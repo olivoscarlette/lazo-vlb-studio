@@ -9,6 +9,7 @@ client/dist/
 data/*.db
 data/*.db-journal
 data/*.db-wal
+data/backups/
 storage/uploads/*
 storage/backups/*
 
