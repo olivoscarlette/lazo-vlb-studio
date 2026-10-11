@@ -1,16 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
-  Contact2, Phone, MessageSquare, Mail, User,
-  Building2, Search, Filter, Sparkles
+  Phone, MessageSquare, Mail, Search, Plus, Edit3, Trash2, X, UserPlus
 } from 'lucide-react';
 
 export const DirectorioModule: React.FC = () => {
-  const { currentWedding, token } = useAuth();
+  const { currentWedding, token, user } = useAuth();
+  const isAdmin = user?.role === 'ADMINISTRADOR';
   const [directory, setDirectory] = useState<{ team: any[]; vendors: any[] }>({ team: [], vendors: [] });
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('ALL');
   const [search, setSearch] = useState('');
+
+  // Modal for assigning or creating a team member
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addMode, setAddMode] = useState<'EXISTING' | 'NEW'>('EXISTING');
+  const [assignForm, setAssignForm] = useState({ user_id: '', assigned_role: 'Coordinadora Senior' });
+  const [newMemberForm, setNewMemberForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    role: 'COORDINADOR',
+    assigned_role: 'Coordinadora Senior'
+  });
+  const [formError, setFormError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  // Modal for editing an assigned team member
+  const [editingMember, setEditingMember] = useState<any | null>(null);
+  const [editMemberForm, setEditMemberForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    assigned_role: '',
+    password: ''
+  });
 
   const fetchDirectory = async () => {
     if (!currentWedding || !token) return;
@@ -29,9 +55,158 @@ export const DirectorioModule: React.FC = () => {
     }
   };
 
+  const fetchAllUsers = async () => {
+    if (!token || !isAdmin) return;
+    try {
+      const res = await fetch('/api/auth/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAllUsers((data.users || []).filter((u: any) => u.role !== 'NOVIOS'));
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     fetchDirectory();
-  }, [currentWedding, token]);
+    if (isAdmin) {
+      fetchAllUsers();
+    }
+  }, [currentWedding, token, isAdmin]);
+
+  const handleOpenAddModal = () => {
+    setFormError('');
+    const unassigned = allUsers.filter(u => !directory.team.some(t => t.id === u.id));
+    if (unassigned.length > 0) {
+      setAddMode('EXISTING');
+      setAssignForm({ user_id: unassigned[0].id, assigned_role: 'Coordinadora General' });
+    } else {
+      setAddMode('NEW');
+    }
+    setShowAddModal(true);
+  };
+
+  const handleSaveTeamMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentWedding) return;
+    setFormError('');
+    setSaving(true);
+
+    try {
+      if (addMode === 'EXISTING') {
+        const res = await fetch(`/api/weddings/${currentWedding.id}/team`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(assignForm)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error al asignar miembro del equipo.');
+      } else {
+        const res = await fetch('/api/auth/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: newMemberForm.name,
+            email: newMemberForm.email,
+            password: newMemberForm.password,
+            phone: newMemberForm.phone,
+            role: newMemberForm.role,
+            assigned_wedding_ids: [currentWedding.id],
+            assigned_role: newMemberForm.assigned_role
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Error al crear miembro del equipo.');
+      }
+
+      setShowAddModal(false);
+      setNewMemberForm({
+        name: '',
+        email: '',
+        password: '',
+        phone: '',
+        role: 'COORDINADOR',
+        assigned_role: 'Coordinadora Senior'
+      });
+      await fetchDirectory();
+      await fetchAllUsers();
+    } catch (err: any) {
+      setFormError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleOpenEditMember = (contact: any) => {
+    setFormError('');
+    setEditingMember(contact);
+    setEditMemberForm({
+      name: contact.name || '',
+      email: contact.email || '',
+      phone: contact.phone || '',
+      assigned_role: contact.role || 'Coordinadora General',
+      password: ''
+    });
+  };
+
+  const handleSaveEditMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentWedding || !editingMember) return;
+    setFormError('');
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/team/${editingMember.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(editMemberForm)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al actualizar miembro.');
+
+      if (editMemberForm.password.trim()) {
+        await fetch(`/api/auth/users/${editingMember.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ password: editMemberForm.password.trim() })
+        });
+      }
+
+      setEditingMember(null);
+      await fetchDirectory();
+      await fetchAllUsers();
+    } catch (err: any) {
+      setFormError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleUnassignMember = async (contact: any) => {
+    if (!currentWedding) return;
+    if (!window.confirm(`¿Quitar a "${contact.name}" del equipo asignado a esta boda?`)) return;
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/team/${contact.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        await fetchDirectory();
+      }
+    } catch {}
+  };
 
   const allContacts = [
     ...directory.team.map(t => ({ ...t, kind: 'TEAM' })),
@@ -48,23 +223,25 @@ export const DirectorioModule: React.FC = () => {
     return matchesFilter && matchesSearch;
   });
 
+  const unassignedUsers = allUsers.filter(u => !directory.team.some(t => t.id === u.id));
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">
-            Contactos Rápidos
+            Contactos Rápidos y Asignación
           </span>
           <h2 className="font-serif text-3xl font-bold text-stone-900">
-            Directorio Unificado
+            Directorio y Equipo VLB
           </h2>
           <p className="text-xs text-stone-500 mt-1">
-            Equipo VLB Studio y proveedores de la boda con enlaces directos para llamada y WhatsApp.
+            Equipo VLB Studio asignado a esta boda y proveedores con enlaces directos para llamada y WhatsApp.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           {['ALL', 'TEAM', 'VENDOR'].map(t => (
             <button
               key={t}
@@ -75,9 +252,19 @@ export const DirectorioModule: React.FC = () => {
                   : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
               }`}
             >
-              {t === 'ALL' ? 'Todos los Contactos' : t === 'TEAM' ? 'Equipo VLB' : 'Proveedores'}
+              {t === 'ALL' ? 'Todos los Contactos' : t === 'TEAM' ? `Equipo VLB (${directory.team.length})` : `Proveedores (${directory.vendors.length})`}
             </button>
           ))}
+
+          {isAdmin && (
+            <button
+              onClick={handleOpenAddModal}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#A6736E] hover:bg-[#885853] text-white transition shadow-xs"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>+ Asignar / Nuevo Equipo VLB</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -111,14 +298,34 @@ export const DirectorioModule: React.FC = () => {
                 <div className="flex items-center justify-between mb-1.5">
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
                     contact.kind === 'TEAM'
-                      ? 'bg-amber-100 text-amber-900 border border-amber-200'
+                      ? 'bg-[#EFE2DF] text-[#885853] border border-[#DFC9C4]'
                       : 'bg-blue-100 text-blue-900 border border-blue-200'
                   }`}>
                     {contact.kind === 'TEAM' ? 'Equipo VLB' : contact.type || 'Proveedor'}
                   </span>
-                  {contact.contact_person && (
+
+                  {isAdmin && contact.kind === 'TEAM' ? (
+                    <div className="flex items-center space-x-1">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditMember(contact)}
+                        className="p-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition"
+                        title="Editar datos o cargo del miembro del equipo"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleUnassignMember(contact)}
+                        className="p-1.5 text-stone-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                        title="Quitar de esta boda"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : contact.contact_person ? (
                     <span className="text-[10px] text-stone-400">Atención: {contact.contact_person}</span>
-                  )}
+                  ) : null}
                 </div>
 
                 <h4 className="font-serif text-lg font-bold text-stone-900">{contact.name}</h4>
@@ -161,6 +368,270 @@ export const DirectorioModule: React.FC = () => {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Modal: Asignar o Crear Miembro de Equipo VLB */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-stone-950/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif text-xl font-bold text-stone-900">Equipo VLB en esta Boda</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-stone-400 hover:text-stone-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="flex space-x-2 mb-4 bg-stone-100 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setAddMode('EXISTING')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
+                  addMode === 'EXISTING' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600'
+                }`}
+              >
+                Asignar Existente ({unassignedUsers.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddMode('NEW')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
+                  addMode === 'NEW' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600'
+                }`}
+              >
+                + Crear Nuevo Miembro
+              </button>
+            </div>
+
+            {formError && (
+              <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+                {formError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveTeamMember} className="space-y-3.5">
+              {addMode === 'EXISTING' ? (
+                unassignedUsers.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-stone-500 bg-stone-50 rounded-xl border border-stone-200">
+                    Todos los miembros actuales del equipo VLB ya están asignados a esta boda. Usa la pestaña <strong>"+ Crear Nuevo Miembro"</strong> arriba.
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">Seleccionar Miembro VLB *</label>
+                      <select
+                        required
+                        value={assignForm.user_id}
+                        onChange={e => setAssignForm({ ...assignForm, user_id: e.target.value })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
+                      >
+                        <option value="">Selecciona un miembro...</option>
+                        {unassignedUsers.map(u => (
+                          <option key={u.id} value={u.id}>
+                            {u.name} ({u.role} · {u.email})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">Cargo / Función en esta Boda *</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej. Coordinadora Principal, Staff Día B..."
+                        value={assignForm.assigned_role}
+                        onChange={e => setAssignForm({ ...assignForm, assigned_role: e.target.value })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                      />
+                    </div>
+                  </>
+                )
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">Nombre Completo *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Valeria Lozano"
+                      value={newMemberForm.name}
+                      onChange={e => setNewMemberForm({ ...newMemberForm, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">Email de Acceso *</label>
+                      <input
+                        type="email"
+                        required
+                        placeholder="nombre@vlb.studio"
+                        value={newMemberForm.email}
+                        onChange={e => setNewMemberForm({ ...newMemberForm, email: e.target.value })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">Contraseña *</label>
+                      <input
+                        type="password"
+                        required
+                        placeholder="Contraseña de acceso"
+                        value={newMemberForm.password}
+                        onChange={e => setNewMemberForm({ ...newMemberForm, password: e.target.value })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">Nivel de Permiso *</label>
+                      <select
+                        value={newMemberForm.role}
+                        onChange={e => setNewMemberForm({ ...newMemberForm, role: e.target.value })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
+                      >
+                        <option value="COORDINADOR">COORDINADOR (Planner)</option>
+                        <option value="STAFF">STAFF (Operativo)</option>
+                        <option value="ADMINISTRADOR">ADMINISTRADOR</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-stone-700 mb-1">WhatsApp / Teléfono</label>
+                      <input
+                        type="text"
+                        placeholder="+52 55..."
+                        value={newMemberForm.phone}
+                        onChange={e => setNewMemberForm({ ...newMemberForm, phone: e.target.value })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">Cargo en esta Boda *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Coordinadora Senior, Staff Recepción..."
+                      value={newMemberForm.assigned_role}
+                      onChange={e => setNewMemberForm({ ...newMemberForm, assigned_role: e.target.value })}
+                      className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                    />
+                  </div>
+                </>
+              )}
+
+              <div className="flex justify-end space-x-2 pt-3 border-t border-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-100 rounded-xl"
+                >
+                  Cancelar
+                </button>
+                {(addMode === 'NEW' || unassignedUsers.length > 0) && (
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="px-5 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow"
+                  >
+                    {saving ? 'Guardando...' : 'Guardar en Equipo'}
+                  </button>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Editar Miembro del Equipo VLB */}
+      {editingMember && (
+        <div className="fixed inset-0 bg-stone-950/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif text-xl font-bold text-stone-900">Editar Miembro del Equipo</h3>
+              <button onClick={() => setEditingMember(null)} className="text-stone-400 hover:text-stone-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {formError && (
+              <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+                {formError}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEditMember} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Nombre Completo *</label>
+                <input
+                  type="text"
+                  required
+                  value={editMemberForm.name}
+                  onChange={e => setEditMemberForm({ ...editMemberForm, name: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Cargo en esta Boda *</label>
+                <input
+                  type="text"
+                  required
+                  value={editMemberForm.assigned_role}
+                  onChange={e => setEditMemberForm({ ...editMemberForm, assigned_role: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={editMemberForm.email}
+                    onChange={e => setEditMemberForm({ ...editMemberForm, email: e.target.value })}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">WhatsApp / Teléfono</label>
+                  <input
+                    type="text"
+                    value={editMemberForm.phone}
+                    onChange={e => setEditMemberForm({ ...editMemberForm, phone: e.target.value })}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Nueva Contraseña (Opcional)</label>
+                <input
+                  type="password"
+                  placeholder="Dejar en blanco para conservar la actual"
+                  value={editMemberForm.password}
+                  onChange={e => setEditMemberForm({ ...editMemberForm, password: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-2 pt-3 border-t border-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingMember(null)}
+                  className="px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-100 rounded-xl"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-5 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

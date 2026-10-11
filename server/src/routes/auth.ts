@@ -113,15 +113,23 @@ router.get('/me', authenticateToken, (req, res) => {
   });
 });
 
-// Admin: List all users
+// Admin: List all users (including assigned weddings for team members)
 router.get('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
-  const users = db.prepare('SELECT id, name, email, role, phone, wedding_id, created_at FROM users ORDER BY name ASC').all();
-  return res.json({ users });
+  const users = db.prepare('SELECT id, name, email, role, phone, wedding_id, created_at FROM users ORDER BY name ASC').all() as any[];
+  const assignments = db.prepare('SELECT user_id, wedding_id, assigned_role FROM wedding_assignments').all() as any[];
+
+  const enriched = users.map(u => ({
+    ...u,
+    assigned_wedding_ids: assignments.filter(a => a.user_id === u.id).map(a => a.wedding_id),
+    assignments: assignments.filter(a => a.user_id === u.id)
+  }));
+
+  return res.json({ users: enriched });
 });
 
 // Admin: Create User
 router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
-  const { name, email, password, role, phone, wedding_id } = req.body;
+  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role } = req.body;
   if (!name || !email || !password || !role) {
     return res.status(400).json({ error: 'Nombre, email, contraseña y rol son requeridos.' });
   }
@@ -140,6 +148,19 @@ router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, r
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(id, name.trim(), email.toLowerCase().trim(), hash, role, phone || null, wedding_id || null, now, now);
 
+  if (Array.isArray(assigned_wedding_ids) && (role === 'COORDINADOR' || role === 'STAFF')) {
+    const insertAssign = db.prepare(`
+      INSERT INTO wedding_assignments (id, wedding_id, user_id, assigned_role, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `);
+    const roleLabel = assigned_role || (role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día B');
+    assigned_wedding_ids.forEach((wId: string, idx: number) => {
+      if (wId) {
+        insertAssign.run(`asg_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 5)}`, wId, id, roleLabel, now);
+      }
+    });
+  }
+
   logAudit(null, req.user!.id, req.user!.name, 'CREAR_USUARIO', 'USER', id, `Creación de usuario ${name} con rol ${role}`);
 
   return res.status(201).json({
@@ -151,11 +172,18 @@ router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, r
 // Admin: Edit User
 router.put('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
   const { id } = req.params;
-  const { name, email, password, role, phone, wedding_id } = req.body;
+  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role } = req.body;
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
   if (!user) {
     return res.status(404).json({ error: 'Usuario no encontrado.' });
+  }
+
+  if (email && email.toLowerCase().trim() !== user.email) {
+    const emailTaken = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email.toLowerCase().trim(), id);
+    if (emailTaken) {
+      return res.status(409).json({ error: 'Ese correo electrónico ya está en uso por otro usuario.' });
+    }
   }
 
   const now = new Date().toISOString();
@@ -164,14 +192,62 @@ router.put('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req
     hash = bcrypt.hashSync(password, 10);
   }
 
+  const finalRole = role || user.role;
+
   db.prepare(`
     UPDATE users SET name = ?, email = ?, password_hash = ?, role = ?, phone = ?, wedding_id = ?, updated_at = ?
     WHERE id = ?
-  `).run(name || user.name, email ? email.toLowerCase().trim() : user.email, hash, role || user.role, phone ?? user.phone, wedding_id ?? user.wedding_id, now, id);
+  `).run(
+    name ? name.trim() : user.name,
+    email ? email.toLowerCase().trim() : user.email,
+    hash,
+    finalRole,
+    phone !== undefined ? phone : user.phone,
+    wedding_id !== undefined ? wedding_id : user.wedding_id,
+    now,
+    id
+  );
+
+  if (Array.isArray(assigned_wedding_ids)) {
+    db.prepare('DELETE FROM wedding_assignments WHERE user_id = ?').run(id);
+    if (finalRole === 'COORDINADOR' || finalRole === 'STAFF') {
+      const insertAssign = db.prepare(`
+        INSERT INTO wedding_assignments (id, wedding_id, user_id, assigned_role, created_at)
+        VALUES (?, ?, ?, ?, ?)
+      `);
+      const roleLabel = assigned_role || (finalRole === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día B');
+      assigned_wedding_ids.forEach((wId: string, idx: number) => {
+        if (wId) {
+          insertAssign.run(`asg_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 5)}`, wId, id, roleLabel, now);
+        }
+      });
+    }
+  }
 
   logAudit(null, req.user!.id, req.user!.name, 'EDITAR_USUARIO', 'USER', id, `Modificación de usuario ${name || user.name}`);
 
   return res.json({ message: 'Usuario actualizado correctamente.' });
+});
+
+// Admin: Delete User
+router.delete('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
+  const { id } = req.params;
+
+  if (id === req.user!.id) {
+    return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta de administrador activa.' });
+  }
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+  if (!user) {
+    return res.status(404).json({ error: 'Usuario no encontrado.' });
+  }
+
+  db.prepare('DELETE FROM wedding_assignments WHERE user_id = ?').run(id);
+  db.prepare('DELETE FROM users WHERE id = ?').run(id);
+
+  logAudit(null, req.user!.id, req.user!.name, 'ELIMINAR_USUARIO', 'USER', id, `Eliminación de usuario ${user.name} (${user.email})`);
+
+  return res.json({ message: 'Usuario eliminado correctamente.' });
 });
 
 export default router;

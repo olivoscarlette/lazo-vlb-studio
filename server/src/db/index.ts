@@ -334,6 +334,15 @@ export function initDatabase() {
   db.prepare('INSERT OR IGNORE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(defaultMasterChecklist));
 
   seedInitialData();
+
+  // Keep only 1 example wedding (Sofía & Alejandro) in normal/production environments
+  if (process.env.NODE_ENV !== 'test') {
+    try {
+      db.prepare('DELETE FROM wedding_assignments WHERE wedding_id = ?').run('wed_valeria_mateo');
+      db.prepare('DELETE FROM users WHERE id IN (?, ?)').run('usr_novios_valeria', 'usr_coord_b');
+      db.prepare('DELETE FROM weddings WHERE id = ?').run('wed_valeria_mateo');
+    } catch {}
+  }
 }
 
 export function seedInitialData() {

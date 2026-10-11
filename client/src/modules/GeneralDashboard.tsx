@@ -20,16 +20,18 @@ export const GeneralDashboard: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Admin: Users management state
-  const [usersList, setUsersList] = useState<User[]>([]);
+  const [usersList, setUsersList] = useState<any[]>([]);
   const [showUserModal, setShowUserModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<any | null>(null);
   const [userForm, setUserForm] = useState({
     name: '',
     email: '',
     password: '',
     role: 'COORDINADOR' as User['role'],
     phone: '',
-    wedding_id: ''
+    wedding_id: '',
+    assigned_wedding_ids: [] as string[],
+    assigned_role: ''
   });
   const [userError, setUserError] = useState('');
 
@@ -203,6 +205,20 @@ export const GeneralDashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteWedding = async (e: React.MouseEvent, w: Wedding) => {
+    e.stopPropagation();
+    if (!window.confirm(`¿Estás segura de eliminar la boda "${w.name}"? Esta acción borrará todos sus registros.`)) return;
+    try {
+      const res = await fetch(`/api/weddings/${w.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        await fetchWeddings();
+      }
+    } catch {}
+  };
+
   const handleOpenNewUser = () => {
     setEditingUser(null);
     setUserError('');
@@ -212,12 +228,14 @@ export const GeneralDashboard: React.FC = () => {
       password: '',
       role: 'COORDINADOR',
       phone: '',
-      wedding_id: ''
+      wedding_id: '',
+      assigned_wedding_ids: weddings.map(w => w.id),
+      assigned_role: 'Coordinadora Senior'
     });
     setShowUserModal(true);
   };
 
-  const handleOpenEditUser = (u: User) => {
+  const handleOpenEditUser = (u: any) => {
     setEditingUser(u);
     setUserError('');
     setUserForm({
@@ -226,9 +244,40 @@ export const GeneralDashboard: React.FC = () => {
       password: '',
       role: u.role,
       phone: u.phone || '',
-      wedding_id: u.wedding_id || ''
+      wedding_id: u.wedding_id || '',
+      assigned_wedding_ids: Array.isArray(u.assigned_wedding_ids) ? u.assigned_wedding_ids : [],
+      assigned_role: u.assignments?.[0]?.assigned_role || (u.role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día B')
     });
     setShowUserModal(true);
+  };
+
+  const handleDeleteUser = async (u: any) => {
+    if (u.id === user?.id) {
+      alert('No puedes eliminar tu propia cuenta activa de Administrador.');
+      return;
+    }
+    if (!window.confirm(`¿Estás segura de eliminar al usuario "${u.name}" (${u.email})?`)) return;
+    try {
+      const res = await fetch(`/api/auth/users/${u.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Error al eliminar usuario.');
+        return;
+      }
+      await fetchUsers();
+      await fetchWeddings();
+    } catch {}
+  };
+
+  const handleToggleAssignedWedding = (wId: string) => {
+    const exists = userForm.assigned_wedding_ids.includes(wId);
+    const updated = exists
+      ? userForm.assigned_wedding_ids.filter(id => id !== wId)
+      : [...userForm.assigned_wedding_ids, wId];
+    setUserForm({ ...userForm, assigned_wedding_ids: updated });
   };
 
   const handleSaveUser = async (e: React.FormEvent) => {
@@ -254,6 +303,7 @@ export const GeneralDashboard: React.FC = () => {
       }
       setShowUserModal(false);
       await fetchUsers();
+      await fetchWeddings();
     } catch (err: any) {
       setUserError(err.message);
     }
@@ -753,15 +803,27 @@ export const GeneralDashboard: React.FC = () => {
                           {w.name}
                         </h3>
                       </div>
-                      <span className={`text-[10px] px-3 py-1 rounded-full font-semibold uppercase tracking-wider ${
-                        w.status === 'UPCOMING'
-                          ? 'bg-[#EFE8DE] text-[#6D5A43] border border-[#DDD2C4]'
-                          : w.status === 'PLANNING'
-                          ? 'bg-[#EFE2DF] text-[#885853] border border-[#DFC9C4]'
-                          : 'bg-[#F9F6F2] text-[#786C68] border border-[#DDD2C4]'
-                      }`}>
-                        {w.status === 'PLANNING' ? 'Planeación' : w.status === 'UPCOMING' ? 'Próxima' : w.status}
-                      </span>
+                      <div className="flex items-center space-x-1.5">
+                        <span className={`text-[10px] px-3 py-1 rounded-full font-semibold uppercase tracking-wider ${
+                          w.status === 'UPCOMING'
+                            ? 'bg-[#EFE8DE] text-[#6D5A43] border border-[#DDD2C4]'
+                            : w.status === 'PLANNING'
+                            ? 'bg-[#EFE2DF] text-[#885853] border border-[#DFC9C4]'
+                            : 'bg-[#F9F6F2] text-[#786C68] border border-[#DDD2C4]'
+                        }`}>
+                          {w.status === 'PLANNING' ? 'Planeación' : w.status === 'UPCOMING' ? 'Próxima' : w.status}
+                        </span>
+                        {user?.role === 'ADMINISTRADOR' && (
+                          <button
+                            type="button"
+                            onClick={(e) => handleDeleteWedding(e, w)}
+                            className="p-1.5 text-stone-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                            title="Eliminar esta boda"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <div className="mt-4 space-y-2 text-xs text-[#786C68]">
@@ -854,7 +916,7 @@ export const GeneralDashboard: React.FC = () => {
               <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Seguridad y Accesos RBAC</span>
               <h2 className="font-serif text-2xl font-bold text-stone-900">Usuarios, Equipo VLB y Cuentas de Novios</h2>
               <p className="text-xs text-stone-500 mt-1">
-                Administra las cuentas del equipo interno y asigna a cada pareja de Novios exclusivamente a su boda.
+                Crea, edita o elimina miembros del equipo VLB y cuentas de novios, y asigna a qué bodas tiene acceso cada coordinador o staff.
               </p>
             </div>
             <button
@@ -862,7 +924,7 @@ export const GeneralDashboard: React.FC = () => {
               className="inline-flex items-center space-x-2 px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow transition"
             >
               <Plus className="w-4 h-4" />
-              <span>Nuevo Usuario</span>
+              <span>Nuevo Usuario / Equipo</span>
             </button>
           </div>
 
@@ -874,13 +936,16 @@ export const GeneralDashboard: React.FC = () => {
                   <th className="py-3 px-4">Email de Acceso</th>
                   <th className="py-3 px-4">Rol en Sistema</th>
                   <th className="py-3 px-4">WhatsApp / Teléfono</th>
-                  <th className="py-3 px-4">Boda Exclusiva (Novios)</th>
-                  <th className="py-3 px-4 text-right">Acción</th>
+                  <th className="py-3 px-4">Bodas Asignadas</th>
+                  <th className="py-3 px-4 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-100 text-xs">
                 {usersList.map(u => {
                   const linkedWedding = weddings.find(w => w.id === u.wedding_id);
+                  const assignedWeddingNames = Array.isArray(u.assigned_wedding_ids)
+                    ? weddings.filter(w => u.assigned_wedding_ids.includes(w.id)).map(w => w.name)
+                    : [];
                   return (
                     <tr key={u.id} className="hover:bg-stone-50/80">
                       <td className="py-3.5 px-4 font-semibold text-stone-900">{u.name}</td>
@@ -900,16 +965,35 @@ export const GeneralDashboard: React.FC = () => {
                       </td>
                       <td className="py-3.5 px-4 text-stone-600">{u.phone || '—'}</td>
                       <td className="py-3.5 px-4 text-stone-700 font-medium">
-                        {u.role === 'NOVIOS' ? (linkedWedding ? linkedWedding.name : u.wedding_id || 'Sin asignar') : 'Según asignación de equipo'}
+                        {u.role === 'NOVIOS'
+                          ? (linkedWedding ? linkedWedding.name : u.wedding_id || 'Sin asignar')
+                          : u.role === 'ADMINISTRADOR'
+                          ? 'Acceso total a todas las bodas'
+                          : assignedWeddingNames.length > 0
+                          ? assignedWeddingNames.join(', ')
+                          : 'Sin bodas asignadas'}
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={() => handleOpenEditUser(u)}
-                          className="inline-flex items-center space-x-1 text-stone-600 hover:text-stone-900 font-semibold px-2.5 py-1 rounded-lg hover:bg-stone-100 transition"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          <span>Editar</span>
-                        </button>
+                        <div className="inline-flex items-center space-x-1">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditUser(u)}
+                            className="inline-flex items-center space-x-1 text-stone-600 hover:text-stone-900 font-semibold px-2.5 py-1 rounded-lg hover:bg-stone-100 transition"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Editar</span>
+                          </button>
+                          {u.id !== user?.id && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteUser(u)}
+                              className="inline-flex items-center space-x-1 text-rose-600 hover:text-rose-800 font-semibold px-2.5 py-1 rounded-lg hover:bg-rose-50 transition"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Eliminar</span>
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1560,6 +1644,36 @@ export const GeneralDashboard: React.FC = () => {
                     ))}
                   </select>
                 </div>
+              )}
+              {(userForm.role === 'COORDINADOR' || userForm.role === 'STAFF') && (
+                <>
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">Cargo / Función en el Equipo VLB</label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Coordinadora Senior, Staff Día B..."
+                      value={userForm.assigned_role}
+                      onChange={e => setUserForm({ ...userForm, assigned_role: e.target.value })}
+                      className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">Bodas Asignadas a este Miembro</label>
+                    <div className="max-h-36 overflow-y-auto space-y-1.5 p-2.5 border border-stone-200 rounded-xl bg-stone-50">
+                      {weddings.map(w => (
+                        <label key={w.id} className="flex items-center space-x-2 text-xs text-stone-800 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={userForm.assigned_wedding_ids.includes(w.id)}
+                            onChange={() => handleToggleAssignedWedding(w.id)}
+                            className="rounded border-stone-300 text-stone-900"
+                          />
+                          <span>{w.name} <span className="text-stone-400">({w.wedding_date})</span></span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
               )}
               <div className="flex justify-end space-x-2 pt-4 border-t border-stone-100">
                 <button

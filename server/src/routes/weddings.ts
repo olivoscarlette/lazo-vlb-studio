@@ -318,6 +318,31 @@ router.post('/:weddingId/team', authenticateToken, requireRole(['ADMINISTRADOR']
   return res.status(201).json({ message: 'Miembro asignado exitosamente al equipo de la boda.' });
 });
 
+// PUT /api/weddings/:weddingId/team/:userId - Update assigned team member role & details
+router.put('/:weddingId/team/:userId', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
+  const { weddingId, userId } = req.params;
+  const { assigned_role, name, email, phone } = req.body;
+  const now = new Date().toISOString();
+
+  if (assigned_role) {
+    db.prepare(`UPDATE wedding_assignments SET assigned_role = ? WHERE wedding_id = ? AND user_id = ?`).run(assigned_role, weddingId, userId);
+  }
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any;
+  if (user && (name || email || phone !== undefined)) {
+    db.prepare(`UPDATE users SET name = ?, email = ?, phone = ?, updated_at = ? WHERE id = ?`).run(
+      name ? name.trim() : user.name,
+      email ? email.toLowerCase().trim() : user.email,
+      phone !== undefined ? phone : user.phone,
+      now,
+      userId
+    );
+  }
+
+  logAudit(weddingId, req.user!.id, req.user!.name, 'EDITAR_EQUIPO', 'ASSIGNMENT', userId, `Actualización de miembro de equipo ${name || userId}`);
+  return res.json({ message: 'Miembro del equipo actualizado correctamente.' });
+});
+
 // DELETE /api/weddings/:weddingId/team/:userId - Unassign team member
 router.delete('/:weddingId/team/:userId', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
   const { weddingId, userId } = req.params;
@@ -327,6 +352,18 @@ router.delete('/:weddingId/team/:userId', authenticateToken, requireRole(['ADMIN
   logAudit(weddingId, req.user!.id, req.user!.name, 'DESASIGNAR_EQUIPO', 'ASSIGNMENT', userId, `Remoción de usuario ${userId} del equipo`);
 
   return res.json({ message: 'Usuario removido del equipo de la boda.' });
+});
+
+// DELETE /api/weddings/:weddingId - Delete wedding (Admin only)
+router.delete('/:weddingId', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
+  const { weddingId } = req.params;
+  const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+  if (!wedding) {
+    return res.status(404).json({ error: 'Boda no encontrada.' });
+  }
+  db.prepare('DELETE FROM weddings WHERE id = ?').run(weddingId);
+  logAudit(null, req.user!.id, req.user!.name, 'ELIMINAR_BODA', 'WEDDING', weddingId, `Eliminación de la boda ${wedding.name}`);
+  return res.json({ message: 'Boda eliminada correctamente.' });
 });
 
 export default router;
