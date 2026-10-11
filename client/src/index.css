@@ -1,0 +1,270 @@
+@import "tailwindcss";
+
+:root {
+  /* Paleta Principal: Rosa Quemado Editorial & Crema Cálido */
+  --lazo-rose: #A6736E;
+  --lazo-rose-dark: #885853;
+  --lazo-blush: #EFE2DF;
+
+  /* Alias de compatibilidad para tokens existentes */
+  --lazo-green: #A6736E;
+  --lazo-green-dark: #885853;
+  --lazo-sage: #EFE2DF;
+
+  --lazo-cream: #F9F6F2;
+  --lazo-beige: #EFE8DE;
+  --lazo-sand: #DDD2C4;
+
+  --lazo-text: #332C2A;
+  --lazo-text-secondary: #786C68;
+
+  --lazo-white: #FFFFFF;
+
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+@theme {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+
+  /* Explicit LAZO Design System Tokens */
+  --color-lazo-rose: #A6736E;
+  --color-lazo-rose-dark: #885853;
+  --color-lazo-blush: #EFE2DF;
+  --color-lazo-green: #A6736E;
+  --color-lazo-green-dark: #885853;
+  --color-lazo-sage: #EFE2DF;
+  --color-lazo-cream: #F9F6F2;
+  --color-lazo-beige: #EFE8DE;
+  --color-lazo-sand: #DDD2C4;
+  --color-lazo-text: #332C2A;
+  --color-lazo-text-secondary: #786C68;
+  --color-lazo-white: #FFFFFF;
+
+  /* Harmonize neutral/stone scale to Warm Blush & Cream Editorial Palette */
+  --color-stone-50: #F9F6F2;
+  --color-stone-100: #EFE8DE;
+  --color-stone-200: #DDD2C4;
+  --color-stone-300: #D2C4B4;
+  --color-stone-400: #786C68;
+  --color-stone-500: #786C68;
+  --color-stone-600: #5E524E;
+  --color-stone-700: #4A3F3C;
+  --color-stone-800: #3E3432;
+  --color-stone-900: #332C2A;
+
+  /* Harmonize emerald to Soft Dusty Rose / Warm Mauve-Blush (Confirmado / Completado) */
+  --color-emerald-50: #F7EEEC;
+  --color-emerald-100: #EFE2DF;
+  --color-emerald-200: #DFC9C4;
+  --color-emerald-300: #CFAFAF;
+  --color-emerald-400: #B98A85;
+  --color-emerald-500: #A6736E;
+  --color-emerald-600: #996560;
+  --color-emerald-700: #82524D;
+  --color-emerald-800: #6E433F;
+  --color-emerald-900: #4A2D2A;
+
+  /* Harmonize amber to Warm Champagne & Sand (Pendiente / En proceso) */
+  --color-amber-50: #F9F6F2;
+  --color-amber-100: #EFE8DE;
+  --color-amber-200: #DDD2C4;
+  --color-amber-300: #CEBFA9;
+  --color-amber-400: #BAA68D;
+  --color-amber-500: #9E896E;
+  --color-amber-600: #857056;
+  --color-amber-700: #6D5A43;
+  --color-amber-800: #564734;
+  --color-amber-900: #423627;
+  --color-amber-950: #332C2A;
+
+  /* Harmonize rose to Soft Muted Berry/Taupe (No asistirá / Alertas suaves) */
+  --color-rose-50: #F5ECEB;
+  --color-rose-100: #EBDAD8;
+  --color-rose-200: #DBC1BE;
+  --color-rose-300: #C7A29E;
+  --color-rose-400: #B0837E;
+  --color-rose-500: #986863;
+  --color-rose-600: #855652;
+  --color-rose-700: #6E4541;
+  --color-rose-800: #593734;
+  --color-rose-900: #422927;
+
+  /* Harmonize blue & purple badges to soft blush/sand editorial tones */
+  --color-blue-50: #F7EEEC;
+  --color-blue-100: #EFE2DF;
+  --color-blue-200: #DFC9C4;
+  --color-blue-800: #784D48;
+  --color-blue-900: #4A2D2A;
+
+  --color-purple-50: #F9F6F2;
+  --color-purple-100: #EFE8DE;
+  --color-purple-200: #DDD2C4;
+  --color-purple-900: #6E433F;
+}
+
+@layer base {
+  html {
+    /* Tamaño base más amplio para lectura descansada y sin fatiga visual */
+    font-size: 17px;
+  }
+
+  body {
+    background-color: var(--lazo-cream);
+    color: var(--lazo-text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Cormorant Garamond para títulos, branding, nombres de bodas y métricas destacadas */
+  h1, h2, h3, .font-serif, .lazo-heading, .lazo-metric {
+    font-family: var(--font-heading);
+    letter-spacing: -0.005em;
+    line-height: 1.25;
+  }
+
+  /* Inter para tablas, formularios, botones, inputs y navegación */
+  table, thead, tbody, tr, th, td,
+  input, select, textarea, button, label, nav {
+    font-family: var(--font-body);
+  }
+
+  input, select, textarea {
+    background-color: var(--lazo-white);
+    border-color: var(--lazo-sand);
+    color: var(--lazo-text);
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--lazo-rose) !important;
+    box-shadow: 0 0 0 3px rgba(166, 115, 110, 0.18) !important;
+  }
+}
+
+/* ==========================================================================
+   ESCALA DE LECTURA CÓMODA: Elimina textos diminutos que cansan la vista
+   ========================================================================== */
+.text-\[9px\],
+.text-\[10px\] {
+  font-size: 0.82rem !important; /* ~14px */
+  line-height: 1.45 !important;
+  letter-spacing: 0.04em !important;
+}
+
+.text-\[11px\] {
+  font-size: 0.875rem !important; /* ~15px */
+  line-height: 1.5 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.text-xs {
+  font-size: 0.925rem !important; /* ~15.7px */
+  line-height: 1.55 !important;
+}
+
+.text-sm {
+  font-size: 1rem !important; /* 17px */
+  line-height: 1.6 !important;
+}
+
+/* Botones Primarios: Rosa Quemado (#A6736E), texto blanco, hover (#885853) */
+button.bg-stone-900,
+a.bg-stone-900,
+.btn-lazo-primary {
+  background-color: var(--lazo-rose) !important;
+  color: var(--lazo-white) !important;
+  border: 1px solid transparent;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+button.bg-stone-900:hover,
+a.bg-stone-900:hover,
+.btn-lazo-primary:hover {
+  background-color: var(--lazo-rose-dark) !important;
+}
+
+/* Botones Secundarios: Fondo cálido claro y borde arena suave */
+button.bg-stone-100,
+a.bg-stone-100,
+.btn-lazo-secondary {
+  background-color: var(--lazo-cream) !important;
+  color: var(--lazo-text) !important;
+  border: 1px solid var(--lazo-sand) !important;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+button.bg-stone-100:hover,
+a.bg-stone-100:hover,
+.btn-lazo-secondary:hover {
+  background-color: var(--lazo-beige) !important;
+  border-color: #C9B9A6 !important;
+}
+
+/* Tarjetas Editoriales: #FFFFFF sobre #F9F6F2 con borde suave #DDD2C4 */
+.luxury-card {
+  background-color: var(--lazo-white);
+  border: 1px solid var(--lazo-sand);
+  box-shadow: 0 2px 16px -4px rgba(51, 44, 42, 0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.luxury-card:hover {
+  border-color: #CBB7A4;
+  box-shadow: 0 6px 22px -4px rgba(166, 115, 110, 0.08);
+}
+
+/* Tablas legibles, en una sola línea por celda y con columnas bien proporcionadas */
+table thead tr {
+  background-color: var(--lazo-beige) !important;
+  border-bottom: 1px solid var(--lazo-sand) !important;
+  color: var(--lazo-text-secondary) !important;
+}
+
+table th {
+  font-size: 0.78rem !important;
+  padding: 0.85rem 1rem !important;
+  letter-spacing: 0.04em !important;
+  white-space: nowrap !important;
+}
+
+table td {
+  font-size: 0.88rem !important;
+  padding: 0.85rem 1rem !important;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+table td span,
+table td a {
+  white-space: nowrap;
+}
+
+table tbody tr {
+  border-bottom: 1px solid #EFEAE2;
+}
+
+table tbody tr:hover {
+  background-color: rgba(249, 246, 242, 0.85) !important;
+}
+
+/* Scrollbar cálido */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--lazo-cream);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--lazo-sand);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--lazo-rose);
+}

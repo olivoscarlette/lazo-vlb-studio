@@ -1,0 +1,22 @@
+# Dependencias
+node_modules/
+
+# Compilados temporales
+dist-server/
+client/dist/
+
+# Base de datos local y archivos privados subidos
+data/*.db
+data/*.db-journal
+data/*.db-wal
+storage/uploads/*
+storage/backups/*
+
+# Variables de entorno privadas
+.env
+.env.local
+.env.production
+
+# Sistema
+.DS_Store
+*.log
