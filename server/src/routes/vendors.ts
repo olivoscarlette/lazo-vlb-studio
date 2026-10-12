@@ -120,6 +120,43 @@ router.put('/:weddingId/vendors/:vendorId', authenticateToken, requireWeddingAcc
   return res.json({ message: 'Proveedor actualizado correctamente.' });
 });
 
+// PUT /api/weddings/:weddingId/vendors/:vendorId/checkin - Toggle vendor arrival on wedding day
+router.put('/:weddingId/vendors/:vendorId/checkin', authenticateToken, requireWeddingAccess, (req, res) => {
+  const { weddingId, vendorId } = req.params;
+  const { arrived, arrived_at } = req.body;
+
+  const vendor = db.prepare('SELECT * FROM vendors WHERE id = ? AND wedding_id = ?').get(vendorId, weddingId) as any;
+  if (!vendor) {
+    return res.status(404).json({ error: 'Proveedor no encontrado.' });
+  }
+
+  const isArrived = arrived ? 1 : 0;
+  const nowTime = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+  const arrivalTime = isArrived ? (arrived_at || nowTime) : null;
+  const now = new Date().toISOString();
+
+  db.prepare(`
+    UPDATE vendors SET arrived = ?, arrived_at = ?, updated_at = ?
+    WHERE id = ? AND wedding_id = ?
+  `).run(isArrived, arrivalTime, now, vendorId, weddingId);
+
+  logAudit(
+    weddingId,
+    req.user!.id,
+    req.user!.name,
+    isArrived ? 'LLEGADA_PROVEEDOR' : 'REVERTIR_LLEGADA_PROVEEDOR',
+    'VENDOR',
+    vendorId,
+    isArrived ? `Llegada confirmada de ${vendor.name} (${arrivalTime})` : `Se desmarcó llegada de ${vendor.name}`
+  );
+
+  return res.json({
+    message: isArrived ? 'Llegada de proveedor registrada.' : 'Llegada desmarcada.',
+    arrived: isArrived,
+    arrived_at: arrivalTime
+  });
+});
+
 // DELETE /api/weddings/:weddingId/vendors/:vendorId - Remove vendor
 router.delete('/:weddingId/vendors/:vendorId', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId, vendorId } = req.params;

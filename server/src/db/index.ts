@@ -287,6 +287,18 @@ export function initDatabase() {
     // Column already exists
   }
 
+  try {
+    db.exec('ALTER TABLE vendors ADD COLUMN arrived INTEGER DEFAULT 0;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE vendors ADD COLUMN arrived_at TEXT;');
+  } catch {
+    // Column already exists
+  }
+
   const defaultPhases = [
     { id: 'phase1_internal_team', name: 'Fase 1: Operación Equipo VLB (Bodas, Invitados, Mesas, Proveedores, Pagos)', enabled: true },
     { id: 'phase2_novios_portal', name: 'Fase 2: Portal de Novios, Reuniones, Timeline y Checklist', enabled: true },

@@ -124,6 +124,8 @@ export interface Vendor {
   notes?: string;
   total_pagado?: number;
   saldo_restante?: number;
+  arrived?: number | boolean;
+  arrived_at?: string | null;
 }
 
 export interface Payment {
