@@ -277,6 +277,85 @@ export const InvitadosModule: React.FC = () => {
     window.open(`/api/weddings/${currentWedding!.id}/guests/template?token=${token}`, '_blank');
   };
 
+  // Export Guest Lists to Excel (.xlsx)
+  const handleExportGuestList = async () => {
+    if (!currentWedding || !token) return;
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/guests?page=1&limit=5000`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        alert('Error al obtener la lista de invitados para descargar.');
+        return;
+      }
+      const data = await res.json();
+      const allGuests: Guest[] = data.guests || [];
+
+      if (allGuests.length === 0) {
+        alert('Aún no hay invitados registrados para descargar.');
+        return;
+      }
+
+      const formatGuestRows = (list: Guest[]) =>
+        list.map(g => ({
+          'NOMBRE': g.first_name,
+          'APELLIDO': g.last_name,
+          'WHATSAPP': g.phone,
+          'ACOMPAÑANTES': g.companion_count,
+          'TOTAL LUGARES': 1 + (g.companion_count || 0),
+          'ESTATUS': g.status,
+          'MESA': g.status === 'No asistirá' ? 'Liberada' : (g.table_name || 'Sin mesa'),
+          'OBSERVACIONES': g.observations || ''
+        }));
+
+      const wb = XLSX.utils.book_new();
+
+      // If user has an active filter, put filtered view as first sheet
+      if (statusFilter || tableFilter || search.trim()) {
+        const filteredQuery = new URLSearchParams({
+          page: '1',
+          limit: '5000',
+          search: search.trim(),
+          status: statusFilter,
+          tableId: tableFilter
+        });
+        const fRes = await fetch(`/api/weddings/${currentWedding.id}/guests?${filteredQuery.toString()}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (fRes.ok) {
+          const fData = await fRes.json();
+          const fGuests: Guest[] = fData.guests || [];
+          const wsFiltered = XLSX.utils.json_to_sheet(formatGuestRows(fGuests));
+          XLSX.utils.book_append_sheet(wb, wsFiltered, 'Vista Filtrada');
+        }
+      }
+
+      // Sheet 1: Todos los invitados
+      const wsAll = XLSX.utils.json_to_sheet(formatGuestRows(allGuests));
+      XLSX.utils.book_append_sheet(wb, wsAll, 'Todos los Invitados');
+
+      // Sheet 2: Confirmados
+      const confirmedList = allGuests.filter(g => g.status === 'Confirmado');
+      const wsConfirmed = XLSX.utils.json_to_sheet(formatGuestRows(confirmedList));
+      XLSX.utils.book_append_sheet(wb, wsConfirmed, 'Confirmados');
+
+      // Sheet 3: Pendientes
+      const pendingList = allGuests.filter(g => g.status === 'Pendiente de confirmar');
+      const wsPending = XLSX.utils.json_to_sheet(formatGuestRows(pendingList));
+      XLSX.utils.book_append_sheet(wb, wsPending, 'Pendientes');
+
+      // Sheet 4: No asistirán
+      const declinedList = allGuests.filter(g => g.status === 'No asistirá');
+      const wsDeclined = XLSX.utils.json_to_sheet(formatGuestRows(declinedList));
+      XLSX.utils.book_append_sheet(wb, wsDeclined, 'No Asistiran');
+
+      const safeWeddingName = currentWedding.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+      XLSX.writeFile(wb, `Lista_Invitados_${safeWeddingName}.xlsx`);
+    } catch (err) {
+      alert('Ocurrió un error al descargar la lista de invitados.');
+    }
+  };
+
   // Excel File Upload & Parse
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -348,12 +427,21 @@ export const InvitadosModule: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            onClick={handleExportGuestList}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#EFE2DF] hover:bg-[#E4D0CC] text-[#6E433F] text-xs font-bold rounded-xl transition border border-[#DFC9C4]"
+            title="Descargar lista actual de invitados en Excel (Todos, Confirmados, Pendientes y Mesas)"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#885853]" />
+            <span>Descargar Lista Excel</span>
+          </button>
+
+          <button
             onClick={handleDownloadTemplate}
             className="inline-flex items-center space-x-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl transition border border-stone-200"
             title="Descargar plantilla limpia de Excel"
           >
             <Download className="w-3.5 h-3.5 text-stone-500" />
-            <span>Descargar Plantilla Excel</span>
+            <span>Plantilla Vacía</span>
           </button>
 
           <button

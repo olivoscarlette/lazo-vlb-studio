@@ -18,7 +18,7 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
   const status = (req.query.status as string) || '';
   const tableId = (req.query.tableId as string) || '';
   const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
-  const limit = Math.min(100, Math.max(10, parseInt(req.query.limit as string, 10) || 30));
+  const limit = Math.min(5000, Math.max(10, parseInt(req.query.limit as string, 10) || 30));
   const offset = (page - 1) * limit;
 
   // Global counts for this wedding
