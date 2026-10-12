@@ -14,10 +14,12 @@ export const InvitadosModule: React.FC = () => {
   const [tables, setTables] = useState<Table[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Search & Filters
+  // Search, Filters & Sort
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
   const [tableFilter, setTableFilter] = useState('');
+  const [sortBy, setSortBy] = useState<'alpha_asc' | 'alpha_desc' | 'lastname_asc' | 'lastname_desc' | 'priority_desc' | 'priority_asc'>('alpha_asc');
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1, limit: 25 });
   const [summary, setSummary] = useState({
@@ -45,6 +47,7 @@ export const InvitadosModule: React.FC = () => {
     last_name: '',
     phone: '+52 ',
     companion_count: 0,
+    priority: 'Media' as 'Alta' | 'Media' | 'Baja',
     status: 'Pendiente de confirmar' as Guest['status'],
     table_id: '',
     observations: ''
@@ -59,7 +62,9 @@ export const InvitadosModule: React.FC = () => {
         limit: '25',
         search: search.trim(),
         status: statusFilter,
-        tableId: tableFilter
+        priority: priorityFilter,
+        tableId: tableFilter,
+        sortBy
       });
       const res = await fetch(`/api/weddings/${currentWedding.id}/guests?${query.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -92,7 +97,7 @@ export const InvitadosModule: React.FC = () => {
 
   useEffect(() => {
     fetchGuests();
-  }, [currentWedding, token, page, statusFilter, tableFilter]);
+  }, [currentWedding, token, page, statusFilter, priorityFilter, tableFilter, sortBy]);
 
   // Debounced search
   useEffect(() => {
@@ -119,12 +124,30 @@ export const InvitadosModule: React.FC = () => {
         body: JSON.stringify({ status: newStatus })
       });
       if (res.ok) {
-        // Refresh list to update counters and table freed if 'No asistirá'
         await fetchGuests();
         await fetchTables();
       }
     } catch (err) {
       console.error('Error updating status:', err);
+    }
+  };
+
+  // Inline Priority Change (Direct update in backend)
+  const handleInlinePriorityChange = async (guest: Guest, newPriority: 'Alta' | 'Media' | 'Baja') => {
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding!.id}/guests/${guest.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ priority: newPriority })
+      });
+      if (res.ok) {
+        await fetchGuests();
+      }
+    } catch (err) {
+      console.error('Error updating priority:', err);
     }
   };
 
@@ -194,6 +217,7 @@ export const InvitadosModule: React.FC = () => {
       last_name: guest.last_name,
       phone: guest.phone,
       companion_count: guest.companion_count,
+      priority: guest.priority || 'Media',
       status: guest.status,
       table_id: guest.table_id || '',
       observations: guest.observations || ''
@@ -210,6 +234,7 @@ export const InvitadosModule: React.FC = () => {
       last_name: '',
       phone: '+52 ',
       companion_count: 0,
+      priority: 'Media',
       status: 'Pendiente de confirmar',
       table_id: '',
       observations: ''
@@ -281,7 +306,7 @@ export const InvitadosModule: React.FC = () => {
   const handleExportGuestList = async () => {
     if (!currentWedding || !token) return;
     try {
-      const res = await fetch(`/api/weddings/${currentWedding.id}/guests?page=1&limit=5000`, {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/guests?page=1&limit=5000&sortBy=${sortBy}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (!res.ok) {
@@ -303,6 +328,7 @@ export const InvitadosModule: React.FC = () => {
           'WHATSAPP': g.phone,
           'ACOMPAÑANTES': g.companion_count,
           'TOTAL LUGARES': 1 + (g.companion_count || 0),
+          'PRIORIDAD': g.priority || 'Media',
           'ESTATUS': g.status,
           'MESA': g.status === 'No asistirá' ? 'Liberada' : (g.table_name || 'Sin mesa'),
           'OBSERVACIONES': g.observations || ''
@@ -311,13 +337,15 @@ export const InvitadosModule: React.FC = () => {
       const wb = XLSX.utils.book_new();
 
       // If user has an active filter, put filtered view as first sheet
-      if (statusFilter || tableFilter || search.trim()) {
+      if (statusFilter || priorityFilter || tableFilter || search.trim()) {
         const filteredQuery = new URLSearchParams({
           page: '1',
           limit: '5000',
           search: search.trim(),
           status: statusFilter,
-          tableId: tableFilter
+          priority: priorityFilter,
+          tableId: tableFilter,
+          sortBy
         });
         const fRes = await fetch(`/api/weddings/${currentWedding.id}/guests?${filteredQuery.toString()}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -521,9 +549,9 @@ export const InvitadosModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Filters and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#DDD2C4] shadow-xs">
-        <div className="relative flex-1 w-full sm:max-w-md">
+      {/* Filters, Search & Sort Bar */}
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#DDD2C4] shadow-xs">
+        <div className="relative flex-1 w-full lg:max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#786C68]" />
           <input
             type="text"
@@ -534,7 +562,7 @@ export const InvitadosModule: React.FC = () => {
           />
         </div>
 
-        <div className="flex items-center space-x-2.5 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           {statusFilter && (
             <button
               onClick={() => { setStatusFilter(''); setPage(1); }}
@@ -543,6 +571,34 @@ export const InvitadosModule: React.FC = () => {
               Filtro: {statusFilter === 'Pendiente de confirmar' ? 'Pendientes' : statusFilter} ✕
             </button>
           )}
+
+          {/* Sort By Selector: Alphabetical or Priority */}
+          <div className="inline-flex items-center space-x-1.5 bg-[#F9F6F2] px-2.5 py-1 rounded-xl border border-[#DDD2C4]">
+            <span className="text-[11px] font-bold text-[#786C68] whitespace-nowrap">Ordenar:</span>
+            <select
+              value={sortBy}
+              onChange={e => { setSortBy(e.target.value as any); setPage(1); }}
+              className="py-1 text-xs font-semibold bg-transparent text-[#332C2A] focus:outline-none cursor-pointer"
+            >
+              <option value="alpha_asc">Alfabético: Nombre (A → Z)</option>
+              <option value="alpha_desc">Alfabético: Nombre (Z → A)</option>
+              <option value="lastname_asc">Alfabético: Apellido (A → Z)</option>
+              <option value="lastname_desc">Alfabético: Apellido (Z → A)</option>
+              <option value="priority_desc">Prioridad (Alta → Baja)</option>
+              <option value="priority_asc">Prioridad (Baja → Alta)</option>
+            </select>
+          </div>
+
+          <select
+            value={priorityFilter}
+            onChange={e => { setPriorityFilter(e.target.value); setPage(1); }}
+            className="px-3 py-2 text-xs border border-[#DDD2C4] rounded-xl bg-white text-[#332C2A] focus:outline-none"
+          >
+            <option value="">Todas las Prioridades</option>
+            <option value="Alta">Prioridad Alta</option>
+            <option value="Media">Prioridad Media</option>
+            <option value="Baja">Prioridad Baja</option>
+          </select>
 
           <select
             value={statusFilter}
@@ -576,9 +632,28 @@ export const InvitadosModule: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#EFE8DE] border-b border-[#DDD2C4] font-bold uppercase tracking-wider text-[#786C68]">
-                <th className="py-3.5 px-4 whitespace-nowrap">NOMBRE Y APELLIDO</th>
+                <th
+                  onClick={() => {
+                    setSortBy(sortBy === 'alpha_asc' ? 'alpha_desc' : 'alpha_asc');
+                    setPage(1);
+                  }}
+                  className="py-3.5 px-4 whitespace-nowrap cursor-pointer hover:text-[#332C2A] select-none transition"
+                  title="Haz clic para ordenar alfabéticamente"
+                >
+                  NOMBRE Y APELLIDO {sortBy === 'alpha_asc' ? '↑' : sortBy === 'alpha_desc' ? '↓' : '↕'}
+                </th>
                 <th className="py-3.5 px-4 whitespace-nowrap min-w-[175px]">WHATSAPP</th>
                 <th className="py-3.5 px-4 text-center whitespace-nowrap"># ACOMPAÑANTES</th>
+                <th
+                  onClick={() => {
+                    setSortBy(sortBy === 'priority_desc' ? 'priority_asc' : 'priority_desc');
+                    setPage(1);
+                  }}
+                  className="py-3.5 px-4 whitespace-nowrap cursor-pointer hover:text-[#332C2A] select-none transition"
+                  title="Haz clic para ordenar por prioridad"
+                >
+                  PRIORIDAD {sortBy === 'priority_desc' ? '↓' : sortBy === 'priority_asc' ? '↑' : '↕'}
+                </th>
                 <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">ESTATUS</th>
                 <th className="py-3.5 px-4 whitespace-nowrap">MESA</th>
                 <th className="py-3.5 px-4 whitespace-nowrap">OBSERVACIONES</th>
@@ -587,13 +662,13 @@ export const InvitadosModule: React.FC = () => {
             <tbody className="divide-y divide-[#EFEAE2]">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={7} className="py-12 text-center text-[#786C68]">
                     Cargando invitados...
                   </td>
                 </tr>
               ) : guests.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={7} className="py-12 text-center text-[#786C68]">
                     No se encontraron invitados con los filtros actuales.
                   </td>
                 </tr>
@@ -640,6 +715,26 @@ export const InvitadosModule: React.FC = () => {
                           ({1 + guest.companion_count} {1 + guest.companion_count === 1 ? 'lugar' : 'lugares'})
                         </span>
                       </div>
+                    </td>
+
+                    {/* Inline Prioridad Dropdown */}
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <select
+                        value={guest.priority || 'Media'}
+                        onChange={e => handleInlinePriorityChange(guest, e.target.value as 'Alta' | 'Media' | 'Baja')}
+                        style={{ fontSize: '0.82rem' }}
+                        className={`font-semibold rounded-lg px-2.5 py-1 border transition focus:outline-none cursor-pointer ${
+                          (guest.priority || 'Media') === 'Alta'
+                            ? 'bg-[#EAD8DE] text-[#6E433F] border-[#DFC9D0]'
+                            : (guest.priority || 'Media') === 'Baja'
+                            ? 'bg-[#F5F3EF] text-[#786C68] border-[#E2DAD0]'
+                            : 'bg-[#EFE8DE] text-[#5A524C] border-[#DDD2C4]'
+                        }`}
+                      >
+                        <option value="Alta">Alta</option>
+                        <option value="Media">Media</option>
+                        <option value="Baja">Baja</option>
+                      </select>
                     </td>
 
                     {/* Inline Estatus Dropdown — Compact width */}
@@ -796,7 +891,7 @@ export const InvitadosModule: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-stone-700 mb-1"># Acompañantes</label>
                   <input
@@ -809,6 +904,19 @@ export const InvitadosModule: React.FC = () => {
                   <span className="text-[10px] text-stone-400 mt-0.5 block">
                     Total: {1 + formData.companion_count} lugares
                   </span>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-stone-700 mb-1">Prioridad</label>
+                  <select
+                    value={formData.priority}
+                    onChange={e => setFormData({ ...formData, priority: e.target.value as 'Alta' | 'Media' | 'Baja' })}
+                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                  >
+                    <option value="Alta">Alta</option>
+                    <option value="Media">Media</option>
+                    <option value="Baja">Baja</option>
+                  </select>
                 </div>
 
                 <div>

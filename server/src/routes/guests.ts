@@ -11,12 +11,14 @@ function normalizeAccents(str: string): string {
 }
 
 // GET /api/weddings/:weddingId/guests
-// Backend search, filter, and pagination
+// Backend search, filter, sort, and pagination
 router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
   const search = ((req.query.search as string) || '').trim();
   const status = (req.query.status as string) || '';
+  const priority = (req.query.priority as string) || '';
   const tableId = (req.query.tableId as string) || '';
+  const sortBy = (req.query.sortBy as string) || 'alpha_asc';
   const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
   const limit = Math.min(5000, Math.max(10, parseInt(req.query.limit as string, 10) || 30));
   const offset = (page - 1) * limit;
@@ -40,7 +42,8 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
   let query = `
     SELECT
       g.id, g.wedding_id, g.first_name, g.last_name, g.phone,
-      g.companion_count, g.status, g.table_id, g.observations,
+      g.companion_count, COALESCE(g.priority, 'Media') as priority,
+      g.status, g.table_id, g.observations,
       g.created_at, g.updated_at,
       t.name as table_name
     FROM guests g
@@ -52,6 +55,11 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
   if (status) {
     query += ` AND g.status = ?`;
     params.push(status);
+  }
+
+  if (priority) {
+    query += ` AND COALESCE(g.priority, 'Media') = ?`;
+    params.push(priority);
   }
 
   if (tableId === 'assigned') {
@@ -74,6 +82,51 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
       return full.includes(cleanSearch);
     });
   }
+
+  // Sort guests by Priority or Alphabetical order
+  const priorityRank: Record<string, number> = {
+    'Alta': 3,
+    'Media': 2,
+    'Baja': 1
+  };
+
+  const compareAlphaFirst = (a: any, b: any) => {
+    const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim();
+    const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim();
+    return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
+  };
+
+  const compareAlphaLast = (a: any, b: any) => {
+    const nameA = `${a.last_name || ''} ${a.first_name || ''}`.trim();
+    const nameB = `${b.last_name || ''} ${b.first_name || ''}`.trim();
+    return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
+  };
+
+  filtered.sort((a, b) => {
+    if (sortBy === 'priority_desc') {
+      const diff = (priorityRank[b.priority || 'Media'] || 2) - (priorityRank[a.priority || 'Media'] || 2);
+      if (diff !== 0) return diff;
+      return compareAlphaFirst(a, b);
+    }
+    if (sortBy === 'priority_asc') {
+      const diff = (priorityRank[a.priority || 'Media'] || 2) - (priorityRank[b.priority || 'Media'] || 2);
+      if (diff !== 0) return diff;
+      return compareAlphaFirst(a, b);
+    }
+    if (sortBy === 'alpha_asc') {
+      return compareAlphaFirst(a, b);
+    }
+    if (sortBy === 'alpha_desc') {
+      return compareAlphaFirst(b, a);
+    }
+    if (sortBy === 'lastname_asc') {
+      return compareAlphaLast(a, b);
+    }
+    if (sortBy === 'lastname_desc') {
+      return compareAlphaLast(b, a);
+    }
+    return 0;
+  });
 
   const totalFiltered = filtered.length;
   const paginatedGuests = filtered.slice(offset, offset + limit);
@@ -102,7 +155,7 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
 // POST /api/weddings/:weddingId/guests - Add single guest
 router.post('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
-  const { first_name, last_name, phone, companion_count, status, table_id, observations } = req.body;
+  const { first_name, last_name, phone, companion_count, priority, status, table_id, observations } = req.body;
 
   if (!first_name || !last_name || !phone) {
     return res.status(400).json({ error: 'Nombre, Apellido y WhatsApp / Teléfono son obligatorios.' });
@@ -111,24 +164,25 @@ router.post('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req,
   const id = 'gst_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
   const now = new Date().toISOString();
   const validStatus = status || 'Pendiente de confirmar';
+  const validPriority = ['Alta', 'Media', 'Baja'].includes(priority) ? priority : 'Media';
   const compCount = Math.max(0, parseInt(companion_count, 10) || 0);
 
   // If status is 'No asistirá', table_id cannot be assigned
   const finalTableId = validStatus === 'No asistirá' ? null : (table_id || null);
 
   db.prepare(`
-    INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, status, table_id, observations, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, priority, status, table_id, observations, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id, weddingId, first_name.trim(), last_name.trim(), phone.trim(),
-    compCount, validStatus, finalTableId, observations ? observations.trim() : null, now, now
+    compCount, validPriority, validStatus, finalTableId, observations ? observations.trim() : null, now, now
   );
 
   logAudit(weddingId, req.user!.id, req.user!.name, 'AGREGAR_INVITADO', 'GUEST', id, `Alta de invitado ${first_name} ${last_name}`);
 
   return res.status(201).json({
     message: 'Invitado registrado correctamente.',
-    guest: { id, first_name, last_name, phone, companion_count: compCount, status: validStatus, table_id: finalTableId, observations }
+    guest: { id, first_name, last_name, phone, companion_count: compCount, priority: validPriority, status: validStatus, table_id: finalTableId, observations }
   });
 });
 
@@ -143,7 +197,7 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
   }
 
   const {
-    first_name, last_name, phone, companion_count,
+    first_name, last_name, phone, companion_count, priority,
     status, table_id, observations, expected_updated_at
   } = req.body;
 
@@ -172,6 +226,7 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
   }
 
   const newStatus = status !== undefined ? status : guest.status;
+  const newPriority = priority !== undefined && ['Alta', 'Media', 'Baja'].includes(priority) ? priority : (guest.priority || 'Media');
   let newTableId = table_id !== undefined ? table_id : guest.table_id;
 
   // RULE: If status changed to 'No asistirá', seats MUST be released (table_id = null)
@@ -189,11 +244,11 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
   db.prepare(`
     UPDATE guests SET
       first_name = ?, last_name = ?, phone = ?, companion_count = ?,
-      status = ?, table_id = ?, observations = ?, updated_at = ?
+      priority = ?, status = ?, table_id = ?, observations = ?, updated_at = ?
     WHERE id = ? AND wedding_id = ?
-  `).run(newFirstName, newLastName, newPhone, newCompCount, newStatus, newTableId, newObs, now, guestId, weddingId);
+  `).run(newFirstName, newLastName, newPhone, newCompCount, newPriority, newStatus, newTableId, newObs, now, guestId, weddingId);
 
-  logAudit(weddingId, user.id, user.name, 'ACTUALIZAR_INVITADO', 'GUEST', guestId, `Actualización de ${newFirstName} ${newLastName} (Estatus: ${newStatus}, Mesa: ${newTableId || 'Ninguna'})`);
+  logAudit(weddingId, user.id, user.name, 'ACTUALIZAR_INVITADO', 'GUEST', guestId, `Actualización de ${newFirstName} ${newLastName} (Prioridad: ${newPriority}, Estatus: ${newStatus}, Mesa: ${newTableId || 'Ninguna'})`);
 
   return res.json({
     message: 'Invitado actualizado correctamente.',
@@ -203,6 +258,7 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
       last_name: newLastName,
       phone: newPhone,
       companion_count: newCompCount,
+      priority: newPriority,
       status: newStatus,
       table_id: newTableId,
       observations: newObs,
@@ -228,13 +284,13 @@ router.delete('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAc
 
 // GET /api/weddings/:weddingId/guests/template - Download updated Excel/CSV template
 router.get('/:weddingId/guests/template', authenticateToken, requireWeddingAccess, (req, res) => {
-  // Pure updated template: NOMBRE, APELLIDO, WHATSAPP, ACOMPAÑANTES, ESTATUS, OBSERVACIONES
   const templateData = [
     {
       'NOMBRE': 'María José',
       'APELLIDO': 'Fernández Silva',
       'WHATSAPP': '+52 55 1234 5678',
       'ACOMPAÑANTES': 1,
+      'PRIORIDAD': 'Alta',
       'ESTATUS': 'Pendiente de confirmar',
       'OBSERVACIONES': 'Familia cercana de la novia. Menú vegetariano.'
     },
@@ -243,6 +299,7 @@ router.get('/:weddingId/guests/template', authenticateToken, requireWeddingAcces
       'APELLIDO': 'Mendoza Lozano',
       'WHATSAPP': '+52 33 9876 5432',
       'ACOMPAÑANTES': 0,
+      'PRIORIDAD': 'Media',
       'ESTATUS': 'Confirmado',
       'OBSERVACIONES': 'Viaja desde Guadalajara.'
     }
@@ -278,6 +335,7 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
     const lastName = (row['APELLIDO'] || row['Apellido'] || row['apellido'] || row['last_name'] || '').toString().trim();
     const phone = (row['WHATSAPP'] || row['Whatsapp'] || row['whatsapp'] || row['TELEFONO'] || row['phone'] || '').toString().trim();
     const companionsRaw = row['ACOMPAÑANTES'] ?? row['Acompañantes'] ?? row['acompañantes'] ?? row['companion_count'] ?? 0;
+    const priorityRaw = (row['PRIORIDAD'] || row['Prioridad'] || row['prioridad'] || row['priority'] || 'Media').toString().trim();
     const statusRaw = (row['ESTATUS'] || row['Estatus'] || row['estatus'] || row['status'] || 'Pendiente de confirmar').toString().trim();
     const tableRaw = (row['MESA'] || row['Mesa'] || row['mesa'] || row['table'] || '').toString().trim();
     const observations = (row['OBSERVACIONES'] || row['Observaciones'] || row['observaciones'] || row['observations'] || '').toString().trim();
@@ -300,6 +358,14 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
       companions = 0;
     }
 
+    let priority = 'Media';
+    const prioNorm = priorityRaw.toLowerCase();
+    if (prioNorm.includes('alt') || prioNorm === '1' || prioNorm === 'a' || prioNorm.includes('vip')) {
+      priority = 'Alta';
+    } else if (prioNorm.includes('baj') || prioNorm === '3' || prioNorm === 'c') {
+      priority = 'Baja';
+    }
+
     let status = 'Pendiente de confirmar';
     const statusNorm = statusRaw.toLowerCase();
     if (statusNorm.includes('confirmad')) {
@@ -313,6 +379,7 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
       last_name: lastName,
       phone,
       companion_count: companions,
+      priority,
       status,
       table_name: status === 'No asistirá' ? '' : tableRaw,
       observations: observations || null
@@ -343,8 +410,8 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
     `);
 
     const insertStmt = db.prepare(`
-      INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, status, table_id, observations, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, priority, status, table_id, observations, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     db.exec('BEGIN TRANSACTION;');
@@ -372,7 +439,7 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
       }
 
       const id = 'gst_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-      insertStmt.run(id, weddingId, g.first_name, g.last_name, g.phone, g.companion_count, g.status, resolvedTableId, g.observations, now, now);
+      insertStmt.run(id, weddingId, g.first_name, g.last_name, g.phone, g.companion_count, g.priority || 'Media', g.status, resolvedTableId, g.observations, now, now);
       insertedCount++;
     }
     db.exec('COMMIT;');

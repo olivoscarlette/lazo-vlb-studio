@@ -69,6 +69,7 @@ export interface Guest {
   last_name: string;
   phone: string;
   companion_count: number;
+  priority?: 'Alta' | 'Media' | 'Baja';
   status: 'Pendiente de confirmar' | 'Confirmado' | 'No asistirá';
   table_id: string | null;
   table_name?: string | null;

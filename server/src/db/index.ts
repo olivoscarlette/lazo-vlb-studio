@@ -115,6 +115,7 @@ export function initDatabase() {
       last_name TEXT NOT NULL,
       phone TEXT NOT NULL,
       companion_count INTEGER DEFAULT 0,
+      priority TEXT DEFAULT 'Media',
       status TEXT DEFAULT 'Pendiente de confirmar',
       table_id TEXT,
       observations TEXT,
@@ -301,6 +302,12 @@ export function initDatabase() {
 
   try {
     db.exec("ALTER TABLE timeline_events ADD COLUMN day_type TEXT DEFAULT 'BODA';");
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN priority TEXT DEFAULT 'Media';");
   } catch {
     // Column already exists
   }
