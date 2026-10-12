@@ -126,6 +126,63 @@ export const InvitadosModule: React.FC = () => {
     }
   };
 
+  // Inline Table Change (Direct update in backend from main guest list)
+  const handleInlineTableChange = async (guest: Guest, selectedValue: string) => {
+    if (!currentWedding || !token) return;
+
+    let targetTableId: string | null = selectedValue || null;
+
+    if (selectedValue === '__new__') {
+      const nextNum = tables.length + 1;
+      const newTableName = window.prompt('Nombre de la nueva mesa:', `Mesa ${nextNum}`);
+      if (!newTableName || !newTableName.trim()) return;
+      try {
+        const createRes = await fetch(`/api/weddings/${currentWedding.id}/tables`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name: newTableName.trim(),
+            type: 'circular',
+            capacity: 10,
+            x: 150 + (tables.length % 4) * 170,
+            y: 200 + Math.floor(tables.length / 4) * 160
+          })
+        });
+        const createData = await createRes.json();
+        if (!createRes.ok) {
+          alert(createData.error || 'No se pudo crear la mesa.');
+          return;
+        }
+        targetTableId = createData.table?.id || null;
+      } catch {
+        return;
+      }
+    }
+
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/guests/${guest.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ table_id: targetTableId })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Error al asignar mesa.');
+        return;
+      }
+      await fetchGuests();
+      await fetchTables();
+    } catch (err) {
+      console.error('Error updating table:', err);
+    }
+  };
+
   // Open fast edit drawer on guest name click
   const handleOpenEdit = (guest: Guest) => {
     setIsNewGuest(false);
@@ -515,16 +572,29 @@ export const InvitadosModule: React.FC = () => {
                       </select>
                     </td>
 
-                    {/* Mesa — Single line */}
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    {/* Mesa — Inline Editable Dropdown */}
+                    <td className="py-3 px-4 whitespace-nowrap min-w-[170px]">
                       {guest.status === 'No asistirá' ? (
                         <span className="text-[#786C68] italic text-[11px] whitespace-nowrap">Liberada</span>
-                      ) : guest.table_name ? (
-                        <span className="inline-block font-medium text-[#332C2A] bg-[#EFE8DE] px-2.5 py-1 rounded-md border border-[#DDD2C4] whitespace-nowrap">
-                          {guest.table_name}
-                        </span>
                       ) : (
-                        <span className="text-[#786C68] text-[11px] whitespace-nowrap">Sin mesa</span>
+                        <select
+                          value={guest.table_id || ''}
+                          onChange={e => handleInlineTableChange(guest, e.target.value)}
+                          style={{ fontSize: '0.82rem' }}
+                          className={`w-full max-w-[190px] font-medium rounded-lg px-2.5 py-1 border transition focus:outline-none cursor-pointer ${
+                            guest.table_id
+                              ? 'bg-[#EFE8DE] text-[#332C2A] border-[#DDD2C4] font-semibold'
+                              : 'bg-white text-[#786C68] border-[#DDD2C4] hover:border-[#A6736E]'
+                          }`}
+                        >
+                          <option value="">Sin mesa</option>
+                          {tables.map(t => (
+                            <option key={t.id} value={t.id}>
+                              {t.name} ({t.used_seats || 0}/{t.capacity})
+                            </option>
+                          ))}
+                          <option value="__new__">+ Crear nueva mesa...</option>
+                        </select>
                       )}
                     </td>
 

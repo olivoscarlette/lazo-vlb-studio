@@ -275,6 +275,7 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
     const phone = (row['WHATSAPP'] || row['Whatsapp'] || row['whatsapp'] || row['TELEFONO'] || row['phone'] || '').toString().trim();
     const companionsRaw = row['ACOMPAÑANTES'] ?? row['Acompañantes'] ?? row['acompañantes'] ?? row['companion_count'] ?? 0;
     const statusRaw = (row['ESTATUS'] || row['Estatus'] || row['estatus'] || row['status'] || 'Pendiente de confirmar').toString().trim();
+    const tableRaw = (row['MESA'] || row['Mesa'] || row['mesa'] || row['table'] || '').toString().trim();
     const observations = (row['OBSERVACIONES'] || row['Observaciones'] || row['observaciones'] || row['observations'] || '').toString().trim();
 
     if (!firstName) {
@@ -309,6 +310,7 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
       phone,
       companion_count: companions,
       status,
+      table_name: status === 'No asistirá' ? '' : tableRaw,
       observations: observations || null
     });
   });
@@ -325,15 +327,48 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
   let insertedCount = 0;
 
   try {
+    const existingTables = db.prepare('SELECT id, name FROM tables WHERE wedding_id = ?').all(weddingId) as { id: string; name: string }[];
+    const tableMap = new Map<string, string>();
+    existingTables.forEach(t => {
+      tableMap.set(t.name.trim().toLowerCase(), t.id);
+    });
+
+    const insertTableStmt = db.prepare(`
+      INSERT INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, created_at, updated_at)
+      VALUES (?, ?, ?, 'circular', 10, ?, ?, 0, ?, ?)
+    `);
+
     const insertStmt = db.prepare(`
       INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, status, table_id, observations, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, NULL, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     db.exec('BEGIN TRANSACTION;');
     for (const g of validRows) {
+      let resolvedTableId: string | null = null;
+      if (g.table_name) {
+        const rawName = /^\d+$/.test(g.table_name) ? `Mesa ${g.table_name}` : g.table_name;
+        const key = rawName.toLowerCase();
+        if (tableMap.has(key)) {
+          resolvedTableId = tableMap.get(key)!;
+        } else {
+          // Check partial match (e.g. "Mesa 1" matches "Mesa 1 - Familia Novia")
+          const partial = existingTables.find(t => t.name.toLowerCase().startsWith(key));
+          if (partial) {
+            resolvedTableId = partial.id;
+            tableMap.set(key, partial.id);
+          } else {
+            const newTblId = 'tbl_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+            const idx = tableMap.size;
+            insertTableStmt.run(newTblId, weddingId, rawName, 160 + (idx % 4) * 170, 220 + Math.floor(idx / 4) * 160, now, now);
+            tableMap.set(key, newTblId);
+            resolvedTableId = newTblId;
+          }
+        }
+      }
+
       const id = 'gst_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-      insertStmt.run(id, weddingId, g.first_name, g.last_name, g.phone, g.companion_count, g.status, g.observations, now, now);
+      insertStmt.run(id, weddingId, g.first_name, g.last_name, g.phone, g.companion_count, g.status, resolvedTableId, g.observations, now, now);
       insertedCount++;
     }
     db.exec('COMMIT;');
