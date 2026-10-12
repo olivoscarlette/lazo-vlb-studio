@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Vendor, Payment } from '../types';
 import {
   CreditCard, Plus, DollarSign, CheckCircle2, Clock, Phone,
-  Building2, Calendar, FileText, Trash2, Edit3, MessageSquare, AlertCircle
+  Building2, Calendar, FileText, Trash2, Edit3, MessageSquare, AlertCircle, AlertTriangle
 } from 'lucide-react';
 
 export const ProveedoresPagosModule: React.FC = () => {
@@ -27,6 +27,7 @@ export const ProveedoresPagosModule: React.FC = () => {
     type: 'Fotografía',
     locations: ['RECEPCIÓN'],
     costo_real: 0,
+    payment_due_date: '',
     contact_person: '',
     notes: ''
   });
@@ -88,6 +89,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       type: catalogTypes[0] || 'Fotografía',
       locations: ['RECEPCIÓN'],
       costo_real: 0,
+      payment_due_date: '',
       contact_person: '',
       notes: ''
     });
@@ -103,11 +105,74 @@ export const ProveedoresPagosModule: React.FC = () => {
       type: v.type || 'Otro',
       locations: Array.isArray(v.locations) && v.locations.length > 0 ? v.locations : ['RECEPCIÓN'],
       costo_real: v.costo_real || 0,
+      payment_due_date: v.payment_due_date || '',
       contact_person: v.contact_person || '',
       notes: v.notes || ''
     });
     setVendorError('');
     setShowVendorModal(true);
+  };
+
+  // Helper for Payment Due Date status & alerts
+  const getPaymentDueStatus = (dueDate?: string | null, saldo?: number) => {
+    if (!saldo || saldo <= 0) {
+      return {
+        status: 'LIQUIDADO',
+        label: 'Liquidado ✓',
+        badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200'
+      };
+    }
+    if (!dueDate) {
+      return {
+        status: 'SIN_FECHA',
+        label: 'Sin fecha límite',
+        badgeClass: 'text-[#8E807A] bg-[#F9F6F2] border-[#DDD2C4]'
+      };
+    }
+    try {
+      const [y, m, d] = dueDate.split('-').map(Number);
+      const due = new Date(y, m - 1, d);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      due.setHours(0, 0, 0, 0);
+      const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) {
+        return {
+          status: 'VENCIDO',
+          label: `⚠️ Vencido hace ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'día' : 'días'}`,
+          badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
+          isAlert: true
+        };
+      }
+      if (diffDays === 0) {
+        return {
+          status: 'HOY',
+          label: '⚠️ ¡Vence hoy!',
+          badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
+          isAlert: true
+        };
+      }
+      if (diffDays <= 7) {
+        return {
+          status: 'PROXIMO',
+          label: `⏳ Vence en ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`,
+          badgeClass: 'bg-amber-100 text-amber-800 border-amber-300 font-semibold',
+          isAlert: true
+        };
+      }
+      return {
+        status: 'EN_TIEMPO',
+        label: dueDate,
+        badgeClass: 'bg-[#EFE8DE] text-[#4A3F3C] border-[#DDD2C4]'
+      };
+    } catch {
+      return {
+        status: 'ERROR',
+        label: dueDate,
+        badgeClass: 'bg-stone-100 text-stone-600 border-stone-200'
+      };
+    }
   };
 
   // Toggle multi-select locations
@@ -154,7 +219,8 @@ export const ProveedoresPagosModule: React.FC = () => {
         locations: ['RECEPCIÓN'],
         costo_real: 0,
         contact_person: '',
-        notes: ''
+        notes: '',
+        payment_due_date: ''
       });
       await fetchVendorsData();
     } catch (err: any) {
@@ -299,6 +365,47 @@ export const ProveedoresPagosModule: React.FC = () => {
         </div>
       </div>
 
+      {/* Payment Due Date Alerts Banner */}
+      {(() => {
+        const urgentVendors = vendors.filter(v => {
+          if (!v.payment_due_date || (v.saldo_restante !== undefined && v.saldo_restante <= 0)) return false;
+          const status = getPaymentDueStatus(v.payment_due_date, v.saldo_restante);
+          return status.isAlert;
+        });
+
+        if (urgentVendors.length === 0) return null;
+
+        return (
+          <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-xl shadow-sm flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="text-sm font-bold text-amber-900">
+                Recordatorio de Liquidaciones Pendientes ({urgentVendors.length})
+              </h4>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Los siguientes proveedores tienen saldo pendiente y su fecha límite de pago está próxima o vencida:
+              </p>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {urgentVendors.map(v => {
+                  const status = getPaymentDueStatus(v.payment_due_date, v.saldo_restante);
+                  return (
+                    <span
+                      key={v.id}
+                      onClick={() => handleOpenEditVendor(v)}
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border cursor-pointer hover:opacity-80 transition ${status.badgeClass}`}
+                    >
+                      <span>{v.name}:</span>
+                      <span>${(v.saldo_restante || 0).toLocaleString()}</span>
+                      <span className="text-[10px] opacity-80">({status.label})</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Vendors List Section */}
       <div className="luxury-card rounded-2xl p-6 border border-stone-200">
         <div className="flex items-center justify-between mb-4">
@@ -317,6 +424,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                 <th className="py-3.5 px-4 whitespace-nowrap">CATEGORÍA</th>
                 <th className="py-3.5 px-4 whitespace-nowrap min-w-[175px]">TELÉFONO</th>
                 <th className="py-3.5 px-4 whitespace-nowrap">UBICACIÓN / ETAPAS</th>
+                <th className="py-3.5 px-4 text-center whitespace-nowrap">FECHA LÍMITE DE PAGO</th>
                 <th className="py-3.5 px-4 text-right whitespace-nowrap">COSTO REAL</th>
                 <th className="py-3.5 px-4 text-right whitespace-nowrap">PAGADO</th>
                 <th className="py-3.5 px-4 text-right whitespace-nowrap">SALDO RESTANTE</th>
@@ -325,78 +433,81 @@ export const ProveedoresPagosModule: React.FC = () => {
             </thead>
             <tbody className="divide-y divide-[#EFEAE2]">
               {loading ? (
-                <tr><td colSpan={8} className="py-8 text-center text-[#786C68]">Cargando proveedores...</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[#786C68]">Cargando proveedores...</td></tr>
               ) : vendors.length === 0 ? (
-                <tr><td colSpan={8} className="py-8 text-center text-[#786C68]">No hay proveedores registrados. Agrega uno con el botón superior.</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[#786C68]">No hay proveedores registrados. Agrega uno con el botón superior.</td></tr>
               ) : (
-                vendors.map(v => (
-                  <tr key={v.id} className="hover:bg-[#F9F6F2] transition group">
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <div
-                        onClick={() => handleOpenEditVendor(v)}
-                        className="cursor-pointer font-bold text-[#332C2A] hover:text-[#A6736E] inline-flex items-center space-x-1.5 whitespace-nowrap transition"
-                        title="Clic para editar información"
-                      >
-                        <span className="underline decoration-[#D2C4B4] decoration-1 underline-offset-4">{v.name}</span>
-                        <Edit3 className="w-3.5 h-3.5 text-[#C7B6A6] group-hover:text-[#A6736E] transition shrink-0" />
-                      </div>
-                      {v.contact_person && (
-                        <div className="text-[11px] text-[#786C68] whitespace-nowrap">Contacto: {v.contact_person}</div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="inline-block bg-[#EFE8DE] text-[#4A3F3C] px-2.5 py-1 rounded-md text-[11px] font-medium border border-[#DDD2C4] whitespace-nowrap">
-                        {v.type}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 font-mono text-[#4A3F3C] whitespace-nowrap min-w-[175px]">
-                      <a
-                        href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center space-x-2 text-[#4A3F3C] hover:text-[#A6736E] whitespace-nowrap"
-                        title="Contactar vía WhatsApp"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5 text-[#A6736E] shrink-0" />
-                        <span className="whitespace-nowrap">{v.phone}</span>
-                      </a>
-                    </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
-                        {v.locations.map(loc => (
-                          <span
-                            key={loc}
-                            className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap ${
-                              loc === 'CIVIL'
-                                ? 'bg-[#EFE2DF] text-[#7A4E49] border border-[#DFC9C4]'
-                                : loc === 'IGLESIA'
-                                ? 'bg-[#EFE8DE] text-[#6D5A43] border border-[#DDD2C4]'
-                                : 'bg-[#F9F6F2] text-[#5E524E] border border-[#DDD2C4]'
-                            }`}
-                          >
-                            {loc}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-right font-semibold text-[#332C2A] whitespace-nowrap">
-                      ${v.costo_real.toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right font-semibold text-[#82524D] whitespace-nowrap">
-                      ${(v.total_pagado || 0).toLocaleString()}
-                    </td>
-                    <td className="py-3 px-4 text-right font-bold text-[#6D5A43] whitespace-nowrap">
-                      ${(v.saldo_restante || 0).toLocaleString()}
-                    </td>
-                    <td className="py-3 px-3 text-center whitespace-nowrap">
-                      <div className="inline-flex items-center space-x-1">
-                        <button
+                vendors.map(v => {
+                  const dueStatus = getPaymentDueStatus(v.payment_due_date, v.saldo_restante);
+                  return (
+                    <tr key={v.id} className="hover:bg-[#F9F6F2] transition group">
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div
                           onClick={() => handleOpenEditVendor(v)}
-                          className="text-[#786C68] hover:text-[#332C2A] p-1.5 transition"
-                          title="Editar proveedor"
+                          className="cursor-pointer font-bold text-[#332C2A] hover:text-[#A6736E] inline-flex items-center space-x-1.5 whitespace-nowrap transition"
+                          title="Clic para editar información"
                         >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
+                          <span className="underline decoration-[#D2C4B4] decoration-1 underline-offset-4">{v.name}</span>
+                          <Edit3 className="w-3.5 h-3.5 text-[#C7B6A6] group-hover:text-[#A6736E] transition shrink-0" />
+                        </div>
+                        {v.contact_person && (
+                          <div className="text-[11px] text-[#786C68] whitespace-nowrap">Contacto: {v.contact_person}</div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className="inline-block bg-[#EFE8DE] text-[#4A3F3C] px-2.5 py-1 rounded-md text-[11px] font-medium border border-[#DDD2C4] whitespace-nowrap">
+                          {v.type}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 font-mono text-[#4A3F3C] whitespace-nowrap min-w-[175px]">
+                        <a
+                          href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center space-x-2 text-[#4A3F3C] hover:text-[#A6736E] whitespace-nowrap"
+                          title="Contactar vía WhatsApp"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 text-[#A6736E] shrink-0" />
+                          <span className="whitespace-nowrap">{v.phone}</span>
+                        </a>
+                      </td>
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                          {v.locations.map(loc => (
+                            <span
+                              key={loc}
+                              className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap ${
+                                loc === 'CIVIL'
+                                  ? 'bg-[#EFE2DF] text-[#7A4E49] border border-[#DFC9C4]'
+                                  : loc === 'IGLESIA'
+                                  ? 'bg-[#EFE8DE] text-[#6D5A43] border border-[#DDD2C4]'
+                                  : 'bg-[#F9F6F2] text-[#5E524E] border border-[#DDD2C4]'
+                              }`}
+                            >
+                              {loc}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        {v.payment_due_date ? (
+                          <span className={`inline-block px-2.5 py-1 rounded-md text-[11px] border whitespace-nowrap ${dueStatus.badgeClass}`}>
+                            {dueStatus.label}
+                          </span>
+                        ) : (
+                          <span className="text-[11px] text-[#A89F91] italic">Sin definir</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right font-semibold text-[#332C2A] whitespace-nowrap">
+                        ${v.costo_real.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right font-semibold text-[#82524D] whitespace-nowrap">
+                        ${(v.total_pagado || 0).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right font-bold text-[#6D5A43] whitespace-nowrap">
+                        ${(v.saldo_restante || 0).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleDeleteVendor(v.id)}
                           className="text-[#C7B6A6] hover:text-[#885853] p-1.5 transition"
@@ -404,10 +515,10 @@ export const ProveedoresPagosModule: React.FC = () => {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -539,6 +650,19 @@ export const ProveedoresPagosModule: React.FC = () => {
                     className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Fecha Límite de Pago / Liquidación</label>
+                <input
+                  type="date"
+                  value={vendorForm.payment_due_date || ''}
+                  onChange={e => setVendorForm({ ...vendorForm, payment_due_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                />
+                <p className="text-[10px] text-stone-400 mt-1">
+                  Se generarán alertas automáticas si faltan 7 días o menos y aún existe saldo pendiente por liquidar.
+                </p>
               </div>
 
               {/* Multi-select Location / Stage (Reused in Civil & Iglesia automatically!) */}

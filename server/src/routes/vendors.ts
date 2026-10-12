@@ -56,7 +56,7 @@ router.get('/:weddingId/vendors', authenticateToken, requireWeddingAccess, (req,
 // POST /api/weddings/:weddingId/vendors - Add vendor
 router.post('/:weddingId/vendors', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
-  const { name, phone, type, locations, costo_real, contact_person, notes } = req.body;
+  const { name, phone, type, locations, costo_real, payment_due_date, contact_person, notes } = req.body;
 
   if (!name || !phone) {
     return res.status(400).json({ error: 'Nombre del proveedor y teléfono de contacto son obligatorios.' });
@@ -66,27 +66,28 @@ router.post('/:weddingId/vendors', authenticateToken, requireWeddingAccess, (req
   const now = new Date().toISOString();
   const locArray = Array.isArray(locations) ? locations : ['RECEPCIÓN'];
   const cost = Math.max(0, parseFloat(costo_real) || 0);
+  const dueDate = payment_due_date ? payment_due_date.trim() : null;
 
   db.prepare(`
-    INSERT INTO vendors (id, wedding_id, name, phone, type, locations, costo_real, contact_person, notes, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO vendors (id, wedding_id, name, phone, type, locations, costo_real, payment_due_date, contact_person, notes, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id, weddingId, name.trim(), phone.trim(), type || 'Otro',
-    JSON.stringify(locArray), cost, contact_person || null, notes || null, now, now
+    JSON.stringify(locArray), cost, dueDate, contact_person || null, notes || null, now, now
   );
 
   logAudit(weddingId, req.user!.id, req.user!.name, 'AGREGAR_PROVEEDOR', 'VENDOR', id, `Alta de proveedor ${name} (${type})`);
 
   return res.status(201).json({
     message: 'Proveedor agregado correctamente.',
-    vendor: { id, wedding_id: weddingId, name, phone, type, locations: locArray, costo_real: cost, total_pagado: 0, saldo_restante: cost }
+    vendor: { id, wedding_id: weddingId, name, phone, type, locations: locArray, costo_real: cost, payment_due_date: dueDate, total_pagado: 0, saldo_restante: cost }
   });
 });
 
 // PUT /api/weddings/:weddingId/vendors/:vendorId - Edit vendor
 router.put('/:weddingId/vendors/:vendorId', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId, vendorId } = req.params;
-  const { name, phone, type, locations, costo_real, contact_person, notes } = req.body;
+  const { name, phone, type, locations, costo_real, payment_due_date, contact_person, notes } = req.body;
 
   const vendor = db.prepare('SELECT * FROM vendors WHERE id = ? AND wedding_id = ?').get(vendorId, weddingId) as any;
   if (!vendor) {
@@ -96,11 +97,12 @@ router.put('/:weddingId/vendors/:vendorId', authenticateToken, requireWeddingAcc
   const now = new Date().toISOString();
   const locArray = locations !== undefined ? (Array.isArray(locations) ? locations : [locations]) : JSON.parse(vendor.locations);
   const cost = costo_real !== undefined ? Math.max(0, parseFloat(costo_real) || 0) : vendor.costo_real;
+  const dueDate = payment_due_date !== undefined ? (payment_due_date ? payment_due_date.trim() : null) : vendor.payment_due_date;
 
   db.prepare(`
     UPDATE vendors SET
       name = ?, phone = ?, type = ?, locations = ?, costo_real = ?,
-      contact_person = ?, notes = ?, updated_at = ?
+      payment_due_date = ?, contact_person = ?, notes = ?, updated_at = ?
     WHERE id = ? AND wedding_id = ?
   `).run(
     name || vendor.name,
@@ -108,6 +110,7 @@ router.put('/:weddingId/vendors/:vendorId', authenticateToken, requireWeddingAcc
     type || vendor.type,
     JSON.stringify(locArray),
     cost,
+    dueDate,
     contact_person !== undefined ? contact_person : vendor.contact_person,
     notes !== undefined ? notes : vendor.notes,
     now,

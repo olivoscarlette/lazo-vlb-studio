@@ -133,6 +133,7 @@ export function initDatabase() {
       type TEXT NOT NULL,
       locations TEXT NOT NULL,
       costo_real REAL DEFAULT 0,
+      payment_due_date TEXT,
       contact_person TEXT,
       notes TEXT,
       created_at TEXT NOT NULL,
@@ -308,6 +309,12 @@ export function initDatabase() {
 
   try {
     db.exec("ALTER TABLE guests ADD COLUMN priority TEXT DEFAULT 'Media';");
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE vendors ADD COLUMN payment_due_date TEXT;');
   } catch {
     // Column already exists
   }

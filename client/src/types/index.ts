@@ -121,6 +121,7 @@ export interface Vendor {
   type: string;
   locations: string[]; // ['IGLESIA', 'CIVIL', 'RECEPCIÓN', 'OTRO']
   costo_real: number;
+  payment_due_date?: string | null;
   contact_person?: string;
   notes?: string;
   total_pagado?: number;
