@@ -438,7 +438,7 @@ export const DirectorioModule: React.FC = () => {
                       <input
                         type="text"
                         required
-                        placeholder="Ej. Coordinadora Principal, Staff Día B..."
+                        placeholder="Ej. Coordinadora Principal, Staff Día Boda..."
                         value={assignForm.assigned_role}
                         onChange={e => setAssignForm({ ...assignForm, assigned_role: e.target.value })}
                         className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"

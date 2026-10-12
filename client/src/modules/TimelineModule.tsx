@@ -140,7 +140,7 @@ export const TimelineModule: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">
-            Minuto a Minuto del Día B
+            Minuto a Minuto del Día Boda
           </span>
           <h2 className="font-serif text-3xl font-bold text-stone-900">
             Timeline Operativo

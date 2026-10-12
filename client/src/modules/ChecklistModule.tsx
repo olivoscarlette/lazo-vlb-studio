@@ -260,7 +260,7 @@ export const ChecklistModule: React.FC = () => {
     '9 a 6 Meses Antes',
     '3 a 2 Meses Antes',
     'Mes 1',
-    'Día B',
+    'Día Boda',
     'Trámites',
     'Proveedores',
     'Logística',
@@ -282,7 +282,7 @@ export const ChecklistModule: React.FC = () => {
             Checklist Operativo por Mes
           </h2>
           <p className="text-xs text-stone-500 mt-1">
-            Actividades editables desde 12 meses antes de la boda hasta el Día B, o importables por Excel.
+            Actividades editables desde 12 meses antes de la boda hasta el Día Boda, o importables por Excel.
           </p>
         </div>
 
@@ -292,7 +292,7 @@ export const ChecklistModule: React.FC = () => {
             onClick={handleLoadVlbMasterChecklist}
             disabled={importingTemplate}
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#EFE8DE] hover:bg-[#EFE2DF] text-[#332C2A] border border-[#DDD2C4] text-xs font-semibold rounded-xl transition disabled:opacity-50"
-            title="Importar actividades de la Plantilla Maestra de VLB Studio (Mes 12 al Día B)"
+            title="Importar actividades de la Plantilla Maestra de VLB Studio (Mes 12 al Día Boda)"
           >
             <Download className="w-3.5 h-3.5 text-[#A6736E]" />
             <span>{importingTemplate ? 'Cargando...' : 'Cargar Plantilla VLB'}</span>
@@ -498,7 +498,7 @@ export const ChecklistModule: React.FC = () => {
                     <option value="9 a 6 Meses Antes">9 a 6 Meses Antes</option>
                     <option value="3 a 2 Meses Antes">3 a 2 Meses Antes</option>
                     <option value="Mes 1">Mes 1 (Último Mes)</option>
-                    <option value="Día B">Día B</option>
+                    <option value="Día Boda">Día Boda</option>
                     <option value="Trámites">Trámites</option>
                     <option value="Proveedores">Proveedores</option>
                     <option value="Logística">Logística</option>

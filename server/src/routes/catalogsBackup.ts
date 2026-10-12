@@ -317,7 +317,7 @@ router.post('/catalogs/templates/import', authenticateToken, requireRole(['ADMIN
       } else if (norm.includes('mes 1') || norm.includes('1 mes') || norm.includes('ultimo mes') || norm.includes('último mes')) {
         category = 'Mes 1';
       } else if (norm.includes('dia b') || norm.includes('día b') || norm.includes('boda')) {
-        category = 'Día B';
+        category = 'Día Boda';
       } else if (norm.includes('tramit') || norm.includes('trámit')) {
         category = 'Trámites';
       } else if (norm.includes('proveedor')) {

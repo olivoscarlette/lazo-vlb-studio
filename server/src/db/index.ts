@@ -328,19 +328,26 @@ export function initDatabase() {
     { title: 'Confirmaciones RSVP y primer acomodo de invitados en mesas', category: 'Mes 1', priority: 'Alta', responsible: 'VLB Studio & Novios' },
     { title: 'Cierre de minuto a minuto (Timeline) y logística con proveedores', category: 'Mes 1', priority: 'Alta', responsible: 'VLB Studio' },
     { title: 'Liquidación de saldos pendientes a proveedores', category: 'Mes 1', priority: 'Alta', responsible: 'Novios' },
-    { title: 'Supervisión de montaje, audio, flores y recepción de proveedores', category: 'Día B', priority: 'Alta', responsible: 'Staff VLB' },
-    { title: 'Recepción de kit de novios, anillos, arras, lazo y actas', category: 'Día B', priority: 'Alta', responsible: 'Coordinación VLB' }
+    { title: 'Supervisión de montaje, audio, flores y recepción de proveedores', category: 'Día Boda', priority: 'Alta', responsible: 'Staff VLB' },
+    { title: 'Recepción de kit de novios, anillos, arras, lazo y actas', category: 'Día Boda', priority: 'Alta', responsible: 'Coordinación VLB' }
   ];
   db.prepare('INSERT OR IGNORE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(defaultMasterChecklist));
 
   seedInitialData();
 
-  // Keep only 1 example wedding (Sofía & Alejandro) in normal/production environments
+  // Keep only 1 example wedding (Sofía & Alejandro) in normal/production environments and rename "Día B" -> "Día Boda"
   if (process.env.NODE_ENV !== 'test') {
     try {
       db.prepare('DELETE FROM wedding_assignments WHERE wedding_id = ?').run('wed_valeria_mateo');
       db.prepare('DELETE FROM users WHERE id IN (?, ?)').run('usr_novios_valeria', 'usr_coord_b');
       db.prepare('DELETE FROM weddings WHERE id = ?').run('wed_valeria_mateo');
+      db.prepare("UPDATE tasks SET category = 'Día Boda' WHERE category = 'Día B'").run();
+      db.prepare("UPDATE users SET name = REPLACE(name, 'Día B)', 'Día Boda)') WHERE name LIKE '%Día B%'").run();
+      db.prepare("UPDATE wedding_assignments SET assigned_role = REPLACE(assigned_role, 'Día B', 'Día Boda') WHERE assigned_role LIKE '%Día B%' AND assigned_role NOT LIKE '%Día Boda%'").run();
+      const mc = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('master_checklist') as any;
+      if (mc && mc.values_json.includes('"Día B"')) {
+        db.prepare('UPDATE catalogs SET values_json = ? WHERE key = ?').run(mc.values_json.replace(/"Día B"/g, '"Día Boda"'), 'master_checklist');
+      }
     } catch {}
   }
 }
@@ -430,7 +437,7 @@ export function seedInitialData() {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     staffAId,
-    'Diego Salazar (Staff Día B)',
+    'Diego Salazar (Staff Día Boda)',
     'staff@vlb.studio',
     bcrypt.hashSync('staff123', salt),
     'STAFF',

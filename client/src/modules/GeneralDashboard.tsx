@@ -246,7 +246,7 @@ export const GeneralDashboard: React.FC = () => {
       phone: u.phone || '',
       wedding_id: u.wedding_id || '',
       assigned_wedding_ids: Array.isArray(u.assigned_wedding_ids) ? u.assigned_wedding_ids : [],
-      assigned_role: u.assignments?.[0]?.assigned_role || (u.role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día B')
+      assigned_role: u.assignments?.[0]?.assigned_role || (u.role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día Boda')
     });
     setShowUserModal(true);
   };
@@ -1097,7 +1097,7 @@ export const GeneralDashboard: React.FC = () => {
                   <option value="9 a 6 Meses Antes">9 a 6 Meses Antes</option>
                   <option value="3 a 2 Meses Antes">3 a 2 Meses Antes</option>
                   <option value="Mes 1">Mes 1 (Último Mes)</option>
-                  <option value="Día B">Día B</option>
+                  <option value="Día Boda">Día Boda</option>
                   <option value="Trámites">Trámites</option>
                   <option value="Proveedores">Proveedores</option>
                   <option value="Logística">Logística</option>
@@ -1149,7 +1149,7 @@ export const GeneralDashboard: React.FC = () => {
                           <option value="9 a 6 Meses Antes">9 a 6 Meses Antes</option>
                           <option value="3 a 2 Meses Antes">3 a 2 Meses Antes</option>
                           <option value="Mes 1">Mes 1 (Último Mes)</option>
-                          <option value="Día B">Día B</option>
+                          <option value="Día Boda">Día Boda</option>
                           <option value="Trámites">Trámites</option>
                           <option value="Proveedores">Proveedores</option>
                           <option value="Logística">Logística</option>
@@ -1651,7 +1651,7 @@ export const GeneralDashboard: React.FC = () => {
                     <label className="block text-xs font-bold text-stone-700 mb-1">Cargo / Función en el Equipo VLB</label>
                     <input
                       type="text"
-                      placeholder="Ej. Coordinadora Senior, Staff Día B..."
+                      placeholder="Ej. Coordinadora Senior, Staff Día Boda..."
                       value={userForm.assigned_role}
                       onChange={e => setUserForm({ ...userForm, assigned_role: e.target.value })}
                       className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"

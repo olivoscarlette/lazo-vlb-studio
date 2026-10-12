@@ -153,7 +153,7 @@ router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, r
       INSERT INTO wedding_assignments (id, wedding_id, user_id, assigned_role, created_at)
       VALUES (?, ?, ?, ?, ?)
     `);
-    const roleLabel = assigned_role || (role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día B');
+    const roleLabel = assigned_role || (role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día Boda');
     assigned_wedding_ids.forEach((wId: string, idx: number) => {
       if (wId) {
         insertAssign.run(`asg_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 5)}`, wId, id, roleLabel, now);
@@ -215,7 +215,7 @@ router.put('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req
         INSERT INTO wedding_assignments (id, wedding_id, user_id, assigned_role, created_at)
         VALUES (?, ?, ?, ?, ?)
       `);
-      const roleLabel = assigned_role || (finalRole === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día B');
+      const roleLabel = assigned_role || (finalRole === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día Boda');
       assigned_wedding_ids.forEach((wId: string, idx: number) => {
         if (wId) {
           insertAssign.run(`asg_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 5)}`, wId, id, roleLabel, now);
