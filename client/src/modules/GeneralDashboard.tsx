@@ -43,14 +43,14 @@ export const GeneralDashboard: React.FC = () => {
   const [masterChecklist, setMasterChecklist] = useState<{ title: string; category: string; priority: string; responsible: string }[]>([]);
   const [newMasterTask, setNewMasterTask] = useState({
     title: '',
-    category: '12 Meses Antes',
+    category: 'Checklist General',
     priority: 'Alta',
     responsible: 'VLB Studio'
   });
   const [editingTaskIdx, setEditingTaskIdx] = useState<number | null>(null);
   const [editingTaskDraft, setEditingTaskDraft] = useState({
     title: '',
-    category: '12 Meses Antes',
+    category: 'Checklist General',
     priority: 'Alta',
     responsible: 'VLB Studio'
   });
@@ -1093,14 +1093,16 @@ export const GeneralDashboard: React.FC = () => {
                   onChange={e => setNewMasterTask({ ...newMasterTask, category: e.target.value })}
                   className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
                 >
-                  <option value="12 Meses Antes">12 Meses Antes (1 Año)</option>
-                  <option value="9 a 6 Meses Antes">9 a 6 Meses Antes</option>
-                  <option value="3 a 2 Meses Antes">3 a 2 Meses Antes</option>
-                  <option value="Mes 1">Mes 1 (Último Mes)</option>
-                  <option value="Día Boda">Día Boda</option>
-                  <option value="Trámites">Trámites</option>
-                  <option value="Proveedores">Proveedores</option>
-                  <option value="Logística">Logística</option>
+                  <option value="Checklist General">Checklist General</option>
+                  <option value="12 - 16 meses">12 - 16 meses</option>
+                  <option value="10 - 11 meses">10 - 11 meses</option>
+                  <option value="8 - 9 meses">8 - 9 meses</option>
+                  <option value="6 - 7 meses">6 - 7 meses</option>
+                  <option value="4 - 5 meses">4 - 5 meses</option>
+                  <option value="2 - 3 meses">2 - 3 meses</option>
+                  <option value="1 mes">1 mes</option>
+                  <option value="15 días">15 días</option>
+                  <option value="1 semana">1 semana</option>
                 </select>
               </div>
               <div className="sm:col-span-5">
@@ -1145,14 +1147,16 @@ export const GeneralDashboard: React.FC = () => {
                           onChange={e => setEditingTaskDraft({ ...editingTaskDraft, category: e.target.value })}
                           className="w-full px-2.5 py-1.5 border border-stone-300 rounded-lg text-xs bg-white"
                         >
-                          <option value="12 Meses Antes">12 Meses Antes (1 Año)</option>
-                          <option value="9 a 6 Meses Antes">9 a 6 Meses Antes</option>
-                          <option value="3 a 2 Meses Antes">3 a 2 Meses Antes</option>
-                          <option value="Mes 1">Mes 1 (Último Mes)</option>
-                          <option value="Día Boda">Día Boda</option>
-                          <option value="Trámites">Trámites</option>
-                          <option value="Proveedores">Proveedores</option>
-                          <option value="Logística">Logística</option>
+                          <option value="Checklist General">Checklist General</option>
+                          <option value="12 - 16 meses">12 - 16 meses</option>
+                          <option value="10 - 11 meses">10 - 11 meses</option>
+                          <option value="8 - 9 meses">8 - 9 meses</option>
+                          <option value="6 - 7 meses">6 - 7 meses</option>
+                          <option value="4 - 5 meses">4 - 5 meses</option>
+                          <option value="2 - 3 meses">2 - 3 meses</option>
+                          <option value="1 mes">1 mes</option>
+                          <option value="15 días">15 días</option>
+                          <option value="1 semana">1 semana</option>
                         </select>
                       </div>
                       <div className="sm:col-span-5">

@@ -144,17 +144,18 @@ router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) =
       const masterTasks: any[] = JSON.parse(checklistCatalog.values_json);
       const insertTask = db.prepare(`
         INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente', '', ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente', ?, ?, ?)
       `);
       masterTasks.forEach((mt, idx) => {
         insertTask.run(
           `tsk_${id}_${idx}_${Date.now()}`,
           id,
           mt.title,
-          mt.category || 'Logística',
+          mt.category || 'Checklist General',
           mt.responsible || 'VLB Studio',
           null,
           mt.priority || 'Media',
+          mt.notes || '',
           now,
           now
         );

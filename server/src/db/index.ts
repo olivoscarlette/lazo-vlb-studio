@@ -317,36 +317,329 @@ export function initDatabase() {
   db.prepare('INSERT OR IGNORE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_religious_requirements', JSON.stringify(defaultReligiousRequirements));
 
   const defaultMasterChecklist = [
-    { title: 'Definición de estilo, concepto y número estimado de invitados', category: '12 Meses Antes', priority: 'Alta', responsible: 'VLB Studio & Novios' },
-    { title: 'Selección y apartado de lugar de recepción e iglesia', category: '12 Meses Antes', priority: 'Alta', responsible: 'VLB Studio & Novios' },
-    { title: 'Contratación de banquete, fotografía y video', category: '12 Meses Antes', priority: 'Alta', responsible: 'VLB Studio' },
-    { title: 'Selección de música (DJ / Grupo) y propuesta de diseño floral', category: '9 a 6 Meses Antes', priority: 'Media', responsible: 'VLB Studio' },
-    { title: 'Inicio de expediente y pláticas prematrimoniales (Civil e Iglesia)', category: '9 a 6 Meses Antes', priority: 'Media', responsible: 'Novios' },
-    { title: 'Levantamiento de lista de invitados y envío de Save the Date', category: '9 a 6 Meses Antes', priority: 'Media', responsible: 'Novios' },
-    { title: 'Degustación de menú y definición de montaje de mesas', category: '3 a 2 Meses Antes', priority: 'Alta', responsible: 'VLB Studio & Novios' },
-    { title: 'Definición de testigos civiles, lectores y repertorio musical de misa', category: '3 a 2 Meses Antes', priority: 'Media', responsible: 'Novios' },
-    { title: 'Confirmaciones RSVP y primer acomodo de invitados en mesas', category: 'Mes 1', priority: 'Alta', responsible: 'VLB Studio & Novios' },
-    { title: 'Cierre de minuto a minuto (Timeline) y logística con proveedores', category: 'Mes 1', priority: 'Alta', responsible: 'VLB Studio' },
-    { title: 'Liquidación de saldos pendientes a proveedores', category: 'Mes 1', priority: 'Alta', responsible: 'Novios' },
-    { title: 'Supervisión de montaje, audio, flores y recepción de proveedores', category: 'Día Boda', priority: 'Alta', responsible: 'Staff VLB' },
-    { title: 'Recepción de kit de novios, anillos, arras, lazo y actas', category: 'Día Boda', priority: 'Alta', responsible: 'Coordinación VLB' }
+    // === CHECKLIST GENERAL: Ceremonia Civil ===
+    { title: 'Lugar para ceremonia', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Civil' },
+    { title: 'Juez', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Civil' },
+    { title: 'Decoración', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Civil' },
+    { title: 'Audio y música', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Civil' },
+    { title: 'Documentación solicitada', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Civil' },
+    { title: 'Exámenes prenupciales', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Civil' },
+    { title: 'Testigos para civil', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Civil' },
+    { title: 'Votos, ceremonia o ritual (si aplica)', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Civil' },
+
+    // === CHECKLIST GENERAL: Getting Ready y First look ===
+    { title: 'Lugar para getting ready', category: 'Checklist General', priority: 'Alta', responsible: 'Getting Ready y First look' },
+    { title: 'Confirmar con fotógrafo hora de llegada', category: 'Checklist General', priority: 'Alta', responsible: 'Getting Ready y First look' },
+    { title: 'Coordinar con maquillista hora de inicio', category: 'Checklist General', priority: 'Alta', responsible: 'Getting Ready y First look' },
+    { title: 'Botella y copa para brindis (si aplica)', category: 'Checklist General', priority: 'Media', responsible: 'Getting Ready y First look' },
+    { title: 'Lugar y logística para First look', category: 'Checklist General', priority: 'Media', responsible: 'Getting Ready y First look' },
+
+    // === CHECKLIST GENERAL: Fotografía y video ===
+    { title: 'Definir estilo de fotografía (inspo)', category: 'Checklist General', priority: 'Media', responsible: 'Fotografía y video' },
+    { title: 'Contratar fotógrafo', category: 'Checklist General', priority: 'Alta', responsible: 'Fotografía y video' },
+    { title: 'Definir fecha, horario y lugar fotos save the date', category: 'Checklist General', priority: 'Media', responsible: 'Fotografía y video' },
+    { title: 'Ropa y accesorios para save the date', category: 'Checklist General', priority: 'Media', responsible: 'Fotografía y video' },
+    { title: 'Horario y lugar para fotografía boda', category: 'Checklist General', priority: 'Alta', responsible: 'Fotografía y video' },
+    { title: 'Hora y lugar sesión de fotos familiar', category: 'Checklist General', priority: 'Alta', responsible: 'Fotografía y video' },
+
+    // === CHECKLIST GENERAL: Ceremonia Religiosa ===
+    { title: 'Iglesia', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Sacerdote', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Constancia de bautizo', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Constancia de confirmación', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Constancia de primera comunión', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: '2 testigos por novio - mayores de edad', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Pláticas prematrimoniales', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Presentación religiosa', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Testigos presentación religiosa', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Ensamble', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Religiosa' },
+    { title: 'Decoración de iglesia', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Religiosa' },
+    { title: 'Anillos', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Arras', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Lazo', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Ramo para la virgen', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Religiosa' },
+    { title: 'Accesorios para salida de los novios', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Religiosa' },
+    { title: 'Cita con sacerdote', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Gratificación sacerdote', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Religiosa' },
+    { title: 'Carta de traslado', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+    { title: 'Definir cortejo', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Religiosa' },
+    { title: 'Definir lecturas', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Religiosa' },
+    { title: 'Definir canciones para el coro', category: 'Checklist General', priority: 'Media', responsible: 'Ceremonia Religiosa' },
+    { title: 'Comprobante matrimonio testigos, mandarlo a iglesia', category: 'Checklist General', priority: 'Alta', responsible: 'Ceremonia Religiosa' },
+
+    // === CHECKLIST GENERAL: Recepción ===
+    { title: 'Salón', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+    { title: 'Banquete', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+    { title: 'Cristalería y Loza', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Mesa de ambientación', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Álbum de firmas', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Caja de sobres, sobres y plumas', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Pastel', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Decoración', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+    { title: 'Números de mesa', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Menús de mesa', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Botella de brindis novios y copas', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Decoración de mesa de novios', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Termos', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Pantuflas', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Auto para los novios y chofer', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Artículos de animación (si aplica)', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Habitación hotel post-boda', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Capitanes de mesa (si aplica)', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Bebidas adicionales', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Happenings', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Valet parking (si aplica)', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Música: DJ o Grupo', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+    { title: 'Playlist/estilos de música para fiesta', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Definir pista - color y/o diseño (si aplica) - Checar ampliación', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Definir canción para entrada novios', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+    { title: 'Definir canción para vals novios', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+    { title: 'Definir canciones para vals con papás', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Canción de cierre de fiesta', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Preparar accesorios y detalles para el tocador', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Invitación', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+    { title: 'Mesa de regalos', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Save the date', category: 'Checklist General', priority: 'Media', responsible: 'Recepción' },
+    { title: 'Lista de invitados', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+    { title: 'Envío de invitaciones', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+    { title: 'Cierre final de invitados', category: 'Checklist General', priority: 'Alta', responsible: 'Recepción' },
+
+    // === CHECKLIST GENERAL: Vestimenta Nupcial - Novia ===
+    { title: 'Vestido', category: 'Checklist General', priority: 'Alta', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Tocado', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Mantilla o Velo', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Zapatos novia', category: 'Checklist General', priority: 'Alta', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Accesorios (aretes y collar)', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Ramos', category: 'Checklist General', priority: 'Alta', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Perfume', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Pruebas de peinado y maquillaje', category: 'Checklist General', priority: 'Alta', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'OK a peinado y maquillaje final', category: 'Checklist General', priority: 'Alta', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Zapatos extras (cómodos, ej. tenis)', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Batas getting ready', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Pedicure y manicure', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Kit SOS: Desodorante', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Kit SOS: Maquillaje (base y polvo)', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Kit SOS: Labial', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Kit SOS: Perfume mini', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Kit SOS: Kleenex', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'KIT RETOQUE', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novia' },
+    { title: 'Maleta preparada para boda', category: 'Checklist General', priority: 'Alta', responsible: 'Vestimenta Nupcial - Novia' },
+
+    // === CHECKLIST GENERAL: Vestimenta Nupcial - Novio ===
+    { title: 'Traje novio', category: 'Checklist General', priority: 'Alta', responsible: 'Vestimenta Nupcial - Novio' },
+    { title: 'Zapatos del novio', category: 'Checklist General', priority: 'Alta', responsible: 'Vestimenta Nupcial - Novio' },
+    { title: 'Boutonniere del novio', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novio' },
+    { title: 'Mancuernillas', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novio' },
+    { title: 'Calcetas', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novio' },
+    { title: 'Corte de cabello', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novio' },
+    { title: 'Perfume', category: 'Checklist General', priority: 'Media', responsible: 'Vestimenta Nupcial - Novio' },
+
+    // === ETAPA: 12 - 16 meses ===
+    { title: 'Fijar fecha de la boda', category: '12 - 16 meses', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Separar iglesia', category: '12 - 16 meses', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Hacer lista de invitados (Registro de invitados)', category: '12 - 16 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Separar lugar para la recepción', category: '12 - 16 meses', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Definir el estilo y detalles deseados para la boda (moodboard con VLB)', category: '12 - 16 meses', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Buscar proveedores de música para recepción', category: '12 - 16 meses', priority: 'Media', responsible: 'VLB Studio' },
+    { title: 'Contratar el registro civil', category: '12 - 16 meses', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Contratar foto y video', category: '12 - 16 meses', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Buscar padres para la ceremonia', category: '12 - 16 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Elaborar un presupuesto inicial (Formato de Presupuesto)', category: '12 - 16 meses', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Hacer un horario tentativo del día de la boda', category: '12 - 16 meses', priority: 'Media', responsible: 'VLB Studio' },
+    { title: 'Definir estilo de despedida de soltera y fecha estimada', category: '12 - 16 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Definir lugar para despedidas y estimado de invitados', category: '12 - 16 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Empezar a buscar vestido de novia y accesorios', category: '12 - 16 meses', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Sesión de arranque VLB - 1 / (Integral 1)', category: '12 - 16 meses', priority: 'Alta', responsible: 'VLB Studio' },
+
+    // === ETAPA: 10 - 11 meses ===
+    { title: 'Revisar con iglesia la papelería que se necesita', category: '10 - 11 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Ir viendo el modelo del vestido de novia', category: '10 - 11 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Buscar y contratar florista y/o decorador', category: '10 - 11 meses', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Cotizar y separar lugar para despedida de soltera', category: '10 - 11 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Cotizar y separar los servicios que no tenga el recinto como por ejemplo: tarima para el grupo, pista de baile, mobiliario, etc', category: '10 - 11 meses', priority: 'Alta', responsible: 'VLB Studio' },
+    { title: 'Separar maquillaje y peinado', category: '10 - 11 meses', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Confirmar música para recepción y dar anticipo', category: '10 - 11 meses', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Confirmar música para iglesia y dar anticipo', category: '10 - 11 meses', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Sesión seguimiento VLB - 2', category: '10 - 11 meses', priority: 'Alta', responsible: 'VLB Studio' },
+
+    // === ETAPA: 8 - 9 meses ===
+    { title: 'Definir arreglos florales de la iglesia, casa de la novia, ramos y carro', category: '8 - 9 meses', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Junta con florista de iglesia y recepción', category: '8 - 9 meses', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Agendar sesión Save the Date', category: '8 - 9 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Separar vestido de novia', category: '8 - 9 meses', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Comprar accesorios de la novia: tocado, velo y zapatos', category: '8 - 9 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Buscar parroquia para las pláticas matrimoniales', category: '8 - 9 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Hacer la selección de los padrinos para matrimonio civil y religioso', category: '8 - 9 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Ir preparando los papeles para la presentación para luego actualizarlos', category: '8 - 9 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Acta de Bautismo', category: '8 - 9 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Confirmación', category: '8 - 9 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Acta de Nacimiento', category: '8 - 9 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Definir estilo de invitación para boda', category: '8 - 9 meses', priority: 'Media', responsible: 'Novios & VLB' },
+    { title: 'Revisar la lista inicial de invitados y ajustar si es necesario', category: '8 - 9 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Contratar o planear luna de miel', category: '8 - 9 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Sacar visas y actualizar pasaportes para la luna de miel (si aplica)', category: '8 - 9 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Contratar mesa de postres, queso o botana para la boda y para la despedida de soltera', category: '8 - 9 meses', priority: 'Media', responsible: 'Novios & VLB' },
+    { title: 'Comprar los anillos, arras y lazo', category: '8 - 9 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Hacer mesa de regalos', category: '8 - 9 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Contratar carro para los novios el día de la boda', category: '8 - 9 meses', priority: 'Media', responsible: 'Novios & VLB' },
+    { title: 'Cotizar y separar regalos para la despedida de soltera, música, pastel, show.', category: '8 - 9 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Mandar hacer la tarjeta de invitación para los testigos civil e iglesia y los padrinos', category: '8 - 9 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Sesión seguimiento VLB - 3', category: '8 - 9 meses', priority: 'Alta', responsible: 'VLB Studio' },
+
+    // === ETAPA: 6 - 7 meses ===
+    { title: 'Invitar al padre que los va a casar', category: '6 - 7 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Mandar a hacer las invitaciones', category: '6 - 7 meses', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Cotizar y contratar vinos y licores adicionales para la boda', category: '6 - 7 meses', priority: 'Media', responsible: 'Novios & VLB' },
+    { title: 'Contratar el pastel', category: '6 - 7 meses', priority: 'Media', responsible: 'Novios & VLB' },
+    { title: 'Ponerse de acuerdo con las otras novias para compartir decoración (si aplica)', category: '6 - 7 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Contratar proveedor de iluminación para la boda (si aplica)', category: '6 - 7 meses', priority: 'Media', responsible: 'VLB Studio' },
+    { title: 'Contratar proveedor de detalles especiales para ceremonia - happenings', category: '6 - 7 meses', priority: 'Media', responsible: 'VLB Studio' },
+    { title: 'Planear y comprar los juegos y premios para despedida de soltera', category: '6 - 7 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Mandar a hacer invitaciones para la despedida de soltera', category: '6 - 7 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Agendar cita con maquillista para prueba - mismo día del save the date', category: '6 - 7 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Sesión Save the Date', category: '6 - 7 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Ir viendo vestido para las mamás - para despedida de soltera', category: '6 - 7 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Comprar arras con su cofre', category: '6 - 7 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Comprar el lazo', category: '6 - 7 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Comprar anillos de boda', category: '6 - 7 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Acudir a pláticas prematrimoniales', category: '6 - 7 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Sesión seguimiento VLB - 4 / (Integral 2)', category: '6 - 7 meses', priority: 'Alta', responsible: 'VLB Studio' },
+    { title: 'Sesión seguimiento VLB - 5', category: '6 - 7 meses', priority: 'Alta', responsible: 'VLB Studio' },
+
+    // === ETAPA: 4 - 5 meses ===
+    { title: 'Pedirle solicitud de matrimonio al juez', category: '4 - 5 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Hacer la despedida de soltera (cuadrar con maquillista para ir haciendo pruebas)', category: '4 - 5 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Cotizar y buscar vestidos para los pajecitos y las damas', category: '4 - 5 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Enviar las invitaciones foráneas', category: '4 - 5 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Planear los regalos para testigos y padrinos (si aplica)', category: '4 - 5 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Reservar el cuarto de hotel para la noche de bodas', category: '4 - 5 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Reservar el cuarto de hotel para getting ready (si aplica)', category: '4 - 5 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Hacer pedido de las pantuflas y termos', category: '4 - 5 meses', priority: 'Media', responsible: 'Novios & VLB' },
+    { title: 'Organizar despedida formal novio', category: '4 - 5 meses', priority: 'Media', responsible: 'Novio' },
+    { title: 'Degustación para despedida formal novia', category: '4 - 5 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Sesión seguimiento VLB - 8', category: '4 - 5 meses', priority: 'Alta', responsible: 'VLB Studio' },
+    { title: 'Sesión seguimiento VLB - 9', category: '4 - 5 meses', priority: 'Alta', responsible: 'VLB Studio' },
+
+    // === ETAPA: 2 - 3 meses ===
+    { title: 'Buscar traje para novio', category: '2 - 3 meses', priority: 'Alta', responsible: 'Novio' },
+    { title: 'Comprar maletas para la luna de miel', category: '2 - 3 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Cita de degustación', category: '2 - 3 meses', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Mandar a hacer los menús y números de mesa', category: '2 - 3 meses', priority: 'Media', responsible: 'VLB Studio & Novios' },
+    { title: 'Escoger las lecturas y repertorio para la misa', category: '2 - 3 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Definir los temas principales: vals de los novios, papá de la novia, mamá del novio', category: '2 - 3 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Prueba de maquillaje y peinado', category: '2 - 3 meses', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Pedir agenda para la prueba del vestido de novia', category: '2 - 3 meses', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Comprar la liga (si aplica)', category: '2 - 3 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Acordar con el fotógrafo el itinerario para la boda y pedirle sugerencias de locaciones para la sesión de novios', category: '2 - 3 meses', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Enviar invitaciones locales', category: '2 - 3 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Seleccionar música para la cena', category: '2 - 3 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Mamás y hermanas hacer citas de maquillaje y peinado para la boda', category: '2 - 3 meses', priority: 'Media', responsible: 'Novios' },
+    { title: 'Hacer asignación de lectores e involucrados en la misa', category: '2 - 3 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Despedida informal novia', category: '2 - 3 meses', priority: 'Media', responsible: 'Novia' },
+    { title: 'Terminar el archivo de invitados para las confirmaciones', category: '2 - 3 meses', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Acudir a presentación religiosa con testigos (2 personas por cada novio)', category: '2 - 3 meses', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Sesión seguimiento VLB - 10 / (Integral 3)', category: '2 - 3 meses', priority: 'Alta', responsible: 'VLB Studio' },
+    { title: 'Sesión seguimiento VLB - 11', category: '2 - 3 meses', priority: 'Alta', responsible: 'VLB Studio' },
+
+    // === ETAPA: 1 mes ===
+    { title: 'Preparar pago del salón antes de la boda', category: '1 mes', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Confirmaciones de invitados', category: '1 mes', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Hacer la canasta del baño para damas y caballeros', category: '1 mes', priority: 'Media', responsible: 'Novios' },
+    { title: 'Mamás, hermanas, damas y pajecitos recoger los vestidos y últimos ajustes', category: '1 mes', priority: 'Media', responsible: 'Novios' },
+    { title: 'Últimos pagos de proveedores', category: '1 mes', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Entrega de los regalos a testigos civil, iglesia y padrinos', category: '1 mes', priority: 'Media', responsible: 'Novios' },
+    { title: 'Última prueba de vestido de novia', category: '1 mes', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Agendar facial', category: '1 mes', priority: 'Media', responsible: 'Novia' },
+    { title: 'Rentar traje de novio', category: '1 mes', priority: 'Alta', responsible: 'Novio' },
+    { title: 'Entregar documentos en iglesia', category: '1 mes', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Sesión seguimiento VLB - 12 / (Integral 4)', category: '1 mes', priority: 'Alta', responsible: 'VLB Studio' },
+
+    // === ETAPA: 15 días ===
+    { title: '2da prueba del vestido de novia', category: '15 días', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Recoger anillos', category: '15 días', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Poner arras, anillos y lazo en cofrecitos', category: '15 días', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Hacerse los análisis de sangre y entregar la papelería al juez', category: '15 días', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Ir a recoger la carta de traslado', category: '15 días', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Avisarle a los involucrados de la misa y mandarle las lecturas', category: '15 días', priority: 'Media', responsible: 'Novios' },
+    { title: 'Terminar asignación de mesas', category: '15 días', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Confirmar al salón número final de invitados', category: '15 días', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Hacer cita para la manicura, pedicura y depilación', category: '15 días', priority: 'Media', responsible: 'Novia' },
+    { title: 'Mandar a limpiar el anillo de compromiso', category: '15 días', priority: 'Media', responsible: 'Novia' },
+    { title: 'Cita con el padre que los va a casar', category: '15 días', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Rentar traje de papás y hermanos ** EL NOVIO DEBE PROBARSE EL TRAJE **', category: '15 días', priority: 'Alta', responsible: 'Novio' },
+    { title: 'Recordar y aclarar últimos pagos a todos los que se contrataron (video, foto, estantes, música, coro, meseros)', category: '15 días', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Pisar los zapatos de la novia y amoldarlos', category: '15 días', priority: 'Media', responsible: 'Novia' },
+    { title: 'Preparar canastas y kit de tocadores para damas y caballeros', category: '15 días', priority: 'Media', responsible: 'Novios' },
+    { title: 'Confirmar con la florista la hora de envío o pick up de los ramos', category: '15 días', priority: 'Alta', responsible: 'VLB Studio' },
+    { title: 'Acudir a la iglesia a entregar carta de traslado y acta de matrimonio o información de testigos', category: '15 días', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Sesión seguimiento VLB - 13', category: '15 días', priority: 'Alta', responsible: 'VLB Studio' },
+
+    // === ETAPA: 1 semana ===
+    { title: 'Corte de cabello del novio (si aplica)', category: '1 semana', priority: 'Media', responsible: 'Novio' },
+    { title: 'Checar con el lugar de la recepción los últimos pendientes', category: '1 semana', priority: 'Alta', responsible: 'VLB Studio & Novios' },
+    { title: 'Recoger vestido de novia y de la mamá', category: '1 semana', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Confesarse los novios y toda la familia (para ceremonia religiosa)', category: '1 semana', priority: 'Media', responsible: 'Novios' },
+    { title: 'Confirmar hora un día antes de: Manicure', category: '1 semana', priority: 'Media', responsible: 'Novia' },
+    { title: 'Confirmar hora un día antes de: Pedicure', category: '1 semana', priority: 'Media', responsible: 'Novia' },
+    { title: 'Confirmar hora un día antes de: Facial', category: '1 semana', priority: 'Media', responsible: 'Novia' },
+    { title: 'Confirmar hora un día antes de: Masaje', category: '1 semana', priority: 'Media', responsible: 'Novia' },
+    { title: 'Confirmar hora un día antes de: Maquillaje', category: '1 semana', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Confirmar hora un día antes de: Peinado', category: '1 semana', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Tener listo kit de emergencia de novia', category: '1 semana', priority: 'Alta', responsible: 'Novia' },
+    { title: 'Preparar sobres con el resto de las contrataciones a liquidar ese día', category: '1 semana', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Hacer sobres para las propinas de meseros, alimento staff y valet parking (si aplica)', category: '1 semana', priority: 'Alta', responsible: 'Novios & VLB' },
+    { title: 'Sesión cierre VLB - 14 (Integral cierre)', category: '1 semana', priority: 'Alta', responsible: 'VLB Studio' },
+    { title: 'Entrega artículos a VLB', category: '1 semana', priority: 'Alta', responsible: 'Novios & VLB' }
   ];
   db.prepare('INSERT OR IGNORE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(defaultMasterChecklist));
 
   seedInitialData();
 
-  // Keep only 1 example wedding (Sofía & Alejandro) in normal/production environments and rename "Día B" -> "Día Boda"
+  // Keep only 1 example wedding (Sofía & Alejandro) in normal/production environments and sync official VLB Google Sheet checklist
   if (process.env.NODE_ENV !== 'test') {
     try {
       db.prepare('DELETE FROM wedding_assignments WHERE wedding_id = ?').run('wed_valeria_mateo');
       db.prepare('DELETE FROM users WHERE id IN (?, ?)').run('usr_novios_valeria', 'usr_coord_b');
       db.prepare('DELETE FROM weddings WHERE id = ?').run('wed_valeria_mateo');
-      db.prepare("UPDATE tasks SET category = 'Día Boda' WHERE category = 'Día B'").run();
-      db.prepare("UPDATE users SET name = REPLACE(name, 'Día B)', 'Día Boda)') WHERE name LIKE '%Día B%'").run();
-      db.prepare("UPDATE wedding_assignments SET assigned_role = REPLACE(assigned_role, 'Día B', 'Día Boda') WHERE assigned_role LIKE '%Día B%' AND assigned_role NOT LIKE '%Día Boda%'").run();
+
+      // Upgrade master_checklist catalog if it doesn't have 'Checklist General' yet
       const mc = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('master_checklist') as any;
-      if (mc && mc.values_json.includes('"Día B"')) {
-        db.prepare('UPDATE catalogs SET values_json = ? WHERE key = ?').run(mc.values_json.replace(/"Día B"/g, '"Día Boda"'), 'master_checklist');
+      if (!mc || !mc.values_json.includes('Checklist General')) {
+        db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(defaultMasterChecklist));
+      }
+
+      // Remove legacy/invented categories from existing weddings and populate official VLB checklist
+      const validCategories = [
+        'Checklist General',
+        '12 - 16 meses',
+        '10 - 11 meses',
+        '8 - 9 meses',
+        '6 - 7 meses',
+        '4 - 5 meses',
+        '2 - 3 meses',
+        '1 mes',
+        '15 días',
+        '1 semana'
+      ];
+      const placeholders = validCategories.map(() => '?').join(',');
+      db.prepare(`DELETE FROM tasks WHERE category NOT IN (${placeholders})`).run(...validCategories);
+
+      const weddingsList = db.prepare('SELECT id FROM weddings').all() as { id: string }[];
+      const nowIso = new Date().toISOString();
+      const insertTask = db.prepare(`
+        INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, NULL, ?, 'Pendiente', ?, ?, ?)
+      `);
+      for (const w of weddingsList) {
+        const existingTasks = db.prepare('SELECT title, category FROM tasks WHERE wedding_id = ?').all(w.id) as { title: string; category: string }[];
+        const existingKeys = new Set(existingTasks.map(t => `${t.category.toLowerCase()}::${t.title.trim().toLowerCase()}`));
+        defaultMasterChecklist.forEach((item: any, idx) => {
+          const key = `${item.category.toLowerCase()}::${item.title.trim().toLowerCase()}`;
+          if (!existingKeys.has(key)) {
+            insertTask.run(`tsk_vlb_${w.id}_${idx}`, w.id, item.title, item.category, item.responsible, item.priority, item.notes || '', nowIso, nowIso);
+            existingKeys.add(key);
+          }
+        });
       }
     } catch {}
   }

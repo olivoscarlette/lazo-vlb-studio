@@ -124,26 +124,29 @@ function syncMasterTemplatesToAllWeddings() {
 
   for (const w of weddings) {
     // 1. Sync Checklist Tasks
-    const existingTasks = db.prepare('SELECT title FROM tasks WHERE wedding_id = ?').all(w.id) as { title: string }[];
-    const existingTaskTitles = new Set(existingTasks.map(t => t.title.trim().toLowerCase()));
+    const existingTasks = db.prepare('SELECT title, category FROM tasks WHERE wedding_id = ?').all(w.id) as { title: string; category: string }[];
+    const existingTaskKeys = new Set(existingTasks.map(t => `${(t.category || '').toLowerCase()}::${t.title.trim().toLowerCase()}`));
     const insertTask = db.prepare(`
       INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, '', ?, 'Pendiente', 'Plantilla Maestra VLB', ?, ?)
+      VALUES (?, ?, ?, ?, ?, '', ?, 'Pendiente', ?, ?, ?)
     `);
 
-    masterChecklist.forEach((mt, idx) => {
-      if (mt.title && !existingTaskTitles.has(mt.title.trim().toLowerCase())) {
+    masterChecklist.forEach((mt: any, idx) => {
+      const cat = mt.category || 'Checklist General';
+      const key = `${cat.toLowerCase()}::${(mt.title || '').trim().toLowerCase()}`;
+      if (mt.title && !existingTaskKeys.has(key)) {
         insertTask.run(
           `tsk_sync_${w.id}_${Date.now()}_${idx}`,
           w.id,
           mt.title.trim(),
-          mt.category || '12 Meses Antes',
+          cat,
           mt.responsible || 'VLB Studio',
           mt.priority || 'Alta',
+          mt.notes || '',
           now,
           now
         );
-        existingTaskTitles.add(mt.title.trim().toLowerCase());
+        existingTaskKeys.add(key);
         addedTasks++;
       }
     });
@@ -306,9 +309,24 @@ router.post('/catalogs/templates/import', authenticateToken, requireRole(['ADMIN
       }
     } else {
       // Normalize stage/month name
-      let category = stageOrCategory || '12 Meses Antes';
+      let category = stageOrCategory || 'Checklist General';
       const norm = category.toLowerCase();
-      if (norm.includes('12') || norm.includes('1 año') || norm.includes('un año') || norm.includes('año antes')) {
+      const officialStages = [
+        'Checklist General',
+        '12 - 16 meses',
+        '10 - 11 meses',
+        '8 - 9 meses',
+        '6 - 7 meses',
+        '4 - 5 meses',
+        '2 - 3 meses',
+        '1 mes',
+        '15 días',
+        '1 semana'
+      ];
+      const exactStage = officialStages.find(s => s.toLowerCase() === norm);
+      if (exactStage) {
+        category = exactStage;
+      } else if (norm.includes('12') || norm.includes('1 año') || norm.includes('un año') || norm.includes('año antes')) {
         category = '12 Meses Antes';
       } else if (norm.includes('9') || norm.includes('8') || norm.includes('7') || norm.includes('6')) {
         category = '9 a 6 Meses Antes';
