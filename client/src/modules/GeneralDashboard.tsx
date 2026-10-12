@@ -38,8 +38,22 @@ export const GeneralDashboard: React.FC = () => {
   // Admin: Catalogs & Master VLB Templates state
   const [vendorTypes, setVendorTypes] = useState<string[]>([]);
   const [newVendorType, setNewVendorType] = useState('');
-  const [meetingPackages, setMeetingPackages] = useState<{ name: string; maxMeetings: number; description: string }[]>([]);
-  const [newPackage, setNewPackage] = useState({ name: '', maxMeetings: 4, description: '' });
+  const [meetingPackages, setMeetingPackages] = useState<{ name: string; maxMeetings: number; description: string; includes?: string[] }[]>([]);
+  const [newPackage, setNewPackage] = useState({
+    name: '',
+    maxMeetings: 4,
+    isUnlimited: false,
+    description: '',
+    includesText: ''
+  });
+  const [editingPkgIdx, setEditingPkgIdx] = useState<number | null>(null);
+  const [editingPkgDraft, setEditingPkgDraft] = useState({
+    name: '',
+    maxMeetings: 4,
+    isUnlimited: false,
+    description: '',
+    includesText: ''
+  });
   const [masterChecklist, setMasterChecklist] = useState<{ title: string; category: string; priority: string; responsible: string }[]>([]);
   const [newMasterTask, setNewMasterTask] = useState({
     title: '',
@@ -346,13 +360,63 @@ export const GeneralDashboard: React.FC = () => {
   const handleAddPackage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPackage.name.trim()) return;
-    const updated = [...meetingPackages, { ...newPackage, name: newPackage.name.trim() }];
+    const includesList = newPackage.includesText
+      .split('\n')
+      .map(line => line.replace(/^[-•*]\s*/, '').trim())
+      .filter(Boolean);
+    const maxMtg = newPackage.isUnlimited ? 999 : (Number(newPackage.maxMeetings) || 1);
+    const desc = newPackage.description.trim() || (maxMtg >= 999 ? 'Reuniones ilimitadas de planeación' : `${maxMtg} reuniones de coordinación y avance`);
+    const updated = [
+      ...meetingPackages,
+      {
+        name: newPackage.name.trim(),
+        maxMeetings: maxMtg,
+        description: desc,
+        includes: includesList
+      }
+    ];
     setMeetingPackages(updated);
-    setNewPackage({ name: '', maxMeetings: 4, description: '' });
+    setNewPackage({ name: '', maxMeetings: 4, isUnlimited: false, description: '', includesText: '' });
+    saveCatalogKey('meeting_packages', updated);
+  };
+
+  const handleStartEditPackage = (idx: number) => {
+    const pkg = meetingPackages[idx];
+    setEditingPkgIdx(idx);
+    setEditingPkgDraft({
+      name: pkg.name,
+      maxMeetings: pkg.maxMeetings >= 999 ? 6 : pkg.maxMeetings,
+      isUnlimited: pkg.maxMeetings >= 999,
+      description: pkg.description || '',
+      includesText: Array.isArray(pkg.includes) ? pkg.includes.join('\n') : ''
+    });
+  };
+
+  const handleSaveEditPackage = (idx: number) => {
+    if (!editingPkgDraft.name.trim()) return;
+    const includesList = editingPkgDraft.includesText
+      .split('\n')
+      .map(line => line.replace(/^[-•*]\s*/, '').trim())
+      .filter(Boolean);
+    const maxMtg = editingPkgDraft.isUnlimited ? 999 : (Number(editingPkgDraft.maxMeetings) || 1);
+    const desc = editingPkgDraft.description.trim() || (maxMtg >= 999 ? 'Reuniones ilimitadas de planeación' : `${maxMtg} reuniones de coordinación y avance`);
+    const updated = meetingPackages.map((p, i) =>
+      i === idx
+        ? {
+            name: editingPkgDraft.name.trim(),
+            maxMeetings: maxMtg,
+            description: desc,
+            includes: includesList
+          }
+        : p
+    );
+    setMeetingPackages(updated);
+    setEditingPkgIdx(null);
     saveCatalogKey('meeting_packages', updated);
   };
 
   const handleRemovePackage = (name: string) => {
+    if (!window.confirm(`¿Eliminar el paquete "${name}"?`)) return;
     const updated = meetingPackages.filter(p => p.name !== name);
     setMeetingPackages(updated);
     saveCatalogKey('meeting_packages', updated);
@@ -1443,42 +1507,193 @@ export const GeneralDashboard: React.FC = () => {
             {/* Catálogo de Paquetes de Reuniones */}
             <div className="luxury-card rounded-3xl p-6 border border-stone-200">
               <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Configuración Comercial</span>
-              <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">Paquetes de Reuniones para Novios</h3>
-              <form onSubmit={handleAddPackage} className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4 mb-4">
+              <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">Paquetes para Novios</h3>
+              <p className="text-xs text-stone-500 mt-1">
+                Configura o modifica tus paquetes, la cantidad de reuniones y todo lo que incluye cada uno.
+              </p>
+
+              <form onSubmit={handleAddPackage} className="space-y-2.5 mt-4 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#DDD2C4]">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[#885853]">Crear Nuevo Paquete</div>
+                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                  <div className="sm:col-span-5">
+                    <input
+                      type="text"
+                      placeholder="Nombre del paquete (ej. Integral)"
+                      value={newPackage.name}
+                      onChange={e => setNewPackage({ ...newPackage, name: e.target.value })}
+                      className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
+                    />
+                  </div>
+                  <div className="sm:col-span-4 flex items-center gap-2">
+                    {!newPackage.isUnlimited && (
+                      <input
+                        type="number"
+                        min={1}
+                        placeholder="Reuniones"
+                        value={newPackage.maxMeetings}
+                        onChange={e => setNewPackage({ ...newPackage, maxMeetings: parseInt(e.target.value, 10) || 1 })}
+                        className="w-20 px-2.5 py-2 border border-stone-300 rounded-xl text-xs bg-white"
+                      />
+                    )}
+                    <label className="flex items-center space-x-1.5 text-xs text-stone-700 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={newPackage.isUnlimited}
+                        onChange={e => setNewPackage({ ...newPackage, isUnlimited: e.target.checked })}
+                        className="rounded border-stone-300 text-stone-900"
+                      />
+                      <span>Ilimitadas</span>
+                    </label>
+                  </div>
+                  <div className="sm:col-span-3">
+                    <button
+                      type="submit"
+                      className="w-full px-3 py-2 bg-stone-900 text-white text-xs font-bold uppercase rounded-xl hover:bg-stone-800 transition"
+                    >
+                      + Añadir Paquete
+                    </button>
+                  </div>
+                </div>
                 <input
                   type="text"
-                  placeholder="Nombre paquete"
-                  value={newPackage.name}
-                  onChange={e => setNewPackage({ ...newPackage, name: e.target.value })}
-                  className="px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                  placeholder="Descripción breve (ej. 6 reuniones detalladas con equipo VLB)"
+                  value={newPackage.description}
+                  onChange={e => setNewPackage({ ...newPackage, description: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
                 />
-                <input
-                  type="number"
-                  placeholder="Máx reuniones"
-                  value={newPackage.maxMeetings}
-                  onChange={e => setNewPackage({ ...newPackage, maxMeetings: parseInt(e.target.value, 10) || 1 })}
-                  className="px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                <textarea
+                  rows={3}
+                  placeholder={"Todo lo que incluye este paquete (escribe un punto por renglón):\n• Seguimiento de proveedores y pagos\n• Confirmación de invitados (RSVP) y layout\n• Coordinación integral Día Boda"}
+                  value={newPackage.includesText}
+                  onChange={e => setNewPackage({ ...newPackage, includesText: e.target.value })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
                 />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-stone-900 text-white text-xs font-bold uppercase rounded-xl hover:bg-stone-800"
-                >
-                  Añadir Paquete
-                </button>
               </form>
-              <div className="space-y-2">
-                {meetingPackages.map(pkg => (
-                  <div key={pkg.name} className="p-3 rounded-xl bg-stone-50 border border-stone-200 flex items-center justify-between text-xs">
-                    <div>
-                      <div className="font-bold text-stone-900">{pkg.name} ({pkg.maxMeetings >= 999 ? 'Ilimitadas' : `${pkg.maxMeetings} reuniones`})</div>
-                      <div className="text-stone-500 text-[11px]">{pkg.description}</div>
-                    </div>
-                    <button
-                      onClick={() => handleRemovePackage(pkg.name)}
-                      className="text-stone-400 hover:text-rose-600 p-1"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+
+              <div className="space-y-3">
+                {meetingPackages.map((pkg, idx) => (
+                  <div key={idx} className="p-4 rounded-2xl bg-stone-50 border border-stone-200 text-xs">
+                    {editingPkgIdx === idx ? (
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#885853]">Editando Paquete</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+                          <div className="sm:col-span-6">
+                            <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">Nombre del Paquete</label>
+                            <input
+                              type="text"
+                              value={editingPkgDraft.name}
+                              onChange={e => setEditingPkgDraft({ ...editingPkgDraft, name: e.target.value })}
+                              className="w-full px-3 py-1.5 border border-stone-300 rounded-xl text-xs bg-white"
+                            />
+                          </div>
+                          <div className="sm:col-span-6">
+                            <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">Cantidad de Reuniones</label>
+                            <div className="flex items-center gap-2.5">
+                              {!editingPkgDraft.isUnlimited && (
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={editingPkgDraft.maxMeetings}
+                                  onChange={e => setEditingPkgDraft({ ...editingPkgDraft, maxMeetings: parseInt(e.target.value, 10) || 1 })}
+                                  className="w-24 px-3 py-1.5 border border-stone-300 rounded-xl text-xs bg-white"
+                                />
+                              )}
+                              <label className="flex items-center space-x-1.5 text-xs text-stone-700 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={editingPkgDraft.isUnlimited}
+                                  onChange={e => setEditingPkgDraft({ ...editingPkgDraft, isUnlimited: e.target.checked })}
+                                  className="rounded border-stone-300 text-stone-900"
+                                />
+                                <span>Reuniones ilimitadas</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">Descripción Breve</label>
+                          <input
+                            type="text"
+                            value={editingPkgDraft.description}
+                            onChange={e => setEditingPkgDraft({ ...editingPkgDraft, description: e.target.value })}
+                            placeholder="Resumen corto del paquete..."
+                            className="w-full px-3 py-1.5 border border-stone-300 rounded-xl text-xs bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-stone-500 uppercase mb-1">
+                            Todo lo que incluye (escribe un beneficio por renglón)
+                          </label>
+                          <textarea
+                            rows={4}
+                            value={editingPkgDraft.includesText}
+                            onChange={e => setEditingPkgDraft({ ...editingPkgDraft, includesText: e.target.value })}
+                            placeholder={"Escribe cada servicio o entregable en un renglón:\nSesiones de planeación\nConfirmación de invitados RSVP\nCoordinación Día Boda"}
+                            className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
+                          />
+                        </div>
+                        <div className="flex justify-end gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => setEditingPkgIdx(null)}
+                            className="px-3 py-1.5 rounded-xl border border-stone-300 text-stone-600 hover:bg-stone-100 text-xs font-medium"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveEditPackage(idx)}
+                            className="px-4 py-1.5 rounded-xl bg-stone-900 text-white hover:bg-stone-800 text-xs font-bold uppercase tracking-wider"
+                          >
+                            Guardar Cambios
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="font-bold text-stone-900 text-sm">
+                              {pkg.name}{' '}
+                              <span className="text-xs font-semibold text-[#885853] bg-[#EFE2DF] px-2 py-0.5 rounded-full ml-1">
+                                {pkg.maxMeetings >= 999 ? 'Ilimitadas' : `${pkg.maxMeetings} reuniones`}
+                              </span>
+                            </div>
+                            <div className="text-stone-500 text-[11px] mt-0.5">{pkg.description}</div>
+                          </div>
+                          <div className="flex items-center space-x-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditPackage(idx)}
+                              className="text-stone-500 hover:text-stone-900 p-1.5 rounded-lg hover:bg-stone-200/60 transition"
+                              title="Editar paquete y lo que incluye"
+                            >
+                              <Edit3 className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePackage(pkg.name)}
+                              className="text-stone-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition"
+                              title="Eliminar paquete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        {Array.isArray(pkg.includes) && pkg.includes.length > 0 && (
+                          <ul className="mt-2.5 pt-2.5 border-t border-stone-200/80 space-y-1 text-[11px] text-stone-700">
+                            {pkg.includes.map((inc, i) => (
+                              <li key={i} className="flex items-start space-x-1.5">
+                                <span className="text-[#885853] font-bold">✓</span>
+                                <span>{inc}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

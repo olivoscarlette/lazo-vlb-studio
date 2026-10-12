@@ -187,6 +187,7 @@ export interface PackageInfo {
   usedMeetings: number;
   remainingMeetings: number | string;
   description: string;
+  includes?: string[];
 }
 
 export interface TimelineEvent {

@@ -56,7 +56,8 @@ router.get('/:weddingId/meetings', authenticateToken, requireWeddingAccess, (req
       maxMeetings: currentPkg.maxMeetings,
       usedMeetings: completedOrScheduled,
       remainingMeetings: currentPkg.maxMeetings >= 999 ? 'Ilimitadas' : remainingMeetings,
-      description: currentPkg.description
+      description: currentPkg.description,
+      includes: Array.isArray(currentPkg.includes) ? currentPkg.includes : []
     }
   });
 });

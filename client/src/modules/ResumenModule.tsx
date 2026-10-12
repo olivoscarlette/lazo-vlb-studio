@@ -15,17 +15,29 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   const [loading, setLoading] = useState(true);
   const [showEditWeddingModal, setShowEditWeddingModal] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
+  const [packagesList, setPackagesList] = useState<{ name: string; maxMeetings: number; description: string }[]>([]);
 
   const fetchWeddingDetails = async () => {
     if (!currentWedding) return;
     try {
-      const res = await fetch(`/api/weddings/${currentWedding.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const [res, catRes] = await Promise.all([
+        fetch(`/api/weddings/${currentWedding.id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        fetch('/api/catalogs', {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
       if (res.ok) {
         const data = await res.json();
         setWeddingData(data.wedding);
         setEditForm(data.wedding);
+      }
+      if (catRes.ok) {
+        const catData = await catRes.json();
+        if (Array.isArray(catData.catalogs?.meeting_packages)) {
+          setPackagesList(catData.catalogs.meeting_packages);
+        }
       }
     } catch (err) {
       console.error('Error fetching wedding details:', err);
@@ -269,18 +281,42 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-[#332C2A] mb-1">Estatus del Evento</label>
-                <select
-                  value={editForm.status || 'PLANNING'}
-                  onChange={e => setEditForm({ ...editForm, status: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#DDD2C4] rounded-xl text-sm"
-                >
-                  <option value="PLANNING">PLANNING (En planeación)</option>
-                  <option value="UPCOMING">UPCOMING (Próxima)</option>
-                  <option value="COMPLETED">COMPLETED (Realizada)</option>
-                  <option value="ARCHIVED">ARCHIVED (Archivada)</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#332C2A] mb-1">Paquete Contratado</label>
+                  <select
+                    value={editForm.package_type || 'Integral'}
+                    onChange={e => setEditForm({ ...editForm, package_type: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-[#DDD2C4] rounded-xl text-sm"
+                  >
+                    {packagesList.length > 0 ? (
+                      packagesList.map(pkg => (
+                        <option key={pkg.name} value={pkg.name}>
+                          {pkg.name} ({pkg.maxMeetings >= 999 ? 'Ilimitadas' : `${pkg.maxMeetings} reuniones`})
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="Esencial">Esencial</option>
+                        <option value="Integral">Integral</option>
+                        <option value="Luxury Exclusivo">Luxury Exclusivo</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#332C2A] mb-1">Estatus del Evento</label>
+                  <select
+                    value={editForm.status || 'PLANNING'}
+                    onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-[#DDD2C4] rounded-xl text-sm"
+                  >
+                    <option value="PLANNING">PLANNING (En planeación)</option>
+                    <option value="UPCOMING">UPCOMING (Próxima)</option>
+                    <option value="COMPLETED">COMPLETED (Realizada)</option>
+                    <option value="ARCHIVED">ARCHIVED (Archivada)</option>
+                  </select>
+                </div>
               </div>
               <div className="flex justify-end space-x-2 pt-4 border-t border-[#EFE8DE]">
                 <button

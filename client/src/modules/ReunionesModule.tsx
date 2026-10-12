@@ -206,9 +206,24 @@ export const ReunionesModule: React.FC = () => {
               <p className="text-xs text-stone-500 mt-1">
                 Límite contratado: <strong>{packageInfo.maxMeetings >= 999 ? 'Reuniones Ilimitadas' : `${packageInfo.maxMeetings} reuniones`}</strong>
               </p>
+              {Array.isArray(packageInfo.includes) && packageInfo.includes.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-stone-200/80">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1.5">
+                    Incluye en tu paquete:
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+                    {packageInfo.includes.map((item, idx) => (
+                      <div key={idx} className="flex items-start space-x-1.5 text-xs text-stone-700">
+                        <Check className="w-3.5 h-3.5 text-[#885853] shrink-0 mt-0.5" />
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="flex items-center space-x-6 border-t md:border-t-0 md:border-l border-stone-200 pt-3 md:pt-0 md:pl-6">
+            <div className="flex items-center space-x-6 border-t md:border-t-0 md:border-l border-stone-200 pt-3 md:pt-0 md:pl-6 shrink-0">
               <div>
                 <div className="text-[10px] text-stone-400 uppercase font-bold">Realizadas o Agendadas</div>
                 <div className="text-2xl font-serif font-bold text-stone-900">{packageInfo.usedMeetings}</div>
