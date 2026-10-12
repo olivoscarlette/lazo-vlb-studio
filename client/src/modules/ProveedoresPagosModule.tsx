@@ -18,8 +18,9 @@ export const ProveedoresPagosModule: React.FC = () => {
   const [catalogTypes, setCatalogTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // New Vendor Modal
+  // Vendor Modal (Add & Edit)
   const [showVendorModal, setShowVendorModal] = useState(false);
+  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [vendorForm, setVendorForm] = useState({
     name: '',
     phone: '+52 ',
@@ -79,6 +80,36 @@ export const ProveedoresPagosModule: React.FC = () => {
     fetchCatalogs();
   }, [currentWedding, token]);
 
+  const handleOpenAddVendor = () => {
+    setEditingVendor(null);
+    setVendorForm({
+      name: '',
+      phone: '+52 ',
+      type: catalogTypes[0] || 'Fotografía',
+      locations: ['RECEPCIÓN'],
+      costo_real: 0,
+      contact_person: '',
+      notes: ''
+    });
+    setVendorError('');
+    setShowVendorModal(true);
+  };
+
+  const handleOpenEditVendor = (v: Vendor) => {
+    setEditingVendor(v);
+    setVendorForm({
+      name: v.name || '',
+      phone: v.phone || '+52 ',
+      type: v.type || 'Otro',
+      locations: Array.isArray(v.locations) && v.locations.length > 0 ? v.locations : ['RECEPCIÓN'],
+      costo_real: v.costo_real || 0,
+      contact_person: v.contact_person || '',
+      notes: v.notes || ''
+    });
+    setVendorError('');
+    setShowVendorModal(true);
+  };
+
   // Toggle multi-select locations
   const handleToggleLocation = (loc: string) => {
     const cur = vendorForm.locations;
@@ -98,8 +129,13 @@ export const ProveedoresPagosModule: React.FC = () => {
     }
 
     try {
-      const res = await fetch(`/api/weddings/${currentWedding!.id}/vendors`, {
-        method: 'POST',
+      const url = editingVendor
+        ? `/api/weddings/${currentWedding!.id}/vendors/${editingVendor.id}`
+        : `/api/weddings/${currentWedding!.id}/vendors`;
+      const method = editingVendor ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
@@ -110,6 +146,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       if (!res.ok) throw new Error(data.error);
 
       setShowVendorModal(false);
+      setEditingVendor(null);
       setVendorForm({
         name: '',
         phone: '+52 ',
@@ -211,7 +248,7 @@ export const ProveedoresPagosModule: React.FC = () => {
             <span>Registrar Pago</span>
           </button>
           <button
-            onClick={() => setShowVendorModal(true)}
+            onClick={handleOpenAddVendor}
             className="inline-flex items-center space-x-1.5 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow transition"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -293,9 +330,16 @@ export const ProveedoresPagosModule: React.FC = () => {
                 <tr><td colSpan={8} className="py-8 text-center text-[#786C68]">No hay proveedores registrados. Agrega uno con el botón superior.</td></tr>
               ) : (
                 vendors.map(v => (
-                  <tr key={v.id} className="hover:bg-[#F9F6F2] transition">
+                  <tr key={v.id} className="hover:bg-[#F9F6F2] transition group">
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <div className="font-bold text-[#332C2A] whitespace-nowrap">{v.name}</div>
+                      <div
+                        onClick={() => handleOpenEditVendor(v)}
+                        className="cursor-pointer font-bold text-[#332C2A] hover:text-[#A6736E] inline-flex items-center space-x-1.5 whitespace-nowrap transition"
+                        title="Clic para editar información"
+                      >
+                        <span className="underline decoration-[#D2C4B4] decoration-1 underline-offset-4">{v.name}</span>
+                        <Edit3 className="w-3.5 h-3.5 text-[#C7B6A6] group-hover:text-[#A6736E] transition shrink-0" />
+                      </div>
                       {v.contact_person && (
                         <div className="text-[11px] text-[#786C68] whitespace-nowrap">Contacto: {v.contact_person}</div>
                       )}
@@ -345,13 +389,22 @@ export const ProveedoresPagosModule: React.FC = () => {
                       ${(v.saldo_restante || 0).toLocaleString()}
                     </td>
                     <td className="py-3 px-3 text-center whitespace-nowrap">
-                      <button
-                        onClick={() => handleDeleteVendor(v.id)}
-                        className="text-[#C7B6A6] hover:text-[#885853] p-1.5 transition"
-                        title="Eliminar proveedor"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="inline-flex items-center space-x-1">
+                        <button
+                          onClick={() => handleOpenEditVendor(v)}
+                          className="text-[#786C68] hover:text-[#332C2A] p-1.5 transition"
+                          title="Editar proveedor"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteVendor(v.id)}
+                          className="text-[#C7B6A6] hover:text-[#885853] p-1.5 transition"
+                          title="Eliminar proveedor"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -419,12 +472,14 @@ export const ProveedoresPagosModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Modal: Nuevo Proveedor */}
+      {/* Modal: Registrar o Editar Proveedor */}
       {showVendorModal && (
         <div className="fixed inset-0 bg-stone-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-stone-100">
-              <h3 className="font-serif text-xl font-bold text-stone-900">Registrar Proveedor</h3>
+              <h3 className="font-serif text-xl font-bold text-stone-900">
+                {editingVendor ? 'Editar Proveedor' : 'Registrar Proveedor'}
+              </h3>
               <button onClick={() => setShowVendorModal(false)} className="text-stone-400 hover:text-stone-700">✕</button>
             </div>
 
@@ -550,7 +605,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                   type="submit"
                   className="px-5 py-2 text-xs font-bold uppercase tracking-wider bg-stone-900 text-white rounded-xl hover:bg-stone-800"
                 >
-                  Guardar Proveedor
+                  {editingVendor ? 'Actualizar Proveedor' : 'Guardar Proveedor'}
                 </button>
               </div>
             </form>
