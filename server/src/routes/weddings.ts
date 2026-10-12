@@ -217,10 +217,16 @@ router.get('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
   const totalPagado = paidStats?.total_pagado || 0;
   const totalRestante = Math.max(0, totalCostoReal - totalPagado);
 
+  const civilCeremony = db.prepare(`
+    SELECT date, time, location, juez_oficial
+    FROM civil_ceremony WHERE wedding_id = ?
+  `).get(weddingId) as any;
+
   return res.json({
     wedding: {
       ...wedding,
       team,
+      civil_ceremony: civilCeremony || null,
       stats: {
         guests: guestStats,
         finance: {

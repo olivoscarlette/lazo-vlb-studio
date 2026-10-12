@@ -19,6 +19,7 @@ export const TimelineModule: React.FC = () => {
 
   // View Mode: 'operation' (Modo Operación Día Boda) vs 'planning' (Cronograma de planeación)
   const [viewMode, setViewMode] = useState<'operation' | 'planning'>('operation');
+  const [activeDayTab, setActiveDayTab] = useState<'BODA' | 'CIVIL'>('BODA');
   const [showFullProgramInOp, setShowFullProgramInOp] = useState(false);
   const [vendorLocFilter, setVendorLocFilter] = useState<string>('ALL');
   const [currentTimeStr, setCurrentTimeStr] = useState<string>('');
@@ -27,6 +28,7 @@ export const TimelineModule: React.FC = () => {
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TimelineEvent | null>(null);
   const [formData, setFormData] = useState({
+    day_type: 'BODA' as 'BODA' | 'CIVIL',
     time: '12:00',
     activity: '',
     location: '',
@@ -115,9 +117,10 @@ export const TimelineModule: React.FC = () => {
   const handleOpenAdd = () => {
     setEditingEvent(null);
     setFormData({
+      day_type: activeDayTab,
       time: '12:00',
       activity: '',
-      location: '',
+      location: activeDayTab === 'CIVIL' ? (civilData?.location || '') : '',
       responsible: '',
       notes: '',
       status: 'PENDIENTE',
@@ -129,6 +132,7 @@ export const TimelineModule: React.FC = () => {
   const handleOpenEdit = (event: TimelineEvent) => {
     setEditingEvent(event);
     setFormData({
+      day_type: event.day_type === 'CIVIL' ? 'CIVIL' : 'BODA',
       time: event.time,
       activity: event.activity,
       location: event.location || '',
@@ -214,10 +218,11 @@ export const TimelineModule: React.FC = () => {
   };
 
   const handleResetProgram = async () => {
-    if (!window.confirm('¿Deseas reiniciar todas las actividades del timeline a PENDIENTE?')) return;
+    if (!window.confirm('¿Deseas reiniciar las actividades de este día a PENDIENTE?')) return;
     try {
+      const targetItems = timeline.filter(t => (t.day_type || 'BODA') === activeDayTab);
       await Promise.all(
-        timeline.map(item =>
+        targetItems.map(item =>
           fetch(`/api/weddings/${currentWedding!.id}/timeline/${item.id}`, {
             method: 'PUT',
             headers: {
@@ -266,9 +271,11 @@ export const TimelineModule: React.FC = () => {
     window.print();
   };
 
-  // Format wedding date nicely in Spanish
-  const formattedWeddingDate = (() => {
-    const rawDate = weddingDetails?.wedding_date || currentWedding?.wedding_date;
+  const mainWeddingDateRaw = weddingDetails?.wedding_date || currentWedding?.wedding_date || '';
+  const civilDateRaw = civilData?.date || '';
+  const isCivilSeparateDay = Boolean(civilDateRaw && mainWeddingDateRaw && civilDateRaw !== mainWeddingDateRaw);
+
+  const formatDateSpanish = (rawDate?: string | null) => {
     if (!rawDate) return 'Fecha por definir';
     try {
       const [y, m, d] = rawDate.split('-').map(Number);
@@ -281,24 +288,34 @@ export const TimelineModule: React.FC = () => {
     } catch {
       return rawDate;
     }
-  })();
+  };
+
+  const formattedWeddingDate = formatDateSpanish(mainWeddingDateRaw);
+  const formattedCivilDate = formatDateSpanish(civilDateRaw || mainWeddingDateRaw);
 
   const venueLabel =
-    weddingDetails?.reception_venue ||
-    weddingDetails?.ceremony_venue ||
-    currentWedding?.reception_venue ||
-    currentWedding?.ceremony_venue ||
-    'Lugar por definir';
+    activeDayTab === 'CIVIL'
+      ? civilData?.location || weddingDetails?.reception_venue || 'Sede Civil por definir'
+      : weddingDetails?.reception_venue ||
+        weddingDetails?.ceremony_venue ||
+        currentWedding?.reception_venue ||
+        currentWedding?.ceremony_venue ||
+        'Lugar por definir';
+
+  // Filter timeline by activeDayTab ('BODA' vs 'CIVIL')
+  const bodaEventsCount = timeline.filter(t => (t.day_type || 'BODA') === 'BODA').length;
+  const civilEventsCount = timeline.filter(t => t.day_type === 'CIVIL').length;
+  const activeTimeline = timeline.filter(t => (t.day_type || 'BODA') === activeDayTab);
 
   // Operational Timeline progression logic
-  const inProgressEvent = timeline.find(t => t.status === 'EN_CURSO') || null;
-  const pendingEvents = timeline.filter(t => t.status === 'PENDIENTE');
+  const inProgressEvent = activeTimeline.find(t => t.status === 'EN_CURSO') || null;
+  const pendingEvents = activeTimeline.filter(t => t.status === 'PENDIENTE');
   const activeOrReadyEvent = inProgressEvent || pendingEvents[0] || null;
   const afterEvent = inProgressEvent
     ? pendingEvents[0] || null
     : pendingEvents[1] || null;
 
-  const completedCount = timeline.filter(t => t.status === 'COMPLETADO').length;
+  const completedCount = activeTimeline.filter(t => t.status === 'COMPLETADO').length;
 
   // Vendor filtering for check-in panel
   const filteredVendors = vendors.filter(v => {
@@ -318,15 +335,28 @@ export const TimelineModule: React.FC = () => {
           <h2 className="font-serif text-4xl sm:text-5xl font-normal text-[#332C2A] tracking-tight">
             Itinerario / Timeline<span className="text-[#D4A5A5]">.</span>
           </h2>
-          <div className="flex flex-wrap items-center gap-4 text-xs text-[#786C68] mt-3">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[#786C68] mt-3">
             <span className="inline-flex items-center space-x-1.5">
               <Calendar className="w-3.5 h-3.5 text-[#8E807A]" />
-              <span>{formattedWeddingDate}</span>
+              <span>
+                {activeDayTab === 'CIVIL'
+                  ? `Ceremonia Civil: ${formattedCivilDate}`
+                  : `Día Boda: ${formattedWeddingDate}`}
+              </span>
             </span>
             <span className="inline-flex items-center space-x-1.5">
               <MapPin className="w-3.5 h-3.5 text-[#8E807A]" />
               <span>{venueLabel}</span>
             </span>
+            {isCivilSeparateDay ? (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#FFF7ED] text-[#9A3412] border border-[#FED7AA]">
+                ⚖️ Civil en otro día ({formattedCivilDate})
+              </span>
+            ) : (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EFF5F0] text-[#3B6E45] border border-[#BBD4BF]">
+                ⚖️ Civil el mismo día de la boda
+              </span>
+            )}
           </div>
         </div>
 
@@ -357,20 +387,56 @@ export const TimelineModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Mode Switcher Bar + Live Clock */}
+      {/* Mode Switcher Bar + Day Selector (Día Boda vs Día Ceremonia Civil) */}
       <div>
-        <div className="flex flex-wrap items-center gap-2 mb-3">
-          <button
-            onClick={() => setViewMode(viewMode === 'operation' ? 'planning' : 'operation')}
-            className="px-4 py-2 rounded-xl text-xs font-medium bg-[#EFECE6] hover:bg-[#E5DFD5] text-[#332C2A] border border-[#DDD2C4] transition"
-          >
-            {viewMode === 'operation' ? 'Cronograma de planeación' : '← Volver a Modo Operación (Día Boda)'}
-          </button>
-          {viewMode === 'planning' && (
-            <span className="text-xs text-[#786C68]">
-              Vista de edición y planeación completa del minuto a minuto
-            </span>
-          )}
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          {/* Day Selector Tabs */}
+          <div className="inline-flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl bg-[#EFECE6] border border-[#DDD2C4]">
+            <button
+              type="button"
+              onClick={() => setActiveDayTab('BODA')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
+                activeDayTab === 'BODA'
+                  ? 'bg-[#363432] text-white shadow-xs'
+                  : 'text-[#5A524C] hover:text-[#332C2A]'
+              }`}
+            >
+              <span>💍 Día Boda Principal ({formattedWeddingDate})</span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-white/20">
+                {bodaEventsCount}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveDayTab('CIVIL');
+                setVendorLocFilter('CIVIL');
+              }}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
+                activeDayTab === 'CIVIL'
+                  ? 'bg-[#A6736E] text-white shadow-xs'
+                  : 'text-[#5A524C] hover:text-[#332C2A]'
+              }`}
+            >
+              <span>
+                ⚖️ Día Ceremonia Civil{' '}
+                {isCivilSeparateDay ? `(Otro día: ${formattedCivilDate})` : '(Itinerario Civil)'}
+              </span>
+              <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/15">
+                {civilEventsCount}
+              </span>
+            </button>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setViewMode(viewMode === 'operation' ? 'planning' : 'operation')}
+              className="px-4 py-2 rounded-xl text-xs font-medium bg-[#EFECE6] hover:bg-[#E5DFD5] text-[#332C2A] border border-[#DDD2C4] transition"
+            >
+              {viewMode === 'operation' ? 'Cronograma de planeación' : '← Volver a Modo Operación (Día Boda)'}
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center justify-between pb-2.5 border-b border-[#E5DEC9]">
@@ -381,7 +447,13 @@ export const TimelineModule: React.FC = () => {
               }`}
             />
             <span className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#6E655F]">
-              {viewMode === 'operation' ? 'MODO OPERACIÓN' : 'CRONOGRAMA DE PLANEACIÓN'}
+              {viewMode === 'operation'
+                ? activeDayTab === 'CIVIL'
+                  ? 'MODO OPERACIÓN · CEREMONIA CIVIL'
+                  : 'MODO OPERACIÓN · DÍA BODA'
+                : activeDayTab === 'CIVIL'
+                ? 'CRONOGRAMA DE PLANEACIÓN · CEREMONIA CIVIL'
+                : 'CRONOGRAMA DE PLANEACIÓN · DÍA BODA'}
             </span>
           </div>
           <div className="text-xs font-medium text-[#5A524C]">{currentTimeStr}</div>
@@ -483,12 +555,14 @@ export const TimelineModule: React.FC = () => {
                       Programa completado
                     </h3>
                     <p className="text-xs text-[#6E565E] mt-2">
-                      {timeline.length > 0
-                        ? `Se completaron las ${timeline.length} actividades del itinerario.`
-                        : 'Aún no hay actividades cargadas en el itinerario.'}
+                      {activeTimeline.length > 0
+                        ? `Se completaron las ${activeTimeline.length} actividades de este día.`
+                        : activeDayTab === 'CIVIL'
+                        ? 'Aún no hay actividades cargadas para el Día de la Ceremonia Civil.'
+                        : 'Aún no hay actividades cargadas en el itinerario del Día Boda.'}
                     </p>
                   </div>
-                  {timeline.length > 0 && (
+                  {activeTimeline.length > 0 && (
                     <div className="mt-6">
                       <button
                         onClick={handleResetProgram}
@@ -562,10 +636,10 @@ export const TimelineModule: React.FC = () => {
               <div className="flex items-center justify-between pb-3 border-b border-[#EFE8DE]">
                 <div>
                   <span className="text-[10px] uppercase font-bold tracking-widest text-[#885853]">
-                    Programa Minuto a Minuto ({completedCount}/{timeline.length} completadas)
+                    Programa Minuto a Minuto ({completedCount}/{activeTimeline.length} completadas)
                   </span>
                   <h3 className="font-serif text-2xl font-bold text-[#332C2A]">
-                    Control de Actividades en Vivo
+                    Control de Actividades en Vivo ({activeDayTab === 'CIVIL' ? 'Día Ceremonia Civil' : 'Día Boda'})
                   </h3>
                 </div>
                 <button
@@ -578,7 +652,7 @@ export const TimelineModule: React.FC = () => {
               </div>
 
               <div className="divide-y divide-[#EFE8DE]">
-                {timeline.map(item => (
+                {activeTimeline.map(item => (
                   <div
                     key={item.id}
                     className={`py-3.5 px-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition ${
@@ -784,9 +858,20 @@ export const TimelineModule: React.FC = () => {
                   <div>🕒 {religiousData?.time || weddingDetails?.ceremony_time || 'Por definir'} hrs</div>
                   {religiousData?.officiant && <div>👤 Oficiante: {religiousData.officiant}</div>}
                 </div>
-                <div className="p-3 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
-                  <div className="font-bold text-[#332C2A]">Ceremonia Civil</div>
-                  <div>📍 {civilData?.location || weddingDetails?.reception_venue || 'Por definir'}</div>
+                <div className={`p-3 rounded-xl border ${isCivilSeparateDay ? 'bg-[#FFF7ED] border-[#FED7AA]' : 'bg-[#F9F6F2] border border-[#EFE8DE]'}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-[#332C2A]">Ceremonia Civil</span>
+                    <span
+                      className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                        isCivilSeparateDay
+                          ? 'bg-[#FFEDD5] text-[#9A3412] border border-[#FED7AA]'
+                          : 'bg-[#EFF5F0] text-[#3B6E45] border border-[#BBD4BF]'
+                      }`}
+                    >
+                      {isCivilSeparateDay ? `Otro día: ${civilData?.date}` : 'Mismo día boda'}
+                    </span>
+                  </div>
+                  <div className="mt-1">📍 {civilData?.location || weddingDetails?.reception_venue || 'Por definir'}</div>
                   <div>🕒 {civilData?.time || 'Por definir'} hrs</div>
                   {civilData?.juez_oficial && <div>👤 Juez: {civilData.juez_oficial}</div>}
                 </div>
@@ -876,13 +961,14 @@ export const TimelineModule: React.FC = () => {
         <div>
           {loading ? (
             <div className="py-12 text-center text-stone-400 text-xs">Cargando timeline...</div>
-          ) : timeline.length === 0 ? (
+          ) : activeTimeline.length === 0 ? (
             <div className="luxury-card rounded-2xl p-8 text-center text-stone-400 text-xs border border-dashed border-stone-300">
-              No hay actividades programadas en el timeline. Haz clic en "Agregar Actividad".
+              No hay actividades programadas en el timeline de{' '}
+              <strong>{activeDayTab === 'CIVIL' ? 'Día Ceremonia Civil' : 'Día Boda Principal'}</strong>. Haz clic en "Agregar Actividad".
             </div>
           ) : (
             <div className="relative pl-6 sm:pl-8 space-y-4 before:content-[''] before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-stone-200">
-              {timeline.map(item => (
+              {activeTimeline.map(item => (
                 <div
                   key={item.id}
                   className="relative luxury-card rounded-2xl p-5 border border-stone-200 hover:border-stone-400 transition"
@@ -908,6 +994,15 @@ export const TimelineModule: React.FC = () => {
                       <h3 className="font-serif text-lg font-bold text-stone-900">
                         {item.activity}
                       </h3>
+                      <span
+                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                          item.day_type === 'CIVIL'
+                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                            : 'bg-stone-100 text-stone-600'
+                        }`}
+                      >
+                        {item.day_type === 'CIVIL' ? '⚖️ Día Civil' : '💍 Día Boda'}
+                      </span>
                     </div>
 
                     <div className="flex items-center space-x-2">
@@ -977,6 +1072,34 @@ export const TimelineModule: React.FC = () => {
             </h3>
 
             <form onSubmit={handleSaveEvent} className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">¿A qué día pertenece esta actividad?</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, day_type: 'BODA' })}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition ${
+                      formData.day_type === 'BODA'
+                        ? 'bg-stone-900 text-white border-stone-900'
+                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'
+                    }`}
+                  >
+                    💍 Día Boda Principal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, day_type: 'CIVIL' })}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition ${
+                      formData.day_type === 'CIVIL'
+                        ? 'bg-[#A6736E] text-white border-[#A6736E]'
+                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'
+                    }`}
+                  >
+                    ⚖️ Día Ceremonia Civil
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-stone-700 mb-1">Hora *</label>

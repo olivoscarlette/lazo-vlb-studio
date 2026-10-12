@@ -112,7 +112,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         </div>
 
         {/* Venues Pill row */}
-        <div className="mt-6 pt-6 border-t border-[#B5837E]/60 flex flex-wrap gap-4 text-xs text-[#FFFFFF]">
+        <div className="mt-6 pt-6 border-t border-[#B5837E]/60 flex flex-wrap gap-3 text-xs text-[#FFFFFF]">
           {weddingData.ceremony_venue && (
             <div className="flex items-center space-x-2 bg-[#885853]/60 px-4 py-2 rounded-full border border-[#B5837E]/50">
               <MapPin className="w-4 h-4 text-[#EFE2DF]" />
@@ -125,6 +125,29 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <span><strong>Recepción:</strong> {weddingData.reception_venue} ({weddingData.reception_time || 'Por definir'})</span>
             </div>
           )}
+          {weddingData.civil_ceremony && (weddingData.civil_ceremony.date || weddingData.civil_ceremony.location) && (() => {
+            const civDate = weddingData.civil_ceremony.date;
+            const isSeparateCivilDay = Boolean(civDate && weddingData.wedding_date && civDate !== weddingData.wedding_date);
+            return (
+              <div
+                onClick={() => onNavigateTab('civil')}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-full border cursor-pointer transition ${
+                  isSeparateCivilDay
+                    ? 'bg-[#FFF7ED] text-[#9A3412] border-[#FED7AA] shadow-xs font-semibold'
+                    : 'bg-[#885853]/60 text-[#FFFFFF] border-[#B5837E]/50'
+                }`}
+                title="Ir a Ceremonia Civil"
+              >
+                <span>⚖️</span>
+                <span>
+                  <strong>Ceremonia Civil:</strong>{' '}
+                  {isSeparateCivilDay ? `Otro día (${civDate})` : 'Mismo día de la boda'}
+                  {weddingData.civil_ceremony.location ? ` · ${weddingData.civil_ceremony.location}` : ''}
+                  {weddingData.civil_ceremony.time ? ` (${weddingData.civil_ceremony.time} hrs)` : ''}
+                </span>
+              </div>
+            );
+          })()}
         </div>
       </div>
 

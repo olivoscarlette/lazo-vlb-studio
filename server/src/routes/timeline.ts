@@ -18,7 +18,7 @@ router.get('/:weddingId/timeline', authenticateToken, requireWeddingAccess, (req
 // POST /api/weddings/:weddingId/timeline - Add timeline event
 router.post('/:weddingId/timeline', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
-  const { time, activity, location, responsible, notes, status, order_index } = req.body;
+  const { time, activity, location, responsible, notes, status, order_index, day_type } = req.body;
 
   if (!time || !activity) {
     return res.status(400).json({ error: 'Hora y actividad son obligatorias.' });
@@ -26,27 +26,28 @@ router.post('/:weddingId/timeline', authenticateToken, requireWeddingAccess, (re
 
   const id = 'tme_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
   const now = new Date().toISOString();
+  const resolvedDayType = day_type === 'CIVIL' ? 'CIVIL' : 'BODA';
 
   db.prepare(`
-    INSERT INTO timeline_events (id, wedding_id, time, activity, location, responsible, notes, status, order_index, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO timeline_events (id, wedding_id, time, activity, location, responsible, notes, status, order_index, day_type, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id, weddingId, time.trim(), activity.trim(), location || null,
-    responsible || null, notes || null, status || 'PENDIENTE', order_index || 0, now, now
+    responsible || null, notes || null, status || 'PENDIENTE', order_index || 0, resolvedDayType, now, now
   );
 
-  logAudit(weddingId, req.user!.id, req.user!.name, 'CREAR_TIMELINE', 'TIMELINE', id, `Nuevo evento en timeline: ${time} ${activity}`);
+  logAudit(weddingId, req.user!.id, req.user!.name, 'CREAR_TIMELINE', 'TIMELINE', id, `Nuevo evento en timeline (${resolvedDayType}): ${time} ${activity}`);
 
   return res.status(201).json({
     message: 'Evento añadido al timeline.',
-    event: { id, time, activity, location, responsible, status: status || 'PENDIENTE' }
+    event: { id, time, activity, location, responsible, status: status || 'PENDIENTE', day_type: resolvedDayType }
   });
 });
 
 // PUT /api/weddings/:weddingId/timeline/:id - Update timeline event
 router.put('/:weddingId/timeline/:id', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId, id } = req.params;
-  const { time, activity, location, responsible, notes, status, order_index } = req.body;
+  const { time, activity, location, responsible, notes, status, order_index, day_type } = req.body;
 
   const event = db.prepare('SELECT * FROM timeline_events WHERE id = ? AND wedding_id = ?').get(id, weddingId) as any;
   if (!event) {
@@ -54,11 +55,12 @@ router.put('/:weddingId/timeline/:id', authenticateToken, requireWeddingAccess, 
   }
 
   const now = new Date().toISOString();
+  const resolvedDayType = day_type !== undefined ? (day_type === 'CIVIL' ? 'CIVIL' : 'BODA') : (event.day_type || 'BODA');
 
   db.prepare(`
     UPDATE timeline_events SET
       time = ?, activity = ?, location = ?, responsible = ?,
-      notes = ?, status = ?, order_index = ?, updated_at = ?
+      notes = ?, status = ?, order_index = ?, day_type = ?, updated_at = ?
     WHERE id = ? AND wedding_id = ?
   `).run(
     time || event.time,
@@ -68,6 +70,7 @@ router.put('/:weddingId/timeline/:id', authenticateToken, requireWeddingAccess, 
     notes !== undefined ? notes : event.notes,
     status || event.status,
     order_index !== undefined ? order_index : event.order_index,
+    resolvedDayType,
     now,
     id,
     weddingId

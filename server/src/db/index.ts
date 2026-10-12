@@ -299,6 +299,12 @@ export function initDatabase() {
     // Column already exists
   }
 
+  try {
+    db.exec("ALTER TABLE timeline_events ADD COLUMN day_type TEXT DEFAULT 'BODA';");
+  } catch {
+    // Column already exists
+  }
+
   const defaultPhases = [
     { id: 'phase1_internal_team', name: 'Fase 1: Operación Equipo VLB (Bodas, Invitados, Mesas, Proveedores, Pagos)', enabled: true },
     { id: 'phase2_novios_portal', name: 'Fase 2: Portal de Novios, Reuniones, Timeline y Checklist', enabled: true },

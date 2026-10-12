@@ -202,6 +202,7 @@ export interface TimelineEvent {
   notes: string | null;
   status: 'PENDIENTE' | 'EN_CURSO' | 'COMPLETADO';
   order_index: number;
+  day_type?: 'BODA' | 'CIVIL';
 }
 
 export interface Task {
