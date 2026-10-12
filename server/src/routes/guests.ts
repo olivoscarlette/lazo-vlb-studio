@@ -29,7 +29,9 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
       SUM(CASE WHEN status = 'Pendiente de confirmar' THEN 1 ELSE 0 END) as pending,
       SUM(CASE WHEN status = 'No asistirá' THEN 1 ELSE 0 END) as declined,
       COALESCE(SUM(1 + companion_count), 0) as total_places_all,
-      COALESCE(SUM(CASE WHEN status = 'Confirmado' THEN 1 + companion_count ELSE 0 END), 0) as confirmed_places
+      COALESCE(SUM(CASE WHEN status = 'Confirmado' THEN 1 + companion_count ELSE 0 END), 0) as confirmed_places,
+      COALESCE(SUM(CASE WHEN status = 'Pendiente de confirmar' THEN 1 + companion_count ELSE 0 END), 0) as pending_places,
+      COALESCE(SUM(CASE WHEN status = 'No asistirá' THEN 1 + companion_count ELSE 0 END), 0) as declined_places
     FROM guests
     WHERE wedding_id = ?
   `).get(weddingId) as any;
@@ -90,7 +92,9 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
       pending: counts.pending || 0,
       declined: counts.declined || 0,
       total_places_all: counts.total_places_all || 0,
-      confirmed_places: counts.confirmed_places || 0
+      confirmed_places: counts.confirmed_places || 0,
+      pending_places: counts.pending_places || 0,
+      declined_places: counts.declined_places || 0
     }
   });
 });

@@ -140,13 +140,13 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             <Users className="w-4 h-4 text-[#A6736E] group-hover:text-[#885853] transition" />
           </div>
           <div className="text-3xl font-serif font-bold text-[#332C2A]">
-            {guestStats.confirmed_count || 0}
+            {guestStats.confirmed_total_seats || 0}
             <span className="text-xs text-[#786C68] font-sans font-normal ml-1.5">
-              / {guestStats.total_guests || 0} invitados
+              / {guestStats.total_seats_potential || 0} invitados
             </span>
           </div>
           <div className="text-[11px] text-[#885853] bg-[#EFE2DF] px-2.5 py-1 rounded-lg inline-block font-medium mt-2.5">
-            {guestStats.confirmed_total_seats || 0} lugares totales con acompañantes
+            Asistentes con +1 ({guestStats.confirmed_count || 0} registros)
           </div>
         </div>
 

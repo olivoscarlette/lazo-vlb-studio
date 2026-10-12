@@ -26,7 +26,9 @@ export const InvitadosModule: React.FC = () => {
     pending: 0,
     declined: 0,
     total_places_all: 0,
-    confirmed_places: 0
+    confirmed_places: 0,
+    pending_places: 0,
+    declined_places: 0
   });
 
   // Modal / Drawer states
@@ -372,7 +374,7 @@ export const InvitadosModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Summary KPI Strip — Tarjetas interactivas para filtrar al hacer clic */}
+      {/* Summary KPI Strip — Cuenta asistente + acompañante (+1) como cifra principal */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div
           onClick={() => { setStatusFilter(''); setPage(1); }}
@@ -382,8 +384,8 @@ export const InvitadosModule: React.FC = () => {
           title="Ver todos los invitados"
         >
           <div className="text-[10px] uppercase font-bold text-[#786C68]">Total Invitados</div>
-          <div className="text-2xl font-serif font-bold text-[#332C2A] mt-0.5">{summary.total}</div>
-          <div className="text-[11px] text-[#786C68]">{summary.total_places_all} lugares totales</div>
+          <div className="text-2xl font-serif font-bold text-[#332C2A] mt-0.5">{summary.total_places_all}</div>
+          <div className="text-[11px] text-[#786C68]">Asistentes con +1 ({summary.total} registros)</div>
         </div>
 
         <div
@@ -394,8 +396,8 @@ export const InvitadosModule: React.FC = () => {
           title="Filtrar solo Confirmados"
         >
           <div className="text-[10px] uppercase font-bold text-[#82524D]">Confirmados</div>
-          <div className="text-2xl font-serif font-bold text-[#6E433F] mt-0.5">{summary.confirmed}</div>
-          <div className="text-[11px] text-[#82524D] font-semibold">{summary.confirmed_places} lugares seguros</div>
+          <div className="text-2xl font-serif font-bold text-[#6E433F] mt-0.5">{summary.confirmed_places}</div>
+          <div className="text-[11px] text-[#82524D] font-semibold">Lugares confirmados ({summary.confirmed} registros)</div>
         </div>
 
         <div
@@ -406,8 +408,8 @@ export const InvitadosModule: React.FC = () => {
           title="Filtrar solo Pendientes de confirmar"
         >
           <div className="text-[10px] uppercase font-bold text-[#6D5A43]">Pendientes</div>
-          <div className="text-2xl font-serif font-bold text-[#564734] mt-0.5">{summary.pending}</div>
-          <div className="text-[11px] text-[#857056]">Por confirmar</div>
+          <div className="text-2xl font-serif font-bold text-[#564734] mt-0.5">{summary.pending_places ?? summary.pending}</div>
+          <div className="text-[11px] text-[#857056]">Por confirmar ({summary.pending} registros)</div>
         </div>
 
         <div
@@ -418,16 +420,16 @@ export const InvitadosModule: React.FC = () => {
           title="Filtrar quienes No asistirán"
         >
           <div className="text-[10px] uppercase font-bold text-[#6E4541]">No asistirán</div>
-          <div className="text-2xl font-serif font-bold text-[#593734] mt-0.5">{summary.declined}</div>
-          <div className="text-[11px] text-[#855652]">Lugares liberados</div>
+          <div className="text-2xl font-serif font-bold text-[#593734] mt-0.5">{summary.declined_places ?? summary.declined}</div>
+          <div className="text-[11px] text-[#855652]">Lugares liberados ({summary.declined} registros)</div>
         </div>
 
         <div className="luxury-card rounded-xl p-4 col-span-2 sm:col-span-1">
           <div className="text-[10px] uppercase font-bold text-[#786C68]">Avance RSVP</div>
           <div className="text-2xl font-serif font-bold text-[#332C2A] mt-0.5">
-            {summary.total > 0 ? Math.round((summary.confirmed / summary.total) * 100) : 0}%
+            {summary.total_places_all > 0 ? Math.round((summary.confirmed_places / summary.total_places_all) * 100) : 0}%
           </div>
-          <div className="text-[11px] text-[#786C68]">Tasa de aceptación</div>
+          <div className="text-[11px] text-[#786C68]">Tasa de asistencia</div>
         </div>
       </div>
 

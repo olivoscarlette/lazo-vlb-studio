@@ -12,10 +12,10 @@ router.get('/', authenticateToken, (req, res) => {
   if (user.role === 'ADMINISTRADOR') {
     weddings = db.prepare(`
       SELECT w.*,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id) as total_guests,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Confirmado') as confirmed_guests,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Pendiente de confirmar') as pending_guests,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'No asistirá') as declined_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id) as total_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Confirmado') as confirmed_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Pendiente de confirmar') as pending_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'No asistirá') as declined_guests,
         (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Confirmado') as total_confirmed_seats,
         (SELECT COUNT(*) FROM tasks t WHERE t.wedding_id = w.id AND t.status != 'Completada') as pending_tasks,
         (SELECT COUNT(*) FROM tasks t WHERE t.wedding_id = w.id) as total_tasks
@@ -25,10 +25,10 @@ router.get('/', authenticateToken, (req, res) => {
   } else if (user.role === 'COORDINADOR' || user.role === 'STAFF') {
     weddings = db.prepare(`
       SELECT w.*,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id) as total_guests,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Confirmado') as confirmed_guests,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Pendiente de confirmar') as pending_guests,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'No asistirá') as declined_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id) as total_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Confirmado') as confirmed_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Pendiente de confirmar') as pending_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'No asistirá') as declined_guests,
         (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Confirmado') as total_confirmed_seats,
         (SELECT COUNT(*) FROM tasks t WHERE t.wedding_id = w.id AND t.status != 'Completada') as pending_tasks,
         (SELECT COUNT(*) FROM tasks t WHERE t.wedding_id = w.id) as total_tasks
@@ -43,10 +43,10 @@ router.get('/', authenticateToken, (req, res) => {
     }
     weddings = db.prepare(`
       SELECT w.*,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id) as total_guests,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Confirmado') as confirmed_guests,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Pendiente de confirmar') as pending_guests,
-        (SELECT COUNT(*) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'No asistirá') as declined_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id) as total_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Confirmado') as confirmed_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Pendiente de confirmar') as pending_guests,
+        (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'No asistirá') as declined_guests,
         (SELECT COALESCE(SUM(1 + g.companion_count), 0) FROM guests g WHERE g.wedding_id = w.id AND g.status = 'Confirmado') as total_confirmed_seats,
         (SELECT COUNT(*) FROM tasks t WHERE t.wedding_id = w.id AND t.status != 'Completada') as pending_tasks,
         (SELECT COUNT(*) FROM tasks t WHERE t.wedding_id = w.id) as total_tasks
