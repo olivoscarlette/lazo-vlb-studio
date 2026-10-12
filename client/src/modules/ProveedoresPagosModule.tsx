@@ -419,19 +419,19 @@ export const ProveedoresPagosModule: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#EFE8DE] border-b border-[#DDD2C4] font-bold uppercase tracking-wider text-[#786C68]">
-                <th className="py-3.5 px-4 whitespace-nowrap">PROVEEDOR</th>
-                <th className="py-3.5 px-4 whitespace-nowrap">CATEGORÍA</th>
-                <th className="py-3.5 px-4 whitespace-nowrap min-w-[175px]">TELÉFONO</th>
-                <th className="py-3.5 px-4 whitespace-nowrap">UBICACIÓN / ETAPAS</th>
-                <th className="py-3.5 px-4 text-center whitespace-nowrap">FECHA LÍMITE DE PAGO</th>
-                <th className="py-3.5 px-4 text-right whitespace-nowrap">COSTO REAL</th>
-                <th className="py-3.5 px-4 text-right whitespace-nowrap">PAGADO</th>
-                <th className="py-3.5 px-4 text-right whitespace-nowrap">SALDO RESTANTE</th>
-                <th className="py-3.5 px-3 text-center whitespace-nowrap">ACCIONES</th>
+              <tr className="bg-[#EFE8DE] border-b border-[#DDD2C4] text-[10px] font-bold uppercase tracking-wider text-[#786C68]">
+                <th className="py-3 px-2.5 whitespace-nowrap">PROVEEDOR</th>
+                <th className="py-3 px-2 whitespace-nowrap">CATEGORÍA</th>
+                <th className="py-3 px-2 whitespace-nowrap">TELÉFONO</th>
+                <th className="py-3 px-2 whitespace-nowrap">ETAPAS</th>
+                <th className="py-3 px-2 text-center whitespace-nowrap">FECHA LÍMITE</th>
+                <th className="py-3 px-2 text-right whitespace-nowrap">COSTO REAL</th>
+                <th className="py-3 px-2 text-right whitespace-nowrap">PAGADO</th>
+                <th className="py-3 px-2 text-right whitespace-nowrap">RESTANTE</th>
+                <th className="py-3 px-1.5 text-center whitespace-nowrap"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#EFEAE2]">
+            <tbody className="divide-y divide-[#EFEAE2] text-xs">
               {loading ? (
                 <tr><td colSpan={9} className="py-8 text-center text-[#786C68]">Cargando proveedores...</td></tr>
               ) : vendors.length === 0 ? (
@@ -441,42 +441,42 @@ export const ProveedoresPagosModule: React.FC = () => {
                   const dueStatus = getPaymentDueStatus(v.payment_due_date, v.saldo_restante);
                   return (
                     <tr key={v.id} className="hover:bg-[#F9F6F2] transition group">
-                      <td className="py-3 px-4 whitespace-nowrap">
+                      <td className="py-2.5 px-2.5 whitespace-nowrap">
                         <div
                           onClick={() => handleOpenEditVendor(v)}
-                          className="cursor-pointer font-bold text-[#332C2A] hover:text-[#A6736E] inline-flex items-center space-x-1.5 whitespace-nowrap transition"
+                          className="cursor-pointer font-bold text-[#332C2A] hover:text-[#A6736E] inline-flex items-center space-x-1 whitespace-nowrap transition"
                           title="Clic para editar información"
                         >
                           <span className="underline decoration-[#D2C4B4] decoration-1 underline-offset-4">{v.name}</span>
-                          <Edit3 className="w-3.5 h-3.5 text-[#C7B6A6] group-hover:text-[#A6736E] transition shrink-0" />
+                          <Edit3 className="w-3 h-3 text-[#C7B6A6] group-hover:text-[#A6736E] transition shrink-0" />
                         </div>
                         {v.contact_person && (
-                          <div className="text-[11px] text-[#786C68] whitespace-nowrap">Contacto: {v.contact_person}</div>
+                          <div className="text-[10px] text-[#786C68] whitespace-nowrap mt-0.5">Contacto: {v.contact_person}</div>
                         )}
                       </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <span className="inline-block bg-[#EFE8DE] text-[#4A3F3C] px-2.5 py-1 rounded-md text-[11px] font-medium border border-[#DDD2C4] whitespace-nowrap">
+                      <td className="py-2.5 px-2 whitespace-nowrap">
+                        <span className="inline-block bg-[#EFE8DE] text-[#4A3F3C] px-2 py-0.5 rounded-md text-[10px] font-medium border border-[#DDD2C4] whitespace-nowrap">
                           {v.type}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-mono text-[#4A3F3C] whitespace-nowrap min-w-[175px]">
+                      <td className="py-2.5 px-2 font-mono text-[11px] text-[#4A3F3C] whitespace-nowrap">
                         <a
                           href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-2 text-[#4A3F3C] hover:text-[#A6736E] whitespace-nowrap"
+                          className="inline-flex items-center space-x-1.5 text-[#4A3F3C] hover:text-[#A6736E] whitespace-nowrap"
                           title="Contactar vía WhatsApp"
                         >
-                          <MessageSquare className="w-3.5 h-3.5 text-[#A6736E] shrink-0" />
+                          <MessageSquare className="w-3 h-3 text-[#A6736E] shrink-0" />
                           <span className="whitespace-nowrap">{v.phone}</span>
                         </a>
                       </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                      <td className="py-2.5 px-2 whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1 whitespace-nowrap">
                           {v.locations.map(loc => (
                             <span
                               key={loc}
-                              className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider whitespace-nowrap ${
+                              className={`inline-block text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider whitespace-nowrap ${
                                 loc === 'CIVIL'
                                   ? 'bg-[#EFE2DF] text-[#7A4E49] border border-[#DFC9C4]'
                                   : loc === 'IGLESIA'
@@ -489,31 +489,31 @@ export const ProveedoresPagosModule: React.FC = () => {
                           ))}
                         </div>
                       </td>
-                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap">
                         {v.payment_due_date ? (
-                          <span className={`inline-block px-2.5 py-1 rounded-md text-[11px] border whitespace-nowrap ${dueStatus.badgeClass}`}>
+                          <span className={`inline-block px-2 py-0.5 rounded-md text-[10px] border whitespace-nowrap ${dueStatus.badgeClass}`}>
                             {dueStatus.label}
                           </span>
                         ) : (
-                          <span className="text-[11px] text-[#A89F91] italic">Sin definir</span>
+                          <span className="text-[10px] text-[#A89F91] italic">Sin definir</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-right font-semibold text-[#332C2A] whitespace-nowrap">
+                      <td className="py-2.5 px-2 text-right font-semibold text-[#332C2A] whitespace-nowrap">
                         ${v.costo_real.toLocaleString()}
                       </td>
-                      <td className="py-3 px-4 text-right font-semibold text-[#82524D] whitespace-nowrap">
+                      <td className="py-2.5 px-2 text-right font-semibold text-[#82524D] whitespace-nowrap">
                         ${(v.total_pagado || 0).toLocaleString()}
                       </td>
-                      <td className="py-3 px-4 text-right font-bold text-[#6D5A43] whitespace-nowrap">
+                      <td className="py-2.5 px-2 text-right font-bold text-[#6D5A43] whitespace-nowrap">
                         ${(v.saldo_restante || 0).toLocaleString()}
                       </td>
-                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                      <td className="py-2.5 px-1.5 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleDeleteVendor(v.id)}
-                          className="text-[#C7B6A6] hover:text-[#885853] p-1.5 transition"
+                          className="text-[#C7B6A6] hover:text-[#885853] p-1 transition"
                           title="Eliminar proveedor"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </td>
                     </tr>
