@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, CalendarCheck2, Users2, Grid2x2Check,
   CreditCard, Landmark, Church, Clock3, CheckSquare,
-  FileText, BarChart3, Contact2, History, X
+  FileText, BarChart3, Contact2, History, X, MessageSquare
 } from 'lucide-react';
 
 export type WorkspaceTab =
@@ -19,7 +19,8 @@ export type WorkspaceTab =
   | 'documentos'
   | 'reportes'
   | 'directorio'
-  | 'bitacora';
+  | 'bitacora'
+  | 'whatsapp';
 
 interface SidebarProps {
   currentTab: WorkspaceTab;
@@ -44,6 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'reuniones', label: 'Información y Reuniones', icon: CalendarCheck2 },
     { id: 'checklist', label: 'Checklist', icon: CheckSquare },
     { id: 'invitados', label: 'Invitados y Confirmaciones', icon: Users2 },
+    { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare, hiddenForNovios: true },
     { id: 'mesas', label: 'Mesas y Layout', icon: Grid2x2Check },
     { id: 'proveedores', label: 'Proveedores y Pagos', icon: CreditCard },
     { id: 'civil', label: 'Civil', icon: Landmark },

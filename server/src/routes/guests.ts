@@ -496,6 +496,24 @@ router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requ
         WHERE id = ?
       `).run(now, result.messageId || null, now, guestId);
 
+      const msgId = 'wmsg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      db.prepare(`
+        INSERT INTO whatsapp_messages (id, wedding_id, guest_id, phone, direction, message_type, content, template_name, status, whatsapp_message_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        msgId,
+        weddingId,
+        guestId,
+        guest.phone,
+        'OUTBOUND',
+        'template',
+        `Hola ${guest.first_name}, te enviamos la confirmación de asistencia (RSVP) para la boda de ${coupleNames}.`,
+        'rsvp_invitacion_vlb',
+        'DELIVERED',
+        result.messageId || null,
+        now
+      );
+
       logAudit(weddingId, req.user!.id, req.user!.name, 'ENVIAR_WHATSAPP_RSVP', 'GUEST', guestId, `Mensaje de RSVP enviado por WhatsApp a ${guest.first_name} ${guest.last_name}`);
 
       return res.json({
@@ -580,6 +598,24 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
         sentCount++;
         if (result.simulated) isSimulated = true;
         updateStmt.run('ENVIADO', now, result.messageId || null, now, g.id);
+
+        const msgId = 'wmsg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        db.prepare(`
+          INSERT INTO whatsapp_messages (id, wedding_id, guest_id, phone, direction, message_type, content, template_name, status, whatsapp_message_id, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          msgId,
+          weddingId,
+          g.id,
+          g.phone,
+          'OUTBOUND',
+          'template',
+          `Hola ${g.first_name}, te enviamos la confirmación de asistencia (RSVP) para la boda de ${coupleNames}.`,
+          'rsvp_invitacion_vlb',
+          'DELIVERED',
+          result.messageId || null,
+          now
+        );
       } else {
         errorCount++;
         updateStmt.run('ERROR', now, null, now, g.id);

@@ -6,12 +6,13 @@ import {
   Plus, Calendar, MapPin, Users, ArrowRight, Sparkles,
   Building2, Search, AlertCircle, Shield, Settings,
   Database, History, Download, Upload, Trash2, CheckCircle2, Edit3,
-  FileSpreadsheet, RefreshCw, Save, X
+  FileSpreadsheet, RefreshCw, Save, X, MessageSquare
 } from 'lucide-react';
+import { WhatsAppHubModule } from './WhatsAppHubModule';
 
 export const GeneralDashboard: React.FC = () => {
   const { user, token, setCurrentWedding } = useAuth();
-  const [activeTab, setActiveTab] = useState<'weddings' | 'users' | 'catalogs' | 'audit'>('weddings');
+  const [activeTab, setActiveTab] = useState<'weddings' | 'whatsapp' | 'users' | 'catalogs' | 'audit'>('weddings');
 
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -770,6 +771,17 @@ export const GeneralDashboard: React.FC = () => {
               <span>Bodas VLB ({weddings.length})</span>
             </button>
             <button
+              onClick={() => setActiveTab('whatsapp')}
+              className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
+                activeTab === 'whatsapp'
+                  ? 'bg-[#FFFFFF] text-[#1B4332] shadow-xs'
+                  : 'bg-emerald-900/60 text-white hover:bg-emerald-800'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4 text-emerald-300" />
+              <span>WhatsApp Hub</span>
+            </button>
+            <button
               onClick={() => setActiveTab('users')}
               className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
                 activeTab === 'users'
@@ -808,6 +820,11 @@ export const GeneralDashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* TAB: WHATSAPP HUB */}
+      {activeTab === 'whatsapp' && (
+        <WhatsAppHubModule />
+      )}
 
       {/* TAB 1: BODAS ACTIVAS */}
       {activeTab === 'weddings' && (

@@ -340,6 +340,24 @@ export function initDatabase() {
     // Column already exists
   }
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS whatsapp_messages (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT NOT NULL,
+      guest_id TEXT,
+      phone TEXT NOT NULL,
+      direction TEXT NOT NULL, -- 'OUTBOUND' | 'INBOUND'
+      message_type TEXT NOT NULL, -- 'template' | 'text'
+      content TEXT NOT NULL,
+      template_name TEXT,
+      status TEXT DEFAULT 'DELIVERED', -- 'SENT' | 'DELIVERED' | 'READ' | 'FAILED'
+      whatsapp_message_id TEXT,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE CASCADE,
+      FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE SET NULL
+    );
+  `);
+
   const defaultPhases = [
     { id: 'phase1_internal_team', name: 'Fase 1: Operación Equipo VLB (Bodas, Invitados, Mesas, Proveedores, Pagos)', enabled: true },
     { id: 'phase2_novios_portal', name: 'Fase 2: Portal de Novios, Reuniones, Timeline y Checklist', enabled: true },
