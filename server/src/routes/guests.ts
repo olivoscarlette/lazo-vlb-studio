@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db/index.js';
 import { authenticateToken, requireWeddingAccess, check5DayTableLock, logAudit } from '../middleware/auth.js';
+import { WhatsAppService } from '../services/whatsapp.js';
 import * as XLSX from 'xlsx';
 
 const router = Router();
@@ -44,6 +45,8 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
       g.id, g.wedding_id, g.first_name, g.last_name, g.phone,
       g.companion_count, COALESCE(g.priority, 'Media') as priority,
       g.status, g.table_id, g.observations,
+      COALESCE(g.whatsapp_status, 'NO_ENVIADO') as whatsapp_status,
+      g.last_whatsapp_sent_at, g.whatsapp_message_id,
       g.created_at, g.updated_at,
       t.name as table_name
     FROM guests g
@@ -456,6 +459,144 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
     errorsCount: errors.length,
     errors
   });
+});
+
+// POST /api/weddings/:weddingId/guests/:guestId/send-whatsapp
+// Enviar invitación / confirmación de RSVP por WhatsApp a un invitado individual
+router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requireWeddingAccess, async (req, res) => {
+  const { weddingId, guestId } = req.params;
+
+  try {
+    const guest = db.prepare('SELECT * FROM guests WHERE id = ? AND wedding_id = ?').get(guestId, weddingId) as any;
+    if (!guest) {
+      return res.status(404).json({ error: 'Invitado no encontrado.' });
+    }
+
+    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+    const coupleNames = wedding ? `${wedding.bride_name} y ${wedding.groom_name}` : 'los novios';
+
+    const result = await WhatsAppService.sendRsvpInvitation({
+      guestName: `${guest.first_name} ${guest.last_name}`.trim(),
+      guestPhone: guest.phone,
+      companionCount: guest.companion_count || 0,
+      coupleNames,
+      weddingDate: wedding?.date
+    });
+
+    const now = new Date().toISOString();
+
+    if (result.success) {
+      db.prepare(`
+        UPDATE guests
+        SET whatsapp_status = 'ENVIADO',
+            last_whatsapp_sent_at = ?,
+            whatsapp_message_id = ?,
+            updated_at = ?
+        WHERE id = ?
+      `).run(now, result.messageId || null, now, guestId);
+
+      logAudit(weddingId, req.user!.id, req.user!.name, 'ENVIAR_WHATSAPP_RSVP', 'GUEST', guestId, `Mensaje de RSVP enviado por WhatsApp a ${guest.first_name} ${guest.last_name}`);
+
+      return res.json({
+        success: true,
+        message: result.simulated
+          ? `Mensaje enviado en Modo Sandbox (Prueba simulada exitosa a ${guest.phone})`
+          : `Mensaje oficial enviado exitosamente a ${guest.phone}`,
+        simulated: result.simulated,
+        whatsapp_status: 'ENVIADO',
+        last_whatsapp_sent_at: now
+      });
+    } else {
+      db.prepare(`
+        UPDATE guests
+        SET whatsapp_status = 'ERROR',
+            updated_at = ?
+        WHERE id = ?
+      `).run(now, guestId);
+
+      return res.status(400).json({
+        success: false,
+        error: result.error || 'No se pudo enviar el mensaje por WhatsApp'
+      });
+    }
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Error del servidor al procesar el envío de WhatsApp: ' + err.message });
+  }
+});
+
+// POST /api/weddings/:weddingId/guests/send-whatsapp-bulk
+// Enviar invitación / confirmación en lote a todos los invitados pendientes o seleccionados
+router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireWeddingAccess, async (req, res) => {
+  const { weddingId } = req.params;
+  const { guestIds, onlyPending = true } = req.body || {};
+
+  try {
+    let guestsToProcess: any[] = [];
+    if (Array.isArray(guestIds) && guestIds.length > 0) {
+      const placeholders = guestIds.map(() => '?').join(',');
+      guestsToProcess = db.prepare(`SELECT * FROM guests WHERE wedding_id = ? AND id IN (${placeholders})`).all(weddingId, ...guestIds) as any[];
+    } else {
+      let q = 'SELECT * FROM guests WHERE wedding_id = ?';
+      if (onlyPending) {
+        q += " AND status = 'Pendiente de confirmar'";
+      }
+      guestsToProcess = db.prepare(q).all(weddingId) as any[];
+    }
+
+    if (guestsToProcess.length === 0) {
+      return res.status(400).json({ error: 'No hay invitados para procesar con los filtros seleccionados.' });
+    }
+
+    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+    const coupleNames = wedding ? `${wedding.bride_name} y ${wedding.groom_name}` : 'los novios';
+
+    const updateStmt = db.prepare(`
+      UPDATE guests
+      SET whatsapp_status = ?,
+          last_whatsapp_sent_at = ?,
+          whatsapp_message_id = ?,
+          updated_at = ?
+      WHERE id = ?
+    `);
+
+    let sentCount = 0;
+    let errorCount = 0;
+    let isSimulated = false;
+
+    for (const g of guestsToProcess) {
+      const result = await WhatsAppService.sendRsvpInvitation({
+        guestName: `${g.first_name} ${g.last_name}`.trim(),
+        guestPhone: g.phone,
+        companionCount: g.companion_count || 0,
+        coupleNames,
+        weddingDate: wedding?.date
+      });
+
+      const now = new Date().toISOString();
+
+      if (result.success) {
+        sentCount++;
+        if (result.simulated) isSimulated = true;
+        updateStmt.run('ENVIADO', now, result.messageId || null, now, g.id);
+      } else {
+        errorCount++;
+        updateStmt.run('ERROR', now, null, now, g.id);
+      }
+    }
+
+    logAudit(weddingId, req.user!.id, req.user!.name, 'ENVIAR_WHATSAPP_RSVP_BULK', 'GUEST', null, `Envío masivo WhatsApp RSVP: ${sentCount} enviados, ${errorCount} errores`);
+
+    return res.json({
+      success: true,
+      total: guestsToProcess.length,
+      sentCount,
+      errorCount,
+      simulated: isSimulated,
+      message: `Proceso completado: ${sentCount} invitaciones enviadas${errorCount > 0 ? `, ${errorCount} con error.` : '.'}`
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Error del servidor en envío masivo: ' + err.message });
+  }
 });
 
 export default router;

@@ -74,6 +74,9 @@ export interface Guest {
   table_id: string | null;
   table_name?: string | null;
   observations: string | null;
+  whatsapp_status?: 'NO_ENVIADO' | 'ENVIADO' | 'ENTREGADO' | 'LEÍDO' | 'ERROR';
+  last_whatsapp_sent_at?: string | null;
+  whatsapp_message_id?: string | null;
   created_at: string;
   updated_at: string;
 }

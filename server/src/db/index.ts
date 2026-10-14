@@ -119,6 +119,9 @@ export function initDatabase() {
       status TEXT DEFAULT 'Pendiente de confirmar',
       table_id TEXT,
       observations TEXT,
+      whatsapp_status TEXT DEFAULT 'NO_ENVIADO',
+      last_whatsapp_sent_at TEXT,
+      whatsapp_message_id TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE CASCADE,
@@ -315,6 +318,24 @@ export function initDatabase() {
 
   try {
     db.exec('ALTER TABLE vendors ADD COLUMN payment_due_date TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN whatsapp_status TEXT DEFAULT 'NO_ENVIADO';");
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE guests ADD COLUMN last_whatsapp_sent_at TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE guests ADD COLUMN whatsapp_message_id TEXT;');
   } catch {
     // Column already exists
   }
