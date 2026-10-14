@@ -16,7 +16,7 @@ export class WhatsAppService {
   private static getCredentials() {
     const token = process.env.WHATSAPP_ACCESS_TOKEN || '';
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
-    const templateName = process.env.WHATSAPP_RSVP_TEMPLATE || 'rsvp_invitacion_vlb';
+    const templateName = process.env.WHATSAPP_RSVP_TEMPLATE || 'hello_world';
     const isConfigured = Boolean(token && phoneNumberId && token !== 'test_token');
 
     return { token, phoneNumberId, templateName, isConfigured };
@@ -73,29 +73,43 @@ export class WhatsAppService {
 
     // --- Modo Oficial Meta Cloud API ---
     try {
-      const url = `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`;
+      const url = `https://graph.facebook.com/v25.0/${phoneNumberId}/messages`;
 
-      const payload = {
-        messaging_product: 'whatsapp',
-        recipient_type: 'individual',
-        to: toPhone,
-        type: 'template',
-        template: {
-          name: templateName,
-          language: { code: 'es_MX' },
-          components: [
-            {
-              type: 'body',
-              parameters: [
-                { type: 'text', text: params.guestName },
-                { type: 'text', text: params.coupleNames || 'los novios' },
-                { type: 'text', text: params.weddingDate || 'la fecha acordada' },
-                { type: 'text', text: (1 + params.companionCount).toString() }
-              ]
-            }
-          ]
-        }
-      };
+      let payload: any;
+      if (templateName === 'hello_world') {
+        payload = {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: toPhone,
+          type: 'template',
+          template: {
+            name: 'hello_world',
+            language: { code: 'en_US' }
+          }
+        };
+      } else {
+        payload = {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: toPhone,
+          type: 'template',
+          template: {
+            name: templateName,
+            language: { code: 'es_MX' },
+            components: [
+              {
+                type: 'body',
+                parameters: [
+                  { type: 'text', text: params.guestName },
+                  { type: 'text', text: params.coupleNames || 'los novios' },
+                  { type: 'text', text: params.weddingDate || 'la fecha acordada' },
+                  { type: 'text', text: (1 + params.companionCount).toString() }
+                ]
+              }
+            ]
+          }
+        };
+      }
 
       const response = await fetch(url, {
         method: 'POST',
