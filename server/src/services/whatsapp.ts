@@ -14,7 +14,7 @@ interface SendTemplateResult {
 
 export class WhatsAppService {
   private static getCredentials() {
-    const token = process.env.WHATSAPP_ACCESS_TOKEN || 'EAAaS7lbIJrMBSnq4Fjc1EU5Uc5oB3ZAZBHOWOkvuLeYN2rZAwqCBCLtt2jTmk35SrBMUbPHuSe3hmAIOwKh7jwYUG1xQK5w2X2xGvnDpR5o4QJUjAyXMOyMlypm8djDDfXCzYAKe5wxnc33jqu4NQipjQnSjtxJk6CTfX69hwMGGhLoUl2PfFuwbJ2mwxmbPi7SzUIUf3DeqZA9v8bchn8gt2IF6SHC7JCkjoR3ZBospZBElq6jMPoyEbqX5tZCxo7ZA2boMWmQWMrHOgvFnJ7OJ6gZBjZAKUypYEURSF6wTcw';
+    const token = process.env.WHATSAPP_ACCESS_TOKEN || 'EAAaS7lbIJrMBSspZBIZBl8mR1cR641gqhq0TZAT6WZB2qDhZCcLBRkkIIv6Hu8RPleGAzHtyJUJATNoDikSXWieZCwjbuLXsyKTAlTGW7K2bJm3vKF0O8ZBeDSOQZCnho9r49ENGmxtSxCHYxc6GBVQtGWzzqGA7LZBDZA0aN2jWU6WMr7lKCYvQ3mlvoYegfRY4S3j4p3TGZBAJyJ6WZAdiVm8mheKJZAbLZC0es3Dximj9MB7KRr0Ki4LDMMWaFZAp2f4zpqTlzZBuIgzMdXFDawZBrmVCTBFD8r1QJz8Qr1mZA67AZDZD';
     const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || '1424004584122204';
     const templateName = process.env.WHATSAPP_RSVP_TEMPLATE || 'hello_world';
     const isConfigured = Boolean(token && phoneNumberId && token !== 'test_token');
