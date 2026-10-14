@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db } from '../db/index.js';
-import { authenticateToken, requireWeddingAccess, check5DayTableLock, logAudit } from '../middleware/auth.js';
+import { authenticateToken, requireWeddingAccess, requireRole, check5DayTableLock, logAudit } from '../middleware/auth.js';
 import { WhatsAppService } from '../services/whatsapp.js';
 import * as XLSX from 'xlsx';
 
@@ -463,7 +463,8 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
 
 // POST /api/weddings/:weddingId/guests/:guestId/send-whatsapp
 // Enviar invitación / confirmación de RSVP por WhatsApp a un invitado individual
-router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requireWeddingAccess, async (req, res) => {
+// SOLO ADMINISTRADOR y COORDINADOR
+router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requireWeddingAccess, requireRole(['ADMINISTRADOR', 'COORDINADOR']), async (req, res) => {
   const { weddingId, guestId } = req.params;
 
   try {
@@ -526,7 +527,8 @@ router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requ
 
 // POST /api/weddings/:weddingId/guests/send-whatsapp-bulk
 // Enviar invitación / confirmación en lote a todos los invitados pendientes o seleccionados
-router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireWeddingAccess, async (req, res) => {
+// SOLO ADMINISTRADOR y COORDINADOR
+router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireWeddingAccess, requireRole(['ADMINISTRADOR', 'COORDINADOR']), async (req, res) => {
   const { weddingId } = req.params;
   const { guestIds, onlyPending = true } = req.body || {};
 

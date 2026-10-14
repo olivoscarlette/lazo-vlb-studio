@@ -47,6 +47,9 @@ export const InvitadosModule: React.FC = () => {
   const [bulkSendingWhatsapp, setBulkSendingWhatsapp] = useState(false);
   const [whatsappBanner, setWhatsappBanner] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  // Permiso exclusivo: solo Administradores y Coordinadores pueden enviar WhatsApps
+  const canSendWhatsApp = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR';
+
   // Form for Add/Edit
   const [formData, setFormData] = useState({
     first_name: '',
@@ -556,19 +559,21 @@ export const InvitadosModule: React.FC = () => {
             <span>Importar Excel</span>
           </button>
 
-          <button
-            onClick={handleSendBulkWhatsapp}
-            disabled={bulkSendingWhatsapp}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition shadow-xs"
-            title="Enviar plantilla oficial de WhatsApp RSVP a los invitados pendientes"
-          >
-            {bulkSendingWhatsapp ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Send className="w-3.5 h-3.5 text-emerald-100" />
-            )}
-            <span>{bulkSendingWhatsapp ? 'Enviando WhatsApps...' : 'Enviar RSVP WhatsApp (Pendientes)'}</span>
-          </button>
+          {canSendWhatsApp && (
+            <button
+              onClick={handleSendBulkWhatsapp}
+              disabled={bulkSendingWhatsapp}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition shadow-xs"
+              title="Enviar plantilla oficial de WhatsApp RSVP a los invitados pendientes"
+            >
+              {bulkSendingWhatsapp ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Send className="w-3.5 h-3.5 text-emerald-100" />
+              )}
+              <span>{bulkSendingWhatsapp ? 'Enviando WhatsApps...' : 'Enviar RSVP WhatsApp (Pendientes)'}</span>
+            </button>
+          )}
 
           <button
             onClick={handleOpenAdd}
@@ -771,7 +776,9 @@ export const InvitadosModule: React.FC = () => {
                   PRIORIDAD {sortBy === 'priority_desc' ? '↓' : sortBy === 'priority_asc' ? '↑' : '↕'}
                 </th>
                 <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">ESTATUS</th>
-                <th className="py-3.5 px-4 text-center whitespace-nowrap">RSVP WHATSAPP</th>
+                {canSendWhatsApp && (
+                  <th className="py-3.5 px-4 text-center whitespace-nowrap">RSVP WHATSAPP</th>
+                )}
                 <th className="py-3.5 px-4 whitespace-nowrap">MESA</th>
                 <th className="py-3.5 px-4 whitespace-nowrap">OBSERVACIONES</th>
               </tr>
@@ -779,13 +786,13 @@ export const InvitadosModule: React.FC = () => {
             <tbody className="divide-y divide-[#EFEAE2]">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={canSendWhatsApp ? 8 : 7} className="py-12 text-center text-[#786C68]">
                     Cargando invitados...
                   </td>
                 </tr>
               ) : guests.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={canSendWhatsApp ? 8 : 7} className="py-12 text-center text-[#786C68]">
                     No se encontraron invitados con los filtros actuales.
                   </td>
                 </tr>
@@ -874,44 +881,46 @@ export const InvitadosModule: React.FC = () => {
                       </select>
                     </td>
 
-                    {/* RSVP WhatsApp Action & Status */}
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
-                      {sendingWhatsappIds[guest.id] ? (
-                        <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 rounded-lg border border-emerald-200">
-                          <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
-                          <span>Enviando...</span>
-                        </span>
-                      ) : guest.whatsapp_status === 'ENVIADO' ? (
-                        <div className="inline-flex items-center space-x-1.5">
-                          <span
-                            className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 rounded-lg border border-emerald-200 cursor-pointer hover:bg-emerald-100 transition"
-                            onClick={() => handleSendSingleWhatsapp(guest)}
-                            title={`Reenviar invitación (Último envío: ${guest.last_whatsapp_sent_at ? new Date(guest.last_whatsapp_sent_at).toLocaleDateString() : 'hoy'})`}
-                          >
-                            <Check className="w-3 h-3 text-emerald-600" />
-                            <span>Enviado ✓</span>
+                    {/* RSVP WhatsApp Action & Status — Only visible for ADMINISTRADOR & COORDINADOR */}
+                    {canSendWhatsApp && (
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        {sendingWhatsappIds[guest.id] ? (
+                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 rounded-lg border border-emerald-200">
+                            <Loader2 className="w-3 h-3 animate-spin text-emerald-600" />
+                            <span>Enviando...</span>
                           </span>
-                        </div>
-                      ) : guest.whatsapp_status === 'ERROR' ? (
-                        <button
-                          onClick={() => handleSendSingleWhatsapp(guest)}
-                          className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition"
-                          title="Reintentar envío"
-                        >
-                          <AlertCircle className="w-3 h-3 text-rose-600" />
-                          <span>Reintentar</span>
-                        </button>
-                      ) : (
-                        <button
-                          onClick={() => handleSendSingleWhatsapp(guest)}
-                          className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition shadow-xs"
-                          title="Enviar plantilla oficial de WhatsApp RSVP"
-                        >
-                          <Send className="w-3 h-3 text-emerald-100" />
-                          <span>Enviar RSVP</span>
-                        </button>
-                      )}
-                    </td>
+                        ) : guest.whatsapp_status === 'ENVIADO' ? (
+                          <div className="inline-flex items-center space-x-1.5">
+                            <span
+                              className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 rounded-lg border border-emerald-200 cursor-pointer hover:bg-emerald-100 transition"
+                              onClick={() => handleSendSingleWhatsapp(guest)}
+                              title={`Reenviar invitación (Último envío: ${guest.last_whatsapp_sent_at ? new Date(guest.last_whatsapp_sent_at).toLocaleDateString() : 'hoy'})`}
+                            >
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              <span>Enviado ✓</span>
+                            </span>
+                          </div>
+                        ) : guest.whatsapp_status === 'ERROR' ? (
+                          <button
+                            onClick={() => handleSendSingleWhatsapp(guest)}
+                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition"
+                            title="Reintentar envío"
+                          >
+                            <AlertCircle className="w-3 h-3 text-rose-600" />
+                            <span>Reintentar</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleSendSingleWhatsapp(guest)}
+                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition shadow-xs"
+                            title="Enviar plantilla oficial de WhatsApp RSVP"
+                          >
+                            <Send className="w-3 h-3 text-emerald-100" />
+                            <span>Enviar RSVP</span>
+                          </button>
+                        )}
+                      </td>
+                    )}
 
                     {/* Mesa — Inline Editable Dropdown */}
                     <td className="py-3 px-4 whitespace-nowrap min-w-[170px]">
