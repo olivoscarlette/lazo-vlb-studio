@@ -230,13 +230,13 @@ export const DirectorioModule: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">
+          <span className="text-xs uppercase font-bold tracking-widest text-[#8A7E72]">
             Contactos Rápidos y Asignación
           </span>
-          <h2 className="font-serif text-3xl font-bold text-stone-900">
+          <h2 className="font-serif text-3xl font-bold text-[#2B2826] mt-1">
             Directorio y Equipo VLB
           </h2>
-          <p className="text-xs text-stone-500 mt-1">
+          <p className="text-sm text-[#8A7E72] mt-1 leading-relaxed">
             Equipo VLB Studio asignado a esta boda y proveedores con enlaces directos para llamada y WhatsApp.
           </p>
         </div>
@@ -246,10 +246,10 @@ export const DirectorioModule: React.FC = () => {
             <button
               key={t}
               onClick={() => setFilterType(t)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
                 filterType === t
-                  ? 'bg-stone-900 text-white'
-                  : 'bg-white text-stone-600 hover:bg-stone-100 border border-stone-200'
+                  ? 'bg-[#9C665C] text-white shadow-xs'
+                  : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
               }`}
             >
               {t === 'ALL' ? 'Todos los Contactos' : t === 'TEAM' ? `Equipo VLB (${directory.team.length})` : `Proveedores (${directory.vendors.length})`}
@@ -259,10 +259,10 @@ export const DirectorioModule: React.FC = () => {
           {isAdmin && (
             <button
               onClick={handleOpenAddModal}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#9C665C] hover:bg-[#8a574e] text-white transition shadow-xs"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#9C665C] hover:bg-[#8A574E] text-white transition shadow-xs"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>+ Asignar / Nuevo Equipo VLB</span>
+              <span>+ Asignar Miembro VLB</span>
             </button>
           )}
         </div>
@@ -270,36 +270,36 @@ export const DirectorioModule: React.FC = () => {
 
       {/* Search Input */}
       <div className="relative max-w-md">
-        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A7E72]" />
         <input
           type="text"
           placeholder="Buscar por nombre, cargo, proveedor o teléfono..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 bg-white border border-stone-200 rounded-xl text-xs text-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-900"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
         />
       </div>
 
       {/* Contacts Grid */}
       {loading ? (
-        <div className="py-12 text-center text-stone-400 text-xs">Cargando directorio...</div>
+        <div className="py-12 text-center text-[#8A7E72] text-sm">Cargando directorio...</div>
       ) : filteredContacts.length === 0 ? (
-        <div className="luxury-card rounded-2xl p-8 text-center text-stone-400 text-xs border border-dashed border-stone-300">
-          No se encontraron contactos en el directorio.
+        <div className="bg-white rounded-3xl p-12 text-center text-[#8A7E72] text-sm border border-dashed border-[#EAE3DA]">
+          No se encontraron contactos en el directorio para los filtros seleccionados.
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredContacts.map((contact, i) => (
             <div
               key={i}
-              className="luxury-card rounded-2xl p-5 border border-stone-200 flex flex-col justify-between hover:border-stone-400 transition"
+              className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs hover:border-[#DDD2C4] flex flex-col justify-between transition-all"
             >
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                <div className="flex items-center justify-between mb-3">
+                  <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
                     contact.kind === 'TEAM'
-                      ? 'bg-[#EFE2DF] text-[#8a574e] border border-[#DFC9C4]'
-                      : 'bg-blue-100 text-blue-900 border border-blue-200'
+                      ? 'bg-[#FDF6F5] text-[#9C665C] border border-[#F3DCD7]'
+                      : 'bg-[#FAF8F5] text-[#5A524C] border border-[#EAE3DA]'
                   }`}>
                     {contact.kind === 'TEAM' ? 'Equipo VLB' : contact.type || 'Proveedor'}
                   </span>
@@ -309,7 +309,7 @@ export const DirectorioModule: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleOpenEditMember(contact)}
-                        className="p-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-100 rounded-lg transition"
+                        className="p-1.5 text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#FAF8F5] rounded-lg transition"
                         title="Editar datos o cargo del miembro del equipo"
                       >
                         <Edit3 className="w-3.5 h-3.5" />
@@ -317,53 +317,53 @@ export const DirectorioModule: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleUnassignMember(contact)}
-                        className="p-1.5 text-stone-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
+                        className="p-1.5 text-[#8A7E72] hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
                         title="Quitar de esta boda"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   ) : contact.contact_person ? (
-                    <span className="text-[10px] text-stone-400">Atención: {contact.contact_person}</span>
+                    <span className="text-xs text-[#8A7E72]">Atención: {contact.contact_person}</span>
                   ) : null}
                 </div>
 
-                <h4 className="font-serif text-lg font-bold text-stone-900">{contact.name}</h4>
-                <div className="text-xs text-stone-600 font-medium mt-0.5">
+                <h4 className="font-serif text-xl font-bold text-[#2B2826]">{contact.name}</h4>
+                <div className="text-sm text-[#8A7E72] font-medium mt-1">
                   {contact.role || contact.category}
                 </div>
 
                 {contact.email && (
-                  <div className="flex items-center space-x-1.5 text-xs text-stone-500 mt-2">
-                    <Mail className="w-3.5 h-3.5 text-stone-400 shrink-0" />
+                  <div className="flex items-center space-x-2 text-sm text-[#8A7E72] mt-3">
+                    <Mail className="w-4 h-4 text-[#8A7E72]/70 shrink-0" />
                     <span className="truncate">{contact.email}</span>
                   </div>
                 )}
               </div>
 
               {/* Action Buttons: Call & WhatsApp */}
-              <div className="mt-4 pt-3 border-t border-stone-100 flex items-center space-x-2">
+              <div className="mt-5 pt-4 border-t border-[#FAF8F5] flex items-center space-x-2">
                 {contact.phone ? (
                   <>
                     <a
                       href={`https://wa.me/${contact.phone.replace(/[^0-9]/g, '')}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex-1 inline-flex items-center justify-center space-x-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-200 transition"
+                      className="flex-1 inline-flex items-center justify-center space-x-2 px-3 py-2.5 bg-[#E4ECE5] hover:bg-[#D5E3D7] text-[#2B5235] text-sm font-semibold rounded-xl border border-[#BDD4C1] transition"
                     >
-                      <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                      <MessageSquare className="w-4 h-4 text-[#2B5235]" />
                       <span>WhatsApp</span>
                     </a>
                     <a
                       href={`tel:${contact.phone}`}
-                      className="inline-flex items-center justify-center p-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl border border-stone-200 transition"
+                      className="inline-flex items-center justify-center p-2.5 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] rounded-xl border border-[#EAE3DA] transition"
                       title="Llamar"
                     >
-                      <Phone className="w-3.5 h-3.5" />
+                      <Phone className="w-4 h-4" />
                     </a>
                   </>
                 ) : (
-                  <span className="text-xs text-stone-400 italic">Sin teléfono registrado</span>
+                  <span className="text-sm text-[#8A7E72] italic py-1">Sin teléfono registrado</span>
                 )}
               </div>
             </div>
@@ -373,21 +373,21 @@ export const DirectorioModule: React.FC = () => {
 
       {/* Modal: Asignar o Crear Miembro de Equipo VLB */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-stone-950/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200">
+        <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif text-xl font-bold text-stone-900">Equipo VLB en esta Boda</h3>
-              <button onClick={() => setShowAddModal(false)} className="text-stone-400 hover:text-stone-700">
+              <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Equipo VLB en esta Boda</h3>
+              <button onClick={() => setShowAddModal(false)} className="text-[#8A7E72] hover:text-[#2B2826] p-1 rounded-lg">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex space-x-2 mb-4 bg-stone-100 p-1 rounded-xl">
+            <div className="flex space-x-2 mb-4 bg-[#FAF8F5] p-1 rounded-xl border border-[#EAE3DA]">
               <button
                 type="button"
                 onClick={() => setAddMode('EXISTING')}
                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
-                  addMode === 'EXISTING' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600'
+                  addMode === 'EXISTING' ? 'bg-[#9C665C] text-white shadow-xs' : 'text-[#5A524C]'
                 }`}
               >
                 Asignar Existente ({unassignedUsers.length})
@@ -396,7 +396,7 @@ export const DirectorioModule: React.FC = () => {
                 type="button"
                 onClick={() => setAddMode('NEW')}
                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
-                  addMode === 'NEW' ? 'bg-white text-stone-900 shadow-2xs' : 'text-stone-600'
+                  addMode === 'NEW' ? 'bg-[#9C665C] text-white shadow-xs' : 'text-[#5A524C]'
                 }`}
               >
                 + Crear Nuevo Miembro
@@ -404,26 +404,26 @@ export const DirectorioModule: React.FC = () => {
             </div>
 
             {formError && (
-              <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+              <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm">
                 {formError}
               </div>
             )}
 
-            <form onSubmit={handleSaveTeamMember} className="space-y-3.5">
+            <form onSubmit={handleSaveTeamMember} className="space-y-4">
               {addMode === 'EXISTING' ? (
                 unassignedUsers.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-stone-500 bg-stone-50 rounded-xl border border-stone-200">
+                  <div className="p-4 text-center text-sm text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-[#EAE3DA]">
                     Todos los miembros actuales del equipo VLB ya están asignados a esta boda. Usa la pestaña <strong>"+ Crear Nuevo Miembro"</strong> arriba.
                   </div>
                 ) : (
                   <>
                     <div>
-                      <label className="block text-xs font-bold text-stone-700 mb-1">Seleccionar Miembro VLB *</label>
+                      <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Seleccionar Miembro VLB *</label>
                       <select
                         required
                         value={assignForm.user_id}
                         onChange={e => setAssignForm({ ...assignForm, user_id: e.target.value })}
-                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
+                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                       >
                         <option value="">Selecciona un miembro...</option>
                         {unassignedUsers.map(u => (
@@ -434,14 +434,14 @@ export const DirectorioModule: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-stone-700 mb-1">Cargo / Función en esta Boda *</label>
+                      <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Cargo / Función en esta Boda *</label>
                       <input
                         type="text"
                         required
                         placeholder="Ej. Coordinadora Principal, Staff Día Boda..."
                         value={assignForm.assigned_role}
                         onChange={e => setAssignForm({ ...assignForm, assigned_role: e.target.value })}
-                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                       />
                     </div>
                   </>
@@ -449,47 +449,47 @@ export const DirectorioModule: React.FC = () => {
               ) : (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">Nombre Completo *</label>
+                    <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Nombre Completo *</label>
                     <input
                       type="text"
                       required
                       placeholder="Ej. Valeria Lozano"
                       value={newMemberForm.name}
                       onChange={e => setNewMemberForm({ ...newMemberForm, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                      className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-stone-700 mb-1">Email de Acceso *</label>
+                      <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Email de Acceso *</label>
                       <input
                         type="email"
                         required
                         placeholder="nombre@vlb.studio"
                         value={newMemberForm.email}
                         onChange={e => setNewMemberForm({ ...newMemberForm, email: e.target.value })}
-                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-stone-700 mb-1">Contraseña *</label>
+                      <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Contraseña *</label>
                       <input
                         type="password"
                         required
-                        placeholder="Contraseña de acceso"
+                        placeholder="Contraseña"
                         value={newMemberForm.password}
                         onChange={e => setNewMemberForm({ ...newMemberForm, password: e.target.value })}
-                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-bold text-stone-700 mb-1">Nivel de Permiso *</label>
+                      <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Nivel de Permiso *</label>
                       <select
                         value={newMemberForm.role}
                         onChange={e => setNewMemberForm({ ...newMemberForm, role: e.target.value })}
-                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
+                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                       >
                         <option value="COORDINADOR">COORDINADOR (Planner)</option>
                         <option value="STAFF">STAFF (Operativo)</option>
@@ -497,35 +497,35 @@ export const DirectorioModule: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-stone-700 mb-1">WhatsApp / Teléfono</label>
+                      <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">WhatsApp / Teléfono</label>
                       <input
                         type="text"
                         placeholder="+52 55..."
                         value={newMemberForm.phone}
                         onChange={e => setNewMemberForm({ ...newMemberForm, phone: e.target.value })}
-                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">Cargo en esta Boda *</label>
+                    <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Cargo en esta Boda *</label>
                     <input
                       type="text"
                       required
                       placeholder="Ej. Coordinadora Senior, Staff Recepción..."
                       value={newMemberForm.assigned_role}
                       onChange={e => setNewMemberForm({ ...newMemberForm, assigned_role: e.target.value })}
-                      className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                      className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                     />
                   </div>
                 </>
               )}
 
-              <div className="flex justify-end space-x-2 pt-3 border-t border-stone-100">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-100 rounded-xl"
+                  className="px-4 py-2.5 text-sm font-semibold text-[#5A524C] hover:bg-[#FAF8F5] rounded-xl transition"
                 >
                   Cancelar
                 </button>
@@ -533,7 +533,7 @@ export const DirectorioModule: React.FC = () => {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-5 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow"
+                    className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-xs transition"
                   >
                     {saving ? 'Guardando...' : 'Guardar en Equipo'}
                   </button>
@@ -546,86 +546,86 @@ export const DirectorioModule: React.FC = () => {
 
       {/* Modal: Editar Miembro del Equipo VLB */}
       {editingMember && (
-        <div className="fixed inset-0 bg-stone-950/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200">
+        <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif text-xl font-bold text-stone-900">Editar Miembro del Equipo</h3>
-              <button onClick={() => setEditingMember(null)} className="text-stone-400 hover:text-stone-700">
+              <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Editar Miembro del Equipo</h3>
+              <button onClick={() => setEditingMember(null)} className="text-[#8A7E72] hover:text-[#2B2826] p-1 rounded-lg">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+              <div className="mb-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-sm">
                 {formError}
               </div>
             )}
 
-            <form onSubmit={handleSaveEditMember} className="space-y-3.5">
+            <form onSubmit={handleSaveEditMember} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Nombre Completo *</label>
+                <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Nombre Completo *</label>
                 <input
                   type="text"
                   required
                   value={editMemberForm.name}
                   onChange={e => setEditMemberForm({ ...editMemberForm, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Cargo en esta Boda *</label>
+                <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Cargo en esta Boda *</label>
                 <input
                   type="text"
                   required
                   value={editMemberForm.assigned_role}
                   onChange={e => setEditMemberForm({ ...editMemberForm, assigned_role: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Email *</label>
+                  <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Email *</label>
                   <input
                     type="email"
                     required
                     value={editMemberForm.email}
                     onChange={e => setEditMemberForm({ ...editMemberForm, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">WhatsApp / Teléfono</label>
+                  <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">WhatsApp / Teléfono</label>
                   <input
                     type="text"
                     value={editMemberForm.phone}
                     onChange={e => setEditMemberForm({ ...editMemberForm, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Nueva Contraseña (Opcional)</label>
+                <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Nueva Contraseña (Opcional)</label>
                 <input
                   type="password"
                   placeholder="Dejar en blanco para conservar la actual"
                   value={editMemberForm.password}
                   onChange={e => setEditMemberForm({ ...editMemberForm, password: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-3 border-t border-stone-100">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
                 <button
                   type="button"
                   onClick={() => setEditingMember(null)}
-                  className="px-4 py-2 text-xs font-bold text-stone-600 hover:bg-stone-100 rounded-xl"
+                  className="px-4 py-2.5 text-sm font-semibold text-[#5A524C] hover:bg-[#FAF8F5] rounded-xl transition"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow"
+                  className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-xs transition"
                 >
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
