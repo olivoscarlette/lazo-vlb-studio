@@ -57,9 +57,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
   const showHamburger = Boolean(currentWedding || user.role !== 'ADMINISTRADOR');
 
   return (
-    <header className="sticky top-0 z-30 bg-[#FCFAF7]/95 backdrop-blur-md border-b border-[#EAE3DA]">
+    <header className="sticky top-0 z-50 bg-[#FCFAF7]/95 backdrop-blur-md border-b border-[#EAE3DA] h-[72px]">
       <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18">
+        <div className="flex items-center justify-between h-[72px]">
           {/* Left: Hamburger Menu Button + Brand Logo */}
           <div className="flex items-center space-x-3 sm:space-x-4">
             {showHamburger && onToggleSidebar && (
