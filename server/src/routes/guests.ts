@@ -480,7 +480,9 @@ router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requ
       guestPhone: guest.phone,
       companionCount: guest.companion_count || 0,
       coupleNames,
-      weddingDate: wedding?.date
+      weddingDate: wedding?.wedding_date || wedding?.date,
+      weddingId: weddingId as string,
+      guestId: guestId as string
     });
 
     const now = new Date().toISOString();
@@ -495,30 +497,12 @@ router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requ
         WHERE id = ?
       `).run(now, result.messageId || null, now, guestId);
 
-      const msgId = 'wmsg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-      db.prepare(`
-        INSERT INTO whatsapp_messages (id, wedding_id, guest_id, phone, direction, message_type, content, template_name, status, whatsapp_message_id, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(
-        msgId,
-        weddingId,
-        guestId,
-        guest.phone,
-        'OUTBOUND',
-        'template',
-        `Hola ${guest.first_name}, te enviamos la confirmación de asistencia (RSVP) para la boda de ${coupleNames}.`,
-        'rsvp_invitacion_vlb',
-        'DELIVERED',
-        result.messageId || null,
-        now
-      );
-
       logAudit(weddingId, req.user!.id, req.user!.name, 'ENVIAR_WHATSAPP_RSVP', 'GUEST', guestId, `Mensaje de RSVP enviado por WhatsApp a ${guest.first_name} ${guest.last_name}`);
 
       return res.json({
         success: true,
         message: result.simulated
-          ? `Mensaje enviado en Modo Sandbox (Prueba simulada exitosa a ${guest.phone})`
+          ? `Mensaje registrado en Modo Sandbox (Prueba simulada exitosa a ${guest.phone})`
           : `Mensaje oficial enviado exitosamente a ${guest.phone}`,
         simulated: result.simulated,
         whatsapp_status: 'ENVIADO',
@@ -588,7 +572,9 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
         guestPhone: g.phone,
         companionCount: g.companion_count || 0,
         coupleNames,
-        weddingDate: wedding?.date
+        weddingDate: wedding?.wedding_date || wedding?.date,
+        weddingId: weddingId as string,
+        guestId: g.id
       });
 
       const now = new Date().toISOString();
@@ -597,24 +583,6 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
         sentCount++;
         if (result.simulated) isSimulated = true;
         updateStmt.run('ENVIADO', now, result.messageId || null, now, g.id);
-
-        const msgId = 'wmsg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-        db.prepare(`
-          INSERT INTO whatsapp_messages (id, wedding_id, guest_id, phone, direction, message_type, content, template_name, status, whatsapp_message_id, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `).run(
-          msgId,
-          weddingId,
-          g.id,
-          g.phone,
-          'OUTBOUND',
-          'template',
-          `Hola ${g.first_name}, te enviamos la confirmación de asistencia (RSVP) para la boda de ${coupleNames}.`,
-          'rsvp_invitacion_vlb',
-          'DELIVERED',
-          result.messageId || null,
-          now
-        );
       } else {
         errorCount++;
         updateStmt.run('ERROR', now, null, now, g.id);

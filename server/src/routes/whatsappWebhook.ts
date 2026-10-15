@@ -1,47 +1,51 @@
-import { Router } from 'express';
+import { Router, Response } from 'express';
 import { db } from '../db/index.js';
+import { verifyMetaSignature, AuthenticatedMetaRequest } from '../middleware/metaSignature.js';
+import { WhatsAppService } from '../services/whatsappService.js';
 
 const router = Router();
-const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'lazo_vlb_webhook_token_2026';
 
 /**
  * Normalizes phone numbers to compare across formats:
- * e.g. "5218110279116", "528110279116", "+52 81 1027 9116", "8110279116"
- * Returns the last 10 digits which uniquely identify the Mexican mobile number.
+ * Returns the last 10 digits to reliably match Mexican numbers
  */
 function getPhoneLast10(phone: string): string {
-  const digits = (phone || '').replace(/[^0-9]/g, '');
+  const digits = (phone || '').replace(/\D/g, '');
   return digits.length >= 10 ? digits.slice(-10) : digits;
 }
 
 /**
- * GET /api/whatsapp/webhook
- * Verification endpoint required by Meta Webhooks
+ * GET /webhook (or /api/whatsapp/webhook)
+ * Webhook Verification required by Meta for Developers
+ *
+ * Meta sends:
+ * - hub.mode: 'subscribe'
+ * - hub.verify_token: your custom token
+ * - hub.challenge: numeric challenge to echo back
  */
 router.get('/webhook', (req, res) => {
+  const config = WhatsAppService.getConfig();
   const mode = req.query['hub.mode'];
   const token = req.query['hub.verify_token'];
   const challenge = req.query['hub.challenge'];
 
-  if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-    console.log('[WhatsApp Webhook] Verificación exitosa de Meta Webhook.');
+  if (mode === 'subscribe' && token === config.verifyToken) {
+    console.log('[WhatsApp Webhook] Handshake exitoso con Meta Cloud API (Token verificado).');
     return res.status(200).send(challenge);
   }
 
-  console.warn('[WhatsApp Webhook] Verificación fallida: token no coincide.');
-  return res.sendStatus(403);
+  console.warn('[WhatsApp Webhook] Verificación rechazada: hub.verify_token no coincide.');
+  return res.status(403).json({ error: 'Token de verificación inválido.' });
 });
 
 /**
- * POST /api/whatsapp/webhook
- * Receives incoming messages and quick reply button clicks from WhatsApp
+ * Asynchronous event processor
+ * Handles messages, button clicks, list selections, and delivery/read statuses
  */
-router.post('/webhook', (req, res) => {
+async function processWebhookEvent(body: any) {
   try {
-    const body = req.body;
-
     if (body.object !== 'whatsapp_business_account') {
-      return res.sendStatus(404);
+      return;
     }
 
     const entries = body.entry || [];
@@ -49,122 +53,212 @@ router.post('/webhook', (req, res) => {
       const changes = entry.changes || [];
       for (const change of changes) {
         const value = change.value;
-        if (!value || !value.messages) continue;
+        if (!value) continue;
 
-        for (const message of value.messages) {
-          const from = message.from; // e.g. "5218110279116"
-          const messageId = message.id;
-          const msgType = message.type;
-          let content = '';
+        // --------------------------------------------------------------------
+        // 1. INCOMING MESSAGES (Text, Buttons, Lists, Media)
+        // --------------------------------------------------------------------
+        if (value.messages && Array.isArray(value.messages)) {
+          // Extract contact profile name provided by Meta if available
+          const senderProfile = value.contacts?.[0]?.profile?.name || '';
 
-          // 1. Extract content depending on message type
-          if (msgType === 'text') {
-            content = message.text?.body || '';
-          } else if (msgType === 'interactive') {
-            content = message.interactive?.button_reply?.title || message.interactive?.list_reply?.title || '';
-          } else if (msgType === 'button') {
-            content = message.button?.text || message.button?.payload || '';
-          } else {
-            content = `[Mensaje tipo: ${msgType}]`;
-          }
+          for (const message of value.messages) {
+            const rawFrom = message.from; // e.g. "5218110279116" or "528110279116"
+            const normalizedPhone = WhatsAppService.normalizePhoneNumber(rawFrom);
+            const messageId = message.id; // wamid.HBg...
+            const msgType = message.type;
+            let content = '';
+            let selectedButtonId = '';
 
-          console.log(`[WhatsApp Webhook] Mensaje entrante de ${from}: "${content}"`);
-
-          const last10 = getPhoneLast10(from);
-          const now = new Date().toISOString();
-
-          // 2. Locate the guest in the database
-          // Search by matching phone ending with the last 10 digits
-          const allGuests = db.prepare(`
-            SELECT g.*, w.name as wedding_name
-            FROM guests g
-            JOIN weddings w ON w.id = g.wedding_id
-            WHERE g.phone IS NOT NULL AND g.phone != ''
-          `).all() as any[];
-
-          const matchedGuest = allGuests.find(g => getPhoneLast10(g.phone) === last10);
-
-          let weddingId = matchedGuest?.wedding_id;
-          let guestId = matchedGuest?.id || null;
-
-          if (!weddingId) {
-            // Fallback to most recent wedding if no guest match
-            const latestWedding = db.prepare('SELECT id FROM weddings ORDER BY wedding_date DESC LIMIT 1').get() as any;
-            weddingId = latestWedding?.id || 'default_wedding';
-          }
-
-          // 3. Process RSVP Intent (Automatic Status Update)
-          const lowerContent = content.toLowerCase().trim();
-          let newGuestStatus: string | null = null;
-
-          if (
-            lowerContent.includes('no asistiré') ||
-            lowerContent.includes('no asistire') ||
-            lowerContent.includes('no podré') ||
-            lowerContent.includes('no podre') ||
-            lowerContent.includes('no voy') ||
-            lowerContent === 'no'
-          ) {
-            newGuestStatus = 'No asistirá';
-          } else if (
-            lowerContent.includes('confirmo') ||
-            lowerContent.includes('asistiré') ||
-            lowerContent.includes('asistire') ||
-            lowerContent.includes('si asistiré') ||
-            lowerContent.includes('sí asistiré') ||
-            lowerContent === 'sí' ||
-            lowerContent === 'si'
-          ) {
-            newGuestStatus = 'Confirmado';
-          }
-
-          if (matchedGuest && newGuestStatus) {
-            console.log(`[WhatsApp Webhook] Actualizando estado de ${matchedGuest.first_name} ${matchedGuest.last_name} a "${newGuestStatus}"`);
-            
-            if (newGuestStatus === 'No asistirá') {
-              // Liberar mesa si se cancela
-              db.prepare(`
-                UPDATE guests
-                SET status = ?, table_id = NULL, updated_at = ?
-                WHERE id = ?
-              `).run(newGuestStatus, now, matchedGuest.id);
+            // Extract content according to WhatsApp message type
+            if (msgType === 'text') {
+              content = message.text?.body || '';
+            } else if (msgType === 'interactive') {
+              const interactive = message.interactive;
+              if (interactive.type === 'button_reply') {
+                selectedButtonId = interactive.button_reply?.id || '';
+                content = interactive.button_reply?.title || selectedButtonId;
+              } else if (interactive.type === 'list_reply') {
+                selectedButtonId = interactive.list_reply?.id || '';
+                content = interactive.list_reply?.title || selectedButtonId;
+              }
+            } else if (msgType === 'button') {
+              selectedButtonId = message.button?.payload || '';
+              content = message.button?.text || selectedButtonId;
+            } else if (msgType === 'image') {
+              content = `[Imagen recibida: ${message.image?.caption || 'Sin descripción'}]`;
+            } else if (msgType === 'document') {
+              content = `[Documento recibido: ${message.document?.filename || 'Archivo adjunto'}]`;
             } else {
+              content = `[Mensaje tipo: ${msgType}]`;
+            }
+
+            console.log(`[WhatsApp Webhook] Mensaje entrante de ${normalizedPhone}: "${content}"`);
+
+            const last10 = getPhoneLast10(normalizedPhone);
+            const now = new Date().toISOString();
+
+            // Locate Guest in database by matching phone number
+            const allGuests = db.prepare(`
+              SELECT g.*, w.name as wedding_name
+              FROM guests g
+              JOIN weddings w ON w.id = g.wedding_id
+              WHERE g.phone IS NOT NULL AND g.phone != ''
+            `).all() as any[];
+
+            const matchedGuest = allGuests.find(g => getPhoneLast10(g.phone) === last10);
+
+            let weddingId = matchedGuest?.wedding_id;
+            const guestId = matchedGuest?.id || null;
+
+            if (!weddingId) {
+              const latestWedding = db.prepare('SELECT id FROM weddings ORDER BY wedding_date DESC LIMIT 1').get() as any;
+              weddingId = latestWedding?.id || 'default_wedding';
+            }
+
+            // Detect and process RSVP Intent
+            const lowerContent = content.toLowerCase().trim();
+            const lowerButtonId = selectedButtonId.toLowerCase().trim();
+            let newGuestStatus: string | null = null;
+
+            if (
+              lowerButtonId.includes('no') ||
+              lowerContent.includes('no asistiré') ||
+              lowerContent.includes('no asistire') ||
+              lowerContent.includes('no podré') ||
+              lowerContent.includes('no podre') ||
+              lowerContent.includes('no voy') ||
+              lowerContent === 'no'
+            ) {
+              newGuestStatus = 'No asistirá';
+            } else if (
+              lowerButtonId.includes('yes') ||
+              lowerButtonId.includes('confirm') ||
+              lowerContent.includes('confirmo') ||
+              lowerContent.includes('asistiré') ||
+              lowerContent.includes('asistire') ||
+              lowerContent.includes('si asistiré') ||
+              lowerContent.includes('sí asistiré') ||
+              lowerContent === 'sí' ||
+              lowerContent === 'si'
+            ) {
+              newGuestStatus = 'Confirmado';
+            }
+
+            if (matchedGuest && newGuestStatus) {
+              console.log(`[WhatsApp Webhook] Actualizando RSVP de ${matchedGuest.first_name} ${matchedGuest.last_name} -> "${newGuestStatus}"`);
+              if (newGuestStatus === 'No asistirá') {
+                db.prepare(`
+                  UPDATE guests
+                  SET status = ?, table_id = NULL, updated_at = ?
+                  WHERE id = ?
+                `).run(newGuestStatus, now, matchedGuest.id);
+              } else {
+                db.prepare(`
+                  UPDATE guests
+                  SET status = ?, updated_at = ?
+                  WHERE id = ?
+                `).run(newGuestStatus, now, matchedGuest.id);
+              }
+            }
+
+            // Persist Message in DB
+            const wmsgId = 'wmsg_in_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+            db.prepare(`
+              INSERT INTO whatsapp_messages (
+                id, wedding_id, guest_id, phone, direction, message_type, content,
+                status, whatsapp_message_id, sender, raw_payload, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(
+              wmsgId,
+              weddingId,
+              guestId,
+              normalizedPhone,
+              'INBOUND',
+              msgType,
+              content,
+              'DELIVERED',
+              messageId,
+              'CUSTOMER',
+              JSON.stringify(message),
+              now
+            );
+
+            // Upsert Contact & increment unread count
+            const contactName = matchedGuest
+              ? `${matchedGuest.first_name} ${matchedGuest.last_name}`.trim()
+              : senderProfile || normalizedPhone;
+
+            WhatsAppService.upsertContact({
+              phoneNumber: normalizedPhone,
+              name: contactName,
+              weddingId: weddingId !== 'default_wedding' ? weddingId : undefined,
+              lastMessageAt: now,
+              lastMessagePreview: content.slice(0, 100),
+              incrementUnread: true
+            });
+          }
+        }
+
+        // --------------------------------------------------------------------
+        // 2. STATUS UPDATES (sent, delivered, read, failed)
+        // --------------------------------------------------------------------
+        if (value.statuses && Array.isArray(value.statuses)) {
+          for (const statusObj of value.statuses) {
+            const wamid = statusObj.id;
+            const newStatus = (statusObj.status || '').toUpperCase(); // 'SENT' | 'DELIVERED' | 'READ' | 'FAILED'
+            const errorMsg = statusObj.errors?.[0]?.message || statusObj.errors?.[0]?.title || null;
+
+            console.log(`[WhatsApp Webhook] Estado de mensaje ${wamid}: ${newStatus}`);
+
+            try {
+              // Update status in whatsapp_messages
               db.prepare(`
-                UPDATE guests
-                SET status = ?, updated_at = ?
-                WHERE id = ?
-              `).run(newGuestStatus, now, matchedGuest.id);
+                UPDATE whatsapp_messages
+                SET status = ?,
+                    error_message = COALESCE(?, error_message)
+                WHERE whatsapp_message_id = ?
+              `).run(newStatus, errorMsg, wamid);
+
+              // If linked to a guest, reflect status
+              if (newStatus === 'READ' || newStatus === 'DELIVERED') {
+                db.prepare(`
+                  UPDATE guests
+                  SET whatsapp_status = ?
+                  WHERE whatsapp_message_id = ?
+                `).run(newStatus === 'READ' ? 'LEIDO' : 'ENTREGADO', wamid);
+              } else if (newStatus === 'FAILED') {
+                db.prepare(`
+                  UPDATE guests
+                  SET whatsapp_status = 'ERROR'
+                  WHERE whatsapp_message_id = ?
+                `).run(wamid);
+              }
+            } catch (err) {
+              console.error('[WhatsApp Webhook] Error updating status in DB:', err);
             }
           }
-
-          // 4. Save message into whatsapp_messages table
-          const wmsgId = 'wmsg_in_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-          db.prepare(`
-            INSERT INTO whatsapp_messages (
-              id, wedding_id, guest_id, phone, direction, message_type, content, status, whatsapp_message_id, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `).run(
-            wmsgId,
-            weddingId,
-            guestId,
-            from,
-            'INBOUND',
-            msgType,
-            content,
-            'DELIVERED',
-            messageId,
-            now
-          );
         }
       }
     }
-
-    // Always respond 200 OK promptly to Meta to acknowledge receipt
-    res.sendStatus(200);
   } catch (err: any) {
-    console.error('[WhatsApp Webhook Error]', err);
-    res.sendStatus(200); // Return 200 so Meta does not retry indefinitely on internal errors
+    console.error('[WhatsApp Webhook Async Processing Error]:', err);
   }
+}
+
+/**
+ * POST /webhook (or /api/whatsapp/webhook)
+ * Receives incoming messages and status events from Meta.
+ * Validates cryptographic signature with META_APP_SECRET and immediately returns 200 OK.
+ */
+router.post('/webhook', verifyMetaSignature, (req: AuthenticatedMetaRequest, res: Response) => {
+  // 1. Immediately acknowledge 200 OK to Meta to prevent retry storms and webhook timeouts
+  res.status(200).send('EVENT_RECEIVED');
+
+  // 2. Process payload asynchronously in background
+  setImmediate(() => {
+    processWebhookEvent(req.body);
+  });
 });
 
 export default router;

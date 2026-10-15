@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db/index.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
-import { WhatsAppService } from '../services/whatsapp.js';
+import { WhatsAppService } from '../services/whatsappService.js';
 
 const router = Router();
 
@@ -9,11 +9,202 @@ const router = Router();
 router.use(authenticateToken, requireRole(['ADMINISTRADOR', 'COORDINADOR']));
 
 /**
+ * GET /api/whatsapp/contacts
+ * Returns contacts registered in the system with their unread count and assigned agent
+ */
+router.get('/contacts', (req, res) => {
+  try {
+    const { weddingId, search = '' } = req.query as {
+      weddingId?: string;
+      search?: string;
+    };
+
+    let query = `
+      SELECT 
+        wc.*,
+        w.name as wedding_name
+      FROM whatsapp_contacts wc
+      LEFT JOIN weddings w ON w.id = wc.wedding_id
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+
+    if (weddingId && weddingId !== 'all') {
+      query += ` AND wc.wedding_id = ?`;
+      params.push(weddingId);
+    }
+
+    query += ` ORDER BY wc.last_message_at DESC`;
+
+    let contacts = db.prepare(query).all(...params) as any[];
+
+    if (search.trim()) {
+      const cleanSearch = search.trim().toLowerCase();
+      contacts = contacts.filter(
+        c =>
+          (c.name && c.name.toLowerCase().includes(cleanSearch)) ||
+          (c.phone_number && c.phone_number.includes(cleanSearch)) ||
+          (c.assigned_agent && c.assigned_agent.toLowerCase().includes(cleanSearch)) ||
+          (c.last_message_preview && c.last_message_preview.toLowerCase().includes(cleanSearch))
+      );
+    }
+
+    res.json({ contacts });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al obtener contactos: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/whatsapp/assign-agent
+ * Assigns an agent to a contact conversation
+ */
+router.post('/assign-agent', (req, res) => {
+  try {
+    const { phoneNumber, agentName } = req.body;
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'phoneNumber es requerido.' });
+    }
+
+    const normalized = WhatsAppService.normalizePhoneNumber(phoneNumber);
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      UPDATE whatsapp_contacts
+      SET assigned_agent = ?, updated_at = ?
+      WHERE phone_number = ?
+    `).run(agentName || null, now, normalized);
+
+    res.json({ success: true, phoneNumber: normalized, assignedAgent: agentName });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al asignar agente: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/whatsapp/mark-read
+ * Resets unread counter for a contact
+ */
+router.post('/mark-read', (req, res) => {
+  try {
+    const { phoneNumber } = req.body;
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'phoneNumber es requerido.' });
+    }
+
+    const normalized = WhatsAppService.normalizePhoneNumber(phoneNumber);
+    WhatsAppService.upsertContact({
+      phoneNumber: normalized,
+      resetUnread: true
+    });
+
+    res.json({ success: true, phoneNumber: normalized });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al marcar como leído: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/whatsapp/send-text
+ * Sends a modular outbound plain text message
+ */
+router.post('/send-text', async (req, res) => {
+  try {
+    const { to, text, weddingId, guestId, previewUrl } = req.body;
+    if (!to || !text) {
+      return res.status(400).json({ error: 'Campos obligatorios: "to" y "text".' });
+    }
+
+    const result = await WhatsAppService.sendTextMessage(to, text, {
+      weddingId,
+      guestId,
+      previewUrl: Boolean(previewUrl),
+      sender: 'AGENT'
+    });
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.json({
+      success: true,
+      messageId: result.messageId,
+      simulated: result.simulated
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al enviar texto: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/whatsapp/send-interactive-buttons
+ * Sends a modular interactive message with quick-reply buttons (up to 3)
+ */
+router.post('/send-interactive-buttons', async (req, res) => {
+  try {
+    const { to, bodyText, buttons, headerText, footerText, weddingId, guestId } = req.body;
+    if (!to || !bodyText || !buttons) {
+      return res.status(400).json({ error: 'Campos obligatorios: "to", "bodyText" y "buttons".' });
+    }
+
+    const result = await WhatsAppService.sendInteractiveButtons(to, bodyText, buttons, {
+      headerText,
+      footerText,
+      weddingId,
+      guestId,
+      sender: 'AGENT'
+    });
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.json({
+      success: true,
+      messageId: result.messageId,
+      simulated: result.simulated
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al enviar botones interactivos: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/whatsapp/send-interactive-list
+ * Sends a modular interactive selectable list message
+ */
+router.post('/send-interactive-list', async (req, res) => {
+  try {
+    const { to, bodyText, buttonText, sections, headerText, footerText, weddingId, guestId } = req.body;
+    if (!to || !bodyText || !buttonText || !sections) {
+      return res.status(400).json({ error: 'Campos obligatorios: "to", "bodyText", "buttonText" y "sections".' });
+    }
+
+    const result = await WhatsAppService.sendInteractiveList(to, bodyText, buttonText, sections, {
+      headerText,
+      footerText,
+      weddingId,
+      guestId,
+      sender: 'AGENT'
+    });
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    res.json({
+      success: true,
+      messageId: result.messageId,
+      simulated: result.simulated
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al enviar lista interactiva: ' + err.message });
+  }
+});
+
+/**
  * GET /api/whatsapp/conversations
- * Returns conversations grouped by phone/guest with:
- * - Guest details (name, wedding_id, wedding_name)
- * - Last message & timestamp
- * - Filterable by weddingId, search (name, wedding, phone), and filter (todas, pendientes, etc.)
+ * Returns conversations grouped by phone/guest
  */
 router.get('/conversations', (req, res) => {
   try {
@@ -23,8 +214,6 @@ router.get('/conversations', (req, res) => {
       filter?: string;
     };
 
-    // Subquery: get all conversations by wedding & phone
-    // We also join guests and weddings
     let query = `
       SELECT 
         wm.phone,
@@ -88,19 +277,14 @@ router.get('/conversations', (req, res) => {
       filtered = filtered.filter(c => c.guest_status === 'Confirmado');
     }
 
-    // Also get all weddings for the wedding filter dropdown
     const weddings = db.prepare('SELECT id, name FROM weddings ORDER BY wedding_date DESC').all() as any[];
-
-    // WhatsApp API status
-    const isConfigured = Boolean(
-      process.env.WHATSAPP_ACCESS_TOKEN || process.env.WHATSAPP_PHONE_NUMBER_ID
-    );
+    const config = WhatsAppService.getConfig();
 
     res.json({
       conversations: filtered,
       weddings,
-      isConfigured: true, // We have the live credentials working!
-      phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || '1424004584122204'
+      isConfigured: config.isConfigured,
+      phoneNumberId: config.phoneNumberId
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Error al obtener conversaciones: ' + err.message });
@@ -114,23 +298,30 @@ router.get('/conversations', (req, res) => {
 router.get('/conversations/:weddingId/:phone', (req, res) => {
   try {
     const { weddingId, phone } = req.params;
+    const normalized = WhatsAppService.normalizePhoneNumber(phone);
 
     const messages = db.prepare(`
       SELECT * FROM whatsapp_messages
-      WHERE wedding_id = ? AND phone = ?
+      WHERE wedding_id = ? AND (phone = ? OR phone = ?)
       ORDER BY created_at ASC
-    `).all(weddingId, phone) as any[];
+    `).all(weddingId, phone, normalized) as any[];
 
     const guest = db.prepare(`
       SELECT g.*, w.name as wedding_name, t.name as table_name
       FROM guests g
       JOIN weddings w ON w.id = g.wedding_id
       LEFT JOIN tables t ON t.id = g.table_id
-      WHERE g.wedding_id = ? AND (g.phone = ? OR REPLACE(REPLACE(g.phone, ' ', ''), '+', '') = REPLACE(REPLACE(?, ' ', ''), '+', ''))
+      WHERE g.wedding_id = ? AND (g.phone = ? OR g.phone = ? OR REPLACE(REPLACE(g.phone, ' ', ''), '+', '') = ?)
       LIMIT 1
-    `).get(weddingId, phone, phone) as any;
+    `).get(weddingId, phone, normalized, normalized) as any;
 
     const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+
+    // Reset contact unread count when opening chat
+    WhatsAppService.upsertContact({
+      phoneNumber: normalized,
+      resetUnread: true
+    });
 
     res.json({
       messages,
@@ -176,28 +367,12 @@ router.post('/send', async (req, res) => {
       guestPhone: phone,
       companionCount: guest?.companion_count || 0,
       coupleNames,
-      weddingDate: wedding?.date
+      weddingDate: wedding?.wedding_date || wedding?.date,
+      weddingId,
+      guestId
     });
 
     const now = new Date().toISOString();
-    const msgId = 'wmsg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-
-    db.prepare(`
-      INSERT INTO whatsapp_messages (id, wedding_id, guest_id, phone, direction, message_type, content, template_name, status, whatsapp_message_id, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      msgId,
-      weddingId,
-      guestId || null,
-      phone,
-      'OUTBOUND',
-      messageType,
-      content,
-      'rsvp_invitacion_vlb',
-      result.success ? 'DELIVERED' : 'FAILED',
-      result.messageId || null,
-      now
-    );
 
     if (guestId && result.success) {
       db.prepare(`
@@ -216,8 +391,7 @@ router.post('/send', async (req, res) => {
 
     res.json({
       success: true,
-      messageId: msgId,
-      whatsappMessageId: result.messageId,
+      messageId: result.messageId,
       created_at: now
     });
   } catch (err: any) {
@@ -238,15 +412,16 @@ router.post('/log-direct', async (req, res) => {
 
     const now = new Date().toISOString();
     const msgId = 'wmsg_dir_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+    const normalized = WhatsAppService.normalizePhoneNumber(phone);
 
     db.prepare(`
-      INSERT INTO whatsapp_messages (id, wedding_id, guest_id, phone, direction, message_type, content, template_name, status, created_at)
-      VALUES (?, ?, ?, ?, 'OUTBOUND', 'text', ?, ?, 'DELIVERED', ?)
+      INSERT INTO whatsapp_messages (id, wedding_id, guest_id, phone, direction, message_type, content, template_name, status, sender, created_at)
+      VALUES (?, ?, ?, ?, 'OUTBOUND', 'text', ?, ?, 'DELIVERED', 'AGENT', ?)
     `).run(
       msgId,
       weddingId,
       guestId || null,
-      phone,
+      normalized,
       content,
       templateType || 'direct_wa_me',
       now
@@ -261,6 +436,13 @@ router.post('/log-direct', async (req, res) => {
         WHERE id = ?
       `).run(now, now, guestId);
     }
+
+    WhatsAppService.upsertContact({
+      phoneNumber: normalized,
+      weddingId,
+      lastMessageAt: now,
+      lastMessagePreview: content.slice(0, 100)
+    });
 
     res.json({
       success: true,

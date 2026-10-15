@@ -355,22 +355,64 @@ export function initDatabase() {
   }
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS whatsapp_contacts (
+      id TEXT PRIMARY KEY,
+      phone_number TEXT UNIQUE NOT NULL,
+      name TEXT,
+      wedding_id TEXT,
+      assigned_agent TEXT,
+      unread_count INTEGER DEFAULT 0,
+      last_message_at TEXT,
+      last_message_preview TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE SET NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_contacts_phone ON whatsapp_contacts(phone_number);
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_contacts_wedding ON whatsapp_contacts(wedding_id);
+
     CREATE TABLE IF NOT EXISTS whatsapp_messages (
       id TEXT PRIMARY KEY,
       wedding_id TEXT NOT NULL,
       guest_id TEXT,
       phone TEXT NOT NULL,
       direction TEXT NOT NULL, -- 'OUTBOUND' | 'INBOUND'
-      message_type TEXT NOT NULL, -- 'template' | 'text'
+      message_type TEXT NOT NULL, -- 'template' | 'text' | 'interactive' | 'button' | 'image'
       content TEXT NOT NULL,
       template_name TEXT,
       status TEXT DEFAULT 'DELIVERED', -- 'SENT' | 'DELIVERED' | 'READ' | 'FAILED'
       whatsapp_message_id TEXT,
+      sender TEXT DEFAULT 'BUSINESS', -- 'CUSTOMER' | 'BUSINESS' | 'AGENT' | 'SYSTEM'
+      error_message TEXT,
+      raw_payload TEXT,
       created_at TEXT NOT NULL,
       FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE CASCADE,
       FOREIGN KEY (guest_id) REFERENCES guests(id) ON DELETE SET NULL
     );
+
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_wamid ON whatsapp_messages(whatsapp_message_id);
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_phone ON whatsapp_messages(phone);
+    CREATE INDEX IF NOT EXISTS idx_whatsapp_messages_wedding ON whatsapp_messages(wedding_id);
   `);
+
+  try {
+    db.exec("ALTER TABLE whatsapp_messages ADD COLUMN sender TEXT DEFAULT 'BUSINESS';");
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE whatsapp_messages ADD COLUMN error_message TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE whatsapp_messages ADD COLUMN raw_payload TEXT;');
+  } catch {
+    // Column already exists
+  }
 
   const defaultPhases = [
     { id: 'phase1_internal_team', name: 'Fase 1: Operación Equipo VLB (Bodas, Invitados, Mesas, Proveedores, Pagos)', enabled: true },
