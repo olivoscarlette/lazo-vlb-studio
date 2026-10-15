@@ -81,7 +81,8 @@ router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) =
     reception_venue,
     estimated_guests,
     notes,
-    package_type
+    package_type,
+    populate_checklist = true
   } = req.body;
 
   if (!name || !partner_1_name || !partner_2_name || !wedding_date) {
@@ -137,31 +138,33 @@ router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) =
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run('rel_' + id, id, wedding_date, null, null, null, JSON.stringify([]), JSON.stringify([]), JSON.stringify(initialReligiousReqs), null, now);
 
-  // Auto-populate wedding checklist from master_checklist catalog
-  try {
-    const checklistCatalog = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('master_checklist') as any;
-    if (checklistCatalog) {
-      const masterTasks: any[] = JSON.parse(checklistCatalog.values_json);
-      const insertTask = db.prepare(`
-        INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente', ?, ?, ?)
-      `);
-      masterTasks.forEach((mt, idx) => {
-        insertTask.run(
-          `tsk_${id}_${idx}_${Date.now()}`,
-          id,
-          mt.title,
-          mt.category || 'Checklist General',
-          mt.responsible || 'VLB Studio',
-          null,
-          mt.priority || 'Media',
-          mt.notes || '',
-          now,
-          now
-        );
-      });
-    }
-  } catch {}
+  // Auto-populate wedding checklist from master_checklist catalog only if populate_checklist is not false
+  if (populate_checklist !== false && populate_checklist !== 'false') {
+    try {
+      const checklistCatalog = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('master_checklist') as any;
+      if (checklistCatalog) {
+        const masterTasks: any[] = JSON.parse(checklistCatalog.values_json);
+        const insertTask = db.prepare(`
+          INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente', ?, ?, ?)
+        `);
+        masterTasks.forEach((mt, idx) => {
+          insertTask.run(
+            `tsk_${id}_${idx}_${Date.now()}`,
+            id,
+            mt.title,
+            mt.category || 'Checklist General',
+            mt.responsible || 'VLB Studio',
+            null,
+            mt.priority || 'Media',
+            mt.notes || '',
+            now,
+            now
+          );
+        });
+      }
+    } catch {}
+  }
 
   logAudit(id, req.user!.id, req.user!.name, 'CREAR_BODA', 'WEDDING', id, `Creación de la boda ${name}`);
 

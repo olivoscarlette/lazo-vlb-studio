@@ -134,7 +134,8 @@ export const GeneralDashboard: React.FC = () => {
     reception_time: '18:00',
     estimated_guests: '150',
     package_type: 'Integral',
-    notes: ''
+    notes: '',
+    checklist_option: 'full' as 'full' | 'empty'
   });
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
@@ -219,13 +220,17 @@ export const GeneralDashboard: React.FC = () => {
     setCreating(true);
 
     try {
+      const payload = {
+        ...formData,
+        populate_checklist: formData.checklist_option === 'full'
+      };
       const res = await fetch('/api/weddings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok) {
@@ -243,7 +248,8 @@ export const GeneralDashboard: React.FC = () => {
         reception_time: '18:00',
         estimated_guests: '150',
         package_type: 'Integral',
-        notes: ''
+        notes: '',
+        checklist_option: 'full'
       });
       await fetchWeddings();
     } catch (err: any) {
@@ -2345,6 +2351,63 @@ export const GeneralDashboard: React.FC = () => {
                     </>
                   )}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">
+                  Asignación Inicial de Checklist
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-[#FAF8F5] border border-[#EAE3DA] rounded-2xl">
+                  <label
+                    onClick={() => setFormData({ ...formData, checklist_option: 'full' })}
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${
+                      formData.checklist_option === 'full'
+                        ? 'bg-white border-[#9C665C] shadow-xs'
+                        : 'bg-white/60 border-[#EAE3DA] hover:border-[#9C665C]/50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="checklist_option"
+                      checked={formData.checklist_option === 'full'}
+                      onChange={() => setFormData({ ...formData, checklist_option: 'full' })}
+                      className="mt-0.5 accent-[#9C665C]"
+                    />
+                    <div>
+                      <div className="text-xs font-semibold text-[#2B2826]">
+                        Plantilla Completa VLB
+                      </div>
+                      <div className="text-[11px] text-[#8A7E72] mt-0.5 leading-snug">
+                        Carga Checklist General y etapas por meses.
+                      </div>
+                    </div>
+                  </label>
+
+                  <label
+                    onClick={() => setFormData({ ...formData, checklist_option: 'empty' })}
+                    className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${
+                      formData.checklist_option === 'empty'
+                        ? 'bg-white border-[#9C665C] shadow-xs'
+                        : 'bg-white/60 border-[#EAE3DA] hover:border-[#9C665C]/50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="checklist_option"
+                      checked={formData.checklist_option === 'empty'}
+                      onChange={() => setFormData({ ...formData, checklist_option: 'empty' })}
+                      className="mt-0.5 accent-[#9C665C]"
+                    />
+                    <div>
+                      <div className="text-xs font-semibold text-[#2B2826]">
+                        Checklist en Blanco
+                      </div>
+                      <div className="text-[11px] text-[#8A7E72] mt-0.5 leading-snug">
+                        Decidiré manualmente qué actividades asignar.
+                      </div>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               <div>
