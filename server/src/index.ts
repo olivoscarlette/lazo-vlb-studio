@@ -25,6 +25,32 @@ import whatsappWebhookRouter from './routes/whatsappWebhook.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Automatic .env loader for environment variables
+const envPath = path.resolve(process.cwd(), '.env');
+if (fs.existsSync(envPath)) {
+  try {
+    const envFile = fs.readFileSync(envPath, 'utf8');
+    envFile.split('\n').forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed && !trimmed.startsWith('#')) {
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx !== -1) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          let val = trimmed.slice(eqIdx + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!process.env[key]) {
+            process.env[key] = val;
+          }
+        }
+      }
+    });
+  } catch (e) {
+    console.warn('[ENV] Warning loading .env:', e);
+  }
+}
+
 // Initialize DB and Seed data
 initDatabase();
 

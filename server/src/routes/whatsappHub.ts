@@ -353,7 +353,11 @@ router.post('/send', async (req, res) => {
     }
 
     const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
-    const coupleNames = wedding ? `${wedding.bride_name} y ${wedding.groom_name}` : 'los novios';
+    const coupleNames = wedding
+      ? (wedding.partner_1_name && wedding.partner_2_name
+          ? `${wedding.partner_1_name} & ${wedding.partner_2_name}`
+          : (wedding.name || 'los novios'))
+      : 'los novios';
 
     let guest = null;
     if (guestId) {

@@ -473,7 +473,11 @@ router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requ
     }
 
     const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
-    const coupleNames = wedding ? `${wedding.bride_name} y ${wedding.groom_name}` : 'los novios';
+    const coupleNames = wedding
+      ? (wedding.partner_1_name && wedding.partner_2_name
+          ? `${wedding.partner_1_name} & ${wedding.partner_2_name}`
+          : (wedding.name || 'los novios'))
+      : 'los novios';
 
     const result = await WhatsAppService.sendRsvpInvitation({
       guestName: `${guest.first_name} ${guest.last_name}`.trim(),
@@ -551,7 +555,11 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
     }
 
     const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
-    const coupleNames = wedding ? `${wedding.bride_name} y ${wedding.groom_name}` : 'los novios';
+    const coupleNames = wedding
+      ? (wedding.partner_1_name && wedding.partner_2_name
+          ? `${wedding.partner_1_name} & ${wedding.partner_2_name}`
+          : (wedding.name || 'los novios'))
+      : 'los novios';
 
     const updateStmt = db.prepare(`
       UPDATE guests
