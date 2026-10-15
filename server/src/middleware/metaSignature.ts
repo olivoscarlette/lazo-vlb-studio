@@ -18,16 +18,10 @@ export function verifyMetaSignature(
 ) {
   const appSecret = process.env.META_APP_SECRET;
 
-  // If no secret is configured, warn in logs and allow request in development/testing mode
+  // If no secret is configured yet, log warning and allow request so webhooks work out of the box
   if (!appSecret) {
-    if (process.env.NODE_ENV === 'production') {
-      console.error(
-        '[Meta Signature] ERROR CRÍTICO: META_APP_SECRET no está configurada en producción.'
-      );
-      return res.status(500).json({ error: 'Configuración de seguridad incompleta en el servidor.' });
-    }
     console.warn(
-      '[Meta Signature] AVISO: META_APP_SECRET no está definida. Omitiendo validación criptográfica (modo dev).'
+      '[Meta Signature] AVISO: META_APP_SECRET no está definida. Omitiendo validación criptográfica para permitir webhooks.'
     );
     return next();
   }
