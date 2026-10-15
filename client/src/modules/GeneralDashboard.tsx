@@ -7,7 +7,7 @@ import {
   Building2, Search, AlertCircle, Shield, Settings,
   Database, History, Download, Upload, Trash2, CheckCircle2, Edit3,
   FileSpreadsheet, RefreshCw, Save, X, MessageSquare, Bell, LogOut,
-  FileText, LayoutGrid
+  FileText, LayoutGrid, PanelLeftClose, PanelLeft
 } from 'lucide-react';
 import { WhatsAppHubModule } from './WhatsAppHubModule';
 
@@ -15,6 +15,37 @@ export const GeneralDashboard: React.FC = () => {
   const { user, token, setCurrentWedding, logout, notifications, refreshNotifications } = useAuth();
   const [activeTab, setActiveTab] = useState<'weddings' | 'whatsapp' | 'plantillas' | 'catalogos' | 'equipo' | 'ajustes'>('weddings');
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+
+  // Collapsable sidebar state (persisted)
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('lazo_dashboard_sidebar_open');
+      if (saved !== null) return saved === 'true';
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
+
+  const handleToggleSidebar = () => {
+    setSidebarOpen(prev => {
+      const next = !prev;
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lazo_dashboard_sidebar_open', String(next));
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+        e.preventDefault();
+        handleToggleSidebar();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [loading, setLoading] = useState(true);
@@ -759,11 +790,29 @@ export const GeneralDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#FCFAF7] flex flex-col md:flex-row text-[#332A28]">
       {/* 1. Sidebar Izquierdo Fijo/Acoplado — Idéntico a la maqueta editorial LAZO */}
-      <aside className="w-full md:w-64 lg:w-72 shrink-0 bg-[#FCFAF7] border-b md:border-b-0 md:border-r border-[#EAE3DA] flex flex-col p-6 sticky top-0 md:h-screen z-30">
-        <div className="mb-8 px-3">
-          <span className="font-serif text-3xl font-bold tracking-widest text-[#332A28] select-none block">
-            LAZO
-          </span>
+      <aside
+        className={`shrink-0 bg-[#FCFAF7] border-b md:border-b-0 md:border-r border-[#EAE3DA] flex flex-col sticky top-0 md:h-screen z-30 transition-all duration-200 ${
+          sidebarOpen
+            ? 'w-full md:w-64 lg:w-72 p-6 block'
+            : 'w-0 p-0 overflow-hidden border-none hidden md:hidden'
+        }`}
+      >
+        <div className="mb-8 px-2 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <img
+              src="/lazo-logo.png"
+              alt="LAZO — VLB Studio · Planning"
+              className="h-10 sm:h-11 w-auto object-contain select-none"
+            />
+          </div>
+          <button
+            onClick={handleToggleSidebar}
+            aria-label="Ocultar menú lateral"
+            className="p-1.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-xl transition cursor-pointer"
+            title="Ocultar menú lateral (⌘B)"
+          >
+            <PanelLeftClose className="w-5 h-5 text-[#9C665C]" />
+          </button>
         </div>
 
         <nav className="space-y-1.5 flex-1">
@@ -805,13 +854,26 @@ export const GeneralDashboard: React.FC = () => {
           <div>
             {/* Cabecera Minimalista y Cálida */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <div>
-                <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#332A28]">
-                  Hola, {userName} 👋
-                </h1>
-                <p className="text-sm text-[#7D6F6B] mt-1">
-                  ¿En qué boda trabajaremos hoy? · {weddings.length} {weddings.length === 1 ? 'boda activa' : 'bodas activas'}
-                </p>
+              <div className="flex items-center space-x-3.5">
+                {!sidebarOpen && (
+                  <button
+                    onClick={handleToggleSidebar}
+                    aria-label="Mostrar menú lateral"
+                    className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    title="Mostrar menú lateral (⌘B)"
+                  >
+                    <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                    <span className="text-sm font-semibold hidden sm:inline">Menú</span>
+                  </button>
+                )}
+                <div>
+                  <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#332A28]">
+                    Hola, {userName} 👋
+                  </h1>
+                  <p className="text-sm text-[#7D6F6B] mt-1">
+                    ¿En qué boda trabajaremos hoy? · {weddings.length} {weddings.length === 1 ? 'boda activa' : 'bodas activas'}
+                  </p>
+                </div>
               </div>
 
               <div className="flex items-center space-x-3.5 self-start sm:self-auto">
@@ -959,15 +1021,28 @@ export const GeneralDashboard: React.FC = () => {
                       className="bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EAE3DA] shadow-xs hover:shadow-md hover:border-[#D6C7B7] transition-all duration-200 flex flex-col justify-between group cursor-pointer"
                     >
                       <div>
-                        {/* Nombres con espaciado editorial */}
-                        <div className="font-serif text-3xl sm:text-[32px] font-bold text-[#332A28] leading-[1.15] mb-4">
-                          {w.partner_1_name && w.partner_2_name ? (
-                            <>
-                              <div className="truncate">{w.partner_1_name}</div>
-                              <div className="truncate">& {w.partner_2_name}</div>
-                            </>
-                          ) : (
-                            <div className="truncate">{w.name}</div>
+                        {/* Fila superior con Nombres y botón eliminar discreto */}
+                        <div className="flex items-start justify-between gap-2 mb-4">
+                          <div className="font-serif text-3xl sm:text-[32px] font-bold text-[#332A28] leading-[1.15]">
+                            {w.partner_1_name && w.partner_2_name ? (
+                              <>
+                                <div className="truncate">{w.partner_1_name}</div>
+                                <div className="truncate">& {w.partner_2_name}</div>
+                              </>
+                            ) : (
+                              <div className="truncate">{w.name}</div>
+                            )}
+                          </div>
+
+                          {user?.role === 'ADMINISTRADOR' && (
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteWedding(e, w)}
+                              className="p-1.5 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition opacity-0 group-hover:opacity-100 shrink-0"
+                              title="Eliminar esta boda"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           )}
                         </div>
 
@@ -1004,50 +1079,54 @@ export const GeneralDashboard: React.FC = () => {
 
                       {/* Fila Inferior: Equipo asignado + Abrir Boda */}
                       <div className="flex items-center justify-between pt-2">
-                        <div className="flex -space-x-2 overflow-hidden items-center">
+                        <div className="flex items-center space-x-1.5">
                           {Array.isArray(w.team) && w.team.length > 0 ? (
-                            w.team.slice(0, 3).map((member: any, i: number) => (
-                              <div
-                                key={member.id || i}
-                                title={`${member.name} (${member.assigned_role || member.role})`}
-                                className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-[#EFE2DF] text-[#8A574E] font-semibold text-xs flex items-center justify-center uppercase shadow-2xs select-none"
-                              >
-                                {member.name?.charAt(0) || 'V'}
-                              </div>
-                            ))
+                            <>
+                              {w.team.slice(0, 3).map((member: any, i: number) => (
+                                <div
+                                  key={member.id || i}
+                                  title={`${member.name} (${member.assigned_role || member.role})`}
+                                  className="w-7 h-7 rounded-full bg-[#EFE2DF] text-[#8A574E] flex items-center justify-center border border-[#CCDACC] shadow-2xs select-none shrink-0"
+                                >
+                                  <span className="text-[11px] font-bold uppercase leading-none">
+                                    {member.name?.trim()?.charAt(0) || 'V'}
+                                  </span>
+                                </div>
+                              ))}
+                              {w.team.length > 3 && (
+                                <div
+                                  title={`+${w.team.length - 3} miembros adicionales`}
+                                  className="w-7 h-7 rounded-full bg-[#F7F3EE] text-[#7D6F6B] flex items-center justify-center border border-[#EAE3DA] shadow-2xs select-none shrink-0"
+                                >
+                                  <span className="text-[10px] font-bold leading-none">
+                                    +{w.team.length - 3}
+                                  </span>
+                                </div>
+                              )}
+                            </>
                           ) : (
                             <div
                               title="VLB Studio"
-                              className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-[#EFE2DF] text-[#8A574E] font-semibold text-xs flex items-center justify-center uppercase shadow-2xs select-none"
+                              className="w-7 h-7 rounded-full bg-[#EFE2DF] text-[#8A574E] flex items-center justify-center border border-[#CCDACC] shadow-2xs select-none shrink-0"
                             >
-                              V
+                              <span className="text-[11px] font-bold uppercase leading-none">
+                                V
+                              </span>
                             </div>
                           )}
                         </div>
 
-                        <div className="flex items-center space-x-2">
-                          {user?.role === 'ADMINISTRADOR' && (
-                            <button
-                              type="button"
-                              onClick={(e) => handleDeleteWedding(e, w)}
-                              className="p-2 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition opacity-0 group-hover:opacity-100"
-                              title="Eliminar esta boda"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setCurrentWedding(w);
-                            }}
-                            className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-[#332A28] bg-[#FFFFFF] hover:bg-[#F7F3EE] border border-[#EAE3DA] transition shadow-2xs group-hover:border-[#9C665C] group-hover:text-[#9C665C] cursor-pointer"
-                          >
-                            <span>Abrir Boda</span>
-                            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                          </button>
-                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentWedding(w);
+                          }}
+                          className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-[#332A28] bg-[#FFFFFF] hover:bg-[#F7F3EE] border border-[#EAE3DA] transition shadow-2xs group-hover:border-[#9C665C] group-hover:text-[#9C665C] cursor-pointer"
+                        >
+                          <span>Abrir Boda</span>
+                          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                        </button>
                       </div>
                     </div>
                   );
@@ -1061,13 +1140,26 @@ export const GeneralDashboard: React.FC = () => {
         {activeTab === 'whatsapp' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
-              <div>
-                <h2 className="font-serif text-2xl font-bold text-[#332A28]">WhatsApp Hub</h2>
-                <p className="text-xs text-[#7D6F6B] mt-0.5">Centro de mensajería ejecutiva y respuestas de confirmación de invitados.</p>
+              <div className="flex items-center space-x-3.5">
+                {!sidebarOpen && (
+                  <button
+                    onClick={handleToggleSidebar}
+                    aria-label="Mostrar menú lateral"
+                    className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    title="Mostrar menú lateral (⌘B)"
+                  >
+                    <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                    <span className="text-sm font-semibold hidden sm:inline">Menú</span>
+                  </button>
+                )}
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-[#332A28]">WhatsApp Hub</h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">Centro de mensajería ejecutiva y respuestas de confirmación de invitados.</p>
+                </div>
               </div>
               <button
                 onClick={() => setActiveTab('weddings')}
-                className="text-xs font-semibold text-[#9C665C] hover:underline"
+                className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
               >
                 ← Volver a Bodas
               </button>
@@ -1080,9 +1172,22 @@ export const GeneralDashboard: React.FC = () => {
         {activeTab === 'equipo' && user?.role === 'ADMINISTRADOR' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
-              <div>
-                <h2 className="font-serif text-2xl font-bold text-[#332A28]">Bitácora & Equipo VLB</h2>
-                <p className="text-xs text-[#7D6F6B] mt-0.5">Gestión de coordinadores, staff y accesos operativos de bodas.</p>
+              <div className="flex items-center space-x-3.5">
+                {!sidebarOpen && (
+                  <button
+                    onClick={handleToggleSidebar}
+                    aria-label="Mostrar menú lateral"
+                    className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    title="Mostrar menú lateral (⌘B)"
+                  >
+                    <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                    <span className="text-sm font-semibold hidden sm:inline">Menú</span>
+                  </button>
+                )}
+                <div>
+                  <h2 className="font-serif text-2xl font-bold text-[#332A28]">Bitácora & Equipo VLB</h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">Gestión de coordinadores, staff y accesos operativos de bodas.</p>
+                </div>
               </div>
               <button
                 onClick={() => setActiveTab('weddings')}
@@ -1102,7 +1207,7 @@ export const GeneralDashboard: React.FC = () => {
             </div>
             <button
               onClick={handleOpenNewUser}
-              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow transition"
+              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Nuevo Usuario / Equipo</span>
@@ -1190,9 +1295,22 @@ export const GeneralDashboard: React.FC = () => {
       {activeTab === 'plantillas' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
-            <div>
-              <h2 className="font-serif text-2xl font-bold text-[#332A28]">Plantillas Maestras VLB</h2>
-              <p className="text-xs text-[#7D6F6B] mt-0.5">Checklist maestro y requisitos de ceremonias civil y religiosa.</p>
+            <div className="flex items-center space-x-3.5">
+              {!sidebarOpen && (
+                <button
+                  onClick={handleToggleSidebar}
+                  aria-label="Mostrar menú lateral"
+                  className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                  title="Mostrar menú lateral (⌘B)"
+                >
+                  <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                  <span className="text-sm font-semibold hidden sm:inline">Menú</span>
+                </button>
+              )}
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-[#332A28]">Plantillas Maestras VLB</h2>
+                <p className="text-xs text-[#7D6F6B] mt-0.5">Checklist maestro y requisitos de ceremonias civil y religiosa.</p>
+              </div>
             </div>
             <button
               onClick={() => setActiveTab('weddings')}
@@ -1235,7 +1353,7 @@ export const GeneralDashboard: React.FC = () => {
                   <span>Descargar Plantilla Excel</span>
                 </button>
 
-                <label className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider cursor-pointer transition shadow">
+                <label className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold cursor-pointer transition shadow-xs">
                   <Upload className="w-4 h-4" />
                   <span>{importingExcel ? 'Cargando Excel...' : 'Subir Excel de Plantillas'}</span>
                   <input
@@ -1602,9 +1720,22 @@ export const GeneralDashboard: React.FC = () => {
       {activeTab === 'catalogos' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
-            <div>
-              <h2 className="font-serif text-2xl font-bold text-[#332A28]">Catálogos VLB</h2>
-              <p className="text-xs text-[#7D6F6B] mt-0.5">Especialidades de proveedores y paquetes de reuniones de novios.</p>
+            <div className="flex items-center space-x-3.5">
+              {!sidebarOpen && (
+                <button
+                  onClick={handleToggleSidebar}
+                  aria-label="Mostrar menú lateral"
+                  className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                  title="Mostrar menú lateral (⌘B)"
+                >
+                  <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                  <span className="text-sm font-semibold hidden sm:inline">Menú</span>
+                </button>
+              )}
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-[#332A28]">Catálogos VLB</h2>
+                <p className="text-xs text-[#7D6F6B] mt-0.5">Especialidades de proveedores y paquetes de reuniones de novios.</p>
+              </div>
             </div>
             <button
               onClick={() => setActiveTab('weddings')}
@@ -1628,7 +1759,7 @@ export const GeneralDashboard: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-stone-900 text-white text-xs font-bold uppercase rounded-xl hover:bg-stone-800"
+                  className="px-4 py-2 bg-[#9C665C] text-white text-xs font-semibold rounded-xl hover:bg-[#8A574E] shadow-xs transition cursor-pointer"
                 >
                   Agregar
                 </button>
@@ -1695,7 +1826,7 @@ export const GeneralDashboard: React.FC = () => {
                   <div className="sm:col-span-3">
                     <button
                       type="submit"
-                      className="w-full px-3 py-2 bg-stone-900 text-white text-xs font-bold uppercase rounded-xl hover:bg-stone-800 transition"
+                      className="w-full px-3 py-2 bg-[#9C665C] text-white text-xs font-semibold rounded-xl hover:bg-[#8A574E] shadow-xs transition cursor-pointer"
                     >
                       + Añadir Paquete
                     </button>
@@ -1792,7 +1923,7 @@ export const GeneralDashboard: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleSaveEditPackage(idx)}
-                            className="px-4 py-1.5 rounded-xl bg-stone-900 text-white hover:bg-stone-800 text-xs font-bold uppercase tracking-wider"
+                            className="px-4 py-1.5 rounded-xl bg-[#9C665C] text-white hover:bg-[#8A574E] text-xs font-semibold shadow-xs transition cursor-pointer"
                           >
                             Guardar Cambios
                           </button>
@@ -1853,9 +1984,22 @@ export const GeneralDashboard: React.FC = () => {
       {activeTab === 'ajustes' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
-            <div>
-              <h2 className="font-serif text-2xl font-bold text-[#332A28]">Ajustes y Copias de Seguridad</h2>
-              <p className="text-xs text-[#7D6F6B] mt-0.5">Respaldo general del sistema, restauración de base de datos y auditoría global.</p>
+            <div className="flex items-center space-x-3.5">
+              {!sidebarOpen && (
+                <button
+                  onClick={handleToggleSidebar}
+                  aria-label="Mostrar menú lateral"
+                  className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                  title="Mostrar menú lateral (⌘B)"
+                >
+                  <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                  <span className="text-sm font-semibold hidden sm:inline">Menú</span>
+                </button>
+              )}
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-[#332A28]">Ajustes y Copias de Seguridad</h2>
+                <p className="text-xs text-[#7D6F6B] mt-0.5">Respaldo general del sistema, restauración de base de datos y auditoría global.</p>
+              </div>
             </div>
             <button
               onClick={() => setActiveTab('weddings')}
@@ -1877,7 +2021,7 @@ export const GeneralDashboard: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleDownloadBackup}
-                  className="inline-flex items-center space-x-2 px-4 py-2.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow transition"
+                  className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                   <span>Descargar Copia de Seguridad</span>
@@ -2063,7 +2207,7 @@ export const GeneralDashboard: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold uppercase tracking-wider bg-stone-900 text-white rounded-xl hover:bg-stone-800"
+                  className="px-5 py-2 text-xs font-semibold bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs transition cursor-pointer"
                 >
                   Guardar Usuario
                 </button>
@@ -2225,7 +2369,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="px-6 py-2.5 text-xs font-bold uppercase tracking-wider bg-stone-900 text-white hover:bg-stone-800 rounded-xl shadow transition disabled:opacity-50"
+                  className="px-6 py-2.5 text-xs font-semibold bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
                 >
                   {creating ? 'Guardando...' : 'Crear Proyecto Boda'}
                 </button>

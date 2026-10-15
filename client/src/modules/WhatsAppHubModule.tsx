@@ -262,30 +262,30 @@ export const WhatsAppHubModule: React.FC = () => {
             <div className="flex items-center space-x-1.5 pt-1">
               <button
                 onClick={() => setFilterType('todas')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
                   filterType === 'todas'
-                    ? 'bg-stone-900 text-white'
-                    : 'bg-[#F9F6F2] text-[#786C68] hover:bg-[#EFE8DE]'
+                    ? 'bg-[#9C665C] text-white shadow-2xs'
+                    : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8DE] hover:text-[#332A28]'
                 }`}
               >
                 Todas
               </button>
               <button
                 onClick={() => setFilterType('pendientes')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
                   filterType === 'pendientes'
-                    ? 'bg-stone-900 text-white'
-                    : 'bg-[#F9F6F2] text-[#786C68] hover:bg-[#EFE8DE]'
+                    ? 'bg-[#9C665C] text-white shadow-2xs'
+                    : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8DE] hover:text-[#332A28]'
                 }`}
               >
                 Pendientes
               </button>
               <button
                 onClick={() => setFilterType('confirmados')}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
                   filterType === 'confirmados'
-                    ? 'bg-stone-900 text-white'
-                    : 'bg-[#F9F6F2] text-[#786C68] hover:bg-[#EFE8DE]'
+                    ? 'bg-[#9C665C] text-white shadow-2xs'
+                    : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8DE] hover:text-[#332A28]'
                 }`}
               >
                 Confirmados
@@ -477,7 +477,7 @@ export const WhatsAppHubModule: React.FC = () => {
                 <button
                   type="submit"
                   disabled={sending || !newMessage.trim()}
-                  className="p-2.5 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white rounded-xl transition shadow-xs"
+                  className="p-2.5 bg-[#9C665C] hover:bg-[#8A574E] disabled:opacity-50 text-white rounded-xl transition shadow-xs cursor-pointer"
                   title="Enviar mensaje por WhatsApp"
                 >
                   <Send className="w-4 h-4" />
