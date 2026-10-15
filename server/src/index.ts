@@ -20,6 +20,7 @@ import reportsRouter from './routes/reports.js';
 import directoryRouter from './routes/directory.js';
 import catalogsBackupRouter from './routes/catalogsBackup.js';
 import whatsappHubRouter from './routes/whatsappHub.js';
+import whatsappWebhookRouter from './routes/whatsappWebhook.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,6 +73,7 @@ app.use('/api/weddings', checklistRouter);
 app.use('/api/weddings', documentsRouter);
 app.use('/api/weddings', reportsRouter);
 app.use('/api/weddings', directoryRouter);
+app.use('/api/whatsapp', whatsappWebhookRouter);
 app.use('/api/whatsapp', whatsappHubRouter);
 app.use('/api', catalogsBackupRouter);
 
