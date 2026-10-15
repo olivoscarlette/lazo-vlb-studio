@@ -20,6 +20,7 @@ interface WhatsAppConversation {
   last_message_direction: 'OUTBOUND' | 'INBOUND';
   last_message_status: string;
   total_messages: number;
+  unread_count?: number;
 }
 
 interface WhatsAppMessage {
@@ -33,6 +34,25 @@ interface WhatsAppMessage {
   template_name?: string;
   status: string;
   created_at: string;
+}
+
+function formatWhatsAppTime(dateStr?: string) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const now = new Date();
+  
+  const isToday = date.toDateString() === now.toDateString();
+  if (isToday) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+  
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) {
+    return 'Ayer';
+  }
+  
+  return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
 }
 
 export const WhatsAppHubModule: React.FC = () => {
@@ -124,7 +144,14 @@ export const WhatsAppHubModule: React.FC = () => {
 
   // Select a conversation
   const handleSelectConversation = (conv: WhatsAppConversation) => {
-    setActiveConversation(conv);
+    setActiveConversation({ ...conv, unread_count: 0 });
+    setConversations(prev =>
+      prev.map(c =>
+        c.phone === conv.phone && c.wedding_id === conv.wedding_id
+          ? { ...c, unread_count: 0 }
+          : c
+      )
+    );
     fetchChatMessages(conv);
     setSelectedTemplate(null);
   };
@@ -383,21 +410,22 @@ export const WhatsAppHubModule: React.FC = () => {
 
                     {/* Conversation Info */}
                     <div className="flex-1 min-w-0">
+                      {/* Top Row: Name & Timestamp */}
                       <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-sm text-[#2B2826] truncate">
+                        <h4 className={`text-sm truncate ${(conv.unread_count || 0) > 0 ? 'font-bold text-[#111B21]' : 'font-semibold text-[#2B2826]'}`}>
                           {conv.guest_name}
                         </h4>
-                        <span className="text-xs text-[#8A7E72] shrink-0 ml-2">
-                          {conv.last_message_at ? new Date(conv.last_message_at).toLocaleDateString([], { month: 'short', day: 'numeric' }) : ''}
+                        <span className={`text-[11px] shrink-0 ml-2 font-medium ${(conv.unread_count || 0) > 0 ? 'text-[#25D366] font-bold' : 'text-[#667781]'}`}>
+                          {formatWhatsAppTime(conv.last_message_at)}
                         </span>
                       </div>
 
-                      {/* Wedding Tag badge */}
+                      {/* Middle Row: Wedding Tag badge */}
                       <div className="flex items-center space-x-1.5 mt-1">
-                        <span className="text-xs text-[#9C665C] font-semibold bg-[#FDF6F5] border border-[#F3DCD7] px-2 py-0.5 rounded-md truncate max-w-[180px]">
+                        <span className="text-[11px] text-[#9C665C] font-semibold bg-[#FDF6F5] border border-[#F3DCD7] px-2 py-0.5 rounded-md truncate max-w-[150px]">
                           💍 {conv.wedding_name}
                         </span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
                           conv.guest_status === 'Confirmado'
                             ? 'bg-[#E4ECE5] text-[#2B5235] border border-[#BDD4C1]'
                             : conv.guest_status === 'No asistirá'
@@ -408,11 +436,30 @@ export const WhatsAppHubModule: React.FC = () => {
                         </span>
                       </div>
 
-                      {/* Last Message Snippet */}
-                      <p className="text-xs text-[#8A7E72] truncate mt-1.5">
-                        {conv.last_message_direction === 'OUTBOUND' && <span className="font-semibold text-[#2B2826]">Tú: </span>}
-                        {conv.last_message_content || 'Invitación enviada'}
-                      </p>
+                      {/* Bottom Row: Last Message Snippet + WhatsApp Green Unread Badge */}
+                      <div className="flex items-center justify-between mt-1.5 gap-2">
+                        <p className={`text-xs truncate flex items-center space-x-1 ${(conv.unread_count || 0) > 0 ? 'text-[#111B21] font-semibold' : 'text-[#667781]'}`}>
+                          {conv.last_message_direction === 'OUTBOUND' && (
+                            <span className="inline-flex shrink-0 mr-1">
+                              {conv.last_message_status === 'READ' ? (
+                                <CheckCheck className="w-3.5 h-3.5 text-[#53BDEB]" />
+                              ) : conv.last_message_status === 'DELIVERED' ? (
+                                <CheckCheck className="w-3.5 h-3.5 text-[#8696A0]" />
+                              ) : (
+                                <Check className="w-3.5 h-3.5 text-[#8696A0]" />
+                              )}
+                            </span>
+                          )}
+                          <span className="truncate">{conv.last_message_content || 'Invitación enviada'}</span>
+                        </p>
+
+                        {/* Circular WhatsApp Green Badge */}
+                        {(conv.unread_count || 0) > 0 && (
+                          <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#25D366] text-white text-[11px] font-bold flex items-center justify-center shrink-0 shadow-2xs">
+                            {conv.unread_count}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );

@@ -240,7 +240,15 @@ router.get('/conversations', (req, res) => {
           WHERE phone = wm.phone AND wedding_id = wm.wedding_id 
           ORDER BY created_at DESC LIMIT 1
         ) as last_message_status,
-        COUNT(wm.id) as total_messages
+        COUNT(wm.id) as total_messages,
+        COALESCE((
+          SELECT wc.unread_count FROM whatsapp_contacts wc
+          WHERE wc.phone_number = wm.phone OR wc.phone_number = REPLACE(REPLACE(wm.phone, '+', ''), ' ', '')
+          LIMIT 1
+        ), (
+          SELECT COUNT(*) FROM whatsapp_messages
+          WHERE phone = wm.phone AND wedding_id = wm.wedding_id AND direction = 'INBOUND' AND status != 'READ'
+        ), 0) as unread_count
       FROM whatsapp_messages wm
       JOIN weddings w ON w.id = wm.wedding_id
       LEFT JOIN guests g ON (g.id = wm.guest_id OR g.phone = wm.phone)
@@ -322,6 +330,16 @@ router.get('/conversations/:weddingId/:phone', (req, res) => {
       phoneNumber: normalized,
       resetUnread: true
     });
+
+    try {
+      db.prepare(`
+        UPDATE whatsapp_messages
+        SET status = 'READ'
+        WHERE wedding_id = ? AND (phone = ? OR phone = ?) AND direction = 'INBOUND'
+      `).run(weddingId, phone, normalized);
+    } catch {
+      // Ignore if table is locked
+    }
 
     res.json({
       messages,
