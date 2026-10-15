@@ -206,6 +206,15 @@ router.post('/send-interactive-list', async (req, res) => {
  * GET /api/whatsapp/conversations
  * Returns conversations grouped by phone/guest
  */
+function getPhoneLast10(phone: string): string {
+  const digits = (phone || '').replace(/\D/g, '');
+  return digits.length >= 10 ? digits.slice(-10) : digits;
+}
+
+/**
+ * GET /api/whatsapp/conversations
+ * Returns active WhatsApp conversations, aggregated by contact (last 10 digits) and wedding
+ */
 router.get('/conversations', (req, res) => {
   try {
     const { weddingId, search = '', filter = 'todas' } = req.query as {
@@ -214,75 +223,91 @@ router.get('/conversations', (req, res) => {
       filter?: string;
     };
 
-    let query = `
+    let msgQuery = `
       SELECT 
-        wm.phone,
-        wm.wedding_id,
-        w.name as wedding_name,
-        COALESCE(
-          g.first_name || ' ' || g.last_name,
-          (
-            SELECT wc.name FROM whatsapp_contacts wc
-            WHERE (wc.phone_number = wm.phone OR wc.phone_number = REPLACE(REPLACE(wm.phone, '+', ''), ' ', ''))
-              AND wc.name IS NOT NULL AND wc.name != ''
-            LIMIT 1
-          ),
-          wm.phone
-        ) as guest_name,
-        COALESCE(g.status, 'Pendiente de confirmar') as guest_status,
-        COALESCE(g.companion_count, 0) as companion_count,
-        COALESCE(t.name, 'Sin mesa') as table_name,
-        MAX(wm.created_at) as last_message_at,
-        (
-          SELECT content FROM whatsapp_messages 
-          WHERE phone = wm.phone AND wedding_id = wm.wedding_id 
-          ORDER BY created_at DESC LIMIT 1
-        ) as last_message_content,
-        (
-          SELECT direction FROM whatsapp_messages 
-          WHERE phone = wm.phone AND wedding_id = wm.wedding_id 
-          ORDER BY created_at DESC LIMIT 1
-        ) as last_message_direction,
-        (
-          SELECT status FROM whatsapp_messages 
-          WHERE phone = wm.phone AND wedding_id = wm.wedding_id 
-          ORDER BY created_at DESC LIMIT 1
-        ) as last_message_status,
-        COUNT(wm.id) as total_messages,
-        MAX(
-          COALESCE((
-            SELECT wc.unread_count FROM whatsapp_contacts wc
-            WHERE wc.phone_number = wm.phone OR wc.phone_number = REPLACE(REPLACE(wm.phone, '+', ''), ' ', '')
-            LIMIT 1
-          ), 0),
-          (
-            SELECT COUNT(*) FROM whatsapp_messages
-            WHERE (phone = wm.phone OR phone = REPLACE(REPLACE(wm.phone, '+', ''), ' ', ''))
-              AND wedding_id = wm.wedding_id 
-              AND direction = 'INBOUND' 
-              AND status != 'READ'
-          )
-        ) as unread_count
+        wm.*,
+        w.name as wedding_name
       FROM whatsapp_messages wm
       JOIN weddings w ON w.id = wm.wedding_id
-      LEFT JOIN guests g ON (g.id = wm.guest_id OR g.phone = wm.phone)
-      LEFT JOIN tables t ON t.id = g.table_id
-      WHERE 1=1
     `;
-
     const params: any[] = [];
-
     if (weddingId && weddingId !== 'all') {
-      query += ` AND wm.wedding_id = ?`;
+      msgQuery += ` WHERE wm.wedding_id = ?`;
       params.push(weddingId);
     }
+    msgQuery += ` ORDER BY wm.created_at DESC`;
 
-    query += ` GROUP BY wm.phone, wm.wedding_id ORDER BY last_message_at DESC`;
+    const rawMessages = db.prepare(msgQuery).all(...params) as any[];
 
-    const rawConversations = db.prepare(query).all(...params) as any[];
+    const allGuests = db.prepare(`
+      SELECT g.*, t.name as table_name
+      FROM guests g
+      LEFT JOIN tables t ON t.id = g.table_id
+    `).all() as any[];
+
+    const allContacts = db.prepare('SELECT * FROM whatsapp_contacts').all() as any[];
+
+    const groupMap = new Map<string, {
+      phone: string;
+      wedding_id: string;
+      wedding_name: string;
+      guest_id: string | null;
+      guest_name: string;
+      guest_status: string;
+      companion_count: number;
+      table_name: string;
+      last_message_at: string;
+      last_message_content: string;
+      last_message_direction: 'OUTBOUND' | 'INBOUND';
+      last_message_status: string;
+      total_messages: number;
+      unread_count: number;
+    }>();
+
+    for (const msg of rawMessages) {
+      const last10 = getPhoneLast10(msg.phone);
+      const key = `${msg.wedding_id}_${last10}`;
+
+      if (!groupMap.has(key)) {
+        const matchedGuest = allGuests.find(g => 
+          g.wedding_id === msg.wedding_id && getPhoneLast10(g.phone) === last10
+        ) || allGuests.find(g => getPhoneLast10(g.phone) === last10);
+
+        const matchedContact = allContacts.find(c => getPhoneLast10(c.phone_number) === last10);
+
+        const guestName = matchedGuest
+          ? `${matchedGuest.first_name} ${matchedGuest.last_name}`.trim()
+          : (matchedContact?.name || msg.phone);
+
+        groupMap.set(key, {
+          phone: WhatsAppService.normalizePhoneNumber(msg.phone) || msg.phone,
+          wedding_id: msg.wedding_id,
+          wedding_name: msg.wedding_name,
+          guest_id: matchedGuest?.id || msg.guest_id || null,
+          guest_name: guestName,
+          guest_status: matchedGuest?.status || 'Pendiente de confirmar',
+          companion_count: matchedGuest?.companion_count || 0,
+          table_name: matchedGuest?.table_name || 'Sin mesa',
+          last_message_at: msg.created_at,
+          last_message_content: msg.content,
+          last_message_direction: msg.direction,
+          last_message_status: msg.status,
+          total_messages: 1,
+          unread_count: (msg.direction === 'INBOUND' && msg.status !== 'READ') ? 1 : 0
+        });
+      } else {
+        const item = groupMap.get(key)!;
+        item.total_messages += 1;
+        if (msg.direction === 'INBOUND' && msg.status !== 'READ') {
+          item.unread_count += 1;
+        }
+      }
+    }
+
+    const conversations = Array.from(groupMap.values());
 
     // In-memory search filter (accent-insensitive)
-    let filtered = rawConversations;
+    let filtered = conversations;
     if (search.trim()) {
       const cleanSearch = search.trim().toLowerCase();
       filtered = filtered.filter(c =>
@@ -321,21 +346,22 @@ router.get('/conversations/:weddingId/:phone', (req, res) => {
   try {
     const { weddingId, phone } = req.params;
     const normalized = WhatsAppService.normalizePhoneNumber(phone);
+    const last10 = getPhoneLast10(phone);
 
     const messages = db.prepare(`
       SELECT * FROM whatsapp_messages
-      WHERE wedding_id = ? AND (phone = ? OR phone = ?)
+      WHERE wedding_id = ? AND (phone = ? OR phone = ? OR phone LIKE ?)
       ORDER BY created_at ASC
-    `).all(weddingId, phone, normalized) as any[];
+    `).all(weddingId, phone, normalized, `%${last10}`) as any[];
 
     const guest = db.prepare(`
       SELECT g.*, w.name as wedding_name, t.name as table_name
       FROM guests g
       JOIN weddings w ON w.id = g.wedding_id
       LEFT JOIN tables t ON t.id = g.table_id
-      WHERE g.wedding_id = ? AND (g.phone = ? OR g.phone = ? OR REPLACE(REPLACE(g.phone, ' ', ''), '+', '') = ?)
+      WHERE g.wedding_id = ? AND (g.phone = ? OR g.phone = ? OR g.phone LIKE ?)
       LIMIT 1
-    `).get(weddingId, phone, normalized, normalized) as any;
+    `).get(weddingId, phone, normalized, `%${last10}`) as any;
 
     const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
 
@@ -349,8 +375,8 @@ router.get('/conversations/:weddingId/:phone', (req, res) => {
       db.prepare(`
         UPDATE whatsapp_messages
         SET status = 'READ'
-        WHERE wedding_id = ? AND (phone = ? OR phone = ?) AND direction = 'INBOUND'
-      `).run(weddingId, phone, normalized);
+        WHERE wedding_id = ? AND (phone = ? OR phone = ? OR phone LIKE ?) AND direction = 'INBOUND'
+      `).run(weddingId, phone, normalized, `%${last10}`);
     } catch {
       // Ignore if table is locked
     }
