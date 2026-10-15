@@ -196,7 +196,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
 };
 
 const AppContent: React.FC = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, currentWedding } = useAuth();
 
   // Initialize sidebar state: default open on desktop (>=1024px), closed on mobile
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -242,6 +242,10 @@ const AppContent: React.FC = () => {
 
   if (!user) {
     return <LoginView />;
+  }
+
+  if (user.role === 'ADMINISTRADOR' && !currentWedding) {
+    return <GeneralDashboard />;
   }
 
   return (

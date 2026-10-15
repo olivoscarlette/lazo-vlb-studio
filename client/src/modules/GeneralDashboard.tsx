@@ -3,21 +3,23 @@ import { useAuth } from '../context/AuthContext';
 import { Wedding, User, AuditLog } from '../types';
 import * as XLSX from 'xlsx';
 import {
-  Plus, Calendar, MapPin, Users, ArrowRight, Sparkles,
+  Plus, Calendar, MapPin, Users2, ArrowRight, Sparkles,
   Building2, Search, AlertCircle, Shield, Settings,
   Database, History, Download, Upload, Trash2, CheckCircle2, Edit3,
-  FileSpreadsheet, RefreshCw, Save, X, MessageSquare
+  FileSpreadsheet, RefreshCw, Save, X, MessageSquare, Bell, LogOut,
+  FileText, LayoutGrid
 } from 'lucide-react';
 import { WhatsAppHubModule } from './WhatsAppHubModule';
 
 export const GeneralDashboard: React.FC = () => {
-  const { user, token, setCurrentWedding } = useAuth();
-  const [activeTab, setActiveTab] = useState<'weddings' | 'whatsapp' | 'users' | 'catalogs' | 'audit'>('weddings');
+  const { user, token, setCurrentWedding, logout, notifications, refreshNotifications } = useAuth();
+  const [activeTab, setActiveTab] = useState<'weddings' | 'whatsapp' | 'plantillas' | 'catalogos' | 'equipo' | 'ajustes'>('weddings');
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
 
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'UPCOMING' | 'PLANNING'>('ALL');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Admin: Users management state
@@ -689,310 +691,408 @@ export const GeneralDashboard: React.FC = () => {
     reader.readAsText(file);
   };
 
+  const formatWeddingCountdown = (dateStr: string) => {
+    if (!dateStr) return 'Fecha por definir';
+    const parts = dateStr.split('-');
+    let target: Date;
+    if (parts.length === 3) {
+      target = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    } else {
+      target = new Date(dateStr);
+    }
+    const now = new Date();
+    target.setHours(0, 0, 0, 0);
+    now.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const formattedDate = `${target.getDate()} ${months[target.getMonth()]} ${target.getFullYear()}`;
+
+    if (diffDays > 0) return `Faltan ${diffDays} días · ${formattedDate}`;
+    if (diffDays === 0) return `¡Hoy es la boda! · ${formattedDate}`;
+    return `Realizada · ${formattedDate}`;
+  };
+
+  const userName = user?.name ? user.name.split(' ')[0] : 'Equipo';
+  const unreadCount = Array.isArray(notifications) ? notifications.filter(n => !n.read).length : 0;
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await fetch(`/api/notifications/${id}/read`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (refreshNotifications) await refreshNotifications();
+    } catch {}
+  };
+
+  const sidebarNavItems = [
+    { id: 'weddings', label: 'Bodas', icon: Users2 },
+    { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare },
+    { id: 'plantillas', label: 'Plantillas', icon: FileText },
+    { id: 'catalogos', label: 'Catálogos', icon: LayoutGrid },
+    { id: 'equipo', label: 'Bitácora & Equipo', icon: History },
+    { id: 'ajustes', label: 'Ajustes', icon: Settings },
+  ];
+
   const filteredWeddings = weddings.filter(w => {
+    const q = search.trim().toLowerCase();
     const matchesSearch =
-      w.name.toLowerCase().includes(search.toLowerCase()) ||
-      w.partner_1_name.toLowerCase().includes(search.toLowerCase()) ||
-      w.partner_2_name.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || w.status === statusFilter;
+      !q ||
+      (w.name && w.name.toLowerCase().includes(q)) ||
+      (w.partner_1_name && w.partner_1_name.toLowerCase().includes(q)) ||
+      (w.partner_2_name && w.partner_2_name.toLowerCase().includes(q)) ||
+      (w.ceremony_venue && w.ceremony_venue.toLowerCase().includes(q)) ||
+      (w.reception_venue && w.reception_venue.toLowerCase().includes(q)) ||
+      (w.wedding_date && w.wedding_date.includes(q));
+
+    let matchesStatus = true;
+    if (statusFilter === 'UPCOMING') {
+      matchesStatus = w.status === 'UPCOMING' || (w.wedding_date && new Date(w.wedding_date) >= new Date());
+    } else if (statusFilter === 'PLANNING') {
+      matchesStatus = w.status === 'PLANNING';
+    }
+
     return matchesSearch && matchesStatus;
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* VLB Executive Header Banner — Editorial Rosa Quemado & Crema */}
-      <div className="bg-[#9E6B66] rounded-3xl p-8 text-[#FFFFFF] shadow-sm mb-8 relative overflow-hidden border border-[#8E5B56]">
-        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-[#B88782]/35 blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center space-x-2 text-[#F7EEEC] text-[11px] font-semibold tracking-[0.22em] uppercase mb-2">
-              <Sparkles className="w-4 h-4 text-[#EFE2DF]" />
-              <span>Dirección General · VLB Studio</span>
-            </div>
-            <h1 className="font-serif text-3xl sm:text-5xl font-semibold tracking-tight text-[#FFFFFF]">
-              LAZO · Planeación y Operación
-            </h1>
-            <p className="text-[#FAF5F3] text-xs sm:text-sm max-w-2xl mt-2 leading-relaxed">
-              Supervisión ejecutiva de bodas activas, confirmaciones en tiempo real, control financiero y coordinación de equipo.
-            </p>
-          </div>
+    <div className="min-h-screen bg-[#FCFAF7] flex flex-col md:flex-row text-[#332A28]">
+      {/* 1. Sidebar Izquierdo Fijo/Acoplado — Idéntico a la maqueta editorial LAZO */}
+      <aside className="w-full md:w-64 lg:w-72 shrink-0 bg-[#FCFAF7] border-b md:border-b-0 md:border-r border-[#EAE3DA] flex flex-col p-6 sticky top-0 md:h-screen z-30">
+        <div className="mb-8 px-3">
+          <span className="font-serif text-3xl font-bold tracking-widest text-[#332A28] select-none block">
+            LAZO
+          </span>
+        </div>
 
-          {user?.role === 'ADMINISTRADOR' && (
-            <div className="flex flex-wrap items-center gap-3">
+        <nav className="space-y-1.5 flex-1">
+          {sidebarNavItems.map(item => {
+            const Icon = item.icon;
+            const active = activeTab === item.id;
+            return (
               <button
-                onClick={() => setShowCreateModal(true)}
-                className="inline-flex items-center space-x-2 bg-[#FFFFFF] text-[#332C2A] hover:bg-[#EFE2DF] px-5 py-3 rounded-2xl text-xs font-semibold uppercase tracking-widest shadow-xs transition"
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id as any);
+                  if (item.id === 'equipo' || item.id === 'ajustes') {
+                    fetchAuditAndBackups();
+                  }
+                }}
+                className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-sm transition-all cursor-pointer ${
+                  active
+                    ? 'bg-[#EFE8DE] text-[#332A28] font-semibold shadow-2xs'
+                    : 'text-[#7D6F6B] hover:bg-[#F7F3EE] hover:text-[#332A28] font-medium'
+                }`}
               >
-                <Plus className="w-4 h-4 text-[#9C665C]" />
-                <span>Nueva Boda</span>
+                <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#9C665C]' : 'text-[#7D6F6B]'}`} />
+                <span>{item.label}</span>
               </button>
-            </div>
-          )}
+            );
+          })}
+        </nav>
+
+        <div className="pt-4 border-t border-[#EAE3DA] px-3 flex items-center justify-between text-xs text-[#7D6F6B]">
+          <span>VLB Studio · Planning</span>
+          <span className="w-2 h-2 rounded-full bg-[#6E8C70]" title="Sistema Activo" />
         </div>
+      </aside>
 
-        {/* Global Key Metrics Bar: Cormorant Garamond numbers + Inter operational labels */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 mt-8 pt-6 border-t border-[#B5837E]/60">
+      {/* 2. Área Principal de Contenido */}
+      <main className="flex-1 min-w-0 p-6 sm:p-8 lg:p-10 overflow-y-auto">
+        {/* PESTAÑA PRINCIPAL: BODAS */}
+        {activeTab === 'weddings' && (
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-[#F7EEEC] font-medium">Bodas en Gestión</div>
-            <div className="text-3xl sm:text-4xl font-serif font-semibold text-[#FFFFFF] mt-1">{weddings.length}</div>
-          </div>
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-[#F7EEEC] font-medium">Invitados Estimados</div>
-            <div className="text-3xl sm:text-4xl font-serif font-semibold text-[#FFFFFF] mt-1">
-              {weddings.reduce((acc, w) => acc + (w.estimated_guests || 0), 0)}
-            </div>
-          </div>
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-[#F7EEEC] font-medium">Confirmados Totales</div>
-            <div className="text-3xl sm:text-4xl font-serif font-semibold text-[#EFE2DF] mt-1">
-              {weddings.reduce((acc, w) => acc + (w.confirmed_guests || 0), 0)}
-            </div>
-          </div>
-          <div>
-            <div className="text-[11px] uppercase tracking-wider text-[#F7EEEC] font-medium">Tareas Pendientes</div>
-            <div className="text-3xl sm:text-4xl font-serif font-semibold text-[#FAF5F3] mt-1">
-              {weddings.reduce((acc, w) => acc + (w.pending_tasks || 0), 0)}
-            </div>
-          </div>
-        </div>
+            {/* Cabecera Minimalista y Cálida */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+              <div>
+                <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#332A28]">
+                  Hola, {userName} 👋
+                </h1>
+                <p className="text-sm text-[#7D6F6B] mt-1">
+                  ¿En qué boda trabajaremos hoy? · {weddings.length} {weddings.length === 1 ? 'boda activa' : 'bodas activas'}
+                </p>
+              </div>
 
-        {/* Admin Navigation Sub-Tabs */}
-        {user?.role === 'ADMINISTRADOR' && (
-          <div className="flex flex-wrap gap-2.5 mt-6 pt-5 border-t border-[#B5837E]/60">
-            <button
-              onClick={() => setActiveTab('weddings')}
-              className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
-                activeTab === 'weddings'
-                  ? 'bg-[#FFFFFF] text-[#332C2A] shadow-xs'
-                  : 'bg-[#8a574e]/70 text-[#FFFFFF] hover:bg-[#8a574e]'
-              }`}
-            >
-              <Building2 className="w-4 h-4" />
-              <span>Bodas VLB ({weddings.length})</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('whatsapp')}
-              className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
-                activeTab === 'whatsapp'
-                  ? 'bg-[#FFFFFF] text-[#1B4332] shadow-xs'
-                  : 'bg-emerald-900/60 text-white hover:bg-emerald-800'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4 text-emerald-300" />
-              <span>WhatsApp Hub</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('users')}
-              className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
-                activeTab === 'users'
-                  ? 'bg-[#FFFFFF] text-[#332C2A] shadow-xs'
-                  : 'bg-[#8a574e]/70 text-[#FFFFFF] hover:bg-[#8a574e]'
-              }`}
-            >
-              <Shield className="w-4 h-4" />
-              <span>Usuarios y Roles ({usersList.length})</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('catalogs')}
-              className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
-                activeTab === 'catalogs'
-                  ? 'bg-[#FFFFFF] text-[#332C2A] shadow-xs'
-                  : 'bg-[#8a574e]/70 text-[#FFFFFF] hover:bg-[#8a574e]'
-              }`}
-            >
-              <Settings className="w-4 h-4" />
-              <span>Plantillas VLB y Catálogos</span>
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('audit');
-                fetchAuditAndBackups();
-              }}
-              className={`inline-flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
-                activeTab === 'audit'
-                  ? 'bg-[#FFFFFF] text-[#332C2A] shadow-xs'
-                  : 'bg-[#8a574e]/70 text-[#FFFFFF] hover:bg-[#8a574e]'
-              }`}
-            >
-              <Database className="w-4 h-4" />
-              <span>Bitácora de Actividad y Copias</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* TAB: WHATSAPP HUB */}
-      {activeTab === 'whatsapp' && (
-        <WhatsAppHubModule />
-      )}
-
-      {/* TAB 1: BODAS ACTIVAS */}
-      {activeTab === 'weddings' && (
-        <>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-7">
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#786C68]" />
-              <input
-                type="text"
-                placeholder="Buscar por nombre de pareja o novios..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-[#FFFFFF] border border-[#DDD2C4] rounded-xl text-sm text-[#332C2A] placeholder-[#786C68] focus:outline-none"
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              {['ALL', 'PLANNING', 'UPCOMING', 'COMPLETED'].map(status => (
+              <div className="flex items-center space-x-3.5 self-start sm:self-auto">
                 <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-4 py-2 rounded-xl text-xs font-medium transition ${
-                    statusFilter === status
-                      ? 'bg-[#9C665C] text-[#FFFFFF]'
-                      : 'bg-[#FFFFFF] text-[#786C68] hover:bg-[#EFE8DE] border border-[#DDD2C4]'
-                  }`}
+                  onClick={() => setShowCreateModal(true)}
+                  className="inline-flex items-center space-x-2 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] px-5 py-2.5 rounded-xl text-sm font-semibold shadow-xs transition cursor-pointer"
                 >
-                  {status === 'ALL' ? 'Todas' : status === 'PLANNING' ? 'En Planeación' : status === 'UPCOMING' ? 'Próximas' : 'Realizadas'}
+                  <Plus className="w-4 h-4" />
+                  <span>Nueva Boda</span>
                 </button>
-              ))}
-            </div>
-          </div>
 
-          {loading ? (
-            <div className="py-20 text-center text-[#786C68] text-sm">Cargando bodas...</div>
-          ) : filteredWeddings.length === 0 ? (
-            <div className="bg-[#FFFFFF] rounded-2xl p-12 text-center border border-dashed border-[#DDD2C4]">
-              <Building2 className="w-10 h-10 text-[#DDD2C4] mx-auto mb-3" />
-              <h3 className="font-serif text-xl font-semibold text-[#332C2A]">No se encontraron bodas</h3>
-              <p className="text-[#786C68] text-xs mt-1">Crea una nueva boda o ajusta tus filtros de búsqueda.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7">
-              {filteredWeddings.map(w => (
-                <div
-                  key={w.id}
-                  className="luxury-card rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer border border-[#DDD2C4]"
-                  onClick={() => setCurrentWedding(w)}
-                >
-                  <div className="p-6">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <span className="text-[10px] uppercase font-semibold tracking-wider text-[#786C68] block mb-1">
-                          Boda VLB · Paquete {w.package_type}
-                        </span>
-                        <h3 className="font-serif text-2xl font-semibold text-[#332C2A] group-hover:text-[#9C665C] transition">
-                          {w.name}
-                        </h3>
+                {/* Avatar circular con punto de estado */}
+                <div className="relative cursor-pointer" title={user?.name}>
+                  <div className="w-10 h-10 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-base flex items-center justify-center border border-[#CCDACC] shadow-2xs">
+                    {userName.charAt(0)}
+                  </div>
+                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#6E8C70] border-2 border-[#FCFAF7]" title="En línea" />
+                </div>
+
+                {/* Campana de Notificaciones */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowNotifMenu(!showNotifMenu)}
+                    className="p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer relative"
+                    title="Notificaciones"
+                  >
+                    <Bell className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#9C665C]" />
+                    )}
+                  </button>
+
+                  {showNotifMenu && (
+                    <div className="absolute right-0 mt-2 w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] py-2 z-50">
+                      <div className="px-4 py-2.5 border-b border-[#F7F3EE] flex items-center justify-between">
+                        <span className="font-serif text-lg font-semibold text-[#332A28]">Notificaciones</span>
+                        {unreadCount > 0 && (
+                          <span className="text-xs bg-[#EFE2DF] text-[#8A574E] px-2.5 py-0.5 rounded-full font-medium">
+                            {unreadCount} nuevas
+                          </span>
+                        )}
                       </div>
-                      <div className="flex items-center space-x-1.5">
-                        <span className={`text-[10px] px-3 py-1 rounded-full font-semibold uppercase tracking-wider ${
-                          w.status === 'UPCOMING'
-                            ? 'bg-[#EFE8DE] text-[#6D5A43] border border-[#DDD2C4]'
-                            : w.status === 'PLANNING'
-                            ? 'bg-[#EFE2DF] text-[#8a574e] border border-[#DFC9C4]'
-                            : 'bg-[#F9F6F2] text-[#786C68] border border-[#DDD2C4]'
-                        }`}>
-                          {w.status === 'PLANNING' ? 'Planeación' : w.status === 'UPCOMING' ? 'Próxima' : w.status}
-                        </span>
-                        {user?.role === 'ADMINISTRADOR' && (
-                          <button
-                            type="button"
-                            onClick={(e) => handleDeleteWedding(e, w)}
-                            className="p-1.5 text-stone-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition"
-                            title="Eliminar esta boda"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                      <div className="max-h-72 overflow-y-auto divide-y divide-[#F7F3EE]">
+                        {notifications.length === 0 ? (
+                          <div className="p-5 text-center text-sm text-[#7D6F6B]">
+                            No hay notificaciones pendientes.
+                          </div>
+                        ) : (
+                          notifications.map(n => (
+                            <div
+                              key={n.id}
+                              onClick={() => handleMarkAsRead(n.id)}
+                              className={`p-3.5 text-sm cursor-pointer hover:bg-[#FCFAF7] transition ${!n.read ? 'bg-[#EFE2DF]/40' : ''}`}
+                            >
+                              <div className="font-semibold text-[#332A28] mb-0.5">{n.title}</div>
+                              <div className="text-xs text-[#7D6F6B] leading-snug">{n.message}</div>
+                              <div className="text-xs text-[#7D6F6B] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
+                            </div>
+                          ))
                         )}
                       </div>
                     </div>
-
-                    <div className="mt-4 space-y-2 text-xs text-[#786C68]">
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-[#9C665C]" />
-                        <span className="font-medium text-[#332C2A]">{w.wedding_date}</span>
-                      </div>
-                      {w.reception_venue && (
-                        <div className="flex items-center space-x-2 truncate">
-                          <MapPin className="w-4 h-4 text-[#9C665C] shrink-0" />
-                          <span className="truncate">{w.reception_venue}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center space-x-2">
-                        <Users className="w-4 h-4 text-[#9C665C]" />
-                        <span>{w.estimated_guests} invitados estimados</span>
-                      </div>
-                    </div>
-
-                    {/* RSVP Mini Progress Bar */}
-                    <div className="mt-5 pt-4 border-t border-[#EFE8DE]">
-                      <div className="flex items-center justify-between text-[11px] mb-1.5 font-medium">
-                        <span className="text-[#786C68]">Confirmaciones RSVP</span>
-                        <span className="text-[#332C2A] font-semibold">
-                          {w.confirmed_guests || 0} confirmados
-                        </span>
-                      </div>
-                      <div className="h-2.5 w-full bg-[#EFE8DE] rounded-full overflow-hidden flex">
-                        <div
-                          className="bg-[#9C665C] h-full transition-all"
-                          style={{
-                            width: `${Math.min(100, Math.round(((w.confirmed_guests || 0) / Math.max(1, w.total_guests || 1)) * 100))}%`
-                          }}
-                        />
-                        <div
-                          className="bg-[#DDD2C4] h-full transition-all"
-                          style={{
-                            width: `${Math.min(100, Math.round(((w.pending_guests || 0) / Math.max(1, w.total_guests || 1)) * 100))}%`
-                          }}
-                        />
-                        <div
-                          className="bg-[#C7A29E] h-full transition-all"
-                          style={{
-                            width: `${Math.min(100, Math.round(((w.declined_guests || 0) / Math.max(1, w.total_guests || 1)) * 100))}%`
-                          }}
-                        />
-                      </div>
-                      <div className="flex justify-between items-center text-[10px] text-[#786C68] mt-1.5">
-                        <span>{w.pending_guests || 0} pendientes</span>
-                        <span>{w.declined_guests || 0} no asistirán</span>
-                      </div>
-                    </div>
-
-                    {/* Assigned Team */}
-                    {w.team && w.team.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-[#EFE8DE]">
-                        <div className="text-[10px] font-semibold text-[#786C68] uppercase tracking-wider mb-1.5">
-                          Equipo Asignado
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {w.team.map(m => (
-                            <span
-                              key={m.id}
-                              className="text-[10px] bg-[#F9F6F2] text-[#332C2A] border border-[#DDD2C4] px-2.5 py-0.5 rounded-md font-medium"
-                            >
-                              {m.name.split(' ')[0]} ({m.assigned_role.slice(0, 5)})
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="bg-[#EFE8DE]/60 px-6 py-4 border-t border-[#DDD2C4] flex items-center justify-between text-[#332C2A] group-hover:bg-[#9C665C] group-hover:text-[#FFFFFF] transition">
-                    <span className="text-xs font-semibold">Abrir Espacio de Trabajo</span>
-                    <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition" />
-                  </div>
+                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </>
-      )}
 
-      {/* TAB 2: ADMINISTRACIÓN DE USUARIOS Y ROLES */}
-      {activeTab === 'users' && user?.role === 'ADMINISTRADOR' && (
-        <div className="luxury-card rounded-3xl p-6 sm:p-8 border border-stone-200 space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-100">
+                {/* Salir */}
+                <button
+                  onClick={logout}
+                  title="Cerrar sesión"
+                  className="p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Barra de Búsqueda Rápida y Filtros Directos */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
+                <input
+                  type="text"
+                  placeholder="Buscar boda por nombre o fecha..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full pl-11 pr-4 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-full text-sm text-[#332A28] placeholder-[#7D6F6B]/70 focus:outline-none focus:border-[#9C665C] shadow-2xs transition"
+                />
+              </div>
+
+              <div className="flex items-center space-x-1.5 bg-[#F7F3EE] p-1 rounded-full border border-[#EAE3DA] self-start sm:self-auto">
+                <button
+                  onClick={() => setStatusFilter('ALL')}
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    statusFilter === 'ALL'
+                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  Todas ({weddings.length})
+                </button>
+                <button
+                  onClick={() => setStatusFilter('UPCOMING')}
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    statusFilter === 'UPCOMING'
+                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  Próximas
+                </button>
+                <button
+                  onClick={() => setStatusFilter('PLANNING')}
+                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    statusFilter === 'PLANNING'
+                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  En planeación
+                </button>
+              </div>
+            </div>
+
+            {/* Grid de Tarjetas de Boda Limpias y Claras (Idénticas a la imagen) */}
+            {loading ? (
+              <div className="py-20 text-center text-[#7D6F6B] text-sm">Cargando bodas...</div>
+            ) : filteredWeddings.length === 0 ? (
+              <div className="bg-[#FFFFFF] rounded-3xl p-12 text-center border border-dashed border-[#EAE3DA]">
+                <h3 className="font-serif text-xl font-semibold text-[#332A28]">No se encontraron bodas</h3>
+                <p className="text-[#7D6F6B] text-sm mt-1">Crea una nueva boda o ajusta tus filtros de búsqueda.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredWeddings.map(w => {
+                  const totalGuests = w.total_guests || w.estimated_guests || 0;
+                  const confirmedGuests = w.confirmed_guests || w.total_confirmed_seats || 0;
+                  const confirmedPct = totalGuests > 0 ? Math.min(100, Math.round((confirmedGuests / totalGuests) * 100)) : 0;
+                  const countdownText = formatWeddingCountdown(w.wedding_date);
+                  const venueName = w.reception_venue || w.ceremony_venue || 'Sede por confirmar';
+
+                  return (
+                    <div
+                      key={w.id}
+                      onClick={() => setCurrentWedding(w)}
+                      className="bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EAE3DA] shadow-xs hover:shadow-md hover:border-[#D6C7B7] transition-all duration-200 flex flex-col justify-between group cursor-pointer"
+                    >
+                      <div>
+                        {/* Nombres con espaciado editorial */}
+                        <div className="font-serif text-3xl sm:text-[32px] font-bold text-[#332A28] leading-[1.15] mb-4">
+                          {w.partner_1_name && w.partner_2_name ? (
+                            <>
+                              <div className="truncate">{w.partner_1_name}</div>
+                              <div className="truncate">& {w.partner_2_name}</div>
+                            </>
+                          ) : (
+                            <div className="truncate">{w.name}</div>
+                          )}
+                        </div>
+
+                        {/* Badge de cuenta regresiva */}
+                        <div className="mb-3.5">
+                          <span className="inline-flex items-center text-xs font-medium text-[#70443D] bg-[#F7F3EE] border border-[#EAE3DA] px-3.5 py-1 rounded-full select-none">
+                            {countdownText}
+                          </span>
+                        </div>
+
+                        {/* Lugar / Sede */}
+                        <div className="flex items-center space-x-1.5 text-xs text-[#7D6F6B] mb-5 truncate">
+                          <MapPin className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
+                          <span className="truncate">{venueName}</span>
+                        </div>
+
+                        {/* Barra delgada y estética */}
+                        <div className="w-full h-1.5 bg-[#F7F3EE] rounded-full overflow-hidden mb-2">
+                          <div
+                            className="h-full bg-[#9C665C] rounded-full transition-all duration-500"
+                            style={{ width: `${Math.max(confirmedPct > 0 ? confirmedPct : 10, 4)}%` }}
+                          />
+                        </div>
+
+                        {/* Métrica propia de la boda */}
+                        <div className="text-xs text-[#7D6F6B] mb-6 font-medium">
+                          {confirmedPct > 0 ? (
+                            <span>{totalGuests} invitados · {confirmedPct}% confirmados</span>
+                          ) : (
+                            <span>{totalGuests > 0 ? `${totalGuests} invitados · ` : ''}En envío de invitaciones</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Fila Inferior: Equipo asignado + Abrir Boda */}
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex -space-x-2 overflow-hidden items-center">
+                          {Array.isArray(w.team) && w.team.length > 0 ? (
+                            w.team.slice(0, 3).map((member: any, i: number) => (
+                              <div
+                                key={member.id || i}
+                                title={`${member.name} (${member.assigned_role || member.role})`}
+                                className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-[#EFE2DF] text-[#8A574E] font-semibold text-xs flex items-center justify-center uppercase shadow-2xs select-none"
+                              >
+                                {member.name?.charAt(0) || 'V'}
+                              </div>
+                            ))
+                          ) : (
+                            <div
+                              title="VLB Studio"
+                              className="inline-block h-8 w-8 rounded-full ring-2 ring-white bg-[#EFE2DF] text-[#8A574E] font-semibold text-xs flex items-center justify-center uppercase shadow-2xs select-none"
+                            >
+                              V
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          {user?.role === 'ADMINISTRADOR' && (
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteWedding(e, w)}
+                              className="p-2 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition opacity-0 group-hover:opacity-100"
+                              title="Eliminar esta boda"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setCurrentWedding(w);
+                            }}
+                            className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-[#332A28] bg-[#FFFFFF] hover:bg-[#F7F3EE] border border-[#EAE3DA] transition shadow-2xs group-hover:border-[#9C665C] group-hover:text-[#9C665C] cursor-pointer"
+                          >
+                            <span>Abrir Boda</span>
+                            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* PESTAÑA: WHATSAPP HUB */}
+        {activeTab === 'whatsapp' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-[#332A28]">WhatsApp Hub</h2>
+                <p className="text-xs text-[#7D6F6B] mt-0.5">Centro de mensajería ejecutiva y respuestas de confirmación de invitados.</p>
+              </div>
+              <button
+                onClick={() => setActiveTab('weddings')}
+                className="text-xs font-semibold text-[#9C665C] hover:underline"
+              >
+                ← Volver a Bodas
+              </button>
+            </div>
+            <WhatsAppHubModule />
+          </div>
+        )}
+
+        {/* PESTAÑA: USUARIOS Y EQUIPO */}
+        {activeTab === 'equipo' && user?.role === 'ADMINISTRADOR' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+              <div>
+                <h2 className="font-serif text-2xl font-bold text-[#332A28]">Bitácora & Equipo VLB</h2>
+                <p className="text-xs text-[#7D6F6B] mt-0.5">Gestión de coordinadores, staff y accesos operativos de bodas.</p>
+              </div>
+              <button
+                onClick={() => setActiveTab('weddings')}
+                className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+              >
+                ← Volver a Bodas
+              </button>
+            </div>
+            <div className="luxury-card rounded-3xl p-6 sm:p-8 border border-stone-200 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-100">
             <div>
               <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Seguridad y Accesos RBAC</span>
               <h2 className="font-serif text-2xl font-bold text-stone-900">Usuarios, Equipo VLB y Cuentas de Novios</h2>
@@ -1082,12 +1182,25 @@ export const GeneralDashboard: React.FC = () => {
               </tbody>
             </table>
           </div>
+          </div>
         </div>
       )}
 
-      {/* TAB 3: PLANTILLAS VLB Y CATÁLOGOS */}
-      {activeTab === 'catalogs' && user?.role === 'ADMINISTRADOR' && (
+      {/* PESTAÑA: PLANTILLAS VLB */}
+      {activeTab === 'plantillas' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+            <div>
+              <h2 className="font-serif text-2xl font-bold text-[#332A28]">Plantillas Maestras VLB</h2>
+              <p className="text-xs text-[#7D6F6B] mt-0.5">Checklist maestro y requisitos de ceremonias civil y religiosa.</p>
+            </div>
+            <button
+              onClick={() => setActiveTab('weddings')}
+              className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+            >
+              ← Volver a Bodas
+            </button>
+          </div>
           {catalogMsg && (
             <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -1482,7 +1595,24 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
 
+      {/* PESTAÑA: CATÁLOGOS VLB */}
+      {activeTab === 'catalogos' && user?.role === 'ADMINISTRADOR' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+            <div>
+              <h2 className="font-serif text-2xl font-bold text-[#332A28]">Catálogos VLB</h2>
+              <p className="text-xs text-[#7D6F6B] mt-0.5">Especialidades de proveedores y paquetes de reuniones de novios.</p>
+            </div>
+            <button
+              onClick={() => setActiveTab('weddings')}
+              className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+            >
+              ← Volver a Bodas
+            </button>
+          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Catálogo de Tipos de Proveedor */}
             <div className="luxury-card rounded-3xl p-6 border border-stone-200">
@@ -1719,9 +1849,21 @@ export const GeneralDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 4: BITÁCORA DE ACTIVIDAD Y COPIAS DE SEGURIDAD */}
-      {activeTab === 'audit' && user?.role === 'ADMINISTRADOR' && (
+      {/* PESTAÑA: AJUSTES Y COPIAS DE SEGURIDAD */}
+      {activeTab === 'ajustes' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+            <div>
+              <h2 className="font-serif text-2xl font-bold text-[#332A28]">Ajustes y Copias de Seguridad</h2>
+              <p className="text-xs text-[#7D6F6B] mt-0.5">Respaldo general del sistema, restauración de base de datos y auditoría global.</p>
+            </div>
+            <button
+              onClick={() => setActiveTab('weddings')}
+              className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+            >
+              ← Volver a Bodas
+            </button>
+          </div>
           {/* Simplified Backup Card */}
           <div className="luxury-card rounded-3xl p-6 border border-stone-200">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -2092,6 +2234,7 @@ export const GeneralDashboard: React.FC = () => {
           </div>
         </div>
       )}
+      </main>
     </div>
   );
 };
