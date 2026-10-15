@@ -7,21 +7,25 @@ export default {
     extend: {
       colors: {
         lazo: {
-          50: '#FBF9F6',
-          100: '#F5F1EB',
-          200: '#ECE3D7',
-          300: '#DECFC0',
-          400: '#CCAFA2',
-          500: '#B89785',
-          600: '#9E7864',
-          700: '#7F5E4D',
-          800: '#5C4438',
-          900: '#3D2D25',
-          gold: '#C5A880',
-          champagne: '#E7DFD5',
-          dark: '#1C1917',
-          olive: '#606C5D',
-          rose: '#D4A373'
+          50: '#FCFAF7',
+          100: '#F7F3EE',
+          200: '#EAE3DA',
+          300: '#DDD2C4',
+          400: '#B88A82',
+          500: '#9C665C',
+          600: '#8A574E',
+          700: '#70443D',
+          800: '#58352F',
+          900: '#332A28',
+          cream: '#FCFAF7',
+          beige: '#F7F3EE',
+          sand: '#EAE3DA',
+          rose: '#9C665C',
+          'rose-dark': '#8A574E',
+          blush: '#EFE2DF',
+          sage: '#CCDACC',
+          'sage-dark': '#455C44',
+          dark: '#332A28'
         }
       },
       fontFamily: {

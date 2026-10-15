@@ -379,7 +379,7 @@ export const TimelineModule: React.FC = () => {
           </button>
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#A6736E] hover:bg-[#885853] text-white text-xs font-semibold rounded-xl shadow-xs transition"
+            className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8a574e] text-white text-xs font-semibold rounded-xl shadow-xs transition"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Agregar Actividad</span>
@@ -415,7 +415,7 @@ export const TimelineModule: React.FC = () => {
               }}
               className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
                 activeDayTab === 'CIVIL'
-                  ? 'bg-[#A6736E] text-white shadow-xs'
+                  ? 'bg-[#9C665C] text-white shadow-xs'
                   : 'text-[#5A524C] hover:text-[#332C2A]'
               }`}
             >
@@ -443,7 +443,7 @@ export const TimelineModule: React.FC = () => {
           <div className="flex items-center space-x-2">
             <span
               className={`w-2 h-2 rounded-full ${
-                viewMode === 'operation' ? 'bg-[#6B8E6E] animate-pulse' : 'bg-[#A6736E]'
+                viewMode === 'operation' ? 'bg-[#6B8E6E] animate-pulse' : 'bg-[#9C665C]'
               }`}
             />
             <span className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#6E655F]">
@@ -635,7 +635,7 @@ export const TimelineModule: React.FC = () => {
             <div className="luxury-card rounded-3xl p-6 border border-[#DDD2C4] space-y-3 animate-in fade-in duration-150">
               <div className="flex items-center justify-between pb-3 border-b border-[#EFE8DE]">
                 <div>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#885853]">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
                     Programa Minuto a Minuto ({completedCount}/{activeTimeline.length} completadas)
                   </span>
                   <h3 className="font-serif text-2xl font-bold text-[#332C2A]">
@@ -722,7 +722,7 @@ export const TimelineModule: React.FC = () => {
           <div className="luxury-card rounded-3xl p-6 sm:p-7 border border-[#DDD2C4] space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EFE8DE]">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#885853]">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
                   Recepción de Proveedores en Campo
                 </span>
                 <h3 className="font-serif text-2xl font-bold text-[#332C2A] mt-0.5">
@@ -749,7 +749,7 @@ export const TimelineModule: React.FC = () => {
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
                     vendorLocFilter === loc
                       ? 'bg-[#363432] text-white'
-                      : 'bg-[#F9F6F2] text-[#786C68] border border-[#DDD2C4] hover:border-[#A6736E]'
+                      : 'bg-[#F9F6F2] text-[#786C68] border border-[#DDD2C4] hover:border-[#9C665C]'
                   }`}
                 >
                   {loc === 'ALL' ? 'Todos los Proveedores' : loc}
@@ -771,7 +771,7 @@ export const TimelineModule: React.FC = () => {
                       className={`p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${
                         isArrived
                           ? 'bg-[#EFF5F0] border-[#BBD4BF]'
-                          : 'bg-[#FFFFFF] border-[#DDD2C4] hover:border-[#A6736E]'
+                          : 'bg-[#FFFFFF] border-[#DDD2C4] hover:border-[#9C665C]'
                       }`}
                     >
                       <div className="min-w-0 flex-1">
@@ -801,7 +801,7 @@ export const TimelineModule: React.FC = () => {
                               href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center space-x-1 text-[#885853] hover:underline font-mono"
+                              className="inline-flex items-center space-x-1 text-[#8a574e] hover:underline font-mono"
                             >
                               <MessageSquare className="w-3 h-3" />
                               <span>{v.phone}</span>
@@ -845,7 +845,7 @@ export const TimelineModule: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Ceremonias y Sedes */}
             <div className="luxury-card rounded-3xl p-6 border border-[#DDD2C4] space-y-3">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#885853]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
                 Sedes y Horarios Clave
               </span>
               <h4 className="font-serif text-xl font-bold text-[#332C2A]">
@@ -885,7 +885,7 @@ export const TimelineModule: React.FC = () => {
 
             {/* Aforo Confirmado y Mesas */}
             <div className="luxury-card rounded-3xl p-6 border border-[#DDD2C4] space-y-3">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#885853]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
                 Aforo en Sitio
               </span>
               <h4 className="font-serif text-xl font-bold text-[#332C2A]">
@@ -917,7 +917,7 @@ export const TimelineModule: React.FC = () => {
 
             {/* Equipo VLB Asignado en Campo */}
             <div className="luxury-card rounded-3xl p-6 border border-[#DDD2C4] space-y-3">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#885853]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
                 Coordinación en Campo
               </span>
               <h4 className="font-serif text-xl font-bold text-[#332C2A]">
@@ -1091,7 +1091,7 @@ export const TimelineModule: React.FC = () => {
                     onClick={() => setFormData({ ...formData, day_type: 'CIVIL' })}
                     className={`px-3 py-2 rounded-xl text-xs font-bold border transition ${
                       formData.day_type === 'CIVIL'
-                        ? 'bg-[#A6736E] text-white border-[#A6736E]'
+                        ? 'bg-[#9C665C] text-white border-[#9C665C]'
                         : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'
                     }`}
                   >

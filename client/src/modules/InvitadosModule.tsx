@@ -538,7 +538,7 @@ export const InvitadosModule: React.FC = () => {
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#EFE2DF] hover:bg-[#E4D0CC] text-[#6E433F] text-xs font-bold rounded-xl transition border border-[#DFC9C4]"
             title="Descargar lista actual de invitados en Excel (Todos, Confirmados, Pendientes y Mesas)"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-[#885853]" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#8a574e]" />
             <span>Descargar Lista Excel</span>
           </button>
 
@@ -616,7 +616,7 @@ export const InvitadosModule: React.FC = () => {
         <div
           onClick={() => { setStatusFilter(''); setPage(1); }}
           className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none ${
-            statusFilter === '' ? 'ring-2 ring-[#A6736E] bg-[#FFFFFF]' : 'hover:border-[#A6736E]'
+            statusFilter === '' ? 'ring-2 ring-[#9C665C] bg-[#FFFFFF]' : 'hover:border-[#9C665C]'
           }`}
           title="Ver todos los invitados"
         >
@@ -628,7 +628,7 @@ export const InvitadosModule: React.FC = () => {
         <div
           onClick={() => { setStatusFilter('Confirmado'); setPage(1); }}
           className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#EFE2DF]/45 border-[#DFC9C4] ${
-            statusFilter === 'Confirmado' ? 'ring-2 ring-[#A6736E] shadow-xs' : 'hover:border-[#A6736E]'
+            statusFilter === 'Confirmado' ? 'ring-2 ring-[#9C665C] shadow-xs' : 'hover:border-[#9C665C]'
           }`}
           title="Filtrar solo Confirmados"
         >
@@ -640,7 +640,7 @@ export const InvitadosModule: React.FC = () => {
         <div
           onClick={() => { setStatusFilter('Pendiente de confirmar'); setPage(1); }}
           className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#EFE8DE]/60 border-[#DDD2C4] ${
-            statusFilter === 'Pendiente de confirmar' ? 'ring-2 ring-[#A6736E] shadow-xs' : 'hover:border-[#A6736E]'
+            statusFilter === 'Pendiente de confirmar' ? 'ring-2 ring-[#9C665C] shadow-xs' : 'hover:border-[#9C665C]'
           }`}
           title="Filtrar solo Pendientes de confirmar"
         >
@@ -652,7 +652,7 @@ export const InvitadosModule: React.FC = () => {
         <div
           onClick={() => { setStatusFilter('No asistirá'); setPage(1); }}
           className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#F5ECEB]/60 border-[#DBC1BE] ${
-            statusFilter === 'No asistirá' ? 'ring-2 ring-[#A6736E] shadow-xs' : 'hover:border-[#A6736E]'
+            statusFilter === 'No asistirá' ? 'ring-2 ring-[#9C665C] shadow-xs' : 'hover:border-[#9C665C]'
           }`}
           title="Filtrar quienes No asistirán"
         >
@@ -806,12 +806,12 @@ export const InvitadosModule: React.FC = () => {
                     <td className="py-3 px-4 whitespace-nowrap">
                       <div
                         onClick={() => handleOpenEdit(guest)}
-                        className="cursor-pointer font-semibold text-[#332C2A] group-hover:text-[#A6736E] inline-flex items-center space-x-2 whitespace-nowrap"
+                        className="cursor-pointer font-semibold text-[#332C2A] group-hover:text-[#9C665C] inline-flex items-center space-x-2 whitespace-nowrap"
                       >
                         <span className="underline decoration-[#D2C4B4] decoration-1 underline-offset-4 whitespace-nowrap">
                           {guest.first_name} {guest.last_name}
                         </span>
-                        <Edit2 className="w-3.5 h-3.5 text-[#C7B6A6] group-hover:text-[#A6736E] transition shrink-0" />
+                        <Edit2 className="w-3.5 h-3.5 text-[#C7B6A6] group-hover:text-[#9C665C] transition shrink-0" />
                       </div>
                     </td>
 
@@ -821,10 +821,10 @@ export const InvitadosModule: React.FC = () => {
                         href={`https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center space-x-2 text-[#4A3F3C] hover:text-[#A6736E] transition font-mono whitespace-nowrap"
+                        className="inline-flex items-center space-x-2 text-[#4A3F3C] hover:text-[#9C665C] transition font-mono whitespace-nowrap"
                         title="Abrir chat en WhatsApp"
                       >
-                        <MessageSquare className="w-3.5 h-3.5 text-[#A6736E] shrink-0" />
+                        <MessageSquare className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
                         <span className="whitespace-nowrap">{guest.phone}</span>
                       </a>
                     </td>
@@ -934,7 +934,7 @@ export const InvitadosModule: React.FC = () => {
                           className={`w-full max-w-[190px] font-medium rounded-lg px-2.5 py-1 border transition focus:outline-none cursor-pointer ${
                             guest.table_id
                               ? 'bg-[#EFE8DE] text-[#332C2A] border-[#DDD2C4] font-semibold'
-                              : 'bg-white text-[#786C68] border-[#DDD2C4] hover:border-[#A6736E]'
+                              : 'bg-white text-[#786C68] border-[#DDD2C4] hover:border-[#9C665C]'
                           }`}
                         >
                           <option value="">Sin mesa</option>

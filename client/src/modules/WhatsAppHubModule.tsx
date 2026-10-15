@@ -220,7 +220,7 @@ export const WhatsAppHubModule: React.FC = () => {
           }}
           className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[#FFFFFF] hover:bg-[#EFE8DE] text-[#332C2A] border border-[#DDD2C4] transition shadow-2xs"
         >
-          <RefreshCw className={`w-3.5 h-3.5 text-[#A6736E] ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 text-[#9C665C] ${loading ? 'animate-spin' : ''}`} />
           <span>Actualizar</span>
         </button>
       </div>
@@ -316,7 +316,7 @@ export const WhatsAppHubModule: React.FC = () => {
                     onClick={() => handleSelectConversation(conv)}
                     className={`p-3.5 cursor-pointer transition flex items-start space-x-3 select-none ${
                       isSelected
-                        ? 'bg-[#EFE2DF]/50 border-l-4 border-l-[#A6736E]'
+                        ? 'bg-[#EFE2DF]/50 border-l-4 border-l-[#9C665C]'
                         : 'hover:bg-[#F9F6F2]'
                     }`}
                   >
@@ -343,7 +343,7 @@ export const WhatsAppHubModule: React.FC = () => {
 
                       {/* Wedding Tag badge */}
                       <div className="flex items-center space-x-1.5 mt-0.5">
-                        <span className="text-[10px] text-[#885853] font-semibold bg-[#EFE2DF] px-2 py-0.5 rounded-md truncate max-w-[190px]">
+                        <span className="text-[10px] text-[#8a574e] font-semibold bg-[#EFE2DF] px-2 py-0.5 rounded-md truncate max-w-[190px]">
                           💍 {conv.wedding_name}
                         </span>
                         <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded uppercase ${
@@ -387,7 +387,7 @@ export const WhatsAppHubModule: React.FC = () => {
                     <div className="flex items-center space-x-2 text-xs text-[#786C68]">
                       <span>{activeConversation.phone}</span>
                       <span>•</span>
-                      <span className="font-medium text-[#885853]">{activeConversation.wedding_name}</span>
+                      <span className="font-medium text-[#8a574e]">{activeConversation.wedding_name}</span>
                     </div>
                   </div>
                 </div>
@@ -487,7 +487,7 @@ export const WhatsAppHubModule: React.FC = () => {
           ) : (
             /* Empty State when no conversation selected */
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-[#786C68]">
-              <div className="w-16 h-16 rounded-3xl bg-[#EFE8DE] flex items-center justify-center mb-4 text-[#A6736E] border border-[#DDD2C4]">
+              <div className="w-16 h-16 rounded-3xl bg-[#EFE8DE] flex items-center justify-center mb-4 text-[#9C665C] border border-[#DDD2C4]">
                 <MessageSquare className="w-8 h-8" />
               </div>
               <h3 className="font-serif text-lg font-bold text-[#332C2A] mb-1">

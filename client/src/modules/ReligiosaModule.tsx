@@ -351,7 +351,7 @@ export const ReligiosaModule: React.FC = () => {
       <div className="luxury-card rounded-2xl p-6 border border-stone-200">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-stone-100">
           <div className="flex items-center space-x-2.5">
-            <Church className="w-5 h-5 text-[#A6736E]" />
+            <Church className="w-5 h-5 text-[#9C665C]" />
             <div>
               <h3 className="font-serif text-xl font-bold text-stone-900">
                 Datos del Templo y Celebración
@@ -369,7 +369,7 @@ export const ReligiosaModule: React.FC = () => {
               onClick={handleStartEditDetails}
               className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#EFE8DE] hover:bg-[#EFE2DF] text-[#332C2A] border border-[#DDD2C4] text-xs font-semibold transition"
             >
-              <Edit3 className="w-3.5 h-3.5 text-[#A6736E]" />
+              <Edit3 className="w-3.5 h-3.5 text-[#9C665C]" />
               <span>Editar Datos</span>
             </button>
           ) : (
@@ -400,7 +400,7 @@ export const ReligiosaModule: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                 <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
-                  <Calendar className="w-3.5 h-3.5 text-[#A6736E]" />
+                  <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Fecha</span>
                 </div>
                 <div className="text-sm font-semibold text-stone-900">
@@ -410,7 +410,7 @@ export const ReligiosaModule: React.FC = () => {
 
               <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                 <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
-                  <Clock className="w-3.5 h-3.5 text-[#A6736E]" />
+                  <Clock className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Hora de Inicio</span>
                 </div>
                 <div className="text-sm font-semibold text-stone-900">
@@ -420,7 +420,7 @@ export const ReligiosaModule: React.FC = () => {
 
               <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                 <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#A6736E]" />
+                  <MapPin className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Templo / Parroquia</span>
                 </div>
                 <div className="text-sm font-semibold text-stone-900">
@@ -430,7 +430,7 @@ export const ReligiosaModule: React.FC = () => {
 
               <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                 <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
-                  <User className="w-3.5 h-3.5 text-[#A6736E]" />
+                  <User className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Sacerdote / Oficiante</span>
                 </div>
                 <div className="text-sm font-semibold text-stone-900">
@@ -517,11 +517,11 @@ export const ReligiosaModule: React.FC = () => {
                   Programa Musical Litúrgico
                 </span>
                 <h3 className="font-serif text-lg font-bold text-stone-900 flex items-center space-x-2">
-                  <Music className="w-4 h-4 text-[#A6736E]" />
+                  <Music className="w-4 h-4 text-[#9C665C]" />
                   <span>Música de Ceremonia Religiosa</span>
                 </h3>
               </div>
-              <span className="text-xs font-semibold text-[#885853] bg-[#EFE2DF] px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#8a574e] bg-[#EFE2DF] px-3 py-1 rounded-full">
                 {musicList.length} piezas
               </span>
             </div>
@@ -538,11 +538,11 @@ export const ReligiosaModule: React.FC = () => {
                     className="p-3 rounded-xl bg-[#F9F6F2] border border-[#DDD2C4] flex items-center justify-between gap-3"
                   >
                     <div className="flex items-start space-x-3">
-                      <span className="w-5 h-5 rounded-full bg-[#EFE2DF] text-[#885853] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-[#EFE2DF] text-[#8a574e] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                         {idx + 1}
                       </span>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#885853]">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a574e]">
                           {item.moment}
                         </div>
                         <div className="text-xs font-semibold text-stone-900 mt-0.5">
@@ -606,11 +606,11 @@ export const ReligiosaModule: React.FC = () => {
                   Liturgia de la Palabra · Desde Confirmados
                 </span>
                 <h3 className="font-serif text-lg font-bold text-stone-900 flex items-center space-x-2">
-                  <BookOpen className="w-4 h-4 text-[#A6736E]" />
+                  <BookOpen className="w-4 h-4 text-[#9C665C]" />
                   <span>Lecturas y Lectores Asignados</span>
                 </h3>
               </div>
-              <span className="text-xs font-semibold text-[#885853] bg-[#EFE2DF] px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#8a574e] bg-[#EFE2DF] px-3 py-1 rounded-full">
                 {readingsList.length} lecturas
               </span>
             </div>
@@ -628,7 +628,7 @@ export const ReligiosaModule: React.FC = () => {
                   >
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#885853] bg-[#EFE2DF] px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8a574e] bg-[#EFE2DF] px-2 py-0.5 rounded">
                           {item.type}
                         </span>
                         <span className="text-xs font-semibold text-stone-900">
@@ -636,7 +636,7 @@ export const ReligiosaModule: React.FC = () => {
                         </span>
                       </div>
                       <div className="flex items-center space-x-1.5 text-[11px] text-stone-600 mt-1.5">
-                        <User className="w-3.5 h-3.5 text-[#A6736E]" />
+                        <User className="w-3.5 h-3.5 text-[#9C665C]" />
                         <span>Lector(a): <strong className="text-stone-900">{item.reader}</strong></span>
                       </div>
                     </div>
@@ -714,7 +714,7 @@ export const ReligiosaModule: React.FC = () => {
               className="inline-flex items-center space-x-1 text-[11px] font-semibold px-3 py-1.5 rounded-xl bg-[#EFE8DE] hover:bg-[#EFE2DF] text-[#332C2A] border border-[#DDD2C4] transition"
               title="Cargar requisitos religiosos de la Plantilla Maestra de VLB Studio"
             >
-              <Download className="w-3.5 h-3.5 text-[#A6736E]" />
+              <Download className="w-3.5 h-3.5 text-[#9C665C]" />
               <span>Cargar Plantilla VLB</span>
             </button>
             <span className="text-xs font-semibold text-stone-600 bg-stone-100 px-2.5 py-1 rounded-full">
@@ -811,7 +811,7 @@ export const ReligiosaModule: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] font-bold text-stone-500 uppercase">{v.type}</span>
-                    <span className="text-[9px] bg-[#EFE2DF] text-[#885853] font-bold px-2 py-0.5 rounded">IGLESIA</span>
+                    <span className="text-[9px] bg-[#EFE2DF] text-[#8a574e] font-bold px-2 py-0.5 rounded">IGLESIA</span>
                   </div>
                   <h4 className="font-bold text-stone-900 text-xs">{v.name}</h4>
                   {v.contact_person && (

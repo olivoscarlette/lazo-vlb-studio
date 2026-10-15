@@ -218,7 +218,7 @@ export const CivilModule: React.FC = () => {
       <div className="luxury-card rounded-2xl p-6 border border-stone-200">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-stone-100">
           <div className="flex items-center space-x-2.5">
-            <Landmark className="w-5 h-5 text-[#A6736E]" />
+            <Landmark className="w-5 h-5 text-[#9C665C]" />
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-serif text-xl font-bold text-stone-900">
@@ -247,7 +247,7 @@ export const CivilModule: React.FC = () => {
               onClick={handleStartEditDetails}
               className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#EFE8DE] hover:bg-[#EFE2DF] text-[#332C2A] border border-[#DDD2C4] text-xs font-semibold transition"
             >
-              <Edit3 className="w-3.5 h-3.5 text-[#A6736E]" />
+              <Edit3 className="w-3.5 h-3.5 text-[#9C665C]" />
               <span>Editar Datos</span>
             </button>
           ) : (
@@ -279,11 +279,11 @@ export const CivilModule: React.FC = () => {
               <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
                   <span className="flex items-center space-x-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-[#A6736E]" />
+                    <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
                     <span>Fecha Civil</span>
                   </span>
                   {civil.date && currentWedding?.wedding_date && civil.date !== currentWedding.wedding_date && (
-                    <span className="text-[#885853] font-bold">Otro día</span>
+                    <span className="text-[#8a574e] font-bold">Otro día</span>
                   )}
                 </div>
                 <div className="text-sm font-semibold text-stone-900">
@@ -293,7 +293,7 @@ export const CivilModule: React.FC = () => {
 
               <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                 <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
-                  <Clock className="w-3.5 h-3.5 text-[#A6736E]" />
+                  <Clock className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Hora</span>
                 </div>
                 <div className="text-sm font-semibold text-stone-900">
@@ -303,7 +303,7 @@ export const CivilModule: React.FC = () => {
 
               <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                 <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#A6736E]" />
+                  <MapPin className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Ubicación / Juzgado</span>
                 </div>
                 <div className="text-sm font-semibold text-stone-900">
@@ -313,7 +313,7 @@ export const CivilModule: React.FC = () => {
 
               <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                 <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
-                  <User className="w-3.5 h-3.5 text-[#A6736E]" />
+                  <User className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Juez u Oficial del Registro</span>
                 </div>
                 <div className="text-sm font-semibold text-stone-900">
@@ -348,7 +348,7 @@ export const CivilModule: React.FC = () => {
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition border ${
                     detailsDraft.date === currentWedding?.wedding_date
                       ? 'bg-[#363432] text-white border-[#363432]'
-                      : 'bg-white text-[#5A524C] border-[#DDD2C4] hover:border-[#A6736E]'
+                      : 'bg-white text-[#5A524C] border-[#DDD2C4] hover:border-[#9C665C]'
                   }`}
                 >
                   Mismo día de la boda ({currentWedding?.wedding_date})
@@ -362,8 +362,8 @@ export const CivilModule: React.FC = () => {
                   }}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition border ${
                     detailsDraft.date !== currentWedding?.wedding_date
-                      ? 'bg-[#A6736E] text-white border-[#A6736E]'
-                      : 'bg-white text-[#5A524C] border-[#DDD2C4] hover:border-[#A6736E]'
+                      ? 'bg-[#9C665C] text-white border-[#9C665C]'
+                      : 'bg-white text-[#5A524C] border-[#DDD2C4] hover:border-[#9C665C]'
                   }`}
                 >
                   Otro día diferente
@@ -440,7 +440,7 @@ export const CivilModule: React.FC = () => {
                 </span>
                 <h3 className="font-serif text-lg font-bold text-stone-900">Testigos de Honor</h3>
               </div>
-              <span className="text-xs font-semibold text-[#885853] bg-[#EFE2DF] px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#8a574e] bg-[#EFE2DF] px-3 py-1 rounded-full">
                 {civil.witnesses.length} asignados
               </span>
             </div>
@@ -457,7 +457,7 @@ export const CivilModule: React.FC = () => {
                     className="p-3 rounded-xl bg-[#F9F6F2] border border-[#DDD2C4] flex items-center justify-between text-xs font-medium text-stone-800"
                   >
                     <div className="flex items-center space-x-2.5">
-                      <User className="w-4 h-4 text-[#A6736E]" />
+                      <User className="w-4 h-4 text-[#9C665C]" />
                       <span>{w}</span>
                     </div>
                     <button
@@ -516,7 +516,7 @@ export const CivilModule: React.FC = () => {
                   className="inline-flex items-center space-x-1 text-[11px] font-semibold px-3 py-1.5 rounded-xl bg-[#EFE8DE] hover:bg-[#EFE2DF] text-[#332C2A] border border-[#DDD2C4] transition"
                   title="Cargar requisitos estándar de VLB Studio"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#A6736E]" />
+                  <Download className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Cargar Plantilla VLB</span>
                 </button>
                 <span className="text-xs font-semibold text-stone-600 bg-stone-100 px-2.5 py-1 rounded-full">
@@ -615,7 +615,7 @@ export const CivilModule: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-[10px] font-bold text-stone-500 uppercase">{v.type}</span>
-                    <span className="text-[9px] bg-[#EFE2DF] text-[#885853] font-bold px-2 py-0.5 rounded">CIVIL</span>
+                    <span className="text-[9px] bg-[#EFE2DF] text-[#8a574e] font-bold px-2 py-0.5 rounded">CIVIL</span>
                   </div>
                   <h4 className="font-bold text-stone-900 text-xs">{v.name}</h4>
                   {v.contact_person && (

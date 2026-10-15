@@ -259,7 +259,7 @@ export const DirectorioModule: React.FC = () => {
           {isAdmin && (
             <button
               onClick={handleOpenAddModal}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#A6736E] hover:bg-[#885853] text-white transition shadow-xs"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#9C665C] hover:bg-[#8a574e] text-white transition shadow-xs"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>+ Asignar / Nuevo Equipo VLB</span>
@@ -298,7 +298,7 @@ export const DirectorioModule: React.FC = () => {
                 <div className="flex items-center justify-between mb-1.5">
                   <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
                     contact.kind === 'TEAM'
-                      ? 'bg-[#EFE2DF] text-[#885853] border border-[#DFC9C4]'
+                      ? 'bg-[#EFE2DF] text-[#8a574e] border border-[#DFC9C4]'
                       : 'bg-blue-100 text-blue-900 border border-blue-200'
                   }`}>
                     {contact.kind === 'TEAM' ? 'Equipo VLB' : contact.type || 'Proveedor'}

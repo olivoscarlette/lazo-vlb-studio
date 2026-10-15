@@ -444,11 +444,11 @@ export const ProveedoresPagosModule: React.FC = () => {
                       <td className="py-2.5 px-2.5 whitespace-nowrap">
                         <div
                           onClick={() => handleOpenEditVendor(v)}
-                          className="cursor-pointer font-bold text-[#332C2A] hover:text-[#A6736E] inline-flex items-center space-x-1 whitespace-nowrap transition"
+                          className="cursor-pointer font-bold text-[#332C2A] hover:text-[#9C665C] inline-flex items-center space-x-1 whitespace-nowrap transition"
                           title="Clic para editar información"
                         >
                           <span className="underline decoration-[#D2C4B4] decoration-1 underline-offset-4">{v.name}</span>
-                          <Edit3 className="w-3 h-3 text-[#C7B6A6] group-hover:text-[#A6736E] transition shrink-0" />
+                          <Edit3 className="w-3 h-3 text-[#C7B6A6] group-hover:text-[#9C665C] transition shrink-0" />
                         </div>
                         {v.contact_person && (
                           <div className="text-[10px] text-[#786C68] whitespace-nowrap mt-0.5">Contacto: {v.contact_person}</div>
@@ -464,10 +464,10 @@ export const ProveedoresPagosModule: React.FC = () => {
                           href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1.5 text-[#4A3F3C] hover:text-[#A6736E] whitespace-nowrap"
+                          className="inline-flex items-center space-x-1.5 text-[#4A3F3C] hover:text-[#9C665C] whitespace-nowrap"
                           title="Contactar vía WhatsApp"
                         >
-                          <MessageSquare className="w-3 h-3 text-[#A6736E] shrink-0" />
+                          <MessageSquare className="w-3 h-3 text-[#9C665C] shrink-0" />
                           <span className="whitespace-nowrap">{v.phone}</span>
                         </a>
                       </td>
@@ -510,7 +510,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                       <td className="py-2.5 px-1.5 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleDeleteVendor(v.id)}
-                          className="text-[#C7B6A6] hover:text-[#885853] p-1 transition"
+                          className="text-[#C7B6A6] hover:text-[#8a574e] p-1 transition"
                           title="Eliminar proveedor"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -569,7 +569,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                     <td className="py-3 px-3 text-center whitespace-nowrap">
                       <button
                         onClick={() => handleDeletePayment(p.id)}
-                        className="text-[#C7B6A6] hover:text-[#885853] p-1.5 transition"
+                        className="text-[#C7B6A6] hover:text-[#8a574e] p-1.5 transition"
                         title="Eliminar pago"
                       >
                         <Trash2 className="w-4 h-4" />

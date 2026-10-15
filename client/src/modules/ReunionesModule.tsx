@@ -214,7 +214,7 @@ export const ReunionesModule: React.FC = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
                     {packageInfo.includes.map((item, idx) => (
                       <div key={idx} className="flex items-start space-x-1.5 text-xs text-stone-700">
-                        <Check className="w-3.5 h-3.5 text-[#885853] shrink-0 mt-0.5" />
+                        <Check className="w-3.5 h-3.5 text-[#8a574e] shrink-0 mt-0.5" />
                         <span>{item}</span>
                       </div>
                     ))}

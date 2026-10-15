@@ -442,7 +442,7 @@ export const MesasLayoutModule: React.FC = () => {
             {/* Legend / Status Overlay */}
             <div className="absolute top-4 left-4 z-10 bg-[#FFFFFF]/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-[#DDD2C4] text-[11px] space-y-1 shadow-xs">
               <div className="font-semibold text-[#332C2A] flex items-center space-x-1.5 pointer-events-none">
-                <Move className="w-3.5 h-3.5 text-[#A6736E]" />
+                <Move className="w-3.5 h-3.5 text-[#9C665C]" />
                 <span>{isLocked ? 'Modo Solo Lectura' : 'Arrastra mesas para acomodar'}</span>
               </div>
               <div className="text-[#786C68] text-[10px] pointer-events-none">
@@ -458,7 +458,7 @@ export const MesasLayoutModule: React.FC = () => {
                     step="0.05"
                     value={floorPlanOpacity}
                     onChange={e => setFloorPlanOpacity(parseFloat(e.target.value))}
-                    className="w-20 accent-[#A6736E]"
+                    className="w-20 accent-[#9C665C]"
                   />
                 </div>
               )}
@@ -479,7 +479,7 @@ export const MesasLayoutModule: React.FC = () => {
                 className={`absolute rounded-2xl flex flex-col items-center justify-center border-2 border-dashed font-serif font-bold text-xs uppercase tracking-wider shadow-xs transition-shadow group ${
                   el.type === 'pista_baile'
                     ? 'bg-[#EFE8DE]/85 border-[#B59F84] text-[#332C2A]'
-                    : 'bg-[#EFE2DF]/85 border-[#A6736E] text-[#332C2A]'
+                    : 'bg-[#EFE2DF]/85 border-[#9C665C] text-[#332C2A]'
                 } ${isLocked ? 'cursor-default' : 'cursor-move hover:shadow-md'}`}
               >
                 <span>{el.name}</span>
@@ -489,14 +489,14 @@ export const MesasLayoutModule: React.FC = () => {
                     <button
                       onClick={e => handleRotateElement(e, el)}
                       title="Girar elemento 45°"
-                      className="bg-[#A6736E] text-white p-1 rounded-full hover:bg-[#885853] shadow"
+                      className="bg-[#9C665C] text-white p-1 rounded-full hover:bg-[#8a574e] shadow"
                     >
                       <RotateCw className="w-2.5 h-2.5" />
                     </button>
                     <button
                       onClick={e => handleDeleteElement(e, el.id)}
                       title="Eliminar elemento"
-                      className="bg-[#885853] text-white p-1 rounded-full hover:bg-[#6E4541] shadow"
+                      className="bg-[#8a574e] text-white p-1 rounded-full hover:bg-[#6E4541] shadow"
                     >
                       <Trash2 className="w-2.5 h-2.5" />
                     </button>
@@ -530,13 +530,13 @@ export const MesasLayoutModule: React.FC = () => {
                       : 'w-40 h-28 rounded-2xl'
                   } ${
                     isSelected
-                      ? 'ring-4 ring-[#A6736E] shadow-xl'
+                      ? 'ring-4 ring-[#9C665C] shadow-xl'
                       : 'shadow-md hover:shadow-lg'
                   } ${
                     isOver
-                      ? 'bg-[#F5ECEB] border-2 border-[#885853] text-[#6E4541]'
+                      ? 'bg-[#F5ECEB] border-2 border-[#8a574e] text-[#6E4541]'
                       : table.type === 'imperial'
-                      ? 'bg-[#EFE2DF] border-2 border-[#A6736E] text-[#332C2A]'
+                      ? 'bg-[#EFE2DF] border-2 border-[#9C665C] text-[#332C2A]'
                       : 'bg-[#FFFFFF] border-2 border-[#DDD2C4] text-[#332C2A]'
                   }`}
                 >
@@ -548,7 +548,7 @@ export const MesasLayoutModule: React.FC = () => {
                   </div>
 
                   {isOver && (
-                    <div className="text-[9px] text-[#885853] font-bold uppercase mt-0.5 flex items-center space-x-0.5">
+                    <div className="text-[9px] text-[#8a574e] font-bold uppercase mt-0.5 flex items-center space-x-0.5">
                       <AlertTriangle className="w-2.5 h-2.5" />
                       <span>Sobrecupo</span>
                     </div>
@@ -559,7 +559,7 @@ export const MesasLayoutModule: React.FC = () => {
                     <button
                       onClick={e => handleRotate(e, table)}
                       title="Girar mesa 45°"
-                      className="absolute -top-2 -right-2 bg-[#A6736E] text-white p-1 rounded-full hover:bg-[#885853] shadow transition"
+                      className="absolute -top-2 -right-2 bg-[#9C665C] text-white p-1 rounded-full hover:bg-[#8a574e] shadow transition"
                     >
                       <RotateCw className="w-3 h-3" />
                     </button>
