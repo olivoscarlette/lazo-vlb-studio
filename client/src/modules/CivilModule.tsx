@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { CivilCeremony, Vendor, Guest } from '../types';
+import { CivilCeremony, Vendor, Guest, CivilSong } from '../types';
 import {
   Landmark, Calendar, Clock, MapPin, User, CheckSquare,
-  Square, MessageSquare, Sparkles, Save, Plus, Trash2, Edit3, Lock, X, Download, Wine, FileCheck, Users
+  Square, MessageSquare, Sparkles, Save, Plus, Trash2, Edit3, Lock, X, Download, Wine, FileCheck, Users, Music
 } from 'lucide-react';
 
 export const CivilModule: React.FC = () => {
@@ -25,9 +25,19 @@ export const CivilModule: React.FC = () => {
     notes: ''
   });
 
-  // Selected witness from Confirmed Guests list
+  // Witnesses management
   const [selectedWitnessGuest, setSelectedWitnessGuest] = useState('');
+  const [customWitnessName, setCustomWitnessName] = useState('');
+  const [witnessInputMode, setWitnessInputMode] = useState<'guest' | 'custom'>('guest');
   const [newReq, setNewReq] = useState('');
+
+  // Music in Civil ceremony draft
+  const [songDraft, setSongDraft] = useState({
+    moment: '',
+    title: '',
+    artist: '',
+    notes: ''
+  });
 
   const fetchCivilData = async () => {
     if (!currentWedding || !token) return;
@@ -172,17 +182,51 @@ export const CivilModule: React.FC = () => {
 
   const handleAddWitness = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedWitnessGuest || !civil) return;
-    if (civil.witnesses.includes(selectedWitnessGuest)) return;
-    const newWitnesses = [...civil.witnesses, selectedWitnessGuest];
+    if (!civil) return;
+    const witnessToAdd = (witnessInputMode === 'guest' ? selectedWitnessGuest : customWitnessName).trim();
+    if (!witnessToAdd) return;
+    if (civil.witnesses.includes(witnessToAdd)) {
+      alert('Este testigo ya se encuentra registrado.');
+      return;
+    }
+    const newWitnesses = [...civil.witnesses, witnessToAdd];
     handleSave({ witnesses: newWitnesses });
     setSelectedWitnessGuest('');
+    setCustomWitnessName('');
   };
 
   const handleRemoveWitness = (index: number) => {
     if (!civil) return;
     const updated = civil.witnesses.filter((_, i) => i !== index);
     handleSave({ witnesses: updated });
+  };
+
+  const handleToggleMusic = async (hasMusic: boolean) => {
+    if (!civil) return;
+    await handleSave({ has_music: hasMusic });
+  };
+
+  const handleAddSong = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!civil || !songDraft.moment.trim() || !songDraft.title.trim()) return;
+    const newSong: CivilSong = {
+      id: 'song_' + Date.now(),
+      moment: songDraft.moment.trim(),
+      title: songDraft.title.trim(),
+      artist: songDraft.artist.trim() || undefined,
+      notes: songDraft.notes.trim() || undefined
+    };
+    const currentSongs = civil.music_songs || [];
+    const updatedSongs = [...currentSongs, newSong];
+    await handleSave({ music_songs: updatedSongs });
+    setSongDraft({ moment: '', title: '', artist: '', notes: '' });
+  };
+
+  const handleRemoveSong = async (songId: string) => {
+    if (!civil) return;
+    const currentSongs = civil.music_songs || [];
+    const updatedSongs = currentSongs.filter(s => s.id !== songId);
+    await handleSave({ music_songs: updatedSongs });
   };
 
   if (loading || !civil) {
@@ -552,50 +596,83 @@ export const CivilModule: React.FC = () => {
                       <User className="w-4 h-4 text-[#9C665C]" />
                       <span>{w}</span>
                     </div>
-                    {!isNovios && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveWitness(index)}
-                        className="text-[#8A7E72]/60 hover:text-rose-600 p-1 transition cursor-pointer"
-                        title="Quitar testigo"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveWitness(index)}
+                      className="text-[#8A7E72]/60 hover:text-rose-600 p-1 transition cursor-pointer"
+                      title="Quitar testigo"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 ))
               )}
             </div>
           </div>
 
-          {!isNovios && (
-            <form onSubmit={handleAddWitness} className="pt-3 border-t border-[#FAF8F5]">
-              <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">
-                Seleccionar testigo de la Lista de Invitados Confirmados ({confirmedGuests.length} confirmados):
+          <form onSubmit={handleAddWitness} className="pt-3 border-t border-[#FAF8F5] space-y-2">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <label className="font-semibold text-[#2B2826]">
+                Agregar Testigo:
               </label>
-              <div className="flex gap-2">
+              <div className="flex items-center space-x-2 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setWitnessInputMode('guest')}
+                  className={`px-2 py-0.5 rounded-lg font-medium transition cursor-pointer ${
+                    witnessInputMode === 'guest'
+                      ? 'bg-[#9C665C] text-white'
+                      : 'text-[#786C68] hover:text-[#2B2826]'
+                  }`}
+                >
+                  Desde Invitados
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWitnessInputMode('custom')}
+                  className={`px-2 py-0.5 rounded-lg font-medium transition cursor-pointer ${
+                    witnessInputMode === 'custom'
+                      ? 'bg-[#9C665C] text-white'
+                      : 'text-[#786C68] hover:text-[#2B2826]'
+                  }`}
+                >
+                  Escribir Nombre
+                </button>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              {witnessInputMode === 'guest' ? (
                 <select
                   value={selectedWitnessGuest}
                   onChange={e => setSelectedWitnessGuest(e.target.value)}
-                  className="flex-1 px-3 py-2.5 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                  className="flex-1 px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
                 >
-                  <option value="">— Seleccionar invitado confirmado —</option>
+                  <option value="">— Seleccionar de {confirmedGuests.length} confirmados —</option>
                   {availableConfirmedNames.map(name => (
                     <option key={name} value={name}>
                       {name}
                     </option>
                   ))}
                 </select>
-                <button
-                  type="submit"
-                  disabled={!selectedWitnessGuest}
-                  className="px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer"
-                >
-                  Asignar
-                </button>
-              </div>
-            </form>
-          )}
+              ) : (
+                <input
+                  type="text"
+                  placeholder="Nombre completo del testigo..."
+                  value={customWitnessName}
+                  onChange={e => setCustomWitnessName(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                />
+              )}
+              <button
+                type="submit"
+                disabled={witnessInputMode === 'guest' ? !selectedWitnessGuest : !customWitnessName.trim()}
+                className="px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer shrink-0"
+              >
+                Agregar
+              </button>
+            </div>
+          </form>
         </div>
 
         {/* Trámites y Requisitos Prenupciales (with VLB Master Template Loader) */}
@@ -682,6 +759,169 @@ export const CivilModule: React.FC = () => {
             </form>
           )}
         </div>
+      </div>
+
+      {/* Música en la Ceremonia Civil */}
+      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <div className="flex items-center space-x-1.5 text-[#9C665C] text-xs font-semibold uppercase tracking-wider">
+              <Music className="w-3.5 h-3.5" />
+              <span>Ambientación Sonora</span>
+            </div>
+            <h3 className="font-serif text-xl font-semibold text-[#2B2826]">
+              Música durante la Ceremonia Civil
+            </h3>
+            <p className="text-xs text-[#8A7E72] mt-0.5">
+              Indica si la ceremonia civil contará con música de fondo o momentos musicales especiales (entrada, firmas, salida).
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2 bg-[#FAF8F5] p-1.5 rounded-2xl border border-[#EAE3DA]">
+            <button
+              type="button"
+              onClick={() => handleToggleMusic(false)}
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                !civil.has_music
+                  ? 'bg-[#2B2826] text-white shadow-xs'
+                  : 'text-[#786C68] hover:text-[#2B2826]'
+              }`}
+            >
+              No habrá música
+            </button>
+            <button
+              type="button"
+              onClick={() => handleToggleMusic(true)}
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                civil.has_music
+                  ? 'bg-[#9C665C] text-white shadow-xs'
+                  : 'text-[#786C68] hover:text-[#2B2826]'
+              }`}
+            >
+              Sí, habrá música
+            </button>
+          </div>
+        </div>
+
+        {civil.has_music && (
+          <div className="space-y-4 pt-2 border-t border-[#F5EFEB]">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-[#2B2826]">
+                Canciones y Momentos Seleccionados ({(civil.music_songs || []).length})
+              </span>
+              <span className="text-[11px] text-[#8A7E72]">
+                Registra cada tema con el momento clave en el que sonará
+              </span>
+            </div>
+
+            {/* Song List */}
+            {(!civil.music_songs || civil.music_songs.length === 0) ? (
+              <div className="p-6 text-center text-xs text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
+                Aún no has agregado canciones. Usa el formulario de abajo para registrar el primer momento musical.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {civil.music_songs.map((song, idx) => (
+                  <div
+                    key={song.id || idx}
+                    className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-start justify-between gap-3 text-xs"
+                  >
+                    <div className="space-y-1 min-w-0">
+                      <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#EFE2DF] text-[#7A4E49] border border-[#DFC9C4]">
+                        {song.moment}
+                      </span>
+                      <div className="font-semibold text-sm text-[#2B2826] truncate">
+                        {song.title}
+                      </div>
+                      {song.artist && (
+                        <div className="text-[11px] text-[#786C68]">
+                          Artista / Versión: <span className="text-[#2B2826]">{song.artist}</span>
+                        </div>
+                      )}
+                      {song.notes && (
+                        <div className="text-[10px] text-[#8A7E72] italic bg-[#FAF8F5] p-1.5 rounded-lg border border-[#EAE3DA]/60">
+                          {song.notes}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSong(song.id)}
+                      className="text-[#8A7E72]/60 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition cursor-pointer shrink-0"
+                      title="Eliminar canción"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add Song Form */}
+            <form onSubmit={handleAddSong} className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EAE3DA] space-y-3">
+              <div className="text-xs font-semibold text-[#2B2826]">
+                + Registrar Nueva Canción
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8A7E72] mb-1">
+                    Momento Clave *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Entrada de Novios, Firmas..."
+                    value={songDraft.moment}
+                    onChange={e => setSongDraft({ ...songDraft, moment: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8A7E72] mb-1">
+                    Título de la Canción *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Canon en Re Mayor"
+                    value={songDraft.title}
+                    onChange={e => setSongDraft({ ...songDraft, title: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-[#8A7E72] mb-1">
+                    Artista / Versión
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Pachelbel / Versión Acústica"
+                    value={songDraft.artist}
+                    onChange={e => setSongDraft({ ...songDraft, artist: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-1">
+                <input
+                  type="text"
+                  placeholder="Notas adicionales (ej. iniciar en el minuto 0:45, volumen suave...)"
+                  value={songDraft.notes}
+                  onChange={e => setSongDraft({ ...songDraft, notes: e.target.value })}
+                  className="w-full sm:flex-1 px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer shrink-0"
+                >
+                  Agregar Canción
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
       </div>
 
       {/* AUTOMATIC REUSE: Reused Vendors Card for Civil */}

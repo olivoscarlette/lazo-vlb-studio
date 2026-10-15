@@ -169,6 +169,8 @@ export function initDatabase() {
       juez_oficial TEXT,
       witnesses TEXT,
       requirements_status TEXT,
+      has_music INTEGER DEFAULT 0,
+      music_songs TEXT DEFAULT '[]',
       notes TEXT,
       updated_at TEXT NOT NULL,
       FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE CASCADE
@@ -336,6 +338,18 @@ export function initDatabase() {
 
   try {
     db.exec('ALTER TABLE guests ADD COLUMN whatsapp_message_id TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE civil_ceremony ADD COLUMN has_music INTEGER DEFAULT 0;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec("ALTER TABLE civil_ceremony ADD COLUMN music_songs TEXT DEFAULT '[]';");
   } catch {
     // Column already exists
   }

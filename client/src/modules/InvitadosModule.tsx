@@ -38,6 +38,7 @@ export const InvitadosModule: React.FC = () => {
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [isNewGuest, setIsNewGuest] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showDownloadsMenu, setShowDownloadsMenu] = useState(false);
   const [importRows, setImportRows] = useState<any[]>([]);
   const [importErrors, setImportErrors] = useState<any[]>([]);
   const [importing, setImporting] = useState(false);
@@ -337,7 +338,6 @@ export const InvitadosModule: React.FC = () => {
           'WHATSAPP': g.phone,
           'ACOMPAÑANTES': g.companion_count,
           'TOTAL LUGARES': 1 + (g.companion_count || 0),
-          'PRIORIDAD': g.priority || 'Media',
           'ESTATUS': g.status,
           'MESA': g.status === 'No asistirá' ? 'Liberada' : (g.table_name || 'Sin mesa'),
           'OBSERVACIONES': g.observations || ''
@@ -535,38 +535,63 @@ export const InvitadosModule: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleExportGuestList}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#EFE2DF] hover:bg-[#E4D0CC] text-[#6E433F] text-xs font-bold rounded-xl transition border border-[#DFC9C4]"
-            title="Descargar lista actual de invitados en Excel (Todos, Confirmados, Pendientes y Mesas)"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-[#8a574e]" />
-            <span>Descargar Lista Excel</span>
-          </button>
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Dropdown Descargables */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowDownloadsMenu(!showDownloadsMenu)}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#332C2A] text-xs font-semibold rounded-xl transition border border-[#DDD2C4] shadow-2xs cursor-pointer"
+            >
+              <Download className="w-3.5 h-3.5 text-[#786C68]" />
+              <span>Descargables</span>
+              <span className="text-[10px] text-[#786C68]">▾</span>
+            </button>
 
-          <button
-            onClick={handleDownloadTemplate}
-            className="inline-flex items-center space-x-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl transition border border-stone-200"
-            title="Descargar plantilla limpia de Excel"
-          >
-            <Download className="w-3.5 h-3.5 text-stone-500" />
-            <span>Plantilla Vacía</span>
-          </button>
-
-          <button
-            onClick={() => { setShowImportModal(true); setImportRows([]); setImportErrors([]); }}
-            className="inline-flex items-center space-x-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl transition border border-stone-200"
-          >
-            <Upload className="w-3.5 h-3.5 text-stone-500" />
-            <span>Importar Excel</span>
-          </button>
+            {showDownloadsMenu && (
+              <div
+                className="absolute right-0 mt-1.5 w-56 bg-white rounded-2xl shadow-xl border border-[#DDD2C4] py-1.5 z-30 animate-in fade-in zoom-in-95"
+                onMouseLeave={() => setShowDownloadsMenu(false)}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDownloadsMenu(false);
+                    handleDownloadTemplate();
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
+                  <div>
+                    <div className="font-semibold text-[#2B2826]">Descargar plantilla vacía</div>
+                    <div className="text-[10px] text-[#786C68]">Formato oficial para importar</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDownloadsMenu(false);
+                    setShowImportModal(true);
+                    setImportRows([]);
+                    setImportErrors([]);
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
+                >
+                  <Upload className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
+                  <div>
+                    <div className="font-semibold text-[#2B2826]">Importar archivo Excel</div>
+                    <div className="text-[10px] text-[#786C68]">Cargar lista desde archivo</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
 
           {canSendWhatsApp && (
             <button
               onClick={handleSendBulkWhatsapp}
               disabled={bulkSendingWhatsapp}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-bold rounded-xl transition shadow-xs"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer"
               title="Enviar plantilla oficial de WhatsApp RSVP a los invitados pendientes"
             >
               {bulkSendingWhatsapp ? (
@@ -574,13 +599,13 @@ export const InvitadosModule: React.FC = () => {
               ) : (
                 <Send className="w-3.5 h-3.5 text-emerald-100" />
               )}
-              <span>{bulkSendingWhatsapp ? 'Enviando WhatsApps...' : 'Enviar RSVP WhatsApp (Pendientes)'}</span>
+              <span>{bulkSendingWhatsapp ? 'Enviando...' : 'Enviar RSVP WhatsApp'}</span>
             </button>
           )}
 
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer shrink-0"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Nuevo Invitado</span>
@@ -741,16 +766,7 @@ export const InvitadosModule: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-          {statusFilter && (
-            <button
-              onClick={() => { setStatusFilter(''); setPage(1); }}
-              className="px-3 py-1.5 text-xs font-medium bg-[#EFE2DF] text-[#7A4E49] rounded-xl border border-[#DFC9C4] whitespace-nowrap"
-            >
-              Filtro: {statusFilter === 'Pendiente de confirmar' ? 'Pendientes' : statusFilter} ✕
-            </button>
-          )}
-
-          {/* Sort By Selector: Alphabetical or Priority */}
+          {/* Sort By Selector: Alphabetical */}
           <div className="inline-flex items-center space-x-1.5 bg-[#F9F6F2] px-2.5 py-1 rounded-xl border border-[#DDD2C4]">
             <span className="text-[11px] font-bold text-[#786C68] whitespace-nowrap">Ordenar:</span>
             <select
@@ -762,21 +778,8 @@ export const InvitadosModule: React.FC = () => {
               <option value="alpha_desc">Alfabético: Nombre (Z → A)</option>
               <option value="lastname_asc">Alfabético: Apellido (A → Z)</option>
               <option value="lastname_desc">Alfabético: Apellido (Z → A)</option>
-              <option value="priority_desc">Prioridad (Alta → Baja)</option>
-              <option value="priority_asc">Prioridad (Baja → Alta)</option>
             </select>
           </div>
-
-          <select
-            value={priorityFilter}
-            onChange={e => { setPriorityFilter(e.target.value); setPage(1); }}
-            className="px-3 py-2 text-xs border border-[#DDD2C4] rounded-xl bg-white text-[#332C2A] focus:outline-none"
-          >
-            <option value="">Todas las Prioridades</option>
-            <option value="Alta">Prioridad Alta</option>
-            <option value="Media">Prioridad Media</option>
-            <option value="Baja">Prioridad Baja</option>
-          </select>
 
           <select
             value={statusFilter}
@@ -822,16 +825,6 @@ export const InvitadosModule: React.FC = () => {
                 </th>
                 <th className="py-3.5 px-4 whitespace-nowrap min-w-[175px]">WHATSAPP</th>
                 <th className="py-3.5 px-4 text-center whitespace-nowrap"># ACOMPAÑANTES</th>
-                <th
-                  onClick={() => {
-                    setSortBy(sortBy === 'priority_desc' ? 'priority_asc' : 'priority_desc');
-                    setPage(1);
-                  }}
-                  className="py-3.5 px-4 whitespace-nowrap cursor-pointer hover:text-[#332C2A] select-none transition"
-                  title="Haz clic para ordenar por prioridad"
-                >
-                  PRIORIDAD {sortBy === 'priority_desc' ? '↓' : sortBy === 'priority_asc' ? '↑' : '↕'}
-                </th>
                 <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">ESTATUS</th>
                 {canSendWhatsApp && (
                   <th className="py-3.5 px-4 text-center whitespace-nowrap">RSVP WHATSAPP</th>
@@ -843,13 +836,13 @@ export const InvitadosModule: React.FC = () => {
             <tbody className="divide-y divide-[#EFEAE2]">
               {loading ? (
                 <tr>
-                  <td colSpan={canSendWhatsApp ? 8 : 7} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={canSendWhatsApp ? 7 : 6} className="py-12 text-center text-[#786C68]">
                     Cargando invitados...
                   </td>
                 </tr>
               ) : guests.length === 0 ? (
                 <tr>
-                  <td colSpan={canSendWhatsApp ? 8 : 7} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={canSendWhatsApp ? 7 : 6} className="py-12 text-center text-[#786C68]">
                     No se encontraron invitados con los filtros actuales.
                   </td>
                 </tr>
@@ -908,25 +901,6 @@ export const InvitadosModule: React.FC = () => {
                           ({1 + guest.companion_count} {1 + guest.companion_count === 1 ? 'lugar' : 'lugares'})
                         </span>
                       </div>
-                    </td>
-
-                    {/* Inline Prioridad Dropdown */}
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <select
-                        value={guest.priority || 'Media'}
-                        onChange={e => handleInlinePriorityChange(guest, e.target.value as 'Alta' | 'Media' | 'Baja')}
-                        className={`text-xs font-semibold rounded-xl px-2.5 py-1.5 border transition focus:outline-none cursor-pointer ${
-                          (guest.priority || 'Media') === 'Alta'
-                            ? 'bg-[#FBF4F3] text-[#70443D] border-[#EAD2D0]'
-                            : (guest.priority || 'Media') === 'Baja'
-                            ? 'bg-[#F7F3EE] text-[#7D6F6B] border-[#EAE3DA]'
-                            : 'bg-[#FCFAF7] text-[#5A524C] border-[#EAE3DA]'
-                        }`}
-                      >
-                        <option value="Alta">Alta</option>
-                        <option value="Media">Media</option>
-                        <option value="Baja">Baja</option>
-                      </select>
                     </td>
 
                     {/* Inline Estatus Dropdown — Soft Sage / Terracotta */}
@@ -1123,7 +1097,7 @@ export const InvitadosModule: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[11px] font-bold text-stone-700 mb-1"># Acompañantes</label>
                   <input
@@ -1136,19 +1110,6 @@ export const InvitadosModule: React.FC = () => {
                   <span className="text-[10px] text-stone-400 mt-0.5 block">
                     Total: {1 + formData.companion_count} lugares
                   </span>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-stone-700 mb-1">Prioridad</label>
-                  <select
-                    value={formData.priority}
-                    onChange={e => setFormData({ ...formData, priority: e.target.value as 'Alta' | 'Media' | 'Baja' })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
-                  >
-                    <option value="Alta">Alta</option>
-                    <option value="Media">Media</option>
-                    <option value="Baja">Baja</option>
-                  </select>
                 </div>
 
                 <div>

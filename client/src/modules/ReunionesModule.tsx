@@ -191,48 +191,35 @@ export const ReunionesModule: React.FC = () => {
         </button>
       </div>
 
-      {/* Package Allowance Card */}
+      {/* Compact Package Allowance Banner */}
       {packageInfo && (
-        <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <div className="flex items-center space-x-2 text-xs font-bold text-[#8A7E72] uppercase tracking-wider">
-                <Sparkles className="w-4 h-4 text-[#9C665C]" />
-                <span>Paquete Contratado: {packageInfo.packageName}</span>
+        <div className="bg-white rounded-2xl p-4 border border-[#EAE3DA] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE3DA] flex items-center justify-center text-[#9C665C] shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-bold text-[#9C665C] uppercase tracking-wider bg-[#FDF6F5] px-2 py-0.5 rounded border border-[#F3DCD7]">
+                  {packageInfo.packageName}
+                </span>
+                <span className="text-xs font-semibold text-[#2B2826] truncate">
+                  {packageInfo.description}
+                </span>
               </div>
-              <h3 className="font-serif text-2xl font-bold text-[#2B2826] mt-1">
-                {packageInfo.description}
-              </h3>
-              <p className="text-sm text-[#8A7E72] mt-1">
-                Límite contratado: <strong className="text-[#2B2826]">{packageInfo.maxMeetings >= 999 ? 'Reuniones Ilimitadas' : `${packageInfo.maxMeetings} reuniones`}</strong>
+              <p className="text-[11px] text-[#8A7E72] mt-0.5">
+                Tope acordado: <strong>{packageInfo.maxMeetings >= 999 ? 'Reuniones ilimitadas' : `${packageInfo.maxMeetings} sesiones`}</strong>
               </p>
-              {Array.isArray(packageInfo.includes) && packageInfo.includes.length > 0 && (
-                <div className="mt-4 pt-3 border-t border-[#FAF8F5]">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#8A7E72] mb-2">
-                    Incluye en tu paquete:
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5">
-                    {packageInfo.includes.map((item, idx) => (
-                      <div key={idx} className="flex items-start space-x-2 text-sm text-[#5A524C]">
-                        <Check className="w-4 h-4 text-[#9C665C] shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+          </div>
 
-            <div className="flex items-center space-x-8 border-t md:border-t-0 md:border-l border-[#EAE3DA] pt-4 md:pt-0 md:pl-8 shrink-0">
-              <div>
-                <div className="text-xs text-[#8A7E72] uppercase font-bold tracking-wider">Realizadas / Agendadas</div>
-                <div className="text-3xl font-serif font-bold text-[#2B2826] mt-0.5">{packageInfo.usedMeetings}</div>
-              </div>
-              <div>
-                <div className="text-xs text-[#9C665C] uppercase font-bold tracking-wider">Disponibles</div>
-                <div className="text-3xl font-serif font-bold text-[#9C665C] mt-0.5">{packageInfo.remainingMeetings}</div>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0 text-xs">
+            <span className="px-3 py-1 rounded-xl bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] font-semibold">
+              Agendadas: <strong>{packageInfo.usedMeetings}</strong>
+            </span>
+            <span className="px-3 py-1 rounded-xl bg-[#F7ECE8] text-[#8A574E] border border-[#E8D1CB] font-semibold">
+              Disponibles: <strong>{packageInfo.remainingMeetings}</strong>
+            </span>
           </div>
         </div>
       )}

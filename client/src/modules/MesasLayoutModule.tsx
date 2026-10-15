@@ -771,26 +771,26 @@ export const MesasLayoutModule: React.FC = () => {
                     {unassignedGuests.map(g => (
                       <div
                         key={g.id}
-                        className="p-2.5 rounded-xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-center justify-between text-xs hover:border-[#9C665C] transition group"
+                        className="p-2.5 rounded-xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2 hover:border-[#9C665C] transition group"
                       >
-                        <div className="min-w-0 pr-2">
-                          <div className="font-semibold text-[#2B2826] truncate">
+                        <div className="flex items-start justify-between gap-1.5">
+                          <div className="font-semibold text-xs text-[#2B2826] leading-snug break-words">
                             {g.first_name} {g.last_name}
                           </div>
-                          <div className="text-[11px] text-[#7D6F6B]">
-                            {1 + g.companion_count} {1 + g.companion_count === 1 ? 'lugar' : 'lugares'} ({g.priority})
-                          </div>
+                          <span className="shrink-0 text-[10px] font-medium bg-[#EFE8DE] text-[#786C68] px-2 py-0.5 rounded-full border border-[#DDD2C4]">
+                            {1 + g.companion_count} {1 + g.companion_count === 1 ? 'lugar' : 'lugares'}
+                          </span>
                         </div>
 
                         {!isLocked && (
-                          <div className="shrink-0">
+                          <div className="pt-0.5">
                             {selectedTable ? (
                               <button
                                 onClick={() => handleAssignGuest(g.id, selectedTable.id)}
-                                className="px-2.5 py-1 bg-[#9C665C] hover:bg-[#8A574E] text-white text-[11px] font-semibold rounded-lg shadow-2xs transition cursor-pointer"
+                                className="w-full py-1.5 px-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-[11px] font-semibold rounded-lg shadow-2xs transition cursor-pointer flex items-center justify-center space-x-1"
                                 title={`Sentar en ${selectedTable.name}`}
                               >
-                                Sentar en {selectedTable.name}
+                                <span>Sentar en {selectedTable.name}</span>
                               </button>
                             ) : (
                               <select
@@ -801,12 +801,12 @@ export const MesasLayoutModule: React.FC = () => {
                                     e.target.value = '';
                                   }
                                 }}
-                                className="text-[11px] font-semibold bg-[#FFFFFF] border border-[#EAE3DA] rounded-lg px-2 py-1 text-[#2B2826] focus:outline-none cursor-pointer"
+                                className="w-full text-[11px] font-medium bg-[#FFFFFF] border border-[#EAE3DA] rounded-lg px-2.5 py-1 text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C] cursor-pointer"
                               >
-                                <option value="">Asignar mesa...</option>
+                                <option value="">Asignar a una mesa...</option>
                                 {tables.map(t => (
                                   <option key={t.id} value={t.id}>
-                                    {t.name} ({t.used_seats || 0}/{t.capacity})
+                                    {t.name} ({t.used_seats || 0}/{t.capacity} lugares)
                                   </option>
                                 ))}
                               </select>

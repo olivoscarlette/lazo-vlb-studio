@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CalendarCheck2, Users2, Grid2x2Check,
   CreditCard, Landmark, Church, Clock3, CheckSquare,
   FileText, BarChart3, Contact2, History, X, MessageSquare,
-  ChevronLeft, ArrowLeft
+  ChevronLeft
 } from 'lucide-react';
 
 export type WorkspaceTab =
@@ -117,39 +117,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare, hiddenForNovios: true },
         { id: 'documentos', label: 'Documentos', icon: FileText },
         { id: 'reportes', label: 'Reportes', icon: BarChart3 },
-        { id: 'directorio', label: 'Directorio', icon: Contact2 },
+        { id: 'directorio', label: 'Directorio', icon: Contact2, hiddenForNovios: true },
         { id: 'bitacora', label: 'Bitácora', icon: History, hiddenForNovios: true }
       ]
     }
   ];
-
-  const getCountdown = (dateStr: string) => {
-    if (!dateStr) return '';
-    const target = new Date(dateStr);
-    const now = new Date();
-    target.setHours(0, 0, 0, 0);
-    now.setHours(0, 0, 0, 0);
-    const diffDays = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays > 0) return `Faltan ${diffDays} días`;
-    if (diffDays === 0) return '¡Hoy es la boda!';
-    return `Realizada hace ${Math.abs(diffDays)} días`;
-  };
-
-  const formatWeddingDateSpanish = (raw?: string) => {
-    if (!raw) return '';
-    try {
-      const [y, m, d] = raw.split('-').map(Number);
-      if (!y || !m || !d) return raw;
-      const dateObj = new Date(y, m - 1, d);
-      return dateObj.toLocaleDateString('es-MX', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric'
-      });
-    } catch {
-      return raw;
-    }
-  };
 
   const handleItemClick = (id: WorkspaceTab) => {
     onSelectTab(id);
@@ -158,71 +130,57 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const coupleTitle = currentWedding.partner_1_name && currentWedding.partner_2_name
-    ? `${currentWedding.partner_1_name} & ${currentWedding.partner_2_name}`
-    : currentWedding.name;
+  const showReturnButton = user.role === 'ADMINISTRADOR' || user.role === 'COORDINADOR';
 
   return (
     <>
-      {/* Mobile Backdrop Overlay - Positioned below navbar so navbar stays accessible */}
+      {/* Mobile Backdrop Overlay */}
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed top-[72px] inset-x-0 bottom-0 bg-[#2B2826]/35 z-30 backdrop-blur-xs lg:hidden transition-opacity"
+          className="fixed top-[72px] inset-x-0 bottom-0 bg-[#2B2826]/35 z-30 backdrop-blur-xs lg:hidden transition-opacity duration-300"
         />
       )}
 
       {/* Sidebar: Responsive dockable on desktop, slide-over drawer below navbar on mobile */}
       <aside
         className={`bg-[#FAF8F5] text-[#2B2826] border-r border-[#EAE3DA] flex flex-col transition-all duration-300 ease-in-out ${
-          // Mobile classes: Fixed drawer cleanly underneath navbar (top-[72px]), exact height to prevent overflow under browser bar
+          // Mobile classes: Fixed drawer cleanly underneath navbar (top-[72px]), exact height
           `fixed top-[72px] bottom-0 left-0 w-80 max-w-[85vw] h-[calc(100dvh-72px)] shadow-2xl z-40 lg:shadow-none ${
-            isOpen ? 'translate-x-0' : '-translate-x-full'
+            isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'
           } ` +
           // Desktop classes: Docked sticky column when open, collapsed when closed
-          `lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] lg:translate-x-0 ${
+          `lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto ${
             isOpen ? 'lg:w-72 xl:w-80 lg:flex' : 'lg:hidden lg:w-0'
           }`
         }`}
       >
-        {/* Top return link & Wedding Context Header */}
-        <div className="p-3.5 sm:p-4 border-b border-[#EAE3DA] bg-[#FCFAF7] shrink-0 space-y-2">
-          {/* Botón de retorno al Dashboard General */}
-          <div className="flex items-center justify-between gap-2">
+        {/* Clean Minimal Header: Return action (without duplicate arrows) + Single Close Control */}
+        <div className="px-4 py-3 border-b border-[#EAE3DA] bg-[#FCFAF7] shrink-0 flex items-center justify-between gap-3">
+          {showReturnButton ? (
             <button
               onClick={() => setCurrentWedding(null)}
-              className="inline-flex items-center space-x-1.5 text-xs font-semibold text-[#8A7E72] hover:text-[#9C665C] transition cursor-pointer group truncate"
+              className="text-xs font-semibold text-[#8A7E72] hover:text-[#9C665C] transition cursor-pointer truncate"
               title="Volver a la lista de bodas"
             >
-              <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5 shrink-0" />
-              <span>← Volver al Dashboard General</span>
+              Volver al Dashboard General
             </button>
+          ) : (
+            <span className="text-xs font-semibold tracking-wider uppercase text-[#9C665C]">
+              Espacio de la Boda
+            </span>
+          )}
 
-            {/* Botón para colapsar sidebar */}
-            <button
-              onClick={onClose}
-              className="p-1 rounded-lg text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#EFE8E0] transition cursor-pointer shrink-0"
-              title="Ocultar menú lateral"
-            >
-              <ChevronLeft className="w-4 h-4 hidden lg:block" />
-              <X className="w-4 h-4 lg:hidden" />
-            </button>
-          </div>
-
-          {/* Nombre de la Boda & Countdown */}
-          <div>
-            <h2 className="font-serif text-lg sm:text-xl font-bold text-[#2B2826] leading-snug truncate" title={coupleTitle}>
-              {coupleTitle}
-            </h2>
-            <div className="flex items-center justify-between mt-0.5 text-xs text-[#8A7E72]">
-              <span className="capitalize font-medium truncate">{formatWeddingDateSpanish(currentWedding.wedding_date)}</span>
-              {currentWedding.wedding_date && (
-                <span className="px-2 py-0.5 rounded-full bg-[#EFE8E0] text-[#70443D] text-[11px] font-medium shrink-0 ml-1.5">
-                  {getCountdown(currentWedding.wedding_date)}
-                </span>
-              )}
-            </div>
-          </div>
+          {/* Único control de cierre / ocultar sidebar */}
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-xl text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#EFE8E0] transition cursor-pointer shrink-0"
+            title="Ocultar menú lateral"
+            aria-label="Cerrar barra lateral"
+          >
+            <ChevronLeft className="w-4 h-4 hidden lg:block transition-transform" />
+            <X className="w-4 h-4 lg:hidden" />
+          </button>
         </div>
 
         {/* Navigation items agrupados por las 3 secciones */}

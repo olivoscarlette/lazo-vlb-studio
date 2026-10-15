@@ -294,7 +294,6 @@ router.get('/:weddingId/guests/template', authenticateToken, requireWeddingAcces
       'APELLIDO': 'Fernández Silva',
       'WHATSAPP': '+52 55 1234 5678',
       'ACOMPAÑANTES': 1,
-      'PRIORIDAD': 'Alta',
       'ESTATUS': 'Pendiente de confirmar',
       'OBSERVACIONES': 'Familia cercana de la novia. Menú vegetariano.'
     },
@@ -303,7 +302,6 @@ router.get('/:weddingId/guests/template', authenticateToken, requireWeddingAcces
       'APELLIDO': 'Mendoza Lozano',
       'WHATSAPP': '+52 33 9876 5432',
       'ACOMPAÑANTES': 0,
-      'PRIORIDAD': 'Media',
       'ESTATUS': 'Confirmado',
       'OBSERVACIONES': 'Viaja desde Guadalajara.'
     }

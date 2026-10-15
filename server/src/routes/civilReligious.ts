@@ -21,12 +21,14 @@ router.get('/:weddingId/civil', authenticateToken, requireWeddingAccess, (req, r
       juez_oficial: null,
       witnesses: JSON.stringify([]),
       requirements_status: JSON.stringify([]),
+      has_music: 0,
+      music_songs: JSON.stringify([]),
       notes: null
     };
     db.prepare(`
-      INSERT INTO civil_ceremony (id, wedding_id, date, time, location, juez_oficial, witnesses, requirements_status, notes, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(civil.id, weddingId, civil.date, null, null, null, civil.witnesses, civil.requirements_status, null, now);
+      INSERT INTO civil_ceremony (id, wedding_id, date, time, location, juez_oficial, witnesses, requirements_status, has_music, music_songs, notes, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(civil.id, weddingId, civil.date, null, null, null, civil.witnesses, civil.requirements_status, 0, civil.music_songs, null, now);
   }
 
   try {
@@ -40,6 +42,13 @@ router.get('/:weddingId/civil', authenticateToken, requireWeddingAccess, (req, r
   } catch {
     civil.requirements_status = [];
   }
+
+  try {
+    civil.music_songs = JSON.parse(civil.music_songs || '[]');
+  } catch {
+    civil.music_songs = [];
+  }
+  civil.has_music = Boolean(civil.has_music);
 
   // AUTOMATIC VENDOR REUSE: Fetch vendors that participate in 'CIVIL'
   const vendors = db.prepare(`
@@ -66,15 +75,17 @@ router.get('/:weddingId/civil', authenticateToken, requireWeddingAccess, (req, r
 // PUT /api/weddings/:weddingId/civil - Update civil ceremony details
 router.put('/:weddingId/civil', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
-  const { date, time, location, juez_oficial, witnesses, requirements_status, notes } = req.body;
+  const { date, time, location, juez_oficial, witnesses, requirements_status, has_music, music_songs, notes } = req.body;
   const now = new Date().toISOString();
 
   const witnessJson = JSON.stringify(Array.isArray(witnesses) ? witnesses : []);
   const reqJson = JSON.stringify(Array.isArray(requirements_status) ? requirements_status : []);
+  const songsJson = JSON.stringify(Array.isArray(music_songs) ? music_songs : []);
+  const hasMusicInt = has_music ? 1 : 0;
 
   db.prepare(`
-    INSERT INTO civil_ceremony (id, wedding_id, date, time, location, juez_oficial, witnesses, requirements_status, notes, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO civil_ceremony (id, wedding_id, date, time, location, juez_oficial, witnesses, requirements_status, has_music, music_songs, notes, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     ON CONFLICT(wedding_id) DO UPDATE SET
       date = excluded.date,
       time = excluded.time,
@@ -82,14 +93,16 @@ router.put('/:weddingId/civil', authenticateToken, requireWeddingAccess, (req, r
       juez_oficial = excluded.juez_oficial,
       witnesses = excluded.witnesses,
       requirements_status = excluded.requirements_status,
+      has_music = excluded.has_music,
+      music_songs = excluded.music_songs,
       notes = excluded.notes,
       updated_at = excluded.updated_at
   `).run(
     'civ_' + weddingId, weddingId, date || null, time || null, location || null,
-    juez_oficial || null, witnessJson, reqJson, notes || null, now
+    juez_oficial || null, witnessJson, reqJson, hasMusicInt, songsJson, notes || null, now
   );
 
-  logAudit(weddingId, req.user!.id, req.user!.name, 'ACTUALIZAR_CIVIL', 'CEREMONY_CIVIL', weddingId, 'Actualización de datos y testigos de Ceremonia Civil');
+  logAudit(weddingId, req.user!.id, req.user!.name, 'ACTUALIZAR_CIVIL', 'CEREMONY_CIVIL', weddingId, 'Actualización de datos, testigos y música de Ceremonia Civil');
 
   return res.json({ message: 'Información de ceremonia civil guardada correctamente.' });
 });

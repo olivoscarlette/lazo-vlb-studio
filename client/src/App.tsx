@@ -163,7 +163,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
       case 'reportes':
         return <ReportesModule />;
       case 'directorio':
-        return <DirectorioModule />;
+        return user?.role === 'NOVIOS' ? <ResumenModule onNavigateTab={setCurrentTab} /> : <DirectorioModule />;
       case 'bitacora':
         return <BitacoraModule />;
       case 'whatsapp':

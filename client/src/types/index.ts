@@ -147,6 +147,14 @@ export interface Payment {
   created_at: string;
 }
 
+export interface CivilSong {
+  id: string;
+  moment: string;
+  title: string;
+  artist?: string;
+  notes?: string;
+}
+
 export interface CivilCeremony {
   id: string;
   wedding_id: string;
@@ -157,6 +165,8 @@ export interface CivilCeremony {
   witnesses: string[];
   requirements_status: { id: string; title: string; completed: boolean }[];
   notes: string | null;
+  has_music?: boolean;
+  music_songs?: CivilSong[];
 }
 
 export interface ReligiousCeremony {

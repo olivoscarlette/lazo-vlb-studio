@@ -321,28 +321,22 @@ export const ProveedoresPagosModule: React.FC = () => {
           </p>
         </div>
 
-        {!isNovios ? (
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setShowPaymentModal(true)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition shadow-xs cursor-pointer"
-            >
-              <DollarSign className="w-3.5 h-3.5 text-[#6E8C70]" />
-              <span>Registrar Pago</span>
-            </button>
-            <button
-              onClick={handleOpenAddVendor}
-              className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Nuevo Proveedor</span>
-            </button>
-          </div>
-        ) : (
-          <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#E4ECE5] text-[#2B5235] border border-[#BDD4C1]">
-            <span>Vista de Consulta Nupcial</span>
-          </span>
-        )}
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowPaymentModal(true)}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition shadow-xs cursor-pointer"
+          >
+            <DollarSign className="w-3.5 h-3.5 text-[#6E8C70]" />
+            <span>Registrar Pago</span>
+          </button>
+          <button
+            onClick={handleOpenAddVendor}
+            className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Nuevo Proveedor</span>
+          </button>
+        </div>
       </div>
 
       {/* Financial Summary: 3 grandes cifras destacadas */}
@@ -420,24 +414,22 @@ export const ProveedoresPagosModule: React.FC = () => {
                       <span className={`text-[10px] px-2 py-0.5 rounded-full ${status.badgeClass}`}>
                         {status.label}
                       </span>
-                      {!isNovios && (
-                        <button
-                          onClick={() => {
-                            setPaymentForm({
-                              vendor_id: v.id,
-                              concept: `Liquidación saldo ${v.name}`,
-                              amount: String(v.saldo_restante || ''),
-                              payment_date: new Date().toISOString().split('T')[0],
-                              payment_method: 'Transferencia SPEI',
-                              notes: ''
-                            });
-                            setShowPaymentModal(true);
-                          }}
-                          className="text-xs text-[#9C665C] hover:underline font-bold ml-1 cursor-pointer"
-                        >
-                          Pagar →
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          setPaymentForm({
+                            vendor_id: v.id,
+                            concept: `Liquidación saldo ${v.name}`,
+                            amount: String(v.saldo_restante || ''),
+                            payment_date: new Date().toISOString().split('T')[0],
+                            payment_method: 'Transferencia SPEI',
+                            notes: ''
+                          });
+                          setShowPaymentModal(true);
+                        }}
+                        className="text-xs text-[#9C665C] hover:underline font-bold ml-1 cursor-pointer"
+                      >
+                        Pagar →
+                      </button>
                     </div>
                   );
                 })}
@@ -512,32 +504,28 @@ export const ProveedoresPagosModule: React.FC = () => {
                 <th className="py-3.5 px-3 text-right whitespace-nowrap">COSTO REAL</th>
                 <th className="py-3.5 px-3 text-right whitespace-nowrap">PAGADO</th>
                 <th className="py-3.5 px-3 text-right whitespace-nowrap">RESTANTE</th>
-                {!isNovios && <th className="py-3.5 px-2 text-center whitespace-nowrap"></th>}
+                <th className="py-3.5 px-2 text-center whitespace-nowrap"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#FAF8F5] text-sm">
               {loading ? (
-                <tr><td colSpan={isNovios ? 8 : 9} className="py-8 text-center text-[#8A7E72]">Cargando proveedores...</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[#8A7E72]">Cargando proveedores...</td></tr>
               ) : filteredVendors.length === 0 ? (
-                <tr><td colSpan={isNovios ? 8 : 9} className="py-8 text-center text-[#8A7E72]">No hay proveedores que coincidan con el filtro.</td></tr>
+                <tr><td colSpan={9} className="py-8 text-center text-[#8A7E72]">No hay proveedores que coincidan con el filtro.</td></tr>
               ) : (
                 filteredVendors.map(v => {
                   const dueStatus = getPaymentDueStatus(v.payment_due_date, v.saldo_restante);
                   return (
                     <tr key={v.id} className="hover:bg-[#FCFAF7] transition group">
                       <td className="py-3 px-3 whitespace-nowrap">
-                        {!isNovios ? (
-                          <div
-                            onClick={() => handleOpenEditVendor(v)}
-                            className="cursor-pointer font-bold text-[#2B2826] hover:text-[#9C665C] inline-flex items-center space-x-1 whitespace-nowrap transition"
-                            title="Clic para editar información"
-                          >
-                            <span className="underline decoration-[#EAE3DA] decoration-1 underline-offset-4">{v.name}</span>
-                            <Edit3 className="w-3.5 h-3.5 text-[#8A7E72] group-hover:text-[#9C665C] transition shrink-0" />
-                          </div>
-                        ) : (
-                          <span className="font-bold text-[#2B2826]">{v.name}</span>
-                        )}
+                        <div
+                          onClick={() => handleOpenEditVendor(v)}
+                          className="cursor-pointer font-bold text-[#2B2826] hover:text-[#9C665C] inline-flex items-center space-x-1 whitespace-nowrap transition"
+                          title="Clic para editar información"
+                        >
+                          <span className="underline decoration-[#EAE3DA] decoration-1 underline-offset-4">{v.name}</span>
+                          <Edit3 className="w-3.5 h-3.5 text-[#8A7E72] group-hover:text-[#9C665C] transition shrink-0" />
+                        </div>
                         {v.contact_person && (
                           <div className="text-xs text-[#8A7E72] whitespace-nowrap mt-0.5">Contacto: {v.contact_person}</div>
                         )}
@@ -595,17 +583,15 @@ export const ProveedoresPagosModule: React.FC = () => {
                       <td className="py-3 px-3 text-right font-bold text-[#8A574E] whitespace-nowrap">
                         ${(v.saldo_restante || 0).toLocaleString()}
                       </td>
-                      {!isNovios && (
-                        <td className="py-3 px-2 text-center whitespace-nowrap">
-                          <button
-                            onClick={() => handleDeleteVendor(v.id)}
-                            className="text-[#8A7E72] hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition"
-                            title="Eliminar proveedor"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </td>
-                      )}
+                      <td className="py-3 px-2 text-center whitespace-nowrap">
+                        <button
+                          onClick={() => handleDeleteVendor(v.id)}
+                          className="text-[#8A7E72] hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                          title="Eliminar proveedor"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
                     </tr>
                   );
                 })
@@ -635,12 +621,12 @@ export const ProveedoresPagosModule: React.FC = () => {
                 <th className="py-3.5 px-4 whitespace-nowrap">MÉTODO DE PAGO</th>
                 <th className="py-3.5 px-4 text-right whitespace-nowrap">MONTO</th>
                 <th className="py-3.5 px-4 whitespace-nowrap">NOTAS</th>
-                {!isNovios && <th className="py-3.5 px-3 text-center whitespace-nowrap">ACCIONES</th>}
+                <th className="py-3.5 px-3 text-center whitespace-nowrap">ACCIONES</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#FAF8F5] text-sm">
               {payments.length === 0 ? (
-                <tr><td colSpan={isNovios ? 6 : 7} className="py-8 text-center text-[#8A7E72]">No hay pagos registrados aún.</td></tr>
+                <tr><td colSpan={7} className="py-8 text-center text-[#8A7E72]">No hay pagos registrados aún.</td></tr>
               ) : (
                 payments.map(p => (
                   <tr key={p.id} className="hover:bg-[#FCFAF7] transition">
@@ -656,17 +642,15 @@ export const ProveedoresPagosModule: React.FC = () => {
                       +${p.amount.toLocaleString()}
                     </td>
                     <td className="py-3 px-4 text-[#8A7E72] max-w-xs truncate whitespace-nowrap">{p.notes || '—'}</td>
-                    {!isNovios && (
-                      <td className="py-3 px-3 text-center whitespace-nowrap">
-                        <button
-                          onClick={() => handleDeletePayment(p.id)}
-                          className="text-[#8A7E72] hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition"
-                          title="Eliminar pago"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </td>
-                    )}
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                      <button
+                        onClick={() => handleDeletePayment(p.id)}
+                        className="text-[#8A7E72] hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                        title="Eliminar pago"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}

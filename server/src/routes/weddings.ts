@@ -225,11 +225,17 @@ router.get('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     FROM civil_ceremony WHERE wedding_id = ?
   `).get(weddingId) as any;
 
+  const religiousCeremony = db.prepare(`
+    SELECT date, time, temple_name, officiant
+    FROM religious_ceremony WHERE wedding_id = ?
+  `).get(weddingId) as any;
+
   return res.json({
     wedding: {
       ...wedding,
       team,
       civil_ceremony: civilCeremony || null,
+      religious_ceremony: religiousCeremony || null,
       stats: {
         guests: guestStats,
         finance: {
