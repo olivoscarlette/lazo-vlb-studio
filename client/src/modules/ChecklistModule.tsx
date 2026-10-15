@@ -40,6 +40,8 @@ export const ChecklistModule: React.FC = () => {
 
   // Default to Checklist General
   const [categoryFilter, setCategoryFilter] = useState('Checklist General');
+  const [responsibleFilter, setResponsibleFilter] = useState<'ALL' | 'VLB' | 'NOVIOS'>('ALL');
+  const [proximityFilter, setProximityFilter] = useState<'ALL' | 'CRITICA' | 'SEMANA' | 'DIA_B' | 'PREVIA'>('ALL');
 
   // Modal (Create or Edit Task)
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -272,7 +274,46 @@ export const ChecklistModule: React.FC = () => {
     } catch {}
   };
 
-  const filteredTasks = tasks.filter(t => categoryFilter === 'ALL' || t.category === categoryFilter);
+  const isVlb = (t: Task) => {
+    const r = (t.responsible || '').toLowerCase();
+    return r.includes('vlb') || r.includes('coord') || r.includes('staff') || r.includes('estudio');
+  };
+
+  const isNovios = (t: Task) => {
+    return !isVlb(t);
+  };
+
+  const getProximity = (t: Task): 'CRITICA' | 'SEMANA' | 'DIA_B' | 'PREVIA' => {
+    const cat = (t.category || '').toLowerCase();
+    const title = (t.title || '').toLowerCase();
+    if (cat.includes('día b') || cat.includes('dia b') || title.includes('día b') || title.includes('dia b')) {
+      return 'DIA_B';
+    }
+    if (cat.includes('1 semana') || cat.includes('semana') || cat.includes('15 días') || cat.includes('15 dias')) {
+      return 'SEMANA';
+    }
+    if (cat.includes('1 mes') || cat.includes('2 - 3') || cat.includes('crítica') || cat.includes('critica')) {
+      return 'CRITICA';
+    }
+    if (cat.includes('4 - 5') || cat.includes('6 - 7') || cat.includes('8 - 9') || cat.includes('10 - 11') || cat.includes('12 - 16')) {
+      return 'PREVIA';
+    }
+    return 'CRITICA';
+  };
+
+  const vlbCount = tasks.filter(isVlb).length;
+  const noviosCount = tasks.filter(isNovios).length;
+  const criticaCount = tasks.filter(t => getProximity(t) === 'CRITICA').length;
+  const semanaCount = tasks.filter(t => getProximity(t) === 'SEMANA').length;
+  const diaBCount = tasks.filter(t => getProximity(t) === 'DIA_B').length;
+
+  const filteredTasks = tasks.filter(t => {
+    if (responsibleFilter === 'VLB' && !isVlb(t)) return false;
+    if (responsibleFilter === 'NOVIOS' && !isNovios(t)) return false;
+    if (proximityFilter !== 'ALL' && getProximity(t) !== proximityFilter) return false;
+    if (categoryFilter !== 'ALL' && categoryFilter !== 'Checklist General' && t.category !== categoryFilter) return false;
+    return true;
+  });
 
   // Group Checklist General tasks by their section (stored in responsible)
   const generalSections = React.useMemo(() => {
@@ -369,29 +410,118 @@ export const ChecklistModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Category Filter Pills: Checklist General first, then by Stages */}
+      {/* Filtro por Responsable */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-[#EAE3DA] shadow-2xs">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-xs font-semibold text-[#8A7E72] px-2">Responsable:</span>
+          <button
+            type="button"
+            onClick={() => setResponsibleFilter('ALL')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
+              responsibleFilter === 'ALL'
+                ? 'bg-[#363432] text-white shadow-xs'
+                : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+            }`}
+          >
+            Todas ({tasks.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setResponsibleFilter('VLB')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
+              responsibleFilter === 'VLB'
+                ? 'bg-[#9C665C] text-white shadow-xs'
+                : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+            }`}
+          >
+            <span>Tareas del Equipo VLB</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/10">
+              {vlbCount}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setResponsibleFilter('NOVIOS')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
+              responsibleFilter === 'NOVIOS'
+                ? 'bg-[#9C665C] text-white shadow-xs'
+                : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+            }`}
+          >
+            <span>Tareas de los Novios</span>
+            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/10">
+              {noviosCount}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Agrupación por Proximidad Temporal */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-1.5">
-        {VLB_CHECKLIST_CATEGORIES.map(cat => {
-          const count = cat === 'ALL' ? tasks.length : tasks.filter(t => t.category === cat).length;
-          return (
-            <button
-              key={cat}
-              onClick={() => setCategoryFilter(cat)}
-              className={`px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition flex items-center space-x-1.5 ${
-                categoryFilter === cat
-                  ? 'bg-[#9C665C] text-white font-semibold shadow-2xs'
-                  : 'bg-white text-stone-700 hover:bg-[#EFE8DE] border border-[#DDD2C4]'
-              }`}
-            >
-              <span>{cat === 'ALL' ? 'Todas' : cat}</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                categoryFilter === cat ? 'bg-white/25 text-white' : 'bg-[#F9F6F2] text-stone-500'
-              }`}>
-                {count}
-              </span>
-            </button>
-          );
-        })}
+        <button
+          type="button"
+          onClick={() => { setProximityFilter('ALL'); setCategoryFilter('Checklist General'); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            proximityFilter === 'ALL' && categoryFilter === 'Checklist General'
+              ? 'bg-[#9C665C] text-white shadow-xs'
+              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+          }`}
+        >
+          Checklist General ({tasks.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => { setProximityFilter('CRITICA'); setCategoryFilter('ALL'); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center space-x-1.5 ${
+            proximityFilter === 'CRITICA'
+              ? 'bg-[#9C665C] text-white shadow-xs'
+              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+          }`}
+        >
+          <span>🚨 Fase Crítica (&lt; 45 días)</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10">
+            {criticaCount}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setProximityFilter('SEMANA'); setCategoryFilter('ALL'); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center space-x-1.5 ${
+            proximityFilter === 'SEMANA'
+              ? 'bg-[#9C665C] text-white shadow-xs'
+              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+          }`}
+        >
+          <span>📅 Semana del Evento (&lt; 7 días)</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10">
+            {semanaCount}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setProximityFilter('DIA_B'); setCategoryFilter('ALL'); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition flex items-center space-x-1.5 ${
+            proximityFilter === 'DIA_B'
+              ? 'bg-[#9C665C] text-white shadow-xs'
+              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+          }`}
+        >
+          <span>💍 Día B</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-black/10">
+            {diaBCount}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => { setProximityFilter('ALL'); setCategoryFilter('ALL'); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+            proximityFilter === 'ALL' && categoryFilter === 'ALL'
+              ? 'bg-[#9C665C] text-white shadow-xs'
+              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+          }`}
+        >
+          Ver Todas las Etapas
+        </button>
       </div>
 
       {/* Content Area */}
@@ -521,22 +651,23 @@ export const ChecklistModule: React.FC = () => {
                   </button>
 
                   <div className="flex-1">
-                    <h4 className={`text-xs font-semibold ${
-                      task.status === 'Completada' ? 'line-through text-stone-400' : 'text-stone-900'
+                    <h4 className={`text-sm font-semibold leading-relaxed ${
+                      task.status === 'Completada' ? 'line-through text-stone-400' : 'text-[#2B2826]'
                     }`}>
                       {task.title}
                     </h4>
 
-                    <div className="flex flex-wrap items-center gap-2.5 text-[11px] text-stone-500 mt-1">
-                      {categoryFilter === 'ALL' && (
-                        <span className="bg-[#EFE2DF] text-[#8a574e] px-2 py-0.5 rounded-md font-semibold">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#8A7E72] mt-1">
+                      <span className={`px-2 py-0.5 rounded-md font-semibold text-[11px] ${
+                        isVlb(task)
+                          ? 'bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA]'
+                          : 'bg-[#FDF6F5] text-[#9C665C] border border-[#F0D5D1]'
+                      }`}>
+                        👤 {isVlb(task) ? 'Equipo VLB' : 'Novios'}
+                      </span>
+                      {task.category && (
+                        <span className="bg-[#FCFAF7] text-[#5A524C] px-2 py-0.5 rounded-md text-[11px] border border-[#EAE3DA]">
                           {task.category}
-                        </span>
-                      )}
-                      {task.responsible && (
-                        <span className="flex items-center space-x-1">
-                          <User className="w-3 h-3 text-stone-400" />
-                          <span>{task.responsible}</span>
                         </span>
                       )}
                       {task.due_date && (

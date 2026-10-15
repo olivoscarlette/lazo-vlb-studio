@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { CivilCeremony, Vendor, Guest } from '../types';
 import {
   Landmark, Calendar, Clock, MapPin, User, CheckSquare,
-  Square, MessageSquare, Sparkles, Save, Plus, Trash2, Edit3, Lock, X, Download
+  Square, MessageSquare, Sparkles, Save, Plus, Trash2, Edit3, Lock, X, Download, Wine, FileCheck, Users
 } from 'lucide-react';
 
 export const CivilModule: React.FC = () => {
@@ -212,6 +212,91 @@ export const CivilModule: React.FC = () => {
         {saving && (
           <span className="text-xs text-stone-400 animate-pulse">Guardando cambios...</span>
         )}
+      </div>
+
+      {/* Ficha Logística Civil Destacada */}
+      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#9C665C]"></span>
+            <h3 className="font-serif text-lg font-bold text-[#2B2826]">
+              Ficha Logística Ejecutiva · Civil
+            </h3>
+          </div>
+          <span className="text-[11px] font-semibold text-[#8A7E72] uppercase tracking-wider bg-[#FAF8F5] px-3 py-1 rounded-full border border-[#EAE3DA]">
+            Protocolo Legal
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Juez u Oficial */}
+          <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+            <div className="flex items-center space-x-2 text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72] mb-1.5">
+              <User className="w-3.5 h-3.5 text-[#9C665C]" />
+              <span>Juez Oficial</span>
+            </div>
+            <div className="text-sm font-bold text-[#2B2826] truncate">
+              {civil.juez_oficial || 'Pendiente de asignar'}
+            </div>
+            <div className="text-[11px] text-[#8A7E72] mt-0.5 truncate">
+              {civil.location || 'Sede por confirmar'}
+            </div>
+          </div>
+
+          {/* Testigos Confirmados */}
+          <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+            <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72] mb-1.5">
+              <span className="flex items-center space-x-2">
+                <Users className="w-3.5 h-3.5 text-[#9C665C]" />
+                <span>Testigos</span>
+              </span>
+              <span className="font-bold text-[#9C665C] bg-[#F7EFEF] px-1.5 py-0.5 rounded text-[10px]">
+                {civil.witnesses.length} listos
+              </span>
+            </div>
+            <div className="text-sm font-bold text-[#2B2826] truncate" title={civil.witnesses.join(', ')}>
+              {civil.witnesses.length > 0 ? civil.witnesses.join(', ') : 'Sin testigos registrados'}
+            </div>
+            <div className="text-[11px] text-[#8A7E72] mt-0.5">
+              Firmantes confirmados
+            </div>
+          </div>
+
+          {/* Documentos Legales Entregados */}
+          <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+            <div className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72] mb-1.5">
+              <span className="flex items-center space-x-2">
+                <FileCheck className="w-3.5 h-3.5 text-[#9C665C]" />
+                <span>Documentos</span>
+              </span>
+              <span className="font-bold text-[#4B7355] bg-[#E4ECE5] px-1.5 py-0.5 rounded text-[10px]">
+                {civil.requirements_status.filter(r => r.completed).length}/{civil.requirements_status.length}
+              </span>
+            </div>
+            <div className="text-sm font-bold text-[#2B2826]">
+              {civil.requirements_status.length > 0 && civil.requirements_status.filter(r => r.completed).length === civil.requirements_status.length
+                ? 'Expediente Completo'
+                : `${civil.requirements_status.filter(r => !r.completed).length} trámite(s) pendiente(s)`}
+            </div>
+            <div className="text-[11px] text-[#8A7E72] mt-0.5">
+              Requisitos prenupciales
+            </div>
+          </div>
+
+          {/* Horario de Firma & Brindis */}
+          <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+            <div className="flex items-center space-x-2 text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72] mb-1.5">
+              <Wine className="w-3.5 h-3.5 text-[#9C665C]" />
+              <span>Firma y Brindis</span>
+            </div>
+            <div className="text-sm font-bold text-[#2B2826]">
+              {civil.time ? `${civil.time} hrs` : 'Horario a convenir'}
+            </div>
+            <div className="text-[11px] text-[#8A7E72] mt-0.5">
+              {civil.date ? `Fecha: ${civil.date}` : 'Fecha no definida'}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Ceremony Overview Details Card — Fixed / Read-Only by Default */}

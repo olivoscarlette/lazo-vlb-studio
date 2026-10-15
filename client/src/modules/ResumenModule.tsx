@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   MapPin, Users, DollarSign, CheckCircle2,
   Clock, Sparkles, Edit3, ShieldCheck, Mail, Phone,
-  ArrowRight
+  ArrowRight, Calendar
 } from 'lucide-react';
 
 interface ResumenProps {
@@ -83,148 +83,209 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   // Requirement 4: Strictly only ADMINISTRADOR and COORDINADOR can see internal team
   const canSeeStaffSection = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR';
 
+  const coupleTitle = weddingData.partner_1_name && weddingData.partner_2_name
+    ? `${weddingData.partner_1_name} & ${weddingData.partner_2_name}`
+    : weddingData.name;
+
+  const getCountdownText = (dateStr: string) => {
+    if (!dateStr) return '';
+    const target = new Date(dateStr);
+    const now = new Date();
+    target.setHours(0, 0, 0, 0);
+    now.setHours(0, 0, 0, 0);
+    const diffDays = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays > 0) return `Faltan ${diffDays} días`;
+    if (diffDays === 0) return '¡Hoy es la boda!';
+    return `Realizada hace ${Math.abs(diffDays)} días`;
+  };
+
+  const totalSeats = guestStats.total_seats_potential || weddingData.estimated_guests || 0;
+  const confirmedSeats = guestStats.confirmed_total_seats || 0;
+  const rsvpPercent = totalSeats > 0 ? Math.min(100, Math.round((confirmedSeats / totalSeats) * 100)) : 0;
+
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {/* Editorial Hero Header — Rosa Quemado Editorial & Crema Cálido */}
-      <div className="bg-[#9C665C] rounded-3xl p-8 text-[#FFFFFF] relative overflow-hidden shadow-md border border-[#8A574E]">
-        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-[#B88A82]/35 blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="flex items-center space-x-2 text-[#F7EEEC] text-xs font-semibold tracking-widest uppercase mb-1.5">
-              <Sparkles className="w-4 h-4" />
+      {/* 1. Cabecera Hero Luminosa y Cálida */}
+      <div className="bg-[#FFFFFF] rounded-3xl p-7 sm:p-8 border border-[#EAE3DA] shadow-xs relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2 text-xs font-semibold tracking-widest text-[#9C665C] uppercase">
+              <Sparkles className="w-3.5 h-3.5" />
               <span>VLB Studio · Proyecto de Boda</span>
             </div>
-            <h1 className="font-serif text-3xl sm:text-5xl font-bold tracking-tight text-[#FFFFFF]">
-              {weddingData.name}
+
+            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#2B2826] leading-tight">
+              {coupleTitle}
             </h1>
-            <p className="text-[#FAF5F3] text-sm mt-2.5 flex items-center space-x-3 leading-relaxed">
-              <span>{weddingData.partner_1_name} & {weddingData.partner_2_name}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#EFE2DF]" />
-              <span className="text-[#EFE2DF] font-medium">{weddingData.wedding_date}</span>
-            </p>
+
+            {/* Badges tipo pastilla para sedes, fechas y cuenta regresiva */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-2">
+              {weddingData.wedding_date && (
+                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#F7F3EE] text-[#70443D] border border-[#EAE3DA]">
+                  <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <span>{getCountdownText(weddingData.wedding_date)}</span>
+                </span>
+              )}
+
+              {weddingData.reception_venue && (
+                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#FCFAF7] text-[#332A28] border border-[#EAE3DA]">
+                  <MapPin className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <span>
+                    <strong>Recepción:</strong> {weddingData.wedding_date ? `${weddingData.wedding_date} · ` : ''}{weddingData.reception_venue}{weddingData.reception_time ? ` (${weddingData.reception_time} hrs)` : ''}
+                  </span>
+                </span>
+              )}
+
+              {weddingData.ceremony_venue && (
+                <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#FCFAF7] text-[#332A28] border border-[#EAE3DA]">
+                  <span>⛪</span>
+                  <span>
+                    <strong>Ceremonia:</strong> {weddingData.ceremony_venue}{weddingData.ceremony_time ? ` (${weddingData.ceremony_time} hrs)` : ''}
+                  </span>
+                </span>
+              )}
+
+              {weddingData.civil_ceremony && (weddingData.civil_ceremony.date || weddingData.civil_ceremony.location) && (
+                <span
+                  onClick={() => onNavigateTab('civil')}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#FFF8F5] text-[#8A574E] border border-[#EAD2D0] cursor-pointer hover:bg-[#FCEEEB] transition"
+                  title="Ver detalles de la Ceremonia Civil"
+                >
+                  <span>⚖️</span>
+                  <span>
+                    <strong>Civil:</strong> {weddingData.civil_ceremony.date ? `${weddingData.civil_ceremony.date} · ` : ''}{weddingData.civil_ceremony.location || 'Sede asignada'}{weddingData.civil_ceremony.time ? ` (${weddingData.civil_ceremony.time} hrs)` : ''}
+                  </span>
+                </span>
+              )}
+            </div>
           </div>
 
-          {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+          {/* Quick Actions (Acciones Rápidas) */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start lg:self-center">
             <button
-              onClick={() => setShowEditWeddingModal(true)}
-              className="inline-flex items-center space-x-2 bg-[#FFFFFF]/20 hover:bg-[#FFFFFF]/30 text-[#FFFFFF] px-4 py-2.5 rounded-2xl text-sm font-semibold border border-[#FFFFFF]/30 transition shadow-xs"
+              onClick={() => onNavigateTab('invitados')}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-[#FCFAF7] hover:bg-[#F7F3EE] text-[#332A28] border border-[#EAE3DA] text-xs font-semibold transition shadow-2xs cursor-pointer"
             >
-              <Edit3 className="w-4 h-4" />
-              <span>Editar Datos de Boda</span>
+              <Users className="w-3.5 h-3.5 text-[#9C665C]" />
+              <span>+ Invitado</span>
             </button>
-          )}
-        </div>
 
-        {/* Venues Pill row */}
-        <div className="mt-6 pt-6 border-t border-[#B88A82]/60 flex flex-wrap gap-3 text-sm text-[#FFFFFF]">
-          {weddingData.ceremony_venue && (
-            <div className="flex items-center space-x-2 bg-[#8A574E]/60 px-4 py-2 rounded-full border border-[#B88A82]/50">
-              <MapPin className="w-4 h-4 text-[#EFE2DF]" />
-              <span><strong>Ceremonia:</strong> {weddingData.ceremony_venue} ({weddingData.ceremony_time || 'Por definir'})</span>
-            </div>
-          )}
-          {weddingData.reception_venue && (
-            <div className="flex items-center space-x-2 bg-[#8A574E]/60 px-4 py-2 rounded-full border border-[#B88A82]/50">
-              <MapPin className="w-4 h-4 text-[#EFE2DF]" />
-              <span><strong>Recepción:</strong> {weddingData.reception_venue} ({weddingData.reception_time || 'Por definir'})</span>
-            </div>
-          )}
-          {weddingData.civil_ceremony && (weddingData.civil_ceremony.date || weddingData.civil_ceremony.location) && (() => {
-            const civDate = weddingData.civil_ceremony.date;
-            const isSeparateCivilDay = Boolean(civDate && weddingData.wedding_date && civDate !== weddingData.wedding_date);
-            return (
-              <div
-                onClick={() => onNavigateTab('civil')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-full border cursor-pointer transition ${
-                  isSeparateCivilDay
-                    ? 'bg-[#FFF7ED] text-[#9A3412] border-[#FED7AA] shadow-xs font-semibold'
-                    : 'bg-[#8A574E]/60 text-[#FFFFFF] border-[#B88A82]/50'
-                }`}
-                title="Ir a Ceremonia Civil"
+            <button
+              onClick={() => onNavigateTab('proveedores')}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-[#FCFAF7] hover:bg-[#F7F3EE] text-[#332A28] border border-[#EAE3DA] text-xs font-semibold transition shadow-2xs cursor-pointer"
+            >
+              <DollarSign className="w-3.5 h-3.5 text-[#6E8C70]" />
+              <span>+ Registrar Pago</span>
+            </button>
+
+            {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+              <button
+                onClick={() => setShowEditWeddingModal(true)}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold transition shadow-xs cursor-pointer"
               >
-                <span>⚖️</span>
-                <span>
-                  <strong>Ceremonia Civil:</strong>{' '}
-                  {isSeparateCivilDay ? `Otro día (${civDate})` : 'Mismo día de la boda'}
-                  {weddingData.civil_ceremony.location ? ` · ${weddingData.civil_ceremony.location}` : ''}
-                  {weddingData.civil_ceremony.time ? ` (${weddingData.civil_ceremony.time} hrs)` : ''}
-                </span>
-              </div>
-            );
-          })()}
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Editar Datos</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* KPI Cards — Tipografía 14px operativa y números serif destacados */}
+      {/* 2. Tarjetas de KPIs (Finanzas y RSVP) — 4 tarjetas blancas uniformes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        {/* Guests Card */}
+        {/* KPI 1: RSVP & Confirmaciones con progreso visual */}
         <div
           onClick={() => onNavigateTab('invitados')}
-          className="luxury-card rounded-2xl p-6 cursor-pointer hover:border-[#9C665C] group transition"
+          className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs cursor-pointer hover:border-[#9C665C] group transition flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
-            <span>Confirmaciones</span>
-            <Users className="w-4 h-4 text-[#9C665C] group-hover:text-[#8A574E] transition" />
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
+              <span>Confirmaciones RSVP</span>
+              <Users className="w-4 h-4 text-[#9C665C] group-hover:scale-110 transition-transform" />
+            </div>
+
+            <div className="text-3xl font-serif font-bold text-[#2B2826]">
+              {confirmedSeats}
+              <span className="text-xs text-[#7D6F6B] font-sans font-normal ml-1.5">
+                / {totalSeats} asientos
+              </span>
+            </div>
+
+            {/* Barra de progreso visual */}
+            <div className="w-full h-1.5 bg-[#F7F3EE] rounded-full overflow-hidden mt-3 mb-1">
+              <div
+                className="h-full bg-[#6E8C70] rounded-full transition-all duration-500"
+                style={{ width: `${Math.max(rsvpPercent, 4)}%` }}
+              />
+            </div>
           </div>
-          <div className="text-3xl font-serif font-bold text-[#332A28]">
-            {guestStats.confirmed_total_seats || 0}
-            <span className="text-xs text-[#7D6F6B] font-sans font-normal ml-1.5">
-              / {guestStats.total_seats_potential || 0} invitados
-            </span>
-          </div>
-          <div className="text-xs text-[#455C44] bg-[#E4ECE5] border border-[#CCDACC] px-2.5 py-1 rounded-lg inline-block font-medium mt-2.5">
-            Asistentes con +1 ({guestStats.confirmed_count || 0} registros)
+
+          <div className="text-xs text-[#577355] font-semibold mt-3 flex items-center justify-between">
+            <span>{rsvpPercent}% confirmado</span>
+            <span className="text-[11px] text-[#7D6F6B] font-normal">{guestStats.confirmed_count || 0} familias/invitados</span>
           </div>
         </div>
 
-        {/* Financial KPI: COSTO REAL */}
+        {/* KPI 2: COSTO REAL CONTRATADO */}
         <div
           onClick={() => onNavigateTab('proveedores')}
-          className="luxury-card rounded-2xl p-6 cursor-pointer hover:border-[#9C665C] group transition"
+          className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs cursor-pointer hover:border-[#9C665C] group transition flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
-            <span>Costo Real Proveedores</span>
-            <DollarSign className="w-4 h-4 text-[#9C665C] group-hover:text-[#8A574E] transition" />
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
+              <span>Costo Real Contratado</span>
+              <DollarSign className="w-4 h-4 text-[#9C665C] group-hover:scale-110 transition-transform" />
+            </div>
+
+            <div className="text-3xl font-serif font-bold text-[#2B2826]">
+              ${(finance.costo_real || 0).toLocaleString()}
+            </div>
           </div>
-          <div className="text-3xl font-serif font-bold text-[#332A28]">
-            ${(finance.costo_real || 0).toLocaleString()}
-          </div>
-          <div className="text-xs text-[#7D6F6B] mt-2 leading-relaxed">
-            Suma de contratos vigentes
+
+          <div className="text-xs text-[#7D6F6B] mt-4 leading-relaxed">
+            Suma de contratos y acuerdos vigentes
           </div>
         </div>
 
-        {/* Financial KPI: MONTO PAGADO */}
+        {/* KPI 3: MONTO PAGADO */}
         <div
           onClick={() => onNavigateTab('proveedores')}
-          className="luxury-card rounded-2xl p-6 cursor-pointer hover:border-[#9C665C] group transition"
+          className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs cursor-pointer hover:border-[#9C665C] group transition flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
-            <span>Monto Pagado</span>
-            <CheckCircle2 className="w-4 h-4 text-[#6E8C70] group-hover:text-[#577355] transition" />
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
+              <span>Monto Pagado</span>
+              <CheckCircle2 className="w-4 h-4 text-[#6E8C70] group-hover:scale-110 transition-transform" />
+            </div>
+
+            <div className="text-3xl font-serif font-bold text-[#455C44]">
+              ${(finance.monto_pagado || 0).toLocaleString()}
+            </div>
           </div>
-          <div className="text-3xl font-serif font-bold text-[#455C44]">
-            ${(finance.monto_pagado || 0).toLocaleString()}
-          </div>
-          <div className="text-xs text-[#7D6F6B] mt-2 leading-relaxed">
-            Pagos asentados en bitácora
+
+          <div className="text-xs text-[#577355] font-medium mt-4 leading-relaxed">
+            Anticipos y liquidaciones registradas
           </div>
         </div>
 
-        {/* Financial KPI: RESTANTE */}
+        {/* KPI 4: SALDO PENDIENTE */}
         <div
           onClick={() => onNavigateTab('proveedores')}
-          className="luxury-card rounded-2xl p-6 cursor-pointer hover:border-[#9C665C] group transition"
+          className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs cursor-pointer hover:border-[#9C665C] group transition flex flex-col justify-between"
         >
-          <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
-            <span>Saldo Restante</span>
-            <Clock className="w-4 h-4 text-[#9E896E] group-hover:text-[#6D5A43] transition" />
+          <div>
+            <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
+              <span>Saldo por Liquidar</span>
+              <Clock className="w-4 h-4 text-[#9E896E] group-hover:scale-110 transition-transform" />
+            </div>
+
+            <div className="text-3xl font-serif font-bold text-[#8A574E]">
+              ${(finance.restante || 0).toLocaleString()}
+            </div>
           </div>
-          <div className="text-3xl font-serif font-bold text-[#6D5A43]">
-            ${(finance.restante || 0).toLocaleString()}
-          </div>
-          <div className="text-xs text-[#7D6F6B] font-medium mt-2 leading-relaxed">
-            Pendiente por liquidar
+
+          <div className="text-xs text-[#8A574E] font-medium mt-4 leading-relaxed">
+            Pendiente por transferir a proveedores
           </div>
         </div>
       </div>

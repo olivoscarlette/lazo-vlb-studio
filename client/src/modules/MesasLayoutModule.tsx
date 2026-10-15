@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { Table, LayoutElement, LayoutVersion, Guest } from '../types';
 import {
   Plus, RotateCw, Trash2, Save, History,
-  Lock, AlertTriangle, Move, Eye, Layers, Image as ImageIcon
+  Lock, AlertTriangle, Move, Eye, Layers, Image as ImageIcon,
+  Maximize2, Minimize2, Unlock, Users, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 export const MesasLayoutModule: React.FC = () => {
@@ -13,6 +14,10 @@ export const MesasLayoutModule: React.FC = () => {
   const [unassignedGuests, setUnassignedGuests] = useState<Guest[]>([]);
   const [versions, setVersions] = useState<LayoutVersion[]>([]);
   const [, setLoading] = useState(true);
+
+  // Modo Lienzo Amplio state
+  const [fullCanvasMode, setFullCanvasMode] = useState(false);
+  const [showUnassignedDrawer, setShowUnassignedDrawer] = useState(true);
 
   // Active selected table for assignment drawer
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
@@ -372,43 +377,71 @@ export const MesasLayoutModule: React.FC = () => {
       {/* Top Controls Toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">
-            Distribución del Salón
-          </span>
-          <h2 className="font-serif text-3xl font-bold text-stone-900">
+          <div className="flex items-center space-x-2.5 mb-1">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">
+              Distribución del Salón
+            </span>
+            {/* Indicador de Candado de 5 Días */}
+            {isLocked ? (
+              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FBF4F3] text-[#70443D] border border-[#EAD2D0]">
+                <Lock className="w-3 h-3 text-[#9C665C]" />
+                <span>Bloqueado (&lt; 5 días del evento)</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#E4ECE5] text-[#354B38] border border-[#CCDACC]">
+                <Unlock className="w-3 h-3 text-[#577355]" />
+                <span>Edición Abierta (Cierre automático 5 días antes)</span>
+              </span>
+            )}
+          </div>
+          <h2 className="font-serif text-3xl font-bold text-[#2B2826]">
             Mesas y Layout Visual
           </h2>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Modo Lienzo Amplio Toggle */}
+          <button
+            onClick={() => setFullCanvasMode(!fullCanvasMode)}
+            className={`inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl border transition shadow-2xs cursor-pointer ${
+              fullCanvasMode
+                ? 'bg-[#EFE8DE] text-[#2B2826] border-[#DDD2C4]'
+                : 'bg-white hover:bg-[#F7F3EE] text-[#5E524E] border-[#EAE3DA]'
+            }`}
+            title={fullCanvasMode ? 'Volver a vista normal con panel lateral' : 'Expandir plano a todo el ancho'}
+          >
+            {fullCanvasMode ? <Minimize2 className="w-3.5 h-3.5 text-[#9C665C]" /> : <Maximize2 className="w-3.5 h-3.5 text-[#9C665C]" />}
+            <span>{fullCanvasMode ? 'Vista Estándar' : 'Modo Lienzo Amplio'}</span>
+          </button>
+
           {!isLocked && (
             <>
               <button
                 onClick={() => setShowNewTableModal(true)}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow transition"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar Mesa</span>
               </button>
               <button
                 onClick={() => setShowNewElementModal(true)}
-                className="inline-flex items-center space-x-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 transition"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
               >
-                <Layers className="w-3.5 h-3.5 text-stone-500" />
+                <Layers className="w-3.5 h-3.5 text-[#9C665C]" />
                 <span>Pista / Escenario</span>
               </button>
               <button
                 onClick={() => setShowFloorPlanModal(true)}
-                className="inline-flex items-center space-x-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 transition"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
               >
-                <ImageIcon className="w-3.5 h-3.5 text-stone-500" />
-                <span>Plano Base del Lugar</span>
+                <ImageIcon className="w-3.5 h-3.5 text-[#9C665C]" />
+                <span>Plano Base</span>
               </button>
               <button
                 onClick={() => setShowSaveVersionModal(true)}
-                className="inline-flex items-center space-x-1.5 px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 transition"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
               >
-                <Save className="w-3.5 h-3.5 text-stone-500" />
+                <Save className="w-3.5 h-3.5 text-[#9C665C]" />
                 <span>Guardar Versión</span>
               </button>
             </>
@@ -417,9 +450,9 @@ export const MesasLayoutModule: React.FC = () => {
       </div>
 
       {/* Main Canvas + Sidebar Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className={`grid grid-cols-1 ${fullCanvasMode ? 'lg:grid-cols-1' : 'lg:grid-cols-4'} gap-6`}>
         {/* Visual Interactive Canvas Area */}
-        <div className="lg:col-span-3">
+        <div className={fullCanvasMode ? 'w-full' : 'lg:col-span-3'}>
           <div
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -683,14 +716,92 @@ export const MesasLayoutModule: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="luxury-card rounded-2xl p-6 text-center text-stone-400 text-xs border border-dashed border-stone-300">
-              <Eye className="w-8 h-8 text-stone-300 mx-auto mb-2" />
-              <p className="font-semibold">Selecciona una mesa en el plano</p>
-              <p className="text-[11px] text-stone-400 mt-1">
+            <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#EAE3DA] shadow-xs text-center text-[#7D6F6B] text-xs">
+              <Eye className="w-6 h-6 text-[#9C665C] mx-auto mb-1.5" />
+              <p className="font-semibold text-[#2B2826]">Selecciona una mesa en el plano</p>
+              <p className="text-[11px] text-[#7D6F6B] mt-0.5">
                 Haz clic sobre cualquier mesa para ver sus invitados y gestionar los lugares.
               </p>
             </div>
           )}
+
+          {/* Panel Lateral: Invitados por Sentar */}
+          <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#EAE3DA] shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-2">
+                <Users className="w-4 h-4 text-[#9C665C]" />
+                <span className="text-xs font-bold text-[#2B2826] uppercase tracking-wider">
+                  Invitados por Sentar ({unassignedGuests.length})
+                </span>
+              </div>
+              <button
+                onClick={() => setShowUnassignedDrawer(!showUnassignedDrawer)}
+                className="text-xs text-[#7D6F6B] hover:text-[#2B2826] p-1"
+              >
+                {showUnassignedDrawer ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {showUnassignedDrawer && (
+              <>
+                {unassignedGuests.length === 0 ? (
+                  <div className="text-xs text-[#577355] bg-[#E4ECE5] p-3 rounded-xl border border-[#CCDACC] text-center font-medium">
+                    ✓ ¡Todos los invitados confirmados tienen mesa asignada!
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {unassignedGuests.map(g => (
+                      <div
+                        key={g.id}
+                        className="p-2.5 rounded-xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-center justify-between text-xs hover:border-[#9C665C] transition group"
+                      >
+                        <div className="min-w-0 pr-2">
+                          <div className="font-semibold text-[#2B2826] truncate">
+                            {g.first_name} {g.last_name}
+                          </div>
+                          <div className="text-[11px] text-[#7D6F6B]">
+                            {1 + g.companion_count} {1 + g.companion_count === 1 ? 'lugar' : 'lugares'} ({g.priority})
+                          </div>
+                        </div>
+
+                        {!isLocked && (
+                          <div className="shrink-0">
+                            {selectedTable ? (
+                              <button
+                                onClick={() => handleAssignGuest(g.id, selectedTable.id)}
+                                className="px-2.5 py-1 bg-[#9C665C] hover:bg-[#8A574E] text-white text-[11px] font-semibold rounded-lg shadow-2xs transition cursor-pointer"
+                                title={`Sentar en ${selectedTable.name}`}
+                              >
+                                Sentar en {selectedTable.name}
+                              </button>
+                            ) : (
+                              <select
+                                defaultValue=""
+                                onChange={e => {
+                                  if (e.target.value) {
+                                    handleAssignGuest(g.id, e.target.value);
+                                    e.target.value = '';
+                                  }
+                                }}
+                                className="text-[11px] font-semibold bg-[#FFFFFF] border border-[#EAE3DA] rounded-lg px-2 py-1 text-[#2B2826] focus:outline-none cursor-pointer"
+                              >
+                                <option value="">Asignar mesa...</option>
+                                {tables.map(t => (
+                                  <option key={t.id} value={t.id}>
+                                    {t.name} ({t.used_seats || 0}/{t.capacity})
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
 
           {/* Saved Layout Versions List */}
           <div className="luxury-card rounded-2xl p-5 border border-stone-200">

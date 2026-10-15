@@ -17,6 +17,7 @@ export const ProveedoresPagosModule: React.FC = () => {
   });
   const [catalogTypes, setCatalogTypes] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [locationFilter, setLocationFilter] = useState<'TODAS' | 'CIVIL' | 'RECEPCIÓN' | 'GENERAL'>('TODAS');
 
   // Vendor Modal (Add & Edit)
   const [showVendorModal, setShowVendorModal] = useState(false);
@@ -289,6 +290,20 @@ export const ProveedoresPagosModule: React.FC = () => {
     } catch {}
   };
 
+  const filteredVendors = vendors.filter(v => {
+    if (locationFilter === 'TODAS') return true;
+    if (locationFilter === 'CIVIL') {
+      return v.locations?.some(l => l.toUpperCase().includes('CIVIL'));
+    }
+    if (locationFilter === 'RECEPCIÓN') {
+      return v.locations?.some(l => l.toUpperCase().includes('RECEPCI') || l.toUpperCase().includes('BODA'));
+    }
+    if (locationFilter === 'GENERAL') {
+      return !v.locations?.length || v.locations?.some(l => l.toUpperCase().includes('GENERAL'));
+    }
+    return true;
+  });
+
   return (
     <div className="space-y-8">
       {/* Top Header */}
@@ -308,14 +323,14 @@ export const ProveedoresPagosModule: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowPaymentModal(true)}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold rounded-xl border border-stone-200 transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition shadow-2xs cursor-pointer"
           >
-            <DollarSign className="w-3.5 h-3.5 text-stone-600" />
+            <DollarSign className="w-3.5 h-3.5 text-[#6E8C70]" />
             <span>Registrar Pago</span>
           </button>
           <button
             onClick={handleOpenAddVendor}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow transition"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Nuevo Proveedor</span>
@@ -323,49 +338,49 @@ export const ProveedoresPagosModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Financial Summary: COSTO REAL, MONTO PAGADO, RESTANTE (strictly no estimated budget!) */}
+      {/* Financial Summary: 3 grandes cifras destacadas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="luxury-card rounded-2xl p-6 border-l-4 border-l-stone-800">
-          <div className="flex items-center justify-between text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">
-            <span>COSTO REAL</span>
-            <DollarSign className="w-4 h-4 text-stone-400" />
+        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
+            <span>TOTAL CONTRATADO</span>
+            <DollarSign className="w-4 h-4 text-[#9C665C]" />
           </div>
-          <div className="text-3xl font-serif font-bold text-stone-900">
+          <div className="text-3xl font-serif font-bold text-[#2B2826]">
             ${financialSummary.costo_real.toLocaleString()}
           </div>
-          <div className="text-[11px] text-stone-500 mt-1">
-            Total contratado con proveedores
+          <div className="text-xs text-[#7D6F6B] mt-2">
+            Costo real con proveedores contratados
           </div>
         </div>
 
-        <div className="luxury-card rounded-2xl p-6 border-l-4 border-l-emerald-600 bg-emerald-50/20">
-          <div className="flex items-center justify-between text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-2">
+        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#577355] uppercase tracking-wider mb-2">
             <span>MONTO PAGADO</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <CheckCircle2 className="w-4 h-4 text-[#6E8C70]" />
           </div>
-          <div className="text-3xl font-serif font-bold text-emerald-800">
+          <div className="text-3xl font-serif font-bold text-[#455C44]">
             ${financialSummary.monto_pagado.toLocaleString()}
           </div>
-          <div className="text-[11px] text-emerald-700 font-medium mt-1">
+          <div className="text-xs text-[#577355] font-medium mt-2">
             Comprobado y liquidado
           </div>
         </div>
 
-        <div className="luxury-card rounded-2xl p-6 border-l-4 border-l-amber-600 bg-amber-50/20">
-          <div className="flex items-center justify-between text-xs font-semibold text-amber-700 uppercase tracking-wider mb-2">
-            <span>RESTANTE</span>
-            <Clock className="w-4 h-4 text-amber-600" />
+        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#8A574E] uppercase tracking-wider mb-2">
+            <span>SALDO RESTANTE</span>
+            <Clock className="w-4 h-4 text-[#9C665C]" />
           </div>
-          <div className="text-3xl font-serif font-bold text-amber-900">
+          <div className="text-3xl font-serif font-bold text-[#8A574E]">
             ${financialSummary.restante.toLocaleString()}
           </div>
-          <div className="text-[11px] text-amber-800 font-medium mt-1">
+          <div className="text-xs text-[#8A574E] font-medium mt-2">
             Saldo pendiente por liquidar
           </div>
         </div>
       </div>
 
-      {/* Payment Due Date Alerts Banner */}
+      {/* Alerta de Pagos Próximos (Vencimiento en 15-30 días o vencidos) */}
       {(() => {
         const urgentVendors = vendors.filter(v => {
           if (!v.payment_due_date || (v.saldo_restante !== undefined && v.saldo_restante <= 0)) return false;
@@ -376,28 +391,45 @@ export const ProveedoresPagosModule: React.FC = () => {
         if (urgentVendors.length === 0) return null;
 
         return (
-          <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-xl shadow-sm flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="bg-[#FFF8F5] border border-[#EAD2D0] p-5 rounded-2xl shadow-xs flex items-start gap-3.5">
+            <AlertTriangle className="w-5 h-5 text-[#9C665C] shrink-0 mt-0.5" />
             <div className="flex-1">
-              <h4 className="text-sm font-bold text-amber-900">
-                Recordatorio de Liquidaciones Pendientes ({urgentVendors.length})
+              <h4 className="text-sm font-bold text-[#70443D]">
+                Alerta de Pagos Próximos y Liquidaciones ({urgentVendors.length})
               </h4>
-              <p className="text-xs text-amber-700 mt-0.5">
-                Los siguientes proveedores tienen saldo pendiente y su fecha límite de pago está próxima o vencida:
+              <p className="text-xs text-[#8A574E] mt-0.5">
+                Los siguientes proveedores tienen saldo pendiente con fecha límite próxima (próximos 15-30 días) o vencida:
               </p>
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-2.5 mt-3">
                 {urgentVendors.map(v => {
                   const status = getPaymentDueStatus(v.payment_due_date, v.saldo_restante);
                   return (
-                    <span
+                    <div
                       key={v.id}
-                      onClick={() => handleOpenEditVendor(v)}
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold border cursor-pointer hover:opacity-80 transition ${status.badgeClass}`}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-[#EAD2D0] shadow-2xs"
                     >
-                      <span>{v.name}:</span>
-                      <span>${(v.saldo_restante || 0).toLocaleString()}</span>
-                      <span className="text-[10px] opacity-80">({status.label})</span>
-                    </span>
+                      <span className="font-bold text-[#2B2826]">{v.name}:</span>
+                      <span className="text-[#8A574E]">${(v.saldo_restante || 0).toLocaleString()}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${status.badgeClass}`}>
+                        {status.label}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setPaymentForm({
+                            vendor_id: v.id,
+                            concept: `Liquidación saldo ${v.name}`,
+                            amount: String(v.saldo_restante || ''),
+                            payment_date: new Date().toISOString().split('T')[0],
+                            payment_method: 'Transferencia SPEI',
+                            notes: ''
+                          });
+                          setShowPaymentModal(true);
+                        }}
+                        className="text-[11px] text-[#9C665C] hover:underline font-bold ml-1 cursor-pointer"
+                      >
+                        Pagar →
+                      </button>
+                    </div>
                   );
                 })}
               </div>
@@ -407,13 +439,56 @@ export const ProveedoresPagosModule: React.FC = () => {
       })()}
 
       {/* Vendors List Section */}
-      <div className="luxury-card rounded-2xl p-6 border border-stone-200">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Directorio de Servicios</span>
-            <h3 className="font-serif text-xl font-bold text-stone-900">Lista de Proveedores</h3>
+            <span className="text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">Directorio Operativo</span>
+            <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Lista de Proveedores</h3>
           </div>
-          <span className="text-xs text-stone-500">{vendors.length} proveedores registrados</span>
+
+          {/* Filtro de Ubicación */}
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1">
+            <button
+              onClick={() => setLocationFilter('TODAS')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                locationFilter === 'TODAS'
+                  ? 'bg-[#9C665C] text-white shadow-2xs'
+                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
+              }`}
+            >
+              Todas ({vendors.length})
+            </button>
+            <button
+              onClick={() => setLocationFilter('CIVIL')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                locationFilter === 'CIVIL'
+                  ? 'bg-[#9C665C] text-white shadow-2xs'
+                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
+              }`}
+            >
+              Civil ({vendors.filter(v => v.locations?.some(l => l.toUpperCase().includes('CIVIL'))).length})
+            </button>
+            <button
+              onClick={() => setLocationFilter('RECEPCIÓN')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                locationFilter === 'RECEPCIÓN'
+                  ? 'bg-[#9C665C] text-white shadow-2xs'
+                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
+              }`}
+            >
+              Recepción ({vendors.filter(v => v.locations?.some(l => l.toUpperCase().includes('RECEPCI') || l.toUpperCase().includes('BODA'))).length})
+            </button>
+            <button
+              onClick={() => setLocationFilter('GENERAL')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                locationFilter === 'GENERAL'
+                  ? 'bg-[#9C665C] text-white shadow-2xs'
+                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
+              }`}
+            >
+              General ({vendors.filter(v => !v.locations?.length || v.locations?.some(l => l.toUpperCase().includes('GENERAL'))).length})
+            </button>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -434,10 +509,10 @@ export const ProveedoresPagosModule: React.FC = () => {
             <tbody className="divide-y divide-[#EFEAE2] text-xs">
               {loading ? (
                 <tr><td colSpan={9} className="py-8 text-center text-[#786C68]">Cargando proveedores...</td></tr>
-              ) : vendors.length === 0 ? (
-                <tr><td colSpan={9} className="py-8 text-center text-[#786C68]">No hay proveedores registrados. Agrega uno con el botón superior.</td></tr>
+              ) : filteredVendors.length === 0 ? (
+                <tr><td colSpan={9} className="py-8 text-center text-[#786C68]">No hay proveedores que coincidan con el filtro.</td></tr>
               ) : (
-                vendors.map(v => {
+                filteredVendors.map(v => {
                   const dueStatus = getPaymentDueStatus(v.payment_due_date, v.saldo_restante);
                   return (
                     <tr key={v.id} className="hover:bg-[#F9F6F2] transition group">

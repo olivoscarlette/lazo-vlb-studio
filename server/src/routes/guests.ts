@@ -34,7 +34,8 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
       COALESCE(SUM(1 + companion_count), 0) as total_places_all,
       COALESCE(SUM(CASE WHEN status = 'Confirmado' THEN 1 + companion_count ELSE 0 END), 0) as confirmed_places,
       COALESCE(SUM(CASE WHEN status = 'Pendiente de confirmar' THEN 1 + companion_count ELSE 0 END), 0) as pending_places,
-      COALESCE(SUM(CASE WHEN status = 'No asistirá' THEN 1 + companion_count ELSE 0 END), 0) as declined_places
+      COALESCE(SUM(CASE WHEN status = 'No asistirá' THEN 1 + companion_count ELSE 0 END), 0) as declined_places,
+      SUM(CASE WHEN table_id IS NULL AND status != 'No asistirá' THEN 1 ELSE 0 END) as unassigned
     FROM guests
     WHERE wedding_id = ?
   `).get(weddingId) as any;

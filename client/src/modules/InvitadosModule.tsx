@@ -577,12 +577,66 @@ export const InvitadosModule: React.FC = () => {
 
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Nuevo Invitado</span>
           </button>
         </div>
+      </div>
+
+      {/* Barra de Pestañas de Filtro Rápido */}
+      <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
+        <button
+          onClick={() => { setStatusFilter(''); setTableFilter(''); setPage(1); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+            statusFilter === '' && tableFilter === ''
+              ? 'bg-[#9C665C] text-white shadow-xs'
+              : 'bg-[#FFFFFF] text-[#5E524E] border border-[#EAE3DA] hover:bg-[#F7F3EE]'
+          }`}
+        >
+          Todos ({summary.total})
+        </button>
+        <button
+          onClick={() => { setStatusFilter('Confirmado'); setTableFilter(''); setPage(1); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+            statusFilter === 'Confirmado' && tableFilter === ''
+              ? 'bg-[#6E8C70] text-white shadow-xs'
+              : 'bg-[#FFFFFF] text-[#354B38] border border-[#CCDACC] hover:bg-[#E4ECE5]'
+          }`}
+        >
+          Confirmados ({summary.confirmed})
+        </button>
+        <button
+          onClick={() => { setStatusFilter('Pendiente de confirmar'); setTableFilter(''); setPage(1); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+            statusFilter === 'Pendiente de confirmar' && tableFilter === ''
+              ? 'bg-[#8A574E] text-white shadow-xs'
+              : 'bg-[#FFFFFF] text-[#6D5A43] border border-[#EAE3DA] hover:bg-[#F7F3EE]'
+          }`}
+        >
+          Pendientes ({summary.pending})
+        </button>
+        <button
+          onClick={() => { setStatusFilter('No asistirá'); setTableFilter(''); setPage(1); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+            statusFilter === 'No asistirá' && tableFilter === ''
+              ? 'bg-[#70443D] text-white shadow-xs'
+              : 'bg-[#FFFFFF] text-[#70443D] border border-[#EAD2D0] hover:bg-[#FBF4F3]'
+          }`}
+        >
+          No asistirán ({summary.declined})
+        </button>
+        <button
+          onClick={() => { setTableFilter('unassigned'); setStatusFilter(''); setPage(1); }}
+          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+            tableFilter === 'unassigned'
+              ? 'bg-[#9C665C] text-white shadow-xs'
+              : 'bg-[#FFFFFF] text-[#7D6F6B] border border-[#EAE3DA] hover:bg-[#F7F3EE]'
+          }`}
+        >
+          Sin Mesa Asignada ({(summary as any).unassigned ?? '—'})
+        </button>
       </div>
 
       {/* WhatsApp Feedback Banner */}
@@ -803,10 +857,10 @@ export const InvitadosModule: React.FC = () => {
                     className="hover:bg-[#F9F6F2] transition group"
                   >
                     {/* Clickable name opens fast edit — Single line */}
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <div
                         onClick={() => handleOpenEdit(guest)}
-                        className="cursor-pointer font-semibold text-[#332C2A] group-hover:text-[#9C665C] inline-flex items-center space-x-2 whitespace-nowrap"
+                        className="cursor-pointer font-semibold text-sm text-[#2B2826] group-hover:text-[#9C665C] inline-flex items-center space-x-2 whitespace-nowrap"
                       >
                         <span className="underline decoration-[#D2C4B4] decoration-1 underline-offset-4 whitespace-nowrap">
                           {guest.first_name} {guest.last_name}
@@ -815,44 +869,55 @@ export const InvitadosModule: React.FC = () => {
                       </div>
                     </td>
 
-                    {/* WhatsApp — Single line, fits entire phone number */}
-                    <td className="py-3 px-4 whitespace-nowrap min-w-[175px]">
-                      <a
-                        href={`https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center space-x-2 text-[#4A3F3C] hover:text-[#9C665C] transition font-mono whitespace-nowrap"
-                        title="Abrir chat en WhatsApp"
-                      >
-                        <MessageSquare className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
-                        <span className="whitespace-nowrap">{guest.phone}</span>
-                      </a>
+                    {/* WhatsApp — Single line with 1-click personalized link */}
+                    <td className="py-3.5 px-4 whitespace-nowrap min-w-[195px]">
+                      {guest.phone ? (
+                        <div className="inline-flex items-center space-x-2">
+                          <a
+                            href={`https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
+                              `Hola ${guest.first_name}! 💍 Nos emociona mucho celebrar nuestra boda contigo (${
+                                currentWedding?.partner_1_name && currentWedding?.partner_2_name
+                                  ? `${currentWedding.partner_1_name} & ${currentWedding.partner_2_name}`
+                                  : (currentWedding?.name || 'VLB Studio')
+                              }). ¿Nos confirmas tu asistencia? (Tienes ${1 + guest.companion_count} ${1 + guest.companion_count === 1 ? 'pase reservado' : 'pases reservados'}).`
+                            )}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-1.5 rounded-lg bg-[#E4ECE5] hover:bg-[#CCDACC] text-[#354B38] transition shadow-2xs shrink-0"
+                            title="Enviar mensaje personalizado por WhatsApp (1 clic)"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </a>
+                          <span className="font-mono text-sm text-[#4A3F3C]">{guest.phone}</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-[#7D6F6B] italic">Sin teléfono</span>
+                      )}
                     </td>
 
                     {/* Companion count — Single line */}
-                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <div className="inline-flex items-center space-x-1.5 whitespace-nowrap">
-                        <span className="font-semibold text-[#332C2A] bg-[#EFE8DE] px-2.5 py-0.5 rounded-full border border-[#DDD2C4]">
+                        <span className="font-semibold text-xs text-[#2B2826] bg-[#EFE8DE] px-2.5 py-0.5 rounded-full border border-[#DDD2C4]">
                           {guest.companion_count}
                         </span>
-                        <span className="text-[11px] text-[#786C68] whitespace-nowrap">
+                        <span className="text-xs text-[#7D6F6B] whitespace-nowrap">
                           ({1 + guest.companion_count} {1 + guest.companion_count === 1 ? 'lugar' : 'lugares'})
                         </span>
                       </div>
                     </td>
 
                     {/* Inline Prioridad Dropdown */}
-                    <td className="py-3 px-4 whitespace-nowrap">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <select
                         value={guest.priority || 'Media'}
                         onChange={e => handleInlinePriorityChange(guest, e.target.value as 'Alta' | 'Media' | 'Baja')}
-                        style={{ fontSize: '0.82rem' }}
-                        className={`font-semibold rounded-lg px-2.5 py-1 border transition focus:outline-none cursor-pointer ${
+                        className={`text-xs font-semibold rounded-xl px-2.5 py-1.5 border transition focus:outline-none cursor-pointer ${
                           (guest.priority || 'Media') === 'Alta'
-                            ? 'bg-[#EAD8DE] text-[#6E433F] border-[#DFC9D0]'
+                            ? 'bg-[#FBF4F3] text-[#70443D] border-[#EAD2D0]'
                             : (guest.priority || 'Media') === 'Baja'
-                            ? 'bg-[#F5F3EF] text-[#786C68] border-[#E2DAD0]'
-                            : 'bg-[#EFE8DE] text-[#5A524C] border-[#DDD2C4]'
+                            ? 'bg-[#F7F3EE] text-[#7D6F6B] border-[#EAE3DA]'
+                            : 'bg-[#FCFAF7] text-[#5A524C] border-[#EAE3DA]'
                         }`}
                       >
                         <option value="Alta">Alta</option>
@@ -861,18 +926,17 @@ export const InvitadosModule: React.FC = () => {
                       </select>
                     </td>
 
-                    {/* Inline Estatus Dropdown — Compact width */}
-                    <td className="py-3 px-4 whitespace-nowrap w-[150px]">
+                    {/* Inline Estatus Dropdown — Soft Sage / Terracotta */}
+                    <td className="py-3.5 px-4 whitespace-nowrap w-[160px]">
                       <select
                         value={guest.status}
                         onChange={e => handleInlineStatusChange(guest, e.target.value as any)}
-                        style={{ fontSize: '0.82rem' }}
-                        className={`w-34 font-semibold rounded-lg px-2.5 py-1 border transition focus:outline-none cursor-pointer ${
+                        className={`w-38 text-xs font-semibold rounded-xl px-2.5 py-1.5 border transition focus:outline-none cursor-pointer ${
                           guest.status === 'Confirmado'
-                            ? 'bg-[#EFE2DF] text-[#7A4E49] border-[#DFC9C4]'
+                            ? 'bg-[#E4ECE5] text-[#354B38] border-[#CCDACC]'
                             : guest.status === 'No asistirá'
-                            ? 'bg-[#EFEBE9] text-[#6E5D59] border-[#D8CECA]'
-                            : 'bg-[#EFE8DE] text-[#6D5A43] border-[#DDD2C4]'
+                            ? 'bg-[#FBF4F3] text-[#70443D] border-[#EAD2D0]'
+                            : 'bg-[#F7F3EE] text-[#6D5A43] border-[#EAE3DA]'
                         }`}
                       >
                         <option value="Pendiente de confirmar">Pendiente</option>

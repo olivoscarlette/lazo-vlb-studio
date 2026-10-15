@@ -20,6 +20,7 @@ export const TimelineModule: React.FC = () => {
   // View Mode: 'operation' (Modo Operación Día Boda) vs 'planning' (Cronograma de planeación)
   const [viewMode, setViewMode] = useState<'operation' | 'planning'>('operation');
   const [activeDayTab, setActiveDayTab] = useState<'BODA' | 'CIVIL'>('BODA');
+  const [roleFilter, setRoleFilter] = useState<string>('TODOS');
   const [showFullProgramInOp, setShowFullProgramInOp] = useState(false);
   const [vendorLocFilter, setVendorLocFilter] = useState<string>('ALL');
   const [currentTimeStr, setCurrentTimeStr] = useState<string>('');
@@ -306,6 +307,36 @@ export const TimelineModule: React.FC = () => {
   const bodaEventsCount = timeline.filter(t => (t.day_type || 'BODA') === 'BODA').length;
   const civilEventsCount = timeline.filter(t => t.day_type === 'CIVIL').length;
   const activeTimeline = timeline.filter(t => (t.day_type || 'BODA') === activeDayTab);
+
+  const ROLE_TABS = [
+    { id: 'TODOS', label: 'Todos' },
+    { id: 'COORDINACION', label: 'Coordinación' },
+    { id: 'FOTO_VIDEO', label: 'Fotografía & Video' },
+    { id: 'BANQUETE', label: 'Banquete' },
+    { id: 'MUSICA_DJ', label: 'Música & DJ' }
+  ];
+
+  const roleFilteredTimeline = activeTimeline.filter(item => {
+    if (roleFilter === 'TODOS') return true;
+    const resp = (item.responsible || '').toLowerCase();
+    const act = (item.activity || '').toLowerCase();
+    const notes = (item.notes || '').toLowerCase();
+    const combo = `${resp} ${act} ${notes}`;
+
+    if (roleFilter === 'COORDINACION') {
+      return combo.includes('coord') || combo.includes('vlb') || combo.includes('staff') || combo.includes('montaje') || combo.includes('revisión') || combo.includes('llegada');
+    }
+    if (roleFilter === 'FOTO_VIDEO') {
+      return combo.includes('foto') || combo.includes('video') || combo.includes('sesión') || combo.includes('first look') || combo.includes('retrato');
+    }
+    if (roleFilter === 'BANQUETE') {
+      return combo.includes('banquet') || combo.includes('cena') || combo.includes('catering') || combo.includes('cocktail') || combo.includes('coctel') || combo.includes('brindis') || combo.includes('pastel') || combo.includes('comida');
+    }
+    if (roleFilter === 'MUSICA_DJ') {
+      return combo.includes('dj') || combo.includes('músic') || combo.includes('banda') || combo.includes('vals') || combo.includes('baile') || combo.includes('fiesta') || combo.includes('audio');
+    }
+    return true;
+  });
 
   // Operational Timeline progression logic
   const inProgressEvent = activeTimeline.find(t => t.status === 'EN_CURSO') || null;
@@ -651,8 +682,25 @@ export const TimelineModule: React.FC = () => {
                 </button>
               </div>
 
+              {/* Role Filter Tabs */}
+              <div className="flex flex-wrap items-center gap-1.5 py-1">
+                {ROLE_TABS.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setRoleFilter(tab.id)}
+                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition ${
+                      roleFilter === tab.id
+                        ? 'bg-[#9C665C] text-white shadow-xs'
+                        : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#EFE8DE] border border-[#DDD2C4]'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
               <div className="divide-y divide-[#EFE8DE]">
-                {activeTimeline.map(item => (
+                {roleFilteredTimeline.map(item => (
                   <div
                     key={item.id}
                     className={`py-3.5 px-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition ${
@@ -961,80 +1009,102 @@ export const TimelineModule: React.FC = () => {
         <div>
           {loading ? (
             <div className="py-12 text-center text-stone-400 text-xs">Cargando timeline...</div>
-          ) : activeTimeline.length === 0 ? (
+          ) : roleFilteredTimeline.length === 0 ? (
             <div className="luxury-card rounded-2xl p-8 text-center text-stone-400 text-xs border border-dashed border-stone-300">
-              No hay actividades programadas en el timeline de{' '}
-              <strong>{activeDayTab === 'CIVIL' ? 'Día Ceremonia Civil' : 'Día Boda Principal'}</strong>. Haz clic en "Agregar Actividad".
+              No hay actividades programadas con el filtro seleccionado en{' '}
+              <strong>{activeDayTab === 'CIVIL' ? 'Día Ceremonia Civil' : 'Día Boda Principal'}</strong>.
             </div>
           ) : (
-            <div className="relative pl-6 sm:pl-8 space-y-4 before:content-[''] before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-stone-200">
-              {activeTimeline.map(item => (
-                <div
-                  key={item.id}
-                  className="relative luxury-card rounded-2xl p-5 border border-stone-200 hover:border-stone-400 transition"
-                >
-                  {/* Status Dot on the vertical line */}
-                  <div
-                    onClick={() => handleToggleStatus(item)}
-                    title="Haz clic para avanzar estatus"
-                    className={`absolute -left-7 sm:-left-8 top-6 w-3 h-3 rounded-full cursor-pointer ring-4 ring-white transition ${
-                      item.status === 'COMPLETADO'
-                        ? 'bg-emerald-600'
-                        : item.status === 'EN_CURSO'
-                        ? 'bg-amber-500 animate-pulse'
-                        : 'bg-stone-400'
+            <div>
+              {/* Role Filter Tabs */}
+              <div className="flex flex-wrap items-center gap-2 mb-6">
+                <span className="text-xs font-semibold text-[#8A7E72] mr-1">Filtrar por rol:</span>
+                {ROLE_TABS.map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setRoleFilter(tab.id)}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
+                      roleFilter === tab.id
+                        ? 'bg-[#9C665C] text-white shadow-xs'
+                        : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
                     }`}
-                  />
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
 
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-center space-x-3">
-                      <span className="font-mono text-sm font-bold text-stone-900 bg-stone-100 px-2.5 py-1 rounded-lg">
-                        {item.time}
-                      </span>
-                      <h3 className="font-serif text-lg font-bold text-stone-900">
-                        {item.activity}
-                      </h3>
-                      <span
-                        className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
-                          item.day_type === 'CIVIL'
-                            ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                            : 'bg-stone-100 text-stone-600'
-                        }`}
-                      >
-                        {item.day_type === 'CIVIL' ? '⚖️ Día Civil' : '💍 Día Boda'}
-                      </span>
+              <div className="relative pl-6 sm:pl-8 space-y-4 before:content-[''] before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-[#EAE3DA]">
+                {roleFilteredTimeline.map(item => (
+                  <div
+                    key={item.id}
+                    className="relative bg-white rounded-2xl p-5 border border-[#EAE3DA] hover:border-[#DDD2C4] shadow-xs transition"
+                  >
+                    {/* Status Dot on the vertical line */}
+                    <div
+                      onClick={() => handleToggleStatus(item)}
+                      title="Haz clic para avanzar estatus"
+                      className={`absolute -left-7 sm:-left-8 top-6 w-3 h-3 rounded-full cursor-pointer ring-4 ring-white transition ${
+                        item.status === 'COMPLETADO'
+                          ? 'bg-emerald-600'
+                          : item.status === 'EN_CURSO'
+                          ? 'bg-amber-500 animate-pulse'
+                          : 'bg-stone-400'
+                      }`}
+                    />
+
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="font-mono text-sm font-bold text-[#2B2826] bg-[#FAF8F5] px-3 py-1 rounded-xl border border-[#EAE3DA]">
+                          {item.time} hrs
+                        </span>
+                        <h3 className="font-serif text-lg font-bold text-[#2B2826]">
+                          {item.activity}
+                        </h3>
+                        <span
+                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                            item.day_type === 'CIVIL'
+                              ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                              : 'bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA]'
+                          }`}
+                        >
+                          {item.day_type === 'CIVIL' ? '⚖️ Día Civil' : '💍 Día Boda'}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        {/* Botón Rápido Completado para Día B */}
+                        <button
+                          onClick={() => handleToggleStatus(item)}
+                          className={`inline-flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition ${
+                            item.status === 'COMPLETADO'
+                              ? 'bg-[#E4ECE5] text-[#2B5235] border-[#BDD4C1]'
+                              : item.status === 'EN_CURSO'
+                              ? 'bg-amber-50 text-amber-800 border-amber-300'
+                              : 'bg-[#FAF8F5] hover:bg-[#EFE8DE] text-[#2B2826] border-[#EAE3DA]'
+                          }`}
+                          title="Haz clic para alternar estatus en tiempo real"
+                        >
+                          <Check className="w-3.5 h-3.5 text-[#4B7355]" />
+                          <span>{item.status === 'COMPLETADO' ? 'Completado' : item.status === 'EN_CURSO' ? 'En Curso' : 'Marcar Hecho'}</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleOpenEdit(item)}
+                          className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-[#FAF8F5]"
+                          title="Editar"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteEvent(item.id)}
+                          className="text-stone-300 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleToggleStatus(item)}
-                        className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full border transition ${
-                          item.status === 'COMPLETADO'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : item.status === 'EN_CURSO'
-                            ? 'bg-amber-50 text-amber-800 border-amber-300'
-                            : 'bg-stone-100 text-stone-600 border-stone-200'
-                        }`}
-                      >
-                        {item.status.replace('_', ' ')}
-                      </button>
-
-                      <button
-                        onClick={() => handleOpenEdit(item)}
-                        className="text-stone-400 hover:text-stone-700 p-1"
-                        title="Editar"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteEvent(item.id)}
-                        className="text-stone-300 hover:text-rose-600 p-1"
-                        title="Eliminar"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
 
                   <div className="flex flex-wrap items-center gap-4 text-xs text-stone-600 mt-2">
                     {item.location && (
@@ -1058,6 +1128,7 @@ export const TimelineModule: React.FC = () => {
                   )}
                 </div>
               ))}
+              </div>
             </div>
           )}
         </div>

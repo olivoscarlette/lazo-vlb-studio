@@ -189,6 +189,24 @@ export const WhatsAppHubModule: React.FC = () => {
     }
   };
 
+  const handleApplyTemplate = (templateType: 1 | 2 | 3) => {
+    if (!activeConversation) return;
+    const name = activeConversation.guest_name || 'Invitado';
+    const wedding = activeConversation.wedding_name || 'los novios';
+    const seats = 1 + (activeConversation.companion_count || 0);
+    const table = activeConversation.table_name || 'Pendiente de asignar';
+
+    let text = '';
+    if (templateType === 1) {
+      text = `¡Hola ${name}! 👋 Te recordamos que la fecha límite para confirmar tu asistencia a la boda de ${wedding} se acerca. Tienes ${seats} lugar(es) reservado(s) a tu nombre. ¿Podrás acompañarnos? Por favor confírmanos por este medio.`;
+    } else if (templateType === 2) {
+      text = `¡Hola ${name}! 📍 Te compartimos los detalles de la boda de ${wedding}: La recepción se llevará a cabo en Fábrica La Fama. Código de vestimenta: Formal / Rigurosa Etiqueta. Te esperamos con mucha alegría.`;
+    } else if (templateType === 3) {
+      text = `¡Hola ${name}! ✨ ¡Hoy es el gran día de ${wedding}! Te esperamos con mucha emoción. Tu mesa asignada es: ${table}. Al llegar, el equipo de coordinación VLB Studio te guiará a tu lugar. ¡A disfrutar!`;
+    }
+    setNewMessage(text);
+  };
+
   return (
     <div className="bg-[#FFFFFF] rounded-3xl border border-[#DDD2C4] shadow-xs overflow-hidden h-[calc(100vh-12rem)] min-h-[580px] flex flex-col">
       {/* Top Header Bar */}
@@ -460,6 +478,38 @@ export const WhatsAppHubModule: React.FC = () => {
                     );
                   })
                 )}
+              </div>
+
+              {/* Plantillas de 1 Clic con variables de la boda */}
+              <div className="px-4 py-2 bg-[#FCFAF7] border-t border-[#DDD2C4] flex items-center gap-1.5 overflow-x-auto">
+                <span className="text-[11px] font-semibold text-[#8A7E72] whitespace-nowrap flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-[#9C665C]" />
+                  <span>Plantillas rápidas:</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleApplyTemplate(1)}
+                  className="px-2.5 py-1 rounded-xl bg-white hover:bg-[#EFE8DE] text-[#2B2826] border border-[#EAE3DA] text-[11px] font-medium whitespace-nowrap transition shadow-2xs"
+                  title="Cargar recordatorio RSVP y acompañantes"
+                >
+                  ⚡ 1. Recordatorio RSVP
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleApplyTemplate(2)}
+                  className="px-2.5 py-1 rounded-xl bg-white hover:bg-[#EFE8DE] text-[#2B2826] border border-[#EAE3DA] text-[11px] font-medium whitespace-nowrap transition shadow-2xs"
+                  title="Cargar ubicación, dress code y horarios"
+                >
+                  📍 2. Ubicación & Dress Code
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleApplyTemplate(3)}
+                  className="px-2.5 py-1 rounded-xl bg-white hover:bg-[#EFE8DE] text-[#2B2826] border border-[#EAE3DA] text-[11px] font-medium whitespace-nowrap transition shadow-2xs"
+                  title="Cargar asignación de mesa para el Día B"
+                >
+                  🍽️ 3. Mesa Día B
+                </button>
               </div>
 
               {/* Message Input Footer */}
