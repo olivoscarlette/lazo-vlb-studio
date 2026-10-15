@@ -552,9 +552,9 @@ export const WhatsAppHubModule: React.FC = () => {
                       ? 'bg-[#9C665C] text-white border-[#9C665C]'
                       : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border-[#EAE3DA]'
                   }`}
-                  title="Cargar asignación de mesa para el Día B"
+                  title="Cargar asignación de mesa para el Día Boda"
                 >
-                  🍽️ 3. Mesa Día B
+                  🍽️ 3. Mesa Día Boda
                 </button>
               </div>
 

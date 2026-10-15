@@ -1008,9 +1008,9 @@ export const TimelineModule: React.FC = () => {
         /* ========================================================================= */
         <div>
           {loading ? (
-            <div className="py-12 text-center text-stone-400 text-xs">Cargando timeline...</div>
+            <div className="py-12 text-center text-[#8A7E72] text-sm">Cargando timeline...</div>
           ) : roleFilteredTimeline.length === 0 ? (
-            <div className="luxury-card rounded-2xl p-8 text-center text-stone-400 text-xs border border-dashed border-stone-300">
+            <div className="bg-white rounded-3xl p-8 text-center text-[#8A7E72] text-sm border border-dashed border-[#EAE3DA]">
               No hay actividades programadas con el filtro seleccionado en{' '}
               <strong>{activeDayTab === 'CIVIL' ? 'Día Ceremonia Civil' : 'Día Boda Principal'}</strong>.
             </div>
@@ -1023,10 +1023,10 @@ export const TimelineModule: React.FC = () => {
                   <button
                     key={tab.id}
                     onClick={() => setRoleFilter(tab.id)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                       roleFilter === tab.id
                         ? 'bg-[#9C665C] text-white shadow-xs'
-                        : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+                        : 'bg-white text-[#2B2826] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
                     }`}
                   >
                     {tab.label}
@@ -1038,7 +1038,7 @@ export const TimelineModule: React.FC = () => {
                 {roleFilteredTimeline.map(item => (
                   <div
                     key={item.id}
-                    className="relative bg-white rounded-2xl p-5 border border-[#EAE3DA] hover:border-[#DDD2C4] shadow-xs transition"
+                    className="relative bg-white rounded-3xl p-5 border border-[#EAE3DA] hover:border-[#9C665C]/40 shadow-xs transition"
                   >
                     {/* Status Dot on the vertical line */}
                     <div
@@ -1046,23 +1046,23 @@ export const TimelineModule: React.FC = () => {
                       title="Haz clic para avanzar estatus"
                       className={`absolute -left-7 sm:-left-8 top-6 w-3 h-3 rounded-full cursor-pointer ring-4 ring-white transition ${
                         item.status === 'COMPLETADO'
-                          ? 'bg-emerald-600'
+                          ? 'bg-[#4B7355]'
                           : item.status === 'EN_CURSO'
                           ? 'bg-amber-500 animate-pulse'
-                          : 'bg-stone-400'
+                          : 'bg-[#DDD2C4]'
                       }`}
                     />
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className="font-mono text-sm font-bold text-[#2B2826] bg-[#FAF8F5] px-3 py-1 rounded-xl border border-[#EAE3DA]">
+                        <span className="font-mono text-sm font-semibold text-[#2B2826] bg-[#FAF8F5] px-3 py-1 rounded-xl border border-[#EAE3DA]">
                           {item.time} hrs
                         </span>
-                        <h3 className="font-serif text-lg font-bold text-[#2B2826]">
+                        <h3 className="font-serif text-lg font-semibold text-[#2B2826]">
                           {item.activity}
                         </h3>
                         <span
-                          className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                          className={`text-xs font-semibold uppercase px-2.5 py-0.5 rounded-full ${
                             item.day_type === 'CIVIL'
                               ? 'bg-amber-50 text-amber-800 border border-amber-200'
                               : 'bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA]'
@@ -1073,15 +1073,15 @@ export const TimelineModule: React.FC = () => {
                       </div>
 
                       <div className="flex items-center space-x-2">
-                        {/* Botón Rápido Completado para Día B */}
+                        {/* Botón Rápido Completado para Día Boda */}
                         <button
                           onClick={() => handleToggleStatus(item)}
-                          className={`inline-flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition ${
+                          className={`inline-flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition cursor-pointer ${
                             item.status === 'COMPLETADO'
                               ? 'bg-[#E4ECE5] text-[#2B5235] border-[#BDD4C1]'
                               : item.status === 'EN_CURSO'
                               ? 'bg-amber-50 text-amber-800 border-amber-300'
-                              : 'bg-[#FAF8F5] hover:bg-[#EFE8DE] text-[#2B2826] border-[#EAE3DA]'
+                              : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border-[#EAE3DA]'
                           }`}
                           title="Haz clic para alternar estatus en tiempo real"
                         >
@@ -1091,14 +1091,14 @@ export const TimelineModule: React.FC = () => {
 
                         <button
                           onClick={() => handleOpenEdit(item)}
-                          className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-[#FAF8F5]"
+                          className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-xl hover:bg-[#FAF8F5] transition cursor-pointer"
                           title="Editar"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteEvent(item.id)}
-                          className="text-stone-300 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50"
+                          className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-xl hover:bg-rose-50 transition cursor-pointer"
                           title="Eliminar"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -1106,28 +1106,28 @@ export const TimelineModule: React.FC = () => {
                       </div>
                     </div>
 
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-stone-600 mt-2">
-                    {item.location && (
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="w-3.5 h-3.5 text-stone-400" />
-                        <span>{item.location}</span>
-                      </div>
-                    )}
-                    {item.responsible && (
-                      <div className="flex items-center space-x-1 font-medium">
-                        <User className="w-3.5 h-3.5 text-stone-400" />
-                        <span>Resp: {item.responsible}</span>
-                      </div>
+                    <div className="flex flex-wrap items-center gap-4 text-xs text-[#8A7E72] mt-2">
+                      {item.location && (
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="w-3.5 h-3.5 text-[#8A7E72]" />
+                          <span>{item.location}</span>
+                        </div>
+                      )}
+                      {item.responsible && (
+                        <div className="flex items-center space-x-1 font-medium text-[#2B2826]">
+                          <User className="w-3.5 h-3.5 text-[#8A7E72]" />
+                          <span>Resp: {item.responsible}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {item.notes && (
+                      <p className="text-xs text-[#2B2826] mt-2 bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EAE3DA] italic">
+                        {item.notes}
+                      </p>
                     )}
                   </div>
-
-                  {item.notes && (
-                    <p className="text-xs text-stone-500 mt-2 bg-stone-50 p-2 rounded-xl italic">
-                      {item.notes}
-                    </p>
-                  )}
-                </div>
-              ))}
+                ))}
               </div>
             </div>
           )}
@@ -1136,23 +1136,23 @@ export const TimelineModule: React.FC = () => {
 
       {/* Modal: Agregar / Editar Evento */}
       {showEventModal && (
-        <div className="fixed inset-0 bg-stone-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200 animate-in fade-in zoom-in-95">
-            <h3 className="font-serif text-xl font-bold text-stone-900 mb-4">
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA] animate-in fade-in zoom-in-95">
+            <h3 className="font-serif text-xl font-semibold text-[#2B2826] mb-4">
               {editingEvent ? 'Editar Actividad' : 'Nueva Actividad en Timeline'}
             </h3>
 
             <form onSubmit={handleSaveEvent} className="space-y-3">
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">¿A qué día pertenece esta actividad?</label>
+                <label className="block text-xs font-semibold text-[#2B2826] mb-1">¿A qué día pertenece esta actividad?</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, day_type: 'BODA' })}
-                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition ${
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
                       formData.day_type === 'BODA'
-                        ? 'bg-stone-900 text-white border-stone-900'
-                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'
+                        ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                        : 'bg-[#FAF8F5] text-[#2B2826] border-[#EAE3DA] hover:border-[#9C665C]'
                     }`}
                   >
                     💍 Día Boda Principal
@@ -1160,10 +1160,10 @@ export const TimelineModule: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, day_type: 'CIVIL' })}
-                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition ${
+                    className={`px-3 py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
                       formData.day_type === 'CIVIL'
                         ? 'bg-[#9C665C] text-white border-[#9C665C]'
-                        : 'bg-stone-50 text-stone-600 border-stone-200 hover:border-stone-400'
+                        : 'bg-[#FAF8F5] text-[#2B2826] border-[#EAE3DA] hover:border-[#9C665C]'
                     }`}
                   >
                     ⚖️ Día Ceremonia Civil
@@ -1173,57 +1173,57 @@ export const TimelineModule: React.FC = () => {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Hora *</label>
+                  <label className="block text-xs font-semibold text-[#2B2826] mb-1">Hora *</label>
                   <input
                     type="time"
                     required
                     value={formData.time}
                     onChange={e => setFormData({ ...formData, time: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs font-mono focus:ring-2 focus:ring-stone-900"
+                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs font-mono bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Actividad *</label>
+                  <label className="block text-xs font-semibold text-[#2B2826] mb-1">Actividad *</label>
                   <input
                     type="text"
                     required
                     placeholder="Ej. Entrada de Novios al Salón"
                     value={formData.activity}
                     onChange={e => setFormData({ ...formData, activity: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Ubicación</label>
+                  <label className="block text-xs font-semibold text-[#2B2826] mb-1">Ubicación</label>
                   <input
                     type="text"
                     placeholder="Salón Principal"
                     value={formData.location}
                     onChange={e => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Responsable</label>
+                  <label className="block text-xs font-semibold text-[#2B2826] mb-1">Responsable</label>
                   <input
                     type="text"
                     placeholder="Mariana / DJ"
                     value={formData.responsible}
                     onChange={e => setFormData({ ...formData, responsible: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Estatus</label>
+                <label className="block text-xs font-semibold text-[#2B2826] mb-1">Estatus</label>
                 <select
                   value={formData.status}
                   onChange={e => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                 >
                   <option value="PENDIENTE">PENDIENTE</option>
                   <option value="EN_CURSO">EN CURSO</option>
@@ -1232,27 +1232,27 @@ export const TimelineModule: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Notas Operativas</label>
+                <label className="block text-xs font-semibold text-[#2B2826] mb-1">Notas Operativas</label>
                 <textarea
                   rows={2}
                   placeholder="Instrucciones para el staff, música especial, etc."
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-stone-100">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#FAF8F5]">
                 <button
                   type="button"
                   onClick={() => setShowEventModal(false)}
-                  className="px-4 py-2 text-xs text-stone-600 hover:bg-stone-100 rounded-xl"
+                  className="px-4 py-2 text-xs font-semibold text-[#8A7E72] hover:bg-[#FAF8F5] rounded-xl transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-bold uppercase tracking-wider bg-stone-900 text-white rounded-xl hover:bg-stone-800 shadow"
+                  className="px-5 py-2 text-xs font-semibold bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs transition cursor-pointer"
                 >
                   Guardar
                 </button>

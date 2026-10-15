@@ -82,7 +82,8 @@ const parseReadingsList = (raw?: string): ReadingItem[] => {
 };
 
 export const ReligiosaModule: React.FC = () => {
-  const { currentWedding, token } = useAuth();
+  const { currentWedding, token, user } = useAuth();
+  const isNovios = user?.role === 'NOVIOS';
   const [religious, setReligious] = useState<ReligiousCeremony | null>(null);
   const [reusedVendors, setReusedVendors] = useState<Vendor[]>([]);
   const [confirmedGuests, setConfirmedGuests] = useState<Guest[]>([]);
@@ -111,6 +112,24 @@ export const ReligiosaModule: React.FC = () => {
   const [newReadingTitle, setNewReadingTitle] = useState('');
   const [newReadingReader, setNewReadingReader] = useState('');
   const [newReq, setNewReq] = useState('');
+
+  const handleDeactivateCeremony = async () => {
+    if (!window.confirm('¿Deseas ocultar y desactivar la ceremonia religiosa para esta boda?')) return;
+    await handleSave({
+      date: '',
+      time: '',
+      temple_name: '',
+      officiant: '',
+      notes: '',
+      music_notes: '',
+      readings_notes: '',
+      requirements_status: []
+    });
+    setMusicList([]);
+    setReadingsList([]);
+    setIsConfiguring(false);
+    setIsEditingDetails(false);
+  };
 
   const fetchReligiousData = async () => {
     if (!currentWedding || !token) return;
@@ -297,7 +316,7 @@ export const ReligiosaModule: React.FC = () => {
   };
 
   if (loading || !religious) {
-    return <div className="py-20 text-center text-stone-400 text-sm">Cargando datos de ceremonia religiosa...</div>;
+    return <div className="py-20 text-center text-[#8A7E72] text-sm">Cargando datos de ceremonia religiosa...</div>;
   }
 
   const confirmedGuestNames = confirmedGuests.map(g => `${g.first_name} ${g.last_name}`.trim());
@@ -343,13 +362,13 @@ export const ReligiosaModule: React.FC = () => {
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-[#8A7E72]">
+            <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
               Liturgia y Templo
             </span>
-            <h2 className="font-serif text-3xl font-bold text-[#2B2826]">
+            <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
               Ceremonia Religiosa
             </h2>
-            <p className="text-xs text-[#8A7E72] mt-1">
+            <p className="text-sm text-[#8A7E72] mt-1">
               Parroquia, celebrante, listado musical litúrgico y lecturas con lectores confirmados.
             </p>
           </div>
@@ -359,10 +378,10 @@ export const ReligiosaModule: React.FC = () => {
           <div className="w-16 h-16 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-center justify-center mx-auto mb-5 text-[#9C665C]">
             <Church className="w-8 h-8 stroke-[1.5]" />
           </div>
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72] bg-[#FAF8F5] px-3 py-1 rounded-full border border-[#EAE3DA]">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#8A7E72] bg-[#FAF8F5] px-3 py-1 rounded-full border border-[#EAE3DA]">
             Módulo Opcional
           </span>
-          <h3 className="font-serif text-2xl font-bold text-[#2B2826] mt-3 mb-2">
+          <h3 className="font-serif text-2xl font-semibold text-[#2B2826] mt-3 mb-2">
             Sin Ceremonia Religiosa Registrada
           </h3>
           <p className="text-sm text-[#8A7E72] leading-relaxed max-w-md mx-auto mb-6">
@@ -375,7 +394,7 @@ export const ReligiosaModule: React.FC = () => {
                 setIsConfiguring(true);
                 setIsEditingDetails(true);
               }}
-              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-white text-sm font-semibold transition shadow-xs"
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-white text-sm font-semibold transition shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Configurar Ceremonia Religiosa</span>
@@ -391,43 +410,60 @@ export const ReligiosaModule: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">
+          <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
             Liturgia y Templo
           </span>
-          <h2 className="font-serif text-3xl font-bold text-stone-900">
+          <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
             Ceremonia Religiosa
           </h2>
-          <p className="text-xs text-stone-500 mt-1">
+          <p className="text-sm text-[#8A7E72] mt-1">
             Parroquia, celebrante, listado musical litúrgico y lecturas con lectores confirmados.
           </p>
         </div>
 
-        {saving && (
-          <span className="text-xs text-stone-400 animate-pulse">Guardando cambios...</span>
-        )}
+        <div className="flex items-center gap-3">
+          {!isNovios && (
+            <button
+              type="button"
+              onClick={handleDeactivateCeremony}
+              className="text-xs font-semibold text-[#8A7E72] hover:text-rose-600 px-3 py-1.5 rounded-xl border border-[#EAE3DA] bg-white transition cursor-pointer"
+              title="Ocultar y limpiar este módulo si la boda no tendrá ceremonia religiosa"
+            >
+              Desactivar Ceremonia
+            </button>
+          )}
+          {saving && (
+            <span className="text-xs text-[#8A7E72] animate-pulse">Guardando cambios...</span>
+          )}
+        </div>
       </div>
 
       {/* Main Details Card — Fixed / Read-Only by Default */}
-      <div className="luxury-card rounded-2xl p-6 border border-stone-200">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-stone-100">
+      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-[#FAF8F5]">
           <div className="flex items-center space-x-2.5">
             <Church className="w-5 h-5 text-[#9C665C]" />
             <div>
-              <h3 className="font-serif text-xl font-bold text-stone-900">
+              <h3 className="font-serif text-xl font-semibold text-[#2B2826]">
                 Datos del Templo y Celebración
               </h3>
-              <p className="text-[11px] text-stone-500 flex items-center space-x-1 mt-0.5">
-                <Lock className="w-3 h-3 text-stone-400" />
+              <p className="text-xs text-[#8A7E72] flex items-center space-x-1 mt-0.5">
+                <Lock className="w-3 h-3 text-[#9C665C]" />
                 <span>Información protegida contra cambios accidentales.</span>
               </p>
             </div>
           </div>
 
-          {!isEditingDetails ? (
+          {isNovios ? (
+            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA] text-xs font-medium">
+              <Lock className="w-3.5 h-3.5 text-[#9C665C]" />
+              <span>Registro Oficial VLB</span>
+            </span>
+          ) : !isEditingDetails ? (
             <button
               type="button"
               onClick={handleStartEditDetails}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#EFE8DE] hover:bg-[#EFE2DF] text-[#332C2A] border border-[#DDD2C4] text-xs font-semibold transition"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] text-xs font-semibold transition cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5 text-[#9C665C]" />
               <span>Editar Datos</span>
@@ -437,7 +473,7 @@ export const ReligiosaModule: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEditingDetails(false)}
-                className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-white hover:bg-stone-100 text-stone-600 border border-stone-200 text-xs font-medium transition"
+                className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] text-xs font-medium transition cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cancelar</span>
@@ -445,7 +481,7 @@ export const ReligiosaModule: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSaveDetails}
-                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold transition shadow-xs"
+                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold transition shadow-xs cursor-pointer"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>Guardar Cambios</span>
@@ -458,52 +494,52 @@ export const ReligiosaModule: React.FC = () => {
           /* Fixed Read-Only View */
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
-                <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+                <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
                   <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Fecha</span>
                 </div>
-                <div className="text-sm font-semibold text-stone-900">
+                <div className="text-sm font-semibold text-[#2B2826]">
                   {religious.date || 'Por definir'}
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
-                <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+                <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
                   <Clock className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Hora de Inicio</span>
                 </div>
-                <div className="text-sm font-semibold text-stone-900">
+                <div className="text-sm font-semibold text-[#2B2826]">
                   {religious.time ? `${religious.time} hrs` : 'Por definir'}
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
-                <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+                <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
                   <MapPin className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Templo / Parroquia</span>
                 </div>
-                <div className="text-sm font-semibold text-stone-900">
+                <div className="text-sm font-semibold text-[#2B2826]">
                   {religious.temple_name || 'Por definir'}
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
-                <div className="flex items-center space-x-1.5 text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+                <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
                   <User className="w-3.5 h-3.5 text-[#9C665C]" />
                   <span>Sacerdote / Oficiante</span>
                 </div>
-                <div className="text-sm font-semibold text-stone-900">
+                <div className="text-sm font-semibold text-[#2B2826]">
                   {religious.officiant || 'Por definir'}
                 </div>
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-stone-400 mb-1">
+            <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+              <div className="text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
                 Notas Generales de la Iglesia
               </div>
-              <div className="text-xs text-stone-700 leading-relaxed">
+              <div className="text-sm text-[#2B2826] leading-relaxed">
                 {religious.notes || 'Sin notas adicionales registradas.'}
               </div>
             </div>
@@ -513,53 +549,53 @@ export const ReligiosaModule: React.FC = () => {
           <form onSubmit={handleSaveDetails} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Fecha</label>
+                <label className="block text-xs font-semibold text-[#2B2826] mb-1">Fecha</label>
                 <input
                   type="date"
                   value={detailsDraft.date}
                   onChange={e => setDetailsDraft({ ...detailsDraft, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Hora de Inicio</label>
+                <label className="block text-xs font-semibold text-[#2B2826] mb-1">Hora de Inicio</label>
                 <input
                   type="time"
                   value={detailsDraft.time}
                   onChange={e => setDetailsDraft({ ...detailsDraft, time: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Templo / Parroquia</label>
+                <label className="block text-xs font-semibold text-[#2B2826] mb-1">Templo / Parroquia</label>
                 <input
                   type="text"
                   placeholder="Parroquia Santa Teresita del Niño Jesús"
                   value={detailsDraft.temple_name}
                   onChange={e => setDetailsDraft({ ...detailsDraft, temple_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Sacerdote / Oficiante</label>
+                <label className="block text-xs font-semibold text-[#2B2826] mb-1">Sacerdote / Oficiante</label>
                 <input
                   type="text"
                   placeholder="Pbro. Francisco Javier Gómez"
                   value={detailsDraft.officiant}
                   onChange={e => setDetailsDraft({ ...detailsDraft, officiant: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-stone-700 mb-1">Notas Generales de la Iglesia</label>
+              <label className="block text-xs font-semibold text-[#2B2826] mb-1">Notas Generales de la Iglesia</label>
               <textarea
                 rows={2}
                 placeholder="Reglamento del templo: lluvia de pétalos, fotógrafos autorizados, etc."
                 value={detailsDraft.notes}
                 onChange={e => setDetailsDraft({ ...detailsDraft, notes: e.target.value })}
-                className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
+                className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
               />
             </div>
           </form>
@@ -569,43 +605,43 @@ export const ReligiosaModule: React.FC = () => {
       {/* Two Column Section: Structured Music List & Readings List with Confirmed Guests */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Card 1: Música de Ceremonia Religiosa (Structured List) */}
-        <div className="luxury-card rounded-2xl p-6 border border-stone-200 flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">
+                <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
                   Programa Musical Litúrgico
                 </span>
-                <h3 className="font-serif text-lg font-bold text-stone-900 flex items-center space-x-2">
+                <h3 className="font-serif text-lg font-semibold text-[#2B2826] flex items-center space-x-2">
                   <Music className="w-4 h-4 text-[#9C665C]" />
                   <span>Música de Ceremonia Religiosa</span>
                 </h3>
               </div>
-              <span className="text-xs font-semibold text-[#8a574e] bg-[#EFE2DF] px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full">
                 {musicList.length} piezas
               </span>
             </div>
 
             <div className="space-y-2 mb-5 max-h-72 overflow-y-auto pr-1">
               {musicList.length === 0 ? (
-                <p className="text-xs text-stone-400 italic py-4 text-center bg-[#F9F6F2] rounded-xl border border-dashed border-[#DDD2C4]">
+                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
                   No se han agregado piezas musicales aún. Regístralas en el listado abajo.
                 </p>
               ) : (
                 musicList.map((item, idx) => (
                   <div
                     key={item.id}
-                    className="p-3 rounded-xl bg-[#F9F6F2] border border-[#DDD2C4] flex items-center justify-between gap-3"
+                    className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-center justify-between gap-3"
                   >
                     <div className="flex items-start space-x-3">
-                      <span className="w-5 h-5 rounded-full bg-[#EFE2DF] text-[#8a574e] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-[#FAF8F5] text-[#9C665C] border border-[#EAE3DA] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                         {idx + 1}
                       </span>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#8a574e]">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#9C665C]">
                           {item.moment}
                         </div>
-                        <div className="text-xs font-semibold text-stone-900 mt-0.5">
+                        <div className="text-sm font-medium text-[#2B2826] mt-0.5">
                           {item.song}
                         </div>
                       </div>
@@ -613,7 +649,7 @@ export const ReligiosaModule: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleRemoveMusicItem(item.id)}
-                      className="text-stone-400 hover:text-rose-600 p-1 transition shrink-0"
+                      className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-xl hover:bg-rose-50 transition shrink-0 cursor-pointer"
                       title="Eliminar pieza"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -624,15 +660,15 @@ export const ReligiosaModule: React.FC = () => {
             </div>
           </div>
 
-          <form onSubmit={handleAddMusicItem} className="pt-3 border-t border-stone-100 space-y-2.5">
-            <div className="text-[11px] font-semibold text-stone-600">
+          <form onSubmit={handleAddMusicItem} className="pt-3 border-t border-[#FAF8F5] space-y-2.5">
+            <div className="text-xs font-semibold text-[#2B2826]">
               Agregar pieza al programa musical:
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <select
                 value={newMusicMoment}
                 onChange={e => setNewMusicMoment(e.target.value)}
-                className="px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
               >
                 {liturgicalMoments.map(m => (
                   <option key={m} value={m}>{m}</option>
@@ -643,13 +679,13 @@ export const ReligiosaModule: React.FC = () => {
                 placeholder="Canción / Obra (ej. Canon en Re - Pachelbel)"
                 value={newMusicSong}
                 onChange={e => setNewMusicSong(e.target.value)}
-                className="px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
               />
             </div>
             <button
               type="submit"
               disabled={!newMusicSong.trim()}
-              className="w-full py-2.5 bg-stone-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-stone-800 shadow disabled:opacity-40 transition flex items-center justify-center space-x-1.5"
+              className="w-full py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer flex items-center justify-center space-x-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Agregar al Listado Musical</span>
@@ -658,52 +694,52 @@ export const ReligiosaModule: React.FC = () => {
         </div>
 
         {/* Card 2: Lecturas de Ceremonia Religiosa (Title + Reader from Confirmed Guests) */}
-        <div className="luxury-card rounded-2xl p-6 border border-stone-200 flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">
+                <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
                   Liturgia de la Palabra · Desde Confirmados
                 </span>
-                <h3 className="font-serif text-lg font-bold text-stone-900 flex items-center space-x-2">
+                <h3 className="font-serif text-lg font-semibold text-[#2B2826] flex items-center space-x-2">
                   <BookOpen className="w-4 h-4 text-[#9C665C]" />
                   <span>Lecturas y Lectores Asignados</span>
                 </h3>
               </div>
-              <span className="text-xs font-semibold text-[#8a574e] bg-[#EFE2DF] px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full">
                 {readingsList.length} lecturas
               </span>
             </div>
 
             <div className="space-y-2 mb-5 max-h-72 overflow-y-auto pr-1">
               {readingsList.length === 0 ? (
-                <p className="text-xs text-stone-400 italic py-4 text-center bg-[#F9F6F2] rounded-xl border border-dashed border-[#DDD2C4]">
+                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
                   No se han registrado lecturas aún. Agrega el título y selecciona al lector de la lista de confirmados.
                 </p>
               ) : (
                 readingsList.map(item => (
                   <div
                     key={item.id}
-                    className="p-3 rounded-xl bg-[#F9F6F2] border border-[#DDD2C4] flex items-center justify-between gap-3"
+                    className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-center justify-between gap-3"
                   >
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8a574e] bg-[#EFE2DF] px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9C665C] bg-[#FAF8F5] border border-[#EAE3DA] px-2 py-0.5 rounded-full">
                           {item.type}
                         </span>
-                        <span className="text-xs font-semibold text-stone-900">
+                        <span className="text-sm font-medium text-[#2B2826]">
                           {item.title}
                         </span>
                       </div>
-                      <div className="flex items-center space-x-1.5 text-[11px] text-stone-600 mt-1.5">
+                      <div className="flex items-center space-x-1.5 text-xs text-[#8A7E72] mt-1.5">
                         <User className="w-3.5 h-3.5 text-[#9C665C]" />
-                        <span>Lector(a): <strong className="text-stone-900">{item.reader}</strong></span>
+                        <span>Lector(a): <strong className="text-[#2B2826] font-medium">{item.reader}</strong></span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleRemoveReadingItem(item.id)}
-                      className="text-stone-400 hover:text-rose-600 p-1 transition shrink-0"
+                      className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-xl hover:bg-rose-50 transition shrink-0 cursor-pointer"
                       title="Eliminar lectura"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -714,15 +750,15 @@ export const ReligiosaModule: React.FC = () => {
             </div>
           </div>
 
-          <form onSubmit={handleAddReadingItem} className="pt-3 border-t border-stone-100 space-y-2.5">
-            <div className="text-[11px] font-semibold text-stone-600">
+          <form onSubmit={handleAddReadingItem} className="pt-3 border-t border-[#FAF8F5] space-y-2.5">
+            <div className="text-xs font-semibold text-[#2B2826]">
               Agregar lectura con lector de la Lista de Confirmados ({confirmedGuests.length} confirmados):
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <select
                 value={newReadingType}
                 onChange={e => setNewReadingType(e.target.value)}
-                className="px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
               >
                 {readingTypes.map(rt => (
                   <option key={rt} value={rt}>{rt}</option>
@@ -733,14 +769,14 @@ export const ReligiosaModule: React.FC = () => {
                 placeholder="Título o cita (ej. 1 Corintios 13, 4-8)"
                 value={newReadingTitle}
                 onChange={e => setNewReadingTitle(e.target.value)}
-                className="px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
               />
             </div>
             <div className="flex gap-2">
               <select
                 value={newReadingReader}
                 onChange={e => setNewReadingReader(e.target.value)}
-                className="flex-1 px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                className="flex-1 px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
               >
                 <option value="">— Seleccionar lector(a) confirmado(a) —</option>
                 {confirmedGuestNames.map(name => (
@@ -750,7 +786,7 @@ export const ReligiosaModule: React.FC = () => {
               <button
                 type="submit"
                 disabled={!newReadingTitle.trim() || !newReadingReader}
-                className="px-4 py-2 bg-stone-900 text-white text-xs font-bold uppercase tracking-wider rounded-xl hover:bg-stone-800 shadow disabled:opacity-40 transition flex items-center space-x-1"
+                className="px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer flex items-center space-x-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar</span>
@@ -761,23 +797,25 @@ export const ReligiosaModule: React.FC = () => {
       </div>
 
       {/* Requisitos y Trámites Eclesiásticos (Conectados a Plantilla Maestra VLB) */}
-      <div className="luxury-card rounded-2xl p-6 border border-stone-200">
+      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Expediente Parroquial VLB</span>
-            <h3 className="font-serif text-lg font-bold text-stone-900">Requisitos y Trámites de Ceremonia Religiosa</h3>
+            <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">Expediente Parroquial VLB</span>
+            <h3 className="font-serif text-lg font-semibold text-[#2B2826]">Requisitos y Trámites de Ceremonia Religiosa</h3>
           </div>
           <div className="flex items-center space-x-2">
-            <button
-              type="button"
-              onClick={handleLoadMasterRequirements}
-              className="inline-flex items-center space-x-1 text-[11px] font-semibold px-3 py-1.5 rounded-xl bg-[#EFE8DE] hover:bg-[#EFE2DF] text-[#332C2A] border border-[#DDD2C4] transition"
-              title="Cargar requisitos religiosos de la Plantilla Maestra de VLB Studio"
-            >
-              <Download className="w-3.5 h-3.5 text-[#9C665C]" />
-              <span>Cargar Plantilla VLB</span>
-            </button>
-            <span className="text-xs font-semibold text-stone-600 bg-stone-100 px-2.5 py-1 rounded-full">
+            {!isNovios && (
+              <button
+                type="button"
+                onClick={handleLoadMasterRequirements}
+                className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] transition cursor-pointer"
+                title="Cargar requisitos religiosos de la Plantilla Maestra de VLB Studio"
+              >
+                <Download className="w-3.5 h-3.5 text-[#9C665C]" />
+                <span>Cargar Plantilla VLB</span>
+              </button>
+            )}
+            <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EAE3DA] px-2.5 py-1 rounded-full">
               {(religious.requirements_status || []).filter(r => r.completed).length} / {(religious.requirements_status || []).length}
             </span>
           </div>
@@ -785,7 +823,7 @@ export const ReligiosaModule: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-5">
           {(religious.requirements_status || []).length === 0 ? (
-            <p className="md:col-span-2 text-xs text-stone-400 italic py-4 text-center bg-[#F9F6F2] rounded-xl border border-dashed border-[#DDD2C4]">
+            <p className="md:col-span-2 text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
               No hay requisitos parroquiales cargados. Haz clic en "Cargar Plantilla VLB" o agrega uno abajo.
             </p>
           ) : (
@@ -793,72 +831,76 @@ export const ReligiosaModule: React.FC = () => {
               <div
                 key={r.id}
                 onClick={() => handleToggleRequirement(r.id)}
-                className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer text-xs transition ${
+                className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer text-xs transition ${
                   r.completed
-                    ? 'bg-emerald-50/60 border-emerald-200 text-emerald-950 font-medium'
-                    : 'bg-[#F9F6F2] border-[#DDD2C4] text-stone-700 hover:bg-[#EFE8DE]/60'
+                    ? 'bg-[#E4ECE5] border-[#D0DED2] text-[#2B5235] font-medium'
+                    : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#2B2826] hover:bg-[#FAF8F5]'
                 }`}
               >
                 <div className="flex items-center space-x-3">
                   {r.completed ? (
-                    <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <CheckSquare className="w-4 h-4 text-[#2B5235] shrink-0" />
                   ) : (
-                    <Square className="w-4 h-4 text-stone-400 shrink-0" />
+                    <Square className="w-4 h-4 text-[#8A7E72] shrink-0" />
                   )}
                   <span className={r.completed ? 'line-through opacity-80' : ''}>{r.title}</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={e => handleRemoveRequirement(r.id, e)}
-                  className="text-stone-300 hover:text-rose-600 p-1 ml-2"
-                  title="Eliminar requisito"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {!isNovios && (
+                  <button
+                    type="button"
+                    onClick={e => handleRemoveRequirement(r.id, e)}
+                    className="text-[#8A7E72]/50 hover:text-rose-600 p-1 ml-2 transition cursor-pointer"
+                    title="Eliminar requisito"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             ))
           )}
         </div>
 
-        <form onSubmit={handleAddRequirement} className="flex gap-2 pt-3 border-t border-stone-100">
-          <input
-            type="text"
-            placeholder="Agregar requisito parroquial a esta boda..."
-            value={newReq}
-            onChange={e => setNewReq(e.target.value)}
-            className="flex-1 px-3 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2.5 bg-stone-900 text-white text-xs font-bold uppercase rounded-xl hover:bg-stone-800 shadow"
-          >
-            Agregar
-          </button>
-        </form>
+        {!isNovios && (
+          <form onSubmit={handleAddRequirement} className="flex gap-2 pt-3 border-t border-[#FAF8F5]">
+            <input
+              type="text"
+              placeholder="Agregar requisito parroquial a esta boda..."
+              value={newReq}
+              onChange={e => setNewReq(e.target.value)}
+              className="flex-1 px-3 py-2.5 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+            >
+              Agregar
+            </button>
+          </form>
+        )}
       </div>
 
       {/* AUTOMATIC REUSE: Reused Vendors Card for Iglesia */}
-      <div className="luxury-card rounded-2xl p-6 border border-stone-200 bg-stone-50/40">
+      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="flex items-center space-x-1.5 text-lazo-700 text-xs font-semibold uppercase tracking-wider">
+            <div className="flex items-center space-x-1.5 text-[#9C665C] text-xs font-semibold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Reutilización Automática de Proveedores</span>
             </div>
-            <h3 className="font-serif text-xl font-bold text-stone-900">
+            <h3 className="font-serif text-xl font-semibold text-[#2B2826]">
               Proveedores que participan en Iglesia / Templo
             </h3>
-            <p className="text-xs text-stone-500 mt-0.5">
+            <p className="text-sm text-[#8A7E72] mt-0.5">
               Reflejados automáticamente desde el módulo Proveedores y Pagos con la etiqueta <strong>IGLESIA</strong>. Sin volver a capturar.
             </p>
           </div>
-          <span className="text-xs font-bold text-stone-700 bg-stone-100 px-3 py-1 rounded-full">
+          <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full">
             {reusedVendors.length} proveedores
           </span>
         </div>
 
         {reusedVendors.length === 0 ? (
-          <div className="p-8 text-center text-xs text-stone-400 bg-white rounded-xl border border-stone-200">
+          <div className="p-8 text-center text-xs text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
             No hay proveedores con etiqueta "IGLESIA". Ve a <strong>Proveedores y Pagos</strong> y marca la casilla IGLESIA en flores, música o foto.
           </div>
         ) : (
@@ -866,23 +908,23 @@ export const ReligiosaModule: React.FC = () => {
             {reusedVendors.map(v => (
               <div
                 key={v.id}
-                className="bg-white p-4 rounded-xl border border-stone-200 shadow-xs flex flex-col justify-between"
+                className="bg-[#FCFAF7] p-4 rounded-2xl border border-[#EAE3DA] shadow-xs flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] font-bold text-stone-500 uppercase">{v.type}</span>
-                    <span className="text-[9px] bg-[#EFE2DF] text-[#8a574e] font-bold px-2 py-0.5 rounded">IGLESIA</span>
+                    <span className="text-xs font-semibold text-[#8A7E72] uppercase tracking-wider">{v.type}</span>
+                    <span className="text-[10px] bg-[#FAF8F5] text-[#9C665C] font-semibold border border-[#EAE3DA] px-2 py-0.5 rounded-full">IGLESIA</span>
                   </div>
-                  <h4 className="font-bold text-stone-900 text-xs">{v.name}</h4>
+                  <h4 className="font-semibold text-[#2B2826] text-sm">{v.name}</h4>
                   {v.contact_person && (
-                    <p className="text-[11px] text-stone-500 mt-0.5">Contacto: {v.contact_person}</p>
+                    <p className="text-xs text-[#8A7E72] mt-0.5">Contacto: {v.contact_person}</p>
                   )}
                   {v.notes && (
-                    <p className="text-[10px] text-stone-400 mt-2 line-clamp-2 italic">{v.notes}</p>
+                    <p className="text-xs text-[#8A7E72]/70 mt-2 line-clamp-2 italic">{v.notes}</p>
                   )}
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between">
+                <div className="mt-4 pt-3 border-t border-[#EAE3DA] flex items-center justify-between">
                   <a
                     href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
                     target="_blank"

@@ -18,6 +18,7 @@ export const MesasLayoutModule: React.FC = () => {
   // Modo Lienzo Amplio state
   const [fullCanvasMode, setFullCanvasMode] = useState(false);
   const [showUnassignedDrawer, setShowUnassignedDrawer] = useState(true);
+  const [lockTouchScroll, setLockTouchScroll] = useState(false);
 
   // Active selected table for assignment drawer
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
@@ -414,6 +415,21 @@ export const MesasLayoutModule: React.FC = () => {
             <span>{fullCanvasMode ? 'Vista Estándar' : 'Modo Lienzo Amplio'}</span>
           </button>
 
+          {/* Fijar Lienzo Táctil Toggle */}
+          <button
+            type="button"
+            onClick={() => setLockTouchScroll(!lockTouchScroll)}
+            className={`inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition shadow-2xs cursor-pointer ${
+              lockTouchScroll
+                ? 'bg-[#E4ECE5] text-[#2B5235] border-[#BDD4C1]'
+                : 'bg-white hover:bg-[#F7F3EE] text-[#5E524E] border-[#EAE3DA]'
+            }`}
+            title="Bloquea el scroll de la página al arrastrar sobre el plano en tablets o pantallas táctiles"
+          >
+            <Lock className="w-3.5 h-3.5 text-[#9C665C]" />
+            <span>{lockTouchScroll ? 'Lienzo Fijado' : 'Fijar Lienzo Táctil'}</span>
+          </button>
+
           {!isLocked && (
             <>
               <button
@@ -456,7 +472,9 @@ export const MesasLayoutModule: React.FC = () => {
           <div
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            className="w-full h-[620px] bg-[#F9F6F2] rounded-3xl border-2 border-[#DDD2C4] relative overflow-hidden select-none shadow-inner"
+            className={`w-full h-[620px] bg-[#F9F6F2] rounded-3xl border-2 border-[#DDD2C4] relative overflow-hidden select-none shadow-inner ${
+              lockTouchScroll ? 'touch-none overscroll-contain' : ''
+            }`}
             style={{
               backgroundImage: 'radial-gradient(#D2C4B4 1px, transparent 1px)',
               backgroundSize: '24px 24px'
