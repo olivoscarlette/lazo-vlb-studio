@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Meeting, PackageInfo } from '../types';
 import {
   CalendarCheck2, Plus, Clock, Users, CheckCircle2,
-  AlertCircle, MessageSquare, ChevronRight, Check, Sparkles, X
+  AlertCircle, MessageSquare, ChevronRight, Check, Sparkles, X, ChevronDown
 } from 'lucide-react';
 
 export const ReunionesModule: React.FC = () => {
@@ -11,6 +11,7 @@ export const ReunionesModule: React.FC = () => {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [packageInfo, setPackageInfo] = useState<PackageInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPackageExpanded, setIsPackageExpanded] = useState(false);
 
   // New Meeting / Request Meeting Modal
   const [showScheduleModal, setShowScheduleModal] = useState(false);
@@ -191,36 +192,70 @@ export const ReunionesModule: React.FC = () => {
         </button>
       </div>
 
-      {/* Compact Package Allowance Banner */}
+      {/* Expandable Package Allowance Banner */}
       {packageInfo && (
-        <div className="bg-white rounded-2xl p-4 border border-[#EAE3DA] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-3 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE3DA] flex items-center justify-center text-[#9C665C] shrink-0">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-bold text-[#9C665C] uppercase tracking-wider bg-[#FDF6F5] px-2 py-0.5 rounded border border-[#F3DCD7]">
-                  {packageInfo.packageName}
-                </span>
-                <span className="text-xs font-semibold text-[#2B2826] truncate">
-                  {packageInfo.description}
-                </span>
+        <div className="bg-white rounded-2xl border border-[#EAE3DA] shadow-xs overflow-hidden transition-all duration-200">
+          <div
+            onClick={() => setIsPackageExpanded(!isPackageExpanded)}
+            className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-[#FAF8F5]/50 transition select-none"
+            title="Haz clic para desplegar u ocultar la información del paquete"
+          >
+            <div className="flex items-start space-x-3 min-w-0 flex-1">
+              <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE3DA] flex items-center justify-center text-[#9C665C] shrink-0 mt-0.5">
+                <Sparkles className="w-4 h-4" />
               </div>
-              <p className="text-[11px] text-[#8A7E72] mt-0.5">
-                Tope acordado: <strong>{packageInfo.maxMeetings >= 999 ? 'Reuniones ilimitadas' : `${packageInfo.maxMeetings} sesiones`}</strong>
-              </p>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-bold text-[#9C665C] uppercase tracking-wider bg-[#FDF6F5] px-2 py-0.5 rounded border border-[#F3DCD7]">
+                    {packageInfo.packageName}
+                  </span>
+                  <span className="text-xs font-semibold text-[#2B2826] leading-snug">
+                    {packageInfo.description}
+                  </span>
+                </div>
+                <p className="text-[11px] text-[#8A7E72] mt-1">
+                  Tope acordado: <strong>{packageInfo.maxMeetings >= 999 ? 'Reuniones ilimitadas' : `${packageInfo.maxMeetings} sesiones`}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 self-start md:self-center shrink-0 text-xs">
+              <span className="px-3 py-1 rounded-xl bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] font-semibold">
+                Agendadas: <strong>{packageInfo.usedMeetings}</strong>
+              </span>
+              <span className="px-3 py-1 rounded-xl bg-[#F7ECE8] text-[#8A574E] border border-[#E8D1CB] font-semibold">
+                Disponibles: <strong>{packageInfo.remainingMeetings}</strong>
+              </span>
+              <div className="p-1 rounded-lg text-[#8A7E72] hover:text-[#2B2826]">
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isPackageExpanded ? 'rotate-180' : ''}`} />
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-center shrink-0 text-xs">
-            <span className="px-3 py-1 rounded-xl bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] font-semibold">
-              Agendadas: <strong>{packageInfo.usedMeetings}</strong>
-            </span>
-            <span className="px-3 py-1 rounded-xl bg-[#F7ECE8] text-[#8A574E] border border-[#E8D1CB] font-semibold">
-              Disponibles: <strong>{packageInfo.remainingMeetings}</strong>
-            </span>
-          </div>
+          {/* Desplegable de información completa del paquete */}
+          {isPackageExpanded && (
+            <div className="px-4 pb-4 pt-2 border-t border-[#F5EFEB] bg-[#FCFAF7] space-y-3 animate-in fade-in duration-150">
+              <div className="text-xs text-[#5A524C] leading-relaxed">
+                <span className="font-semibold text-[#2B2826]">Alcance del paquete contratado:</span> {packageInfo.description}
+              </div>
+
+              {packageInfo.includes && packageInfo.includes.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-[#8A7E72]">
+                    Servicios e Inclusiones Clave:
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {packageInfo.includes.map((inc, i) => (
+                      <div key={i} className="flex items-start space-x-2 text-xs text-[#2B2826] bg-white p-2 rounded-xl border border-[#EAE3DA]">
+                        <Check className="w-3.5 h-3.5 text-[#6B8E6E] shrink-0 mt-0.5" />
+                        <span>{inc}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

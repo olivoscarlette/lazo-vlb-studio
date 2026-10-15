@@ -393,13 +393,15 @@ export const TimelineModule: React.FC = () => {
             <Printer className="w-3.5 h-3.5 text-[#786C68]" />
             <span>Imprimir</span>
           </button>
-          <button
-            onClick={handleOpenAdd}
-            className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8a574e] text-white text-xs font-semibold rounded-xl shadow-xs transition"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Agregar Actividad</span>
-          </button>
+          {!isNovios && (
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8a574e] text-white text-xs font-semibold rounded-xl shadow-xs transition"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Agregar Actividad</span>
+            </button>
+          )}
         </div>
       </div>
 

@@ -198,11 +198,8 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <div className="text-[10px] uppercase font-bold tracking-wider text-[#8A7E72]">
                 Fecha de la Boda
               </div>
-              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 truncate">
+              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 leading-snug break-words">
                 {formatFullDateSpanish(weddingData.wedding_date)}
-              </div>
-              <div className="text-[11px] text-[#8A7E72] mt-0.5">
-                {weddingData.wedding_date || 'Por definir'}
               </div>
             </div>
           </div>
@@ -216,10 +213,10 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <div className="text-[10px] uppercase font-bold tracking-wider text-[#8A7E72]">
                 Ceremonia Civil
               </div>
-              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 truncate" title={civilInfo.location || 'Sede por confirmar'}>
+              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 leading-snug break-words">
                 {civilInfo.location || 'Lugar por definir'}
               </div>
-              <div className="text-[11px] text-[#8A7E72] mt-0.5 truncate">
+              <div className="text-[11px] text-[#8A7E72] mt-0.5 leading-snug break-words">
                 {civilInfo.time ? `${civilInfo.time} hrs` : 'Horario por definir'}
                 {civilInfo.date && civilInfo.date !== weddingData.wedding_date ? ` · ${civilInfo.date}` : ''}
               </div>
@@ -235,10 +232,10 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <div className="text-[10px] uppercase font-bold tracking-wider text-[#8A7E72]">
                 Ceremonia Religiosa
               </div>
-              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 truncate" title={relInfo.temple_name || weddingData.ceremony_venue || 'Templo por definir'}>
+              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 leading-snug break-words">
                 {relInfo.temple_name || weddingData.ceremony_venue || 'Lugar por definir'}
               </div>
-              <div className="text-[11px] text-[#8A7E72] mt-0.5 truncate">
+              <div className="text-[11px] text-[#8A7E72] mt-0.5 leading-snug break-words">
                 {relInfo.time || weddingData.ceremony_time ? `${relInfo.time || weddingData.ceremony_time} hrs` : 'Horario por definir'}
               </div>
             </div>
@@ -253,10 +250,10 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <div className="text-[10px] uppercase font-bold tracking-wider text-[#8A7E72]">
                 Recepción
               </div>
-              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 truncate" title={weddingData.reception_venue || 'Sede por confirmar'}>
+              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 leading-snug break-words">
                 {weddingData.reception_venue || 'Lugar por definir'}
               </div>
-              <div className="text-[11px] text-[#8A7E72] mt-0.5 truncate">
+              <div className="text-[11px] text-[#8A7E72] mt-0.5 leading-snug break-words">
                 {weddingData.reception_time ? `${weddingData.reception_time} hrs` : 'Horario por definir'}
               </div>
             </div>

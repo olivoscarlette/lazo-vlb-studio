@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   Bell, LogOut, ChevronDown, Building2,
-  CheckCircle2, ShieldCheck, Menu, PanelLeftClose, PanelLeft
+  CheckCircle2, ShieldCheck, Menu, PanelLeft
 } from 'lucide-react';
 import { UserRole } from '../types';
 
@@ -62,25 +62,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
         <div className="flex items-center justify-between h-[72px]">
           {/* Left: Hamburger Menu Button + Brand Logo */}
           <div className="flex items-center space-x-3 sm:space-x-4">
-            {showHamburger && onToggleSidebar && (
+            {showHamburger && onToggleSidebar && !sidebarOpen && (
               <button
                 onClick={onToggleSidebar}
-                aria-label={sidebarOpen ? "Ocultar menú lateral" : "Mostrar menú lateral"}
-                aria-expanded={sidebarOpen}
-                className={`inline-flex items-center space-x-2 px-3 py-2 rounded-xl border transition shadow-xs cursor-pointer ${
-                  sidebarOpen
-                    ? 'bg-[#EFE2DF] hover:bg-[#EAD2D0] text-[#70443D] border-[#9C665C]/30'
-                    : 'bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] border-[#EAE3DA]'
-                }`}
-                title={sidebarOpen ? "Ocultar menú lateral para expandir pantalla" : "Mostrar menú lateral"}
+                aria-label="Mostrar menú lateral"
+                className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer"
+                title="Mostrar menú lateral"
               >
-                {sidebarOpen ? (
-                  <PanelLeftClose className="w-5 h-5 text-[#9C665C]" />
-                ) : (
-                  <PanelLeft className="w-5 h-5 text-[#9C665C]" />
-                )}
+                <PanelLeft className="w-5 h-5 text-[#9C665C]" />
                 <span className="text-sm font-semibold hidden md:inline">
-                  {sidebarOpen ? 'Ocultar Menú' : 'Menú'}
+                  Menú
                 </span>
               </button>
             )}

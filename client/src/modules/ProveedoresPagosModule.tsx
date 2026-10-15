@@ -501,7 +501,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                 <th className="py-3.5 px-3 whitespace-nowrap">TELÉFONO</th>
                 <th className="py-3.5 px-3 whitespace-nowrap">ETAPAS</th>
                 <th className="py-3.5 px-3 text-center whitespace-nowrap">FECHA LÍMITE</th>
-                <th className="py-3.5 px-3 text-right whitespace-nowrap">COSTO REAL</th>
+                <th className="py-3.5 px-3 text-right whitespace-nowrap">COSTO</th>
                 <th className="py-3.5 px-3 text-right whitespace-nowrap">PAGADO</th>
                 <th className="py-3.5 px-3 text-right whitespace-nowrap">RESTANTE</th>
                 <th className="py-3.5 px-2 text-center whitespace-nowrap"></th>
@@ -716,7 +716,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-[#2B2826] uppercase tracking-wider mb-1">Costo Real ($)</label>
+                  <label className="block text-xs font-bold text-[#2B2826] uppercase tracking-wider mb-1">Costo ($)</label>
                   <input
                     type="number"
                     min="0"
