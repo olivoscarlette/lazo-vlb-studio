@@ -112,6 +112,17 @@ async function processWebhookEvent(body: any) {
             const guestId = matchedGuest?.id || null;
 
             if (!weddingId) {
+              const prevMsg = db.prepare(`
+                SELECT wedding_id FROM whatsapp_messages
+                WHERE phone = ? OR phone LIKE ?
+                ORDER BY created_at DESC LIMIT 1
+              `).get(normalizedPhone, `%${last10}`) as any;
+              if (prevMsg?.wedding_id) {
+                weddingId = prevMsg.wedding_id;
+              }
+            }
+
+            if (!weddingId) {
               const latestWedding = db.prepare('SELECT id FROM weddings ORDER BY wedding_date DESC LIMIT 1').get() as any;
               weddingId = latestWedding?.id || 'default_wedding';
             }
@@ -185,9 +196,14 @@ async function processWebhookEvent(body: any) {
             );
 
             // Upsert Contact & increment unread count
+            const existingContact = db.prepare(`
+              SELECT name FROM whatsapp_contacts
+              WHERE phone_number = ? OR phone_number LIKE ?
+            `).get(normalizedPhone, `%${last10}`) as any;
+
             const contactName = matchedGuest
               ? `${matchedGuest.first_name} ${matchedGuest.last_name}`.trim()
-              : senderProfile || normalizedPhone;
+              : (existingContact?.name || senderProfile || normalizedPhone);
 
             WhatsAppService.upsertContact({
               phoneNumber: normalizedPhone,

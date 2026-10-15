@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   MessageSquare, Search, Send, RefreshCw, CheckCheck,
@@ -69,6 +69,9 @@ export const WhatsAppHubModule: React.FC = () => {
 
   // Selected Chat
   const [activeConversation, setActiveConversation] = useState<WhatsAppConversation | null>(null);
+  const activeConvRef = useRef<WhatsAppConversation | null>(null);
+  activeConvRef.current = activeConversation;
+
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
   const [activeGuest, setActiveGuest] = useState<any>(null);
   const [activeWedding, setActiveWedding] = useState<any>(null);
@@ -96,11 +99,13 @@ export const WhatsAppHubModule: React.FC = () => {
         if (data.weddings) setWeddings(data.weddings);
 
         // Keep active conversation updated if it exists
-        if (activeConversation) {
+        if (activeConvRef.current) {
           const updated = (data.conversations || []).find(
-            (c: WhatsAppConversation) => c.phone === activeConversation.phone && c.wedding_id === activeConversation.wedding_id
+            (c: WhatsAppConversation) => c.phone === activeConvRef.current?.phone && c.wedding_id === activeConvRef.current?.wedding_id
           );
-          if (updated) setActiveConversation(updated);
+          if (updated) {
+            setActiveConversation(prev => prev ? { ...prev, ...updated, unread_count: 0 } : null);
+          }
         }
       }
     } catch (err) {
@@ -130,8 +135,42 @@ export const WhatsAppHubModule: React.FC = () => {
     }
   };
 
+  // Silently refresh chat messages for active chat (no flicker, no spinners)
+  const fetchChatMessagesSilently = async (conv: WhatsAppConversation) => {
+    try {
+      const res = await fetch(`/api/whatsapp/conversations/${conv.wedding_id}/${encodeURIComponent(conv.phone)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newMsgs = data.messages || [];
+        setMessages(prev => {
+          if (newMsgs.length !== prev.length || (newMsgs.length > 0 && newMsgs[newMsgs.length - 1]?.id !== prev[prev.length - 1]?.id)) {
+            return newMsgs;
+          }
+          return prev;
+        });
+        if (data.guest) setActiveGuest(data.guest);
+        if (data.wedding) setActiveWedding(data.wedding);
+      }
+    } catch {
+      // background polling error ignored
+    }
+  };
+
   useEffect(() => {
     fetchConversations();
+  }, [selectedWeddingId, filterType]);
+
+  // Periodic Auto-Refresh: ensures incoming WhatsApp messages and badges appear instantly!
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchConversations(true);
+      if (activeConvRef.current) {
+        fetchChatMessagesSilently(activeConvRef.current);
+      }
+    }, 3500);
+    return () => clearInterval(interval);
   }, [selectedWeddingId, filterType]);
 
   // Debounced search

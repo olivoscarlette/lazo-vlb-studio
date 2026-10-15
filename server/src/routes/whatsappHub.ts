@@ -219,8 +219,16 @@ router.get('/conversations', (req, res) => {
         wm.phone,
         wm.wedding_id,
         w.name as wedding_name,
-        COALESCE(g.id, wm.guest_id) as guest_id,
-        COALESCE(g.first_name || ' ' || g.last_name, wm.phone) as guest_name,
+        COALESCE(
+          g.first_name || ' ' || g.last_name,
+          (
+            SELECT wc.name FROM whatsapp_contacts wc
+            WHERE (wc.phone_number = wm.phone OR wc.phone_number = REPLACE(REPLACE(wm.phone, '+', ''), ' ', ''))
+              AND wc.name IS NOT NULL AND wc.name != ''
+            LIMIT 1
+          ),
+          wm.phone
+        ) as guest_name,
         COALESCE(g.status, 'Pendiente de confirmar') as guest_status,
         COALESCE(g.companion_count, 0) as companion_count,
         COALESCE(t.name, 'Sin mesa') as table_name,
@@ -241,14 +249,20 @@ router.get('/conversations', (req, res) => {
           ORDER BY created_at DESC LIMIT 1
         ) as last_message_status,
         COUNT(wm.id) as total_messages,
-        COALESCE((
-          SELECT wc.unread_count FROM whatsapp_contacts wc
-          WHERE wc.phone_number = wm.phone OR wc.phone_number = REPLACE(REPLACE(wm.phone, '+', ''), ' ', '')
-          LIMIT 1
-        ), (
-          SELECT COUNT(*) FROM whatsapp_messages
-          WHERE phone = wm.phone AND wedding_id = wm.wedding_id AND direction = 'INBOUND' AND status != 'READ'
-        ), 0) as unread_count
+        MAX(
+          COALESCE((
+            SELECT wc.unread_count FROM whatsapp_contacts wc
+            WHERE wc.phone_number = wm.phone OR wc.phone_number = REPLACE(REPLACE(wm.phone, '+', ''), ' ', '')
+            LIMIT 1
+          ), 0),
+          (
+            SELECT COUNT(*) FROM whatsapp_messages
+            WHERE (phone = wm.phone OR phone = REPLACE(REPLACE(wm.phone, '+', ''), ' ', ''))
+              AND wedding_id = wm.wedding_id 
+              AND direction = 'INBOUND' 
+              AND status != 'READ'
+          )
+        ) as unread_count
       FROM whatsapp_messages wm
       JOIN weddings w ON w.id = wm.wedding_id
       LEFT JOIN guests g ON (g.id = wm.guest_id OR g.phone = wm.phone)
