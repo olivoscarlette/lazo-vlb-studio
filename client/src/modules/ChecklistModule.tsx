@@ -40,7 +40,6 @@ export const ChecklistModule: React.FC = () => {
 
   // Default to Checklist General
   const [categoryFilter, setCategoryFilter] = useState('Checklist General');
-  const [responsibleFilter, setResponsibleFilter] = useState<'ALL' | 'VLB' | 'NOVIOS'>('ALL');
   const [proximityFilter, setProximityFilter] = useState<'ALL' | 'CRITICA' | 'SEMANA' | 'DIA_B' | 'PREVIA'>('ALL');
 
   // Modal (Create or Edit Task)
@@ -274,15 +273,6 @@ export const ChecklistModule: React.FC = () => {
     } catch {}
   };
 
-  const isVlb = (t: Task) => {
-    const r = (t.responsible || '').toLowerCase();
-    return r.includes('vlb') || r.includes('coord') || r.includes('staff') || r.includes('estudio');
-  };
-
-  const isNovios = (t: Task) => {
-    return !isVlb(t);
-  };
-
   const getProximity = (t: Task): 'CRITICA' | 'SEMANA' | 'DIA_B' | 'PREVIA' => {
     const cat = (t.category || '').toLowerCase();
     const title = (t.title || '').toLowerCase();
@@ -301,15 +291,11 @@ export const ChecklistModule: React.FC = () => {
     return 'CRITICA';
   };
 
-  const vlbCount = tasks.filter(isVlb).length;
-  const noviosCount = tasks.filter(isNovios).length;
   const criticaCount = tasks.filter(t => getProximity(t) === 'CRITICA').length;
   const semanaCount = tasks.filter(t => getProximity(t) === 'SEMANA').length;
   const diaBCount = tasks.filter(t => getProximity(t) === 'DIA_B').length;
 
   const filteredTasks = tasks.filter(t => {
-    if (responsibleFilter === 'VLB' && !isVlb(t)) return false;
-    if (responsibleFilter === 'NOVIOS' && !isNovios(t)) return false;
     if (proximityFilter !== 'ALL' && getProximity(t) !== proximityFilter) return false;
     if (categoryFilter !== 'ALL' && categoryFilter !== 'Checklist General' && t.category !== categoryFilter) return false;
     return true;
@@ -407,52 +393,6 @@ export const ChecklistModule: React.FC = () => {
             className="h-full bg-[#9C665C] rounded-full transition-all duration-300"
             style={{ width: `${stats.progressPercent}%` }}
           />
-        </div>
-      </div>
-
-      {/* Filtro por Responsable */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-[#EAE3DA] shadow-2xs">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-xs font-semibold text-[#8A7E72] px-2">Responsable:</span>
-          <button
-            type="button"
-            onClick={() => setResponsibleFilter('ALL')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
-              responsibleFilter === 'ALL'
-                ? 'bg-[#363432] text-white shadow-xs'
-                : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
-            }`}
-          >
-            Todas ({tasks.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setResponsibleFilter('VLB')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-              responsibleFilter === 'VLB'
-                ? 'bg-[#9C665C] text-white shadow-xs'
-                : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
-            }`}
-          >
-            <span>Tareas del Equipo VLB</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/10">
-              {vlbCount}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setResponsibleFilter('NOVIOS')}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 ${
-              responsibleFilter === 'NOVIOS'
-                ? 'bg-[#9C665C] text-white shadow-xs'
-                : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
-            }`}
-          >
-            <span>Tareas de los Novios</span>
-            <span className="px-1.5 py-0.2 rounded-full text-[10px] bg-black/10">
-              {noviosCount}
-            </span>
-          </button>
         </div>
       </div>
 
@@ -658,13 +598,6 @@ export const ChecklistModule: React.FC = () => {
                     </h4>
 
                     <div className="flex flex-wrap items-center gap-2 text-xs text-[#8A7E72] mt-1">
-                      <span className={`px-2 py-0.5 rounded-md font-semibold text-[11px] ${
-                        isVlb(task)
-                          ? 'bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA]'
-                          : 'bg-[#FDF6F5] text-[#9C665C] border border-[#F0D5D1]'
-                      }`}>
-                        👤 {isVlb(task) ? 'Equipo VLB' : 'Novios'}
-                      </span>
                       {task.category && (
                         <span className="bg-[#FCFAF7] text-[#5A524C] px-2 py-0.5 rounded-md text-[11px] border border-[#EAE3DA]">
                           {task.category}

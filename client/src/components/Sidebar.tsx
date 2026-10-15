@@ -90,7 +90,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const isNovios = user.role === 'NOVIOS';
 
-  // 3 Categorías solicitadas
+  // 3 Categorías solicitadas (Proveedores en Planificación, Timeline en Logística)
   const sections: { title: string; items: MenuItemDef[] }[] = [
     {
       title: 'PLANIFICACIÓN',
@@ -98,15 +98,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'resumen', label: 'Resumen', icon: LayoutDashboard },
         { id: 'reuniones', label: 'Información y Reuniones', icon: CalendarCheck2 },
         { id: 'checklist', label: 'Checklist', icon: CheckSquare },
-        { id: 'timeline', label: 'Timeline', icon: Clock3 }
+        { id: 'proveedores', label: 'Proveedores y Pagos', icon: CreditCard }
       ]
     },
     {
       title: 'LOGÍSTICA & INVITADOS',
       items: [
+        { id: 'timeline', label: 'Timeline', icon: Clock3 },
         { id: 'invitados', label: 'Invitados y Confirmaciones', icon: Users2 },
         { id: 'mesas', label: 'Mesas y Layout', icon: Grid2x2Check },
-        { id: 'proveedores', label: 'Proveedores y Pagos', icon: CreditCard },
         { id: 'civil', label: 'Civil', icon: Landmark },
         { id: 'religiosa', label: 'Ceremonia Religiosa', icon: Church }
       ]
@@ -135,6 +135,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return `Realizada hace ${Math.abs(diffDays)} días`;
   };
 
+  const formatWeddingDateSpanish = (raw?: string) => {
+    if (!raw) return '';
+    try {
+      const [y, m, d] = raw.split('-').map(Number);
+      if (!y || !m || !d) return raw;
+      const dateObj = new Date(y, m - 1, d);
+      return dateObj.toLocaleDateString('es-MX', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch {
+      return raw;
+    }
+  };
+
   const handleItemClick = (id: WorkspaceTab) => {
     onSelectTab(id);
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
@@ -148,19 +164,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <>
-      {/* Mobile Backdrop Overlay */}
+      {/* Mobile Backdrop Overlay - Positioned below navbar so navbar stays accessible */}
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-[#2B2826]/40 z-40 backdrop-blur-xs lg:hidden transition-opacity"
+          className="fixed top-18 inset-x-0 bottom-0 bg-[#2B2826]/30 z-30 backdrop-blur-xs lg:hidden transition-opacity"
         />
       )}
 
-      {/* Sidebar: Responsive dockable on desktop, slide-over drawer on mobile */}
+      {/* Sidebar: Responsive dockable on desktop, slide-over drawer below navbar on mobile */}
       <aside
-        className={`bg-[#FAF8F5] text-[#2B2826] border-r border-[#EAE3DA] flex flex-col z-40 transition-all duration-300 ease-in-out ${
-          // Mobile classes: Fixed drawer
-          `fixed top-0 bottom-0 left-0 w-80 shadow-2xl lg:shadow-none ${
+        className={`bg-[#FAF8F5] text-[#2B2826] border-r border-[#EAE3DA] flex flex-col transition-all duration-300 ease-in-out ${
+          // Mobile classes: Fixed drawer cleanly underneath navbar (top-18)
+          `fixed top-18 bottom-0 left-0 w-80 max-w-[85vw] shadow-2xl z-40 lg:shadow-none ${
             isOpen ? 'translate-x-0' : '-translate-x-full'
           } ` +
           // Desktop classes: Docked sticky column when open, collapsed when closed
@@ -172,21 +188,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Top return link & Wedding Context Header */}
         <div className="p-4 sm:p-5 border-b border-[#EAE3DA] bg-[#FCFAF7] shrink-0 space-y-3">
           {/* Botón de retorno al Dashboard General */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <button
               onClick={() => setCurrentWedding(null)}
-              className="inline-flex items-center space-x-1.5 text-xs font-semibold text-[#8A7E72] hover:text-[#9C665C] transition cursor-pointer group"
+              className="inline-flex items-center space-x-1.5 text-xs font-semibold text-[#8A7E72] hover:text-[#9C665C] transition cursor-pointer group truncate"
               title="Volver a la lista de bodas"
             >
-              <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-              <span>Volver al Dashboard General</span>
+              <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5 shrink-0" />
+              <span>Dashboard General</span>
             </button>
 
             {/* Botón para colapsar sidebar */}
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#EFE8E0] transition cursor-pointer"
-              title="Ocultar menú"
+              className="p-1.5 rounded-xl text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#EFE8E0] transition cursor-pointer shrink-0"
+              title="Ocultar menú lateral"
             >
               <ChevronLeft className="w-4 h-4 hidden lg:block" />
               <X className="w-4 h-4 lg:hidden" />
@@ -199,7 +215,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {coupleTitle}
             </h2>
             <div className="flex items-center justify-between mt-1 text-xs text-[#8A7E72]">
-              <span className="truncate">{currentWedding.wedding_date}</span>
+              <span className="capitalize font-medium">{formatWeddingDateSpanish(currentWedding.wedding_date)}</span>
               {currentWedding.wedding_date && (
                 <span className="px-2 py-0.5 rounded-full bg-[#EFE8E0] text-[#70443D] text-[11px] font-medium shrink-0 ml-2">
                   {getCountdown(currentWedding.wedding_date)}
