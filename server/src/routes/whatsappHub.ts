@@ -225,4 +225,51 @@ router.post('/send', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/whatsapp/log-direct
+ * Logs a message that was opened/sent directly via wa.me without requiring Meta Cloud API
+ */
+router.post('/log-direct', async (req, res) => {
+  try {
+    const { weddingId, guestId, phone, content, templateType } = req.body;
+    if (!weddingId || !phone || !content) {
+      return res.status(400).json({ error: 'weddingId, phone y content son obligatorios.' });
+    }
+
+    const now = new Date().toISOString();
+    const msgId = 'wmsg_dir_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+
+    db.prepare(`
+      INSERT INTO whatsapp_messages (id, wedding_id, guest_id, phone, direction, message_type, content, template_name, status, created_at)
+      VALUES (?, ?, ?, ?, 'OUTBOUND', 'text', ?, ?, 'DELIVERED', ?)
+    `).run(
+      msgId,
+      weddingId,
+      guestId || null,
+      phone,
+      content,
+      templateType || 'direct_wa_me',
+      now
+    );
+
+    if (guestId) {
+      db.prepare(`
+        UPDATE guests
+        SET whatsapp_status = 'ENVIADO',
+            last_whatsapp_sent_at = ?,
+            updated_at = ?
+        WHERE id = ?
+      `).run(now, now, guestId);
+    }
+
+    res.json({
+      success: true,
+      messageId: msgId,
+      created_at: now
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al registrar mensaje directo: ' + err.message });
+  }
+});
+
 export default router;

@@ -462,7 +462,10 @@ export const InvitadosModule: React.FC = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setWhatsappBanner({ text: data.error || 'Error al enviar WhatsApp', type: 'error' });
+        setWhatsappBanner({
+          text: `${data.error || 'Meta API no disponible'}. Puedes enviar el mensaje directamente haciendo clic en el ícono de WhatsApp junto al teléfono del invitado.`,
+          type: 'error'
+        });
       } else {
         setWhatsappBanner({ text: data.message, type: 'success' });
         // Update local guest whatsapp_status
