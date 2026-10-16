@@ -911,7 +911,7 @@ export const GeneralDashboard: React.FC = () => {
       </aside>
 
       {/* 2. Área Principal de Contenido */}
-      <main className={`flex-1 min-w-0 max-w-full overflow-x-hidden ${activeTab === 'calendario' ? 'p-0 md:p-8 lg:p-10' : 'p-4 sm:p-8 lg:p-10'} overflow-y-auto`}>
+      <main className="flex-1 min-w-0 max-w-full overflow-x-hidden p-3.5 sm:p-8 lg:p-10 overflow-y-auto">
         {/* PESTAÑA PRINCIPAL: BODAS */}
         {activeTab === 'weddings' && (
           <div>
@@ -1215,7 +1215,7 @@ export const GeneralDashboard: React.FC = () => {
         {/* PESTAÑA: CALENDARIO GENERAL */}
         {activeTab === 'calendario' && (
           <div className="space-y-4">
-            <div className="hidden md:flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
               <div className="flex items-center space-x-3.5">
                 {!sidebarOpen && (
                   <button

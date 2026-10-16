@@ -439,8 +439,8 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
       });
     }
 
-    // Next month filler days (fill up to 35 or 42 grid cells)
-    const totalSlots = days.length > 35 ? 42 : 35;
+    // Next month filler days (always fill 42 grid cells / 6 full weeks like Google Calendar)
+    const totalSlots = 42;
     const remainingSlots = totalSlots - days.length;
     for (let d = 1; d <= remainingSlots; d++) {
       const nextMonthDate = new Date(year, month + 1, d);
@@ -1376,76 +1376,66 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
       </div>
     </div>
 
-      {/* 2. MOBILE VIEW: GOOGLE CALENDAR APP LAYOUT (Idéntico a Google Calendar móvil) */}
-      <div className="md:hidden flex flex-col w-full bg-white select-none relative pb-20">
-        {/* Top Bar: Hamburger, "octubre ▾", Search, Today [16], Avatar (S) */}
-        <div className="flex items-center justify-between px-3 py-2.5 bg-white border-b border-[#F0EBE4] sticky top-0 z-30">
+      {/* 2. MOBILE VIEW: GOOGLE CALENDAR RESPONSIVE (Alineado con el estilo de la plataforma LAZO) */}
+      <div className="md:hidden flex flex-col w-full bg-white rounded-2xl border border-[#EAE3DA] shadow-xs overflow-hidden select-none relative mb-6">
+        {/* Card Header: Mes / Año + Navegación (Hoy, Flechas, Buscar) */}
+        <div className="flex items-center justify-between px-3.5 py-3 bg-[#FAF8F5] border-b border-[#EAE3DA]">
           <div className="flex items-center space-x-2">
-            {onToggleSidebar && (
-              <button
-                onClick={onToggleSidebar}
-                className="p-2 text-[#332A28] hover:bg-stone-100 rounded-full transition cursor-pointer"
-                title="Menú"
-                aria-label="Abrir Menú Lateral"
-              >
-                <Menu className="w-5 h-5 text-[#332A28]" />
-              </button>
-            )}
-            <div
-              onClick={handleToday}
-              className="flex items-center space-x-1 cursor-pointer select-none"
-            >
-              <span className="font-semibold text-lg text-[#332A28] lowercase">
-                {monthNames[month].toLowerCase()}
-              </span>
-              <ChevronDown className="w-4 h-4 text-stone-500" />
-            </div>
+            <h2 className="font-serif text-lg font-bold text-[#332A28] capitalize">
+              {monthNames[month]} {year}
+            </h2>
           </div>
 
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={() => setShowMobileSearch(prev => !prev)}
-              className="p-2 text-[#332A28] hover:bg-stone-100 rounded-full transition cursor-pointer"
-              title="Buscar"
-            >
-              <Search className="w-5 h-5" />
-            </button>
-
-            {/* Today Button Icon [16] */}
+          <div className="flex items-center space-x-1.5">
             <button
               onClick={handleToday}
-              className="p-1.5 text-[#332A28] hover:bg-stone-100 rounded-lg transition cursor-pointer"
+              className="px-2.5 py-1 text-xs font-semibold rounded-xl border border-[#EAE3DA] bg-white text-[#332A28] hover:bg-[#FAF8F5] transition shadow-2xs cursor-pointer"
               title="Ir a Hoy"
             >
-              <div className="w-6 h-6 border-2 border-[#332A28] rounded-md flex items-center justify-center font-bold text-[10px]">
-                {new Date().getDate()}
-              </div>
+              Hoy
             </button>
-
-            {/* User profile avatar */}
-            <div
-              className="w-8 h-8 rounded-full bg-[#1A73E8] text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer ml-1"
-              title={user?.name || ''}
-            >
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            <div className="flex items-center space-x-0.5">
+              <button
+                onClick={handlePrevMonth}
+                className="p-1 rounded-lg border border-[#EAE3DA] bg-white text-[#7D6F6B] hover:text-[#332A28] transition cursor-pointer"
+                title="Mes anterior"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleNextMonth}
+                className="p-1 rounded-lg border border-[#EAE3DA] bg-white text-[#7D6F6B] hover:text-[#332A28] transition cursor-pointer"
+                title="Mes siguiente"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
+            <button
+              onClick={() => setShowMobileSearch(prev => !prev)}
+              className={`p-1.5 rounded-lg border transition cursor-pointer ${
+                showMobileSearch ? 'bg-[#9C665C] text-white border-[#9C665C]' : 'border-[#EAE3DA] bg-white text-[#7D6F6B] hover:text-[#332A28]'
+              }`}
+              title="Buscar eventos"
+            >
+              <Search className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
         {/* Search bar on mobile (if toggled) */}
         {showMobileSearch && (
-          <div className="p-2.5 bg-[#FAF8F5] border-b border-[#EAE3DA] flex items-center space-x-2">
+          <div className="p-2.5 bg-white border-b border-[#EAE3DA] flex items-center space-x-2">
             <Search className="w-4 h-4 text-stone-400 shrink-0" />
             <input
               type="text"
               placeholder="Buscar eventos o tareas..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="flex-1 bg-white border border-[#EAE3DA] rounded-lg px-2.5 py-1 text-xs text-[#332A28] focus:outline-none"
+              className="flex-1 bg-[#FAF8F5] border border-[#EAE3DA] rounded-lg px-2.5 py-1.5 text-xs text-[#332A28] focus:outline-none"
               autoFocus
             />
             {search && (
-              <button onClick={() => setSearch('')} className="p-1 text-stone-400 hover:text-stone-700">
+              <button onClick={() => setSearch('')} className="p-1 text-stone-400 hover:text-stone-700 cursor-pointer">
                 <X className="w-3.5 h-3.5" />
               </button>
             )}
@@ -1453,11 +1443,11 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
         )}
 
         {/* Month Carousel Pills */}
-        <div className="flex items-center space-x-2 px-3 py-2.5 overflow-x-auto no-scrollbar border-b border-[#F0EBE4] bg-white">
+        <div className="flex items-center space-x-2 px-3 py-2.5 overflow-x-auto no-scrollbar border-b border-[#EAE3DA] bg-[#FAF8F5]/60">
           {monthCarousel.map((item, idx) => {
             if (item.isYearSeparator) {
               return (
-                <span key={`year-${idx}`} className="font-bold text-xs text-[#332A28] px-1.5 shrink-0 select-none">
+                <span key={`year-${idx}`} className="font-bold text-xs text-[#9C665C] px-1.5 shrink-0 select-none">
                   {item.label}
                 </span>
               );
@@ -1467,10 +1457,10 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
               <button
                 key={`m-${idx}`}
                 onClick={() => setCurrentDate(new Date(item.year, item.month, 1))}
-                className={`px-3.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 ${
+                className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 ${
                   isSelected
-                    ? 'bg-[#C2E7FF] text-[#004A77] font-bold shadow-2xs'
-                    : 'border border-[#EAE3DA] bg-white text-[#332A28] hover:bg-[#FAF8F5]'
+                    ? 'bg-[#9C665C] text-white font-bold shadow-2xs'
+                    : 'border border-[#EAE3DA] bg-white text-[#7D6F6B] hover:text-[#332A28] hover:bg-white'
                 }`}
               >
                 {item.label}
@@ -1480,14 +1470,14 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
         </div>
 
         {/* Day of Week Headers (D, L, M, M, J, V, S) */}
-        <div className="grid grid-cols-7 text-center py-2 bg-white border-b border-[#F0EBE4]">
+        <div className="grid grid-cols-7 text-center py-2 bg-white border-b border-[#EAE3DA]">
           {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((letter, dIdx) => {
             const isTodayWeekday = dIdx === new Date().getDay() && month === new Date().getMonth() && year === new Date().getFullYear();
             return (
               <div
                 key={dIdx}
                 className={`text-[11px] font-semibold ${
-                  isTodayWeekday ? 'text-[#1A73E8] font-bold' : 'text-[#7D6F6B]'
+                  isTodayWeekday ? 'text-[#9C665C] font-bold' : 'text-[#7D6F6B]'
                 }`}
               >
                 {letter}
@@ -1496,8 +1486,8 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
           })}
         </div>
 
-        {/* Monthly Grid (Full Width, 7 Columns, Never Cut Off) */}
-        <div className="grid grid-cols-7 w-full border-b border-[#EAE3DA] divide-x divide-y divide-[#EAE3DA] bg-white">
+        {/* Monthly Grid (Full Width, 7 Columns, 42 cells = 6 Full Rows) */}
+        <div className="grid grid-cols-7 w-full divide-x divide-y divide-[#EAE3DA] bg-white">
           {calendarDays.map((d, cIdx) => {
             const dayEvents = filteredEvents.filter(e => e.date === d.dateStr);
 
@@ -1505,19 +1495,19 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
               <div
                 key={cIdx}
                 onClick={() => setSelectedMobileDay(d.dateStr)}
-                className={`min-h-[84px] max-h-[105px] p-0.5 sm:p-1 flex flex-col justify-start overflow-hidden cursor-pointer active:bg-stone-50 transition relative ${
+                className={`min-h-[88px] sm:min-h-[105px] p-1 flex flex-col justify-start overflow-hidden cursor-pointer active:bg-[#FAF8F5] transition relative ${
                   !d.isCurrentMonth ? 'bg-[#FAF8F5]/50' : 'bg-white'
                 }`}
               >
                 {/* Day number */}
                 <div className="text-center mb-0.5">
                   {d.isToday ? (
-                    <div className="w-5 h-5 rounded-full bg-[#1A73E8] text-white font-bold text-[11px] flex items-center justify-center mx-auto shadow-2xs">
+                    <div className="w-5 h-5 rounded-full bg-[#9C665C] text-white font-bold text-[11px] flex items-center justify-center mx-auto shadow-2xs">
                       {d.dayNum}
                     </div>
                   ) : (
                     <span
-                      className={`text-[11px] font-normal inline-block ${
+                      className={`text-[11px] font-medium inline-block ${
                         d.isCurrentMonth ? 'text-[#332A28]' : 'text-stone-300'
                       }`}
                     >
@@ -1547,7 +1537,7 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                     </div>
                   ))}
                   {dayEvents.length > 3 && (
-                    <span className="text-[8px] font-bold text-stone-500 text-center leading-none">
+                    <span className="text-[8px] font-bold text-[#9C665C] text-center leading-none">
                       +{dayEvents.length - 3}
                     </span>
                   )}
@@ -1561,11 +1551,11 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
         <div className="fixed bottom-6 right-5 z-40">
           <button
             onClick={() => handleOpenAddEvent()}
-            className="w-14 h-14 rounded-2xl bg-[#D3E3FD] hover:bg-[#C2E7FF] text-[#041E49] shadow-xl flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+            className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#9C665C] hover:bg-[#8A574E] text-white shadow-xl flex items-center justify-center transition active:scale-90 cursor-pointer"
             title="Crear Evento"
             aria-label="Crear Evento"
           >
-            <Plus className="w-7 h-7 stroke-[2.5]" />
+            <Plus className="w-6 h-6 sm:w-7 sm:h-7 stroke-[2.5]" />
           </button>
         </div>
       </div>
