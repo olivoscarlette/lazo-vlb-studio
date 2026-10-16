@@ -322,12 +322,12 @@ export const WhatsAppHubModule: React.FC = () => {
                 Centro de Mensajería WhatsApp
               </h2>
               <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-xs font-semibold bg-[#E4ECE5] text-[#2B5235] border border-[#BDD4C1]">
-                <span className="w-2 h-2 rounded-full bg-[#2B5235]" />
-                <span>WhatsApp Directo (wa.me) 100% Activo</span>
+                <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse" />
+                <span>Meta Cloud API Oficial Conectada</span>
               </span>
             </div>
             <p className="text-sm text-[#8A7E72] mt-0.5">
-              Envío directo sin bloqueos de Meta ni plantillas pendientes, con respaldo de historial por boda.
+              Envío y recepción de mensajes en tiempo real integrada directamente con WhatsApp Business.
             </p>
           </div>
         </div>
@@ -669,28 +669,28 @@ export const WhatsAppHubModule: React.FC = () => {
                   </div>
 
                   <div className="flex items-center space-x-2.5">
-                    {/* Botón Principal: Abrir en WhatsApp (wa.me) sin depender de Meta */}
-                    <button
-                      type="button"
-                      onClick={handleOpenDirectWhatsApp}
-                      disabled={!newMessage.trim()}
-                      className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#E4ECE5] hover:bg-[#D5E3D7] text-[#2B5235] text-xs font-bold uppercase tracking-wider rounded-xl border border-[#BDD4C1] transition shadow-xs cursor-pointer disabled:opacity-50"
-                      title="Abrir en WhatsApp Web o App con mensaje prellenado"
-                    >
-                      <MessageSquare className="w-4 h-4 text-[#2B5235]" />
-                      <span>Abrir en WhatsApp (wa.me)</span>
-                    </button>
-
-                    {/* Botón Secundario: Enviar vía Meta Cloud API */}
+                    {/* Botón Principal: Enviar directamente vía Meta Cloud API */}
                     <button
                       type="button"
                       onClick={handleSendMessageMeta}
                       disabled={sending || !newMessage.trim()}
-                      className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
-                      title="Enviar mediante plantilla oficial de Meta API"
+                      className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs cursor-pointer disabled:opacity-50"
+                      title="Enviar directamente desde LAZO mediante WhatsApp Meta API"
                     >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>{sending ? 'Enviando...' : 'Meta API'}</span>
+                      <Send className="w-4 h-4" />
+                      <span>{sending ? 'Enviando...' : 'Enviar por WhatsApp'}</span>
+                    </button>
+
+                    {/* Auxiliar opcional: wa.me */}
+                    <button
+                      type="button"
+                      onClick={handleOpenDirectWhatsApp}
+                      disabled={!newMessage.trim()}
+                      className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-medium text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer disabled:opacity-40"
+                      title="Abrir en WhatsApp Web / App como alternativa"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>wa.me</span>
                     </button>
                   </div>
                 </div>
