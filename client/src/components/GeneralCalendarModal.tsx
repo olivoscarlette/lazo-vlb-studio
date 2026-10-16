@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Calendar as CalendarIcon, Clock, MapPin, User,
@@ -308,7 +309,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
     return true;
   });
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 bg-[#2B2826]/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in">
       <div className="bg-[#FFFFFF] w-full max-w-6xl h-[92vh] max-h-[880px] rounded-3xl border border-[#EAE3DA] shadow-2xl flex flex-col overflow-hidden">
         
@@ -954,6 +955,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
