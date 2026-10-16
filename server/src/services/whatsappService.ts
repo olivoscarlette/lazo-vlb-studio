@@ -595,7 +595,7 @@ export class WhatsAppService {
       }
     ];
 
-    const primaryResult = await this.sendTemplate(toPhone, templateName, 'es_MX', components, {
+    let primaryResult = await this.sendTemplate(toPhone, templateName, 'es_MX', components, {
       weddingId: params.weddingId,
       guestId: params.guestId,
       contentSummary
@@ -605,6 +605,25 @@ export class WhatsAppService {
       return primaryResult;
     }
 
+    // If template was created with language 'es' (Spanish general) instead of 'es_MX'
+    if (
+      primaryResult.error &&
+      (primaryResult.error.includes('132001') ||
+        primaryResult.error.includes('does not exist') ||
+        primaryResult.error.includes('translation'))
+    ) {
+      console.log(`[WhatsAppService] Reintentando plantilla "${templateName}" con idioma 'es'...`);
+      const esResult = await this.sendTemplate(toPhone, templateName, 'es', components, {
+        weddingId: params.weddingId,
+        guestId: params.guestId,
+        contentSummary
+      });
+
+      if (esResult.success) {
+        return esResult;
+      }
+    }
+
     // If template is still pending in Meta or does not exist yet, fallback to hello_world so message delivers
     if (
       primaryResult.error &&
@@ -612,11 +631,11 @@ export class WhatsAppService {
         primaryResult.error.includes('does not exist') ||
         primaryResult.error.includes('translation'))
     ) {
-      console.warn(`[WhatsAppService] Plantilla "${templateName}" está en revisión en Meta. Enviando con plantilla aprobada "hello_world"...`);
+      console.warn(`[WhatsAppService] Plantilla "${templateName}" no encontrada en Meta. Probando fallback "hello_world"...`);
       return this.sendTemplate(toPhone, 'hello_world', 'en_US', [], {
         weddingId: params.weddingId,
         guestId: params.guestId,
-        contentSummary: `${contentSummary} [Plantilla de prueba aprobada]`
+        contentSummary: `${contentSummary} [Plantilla de prueba]`
       });
     }
 
