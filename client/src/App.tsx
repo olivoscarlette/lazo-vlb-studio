@@ -17,6 +17,7 @@ import { ReportesModule } from './modules/ReportesModule';
 import { DirectorioModule } from './modules/DirectorioModule';
 import { BitacoraModule } from './modules/BitacoraModule';
 import { WhatsAppHubModule } from './modules/WhatsAppHubModule';
+import { CalendarioModule } from './modules/CalendarioModule';
 import {
   Lock, Mail, ArrowRight, AlertCircle
 } from 'lucide-react';
@@ -205,6 +206,8 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
         return <BitacoraModule />;
       case 'whatsapp':
         return <WhatsAppHubModule />;
+      case 'calendario':
+        return <CalendarioModule />;
       default:
         return <ResumenModule onNavigateTab={setActiveTab} />;
     }

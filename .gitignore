@@ -12,6 +12,8 @@ data/*.db-wal
 data/backups/
 storage/uploads/*
 storage/backups/*
+*.sqlite
+server/*.sqlite
 
 # Variables de entorno privadas
 .env

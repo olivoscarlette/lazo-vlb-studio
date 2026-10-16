@@ -384,6 +384,12 @@ export function initDatabase() {
     // Column already exists
   }
 
+  try {
+    db.exec("ALTER TABLE calendar_events ADD COLUMN checklist TEXT DEFAULT '[]';");
+  } catch {
+    // Column already exists
+  }
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS calendar_events (
       id TEXT PRIMARY KEY,
@@ -396,6 +402,7 @@ export function initDatabase() {
       location TEXT,
       responsible TEXT,
       notes TEXT,
+      checklist TEXT DEFAULT '[]',
       created_by TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
@@ -404,6 +411,16 @@ export function initDatabase() {
 
     CREATE INDEX IF NOT EXISTS idx_calendar_date ON calendar_events(date);
     CREATE INDEX IF NOT EXISTS idx_calendar_wedding ON calendar_events(wedding_id);
+
+    CREATE TABLE IF NOT EXISTS calendar_tasks (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      notes TEXT,
+      due_date TEXT,
+      location TEXT,
+      completed INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
   `);
 
   db.exec(`

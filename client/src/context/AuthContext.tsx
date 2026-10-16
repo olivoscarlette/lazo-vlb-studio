@@ -10,6 +10,8 @@ interface AuthContextType {
   setCurrentWedding: (wedding: Wedding | null) => void;
   activeTab: WorkspaceTab;
   setActiveTab: (tab: WorkspaceTab) => void;
+  generalDashboardTab: string;
+  setGeneralDashboardTab: (tab: string) => void;
   navigateToNotification: (notif: NotificationItem) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -141,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('resumen');
+  const [generalDashboardTab, setGeneralDashboardTab] = useState<string>('weddings');
 
   const navigateToNotification = async (notif: NotificationItem) => {
     // 1. Mark as read on server
@@ -224,6 +227,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentWedding,
         activeTab,
         setActiveTab,
+        generalDashboardTab,
+        setGeneralDashboardTab,
         navigateToNotification,
         login,
         logout,

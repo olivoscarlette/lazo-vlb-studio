@@ -10,10 +10,12 @@ import {
   FileText, LayoutGrid, PanelLeftClose, PanelLeft
 } from 'lucide-react';
 import { WhatsAppHubModule } from './WhatsAppHubModule';
+import { CalendarioModule } from './CalendarioModule';
 
 export const GeneralDashboard: React.FC = () => {
-  const { user, token, setCurrentWedding, logout, notifications, refreshNotifications } = useAuth();
-  const [activeTab, setActiveTab] = useState<'weddings' | 'whatsapp' | 'plantillas' | 'catalogos' | 'equipo' | 'ajustes'>('weddings');
+  const { user, token, setCurrentWedding, logout, notifications, refreshNotifications, generalDashboardTab, setGeneralDashboardTab } = useAuth();
+  const activeTab = generalDashboardTab || 'weddings';
+  const setActiveTab = (t: string) => setGeneralDashboardTab(t);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
 
   // Collapsable sidebar state (persisted)
@@ -765,6 +767,7 @@ export const GeneralDashboard: React.FC = () => {
 
   const sidebarNavItems = [
     { id: 'weddings', label: 'Bodas', icon: Users2 },
+    { id: 'calendario', label: 'Calendario General', icon: Calendar },
     { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare },
     { id: 'plantillas', label: 'Plantillas', icon: FileText },
     { id: 'catalogos', label: 'Catálogos', icon: LayoutGrid },
@@ -1139,6 +1142,37 @@ export const GeneralDashboard: React.FC = () => {
                 })}
               </div>
             )}
+          </div>
+        )}
+
+        {/* PESTAÑA: CALENDARIO GENERAL (GOOGLE CALENDAR EXPERIENCE) */}
+        {activeTab === 'calendario' && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+              <div className="flex items-center space-x-3.5">
+                {!sidebarOpen && (
+                  <button
+                    onClick={handleToggleSidebar}
+                    aria-label="Mostrar menú lateral"
+                    className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    title="Mostrar menú lateral (⌘B)"
+                  >
+                    <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                    <span className="text-sm font-semibold hidden sm:inline">Menú</span>
+                  </button>
+                )}
+                <div>
+                  <h1 className="text-2xl font-serif font-bold text-[#332A28] tracking-tight">
+                    Calendario General
+                  </h1>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Visión unificada de citas planning, bodas, citas externas, open houses, listas de tareas y sincronización Google Calendar.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <CalendarioModule />
           </div>
         )}
 

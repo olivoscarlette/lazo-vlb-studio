@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CalendarCheck2, Users2, Grid2x2Check,
   CreditCard, Landmark, Church, Clock3, CheckSquare,
   FileText, BarChart3, Contact2, History, X, MessageSquare,
-  ChevronLeft, Sparkles
+  ChevronLeft, Sparkles, Calendar
 } from 'lucide-react';
 
 export type WorkspaceTab =
@@ -21,7 +21,8 @@ export type WorkspaceTab =
   | 'reportes'
   | 'directorio'
   | 'bitacora'
-  | 'whatsapp';
+  | 'whatsapp'
+  | 'calendario';
 
 interface SidebarProps {
   currentTab: WorkspaceTab;
@@ -129,6 +130,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {
           title: 'GESTIÓN & ARCHIVOS',
           items: [
+            { id: 'calendario', label: 'Calendario General', icon: Calendar, hiddenForNovios: true },
             { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare, hiddenForNovios: true },
             { id: 'documentos', label: 'Documentos', icon: FileText },
             { id: 'reportes', label: 'Reportes', icon: BarChart3 },

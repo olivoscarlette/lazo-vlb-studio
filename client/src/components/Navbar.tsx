@@ -5,7 +5,6 @@ import {
   CheckCircle2, ShieldCheck, Menu, PanelLeft, Calendar
 } from 'lucide-react';
 import { UserRole } from '../types';
-import { GeneralCalendarModal } from './GeneralCalendarModal';
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
@@ -21,13 +20,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
     assignedWeddings,
     notifications,
     refreshNotifications,
-    navigateToNotification
+    navigateToNotification,
+    setActiveTab,
+    setGeneralDashboardTab
   } = useAuth();
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showWeddingMenu, setShowWeddingMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
-  const [showGeneralCalendar, setShowGeneralCalendar] = useState(false);
 
   if (!user) return null;
 
@@ -156,9 +156,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             {/* Calendario General Button for Admin, Coordinador, Staff */}
             {user.role !== 'NOVIOS' && (
               <button
-                onClick={() => setShowGeneralCalendar(true)}
+                onClick={() => {
+                  if (user.role === 'ADMINISTRADOR') {
+                    setCurrentWedding(null);
+                    setGeneralDashboardTab('calendario');
+                  } else if (currentWedding) {
+                    setActiveTab('calendario');
+                  } else {
+                    setGeneralDashboardTab('calendario');
+                  }
+                }}
                 className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] transition shadow-2xs cursor-pointer"
-                title="Abrir Calendario General VLB (Citas Planning, Bodas, Citas Externas, Open House)"
+                title="Abrir Calendario General VLB"
               >
                 <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
                 <span className="hidden sm:inline">Calendario General</span>
@@ -251,19 +260,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
           </div>
         </div>
       </div>
-
-      {/* General Studio Calendar Modal */}
-      <GeneralCalendarModal
-        isOpen={showGeneralCalendar}
-        onClose={() => setShowGeneralCalendar(false)}
-        onSelectWedding={(wedId) => {
-          const match = assignedWeddings.find(w => w.id === wedId);
-          if (match) {
-            setCurrentWedding(match);
-            setShowGeneralCalendar(false);
-          }
-        }}
-      />
     </header>
   );
 };

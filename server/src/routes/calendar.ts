@@ -335,12 +335,13 @@ router.post('/', authenticateToken, (req, res) => {
 
     const id = 'cal_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     const now = new Date().toISOString();
+    const checklistStr = typeof req.body.checklist === 'string' ? req.body.checklist : JSON.stringify(req.body.checklist || []);
 
     db.prepare(`
       INSERT INTO calendar_events (
         id, wedding_id, title, event_type, date, time, end_time,
-        location, responsible, notes, created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        location, responsible, notes, checklist, created_by, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       wedding_id || null,
@@ -352,6 +353,7 @@ router.post('/', authenticateToken, (req, res) => {
       location || null,
       responsible || user.name,
       notes || null,
+      checklistStr,
       user.name,
       now,
       now
@@ -373,7 +375,7 @@ router.put('/:id', authenticateToken, (req, res) => {
   try {
     const user = req.user!;
     const { id } = req.params;
-    const { title, event_type, date, time, end_time, location, responsible, notes, wedding_id, force_conflict } = req.body;
+    const { title, event_type, date, time, end_time, location, responsible, notes, checklist, wedding_id, force_conflict } = req.body;
 
     const existing = db.prepare('SELECT * FROM calendar_events WHERE id = ?').get(id) as any;
     if (!existing) {
@@ -393,11 +395,14 @@ router.put('/:id', authenticateToken, (req, res) => {
     }
 
     const now = new Date().toISOString();
+    const checklistStr = checklist !== undefined
+      ? (typeof checklist === 'string' ? checklist : JSON.stringify(checklist))
+      : (existing.checklist || '[]');
 
     db.prepare(`
       UPDATE calendar_events SET
         title = ?, event_type = ?, date = ?, time = ?, end_time = ?,
-        location = ?, responsible = ?, notes = ?, wedding_id = ?, updated_at = ?
+        location = ?, responsible = ?, notes = ?, checklist = ?, wedding_id = ?, updated_at = ?
       WHERE id = ?
     `).run(
       title || existing.title,
@@ -408,6 +413,7 @@ router.put('/:id', authenticateToken, (req, res) => {
       location !== undefined ? location : existing.location,
       responsible !== undefined ? responsible : existing.responsible,
       notes !== undefined ? notes : existing.notes,
+      checklistStr,
       wedding_id !== undefined ? wedding_id : existing.wedding_id,
       now,
       id
@@ -427,6 +433,79 @@ router.delete('/:id', authenticateToken, (req, res) => {
     res.json({ message: 'Evento eliminado del calendario general.' });
   } catch (err: any) {
     res.status(500).json({ error: 'Error al eliminar evento: ' + err.message });
+  }
+});
+
+// --- GOOGLE TASKS STYLE ROUTES FOR LISTS ---
+
+// GET /api/calendar/tasks - Get all tasks
+router.get('/tasks', authenticateToken, (req, res) => {
+  try {
+    const tasks = db.prepare('SELECT * FROM calendar_tasks ORDER BY completed ASC, due_date ASC, created_at DESC').all();
+    res.json({ tasks });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al obtener tareas: ' + err.message });
+  }
+});
+
+// POST /api/calendar/tasks - Create task
+router.post('/tasks', authenticateToken, (req, res) => {
+  try {
+    const { title, notes, due_date, location } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'El título de la tarea es obligatorio.' });
+    }
+    const id = 'task_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO calendar_tasks (id, title, notes, due_date, location, completed, created_at)
+      VALUES (?, ?, ?, ?, ?, 0, ?)
+    `).run(id, title.trim(), notes || null, due_date || null, location || null, now);
+
+    res.status(201).json({ task: { id, title: title.trim(), notes, due_date, location, completed: 0, created_at: now } });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al crear tarea: ' + err.message });
+  }
+});
+
+// PUT /api/calendar/tasks/:id - Update task (toggle completed, edit)
+router.put('/tasks/:id', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, notes, due_date, location, completed } = req.body;
+    const existing = db.prepare('SELECT * FROM calendar_tasks WHERE id = ?').get(id) as any;
+    if (!existing) {
+      return res.status(404).json({ error: 'Tarea no encontrada.' });
+    }
+
+    db.prepare(`
+      UPDATE calendar_tasks SET
+        title = ?, notes = ?, due_date = ?, location = ?, completed = ?
+      WHERE id = ?
+    `).run(
+      title !== undefined ? title : existing.title,
+      notes !== undefined ? notes : existing.notes,
+      due_date !== undefined ? due_date : existing.due_date,
+      location !== undefined ? location : existing.location,
+      completed !== undefined ? (completed ? 1 : 0) : existing.completed,
+      id
+    );
+
+    res.json({ message: 'Tarea actualizada.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al actualizar tarea: ' + err.message });
+  }
+});
+
+// DELETE /api/calendar/tasks/:id - Delete task
+router.delete('/tasks/:id', authenticateToken, (req, res) => {
+  try {
+    const { id } = req.params;
+    db.prepare('DELETE FROM calendar_tasks WHERE id = ?').run(id);
+    res.json({ message: 'Tarea eliminada.' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al eliminar tarea: ' + err.message });
   }
 });
 
