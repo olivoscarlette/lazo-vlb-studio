@@ -92,7 +92,7 @@ router.get('/', authenticateToken, (req, res) => {
         wedding_date as date,
         '12:00' as time,
         '23:59' as end_time,
-        venue as location,
+        COALESCE(reception_venue, ceremony_venue, 'Por definir') as location,
         'Equipo VLB Studio' as responsible,
         'Día oficial de la boda: ' || name as notes,
         'CONFIRMADA' as status,
@@ -182,7 +182,7 @@ router.get('/feed.ics', (req, res) => {
     const meetings = db.prepare(meetQuery).all(...meetParams) as any[];
 
     // 3. Wedding Days
-    let wedQuery = "SELECT id, name, wedding_date, venue FROM weddings WHERE wedding_date IS NOT NULL AND wedding_date != ''";
+    let wedQuery = "SELECT id, name, wedding_date, ceremony_venue, reception_venue FROM weddings WHERE wedding_date IS NOT NULL AND wedding_date != ''";
     const wedParams: any[] = [];
     if (wedding_id) {
       wedQuery += ' AND id = ?';
@@ -285,14 +285,15 @@ router.get('/feed.ics', (req, res) => {
       const cleanDate = (w.wedding_date || '').replace(/[^0-9]/g, '');
       if (!cleanDate) continue;
 
+      const venue = w.reception_venue || w.ceremony_venue || 'Por definir';
       lines.push('BEGIN:VEVENT');
       lines.push(`UID:lazo-wedding-day-${w.id}@vlb.studio`);
       lines.push(`DTSTAMP:${nowIso}`);
       lines.push(`DTSTART;VALUE=DATE:${cleanDate}`);
       lines.push(`SUMMARY:${escapeIcs(`💍 BODA VLB: ${w.name}`)}`);
-      lines.push(`DESCRIPTION:${escapeIcs(`Día oficial de celebración para la boda de ${w.name}.\\nVenue: ${w.venue || 'Por definir'}\\nPlataforma: LAZO VLB Studio`)}`);
-      if (w.venue) {
-        lines.push(`LOCATION:${escapeIcs(w.venue)}`);
+      lines.push(`DESCRIPTION:${escapeIcs(`Día oficial de celebración para la boda de ${w.name}.\\nLugar: ${venue}\\nPlataforma: LAZO VLB Studio`)}`);
+      if (venue && venue !== 'Por definir') {
+        lines.push(`LOCATION:${escapeIcs(venue)}`);
       }
       lines.push('STATUS:CONFIRMED');
       lines.push('END:VEVENT');
