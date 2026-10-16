@@ -572,16 +572,11 @@ export class WhatsAppService {
       };
     }
 
-    const templateName = process.env.WHATSAPP_RSVP_TEMPLATE || 'rsvp_confirmacion_boda';
+    const rawTemplateEnv = process.env.WHATSAPP_RSVP_TEMPLATE;
+    const templateName = rawTemplateEnv && rawTemplateEnv !== 'hello_world'
+      ? rawTemplateEnv
+      : 'rsvp_confirmacion_boda';
     const contentSummary = `Hola ${params.guestName}, te enviamos la confirmación de asistencia (RSVP) para la boda de ${params.coupleNames || 'los novios'}.`;
-
-    if (templateName === 'hello_world') {
-      return this.sendTemplate(toPhone, 'hello_world', 'en_US', [], {
-        weddingId: params.weddingId,
-        guestId: params.guestId,
-        contentSummary
-      });
-    }
 
     const components = [
       {
@@ -622,21 +617,6 @@ export class WhatsAppService {
       if (esResult.success) {
         return esResult;
       }
-    }
-
-    // If template is still pending in Meta or does not exist yet, fallback to hello_world so message delivers
-    if (
-      primaryResult.error &&
-      (primaryResult.error.includes('132001') ||
-        primaryResult.error.includes('does not exist') ||
-        primaryResult.error.includes('translation'))
-    ) {
-      console.warn(`[WhatsAppService] Plantilla "${templateName}" no encontrada en Meta. Probando fallback "hello_world"...`);
-      return this.sendTemplate(toPhone, 'hello_world', 'en_US', [], {
-        weddingId: params.weddingId,
-        guestId: params.guestId,
-        contentSummary: `${contentSummary} [Plantilla de prueba]`
-      });
     }
 
     return primaryResult;
