@@ -49,47 +49,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleWeddingDayMode
 }) => {
   const { user, token, currentWedding, setCurrentWedding } = useAuth();
-  const [rsvpPercent, setRsvpPercent] = useState<number | null>(null);
-  const [pendingChecklistCount, setPendingChecklistCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!currentWedding || !token) return;
-
-    // Fetch quick stats for badges
-    const fetchStats = async () => {
-      try {
-        const [wRes, chRes] = await Promise.all([
-          fetch(`/api/weddings/${currentWedding.id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          fetch(`/api/checklist/${currentWedding.id}`, {
-            headers: { Authorization: `Bearer ${token}` }
-          })
-        ]);
-
-        if (wRes.ok) {
-          const wData = await wRes.json();
-          const stats = wData.stats?.guests || {};
-          const total = stats.total_guests || wData.wedding?.estimated_guests || 0;
-          const conf = stats.confirmed_count || stats.confirmed_total_seats || 0;
-          if (total > 0) {
-            setRsvpPercent(Math.min(100, Math.round((conf / total) * 100)));
-          }
-        }
-
-        if (chRes.ok) {
-          const chData = await chRes.json();
-          const items = chData.items || [];
-          const pending = items.filter((it: any) => !it.completed).length;
-          setPendingChecklistCount(pending);
-        }
-      } catch (err) {
-        // Silently fallback if stats not available
-      }
-    };
-
-    fetchStats();
-  }, [currentWedding?.id, token]);
 
   if (!user || !currentWedding) return null;
 
@@ -216,31 +175,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   const Icon = item.icon;
                   const active = currentTab === item.id;
 
-                  // Badges dinámicos
-                  let badge = null;
-                  if (item.id === 'invitados' && rsvpPercent !== null) {
-                    badge = (
-                      <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-semibold ${
-                        active ? 'bg-[#9C665C] text-white' : 'bg-[#EAE3DA] text-[#70443D]'
-                      }`}>
-                        {rsvpPercent}%
-                      </span>
-                    );
-                  } else if (item.id === 'checklist' && pendingChecklistCount !== null && pendingChecklistCount > 0) {
-                    badge = (
-                      <span className={`text-[11px] px-1.5 py-0.5 rounded-md font-semibold ${
-                        active ? 'bg-[#9C665C] text-white' : 'bg-[#EFE2DF] text-[#8A574E]'
-                      }`}>
-                        {pendingChecklistCount}
-                      </span>
-                    );
-                  }
-
                   return (
                     <button
                       key={item.id}
                       onClick={() => handleItemClick(item.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all cursor-pointer ${
+                      className={`w-full flex items-center px-3 py-2 rounded-xl text-sm transition-all cursor-pointer ${
                         active
                           ? 'bg-[#EFE8E0] text-[#2B2826] font-semibold shadow-2xs'
                           : 'text-[#5E524E] hover:bg-[#F4EFEB] hover:text-[#2B2826] font-medium'
@@ -250,7 +189,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#9C665C]' : 'text-[#8A7E72]'}`} />
                         <span className="truncate">{item.label}</span>
                       </div>
-                      {badge}
                     </button>
                   );
                 })}
