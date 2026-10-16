@@ -324,14 +324,14 @@ export const ProveedoresPagosModule: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowPaymentModal(true)}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition shadow-xs cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-lg border border-[#EAE3DA] transition shadow-2xs cursor-pointer"
           >
             <DollarSign className="w-3.5 h-3.5 text-[#6E8C70]" />
             <span>Registrar Pago</span>
           </button>
           <button
             onClick={handleOpenAddVendor}
-            className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-lg shadow-2xs transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Nuevo Proveedor</span>
@@ -448,10 +448,10 @@ export const ProveedoresPagosModule: React.FC = () => {
           </div>
 
           {/* Filtro de Ubicación */}
-          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1">
+          <div className="flex items-center space-x-1 overflow-x-auto pb-1">
             <button
               onClick={() => setLocationFilter('TODAS')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'TODAS'
                   ? 'bg-[#9C665C] text-white shadow-2xs'
                   : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
@@ -461,7 +461,7 @@ export const ProveedoresPagosModule: React.FC = () => {
             </button>
             <button
               onClick={() => setLocationFilter('CIVIL')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'CIVIL'
                   ? 'bg-[#9C665C] text-white shadow-2xs'
                   : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
@@ -471,7 +471,7 @@ export const ProveedoresPagosModule: React.FC = () => {
             </button>
             <button
               onClick={() => setLocationFilter('RECEPCIÓN')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'RECEPCIÓN'
                   ? 'bg-[#9C665C] text-white shadow-2xs'
                   : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
@@ -481,7 +481,7 @@ export const ProveedoresPagosModule: React.FC = () => {
             </button>
             <button
               onClick={() => setLocationFilter('GENERAL')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'GENERAL'
                   ? 'bg-[#9C665C] text-white shadow-2xs'
                   : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
@@ -495,19 +495,19 @@ export const ProveedoresPagosModule: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#FAF8F5] border-b border-[#EAE3DA] text-xs font-semibold uppercase tracking-wider text-[#8A7E72]">
-                <th className="py-3.5 px-3 whitespace-nowrap">PROVEEDOR</th>
-                <th className="py-3.5 px-3 whitespace-nowrap">CATEGORÍA</th>
-                <th className="py-3.5 px-3 whitespace-nowrap">TELÉFONO</th>
-                <th className="py-3.5 px-3 whitespace-nowrap">ETAPAS</th>
-                <th className="py-3.5 px-3 text-center whitespace-nowrap">FECHA LÍMITE</th>
-                <th className="py-3.5 px-3 text-right whitespace-nowrap">COSTO</th>
-                <th className="py-3.5 px-3 text-right whitespace-nowrap">PAGADO</th>
-                <th className="py-3.5 px-3 text-right whitespace-nowrap">RESTANTE</th>
-                <th className="py-3.5 px-2 text-center whitespace-nowrap"></th>
+              <tr className="bg-[#FAF8F5] border-b border-[#EAE3DA] text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72]">
+                <th className="py-2.5 px-3 whitespace-nowrap">PROVEEDOR</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">CATEGORÍA</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">TELÉFONO</th>
+                <th className="py-2.5 px-3 whitespace-nowrap">ETAPAS</th>
+                <th className="py-2.5 px-3 text-center whitespace-nowrap">FECHA LÍMITE</th>
+                <th className="py-2.5 px-3 text-right whitespace-nowrap">COSTO</th>
+                <th className="py-2.5 px-3 text-right whitespace-nowrap">PAGADO</th>
+                <th className="py-2.5 px-3 text-right whitespace-nowrap">RESTANTE</th>
+                <th className="py-2.5 px-2 text-center whitespace-nowrap"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#FAF8F5] text-sm">
+            <tbody className="divide-y divide-[#FAF8F5] text-xs">
               {loading ? (
                 <tr><td colSpan={9} className="py-8 text-center text-[#8A7E72]">Cargando proveedores...</td></tr>
               ) : filteredVendors.length === 0 ? (
@@ -517,7 +517,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                   const dueStatus = getPaymentDueStatus(v.payment_due_date, v.saldo_restante);
                   return (
                     <tr key={v.id} className="hover:bg-[#FCFAF7] transition group">
-                      <td className="py-3 px-3 whitespace-nowrap">
+                      <td className="py-2.5 px-3 whitespace-nowrap">
                         <div
                           onClick={() => handleOpenEditVendor(v)}
                           className="cursor-pointer font-bold text-[#2B2826] hover:text-[#9C665C] inline-flex items-center space-x-1 whitespace-nowrap transition"
@@ -527,32 +527,32 @@ export const ProveedoresPagosModule: React.FC = () => {
                           <Edit3 className="w-3.5 h-3.5 text-[#8A7E72] group-hover:text-[#9C665C] transition shrink-0" />
                         </div>
                         {v.contact_person && (
-                          <div className="text-xs text-[#8A7E72] whitespace-nowrap mt-0.5">Contacto: {v.contact_person}</div>
+                          <div className="text-[11px] text-[#8A7E72] whitespace-nowrap mt-0.5">Contacto: {v.contact_person}</div>
                         )}
                       </td>
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <span className="inline-block bg-[#FAF8F5] text-[#5A524C] px-2.5 py-0.5 rounded-md text-xs font-medium border border-[#EAE3DA] whitespace-nowrap">
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <span className="inline-flex items-center bg-[#FAF8F5] text-[#5A524C] px-2 py-0.5 rounded-md text-[11px] font-medium border border-[#EAE3DA] whitespace-nowrap shrink-0">
                           {v.type}
                         </span>
                       </td>
-                      <td className="py-3 px-3 font-mono text-xs text-[#5A524C] whitespace-nowrap">
+                      <td className="py-2.5 px-3 font-mono text-xs text-[#5A524C] whitespace-nowrap">
                         <a
                           href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1.5 text-[#5A524C] hover:text-[#9C665C] whitespace-nowrap"
+                          className="inline-flex items-center space-x-1.5 text-[#5A524C] hover:text-[#9C665C] whitespace-nowrap shrink-0"
                           title="Contactar vía WhatsApp"
                         >
                           <MessageSquare className="w-3.5 h-3.5 text-[#2B5235] shrink-0" />
                           <span className="whitespace-nowrap">{v.phone}</span>
                         </a>
                       </td>
-                      <td className="py-3 px-3 whitespace-nowrap">
-                        <div className="inline-flex items-center gap-1 whitespace-nowrap">
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <div className="inline-flex items-center gap-1 whitespace-nowrap shrink-0">
                           {v.locations.map(loc => (
                             <span
                               key={loc}
-                              className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap ${
+                              className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap shrink-0 ${
                                 loc === 'CIVIL'
                                   ? 'bg-[#FDF6F5] text-[#9C665C] border border-[#F3DCD7]'
                                   : loc === 'IGLESIA'
@@ -565,28 +565,28 @@ export const ProveedoresPagosModule: React.FC = () => {
                           ))}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-center whitespace-nowrap">
+                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
                         {v.payment_due_date ? (
-                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap ${dueStatus.badgeClass}`}>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border whitespace-nowrap shrink-0 ${dueStatus.badgeClass}`}>
                             {dueStatus.label}
                           </span>
                         ) : (
                           <span className="text-xs text-[#8A7E72] italic">Sin definir</span>
                         )}
                       </td>
-                      <td className="py-3 px-3 text-right font-semibold text-[#2B2826] whitespace-nowrap">
+                      <td className="py-2.5 px-3 text-right font-semibold text-[#2B2826] whitespace-nowrap">
                         ${v.costo_real.toLocaleString()}
                       </td>
-                      <td className="py-3 px-3 text-right font-semibold text-[#2B5235] whitespace-nowrap">
+                      <td className="py-2.5 px-3 text-right font-semibold text-[#2B5235] whitespace-nowrap">
                         ${(v.total_pagado || 0).toLocaleString()}
                       </td>
-                      <td className="py-3 px-3 text-right font-bold text-[#8A574E] whitespace-nowrap">
+                      <td className="py-2.5 px-3 text-right font-bold text-[#8A574E] whitespace-nowrap">
                         ${(v.saldo_restante || 0).toLocaleString()}
                       </td>
-                      <td className="py-3 px-2 text-center whitespace-nowrap">
+                      <td className="py-2.5 px-2 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleDeleteVendor(v.id)}
-                          className="text-[#8A7E72] hover:text-rose-700 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                          className="text-[#8A7E72] hover:text-rose-700 p-1 rounded-lg hover:bg-rose-50 transition cursor-pointer"
                           title="Eliminar proveedor"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

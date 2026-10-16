@@ -162,20 +162,34 @@
 }
 
 /* ==========================================================================
-   ESCALA DE LECTURA CÓMODA: Aumenta textos operativos a mínimo 14px (text-sm)
-   con interlineado generoso (leading-relaxed) para evitar la fatiga visual
+   CHIPS, BADGES Y PILLS ANTI-EMPALME (Web & Mobile)
+   Garantiza que ningún chip se rompa en dos líneas ni se empalme con el borde
    ========================================================================== */
-.text-\[9px\],
-.text-\[10px\],
-.text-\[11px\],
+span[class*="rounded-full"],
+span[class*="rounded-md"],
+span[class*="rounded-xl"],
+.badge,
+.chip,
+.pill,
+[class*="rounded-full"][class*="px-"] {
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1.25 !important;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* Escala equilibrada y legible para textos pequeños sin desbordar contenedores */
 .text-xs {
-  font-size: 0.875rem !important; /* 14px legible */
-  line-height: 1.625 !important;   /* leading-relaxed */
+  font-size: 0.75rem; /* 12px */
+  line-height: 1rem;
 }
 
 .text-sm {
-  font-size: 0.9375rem !important; /* ~15px */
-  line-height: 1.625 !important;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.375rem;
 }
 
 /* Botones Primarios: Rosa Quemado (#9C665C), hover (#8A574E) */

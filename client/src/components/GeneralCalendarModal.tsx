@@ -334,36 +334,36 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center space-x-2.5 self-end md:self-auto">
+          <div className="flex items-center space-x-2 self-end md:self-auto">
             <button
               onClick={() => setShowGoogleSyncModal(true)}
-              className="px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] hover:border-[#4285F4]/40 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer inline-flex items-center space-x-1.5"
+              className="px-2.5 py-1.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] hover:border-[#4285F4]/40 text-xs font-semibold rounded-lg transition shadow-2xs cursor-pointer inline-flex items-center space-x-1.5"
               title="Vincular y sincronizar con Google Calendar"
             >
               <CalendarIcon className="w-3.5 h-3.5 text-[#4285F4]" />
-              <span>Vincular Google Calendar</span>
+              <span className="hidden sm:inline">Google Calendar</span>
             </button>
 
             <button
               onClick={() => handleOpenAdd()}
-              className="px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs cursor-pointer inline-flex items-center space-x-1.5"
+              className="px-3 py-1.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-lg transition shadow-2xs cursor-pointer inline-flex items-center space-x-1.5"
             >
-              <Plus className="w-4 h-4" />
-              <span>Agendar Cita / Evento</span>
+              <Plus className="w-3.5 h-3.5" />
+              <span>Agendar Cita</span>
             </button>
             <button
               onClick={onClose}
-              className="p-2 text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#FAF8F5] rounded-xl transition cursor-pointer"
+              className="p-1.5 text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#FAF8F5] rounded-lg transition cursor-pointer"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Filters and Month Switcher */}
-        <div className="px-6 py-3 border-b border-[#EAE3DA] bg-[#FFFFFF] flex flex-wrap items-center justify-between gap-3">
+        <div className="px-6 py-2.5 border-b border-[#EAE3DA] bg-[#FFFFFF] flex flex-wrap items-center justify-between gap-2.5">
           {/* Categories */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
             {[
               { id: 'TODOS', label: 'Todos' },
               { id: 'PLANNING', label: 'Citas Planning' },
@@ -375,9 +375,9 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
               <button
                 key={tab.id}
                 onClick={() => setFilterType(tab.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                   filterType === tab.id
-                    ? 'bg-[#2B2826] text-white shadow-xs'
+                    ? 'bg-[#2B2826] text-white shadow-2xs'
                     : 'bg-[#FAF8F5] text-[#5A524C] hover:bg-[#F3ECE2] border border-[#EAE3DA]'
                 }`}
               >
@@ -387,21 +387,21 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
           </div>
 
           {/* Month Controller */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <button
               onClick={prevMonth}
-              className="p-1.5 rounded-lg border border-[#EAE3DA] hover:bg-[#FAF8F5] text-[#2B2826] transition"
+              className="p-1 rounded-lg border border-[#EAE3DA] hover:bg-[#FAF8F5] text-[#2B2826] transition"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
-            <span className="font-serif text-sm font-bold text-[#2B2826] capitalize min-w-[150px] text-center">
+            <span className="font-serif text-sm font-bold text-[#2B2826] capitalize min-w-[130px] text-center">
               {monthName}
             </span>
             <button
               onClick={nextMonth}
-              className="p-1.5 rounded-lg border border-[#EAE3DA] hover:bg-[#FAF8F5] text-[#2B2826] transition"
+              className="p-1 rounded-lg border border-[#EAE3DA] hover:bg-[#FAF8F5] text-[#2B2826] transition"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

@@ -557,36 +557,36 @@ export const CalendarioModule: React.FC = () => {
           <div className="flex items-center space-x-1 pl-2">
             <button
               onClick={handleToday}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#332A28] transition shadow-2xs cursor-pointer"
+              className="px-2.5 py-1 text-xs font-semibold rounded-lg border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#332A28] transition shadow-2xs cursor-pointer"
             >
               Hoy
             </button>
             <button
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-lg border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#7D6F6B] hover:text-[#332A28] transition shadow-2xs cursor-pointer"
+              className="p-1 rounded-lg border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#7D6F6B] hover:text-[#332A28] transition shadow-2xs cursor-pointer"
               title="Mes Anterior"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={handleNextMonth}
-              className="p-1.5 rounded-lg border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#7D6F6B] hover:text-[#332A28] transition shadow-2xs cursor-pointer"
+              className="p-1 rounded-lg border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#FAF8F5] text-[#7D6F6B] hover:text-[#332A28] transition shadow-2xs cursor-pointer"
               title="Mes Siguiente"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
         {/* Center: Search bar */}
-        <div className="relative flex-1 max-w-xs min-w-[200px]">
+        <div className="relative flex-1 max-w-xs min-w-[180px]">
           <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
           <input
             type="text"
             placeholder="Buscar eventos o tareas..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] placeholder-[#7D6F6B]/60 focus:outline-none focus:border-[#9C665C]"
+            className="w-full pl-8 pr-3 py-1 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-lg text-[#332A28] placeholder-[#7D6F6B]/60 focus:outline-none focus:border-[#9C665C]"
           />
           {search && (
             <button
@@ -599,12 +599,12 @@ export const CalendarioModule: React.FC = () => {
         </div>
 
         {/* Right: View switch (Mes, Semana, Agenda), Sync & Create Event */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1.5">
           {/* Segmented control for Views */}
-          <div className="inline-flex p-1 rounded-xl bg-[#FAF8F5] border border-[#EAE3DA]">
+          <div className="inline-flex p-0.5 rounded-lg bg-[#FAF8F5] border border-[#EAE3DA]">
             <button
               onClick={() => setViewMode('month')}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
+              className={`px-2.5 py-0.5 text-xs font-semibold rounded-md transition ${
                 viewMode === 'month'
                   ? 'bg-[#FFFFFF] text-[#9C665C] shadow-2xs'
                   : 'text-[#7D6F6B] hover:text-[#332A28]'
@@ -614,7 +614,7 @@ export const CalendarioModule: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('week')}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
+              className={`px-2.5 py-0.5 text-xs font-semibold rounded-md transition ${
                 viewMode === 'week'
                   ? 'bg-[#FFFFFF] text-[#9C665C] shadow-2xs'
                   : 'text-[#7D6F6B] hover:text-[#332A28]'
@@ -624,7 +624,7 @@ export const CalendarioModule: React.FC = () => {
             </button>
             <button
               onClick={() => setViewMode('agenda')}
-              className={`px-3 py-1 text-xs font-semibold rounded-lg transition ${
+              className={`px-2.5 py-0.5 text-xs font-semibold rounded-md transition ${
                 viewMode === 'agenda'
                   ? 'bg-[#FFFFFF] text-[#9C665C] shadow-2xs'
                   : 'text-[#7D6F6B] hover:text-[#332A28]'
@@ -637,19 +637,19 @@ export const CalendarioModule: React.FC = () => {
           {/* Sync Button */}
           <button
             onClick={() => setShowGoogleSyncModal(true)}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#FAF8F5] text-xs font-semibold text-[#332A28] transition shadow-2xs cursor-pointer"
+            className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#FAF8F5] text-xs font-semibold text-[#332A28] transition shadow-2xs cursor-pointer"
             title="Vincular con Google Calendar / iCal"
           >
             <CalendarDays className="w-3.5 h-3.5 text-[#2563EB]" />
-            <span className="hidden md:inline">Vincular Google Calendar</span>
+            <span className="hidden md:inline">Google Calendar</span>
           </button>
 
           {/* Create Button (Google Style) */}
           <button
             onClick={() => handleOpenAddEvent()}
-            className="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-xl bg-[#9C665C] hover:bg-[#85534A] text-white text-xs font-semibold transition shadow-sm cursor-pointer"
+            className="inline-flex items-center space-x-1 px-3 py-1 rounded-lg bg-[#9C665C] hover:bg-[#85534A] text-white text-xs font-semibold transition shadow-2xs cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             <span>Crear Evento</span>
           </button>
         </div>

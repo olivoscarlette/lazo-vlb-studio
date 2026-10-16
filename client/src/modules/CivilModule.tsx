@@ -493,7 +493,7 @@ export const CivilModule: React.FC = () => {
                 </span>
                 <h3 className="font-serif text-lg font-semibold text-[#2B2826]">Testigos de Honor</h3>
               </div>
-              <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
                 {civil.witnesses.length} asignados
               </span>
             </div>
@@ -612,7 +612,7 @@ export const CivilModule: React.FC = () => {
                     <span>Cargar Plantilla VLB</span>
                   </button>
                 )}
-                <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EAE3DA] px-2.5 py-1 rounded-full">
+                <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EAE3DA] px-2.5 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
                   {civil.requirements_status.filter(r => r.completed).length} / {civil.requirements_status.length}
                 </span>
               </div>
@@ -856,7 +856,7 @@ export const CivilModule: React.FC = () => {
               Reflejados automáticamente desde el módulo Proveedores y Pagos con la etiqueta <strong>CIVIL</strong>. Sin doble captura.
             </p>
           </div>
-          <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full">
+          <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
             {reusedVendors.length} proveedores
           </span>
         </div>
