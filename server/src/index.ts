@@ -88,6 +88,7 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     app: 'LAZO — VLB Studio · Planning',
     version: '1.0.0',
+    build: '2026-10-16-v2-calendar-fix',
     timestamp: new Date().toISOString()
   });
 });
