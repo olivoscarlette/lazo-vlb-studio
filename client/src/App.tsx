@@ -214,7 +214,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-4.5rem)] bg-[#FCFAF7] relative">
+    <div className="flex min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] bg-[#FCFAF7] relative max-w-full overflow-x-hidden">
       {/* Sidebar Responsive: Docked on desktop, drawer on mobile */}
       <Sidebar
         currentTab={activeTab}
@@ -228,7 +228,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
 
       {/* Main Workspace Area: Expands smoothly to full width when sidebar is collapsed */}
       <main
-        className={`flex-1 min-w-0 w-full transition-all duration-300 ease-in-out p-4 sm:p-6 lg:p-8 overflow-y-auto bg-[#FCFAF7] ${
+        className={`flex-1 min-w-0 w-full max-w-full transition-all duration-300 ease-in-out p-3 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden bg-[#FCFAF7] ${
           !sidebarOpen ? 'max-w-none' : 'max-w-7xl mx-auto'
         }`}
       >

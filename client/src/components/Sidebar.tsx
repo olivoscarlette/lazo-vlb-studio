@@ -101,6 +101,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }
       ];
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      if (isOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   const handleItemClick = (id: WorkspaceTab) => {
     onSelectTab(id);
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
@@ -116,15 +129,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed top-[72px] inset-x-0 bottom-0 bg-[#2B2826]/35 z-30 backdrop-blur-xs lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-[#2B2826]/40 z-40 backdrop-blur-xs lg:hidden transition-opacity duration-300"
         />
       )}
 
-      {/* Sidebar: Responsive dockable on desktop (Full or Icon Rail), slide-over drawer below navbar on mobile */}
+      {/* Sidebar: Responsive dockable on desktop (Full or Icon Rail), slide-over drawer on mobile */}
       <aside
         className={`bg-[#FAF8F5] text-[#2B2826] border-r border-[#EAE3DA] flex flex-col transition-all duration-300 ease-in-out shrink-0 ${
-          // Mobile classes: Fixed drawer cleanly underneath navbar
-          `fixed top-[72px] bottom-0 left-0 w-80 max-w-[85vw] h-[calc(100dvh-72px)] shadow-2xl z-40 lg:shadow-none ${
+          // Mobile classes: Fixed drawer from left-0
+          `fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] h-full shadow-2xl z-50 lg:shadow-none ${
             isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'
           } ` +
           // Desktop classes: Docked sticky column when open, compact icon rail when closed
@@ -135,17 +148,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         {/* Header: Full mode or Icon Rail toggle */}
         <div className={`border-b border-[#EAE3DA] bg-[#FCFAF7] shrink-0 flex items-center transition-all ${
-          isOpen ? 'px-4 py-3 justify-between gap-3' : 'p-2.5 justify-center'
+          isOpen ? 'px-4 py-3 sm:py-3.5 justify-between gap-2' : 'p-2.5 justify-center'
         }`}>
           {isOpen ? (
             <>
               {showReturnButton ? (
                 <button
-                  onClick={() => setCurrentWedding(null)}
-                  className="text-xs font-semibold text-[#8A7E72] hover:text-[#9C665C] transition cursor-pointer truncate"
+                  onClick={() => {
+                    setCurrentWedding(null);
+                    if (window.innerWidth < 1024) onClose();
+                  }}
+                  className="flex items-center space-x-1.5 text-xs font-semibold text-[#8A7E72] hover:text-[#9C665C] transition cursor-pointer truncate max-w-[80%]"
                   title="Volver a la lista de bodas"
                 >
-                  Volver al Dashboard
+                  <ChevronLeft className="w-4 h-4 shrink-0 text-[#9C665C]" />
+                  <span className="truncate">Volver al Dashboard</span>
                 </button>
               ) : (
                 <span className="text-xs font-semibold tracking-wider uppercase text-[#9C665C] truncate">
@@ -156,11 +173,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <button
                 onClick={onClose}
                 className="p-1.5 rounded-xl text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#EFE8E0] transition cursor-pointer shrink-0"
-                title="Contraer menú a iconos"
-                aria-label="Contraer barra lateral"
+                title="Cerrar menú lateral"
+                aria-label="Cerrar menú lateral"
               >
                 <ChevronLeft className="w-4 h-4 hidden lg:block transition-transform" />
-                <X className="w-4 h-4 lg:hidden" />
+                <X className="w-5 h-5 lg:hidden" />
               </button>
             </>
           ) : (

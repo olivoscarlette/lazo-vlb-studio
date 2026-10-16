@@ -108,6 +108,9 @@
   html {
     /* Escala base cómoda para evitar fatiga visual */
     font-size: 16px;
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
   }
 
   body {
@@ -117,6 +120,17 @@
     line-height: 1.625;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    min-height: 100%;
+  }
+
+  #root {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+    min-height: 100vh;
   }
 
   /* Cormorant Garamond exclusivamente para títulos principales y números destacados */

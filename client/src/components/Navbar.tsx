@@ -62,19 +62,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
   const showHamburger = Boolean(currentWedding || user.role !== 'ADMINISTRADOR');
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FCFAF7]/95 backdrop-blur-md border-b border-[#EAE3DA] h-[72px]">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-[72px]">
+    <header className="sticky top-0 z-50 bg-[#FCFAF7]/95 backdrop-blur-md border-b border-[#EAE3DA] h-16 sm:h-[72px]">
+      <div className="w-full px-2.5 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-[72px]">
           {/* Left: Hamburger Menu Button + Brand Logo */}
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
             {showHamburger && onToggleSidebar && !sidebarOpen && (
               <button
                 onClick={onToggleSidebar}
                 aria-label="Mostrar menú lateral"
-                className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                 title="Mostrar menú lateral"
               >
-                <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                <PanelLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#9C665C]" />
                 <span className="text-sm font-semibold hidden md:inline">
                   Menú
                 </span>
@@ -85,13 +85,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               onClick={() => {
                 if (user.role === 'ADMINISTRADOR') setCurrentWedding(null);
               }}
-              className="cursor-pointer flex items-center group py-1"
+              className="cursor-pointer flex items-center group py-1 shrink-0"
               title="Ir al inicio de LAZO"
             >
               <img
                 src="/lazo-logo.png"
                 alt="LAZO — VLB Studio · Planning"
-                className="h-10 sm:h-12 w-auto object-contain select-none transition-transform duration-200 group-hover:scale-[1.02]"
+                className="h-8 sm:h-12 w-auto max-w-[105px] sm:max-w-none object-contain select-none transition-transform duration-200 group-hover:scale-[1.02]"
               />
             </div>
 
@@ -154,7 +154,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
           </div>
 
           {/* Right Area: Calendario General, Role Badge, Notifications & User Info */}
-          <div className="flex items-center space-x-2.5 sm:space-x-3">
+          <div className="flex items-center space-x-1 sm:space-x-2.5 shrink-0">
             {/* Calendario General Button for Admin, Coordinador, Staff */}
             {user.role !== 'NOVIOS' && (
               <button
@@ -168,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                     setGeneralDashboardTab('calendario');
                   }
                 }}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] transition shadow-2xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] transition shadow-2xs cursor-pointer shrink-0"
                 title="Abrir Calendario General VLB"
               >
                 <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
@@ -178,27 +178,28 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
 
             {/* Authentic Role Badge */}
             <div
-              className={`text-xs px-3.5 py-1.5 rounded-full border flex items-center space-x-1.5 font-medium select-none ${getRoleBadgeStyle(user.role)}`}
+              className={`text-xs p-1.5 sm:px-3 sm:py-1.5 rounded-full border flex items-center space-x-1.5 font-medium select-none shrink-0 ${getRoleBadgeStyle(user.role)}`}
+              title={`Rol: ${user.role}`}
             >
-              <ShieldCheck className="w-4 h-4" />
-              <span>{user.role}</span>
+              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+              <span className="hidden md:inline">{user.role}</span>
             </div>
 
             {/* Notifications Bell */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setShowNotifMenu(!showNotifMenu)}
-                className="relative p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition"
+                className="relative p-1.5 sm:p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer"
                 title="Notificaciones"
               >
-                <Bell className="w-5 h-5" />
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-[#9C665C] rounded-full" />
+                  <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-[#9C665C] rounded-full" />
                 )}
               </button>
 
               {showNotifMenu && (
-                <div className="absolute right-0 mt-2 w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] py-2 z-50">
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] py-2 z-50">
                   <div className="px-4 py-2.5 border-b border-[#F7F3EE] flex items-center justify-between">
                     <span className="font-serif text-lg font-semibold text-[#332A28]">Notificaciones</span>
                     {unreadCount > 0 && (
@@ -246,25 +247,25 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             </div>
 
             {/* User Profile Pill & Logout */}
-            <div className="flex items-center pl-3 border-l border-[#EAE3DA] space-x-2.5">
+            <div className="flex items-center pl-1.5 sm:pl-3 border-l border-[#EAE3DA] space-x-1 sm:space-x-2.5 shrink-0">
               {/* Clickable Avatar */}
               <div
                 onClick={() => setShowProfileModal(true)}
-                className="relative cursor-pointer group"
+                className="relative cursor-pointer group shrink-0"
                 title={`Mi Perfil · ${user.name}`}
               >
                 {user.avatar_url ? (
                   <img
                     src={user.avatar_url}
                     alt={user.name}
-                    className="w-9 h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition"
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition"
                   />
                 ) : (
-                  <div className="w-9 h-9 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-sm flex items-center justify-center border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-xs sm:text-sm flex items-center justify-center border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#6E8C70] border-2 border-[#FCFAF7]" title="En línea" />
+                <span className="absolute -top-0.5 -right-0.5 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#6E8C70] border-2 border-[#FCFAF7]" title="En línea" />
               </div>
 
               <div
@@ -279,7 +280,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               <button
                 onClick={logout}
                 title="Cerrar sesión"
-                className="p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition"
+                className="p-1.5 sm:p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer shrink-0"
               >
                 <LogOut className="w-4 h-4" />
               </button>

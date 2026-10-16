@@ -800,14 +800,40 @@ export const GeneralDashboard: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) {
+      if (sidebarOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [sidebarOpen]);
+
   return (
-    <div className="min-h-screen bg-[#FCFAF7] flex flex-col md:flex-row text-[#332A28]">
+    <div className="min-h-screen bg-[#FCFAF7] flex flex-col md:flex-row text-[#332A28] max-w-full overflow-x-hidden">
+      {/* Mobile Backdrop Overlay for GeneralDashboard */}
+      {sidebarOpen && (
+        <div
+          onClick={handleToggleSidebar}
+          className="fixed inset-0 bg-[#2B2826]/40 z-40 backdrop-blur-xs md:hidden transition-opacity duration-300"
+        />
+      )}
+
       {/* 1. Sidebar Izquierdo Fijo/Acoplado — Idéntico a la maqueta editorial LAZO */}
       <aside
-        className={`shrink-0 bg-[#FCFAF7] border-b md:border-b-0 md:border-r border-[#EAE3DA] flex flex-col sticky top-0 md:h-screen z-30 transition-all duration-300 ${
-          sidebarOpen
-            ? 'w-full md:w-64 lg:w-72 p-6'
-            : 'hidden md:flex md:w-16 lg:w-[4.25rem] p-2.5'
+        className={`shrink-0 bg-[#FCFAF7] border-r border-[#EAE3DA] flex flex-col transition-all duration-300 ${
+          // Mobile: drawer
+          `fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] h-full shadow-2xl z-50 md:shadow-none md:sticky md:top-0 md:h-screen md:z-30 ${
+            sidebarOpen
+              ? 'translate-x-0 opacity-100'
+              : '-translate-x-full opacity-0 pointer-events-none md:translate-x-0 md:opacity-100 md:pointer-events-auto'
+          } ` +
+          // Desktop:
+          (sidebarOpen ? 'md:w-64 lg:w-72 p-6' : 'md:w-16 lg:w-[4.25rem] p-2.5')
         }`}
       >
         <div className={`mb-8 flex items-center transition-all ${sidebarOpen ? 'px-2 justify-between' : 'justify-center'}`}>
@@ -817,7 +843,7 @@ export const GeneralDashboard: React.FC = () => {
                 <img
                   src="/lazo-logo.png"
                   alt="LAZO — VLB Studio · Planning"
-                  className="h-10 sm:h-11 w-auto object-contain select-none"
+                  className="h-9 sm:h-11 w-auto object-contain select-none"
                 />
               </div>
               <button
@@ -826,7 +852,8 @@ export const GeneralDashboard: React.FC = () => {
                 className="p-1.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-xl transition cursor-pointer"
                 title="Contraer menú lateral (⌘B)"
               >
-                <PanelLeftClose className="w-5 h-5 text-[#9C665C]" />
+                <PanelLeftClose className="w-5 h-5 text-[#9C665C] hidden md:block" />
+                <X className="w-5 h-5 text-[#9C665C] md:hidden" />
               </button>
             </>
           ) : (
@@ -852,6 +879,9 @@ export const GeneralDashboard: React.FC = () => {
                   setActiveTab(item.id as any);
                   if (item.id === 'equipo' || item.id === 'ajustes') {
                     fetchAuditAndBackups();
+                  }
+                  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                    setSidebarOpen(false);
                   }
                 }}
                 title={item.label}
@@ -881,7 +911,7 @@ export const GeneralDashboard: React.FC = () => {
       </aside>
 
       {/* 2. Área Principal de Contenido */}
-      <main className="flex-1 min-w-0 p-6 sm:p-8 lg:p-10 overflow-y-auto">
+      <main className="flex-1 min-w-0 max-w-full overflow-x-hidden p-4 sm:p-8 lg:p-10 overflow-y-auto">
         {/* PESTAÑA PRINCIPAL: BODAS */}
         {activeTab === 'weddings' && (
           <div>
