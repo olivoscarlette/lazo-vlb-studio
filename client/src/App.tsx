@@ -221,6 +221,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
         onSelectTab={setActiveTab}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        onToggle={() => setSidebarOpen(prev => !prev)}
         weddingDayMode={weddingDayMode}
         onToggleWeddingDayMode={handleToggleWeddingDayMode}
       />

@@ -800,31 +800,44 @@ export const GeneralDashboard: React.FC = () => {
     <div className="min-h-screen bg-[#FCFAF7] flex flex-col md:flex-row text-[#332A28]">
       {/* 1. Sidebar Izquierdo Fijo/Acoplado — Idéntico a la maqueta editorial LAZO */}
       <aside
-        className={`shrink-0 bg-[#FCFAF7] border-b md:border-b-0 md:border-r border-[#EAE3DA] flex flex-col sticky top-0 md:h-screen z-30 transition-all duration-200 ${
+        className={`shrink-0 bg-[#FCFAF7] border-b md:border-b-0 md:border-r border-[#EAE3DA] flex flex-col sticky top-0 md:h-screen z-30 transition-all duration-300 ${
           sidebarOpen
-            ? 'w-full md:w-64 lg:w-72 p-6 block'
-            : 'w-0 p-0 overflow-hidden border-none hidden md:hidden'
+            ? 'w-full md:w-64 lg:w-72 p-6'
+            : 'hidden md:flex md:w-16 lg:w-[4.25rem] p-2.5'
         }`}
       >
-        <div className="mb-8 px-2 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <img
-              src="/lazo-logo.png"
-              alt="LAZO — VLB Studio · Planning"
-              className="h-10 sm:h-11 w-auto object-contain select-none"
-            />
-          </div>
-          <button
-            onClick={handleToggleSidebar}
-            aria-label="Ocultar menú lateral"
-            className="p-1.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-xl transition cursor-pointer"
-            title="Ocultar menú lateral (⌘B)"
-          >
-            <PanelLeftClose className="w-5 h-5 text-[#9C665C]" />
-          </button>
+        <div className={`mb-8 flex items-center transition-all ${sidebarOpen ? 'px-2 justify-between' : 'justify-center'}`}>
+          {sidebarOpen ? (
+            <>
+              <div className="flex items-center space-x-2">
+                <img
+                  src="/lazo-logo.png"
+                  alt="LAZO — VLB Studio · Planning"
+                  className="h-10 sm:h-11 w-auto object-contain select-none"
+                />
+              </div>
+              <button
+                onClick={handleToggleSidebar}
+                aria-label="Contraer menú lateral"
+                className="p-1.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-xl transition cursor-pointer"
+                title="Contraer menú lateral (⌘B)"
+              >
+                <PanelLeftClose className="w-5 h-5 text-[#9C665C]" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleToggleSidebar}
+              aria-label="Expandir menú lateral"
+              className="p-2 text-[#7D6F6B] hover:text-[#9C665C] hover:bg-[#F7F3EE] rounded-xl transition cursor-pointer"
+              title="Expandir menú lateral (⌘B)"
+            >
+              <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+            </button>
+          )}
         </div>
 
-        <nav className="space-y-1.5 flex-1">
+        <nav className={`space-y-1.5 flex-1 ${!sidebarOpen ? 'flex flex-col items-center' : ''}`}>
           {sidebarNavItems.map(item => {
             const Icon = item.icon;
             const active = activeTab === item.id;
@@ -837,21 +850,28 @@ export const GeneralDashboard: React.FC = () => {
                     fetchAuditAndBackups();
                   }
                 }}
-                className={`w-full flex items-center space-x-3.5 px-4 py-3 rounded-2xl text-sm transition-all cursor-pointer ${
+                title={item.label}
+                className={`flex items-center transition-all cursor-pointer ${
+                  sidebarOpen
+                    ? 'w-full space-x-3.5 px-4 py-3 rounded-2xl text-sm'
+                    : 'w-10 h-10 justify-center rounded-xl p-2.5'
+                } ${
                   active
-                    ? 'bg-[#EFE8DE] text-[#332A28] font-semibold shadow-2xs'
+                    ? 'bg-[#EFE8DE] text-[#9C665C] font-semibold shadow-2xs'
                     : 'text-[#7D6F6B] hover:bg-[#F7F3EE] hover:text-[#332A28] font-medium'
                 }`}
               >
                 <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#9C665C]' : 'text-[#7D6F6B]'}`} />
-                <span>{item.label}</span>
+                {sidebarOpen && <span>{item.label}</span>}
               </button>
             );
           })}
         </nav>
 
-        <div className="pt-4 border-t border-[#EAE3DA] px-3 flex items-center justify-between text-xs text-[#7D6F6B]">
-          <span>VLB Studio · Planning</span>
+        <div className={`pt-4 border-t border-[#EAE3DA] flex items-center text-xs text-[#7D6F6B] transition-all ${
+          sidebarOpen ? 'px-3 justify-between' : 'justify-center p-2'
+        }`}>
+          {sidebarOpen && <span>VLB Studio · Planning</span>}
           <span className="w-2 h-2 rounded-full bg-[#6E8C70]" title="Sistema Activo" />
         </div>
       </aside>
