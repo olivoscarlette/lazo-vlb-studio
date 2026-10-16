@@ -45,12 +45,41 @@ function findTimeConflict(date: string, time: string, excludeId?: string) {
   return null;
 }
 
-// GET /api/calendar - Returns unified studio calendar: Planning meetings, wedding days, and studio events
+export const DEFAULT_CALENDAR_PERMISSIONS: Record<string, string[]> = {
+  ADMINISTRADOR: ['PLANNING', 'CITA_EXTERNA', 'BODA', 'OPEN_HOUSE', 'SERVICIO', 'PAPELERIA', 'OTRO'],
+  COORDINADOR: ['PLANNING', 'CITA_EXTERNA', 'BODA', 'OPEN_HOUSE', 'SERVICIO', 'PAPELERIA', 'OTRO'],
+  STAFF: ['SERVICIO'],
+  NOVIOS: ['PLANNING', 'BODA']
+};
+
+export function normalizeEventType(type: string = ''): string {
+  const upper = (type || '').toUpperCase().trim();
+  if (upper === 'EVENTO') return 'BODA';
+  if (upper === 'CITA_PLANNING') return 'PLANNING';
+  if (upper === 'SERVICIOS') return 'SERVICIO';
+  return upper || 'OTRO';
+}
+
+export function getCalendarPermissions(): Record<string, string[]> {
+  try {
+    const row = db.prepare("SELECT values_json FROM catalogs WHERE key = 'calendar_role_permissions'").get() as any;
+    if (row && row.values_json) {
+      const parsed = JSON.parse(row.values_json);
+      return { ...DEFAULT_CALENDAR_PERMISSIONS, ...parsed };
+    }
+  } catch (err) {
+    console.error('Error reading calendar_role_permissions:', err);
+  }
+  return DEFAULT_CALENDAR_PERMISSIONS;
+}
+
+// GET /api/calendar - Returns unified studio calendar filtered by user role permissions
 router.get('/', authenticateToken, (req, res) => {
   try {
+    const user = req.user!;
     const { month, year, type } = req.query as { month?: string; year?: string; type?: string };
 
-    // 1. Custom Studio Events (Citas externas, Servicios, Open house, etc.)
+    // 1. Custom Studio Events (Citas externas, Servicios, Open house, Papelería, etc.)
     const customEvents = db.prepare(`
       SELECT ce.*, w.name as wedding_name
       FROM calendar_events ce
@@ -82,13 +111,13 @@ router.get('/', authenticateToken, (req, res) => {
       ORDER BY m.date ASC, m.time ASC
     `).all() as any[];
 
-    // 3. Wedding Days (Bodas VLB)
+    // 3. Wedding Days (Bodas de planning agregadas automáticamente)
     const weddingDays = db.prepare(`
       SELECT 
         'wed_day_' || id as id,
         id as wedding_id,
-        'BODA VLB: ' || name as title,
-        'EVENTO' as event_type,
+        'Boda: ' || name as title,
+        'BODA' as event_type,
         wedding_date as date,
         '12:00' as time,
         '23:59' as end_time,
@@ -116,6 +145,7 @@ router.get('/', authenticateToken, (req, res) => {
 
     const formattedCustom = customEvents.map(e => ({
       ...e,
+      event_type: normalizeEventType(e.event_type),
       source: 'CALENDAR_EVENT'
     }));
 
@@ -126,9 +156,30 @@ router.get('/', authenticateToken, (req, res) => {
 
     let allEvents = [...formattedCustom, ...formattedMeetings, ...formattedWeddings];
 
+    // Determine allowed categories for the authenticated user
+    const permissions = getCalendarPermissions();
+    const allowedTypes: string[] = user.role === 'ADMINISTRADOR'
+      ? ['PLANNING', 'CITA_EXTERNA', 'BODA', 'OPEN_HOUSE', 'SERVICIO', 'PAPELERIA', 'OTRO']
+      : (permissions[user.role] || DEFAULT_CALENDAR_PERMISSIONS[user.role] || ['SERVICIO']);
+
+    // Filter events by role permissions
+    allEvents = allEvents.filter(e => {
+      const normType = normalizeEventType(e.event_type);
+      if (!allowedTypes.includes(normType)) return false;
+
+      // If user is NOVIOS, only events for their assigned wedding
+      if (user.role === 'NOVIOS') {
+        if (user.wedding_id && e.wedding_id && e.wedding_id !== user.wedding_id) {
+          return false;
+        }
+      }
+      return true;
+    });
+
     // Filter by type if provided
     if (type && type !== 'TODOS') {
-      allEvents = allEvents.filter(e => e.event_type === type);
+      const normQueryType = normalizeEventType(type);
+      allEvents = allEvents.filter(e => normalizeEventType(e.event_type) === normQueryType);
     }
 
     // Sort chronologically
@@ -138,7 +189,11 @@ router.get('/', authenticateToken, (req, res) => {
       return (a.time || '').localeCompare(b.time || '');
     });
 
-    res.json({ events: allEvents });
+    res.json({
+      events: allEvents,
+      allowedTypes,
+      userRole: user.role
+    });
   } catch (err: any) {
     res.status(500).json({ error: 'Error al cargar el calendario general: ' + err.message });
   }
@@ -368,6 +423,52 @@ router.post('/', authenticateToken, (req, res) => {
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Error al agendar en el calendario: ' + err.message });
+  }
+});
+
+// GET /api/calendar/permissions - Get calendar visibility permissions
+router.get('/permissions', authenticateToken, (req, res) => {
+  try {
+    const permissions = getCalendarPermissions();
+    // Also fetch all team users for reference
+    const teamUsers = db.prepare('SELECT id, name, email, role, avatar_url FROM users WHERE role != "NOVIOS" ORDER BY role ASC, name ASC').all() as any[];
+    res.json({
+      permissions,
+      defaultPermissions: DEFAULT_CALENDAR_PERMISSIONS,
+      teamUsers
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al obtener permisos del calendario: ' + err.message });
+  }
+});
+
+// PUT /api/calendar/permissions - Update calendar visibility permissions (Admin only)
+router.put('/permissions', authenticateToken, (req, res) => {
+  try {
+    const user = req.user!;
+    if (user.role !== 'ADMINISTRADOR') {
+      return res.status(403).json({ error: 'Solo los Administradores pueden configurar los permisos del calendario.' });
+    }
+
+    const { permissions } = req.body;
+    if (!permissions || typeof permissions !== 'object') {
+      return res.status(400).json({ error: 'El objeto de permisos es inválido.' });
+    }
+
+    db.prepare(`
+      INSERT INTO catalogs (key, values_json)
+      VALUES ('calendar_role_permissions', ?)
+      ON CONFLICT(key) DO UPDATE SET values_json = excluded.values_json
+    `).run(JSON.stringify(permissions));
+
+    logAudit('GENERAL', user.id, user.name, 'ACTUALIZAR_PERMISOS_CALENDARIO', 'CALENDAR', 'calendar_role_permissions', 'Permisos de visualización de listas de calendario actualizados');
+
+    res.json({
+      message: 'Permisos del calendario actualizados correctamente.',
+      permissions
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al actualizar permisos del calendario: ' + err.message });
   }
 });
 

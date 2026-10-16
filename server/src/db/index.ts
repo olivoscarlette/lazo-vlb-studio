@@ -497,6 +497,13 @@ export function initDatabase() {
   ];
   db.prepare('INSERT OR IGNORE INTO catalogs (key, values_json) VALUES (?, ?)').run('system_phases', JSON.stringify(defaultPhases));
 
+  const defaultCalendarRolePermissions = {
+    COORDINADOR: ['PLANNING', 'CITA_EXTERNA', 'BODA', 'OPEN_HOUSE', 'SERVICIO', 'PAPELERIA', 'OTRO'],
+    STAFF: ['SERVICIO'],
+    NOVIOS: ['PLANNING', 'BODA']
+  };
+  db.prepare('INSERT OR IGNORE INTO catalogs (key, values_json) VALUES (?, ?)').run('calendar_role_permissions', JSON.stringify(defaultCalendarRolePermissions));
+
   const defaultCivilRequirements = [
     'Solicitud de matrimonio civil requisitada',
     'Actas de nacimiento certificadas y actualizadas de ambos novios',

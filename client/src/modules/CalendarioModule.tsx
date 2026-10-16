@@ -5,7 +5,8 @@ import {
   Plus, X, AlertTriangle, Filter, ChevronLeft,
   ChevronRight, Sparkles, Building2, ExternalLink, Trash2, Edit2,
   Copy, Check, Link2, CheckCircle2, CheckSquare, Square, Search,
-  ListTodo, Video, CalendarDays, Eye, Tag, AlertCircle, Menu, ChevronDown
+  ListTodo, Video, CalendarDays, Eye, Tag, AlertCircle, Menu, ChevronDown,
+  ShieldCheck, Users, Settings2
 } from 'lucide-react';
 
 export interface CalendarEventItem {
@@ -13,7 +14,7 @@ export interface CalendarEventItem {
   wedding_id?: string | null;
   wedding_name?: string | null;
   title: string;
-  event_type: 'PLANNING' | 'CITA_EXTERNA' | 'EVENTO' | 'SERVICIO' | 'OPEN_HOUSE' | 'OTRO';
+  event_type: 'PLANNING' | 'CITA_EXTERNA' | 'BODA' | 'OPEN_HOUSE' | 'SERVICIO' | 'PAPELERIA' | 'OTRO' | 'EVENTO';
   date: string;
   time: string;
   end_time?: string | null;
@@ -26,6 +27,65 @@ export interface CalendarEventItem {
   meet_url?: string | null;
   source?: 'MEETING' | 'CALENDAR_EVENT' | 'WEDDING_DAY';
 }
+
+export const CALENDAR_CATEGORIES = [
+  {
+    type: 'PLANNING',
+    label: 'Cita planning',
+    color: '#9C665C',
+    dotColor: '#9C665C',
+    icon: '🌸',
+    description: 'Citas y reuniones de seguimiento de planeación con novios'
+  },
+  {
+    type: 'CITA_EXTERNA',
+    label: 'Cita externa',
+    color: '#2563EB',
+    dotColor: '#2563EB',
+    icon: '💼',
+    description: 'Citas externas, visitas a locaciones, degustaciones y proveedores'
+  },
+  {
+    type: 'BODA',
+    label: 'Boda',
+    color: '#059669',
+    dotColor: '#059669',
+    icon: '💍',
+    description: 'Día oficial de la boda (agregadas automáticamente desde Bodas)'
+  },
+  {
+    type: 'OPEN_HOUSE',
+    label: 'Open house',
+    color: '#7C3AED',
+    dotColor: '#7C3AED',
+    icon: '🏛️',
+    description: 'Open house de venues, showrooms y presentaciones'
+  },
+  {
+    type: 'SERVICIO',
+    label: 'Servicios',
+    color: '#D97706',
+    dotColor: '#D97706',
+    icon: '🍸',
+    description: 'Servicios especiales (Beerstand, Memorial, Mimosas, etc.)'
+  },
+  {
+    type: 'PAPELERIA',
+    label: 'Papelería',
+    color: '#E11D48',
+    dotColor: '#E11D48',
+    icon: '💌',
+    description: 'Entregas, revisiones y pruebas de papelería nupcial'
+  },
+  {
+    type: 'OTRO',
+    label: 'Otro',
+    color: '#78716C',
+    dotColor: '#78716C',
+    icon: '📌',
+    description: 'Otros eventos y actividades del estudio'
+  }
+];
 
 export interface CalendarTaskItem {
   id: string;
@@ -95,15 +155,32 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [selectedMobileDay, setSelectedMobileDay] = useState<string | null>(null);
 
+  // Allowed categories returned by backend based on role
+  const [allowedCategories, setAllowedCategories] = useState<string[]>([
+    'PLANNING', 'CITA_EXTERNA', 'BODA', 'OPEN_HOUSE', 'SERVICIO', 'PAPELERIA', 'OTRO'
+  ]);
+
   // Event category toggles (Google Calendar style color checkboxes)
   const [activeCalendars, setActiveCalendars] = useState<Record<string, boolean>>({
     PLANNING: true,
     CITA_EXTERNA: true,
-    EVENTO: true,
-    SERVICIO: true,
+    BODA: true,
     OPEN_HOUSE: true,
+    SERVICIO: true,
+    PAPELERIA: true,
     OTRO: true
   });
+
+  // Team visibility permissions modal (Admin only)
+  const [showPermissionsModal, setShowPermissionsModal] = useState(false);
+  const [rolePermissions, setRolePermissions] = useState<Record<string, string[]>>({
+    COORDINADOR: ['PLANNING', 'CITA_EXTERNA', 'BODA', 'OPEN_HOUSE', 'SERVICIO', 'PAPELERIA', 'OTRO'],
+    STAFF: ['SERVICIO'],
+    NOVIOS: ['PLANNING', 'BODA']
+  });
+  const [teamUsersList, setTeamUsersList] = useState<any[]>([]);
+  const [savingPermissions, setSavingPermissions] = useState(false);
+  const [permissionsSuccess, setPermissionsSuccess] = useState(false);
 
   // Tasks filter
   const [taskFilter, setTaskFilter] = useState<'all' | 'pending' | 'completed'>('all');
@@ -151,6 +228,20 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
       if (calRes.ok) {
         const calData = await calRes.json();
         setEvents(calData.events || []);
+        if (calData.allowedTypes && Array.isArray(calData.allowedTypes)) {
+          setAllowedCategories(calData.allowedTypes);
+          setActiveCalendars(prev => {
+            const next = { ...prev };
+            CALENDAR_CATEGORIES.forEach(cat => {
+              if (!calData.allowedTypes.includes(cat.type)) {
+                next[cat.type] = false;
+              } else if (prev[cat.type] === undefined) {
+                next[cat.type] = true;
+              }
+            });
+            return next;
+          });
+        }
       }
       if (taskRes.ok) {
         const taskData = await taskRes.json();
@@ -166,6 +257,59 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
   useEffect(() => {
     fetchEventsAndTasks();
   }, [token]);
+
+  // Fetch visibility permissions (Admin)
+  const fetchPermissions = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch('/api/calendar/permissions', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.permissions) {
+          setRolePermissions(data.permissions);
+        }
+        if (data.teamUsers) {
+          setTeamUsersList(data.teamUsers);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching calendar permissions:', err);
+    }
+  };
+
+  // Save visibility permissions (Admin)
+  const handleSavePermissions = async () => {
+    if (!token) return;
+    setSavingPermissions(true);
+    setPermissionsSuccess(false);
+    try {
+      const res = await fetch('/api/calendar/permissions', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ permissions: rolePermissions })
+      });
+      if (res.ok) {
+        setPermissionsSuccess(true);
+        setTimeout(() => {
+          setPermissionsSuccess(false);
+          setShowPermissionsModal(false);
+        }, 1200);
+        await fetchEventsAndTasks();
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Error al guardar los permisos del calendario.');
+      }
+    } catch (err: any) {
+      alert('Error de conexión al guardar los permisos.');
+    } finally {
+      setSavingPermissions(false);
+    }
+  };
 
   // Conflict detector for event form
   const checkClientConflict = (date: string, time: string, excludeId?: string | null) => {
@@ -488,46 +632,55 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
           border: 'border-[#EAD2D0]',
           text: 'text-[#8A574E]',
           dot: 'bg-[#9C665C]',
-          label: 'Planning'
+          label: 'Cita planning'
         };
+      case 'BODA':
       case 'EVENTO':
         return {
           bg: 'bg-emerald-50',
           border: 'border-emerald-200',
           text: 'text-emerald-800',
-          dot: 'bg-emerald-600',
-          label: 'Boda VLB'
+          dot: 'bg-[#059669]',
+          label: 'Boda'
         };
       case 'CITA_EXTERNA':
         return {
-          bg: 'bg-sky-50',
-          border: 'border-sky-200',
-          text: 'text-sky-800',
-          dot: 'bg-sky-600',
-          label: 'Cita Externa'
+          bg: 'bg-blue-50',
+          border: 'border-blue-200',
+          text: 'text-blue-800',
+          dot: 'bg-[#2563EB]',
+          label: 'Cita externa'
         };
       case 'OPEN_HOUSE':
         return {
           bg: 'bg-purple-50',
           border: 'border-purple-200',
           text: 'text-purple-800',
-          dot: 'bg-purple-600',
-          label: 'Open House'
+          dot: 'bg-[#7C3AED]',
+          label: 'Open house'
         };
       case 'SERVICIO':
         return {
           bg: 'bg-amber-50',
           border: 'border-amber-200',
           text: 'text-amber-800',
-          dot: 'bg-amber-600',
-          label: 'Servicio'
+          dot: 'bg-[#D97706]',
+          label: 'Servicios'
+        };
+      case 'PAPELERIA':
+        return {
+          bg: 'bg-rose-50',
+          border: 'border-rose-200',
+          text: 'text-rose-800',
+          dot: 'bg-[#E11D48]',
+          label: 'Papelería'
         };
       default:
         return {
           bg: 'bg-stone-100',
           border: 'border-stone-200',
           text: 'text-stone-800',
-          dot: 'bg-stone-500',
+          dot: 'bg-[#78716C]',
           label: 'Otro'
         };
     }
@@ -563,15 +716,19 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
   const getMobileChipColor = (type: string) => {
     switch (type) {
       case 'PLANNING':
-        return 'bg-[#B87068] text-white';
+        return 'bg-[#9C665C] text-white';
+      case 'BODA':
       case 'EVENTO':
-        return 'bg-[#8A574E] text-white';
+        return 'bg-[#059669] text-white';
       case 'CITA_EXTERNA':
         return 'bg-[#2563EB] text-white';
       case 'SERVICIO':
-        return 'bg-[#5F8265] text-white';
+      case 'SERVICIOS':
+        return 'bg-[#D97706] text-white';
       case 'OPEN_HOUSE':
         return 'bg-[#7C3AED] text-white';
+      case 'PAPELERIA':
+        return 'bg-[#E11D48] text-white';
       default:
         return 'bg-[#78716C] text-white';
     }
@@ -919,11 +1076,26 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
             </div>
           </div>
 
-          {/* MIS CALENDARIOS (Categories Filter with Color Checkboxes) */}
+          {/* LISTAS DE CALENDARIO (Categories Filter with Color Checkboxes) */}
           <div className="space-y-2 pt-2 border-t border-[#EAE3DA]">
-            <h3 className="text-xs font-bold text-[#332A28] uppercase tracking-wider">
-              Mis Calendarios
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-[#332A28] uppercase tracking-wider">
+                Listas de Calendario
+              </h3>
+              {user?.role === 'ADMINISTRADOR' && (
+                <button
+                  onClick={() => {
+                    fetchPermissions();
+                    setShowPermissionsModal(true);
+                  }}
+                  className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-lg border border-[#EAE3DA] bg-white text-[#9C665C] hover:bg-[#FAF8F5] text-[10px] font-bold shadow-2xs transition cursor-pointer"
+                  title="Configurar qué listas ve cada rol del equipo"
+                >
+                  <ShieldCheck className="w-3 h-3" />
+                  <span>Permisos</span>
+                </button>
+              )}
+            </div>
 
             {/* Wedding Filter Dropdown */}
             <div className="mb-2">
@@ -944,20 +1116,14 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
               </select>
             </div>
 
-            <div className="space-y-1.5 text-xs">
-              {[
-                { type: 'PLANNING', label: 'Citas Planning', color: '#9C665C' },
-                { type: 'EVENTO', label: 'Bodas VLB', color: '#059669' },
-                { type: 'CITA_EXTERNA', label: 'Citas Externas', color: '#2563EB' },
-                { type: 'OPEN_HOUSE', label: 'Open House', color: '#7C3AED' },
-                { type: 'SERVICIO', label: 'Servicios', color: '#D97706' },
-                { type: 'OTRO', label: 'Otros Eventos', color: '#57534E' }
-              ].map(cat => {
+            <div className="space-y-1 text-xs">
+              {CALENDAR_CATEGORIES.filter(cat => allowedCategories.includes(cat.type)).map(cat => {
                 const checked = !!activeCalendars[cat.type];
                 return (
                   <label
                     key={cat.type}
                     className="flex items-center space-x-2 text-[#332A28] cursor-pointer hover:bg-[#FAF8F5] p-1.5 rounded-lg transition"
+                    title={cat.description}
                   >
                     <input
                       type="checkbox"
@@ -1419,6 +1585,18 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
             >
               <Search className="w-3.5 h-3.5" />
             </button>
+            {user?.role === 'ADMINISTRADOR' && (
+              <button
+                onClick={() => {
+                  fetchPermissions();
+                  setShowPermissionsModal(true);
+                }}
+                className="p-1.5 rounded-lg border border-[#EAE3DA] bg-white text-[#9C665C] hover:bg-[#FAF8F5] transition cursor-pointer"
+                title="Asignar permisos del equipo"
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         </div>
 
@@ -1701,19 +1879,30 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-semibold text-[#332A28] mb-1">Tipo de Evento</label>
+                  <label className="block font-semibold text-[#332A28] mb-1">Tipo de Evento / Lista *</label>
                   <select
                     value={formData.event_type}
                     onChange={e => setFormData({ ...formData, event_type: e.target.value as any })}
-                    className="w-full text-xs px-3 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none"
+                    className="w-full text-xs px-3 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
                   >
-                    <option value="PLANNING">🌸 Cita Planning</option>
-                    <option value="CITA_EXTERNA">🌐 Cita Externa</option>
-                    <option value="EVENTO">💍 Boda / Evento VLB</option>
-                    <option value="OPEN_HOUSE">🏛️ Open House</option>
-                    <option value="SERVICIO">🛠️ Servicio Proveedor</option>
+                    <option value="PLANNING">🌸 Cita planning</option>
+                    <option value="CITA_EXTERNA">💼 Cita externa</option>
+                    <option value="BODA">💍 Boda</option>
+                    <option value="OPEN_HOUSE">🏛️ Open house</option>
+                    <option value="SERVICIO">🍸 Servicios (Beerstand, Memorial, Mimosas, etc.)</option>
+                    <option value="PAPELERIA">💌 Papelería</option>
                     <option value="OTRO">📌 Otro</option>
                   </select>
+                  {formData.event_type === 'SERVICIO' && (
+                    <p className="text-[10px] text-[#D97706] mt-1 font-medium leading-tight">
+                      🍸 Aquí se agendan servicios como Beerstand, Memorial, Mimosas, etc.
+                    </p>
+                  )}
+                  {formData.event_type === 'BODA' && (
+                    <p className="text-[10px] text-[#059669] mt-1 font-medium leading-tight">
+                      💍 Las bodas se agregan automáticamente al darlas de alta en Nuestras Bodas de planning.
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -2005,6 +2194,296 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
               >
                 Listo
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 4. TEAM VISIBILITY PERMISSIONS MODAL (Admin Only) */}
+      {showPermissionsModal && (
+        <div
+          className="fixed inset-0 z-50 bg-[#2B2826]/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto"
+          onClick={() => setShowPermissionsModal(false)}
+        >
+          <div
+            className="bg-[#FFFFFF] rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-[#EAE3DA] space-y-5 animate-in fade-in-50 zoom-in-95 duration-200 my-8"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-[#EAE3DA]">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-2xl bg-[#FAF4F2] text-[#9C665C] flex items-center justify-center shrink-0 shadow-2xs">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-serif text-xl font-bold text-[#332A28]">
+                    Permisos de Visualización del Calendario
+                  </h3>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Asigna qué listas de eventos puede ver cada rol del equipo en LAZO.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowPermissionsModal(false)}
+                className="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Quick preset banner */}
+            <div className="p-3 bg-[#FAF8F5] border border-[#EAE3DA] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+              <div className="text-[#332A28] leading-relaxed">
+                <span className="font-bold">Regla recomendada:</span> El <strong>Staff</strong> sólo visualiza eventos de <strong>Servicios</strong> (beerstand, memorial, mimosas, etc.) y los <strong>Coordinadores</strong> visualizan todas las listas.
+              </div>
+              <button
+                onClick={() => {
+                  setRolePermissions({
+                    COORDINADOR: ['PLANNING', 'CITA_EXTERNA', 'BODA', 'OPEN_HOUSE', 'SERVICIO', 'PAPELERIA', 'OTRO'],
+                    STAFF: ['SERVICIO'],
+                    NOVIOS: ['PLANNING', 'BODA']
+                  });
+                }}
+                className="px-3 py-1.5 bg-[#FFFFFF] hover:bg-[#F3ECE2] border border-[#EAE3DA] text-[#9C665C] font-semibold rounded-xl transition shadow-2xs whitespace-nowrap cursor-pointer shrink-0"
+              >
+                ✨ Aplicar Regla
+              </button>
+            </div>
+
+            {/* Roles Matrix */}
+            <div className="space-y-4 max-h-[55vh] overflow-y-auto pr-1">
+              {/* Coordinadores */}
+              <div className="border border-[#EAE3DA] rounded-2xl p-4 bg-white space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EFE2DF] text-[#70443D] border border-[#CCDACC]">
+                      COORDINADORES
+                    </span>
+                    <span className="text-xs text-[#7D6F6B] hidden sm:inline">
+                      Coordinación general de planeación y logística
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-[11px]">
+                    <button
+                      onClick={() => {
+                        setRolePermissions(prev => ({
+                          ...prev,
+                          COORDINADOR: CALENDAR_CATEGORIES.map(c => c.type)
+                        }));
+                      }}
+                      className="text-[#9C665C] hover:underline font-semibold cursor-pointer"
+                    >
+                      Marcar todo
+                    </button>
+                    <span className="text-stone-300">|</span>
+                    <button
+                      onClick={() => {
+                        setRolePermissions(prev => ({
+                          ...prev,
+                          COORDINADOR: []
+                        }));
+                      }}
+                      className="text-stone-500 hover:underline cursor-pointer"
+                    >
+                      Desmarcar
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-1">
+                  {CALENDAR_CATEGORIES.map(cat => {
+                    const isChecked = (rolePermissions.COORDINADOR || []).includes(cat.type);
+                    return (
+                      <label
+                        key={cat.type}
+                        className={`flex items-center space-x-2 p-2 rounded-xl border transition cursor-pointer text-xs ${
+                          isChecked
+                            ? 'border-[#9C665C]/40 bg-[#FAF4F2]'
+                            : 'border-[#EAE3DA] bg-white opacity-60'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            setRolePermissions(prev => {
+                              const curr = prev.COORDINADOR || [];
+                              const next = isChecked
+                                ? curr.filter(t => t !== cat.type)
+                                : [...curr, cat.type];
+                              return { ...prev, COORDINADOR: next };
+                            });
+                          }}
+                          className="rounded text-[#9C665C] focus:ring-[#9C665C]"
+                          style={{ accentColor: cat.color }}
+                        />
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                        <span className="font-medium text-[#332A28] truncate">{cat.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Staff */}
+              <div className="border border-[#EAE3DA] rounded-2xl p-4 bg-white space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#F7F3EE] text-[#332A28] border border-[#EAE3DA]">
+                      STAFF
+                    </span>
+                    <span className="text-xs text-[#7D6F6B] hidden sm:inline">
+                      Equipo operativo en sitio y servicios especiales
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2 text-[11px]">
+                    <button
+                      onClick={() => {
+                        setRolePermissions(prev => ({
+                          ...prev,
+                          STAFF: ['SERVICIO']
+                        }));
+                      }}
+                      className="text-[#9C665C] hover:underline font-semibold cursor-pointer"
+                    >
+                      Solo Servicios
+                    </button>
+                    <span className="text-stone-300">|</span>
+                    <button
+                      onClick={() => {
+                        setRolePermissions(prev => ({
+                          ...prev,
+                          STAFF: CALENDAR_CATEGORIES.map(c => c.type)
+                        }));
+                      }}
+                      className="text-[#9C665C] hover:underline cursor-pointer"
+                    >
+                      Marcar todo
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-1">
+                  {CALENDAR_CATEGORIES.map(cat => {
+                    const isChecked = (rolePermissions.STAFF || []).includes(cat.type);
+                    return (
+                      <label
+                        key={cat.type}
+                        className={`flex items-center space-x-2 p-2 rounded-xl border transition cursor-pointer text-xs ${
+                          isChecked
+                            ? 'border-[#9C665C]/40 bg-[#FAF4F2]'
+                            : 'border-[#EAE3DA] bg-white opacity-60'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            setRolePermissions(prev => {
+                              const curr = prev.STAFF || [];
+                              const next = isChecked
+                                ? curr.filter(t => t !== cat.type)
+                                : [...curr, cat.type];
+                              return { ...prev, STAFF: next };
+                            });
+                          }}
+                          className="rounded text-[#9C665C] focus:ring-[#9C665C]"
+                          style={{ accentColor: cat.color }}
+                        />
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                        <span className="font-medium text-[#332A28] truncate">{cat.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Novios */}
+              <div className="border border-[#EAE3DA] rounded-2xl p-4 bg-white space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FCFAF7] text-[#9C665C] border border-[#EAE3DA]">
+                      NOVIOS
+                    </span>
+                    <span className="text-xs text-[#7D6F6B] hidden sm:inline">
+                      Portal de novios (acotado exclusivamente a su boda)
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 pt-1">
+                  {CALENDAR_CATEGORIES.map(cat => {
+                    const isChecked = (rolePermissions.NOVIOS || []).includes(cat.type);
+                    return (
+                      <label
+                        key={cat.type}
+                        className={`flex items-center space-x-2 p-2 rounded-xl border transition cursor-pointer text-xs ${
+                          isChecked
+                            ? 'border-[#9C665C]/40 bg-[#FAF4F2]'
+                            : 'border-[#EAE3DA] bg-white opacity-60'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            setRolePermissions(prev => {
+                              const curr = prev.NOVIOS || [];
+                              const next = isChecked
+                                ? curr.filter(t => t !== cat.type)
+                                : [...curr, cat.type];
+                              return { ...prev, NOVIOS: next };
+                            });
+                          }}
+                          className="rounded text-[#9C665C] focus:ring-[#9C665C]"
+                          style={{ accentColor: cat.color }}
+                        />
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                        <span className="font-medium text-[#332A28] truncate">{cat.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Administradores info banner */}
+              <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 text-xs text-emerald-900 flex items-center space-x-2.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0" />
+                <span>
+                  <strong>Administradores:</strong> Tienen acceso total a todas las listas del calendario y la facultad de modificar estos permisos en cualquier momento.
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between pt-4 border-t border-[#EAE3DA]">
+              {permissionsSuccess ? (
+                <div className="flex items-center space-x-1.5 text-emerald-600 text-xs font-semibold">
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>¡Permisos guardados y sincronizados!</span>
+                </div>
+              ) : (
+                <span className="text-xs text-[#7D6F6B]">
+                  Los cambios se aplican de inmediato a todo el equipo.
+                </span>
+              )}
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowPermissionsModal(false)}
+                  className="px-4 py-2 border border-[#EAE3DA] rounded-xl text-xs font-semibold text-[#7D6F6B] hover:bg-[#FAF8F5] transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSavePermissions}
+                  disabled={savingPermissions}
+                  className="px-5 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl text-xs font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
+                >
+                  {savingPermissions ? 'Guardando...' : 'Guardar Permisos'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
