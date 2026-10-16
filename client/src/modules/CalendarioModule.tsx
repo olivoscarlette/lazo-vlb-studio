@@ -1926,28 +1926,26 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                     className="w-full text-xs px-3 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:col-span-2">
-                  <div>
-                    <label className="block font-semibold text-[#332A28] mb-1">Hora Inicio</label>
-                    <input
-                      type="time"
-                      value={formData.time}
-                      onChange={e => {
-                        setFormData({ ...formData, time: e.target.value });
-                        checkClientConflict(formData.date, e.target.value, editingEventId);
-                      }}
-                      className="w-full text-xs px-2.5 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-[#332A28] mb-1">Hora Fin</label>
-                    <input
-                      type="time"
-                      value={formData.end_time}
-                      onChange={e => setFormData({ ...formData, end_time: e.target.value })}
-                      className="w-full text-xs px-2.5 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
-                    />
-                  </div>
+                <div>
+                  <label className="block font-semibold text-[#332A28] mb-1">Hora Inicio</label>
+                  <input
+                    type="time"
+                    value={formData.time}
+                    onChange={e => {
+                      setFormData({ ...formData, time: e.target.value });
+                      checkClientConflict(formData.date, e.target.value, editingEventId);
+                    }}
+                    className="w-full text-xs px-3 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-[#332A28] mb-1">Hora Fin</label>
+                  <input
+                    type="time"
+                    value={formData.end_time}
+                    onChange={e => setFormData({ ...formData, end_time: e.target.value })}
+                    className="w-full text-xs px-3 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                  />
                 </div>
               </div>
 

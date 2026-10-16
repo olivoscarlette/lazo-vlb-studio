@@ -701,7 +701,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="col-span-1">
                     <label className="block text-xs font-bold text-[#2B2826] mb-1 uppercase tracking-wider">
                       Fecha *
@@ -749,7 +749,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-[#2B2826] mb-1 uppercase tracking-wider">
                       Ubicación / Lugar
