@@ -318,7 +318,7 @@ const AppContent: React.FC = () => {
     return <LoginView />;
   }
 
-  if (user.role === 'ADMINISTRADOR' && !currentWedding) {
+  if (user.role !== 'NOVIOS' && !currentWedding) {
     return <GeneralDashboard />;
   }
 

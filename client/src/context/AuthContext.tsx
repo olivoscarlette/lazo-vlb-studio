@@ -1,6 +1,64 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { User, Wedding, NotificationItem, UserRole } from '../types';
 import { WorkspaceTab } from '../components/Sidebar';
+
+export interface AppRoute {
+  type: 'wedding' | 'dashboard';
+  weddingId?: string;
+  tab: string;
+}
+
+// Parses URL pathname or hash into structured route
+export const parseLocation = (pathname: string, hash: string): AppRoute => {
+  let path = pathname || '/';
+  if (hash && hash.startsWith('#/')) {
+    path = hash.slice(1);
+  }
+
+  // Remove trailing slashes
+  const clean = path.replace(/\/+$/, '') || '/';
+  const parts = clean.split('/').filter(Boolean);
+
+  // Match /boda/:weddingId/:tab?
+  if (parts[0] === 'boda' && parts[1]) {
+    return {
+      type: 'wedding',
+      weddingId: parts[1],
+      tab: parts[2] || 'resumen'
+    };
+  }
+
+  // Known dashboard tabs: /calendario, /whatsapp, /plantillas, /catalogos, /equipo, /ajustes, /bodas
+  const knownDashboard = ['calendario', 'whatsapp', 'plantillas', 'catalogos', 'equipo', 'ajustes', 'bodas', 'weddings'];
+  if (parts[0] && knownDashboard.includes(parts[0])) {
+    return {
+      type: 'dashboard',
+      tab: parts[0] === 'bodas' ? 'weddings' : parts[0]
+    };
+  }
+
+  if (parts[0] === 'dashboard' && parts[1]) {
+    return {
+      type: 'dashboard',
+      tab: parts[1] === 'bodas' ? 'weddings' : parts[1]
+    };
+  }
+
+  return {
+    type: 'dashboard',
+    tab: 'weddings'
+  };
+};
+
+export const buildRouteUrl = (route: AppRoute): string => {
+  if (route.type === 'wedding' && route.weddingId) {
+    return `/boda/${route.weddingId}/${route.tab || 'resumen'}`;
+  }
+  if (route.tab && route.tab !== 'weddings') {
+    return `/${route.tab}`;
+  }
+  return '/';
+};
 
 interface AuthContextType {
   user: User | null;
@@ -28,10 +86,64 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('lazo_token'));
   const [assignedWeddings, setAssignedWeddings] = useState<Wedding[]>([]);
-  const [currentWedding, setCurrentWedding] = useState<Wedding | null>(null);
+  const [currentWedding, setCurrentWeddingState] = useState<Wedding | null>(null);
+  const [activeTab, setActiveTabState] = useState<WorkspaceTab>('resumen');
+  const [generalDashboardTab, setGeneralDashboardTabState] = useState<string>('weddings');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  const assignedWeddingsRef = useRef<Wedding[]>([]);
+  assignedWeddingsRef.current = assignedWeddings;
+
+  const currentWeddingRef = useRef<Wedding | null>(null);
+  currentWeddingRef.current = currentWedding;
+
+  const activeTabRef = useRef<WorkspaceTab>(activeTab);
+  activeTabRef.current = activeTab;
+
+  const generalDashboardTabRef = useRef<string>(generalDashboardTab);
+  generalDashboardTabRef.current = generalDashboardTab;
+
+  // Change active tab within wedding workspace and push to browser history
+  const setActiveTab = useCallback((tab: WorkspaceTab) => {
+    setActiveTabState(tab);
+    const targetWedding = currentWeddingRef.current;
+    if (targetWedding) {
+      const newUrl = `/boda/${targetWedding.id}/${tab}`;
+      if (window.location.pathname !== newUrl) {
+        window.history.pushState({ type: 'wedding', weddingId: targetWedding.id, tab }, '', newUrl);
+      }
+    }
+  }, []);
+
+  // Change general dashboard tab and push to browser history
+  const setGeneralDashboardTab = useCallback((tab: string) => {
+    setGeneralDashboardTabState(tab);
+    const newUrl = tab === 'weddings' ? '/' : `/${tab}`;
+    if (window.location.pathname !== newUrl) {
+      window.history.pushState({ type: 'dashboard', tab }, '', newUrl);
+    }
+  }, []);
+
+  // Select or clear wedding and sync browser URL
+  const setCurrentWedding = useCallback((wedding: Wedding | null) => {
+    setCurrentWeddingState(wedding);
+    if (wedding) {
+      const tab = activeTabRef.current || 'resumen';
+      const newUrl = `/boda/${wedding.id}/${tab}`;
+      if (window.location.pathname !== newUrl) {
+        window.history.pushState({ type: 'wedding', weddingId: wedding.id, tab }, '', newUrl);
+      }
+    } else {
+      const tab = generalDashboardTabRef.current || 'weddings';
+      const newUrl = tab === 'weddings' ? '/' : `/${tab}`;
+      if (window.location.pathname !== newUrl) {
+        window.history.pushState({ type: 'dashboard', tab }, '', newUrl);
+      }
+    }
+  }, []);
+
+  // Fetch user profile and sync with current URL route
   const fetchProfile = async (authToken: string) => {
     try {
       const res = await fetch('/api/auth/me', {
@@ -40,20 +152,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
-        setAssignedWeddings(data.assignedWeddings || []);
+        const weddings: Wedding[] = data.assignedWeddings || [];
+        setAssignedWeddings(weddings);
+
+        // Parse initial URL from browser
+        const initialRoute = parseLocation(window.location.pathname, window.location.hash);
+
+        if (initialRoute.type === 'wedding' && initialRoute.weddingId) {
+          let found = weddings.find(w => w.id === initialRoute.weddingId);
+          if (!found) {
+            try {
+              const resWed = await fetch(`/api/weddings/${initialRoute.weddingId}`, {
+                headers: { Authorization: `Bearer ${authToken}` }
+              });
+              if (resWed.ok) {
+                const dWed = await resWed.json();
+                if (dWed.wedding) found = dWed.wedding;
+              }
+            } catch {}
+          }
+          if (found) {
+            setCurrentWeddingState(found);
+            setActiveTabState((initialRoute.tab as WorkspaceTab) || 'resumen');
+            return;
+          }
+        }
+
+        if (initialRoute.type === 'dashboard' && initialRoute.tab !== 'weddings') {
+          setCurrentWeddingState(null);
+          setGeneralDashboardTabState(initialRoute.tab);
+          return;
+        }
 
         // Auto select current wedding if Novios or only 1 wedding
-        if (data.user.role === 'NOVIOS' && data.assignedWeddings.length > 0) {
-          setCurrentWedding(data.assignedWeddings[0]);
-        } else if (!currentWedding && data.assignedWeddings.length > 0) {
-          // If we had a stored wedding id, restore it
-          const savedId = localStorage.getItem('lazo_active_wedding');
-          const found = data.assignedWeddings.find((w: Wedding) => w.id === savedId);
-          if (found) {
-            setCurrentWedding(found);
-          } else if (data.user.role !== 'ADMINISTRADOR') {
-            setCurrentWedding(data.assignedWeddings[0]);
+        if (data.user.role === 'NOVIOS' && weddings.length > 0) {
+          setCurrentWeddingState(weddings[0]);
+          const targetUrl = `/boda/${weddings[0].id}/resumen`;
+          if (window.location.pathname !== targetUrl) {
+            window.history.replaceState({ type: 'wedding', weddingId: weddings[0].id, tab: 'resumen' }, '', targetUrl);
           }
+        } else if (data.user.role !== 'ADMINISTRADOR' && weddings.length > 0) {
+          const savedId = localStorage.getItem('lazo_active_wedding');
+          const found = weddings.find(w => w.id === savedId) || weddings[0];
+          setCurrentWeddingState(found);
+          const targetUrl = `/boda/${found.id}/resumen`;
+          if (window.location.pathname !== targetUrl && window.location.pathname === '/') {
+            window.history.replaceState({ type: 'wedding', weddingId: found.id, tab: 'resumen' }, '', targetUrl);
+          }
+        } else {
+          // Admin at root /
+          setCurrentWeddingState(null);
+          setGeneralDashboardTabState('weddings');
         }
       } else {
         localStorage.removeItem('lazo_token');
@@ -81,6 +230,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error fetching notifications:', err);
     }
   };
+
+  // Browser Back / Forward button handler (popstate event)
+  useEffect(() => {
+    const handlePopState = async () => {
+      const route = parseLocation(window.location.pathname, window.location.hash);
+
+      if (route.type === 'wedding' && route.weddingId) {
+        let match = assignedWeddingsRef.current.find(w => w.id === route.weddingId);
+        if (!match && token) {
+          try {
+            const res = await fetch(`/api/weddings/${route.weddingId}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.wedding) match = data.wedding;
+            }
+          } catch {}
+        }
+        if (match) {
+          setCurrentWeddingState(match);
+          setActiveTabState((route.tab as WorkspaceTab) || 'resumen');
+        }
+      } else {
+        setCurrentWeddingState(null);
+        setGeneralDashboardTabState(route.tab || 'weddings');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [token]);
 
   useEffect(() => {
     if (token) {
@@ -124,8 +305,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('lazo_active_wedding');
     setToken(null);
     setUser(null);
-    setCurrentWedding(null);
+    setCurrentWeddingState(null);
     setAssignedWeddings([]);
+    window.history.pushState({}, '', '/');
   };
 
   // Demo Switcher for fast test and QA
@@ -142,9 +324,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const [activeTab, setActiveTab] = useState<WorkspaceTab>('resumen');
-  const [generalDashboardTab, setGeneralDashboardTab] = useState<string>('weddings');
-
   const navigateToNotification = async (notif: NotificationItem) => {
     // 1. Mark as read on server
     try {
@@ -158,8 +337,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {}
 
     // 2. Select the relevant wedding
+    let targetWedding: Wedding | null = null;
     if (notif.wedding_id) {
-      let targetWedding = assignedWeddings.find(w => w.id === notif.wedding_id);
+      targetWedding = assignedWeddings.find(w => w.id === notif.wedding_id) || null;
       if (!targetWedding && token) {
         try {
           const res = await fetch(`/api/weddings/${notif.wedding_id}`, {
@@ -167,14 +347,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           if (res.ok) {
             const data = await res.json();
-            if (data.wedding) {
-              targetWedding = data.wedding;
-            }
+            if (data.wedding) targetWedding = data.wedding;
           }
         } catch {}
-      }
-      if (targetWedding) {
-        setCurrentWedding(targetWedding);
       }
     }
 
@@ -206,7 +381,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       targetTab = 'documentos';
     }
 
-    setActiveTab(targetTab);
+    if (targetWedding) {
+      setCurrentWeddingState(targetWedding);
+      setActiveTabState(targetTab);
+      const newUrl = `/boda/${targetWedding.id}/${targetTab}`;
+      window.history.pushState({ type: 'wedding', weddingId: targetWedding.id, tab: targetTab }, '', newUrl);
+    } else {
+      setActiveTab(targetTab);
+    }
   };
 
   const refreshUserData = async () => {
