@@ -129,8 +129,7 @@ interface MainWorkspaceProps {
 }
 
 const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOpen }) => {
-  const { user, currentWedding } = useAuth();
-  const [currentTab, setCurrentTab] = useState<WorkspaceTab>('resumen');
+  const { user, currentWedding, activeTab, setActiveTab } = useAuth();
 
   // Check if today matches the wedding date
   const todayStr = new Date().toISOString().split('T')[0];
@@ -157,15 +156,6 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     }
   }, [currentWedding?.id, currentWedding?.wedding_date, todayStr]);
 
-  // When Wedding Day Mode is active, restrict tabs exclusively to timeline, mesas, or invitados
-  useEffect(() => {
-    if (weddingDayMode) {
-      if (currentTab !== 'timeline' && currentTab !== 'mesas' && currentTab !== 'invitados') {
-        setCurrentTab('timeline');
-      }
-    }
-  }, [weddingDayMode, currentTab]);
-
   const handleToggleWeddingDayMode = () => {
     setWeddingDayMode(prev => {
       const next = !prev;
@@ -173,7 +163,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
         localStorage.setItem(`lazo_day_mode_${currentWedding.id}`, String(next));
       }
       if (next) {
-        setCurrentTab('timeline');
+        setActiveTab('timeline');
       }
       return next;
     });
@@ -186,9 +176,9 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
 
   // If wedding is selected or user is Novios/Coord/Staff: render wedding workspace
   const renderModuleContent = () => {
-    switch (currentTab) {
+    switch (activeTab) {
       case 'resumen':
-        return <ResumenModule onNavigateTab={setCurrentTab} />;
+        return <ResumenModule onNavigateTab={setActiveTab} />;
       case 'reuniones':
         return <ReunionesModule />;
       case 'invitados':
@@ -210,13 +200,13 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
       case 'reportes':
         return <ReportesModule />;
       case 'directorio':
-        return user?.role === 'NOVIOS' ? <ResumenModule onNavigateTab={setCurrentTab} /> : <DirectorioModule />;
+        return user?.role === 'NOVIOS' ? <ResumenModule onNavigateTab={setActiveTab} /> : <DirectorioModule />;
       case 'bitacora':
         return <BitacoraModule />;
       case 'whatsapp':
         return <WhatsAppHubModule />;
       default:
-        return <ResumenModule onNavigateTab={setCurrentTab} />;
+        return <ResumenModule onNavigateTab={setActiveTab} />;
     }
   };
 
@@ -224,8 +214,8 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     <div className="flex min-h-[calc(100vh-4.5rem)] bg-[#FCFAF7] relative">
       {/* Sidebar Responsive: Docked on desktop, drawer on mobile */}
       <Sidebar
-        currentTab={currentTab}
-        onSelectTab={setCurrentTab}
+        currentTab={activeTab}
+        onSelectTab={setActiveTab}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         weddingDayMode={weddingDayMode}

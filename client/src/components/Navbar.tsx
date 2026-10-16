@@ -20,7 +20,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
     setCurrentWedding,
     assignedWeddings,
     notifications,
-    refreshNotifications
+    refreshNotifications,
+    navigateToNotification
   } = useAuth();
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -204,12 +205,27 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                       notifications.map(n => (
                         <div
                           key={n.id}
-                          onClick={() => handleMarkAsRead(n.id)}
-                          className={`p-3.5 text-sm cursor-pointer hover:bg-[#FCFAF7] transition ${!n.read ? 'bg-[#EFE2DF]/40' : ''}`}
+                          onClick={async () => {
+                            await navigateToNotification(n);
+                            setShowNotifMenu(false);
+                          }}
+                          className={`p-3.5 text-sm cursor-pointer hover:bg-[#FCFAF7] transition group ${!n.read ? 'bg-[#EFE2DF]/40' : ''}`}
                         >
-                          <div className="font-semibold text-[#332A28] mb-0.5">{n.title}</div>
+                          <div className="flex items-center justify-between gap-1">
+                            <div className="font-semibold text-[#332A28] mb-0.5 group-hover:text-[#9C665C] transition">
+                              {n.title}
+                            </div>
+                            <span className="text-[10px] text-[#9C665C] font-semibold opacity-0 group-hover:opacity-100 transition shrink-0">
+                              Ver en LAZO →
+                            </span>
+                          </div>
                           <div className="text-xs text-[#7D6F6B] leading-snug">{n.message}</div>
-                          <div className="text-xs text-[#7D6F6B] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
+                          <div className="flex items-center justify-between text-[11px] text-[#7D6F6B] mt-1.5 pt-1 border-t border-[#F7F3EE]">
+                            <span>{new Date(n.created_at).toLocaleDateString('es-MX')}</span>
+                            <span className="text-[#9C665C] font-semibold text-[11px] underline underline-offset-2">
+                              Ir a la sección →
+                            </span>
+                          </div>
                         </div>
                       ))
                     )}

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, Wedding, NotificationItem, UserRole } from '../types';
+import { WorkspaceTab } from '../components/Sidebar';
 
 interface AuthContextType {
   user: User | null;
@@ -7,6 +8,9 @@ interface AuthContextType {
   assignedWeddings: Wedding[];
   currentWedding: Wedding | null;
   setCurrentWedding: (wedding: Wedding | null) => void;
+  activeTab: WorkspaceTab;
+  setActiveTab: (tab: WorkspaceTab) => void;
+  navigateToNotification: (notif: NotificationItem) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   switchUserDemo: (role: UserRole) => Promise<void>;
@@ -136,6 +140,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>('resumen');
+
+  const navigateToNotification = async (notif: NotificationItem) => {
+    // 1. Mark as read on server
+    try {
+      if (token && !notif.read) {
+        await fetch(`/api/notifications/${notif.id}/read`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, read: 1 } : n));
+      }
+    } catch {}
+
+    // 2. Select the relevant wedding
+    if (notif.wedding_id) {
+      let targetWedding = assignedWeddings.find(w => w.id === notif.wedding_id);
+      if (!targetWedding && token) {
+        try {
+          const res = await fetch(`/api/weddings/${notif.wedding_id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.wedding) {
+              targetWedding = data.wedding;
+            }
+          }
+        } catch {}
+      }
+      if (targetWedding) {
+        setCurrentWedding(targetWedding);
+      }
+    }
+
+    // 3. Determine target workspace tab based on link or title
+    const title = (notif.title || '').toLowerCase();
+    const link = (notif.link || '').toLowerCase();
+    const msg = (notif.message || '').toLowerCase();
+
+    let targetTab: WorkspaceTab = 'resumen';
+    if (
+      link.includes('meeting') ||
+      title.includes('reunión') ||
+      title.includes('reunion') ||
+      msg.includes('reunión') ||
+      msg.includes('reunion')
+    ) {
+      targetTab = 'reuniones';
+    } else if (link.includes('timeline') || title.includes('timeline') || title.includes('cronograma')) {
+      targetTab = 'timeline';
+    } else if (link.includes('guest') || title.includes('invitado') || msg.includes('invitado') || msg.includes('rsvp')) {
+      targetTab = 'invitados';
+    } else if (link.includes('table') || title.includes('mesa') || msg.includes('mesa')) {
+      targetTab = 'mesas';
+    } else if (link.includes('checklist') || title.includes('tarea') || title.includes('checklist')) {
+      targetTab = 'checklist';
+    } else if (link.includes('proveedor') || title.includes('proveedor') || msg.includes('pago')) {
+      targetTab = 'proveedores';
+    } else if (link.includes('document') || title.includes('documento')) {
+      targetTab = 'documentos';
+    }
+
+    setActiveTab(targetTab);
+  };
+
   const refreshUserData = async () => {
     if (token) await fetchProfile(token);
   };
@@ -152,6 +222,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         assignedWeddings,
         currentWedding,
         setCurrentWedding,
+        activeTab,
+        setActiveTab,
+        navigateToNotification,
         login,
         logout,
         switchUserDemo,
