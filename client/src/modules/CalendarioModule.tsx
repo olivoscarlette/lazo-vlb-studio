@@ -5,7 +5,7 @@ import {
   Plus, X, AlertTriangle, Filter, ChevronLeft,
   ChevronRight, Sparkles, Building2, ExternalLink, Trash2, Edit2,
   Copy, Check, Link2, CheckCircle2, CheckSquare, Square, Search,
-  ListTodo, Video, CalendarDays, Eye, Tag, AlertCircle
+  ListTodo, Video, CalendarDays, Eye, Tag, AlertCircle, Menu, ChevronDown
 } from 'lucide-react';
 
 export interface CalendarEventItem {
@@ -75,7 +75,11 @@ export const createGoogleCalendarUrl = (event: CalendarEventItem): string => {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 };
 
-export const CalendarioModule: React.FC = () => {
+interface CalendarioModuleProps {
+  onToggleSidebar?: () => void;
+}
+
+export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSidebar }) => {
   const { token, user, assignedWeddings, setCurrentWedding } = useAuth();
 
   // Calendar events & tasks
@@ -88,6 +92,8 @@ export const CalendarioModule: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [search, setSearch] = useState('');
   const [selectedWeddingFilter, setSelectedWeddingFilter] = useState<string>('TODAS');
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [selectedMobileDay, setSelectedMobileDay] = useState<string | null>(null);
 
   // Event category toggles (Google Calendar style color checkboxes)
   const [activeCalendars, setActiveCalendars] = useState<Record<string, boolean>>({
@@ -534,10 +540,49 @@ export const CalendarioModule: React.FC = () => {
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
   const fullDayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
+  // Google Calendar Mobile Month Carousel
+  const monthCarousel = useMemo(() => {
+    const currentY = currentDate.getFullYear();
+    const currentM = currentDate.getMonth();
+    const items: { label: string; year: number; month: number; isYearSeparator?: boolean }[] = [];
+    const shortNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+    for (let offset = -2; offset <= 13; offset++) {
+      const d = new Date(currentY, currentM + offset, 1);
+      const mIdx = d.getMonth();
+      const y = d.getFullYear();
+
+      if (mIdx === 0 && offset !== -2) {
+        items.push({ label: `${y}`, year: y, month: 0, isYearSeparator: true });
+      }
+      items.push({ label: shortNames[mIdx], year: y, month: mIdx });
+    }
+    return items;
+  }, [currentDate]);
+
+  const getMobileChipColor = (type: string) => {
+    switch (type) {
+      case 'PLANNING':
+        return 'bg-[#B87068] text-white';
+      case 'EVENTO':
+        return 'bg-[#8A574E] text-white';
+      case 'CITA_EXTERNA':
+        return 'bg-[#2563EB] text-white';
+      case 'SERVICIO':
+        return 'bg-[#5F8265] text-white';
+      case 'OPEN_HOUSE':
+        return 'bg-[#7C3AED] text-white';
+      default:
+        return 'bg-[#78716C] text-white';
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full bg-[#FFFFFF] rounded-2xl border border-[#EAE3DA] shadow-xs overflow-hidden">
-      {/* GOOGLE CALENDAR HEADER */}
-      <header className="px-5 py-3.5 border-b border-[#EAE3DA] bg-[#FCFAF7] flex flex-wrap items-center justify-between gap-3">
+    <div className="w-full flex-1 flex flex-col">
+      {/* 1. DESKTOP VIEW (GOOGLE CALENDAR WEB) */}
+      <div className="hidden md:flex flex-col h-full bg-[#FFFFFF] rounded-2xl border border-[#EAE3DA] shadow-xs overflow-hidden">
+        {/* GOOGLE CALENDAR HEADER */}
+        <header className="px-5 py-3.5 border-b border-[#EAE3DA] bg-[#FCFAF7] flex flex-wrap items-center justify-between gap-3">
         {/* Left: Today, arrows, Month/Year */}
         <div className="flex items-center space-x-3">
           <div className="flex items-center space-x-2">
@@ -1329,6 +1374,294 @@ export const CalendarioModule: React.FC = () => {
           )}
         </main>
       </div>
+    </div>
+
+      {/* 2. MOBILE VIEW: GOOGLE CALENDAR APP LAYOUT (Idéntico a Google Calendar móvil) */}
+      <div className="md:hidden flex flex-col w-full bg-white select-none relative pb-20">
+        {/* Top Bar: Hamburger, "octubre ▾", Search, Today [16], Avatar (S) */}
+        <div className="flex items-center justify-between px-3 py-2.5 bg-white border-b border-[#F0EBE4] sticky top-0 z-30">
+          <div className="flex items-center space-x-2">
+            {onToggleSidebar && (
+              <button
+                onClick={onToggleSidebar}
+                className="p-2 text-[#332A28] hover:bg-stone-100 rounded-full transition cursor-pointer"
+                title="Menú"
+                aria-label="Abrir Menú Lateral"
+              >
+                <Menu className="w-5 h-5 text-[#332A28]" />
+              </button>
+            )}
+            <div
+              onClick={handleToday}
+              className="flex items-center space-x-1 cursor-pointer select-none"
+            >
+              <span className="font-semibold text-lg text-[#332A28] lowercase">
+                {monthNames[month].toLowerCase()}
+              </span>
+              <ChevronDown className="w-4 h-4 text-stone-500" />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => setShowMobileSearch(prev => !prev)}
+              className="p-2 text-[#332A28] hover:bg-stone-100 rounded-full transition cursor-pointer"
+              title="Buscar"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
+            {/* Today Button Icon [16] */}
+            <button
+              onClick={handleToday}
+              className="p-1.5 text-[#332A28] hover:bg-stone-100 rounded-lg transition cursor-pointer"
+              title="Ir a Hoy"
+            >
+              <div className="w-6 h-6 border-2 border-[#332A28] rounded-md flex items-center justify-center font-bold text-[10px]">
+                {new Date().getDate()}
+              </div>
+            </button>
+
+            {/* User profile avatar */}
+            <div
+              className="w-8 h-8 rounded-full bg-[#1A73E8] text-white font-bold text-xs flex items-center justify-center shadow-xs cursor-pointer ml-1"
+              title={user?.name || ''}
+            >
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            </div>
+          </div>
+        </div>
+
+        {/* Search bar on mobile (if toggled) */}
+        {showMobileSearch && (
+          <div className="p-2.5 bg-[#FAF8F5] border-b border-[#EAE3DA] flex items-center space-x-2">
+            <Search className="w-4 h-4 text-stone-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Buscar eventos o tareas..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="flex-1 bg-white border border-[#EAE3DA] rounded-lg px-2.5 py-1 text-xs text-[#332A28] focus:outline-none"
+              autoFocus
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="p-1 text-stone-400 hover:text-stone-700">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Month Carousel Pills */}
+        <div className="flex items-center space-x-2 px-3 py-2.5 overflow-x-auto no-scrollbar border-b border-[#F0EBE4] bg-white">
+          {monthCarousel.map((item, idx) => {
+            if (item.isYearSeparator) {
+              return (
+                <span key={`year-${idx}`} className="font-bold text-xs text-[#332A28] px-1.5 shrink-0 select-none">
+                  {item.label}
+                </span>
+              );
+            }
+            const isSelected = item.year === year && item.month === month;
+            return (
+              <button
+                key={`m-${idx}`}
+                onClick={() => setCurrentDate(new Date(item.year, item.month, 1))}
+                className={`px-3.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition cursor-pointer shrink-0 ${
+                  isSelected
+                    ? 'bg-[#C2E7FF] text-[#004A77] font-bold shadow-2xs'
+                    : 'border border-[#EAE3DA] bg-white text-[#332A28] hover:bg-[#FAF8F5]'
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Day of Week Headers (D, L, M, M, J, V, S) */}
+        <div className="grid grid-cols-7 text-center py-2 bg-white border-b border-[#F0EBE4]">
+          {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((letter, dIdx) => {
+            const isTodayWeekday = dIdx === new Date().getDay() && month === new Date().getMonth() && year === new Date().getFullYear();
+            return (
+              <div
+                key={dIdx}
+                className={`text-[11px] font-semibold ${
+                  isTodayWeekday ? 'text-[#1A73E8] font-bold' : 'text-[#7D6F6B]'
+                }`}
+              >
+                {letter}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Monthly Grid (Full Width, 7 Columns, Never Cut Off) */}
+        <div className="grid grid-cols-7 w-full border-b border-[#EAE3DA] divide-x divide-y divide-[#EAE3DA] bg-white">
+          {calendarDays.map((d, cIdx) => {
+            const dayEvents = filteredEvents.filter(e => e.date === d.dateStr);
+
+            return (
+              <div
+                key={cIdx}
+                onClick={() => setSelectedMobileDay(d.dateStr)}
+                className={`min-h-[84px] max-h-[105px] p-0.5 sm:p-1 flex flex-col justify-start overflow-hidden cursor-pointer active:bg-stone-50 transition relative ${
+                  !d.isCurrentMonth ? 'bg-[#FAF8F5]/50' : 'bg-white'
+                }`}
+              >
+                {/* Day number */}
+                <div className="text-center mb-0.5">
+                  {d.isToday ? (
+                    <div className="w-5 h-5 rounded-full bg-[#1A73E8] text-white font-bold text-[11px] flex items-center justify-center mx-auto shadow-2xs">
+                      {d.dayNum}
+                    </div>
+                  ) : (
+                    <span
+                      className={`text-[11px] font-normal inline-block ${
+                        d.isCurrentMonth ? 'text-[#332A28]' : 'text-stone-300'
+                      }`}
+                    >
+                      {d.dayNum}
+                    </span>
+                  )}
+                </div>
+
+                {/* Event indicators */}
+                <div className="flex-1 flex flex-col space-y-0.5 overflow-hidden">
+                  {dayEvents.slice(0, 3).map(evt => (
+                    <div
+                      key={evt.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (evt.source === 'CALENDAR_EVENT') {
+                          handleOpenEditEvent(evt);
+                        } else if (evt.wedding_id) {
+                          const wed = assignedWeddings.find(w => w.id === evt.wedding_id);
+                          if (wed) setCurrentWedding(wed);
+                        }
+                      }}
+                      className={`rounded-[3px] text-[9px] font-medium px-1 py-0.5 truncate text-white leading-tight shadow-2xs cursor-pointer ${getMobileChipColor(evt.event_type)}`}
+                      title={`${evt.time || ''} ${evt.title}`}
+                    >
+                      {evt.title}
+                    </div>
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <span className="text-[8px] font-bold text-stone-500 text-center leading-none">
+                      +{dayEvents.length - 3}
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Floating Action Button (FAB) at bottom-right */}
+        <div className="fixed bottom-6 right-5 z-40">
+          <button
+            onClick={() => handleOpenAddEvent()}
+            className="w-14 h-14 rounded-2xl bg-[#D3E3FD] hover:bg-[#C2E7FF] text-[#041E49] shadow-xl flex items-center justify-center transition-transform active:scale-90 cursor-pointer"
+            title="Crear Evento"
+            aria-label="Crear Evento"
+          >
+            <Plus className="w-7 h-7 stroke-[2.5]" />
+          </button>
+        </div>
+      </div>
+
+      {/* 3. MOBILE DAY EVENTS DETAIL BOTTOM SHEET */}
+      {selectedMobileDay && (
+        <div
+          className="md:hidden fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-end justify-center"
+          onClick={() => setSelectedMobileDay(null)}
+        >
+          <div
+            className="bg-white rounded-t-3xl w-full max-h-[70vh] p-5 overflow-y-auto space-y-4 shadow-2xl animate-in slide-in-from-bottom duration-200"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-[#EAE3DA] pb-3">
+              <div>
+                <span className="text-xs uppercase font-bold text-[#8A574E]">Detalle del Día</span>
+                <h3 className="text-lg font-serif font-bold text-[#2B2826] capitalize">
+                  {new Date(selectedMobileDay + 'T12:00:00').toLocaleDateString('es-MX', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </h3>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    handleOpenAddEvent(selectedMobileDay);
+                    setSelectedMobileDay(null);
+                  }}
+                  className="p-2 rounded-xl bg-[#9C665C] text-white hover:bg-[#85534A] transition cursor-pointer"
+                  title="Añadir evento a este día"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setSelectedMobileDay(null)}
+                  className="p-2 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {filteredEvents.filter(e => e.date === selectedMobileDay).length === 0 ? (
+                <div className="text-center py-6 text-sm text-[#7D6F6B]">
+                  No hay eventos programados para este día.
+                  <div className="mt-3">
+                    <button
+                      onClick={() => {
+                        handleOpenAddEvent(selectedMobileDay);
+                        setSelectedMobileDay(null);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#9C665C] text-white text-xs font-semibold cursor-pointer"
+                    >
+                      + Agendar Evento
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                filteredEvents.filter(e => e.date === selectedMobileDay).map(evt => (
+                  <div
+                    key={evt.id}
+                    onClick={() => {
+                      setSelectedMobileDay(null);
+                      if (evt.source === 'CALENDAR_EVENT') {
+                        handleOpenEditEvent(evt);
+                      } else if (evt.wedding_id) {
+                        const wed = assignedWeddings.find(w => w.id === evt.wedding_id);
+                        if (wed) setCurrentWedding(wed);
+                      }
+                    }}
+                    className="p-3 rounded-2xl border border-[#EAE3DA] bg-[#FCFAF7] hover:bg-white transition cursor-pointer flex items-center justify-between"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getMobileChipColor(evt.event_type)}`}>
+                          {evt.event_type}
+                        </span>
+                        {evt.time && <span className="text-xs font-bold text-[#2B2826]">{evt.time}</span>}
+                      </div>
+                      <div className="font-semibold text-sm text-[#2B2826]">{evt.title}</div>
+                      {evt.wedding_name && <div className="text-xs text-[#8A7E72]">💍 {evt.wedding_name}</div>}
+                      {evt.location && <div className="text-xs text-[#8A7E72]">📍 {evt.location}</div>}
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-stone-400 shrink-0" />
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL CREAR / EDITAR EVENTO */}
       {showEventModal && (

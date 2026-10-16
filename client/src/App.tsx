@@ -207,7 +207,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
       case 'whatsapp':
         return <WhatsAppHubModule />;
       case 'calendario':
-        return <CalendarioModule />;
+        return <CalendarioModule onToggleSidebar={() => setSidebarOpen(prev => !prev)} />;
       default:
         return <ResumenModule onNavigateTab={setActiveTab} />;
     }
@@ -228,7 +228,9 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
 
       {/* Main Workspace Area: Expands smoothly to full width when sidebar is collapsed */}
       <main
-        className={`flex-1 min-w-0 w-full max-w-full transition-all duration-300 ease-in-out p-3 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden bg-[#FCFAF7] ${
+        className={`flex-1 min-w-0 w-full max-w-full transition-all duration-300 ease-in-out ${
+          activeTab === 'calendario' ? 'p-0 md:p-6 lg:p-8' : 'p-3 sm:p-6 lg:p-8'
+        } overflow-y-auto overflow-x-hidden bg-[#FCFAF7] ${
           !sidebarOpen ? 'max-w-none' : 'max-w-7xl mx-auto'
         }`}
       >
