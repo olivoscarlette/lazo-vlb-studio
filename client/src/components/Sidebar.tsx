@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CalendarCheck2, Users2, Grid2x2Check,
   CreditCard, Landmark, Church, Clock3, CheckSquare,
   FileText, BarChart3, Contact2, History, X, MessageSquare,
-  ChevronLeft
+  ChevronLeft, Sparkles
 } from 'lucide-react';
 
 export type WorkspaceTab =
@@ -28,6 +28,8 @@ interface SidebarProps {
   onSelectTab: (tab: WorkspaceTab) => void;
   isOpen: boolean;
   onClose: () => void;
+  weddingDayMode?: boolean;
+  onToggleWeddingDayMode?: () => void;
 }
 
 interface MenuItemDef {
@@ -41,7 +43,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentTab,
   onSelectTab,
   isOpen,
-  onClose
+  onClose,
+  weddingDayMode = false,
+  onToggleWeddingDayMode
 }) => {
   const { user, token, currentWedding, setCurrentWedding } = useAuth();
   const [rsvpPercent, setRsvpPercent] = useState<number | null>(null);
@@ -90,38 +94,49 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const isNovios = user.role === 'NOVIOS';
 
-  // 3 Categorías solicitadas (Proveedores en Planificación, Timeline en Logística)
-  const sections: { title: string; items: MenuItemDef[] }[] = [
-    {
-      title: 'PLANIFICACIÓN',
-      items: [
-        { id: 'resumen', label: 'Resumen', icon: LayoutDashboard },
-        { id: 'reuniones', label: 'Información y Reuniones', icon: CalendarCheck2 },
-        { id: 'checklist', label: 'Checklist', icon: CheckSquare },
-        { id: 'proveedores', label: 'Proveedores y Pagos', icon: CreditCard }
+  // Si weddingDayMode está activo, SOLO se muestran Modo Operación, Asignación de Mesas y Listado de Invitados
+  const sections: { title: string; items: MenuItemDef[] }[] = weddingDayMode
+    ? [
+        {
+          title: '⚡ OPERACIÓN EN VIVO',
+          items: [
+            { id: 'timeline', label: 'Modo Operación', icon: Clock3 },
+            { id: 'mesas', label: 'Asignación de Mesas', icon: Grid2x2Check },
+            { id: 'invitados', label: 'Listado de Invitados', icon: Users2 }
+          ]
+        }
       ]
-    },
-    {
-      title: 'LOGÍSTICA & INVITADOS',
-      items: [
-        { id: 'timeline', label: 'Timeline', icon: Clock3 },
-        { id: 'invitados', label: 'Invitados y Confirmaciones', icon: Users2 },
-        { id: 'mesas', label: 'Mesas y Layout', icon: Grid2x2Check },
-        { id: 'civil', label: 'Civil', icon: Landmark },
-        { id: 'religiosa', label: 'Ceremonia Religiosa', icon: Church }
-      ]
-    },
-    {
-      title: 'GESTIÓN & ARCHIVOS',
-      items: [
-        { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare, hiddenForNovios: true },
-        { id: 'documentos', label: 'Documentos', icon: FileText },
-        { id: 'reportes', label: 'Reportes', icon: BarChart3 },
-        { id: 'directorio', label: 'Directorio', icon: Contact2, hiddenForNovios: true },
-        { id: 'bitacora', label: 'Bitácora', icon: History, hiddenForNovios: true }
-      ]
-    }
-  ];
+    : [
+        {
+          title: 'PLANIFICACIÓN',
+          items: [
+            { id: 'resumen', label: 'Resumen', icon: LayoutDashboard },
+            { id: 'reuniones', label: 'Información y Reuniones', icon: CalendarCheck2 },
+            { id: 'checklist', label: 'Checklist', icon: CheckSquare },
+            { id: 'proveedores', label: 'Proveedores y Pagos', icon: CreditCard }
+          ]
+        },
+        {
+          title: 'LOGÍSTICA & INVITADOS',
+          items: [
+            { id: 'timeline', label: 'Timeline', icon: Clock3 },
+            { id: 'invitados', label: 'Invitados y Confirmaciones', icon: Users2 },
+            { id: 'mesas', label: 'Mesas y Layout', icon: Grid2x2Check },
+            { id: 'civil', label: 'Civil', icon: Landmark },
+            { id: 'religiosa', label: 'Ceremonia Religiosa', icon: Church }
+          ]
+        },
+        {
+          title: 'GESTIÓN & ARCHIVOS',
+          items: [
+            { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare, hiddenForNovios: true },
+            { id: 'documentos', label: 'Documentos', icon: FileText },
+            { id: 'reportes', label: 'Reportes', icon: BarChart3 },
+            { id: 'directorio', label: 'Directorio', icon: Contact2, hiddenForNovios: true },
+            { id: 'bitacora', label: 'Bitácora', icon: History, hiddenForNovios: true }
+          ]
+        }
+      ];
 
   const handleItemClick = (id: WorkspaceTab) => {
     onSelectTab(id);
@@ -244,7 +259,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="h-6" />
         </nav>
 
-        {/* Footer */}
+        {/* Footer with Wedding Day Mode Toggle */}
+        {onToggleWeddingDayMode && (user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+          <div className="p-2.5 border-t border-[#EAE3DA] bg-[#FAF8F5]">
+            <button
+              onClick={onToggleWeddingDayMode}
+              className={`w-full py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center space-x-2 transition cursor-pointer ${
+                weddingDayMode
+                  ? 'bg-white text-[#2B2826] border border-[#EAE3DA] hover:bg-[#FAF8F5] shadow-2xs'
+                  : 'bg-[#9C665C]/10 text-[#9C665C] hover:bg-[#9C665C]/20 border border-[#9C665C]/20'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#9C665C]" />
+              <span>{weddingDayMode ? 'Ver Planeación Completa' : '⚡ Activar Modo Día de Boda'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* Brand Footer */}
         <div className="px-4 py-2.5 border-t border-[#EAE3DA] bg-[#FAF8F5] flex items-center justify-between shrink-0">
           <span className="text-[11px] font-medium text-[#8A7E72]">LAZO · VLB Studio</span>
           <span className="w-2 h-2 rounded-full bg-[#6E8C70]" title="Espacio activo" />

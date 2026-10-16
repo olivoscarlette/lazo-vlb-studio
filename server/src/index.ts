@@ -21,6 +21,7 @@ import directoryRouter from './routes/directory.js';
 import catalogsBackupRouter from './routes/catalogsBackup.js';
 import whatsappHubRouter from './routes/whatsappHub.js';
 import whatsappWebhookRouter from './routes/whatsappWebhook.js';
+import calendarRouter from './routes/calendar.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -106,6 +107,7 @@ app.use('/api/weddings', reportsRouter);
 app.use('/api/weddings', directoryRouter);
 app.use('/api/whatsapp', whatsappWebhookRouter);
 app.use('/api/whatsapp', whatsappHubRouter);
+app.use('/api/calendar', calendarRouter);
 app.use('/api', catalogsBackupRouter);
 
 // Serve static client build if it exists

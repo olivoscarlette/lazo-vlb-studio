@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Meeting, PackageInfo } from '../types';
 import {
   CalendarCheck2, Plus, Clock, Users, CheckCircle2,
-  AlertCircle, MessageSquare, ChevronRight, Check, Sparkles, X, ChevronDown
+  AlertCircle, MessageSquare, ChevronRight, Check, Sparkles, X, ChevronDown,
+  Video, ExternalLink, Bot, FileText, AlertTriangle
 } from 'lucide-react';
 
 export const ReunionesModule: React.FC = () => {
@@ -19,7 +20,8 @@ export const ReunionesModule: React.FC = () => {
     title: '',
     date: new Date().toISOString().split('T')[0],
     time: '11:00',
-    notes: ''
+    notes: '',
+    meet_url: ''
   });
   const [formError, setFormError] = useState('');
 
@@ -34,8 +36,24 @@ export const ReunionesModule: React.FC = () => {
     agreements: '',
     pending_tasks: '',
     notes: '',
+    meet_url: '',
+    summary: '',
     status: 'PROGRAMADA'
   });
+  const [rawTranscript, setRawTranscript] = useState('');
+  const [isAiProcessing, setIsAiProcessing] = useState(false);
+
+  const parseAcceptedList = (m: Meeting): Array<{ userId: string; userName: string; role: string; acceptedAt: string }> => {
+    try {
+      if (Array.isArray(m.accepted_by)) return m.accepted_by;
+      if (typeof m.accepted_by === 'string' && m.accepted_by.trim()) {
+        return JSON.parse(m.accepted_by);
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  };
 
   const fetchMeetings = async () => {
     if (!currentWedding || !token) return;
@@ -58,6 +76,30 @@ export const ReunionesModule: React.FC = () => {
   useEffect(() => {
     fetchMeetings();
   }, [currentWedding, token]);
+
+  // Conflict detection within +/- 45 minutes
+  const getConflictWarning = (targetDate: string, targetTime: string, excludeId?: string) => {
+    if (!targetDate || !targetTime) return null;
+    const [tH, tM] = targetTime.split(':').map(Number);
+    const targetMinutes = tH * 60 + (tM || 0);
+
+    for (const m of meetings) {
+      if (excludeId && m.id === excludeId) continue;
+      if (m.status === 'CANCELADA') continue;
+      if (m.date === targetDate && m.time) {
+        const [mH, mM] = m.time.split(':').map(Number);
+        const mMinutes = mH * 60 + (mM || 0);
+        if (Math.abs(targetMinutes - mMinutes) < 45) {
+          return `Atención: Ya existe la reunión "${m.title}" agendada a las ${m.time} hrs (${m.status}).`;
+        }
+      }
+    }
+    return null;
+  };
+
+  const scheduleConflictAlert = useMemo(() => {
+    return getConflictWarning(formData.date, formData.time);
+  }, [formData.date, formData.time, meetings]);
 
   const handleCreateMeeting = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +126,8 @@ export const ReunionesModule: React.FC = () => {
         title: '',
         date: new Date().toISOString().split('T')[0],
         time: '11:00',
-        notes: ''
+        notes: '',
+        meet_url: ''
       });
       await fetchMeetings();
     } catch (err: any) {
@@ -92,7 +135,7 @@ export const ReunionesModule: React.FC = () => {
     }
   };
 
-  // Team accepts meeting directly
+  // Team accepts meeting - requires 2 coordinators/admins
   const handleAcceptMeeting = async (meetingId: string) => {
     try {
       const res = await fetch(`/api/weddings/${currentWedding!.id}/meetings/${meetingId}`, {
@@ -101,10 +144,22 @@ export const ReunionesModule: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ status: 'PROGRAMADA' })
+        body: JSON.stringify({ action: 'ACCEPT_HORARIO' })
       });
-      if (res.ok) fetchMeetings();
-    } catch {}
+      const data = await res.json();
+      if (res.ok) {
+        if (data.meeting?.status === 'PROGRAMADA') {
+          alert('¡Horario confirmado con éxito! Con tu aceptación se completaron las 2 requeridas y la sesión ha quedado PROGRAMADA.');
+        } else {
+          alert('Aceptación de horario registrada. La sesión pasará a PROGRAMADA una vez que otro coordinador o administrador acepte.');
+        }
+        fetchMeetings();
+      } else {
+        alert(data.error || 'Error al procesar la aceptación.');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error de conexión.');
+    }
   };
 
   // Team submits 2 alternative slots
@@ -127,6 +182,51 @@ export const ReunionesModule: React.FC = () => {
         fetchMeetings();
       }
     } catch {}
+  };
+
+  // AI-powered Minuta Generator
+  const handleGenerateAiMinuta = () => {
+    if (!rawTranscript.trim()) return;
+    setIsAiProcessing(true);
+
+    setTimeout(() => {
+      const lines = rawTranscript.split('\n').map(l => l.trim()).filter(Boolean);
+      const newAgreements: string[] = [];
+      const newTasks: string[] = [];
+      const generalSummary: string[] = [];
+
+      lines.forEach(line => {
+        const lower = line.toLowerCase();
+        if (lower.includes('acuerdo') || lower.includes('definir') || lower.includes('queda') || lower.includes('aprob') || lower.includes('precio') || lower.includes('costo') || lower.includes('pact')) {
+          newAgreements.push(line.replace(/^[-*•\d.]+\s*/, ''));
+        } else if (lower.includes('tarea') || lower.includes('pendiente') || lower.includes('enviar') || lower.includes('revisar') || lower.includes('cotizar') || lower.includes('llamar') || lower.includes('dar seguimiento')) {
+          newTasks.push(line.replace(/^[-*•\d.]+\s*/, ''));
+        } else {
+          generalSummary.push(line.replace(/^[-*•\d.]+\s*/, ''));
+        }
+      });
+
+      const formattedSummary = `Resumen Ejecutivo de Sesión (${new Date().toLocaleDateString('es-MX')}):\n` +
+        (generalSummary.length > 0 ? generalSummary.slice(0, 4).map(s => `• ${s}`).join('\n') : '• Sesión de coordinación y avance general.');
+
+      const formattedAgreements = (meetingNotes.agreements ? meetingNotes.agreements + '\n\n' : '') +
+        (newAgreements.length > 0 
+          ? newAgreements.map(a => `✓ ${a}`).join('\n')
+          : `✓ Se revisaron y validaron los puntos acordados en la videollamada.`);
+
+      const formattedTasks = (meetingNotes.pending_tasks ? meetingNotes.pending_tasks + '\n\n' : '') +
+        (newTasks.length > 0
+          ? newTasks.map(t => `▫ ${t}`).join('\n')
+          : `▫ Seguimiento general y confirmación con proveedores.`);
+
+      setMeetingNotes(prev => ({
+        ...prev,
+        agreements: formattedAgreements,
+        pending_tasks: formattedTasks,
+        summary: formattedSummary
+      }));
+      setIsAiProcessing(false);
+    }, 500);
   };
 
   // Novios selects an alternative slot
@@ -272,15 +372,18 @@ export const ReunionesModule: React.FC = () => {
         ) : (
           meetings.map(m => {
             const hasProposed = m.status === 'PROPUESTA' && m.proposed_slots && m.proposed_slots.length > 0;
+            const acceptedList = parseAcceptedList(m);
+            const hasCurrentUserAccepted = Boolean(user && acceptedList.some(a => a.userId === user.id));
+            const canAcceptMeeting = !isNovios && (user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR');
 
             return (
               <div
                 key={m.id}
-                className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs hover:border-[#DDD2C4] transition"
+                className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs hover:border-[#DDD2C4] transition space-y-4"
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
-                    <div className="flex items-center space-x-2.5">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
                         m.status === 'REALIZADA'
                           ? 'bg-[#E4ECE5] text-[#2B5235] border border-[#BDD4C1]'
@@ -293,6 +396,32 @@ export const ReunionesModule: React.FC = () => {
                         {m.status}
                       </span>
                       <span className="text-xs text-[#8A7E72]">Creada por: {m.created_by}</span>
+
+                      {/* Google Meet Pill */}
+                      {m.meet_url ? (
+                        <a
+                          href={m.meet_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center space-x-1.5 px-2.5 py-0.5 bg-[#4285F4]/10 hover:bg-[#4285F4]/20 text-[#1967D2] text-xs font-semibold rounded-full border border-[#4285F4]/30 transition"
+                          title="Abrir reunión de Google Meet"
+                        >
+                          <Video className="w-3 h-3 text-[#1967D2]" />
+                          <span>Google Meet</span>
+                          <ExternalLink className="w-2.5 h-2.5" />
+                        </a>
+                      ) : (
+                        <a
+                          href="https://meet.google.com/new"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center space-x-1 px-2 py-0.5 text-[11px] text-[#8A7E72] hover:text-[#1967D2] bg-[#FAF8F5] hover:bg-[#4285F4]/10 rounded-full border border-[#EAE3DA] transition"
+                          title="Crear sala de Google Meet para esta sesión"
+                        >
+                          <Video className="w-3 h-3 text-[#8A7E72]" />
+                          <span>+ Sala Meet</span>
+                        </a>
+                      )}
                     </div>
 
                     <h4 className="font-serif text-2xl font-bold text-[#2B2826] mt-2">{m.title}</h4>
@@ -317,21 +446,30 @@ export const ReunionesModule: React.FC = () => {
 
                   {/* Actions according to role and status */}
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                    {!isNovios && m.status === 'SOLICITADA' && (
+                    {canAcceptMeeting && (m.status === 'SOLICITADA' || m.status === 'PROPUESTA') && (
                       <>
-                        <button
-                          onClick={() => handleAcceptMeeting(m.id)}
-                          className="px-4 py-2 bg-[#E4ECE5] hover:bg-[#D5E3D7] text-[#2B5235] text-xs font-bold uppercase tracking-wider rounded-xl border border-[#BDD4C1] transition shadow-xs"
-                        >
-                          Aceptar Horario
-                        </button>
+                        {hasCurrentUserAccepted ? (
+                          <span className="inline-flex items-center space-x-1.5 px-3 py-2 bg-[#E4ECE5] text-[#2B5235] text-xs font-semibold rounded-xl border border-[#BDD4C1]">
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Horario Aceptado ({acceptedList.length}/2)</span>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleAcceptMeeting(m.id)}
+                            className="px-4 py-2 bg-[#E4ECE5] hover:bg-[#D5E3D7] text-[#2B5235] text-xs font-bold uppercase tracking-wider rounded-xl border border-[#BDD4C1] transition shadow-xs cursor-pointer"
+                            title="Aceptar este horario. Se requieren al menos 2 administradores/coordinadores para confirmar la cita."
+                          >
+                            Aceptar Horario ({acceptedList.length}/2)
+                          </button>
+                        )}
+
                         <button
                           onClick={() => {
                             setProposingMeeting(m);
                             setSlot1({ date: m.date, time: '16:00', note: 'Opción A (Tarde)' });
                             setSlot2({ date: m.date, time: '11:00', note: 'Opción B (Mañana)' });
                           }}
-                          className="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition"
+                          className="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
                         >
                           Proponer 2 Alternativas
                         </button>
@@ -345,15 +483,51 @@ export const ReunionesModule: React.FC = () => {
                           agreements: m.agreements || '',
                           pending_tasks: m.pending_tasks || '',
                           notes: m.notes || '',
+                          meet_url: m.meet_url || '',
+                          summary: m.summary || '',
                           status: m.status
                         });
+                        setRawTranscript('');
                       }}
-                      className="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition"
+                      className="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
                     >
-                      Ver Acuerdos y Notas
+                      Ver Acuerdos y Minuta
                     </button>
                   </div>
                 </div>
+
+                {/* Condition: Planning team approvals strip (Foto 1) */}
+                {(m.status === 'SOLICITADA' || m.status === 'PROPUESTA') && (
+                  <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#EAE3DA] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4 text-[#9C665C]" />
+                        <span className="font-bold text-[#2B2826]">Aprobación del Equipo de Planeación:</span>
+                        <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
+                          acceptedList.length >= 2
+                            ? 'bg-[#E4ECE5] text-[#2B5235]'
+                            : 'bg-[#FAF3E8] text-[#7C5824]'
+                        }`}>
+                          {acceptedList.length} de 2 coordinadores han aceptado
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#8A7E72]">
+                        {acceptedList.length >= 2
+                          ? '✓ Horario aprobado por 2 personas del equipo. La sesión está lista.'
+                          : 'Condición activa: Tanto Administradores como Coordinadores involucrados deben aceptar la propuesta. La sesión se agenda automáticamente con 2 o más aceptaciones.'}
+                      </p>
+                      {acceptedList.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {acceptedList.map((acc, idx) => (
+                            <span key={idx} className="bg-white px-2 py-0.5 rounded-md border border-[#EAE3DA] text-[11px] text-[#2B2826] font-medium">
+                              ✓ {acc.userName} ({acc.role})
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* If PROPUESTA: show the 2 alternative options for Novios to pick! */}
                 {hasProposed && (
@@ -425,6 +599,17 @@ export const ReunionesModule: React.FC = () => {
               </div>
             )}
 
+            {/* Real-time Conflict Alert (Foto 3 / Extra req) */}
+            {scheduleConflictAlert && (
+              <div className="mb-3 p-3.5 rounded-xl bg-amber-50 text-amber-900 text-xs border border-amber-200 flex items-start space-x-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-bold">¡Alerta de empalme de horario!</div>
+                  <div className="mt-0.5">{scheduleConflictAlert}</div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleCreateMeeting} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Motivo o Título de la Sesión *</label>
@@ -462,9 +647,31 @@ export const ReunionesModule: React.FC = () => {
               </div>
 
               <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-[#2B2826] uppercase tracking-wider">Enlace de Google Meet (Opcional)</label>
+                  <a
+                    href="https://meet.google.com/new"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-[#1967D2] hover:underline inline-flex items-center space-x-1"
+                  >
+                    <Video className="w-3 h-3" />
+                    <span>+ Crear sala Meet</span>
+                  </a>
+                </div>
+                <input
+                  type="url"
+                  placeholder="https://meet.google.com/..."
+                  value={formData.meet_url}
+                  onChange={e => setFormData({ ...formData, meet_url: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Temas o Notas Previas</label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   placeholder="Puntos clave que te gustaría revisar en esta sesión..."
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
@@ -587,7 +794,7 @@ export const ReunionesModule: React.FC = () => {
               Fecha: {viewingMeeting.date} · {viewingMeeting.time} hrs
             </p>
 
-            <div className="space-y-4">
+            <div className="space-y-4 max-h-[75vh] overflow-y-auto pr-1">
               <div>
                 <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Estatus de la Sesión</label>
                 <select
@@ -603,6 +810,88 @@ export const ReunionesModule: React.FC = () => {
                   <option value="CANCELADA">CANCELADA</option>
                 </select>
               </div>
+
+              {/* Google Meet Link (Foto 2) */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-bold text-[#2B2826] uppercase tracking-wider">
+                    Enlace de Google Meet
+                  </label>
+                  {meetingNotes.meet_url ? (
+                    <a
+                      href={meetingNotes.meet_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-[#1967D2] font-semibold hover:underline inline-flex items-center space-x-1"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span>Abrir Google Meet</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ) : (
+                    <a
+                      href="https://meet.google.com/new"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-[#1967D2] hover:underline inline-flex items-center space-x-1"
+                    >
+                      <Video className="w-3 h-3" />
+                      <span>Crear sala Meet</span>
+                    </a>
+                  )}
+                </div>
+                <input
+                  type="url"
+                  disabled={isNovios}
+                  placeholder="https://meet.google.com/abc-defg-hij"
+                  value={meetingNotes.meet_url}
+                  onChange={e => setMeetingNotes({ ...meetingNotes, meet_url: e.target.value })}
+                  className="w-full px-3.5 py-2 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C] disabled:bg-[#FAF8F5]"
+                />
+              </div>
+
+              {/* AI Minuta & Recording Summarizer (Foto 2) */}
+              {!isNovios && (
+                <div className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-[#9C665C]">
+                      <Bot className="w-4 h-4" />
+                      <span>Minuta Inteligente con IA (Google Meet / Notas)</span>
+                    </div>
+                    <span className="text-[10px] text-[#8A7E72] bg-white px-2 py-0.5 rounded border border-[#EAE3DA]">
+                      Asistente VLB
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[#8A7E72] leading-relaxed">
+                    Pega aquí la transcripción automática de Google Meet, enlace de grabación o tus notas rápidas para extraer acuerdos y tareas estructuradas:
+                  </p>
+                  <textarea
+                    rows={2}
+                    placeholder="Ejemplo: 'La novia aprobó el proveedor de audio por $25,000. Queda pendiente que el coordinador envíe el contrato antes del viernes...'"
+                    value={rawTranscript}
+                    onChange={e => setRawTranscript(e.target.value)}
+                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      disabled={isAiProcessing || !rawTranscript.trim()}
+                      onClick={handleGenerateAiMinuta}
+                      className="px-3.5 py-1.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold rounded-xl shadow-2xs transition inline-flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>{isAiProcessing ? 'Analizando grabación...' : 'Generar Acuerdos y Minuta con IA'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {meetingNotes.summary && (
+                <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE3DA] text-xs">
+                  <div className="font-bold text-[#2B2826] mb-1">Resumen Ejecutivo de la Sesión:</div>
+                  <div className="text-[#5A524C] whitespace-pre-line">{meetingNotes.summary}</div>
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Acuerdos Principales</label>

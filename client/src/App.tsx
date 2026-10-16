@@ -132,6 +132,53 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
   const { user, currentWedding } = useAuth();
   const [currentTab, setCurrentTab] = useState<WorkspaceTab>('resumen');
 
+  // Check if today matches the wedding date
+  const todayStr = new Date().toISOString().split('T')[0];
+  const isDateToday = currentWedding?.wedding_date === todayStr;
+
+  // Wedding Day Mode: default true if today is wedding date, or restored from localStorage
+  const [weddingDayMode, setWeddingDayMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined' && currentWedding?.id) {
+      const saved = localStorage.getItem(`lazo_day_mode_${currentWedding.id}`);
+      if (saved !== null) return saved === 'true';
+    }
+    return isDateToday;
+  });
+
+  // Re-evaluate whenever wedding changes
+  useEffect(() => {
+    if (!currentWedding) return;
+    const isToday = currentWedding.wedding_date === todayStr;
+    const saved = localStorage.getItem(`lazo_day_mode_${currentWedding.id}`);
+    if (saved !== null) {
+      setWeddingDayMode(saved === 'true');
+    } else if (isToday) {
+      setWeddingDayMode(true);
+    }
+  }, [currentWedding?.id, currentWedding?.wedding_date, todayStr]);
+
+  // When Wedding Day Mode is active, restrict tabs exclusively to timeline, mesas, or invitados
+  useEffect(() => {
+    if (weddingDayMode) {
+      if (currentTab !== 'timeline' && currentTab !== 'mesas' && currentTab !== 'invitados') {
+        setCurrentTab('timeline');
+      }
+    }
+  }, [weddingDayMode, currentTab]);
+
+  const handleToggleWeddingDayMode = () => {
+    setWeddingDayMode(prev => {
+      const next = !prev;
+      if (currentWedding?.id) {
+        localStorage.setItem(`lazo_day_mode_${currentWedding.id}`, String(next));
+      }
+      if (next) {
+        setCurrentTab('timeline');
+      }
+      return next;
+    });
+  };
+
   // If Admin and no specific wedding selected -> General Dashboard
   if (user?.role === 'ADMINISTRADOR' && !currentWedding) {
     return <GeneralDashboard />;
@@ -181,6 +228,8 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
         onSelectTab={setCurrentTab}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        weddingDayMode={weddingDayMode}
+        onToggleWeddingDayMode={handleToggleWeddingDayMode}
       />
 
       {/* Main Workspace Area: Expands smoothly to full width when sidebar is collapsed */}
@@ -189,6 +238,38 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
           !sidebarOpen ? 'max-w-none' : 'max-w-7xl mx-auto'
         }`}
       >
+        {/* Banner exclusivo de Modo Día de la Boda */}
+        {weddingDayMode && (
+          <div className="mb-6 bg-gradient-to-r from-[#9C665C] via-[#85534A] to-[#6E433D] text-white p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-3.5">
+              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shrink-0">
+                💍
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-bold text-sm tracking-wide uppercase">MODO DÍA DE LA BODA ACTIVO</span>
+                  <span className="bg-emerald-400 text-emerald-950 font-black text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                    EN VIVO
+                  </span>
+                </div>
+                <p className="text-xs text-stone-200 mt-0.5">
+                  Herramientas operativas en tiempo real: Cronograma en vivo, Asignación de Mesas y Listado de Invitados para recepción.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0 self-start sm:self-center">
+              <button
+                onClick={handleToggleWeddingDayMode}
+                className="px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-semibold rounded-xl border border-white/20 transition cursor-pointer"
+                title="Volver al menú de planeación general"
+              >
+                Ver Planeación Completa
+              </button>
+            </div>
+          </div>
+        )}
+
         {renderModuleContent()}
       </main>
     </div>

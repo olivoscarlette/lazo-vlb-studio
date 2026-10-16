@@ -194,6 +194,9 @@ export interface Meeting {
   agreements: string | null;
   pending_tasks: string | null;
   proposed_slots?: { date: string; time: string; note?: string }[] | null;
+  accepted_by?: { userId: string; userName: string; role: string; acceptedAt: string }[];
+  meet_url?: string | null;
+  summary?: string | null;
   created_by: string;
   created_at: string;
 }
@@ -218,6 +221,8 @@ export interface TimelineEvent {
   status: 'PENDIENTE' | 'EN_CURSO' | 'COMPLETADO';
   order_index: number;
   day_type?: 'BODA' | 'CIVIL';
+  completed_by?: string | null;
+  completed_at?: string | null;
 }
 
 export interface Task {

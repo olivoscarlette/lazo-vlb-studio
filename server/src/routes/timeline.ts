@@ -47,7 +47,7 @@ router.post('/:weddingId/timeline', authenticateToken, requireWeddingAccess, (re
 // PUT /api/weddings/:weddingId/timeline/:id - Update timeline event
 router.put('/:weddingId/timeline/:id', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId, id } = req.params;
-  const { time, activity, location, responsible, notes, status, order_index, day_type } = req.body;
+  const { time, activity, location, responsible, notes, status, order_index, day_type, completed_by, completed_at } = req.body;
 
   const event = db.prepare('SELECT * FROM timeline_events WHERE id = ? AND wedding_id = ?').get(id, weddingId) as any;
   if (!event) {
@@ -56,11 +56,24 @@ router.put('/:weddingId/timeline/:id', authenticateToken, requireWeddingAccess, 
 
   const now = new Date().toISOString();
   const resolvedDayType = day_type !== undefined ? (day_type === 'CIVIL' ? 'CIVIL' : 'BODA') : (event.day_type || 'BODA');
+  const targetStatus = status || event.status;
+
+  let resolvedCompletedBy = event.completed_by;
+  let resolvedCompletedAt = event.completed_at;
+
+  if (targetStatus === 'COMPLETADO') {
+    resolvedCompletedBy = completed_by !== undefined ? completed_by : (event.completed_by || req.user!.name);
+    resolvedCompletedAt = completed_at !== undefined ? completed_at : (event.completed_at || now);
+  } else if (status && status !== 'COMPLETADO') {
+    resolvedCompletedBy = null;
+    resolvedCompletedAt = null;
+  }
 
   db.prepare(`
     UPDATE timeline_events SET
       time = ?, activity = ?, location = ?, responsible = ?,
-      notes = ?, status = ?, order_index = ?, day_type = ?, updated_at = ?
+      notes = ?, status = ?, order_index = ?, day_type = ?,
+      completed_by = ?, completed_at = ?, updated_at = ?
     WHERE id = ? AND wedding_id = ?
   `).run(
     time || event.time,
@@ -68,15 +81,25 @@ router.put('/:weddingId/timeline/:id', authenticateToken, requireWeddingAccess, 
     location !== undefined ? location : event.location,
     responsible !== undefined ? responsible : event.responsible,
     notes !== undefined ? notes : event.notes,
-    status || event.status,
+    targetStatus,
     order_index !== undefined ? order_index : event.order_index,
     resolvedDayType,
+    resolvedCompletedBy,
+    resolvedCompletedAt,
     now,
     id,
     weddingId
   );
 
-  return res.json({ message: 'Evento actualizado correctamente.' });
+  return res.json({
+    message: 'Evento actualizado correctamente.',
+    event: {
+      id,
+      status: targetStatus,
+      completed_by: resolvedCompletedBy,
+      completed_at: resolvedCompletedAt
+    }
+  });
 });
 
 // DELETE /api/weddings/:weddingId/timeline/:id - Delete event

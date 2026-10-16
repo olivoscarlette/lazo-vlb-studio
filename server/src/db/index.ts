@@ -354,6 +354,58 @@ export function initDatabase() {
     // Column already exists
   }
 
+  try {
+    db.exec("ALTER TABLE meetings ADD COLUMN accepted_by TEXT DEFAULT '[]';");
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE meetings ADD COLUMN meet_url TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE meetings ADD COLUMN summary TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE timeline_events ADD COLUMN completed_by TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE timeline_events ADD COLUMN completed_at TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS calendar_events (
+      id TEXT PRIMARY KEY,
+      wedding_id TEXT,
+      title TEXT NOT NULL,
+      event_type TEXT NOT NULL, -- 'PLANNING' | 'CITA_EXTERNA' | 'EVENTO' | 'SERVICIO' | 'OPEN_HOUSE' | 'OTRO'
+      date TEXT NOT NULL,
+      time TEXT NOT NULL,
+      end_time TEXT,
+      location TEXT,
+      responsible TEXT,
+      notes TEXT,
+      created_by TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE SET NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_calendar_date ON calendar_events(date);
+    CREATE INDEX IF NOT EXISTS idx_calendar_wedding ON calendar_events(wedding_id);
+  `);
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS whatsapp_contacts (
       id TEXT PRIMARY KEY,

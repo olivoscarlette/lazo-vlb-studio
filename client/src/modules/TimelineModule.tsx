@@ -178,7 +178,11 @@ export const TimelineModule: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({
+          status: newStatus,
+          completed_by: newStatus === 'COMPLETADO' ? (user?.name || 'Coordinación VLB') : null,
+          completed_at: newStatus === 'COMPLETADO' ? new Date().toISOString() : null
+        })
       });
       await fetchTimelineAndOpData();
     } catch {}
@@ -193,7 +197,11 @@ export const TimelineModule: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ status: 'COMPLETADO' })
+        body: JSON.stringify({
+          status: 'COMPLETADO',
+          completed_by: user?.name || 'Coordinación VLB',
+          completed_at: new Date().toISOString()
+        })
       });
       if (nextPending) {
         await fetch(`/api/weddings/${currentWedding!.id}/timeline/${nextPending.id}`, {
@@ -664,6 +672,15 @@ export const TimelineModule: React.FC = () => {
                           {item.responsible && <span>👤 Resp: {item.responsible}</span>}
                           {item.notes && <span className="italic">“{item.notes}”</span>}
                         </div>
+                        {item.status === 'COMPLETADO' && (
+                          <div className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-lg inline-flex items-center space-x-1.5 mt-1.5 shadow-2xs">
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>
+                              Marcada como completada por: <strong className="text-emerald-950 font-bold">{item.completed_by || 'Coordinación VLB'}</strong>
+                              {item.completed_at && ` a las ${new Date(item.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}`}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1055,6 +1072,16 @@ export const TimelineModule: React.FC = () => {
                       <p className="text-xs text-[#2B2826] mt-2 bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EAE3DA] italic">
                         {item.notes}
                       </p>
+                    )}
+
+                    {item.status === 'COMPLETADO' && (
+                      <div className="mt-2.5 pt-2 border-t border-[#EAE3DA]/60 flex items-center space-x-1.5 text-xs text-emerald-800 font-semibold bg-emerald-50/70 border border-emerald-200/60 px-3 py-1.5 rounded-xl">
+                        <Check className="w-3.5 h-3.5 text-emerald-700" />
+                        <span>
+                          Completada por: <strong className="font-bold text-emerald-950">{item.completed_by || 'Coordinación VLB'}</strong>
+                          {item.completed_at && ` a las ${new Date(item.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} hrs`}
+                        </span>
+                      </div>
                     )}
                   </div>
                 ))}

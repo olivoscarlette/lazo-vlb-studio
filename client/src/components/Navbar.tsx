@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   Bell, LogOut, ChevronDown, Building2,
-  CheckCircle2, ShieldCheck, Menu, PanelLeft
+  CheckCircle2, ShieldCheck, Menu, PanelLeft, Calendar
 } from 'lucide-react';
 import { UserRole } from '../types';
+import { GeneralCalendarModal } from './GeneralCalendarModal';
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
@@ -25,6 +26,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showWeddingMenu, setShowWeddingMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showGeneralCalendar, setShowGeneralCalendar] = useState(false);
 
   if (!user) return null;
 
@@ -148,8 +150,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             )}
           </div>
 
-          {/* Right Area: Role Badge, Notifications & User Info */}
-          <div className="flex items-center space-x-3">
+          {/* Right Area: Calendario General, Role Badge, Notifications & User Info */}
+          <div className="flex items-center space-x-2.5 sm:space-x-3">
+            {/* Calendario General Button for Admin, Coordinador, Staff */}
+            {user.role !== 'NOVIOS' && (
+              <button
+                onClick={() => setShowGeneralCalendar(true)}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] transition shadow-2xs cursor-pointer"
+                title="Abrir Calendario General VLB (Citas Planning, Bodas, Citas Externas, Open House)"
+              >
+                <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
+                <span className="hidden sm:inline">Calendario General</span>
+              </button>
+            )}
+
             {/* Authentic Role Badge */}
             <div
               className={`text-xs px-3.5 py-1.5 rounded-full border flex items-center space-x-1.5 font-medium select-none ${getRoleBadgeStyle(user.role)}`}
@@ -221,6 +235,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
           </div>
         </div>
       </div>
+
+      {/* General Studio Calendar Modal */}
+      <GeneralCalendarModal
+        isOpen={showGeneralCalendar}
+        onClose={() => setShowGeneralCalendar(false)}
+        onSelectWedding={(wedId) => {
+          const match = assignedWeddings.find(w => w.id === wedId);
+          if (match) {
+            setCurrentWedding(match);
+            setShowGeneralCalendar(false);
+          }
+        }}
+      />
     </header>
   );
 };
