@@ -5,6 +5,7 @@ import {
   CheckCircle2, ShieldCheck, Menu, PanelLeft, Calendar
 } from 'lucide-react';
 import { UserRole } from '../types';
+import { UserProfileModal } from './UserProfileModal';
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
@@ -28,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showWeddingMenu, setShowWeddingMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   if (!user) return null;
 
@@ -244,11 +246,36 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             </div>
 
             {/* User Profile Pill & Logout */}
-            <div className="flex items-center pl-3 border-l border-[#EAE3DA] space-x-2">
-              <div className="hidden lg:block text-right">
-                <div className="text-sm font-semibold text-[#332A28] leading-tight">{user.name}</div>
+            <div className="flex items-center pl-3 border-l border-[#EAE3DA] space-x-2.5">
+              {/* Clickable Avatar */}
+              <div
+                onClick={() => setShowProfileModal(true)}
+                className="relative cursor-pointer group"
+                title={`Mi Perfil · ${user.name}`}
+              >
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt={user.name}
+                    className="w-9 h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-sm flex items-center justify-center border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition">
+                    {user.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#6E8C70] border-2 border-[#FCFAF7]" title="En línea" />
+              </div>
+
+              <div
+                onClick={() => setShowProfileModal(true)}
+                className="hidden lg:block text-right cursor-pointer group"
+                title="Editar mi perfil y contraseña"
+              >
+                <div className="text-sm font-semibold text-[#332A28] leading-tight group-hover:text-[#9C665C] transition">{user.name}</div>
                 <div className="text-xs text-[#7D6F6B] leading-tight">{user.email}</div>
               </div>
+
               <button
                 onClick={logout}
                 title="Cerrar sesión"
@@ -260,6 +287,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
           </div>
         </div>
       </div>
+
+      {/* User Profile & Password Modal */}
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
     </header>
   );
 };

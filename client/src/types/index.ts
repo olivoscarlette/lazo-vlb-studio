@@ -7,6 +7,7 @@ export interface User {
   role: UserRole;
   phone?: string;
   wedding_id?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface WeddingTeamMember {
@@ -16,6 +17,7 @@ export interface WeddingTeamMember {
   email: string;
   phone?: string;
   assigned_role: string;
+  avatar_url?: string | null;
 }
 
 export interface WeddingStats {

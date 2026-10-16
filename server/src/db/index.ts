@@ -34,6 +34,7 @@ export function initDatabase() {
       role TEXT NOT NULL,
       phone TEXT,
       wedding_id TEXT,
+      avatar_url TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -386,6 +387,12 @@ export function initDatabase() {
 
   try {
     db.exec("ALTER TABLE calendar_events ADD COLUMN checklist TEXT DEFAULT '[]';");
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE users ADD COLUMN avatar_url TEXT;');
   } catch {
     // Column already exists
   }

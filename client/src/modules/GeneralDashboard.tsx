@@ -11,12 +11,14 @@ import {
 } from 'lucide-react';
 import { WhatsAppHubModule } from './WhatsAppHubModule';
 import { CalendarioModule } from './CalendarioModule';
+import { UserProfileModal } from '../components/UserProfileModal';
 
 export const GeneralDashboard: React.FC = () => {
   const { user, token, setCurrentWedding, logout, notifications, refreshNotifications, generalDashboardTab, setGeneralDashboardTab } = useAuth();
   const activeTab = generalDashboardTab || 'weddings';
   const setActiveTab = (t: string) => setGeneralDashboardTab(t);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   // Collapsable sidebar state (persisted)
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -915,10 +917,22 @@ export const GeneralDashboard: React.FC = () => {
                 </button>
 
                 {/* Avatar circular con punto de estado */}
-                <div className="relative cursor-pointer" title={user?.name}>
-                  <div className="w-10 h-10 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-base flex items-center justify-center border border-[#CCDACC] shadow-2xs">
-                    {userName.charAt(0)}
-                  </div>
+                <div
+                  onClick={() => setShowProfileModal(true)}
+                  className="relative cursor-pointer group"
+                  title={`Mi Perfil · ${user?.name || ''}`}
+                >
+                  {user?.avatar_url ? (
+                    <img
+                      src={user.avatar_url}
+                      alt={user?.name}
+                      className="w-10 h-10 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-base flex items-center justify-center border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition">
+                      {userName.charAt(0)}
+                    </div>
+                  )}
                   <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#6E8C70] border-2 border-[#FCFAF7]" title="En línea" />
                 </div>
 
@@ -2495,6 +2509,12 @@ export const GeneralDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* User Profile & Password Modal */}
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
       </main>
     </div>
   );

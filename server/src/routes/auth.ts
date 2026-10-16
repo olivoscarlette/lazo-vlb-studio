@@ -59,7 +59,8 @@ router.post('/login', (req, res) => {
     email: user.email,
     role: user.role,
     phone: user.phone,
-    wedding_id: user.wedding_id
+    wedding_id: user.wedding_id,
+    avatar_url: user.avatar_url || null
   };
 
   const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
@@ -91,6 +92,9 @@ router.get('/me', authenticateToken, (req, res) => {
     return res.status(401).json({ error: 'No autenticado.' });
   }
 
+  const dbUser = db.prepare('SELECT id, name, email, role, phone, wedding_id, avatar_url FROM users WHERE id = ?').get(req.user.id) as any;
+  const userData = dbUser || req.user;
+
   let assignedWeddings: any[] = [];
   if (req.user.role === 'ADMINISTRADOR') {
     assignedWeddings = db.prepare('SELECT id, name, slug, wedding_date, status FROM weddings ORDER BY wedding_date ASC').all();
@@ -108,9 +112,75 @@ router.get('/me', authenticateToken, (req, res) => {
   }
 
   return res.json({
-    user: req.user,
+    user: userData,
     assignedWeddings
   });
+});
+
+// Update Current User Profile & Password
+router.put('/profile', authenticateToken, (req, res) => {
+  try {
+    const userId = req.user!.id;
+    const { name, phone, avatar_url, current_password, new_password } = req.body;
+
+    const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as any;
+    if (!existing) {
+      return res.status(404).json({ error: 'Usuario no encontrado.' });
+    }
+
+    let passwordHash = existing.password_hash;
+    if (new_password) {
+      if (!new_password || new_password.trim().length < 6) {
+        return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+      }
+
+      if (current_password) {
+        const valid = bcrypt.compareSync(current_password, existing.password_hash);
+        if (!valid) {
+          return res.status(400).json({ error: 'La contraseña actual no es correcta.' });
+        }
+      } else if (req.user?.role !== 'ADMINISTRADOR') {
+        return res.status(400).json({ error: 'Debes ingresar tu contraseña actual para cambiarla.' });
+      }
+
+      passwordHash = bcrypt.hashSync(new_password.trim(), 10);
+    }
+
+    const updatedName = name !== undefined && name.trim() ? name.trim() : existing.name;
+    const updatedPhone = phone !== undefined ? phone : existing.phone;
+    const updatedAvatar = avatar_url !== undefined ? avatar_url : existing.avatar_url;
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      UPDATE users SET
+        name = ?,
+        phone = ?,
+        avatar_url = ?,
+        password_hash = ?,
+        updated_at = ?
+      WHERE id = ?
+    `).run(updatedName, updatedPhone, updatedAvatar, passwordHash, now, userId);
+
+    logAudit(null, userId, updatedName, 'ACTUALIZAR_PERFIL', 'USER', userId, `Actualización de perfil/contraseña de ${updatedName}`);
+
+    const updatedUser = {
+      id: userId,
+      name: updatedName,
+      email: existing.email,
+      role: existing.role,
+      phone: updatedPhone,
+      wedding_id: existing.wedding_id,
+      avatar_url: updatedAvatar
+    };
+
+    return res.json({
+      message: 'Perfil actualizado correctamente.',
+      user: updatedUser
+    });
+  } catch (err: any) {
+    console.error('Error updating profile:', err);
+    return res.status(500).json({ error: 'Error al actualizar perfil: ' + err.message });
+  }
 });
 
 // Admin: List all users (including assigned weddings for team members)
