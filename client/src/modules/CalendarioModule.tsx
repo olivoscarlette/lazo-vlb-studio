@@ -67,7 +67,7 @@ export const CALENDAR_CATEGORIES = [
     color: '#D97706',
     dotColor: '#D97706',
     icon: '🍸',
-    description: 'Servicios especiales (Beerstand, Memorial, Mimosas, etc.)'
+    description: 'Servicios'
   },
   {
     type: 'PAPELERIA',
@@ -1877,32 +1877,22 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-[#332A28] mb-1">Tipo de Evento / Lista *</label>
                   <select
                     value={formData.event_type}
                     onChange={e => setFormData({ ...formData, event_type: e.target.value as any })}
-                    className="w-full text-xs px-3 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                    className="w-full text-xs px-3 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
                   >
                     <option value="PLANNING">🌸 Cita planning</option>
                     <option value="CITA_EXTERNA">💼 Cita externa</option>
                     <option value="BODA">💍 Boda</option>
                     <option value="OPEN_HOUSE">🏛️ Open house</option>
-                    <option value="SERVICIO">🍸 Servicios (Beerstand, Memorial, Mimosas, etc.)</option>
+                    <option value="SERVICIO">🍸 Servicios</option>
                     <option value="PAPELERIA">💌 Papelería</option>
                     <option value="OTRO">📌 Otro</option>
                   </select>
-                  {formData.event_type === 'SERVICIO' && (
-                    <p className="text-[10px] text-[#D97706] mt-1 font-medium leading-tight">
-                      🍸 Aquí se agendan servicios como Beerstand, Memorial, Mimosas, etc.
-                    </p>
-                  )}
-                  {formData.event_type === 'BODA' && (
-                    <p className="text-[10px] text-[#059669] mt-1 font-medium leading-tight">
-                      💍 Las bodas se agregan automáticamente al darlas de alta en Nuestras Bodas de planning.
-                    </p>
-                  )}
                 </div>
 
                 <div>
@@ -1910,7 +1900,7 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                   <select
                     value={formData.wedding_id}
                     onChange={e => setFormData({ ...formData, wedding_id: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none"
+                    className="w-full text-xs px-3 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
                   >
                     <option value="">(Ninguna / Evento General)</option>
                     {assignedWeddings.map(w => (
@@ -1922,7 +1912,7 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block font-semibold text-[#332A28] mb-1">Fecha *</label>
                   <input
@@ -1933,33 +1923,35 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                       setFormData({ ...formData, date: e.target.value });
                       checkClientConflict(e.target.value, formData.time, editingEventId);
                     }}
-                    className="w-full text-xs px-2.5 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none"
+                    className="w-full text-xs px-3 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
                   />
                 </div>
-                <div>
-                  <label className="block font-semibold text-[#332A28] mb-1">Hora Inicio</label>
-                  <input
-                    type="time"
-                    value={formData.time}
-                    onChange={e => {
-                      setFormData({ ...formData, time: e.target.value });
-                      checkClientConflict(formData.date, e.target.value, editingEventId);
-                    }}
-                    className="w-full text-xs px-2.5 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block font-semibold text-[#332A28] mb-1">Hora Fin</label>
-                  <input
-                    type="time"
-                    value={formData.end_time}
-                    onChange={e => setFormData({ ...formData, end_time: e.target.value })}
-                    className="w-full text-xs px-2.5 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none"
-                  />
+                <div className="grid grid-cols-2 gap-2 sm:col-span-2">
+                  <div>
+                    <label className="block font-semibold text-[#332A28] mb-1">Hora Inicio</label>
+                    <input
+                      type="time"
+                      value={formData.time}
+                      onChange={e => {
+                        setFormData({ ...formData, time: e.target.value });
+                        checkClientConflict(formData.date, e.target.value, editingEventId);
+                      }}
+                      className="w-full text-xs px-2.5 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-semibold text-[#332A28] mb-1">Hora Fin</label>
+                    <input
+                      type="time"
+                      value={formData.end_time}
+                      onChange={e => setFormData({ ...formData, end_time: e.target.value })}
+                      className="w-full text-xs px-2.5 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-semibold text-[#332A28] mb-1">Ubicación / Lugar</label>
                   <div className="relative">
@@ -1969,7 +1961,7 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                       placeholder="Dirección o recinto"
                       value={formData.location}
                       onChange={e => setFormData({ ...formData, location: e.target.value })}
-                      className="w-full text-xs pl-8 pr-3 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none"
+                      className="w-full text-xs pl-8 pr-3 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
                     />
                   </div>
                 </div>
@@ -1980,7 +1972,7 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                     type="text"
                     value={formData.responsible}
                     onChange={e => setFormData({ ...formData, responsible: e.target.value })}
-                    className="w-full text-xs px-3 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none"
+                    className="w-full text-xs px-3 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
                   />
                 </div>
               </div>
