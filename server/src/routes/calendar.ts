@@ -144,6 +144,173 @@ router.get('/', authenticateToken, (req, res) => {
   }
 });
 
+// Helper for escaping iCalendar text
+function escapeIcs(str: string = ''): string {
+  return str
+    .replace(/\\/g, '\\\\')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,')
+    .replace(/\r?\n/g, '\\n');
+}
+
+// GET /api/calendar/feed.ics - Live subscription feed for Google Calendar / Apple Calendar
+router.get('/feed.ics', (req, res) => {
+  try {
+    const { wedding_id } = req.query as { wedding_id?: string };
+
+    // 1. Studio Events
+    let customQuery = 'SELECT ce.*, w.name as wedding_name FROM calendar_events ce LEFT JOIN weddings w ON w.id = ce.wedding_id';
+    const customParams: any[] = [];
+    if (wedding_id) {
+      customQuery += ' WHERE ce.wedding_id = ? OR ce.wedding_id IS NULL';
+      customParams.push(wedding_id);
+    }
+    const customEvents = db.prepare(customQuery).all(...customParams) as any[];
+
+    // 2. Planning Meetings
+    let meetQuery = `
+      SELECT m.*, w.name as wedding_name
+      FROM meetings m
+      JOIN weddings w ON w.id = m.wedding_id
+      WHERE m.status != 'CANCELADA'
+    `;
+    const meetParams: any[] = [];
+    if (wedding_id) {
+      meetQuery += ' AND m.wedding_id = ?';
+      meetParams.push(wedding_id);
+    }
+    const meetings = db.prepare(meetQuery).all(...meetParams) as any[];
+
+    // 3. Wedding Days
+    let wedQuery = "SELECT id, name, wedding_date, venue FROM weddings WHERE wedding_date IS NOT NULL AND wedding_date != ''";
+    const wedParams: any[] = [];
+    if (wedding_id) {
+      wedQuery += ' AND id = ?';
+      wedParams.push(wedding_id);
+    }
+    const weddings = db.prepare(wedQuery).all(...wedParams) as any[];
+
+    const nowIso = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+    const lines: string[] = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//LAZO VLB Studio//Calendario General//ES',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+      'X-WR-CALNAME:LAZO — VLB Studio',
+      'X-WR-TIMEZONE:America/Mexico_City'
+    ];
+
+    // Add Custom Events
+    for (const ce of customEvents) {
+      const cleanDate = (ce.date || '').replace(/[^0-9]/g, '');
+      if (!cleanDate) continue;
+
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:lazo-cal-${ce.id}@vlb.studio`);
+      lines.push(`DTSTAMP:${nowIso}`);
+
+      if (ce.time) {
+        const cleanStart = ce.time.replace(/[^0-9]/g, '').padEnd(4, '0').slice(0, 4) + '00';
+        lines.push(`DTSTART:${cleanDate}T${cleanStart}`);
+        if (ce.end_time) {
+          const cleanEnd = ce.end_time.replace(/[^0-9]/g, '').padEnd(4, '0').slice(0, 4) + '00';
+          lines.push(`DTEND:${cleanDate}T${cleanEnd}`);
+        } else {
+          // Default 1 hr
+          const [h, m] = ce.time.split(':').map(Number);
+          const endH = String((h + 1) % 24).padStart(2, '0');
+          lines.push(`DTEND:${cleanDate}T${endH}${String(m || 0).padStart(2, '0')}00`);
+        }
+      } else {
+        lines.push(`DTSTART;VALUE=DATE:${cleanDate}`);
+      }
+
+      lines.push(`SUMMARY:${escapeIcs(ce.title)}`);
+      
+      const desc = [
+        ce.wedding_name ? `Boda: ${ce.wedding_name}` : '',
+        ce.responsible ? `Responsable: ${ce.responsible}` : '',
+        ce.notes ? `Notas: ${ce.notes}` : '',
+        'Plataforma: LAZO VLB Studio'
+      ].filter(Boolean).join('\\n');
+
+      lines.push(`DESCRIPTION:${escapeIcs(desc)}`);
+      if (ce.location) {
+        lines.push(`LOCATION:${escapeIcs(ce.location)}`);
+      }
+      lines.push('STATUS:CONFIRMED');
+      lines.push('END:VEVENT');
+    }
+
+    // Add Planning Meetings
+    for (const m of meetings) {
+      const cleanDate = (m.date || '').replace(/[^0-9]/g, '');
+      if (!cleanDate) continue;
+
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:lazo-meeting-${m.id}@vlb.studio`);
+      lines.push(`DTSTAMP:${nowIso}`);
+
+      if (m.time) {
+        const cleanStart = m.time.replace(/[^0-9]/g, '').padEnd(4, '0').slice(0, 4) + '00';
+        lines.push(`DTSTART:${cleanDate}T${cleanStart}`);
+        const [h, min] = m.time.split(':').map(Number);
+        const endH = String((h + 1) % 24).padStart(2, '0');
+        lines.push(`DTEND:${cleanDate}T${endH}${String(min || 0).padStart(2, '0')}00`);
+      } else {
+        lines.push(`DTSTART;VALUE=DATE:${cleanDate}`);
+      }
+
+      lines.push(`SUMMARY:${escapeIcs(`Cita Planning: ${m.title} (${m.wedding_name})`)}`);
+
+      const desc = [
+        `Boda: ${m.wedding_name}`,
+        `Estatus: ${m.status}`,
+        m.meet_url ? `Google Meet: ${m.meet_url}` : '',
+        m.notes ? `Notas: ${m.notes}` : '',
+        m.agreements ? `Acuerdos: ${m.agreements}` : '',
+        'Plataforma: LAZO VLB Studio'
+      ].filter(Boolean).join('\\n');
+
+      lines.push(`DESCRIPTION:${escapeIcs(desc)}`);
+      lines.push(`LOCATION:${escapeIcs(m.meet_url || 'En línea / Google Meet')}`);
+      lines.push('STATUS:CONFIRMED');
+      lines.push('END:VEVENT');
+    }
+
+    // Add Wedding Days
+    for (const w of weddings) {
+      const cleanDate = (w.wedding_date || '').replace(/[^0-9]/g, '');
+      if (!cleanDate) continue;
+
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:lazo-wedding-day-${w.id}@vlb.studio`);
+      lines.push(`DTSTAMP:${nowIso}`);
+      lines.push(`DTSTART;VALUE=DATE:${cleanDate}`);
+      lines.push(`SUMMARY:${escapeIcs(`💍 BODA VLB: ${w.name}`)}`);
+      lines.push(`DESCRIPTION:${escapeIcs(`Día oficial de celebración para la boda de ${w.name}.\\nVenue: ${w.venue || 'Por definir'}\\nPlataforma: LAZO VLB Studio`)}`);
+      if (w.venue) {
+        lines.push(`LOCATION:${escapeIcs(w.venue)}`);
+      }
+      lines.push('STATUS:CONFIRMED');
+      lines.push('END:VEVENT');
+    }
+
+    lines.push('END:VCALENDAR');
+
+    const icsContent = lines.join('\r\n');
+
+    res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline; filename="lazo_vlb_calendar.ics"');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.send(icsContent);
+  } catch (err: any) {
+    res.status(500).send('Error generando archivo iCalendar: ' + err.message);
+  }
+});
+
 // POST /api/calendar - Add an event with conflict detection
 router.post('/', authenticateToken, (req, res) => {
   try {

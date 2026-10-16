@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import {
   Calendar as CalendarIcon, Clock, MapPin, User,
   Plus, X, AlertTriangle, Filter, ChevronLeft,
-  ChevronRight, Sparkles, Building2, ExternalLink, Trash2, Edit2
+  ChevronRight, Sparkles, Building2, ExternalLink, Trash2, Edit2,
+  Copy, Check, Link2, CheckCircle2
 } from 'lucide-react';
 
 export interface CalendarEventItem {
@@ -23,6 +24,44 @@ export interface CalendarEventItem {
   meet_url?: string | null;
   source?: 'MEETING' | 'CALENDAR_EVENT' | 'WEDDING_DAY';
 }
+
+// 1-Click Google Calendar URL Generator
+export const createGoogleCalendarUrl = (event: CalendarEventItem): string => {
+  const cleanDate = (event.date || '').replace(/[^0-9]/g, '');
+  let start = cleanDate;
+  let end = cleanDate;
+
+  if (event.time) {
+    const cleanTime = event.time.replace(/[^0-9]/g, '').padEnd(4, '0').slice(0, 4) + '00';
+    start = `${cleanDate}T${cleanTime}`;
+    if (event.end_time) {
+      const cleanEnd = event.end_time.replace(/[^0-9]/g, '').padEnd(4, '0').slice(0, 4) + '00';
+      end = `${cleanDate}T${cleanEnd}`;
+    } else {
+      const [h, m] = event.time.split(':').map(Number);
+      const endH = String((h + 1) % 24).padStart(2, '0');
+      end = `${cleanDate}T${endH}${String(m || 0).padStart(2, '0')}00`;
+    }
+  }
+
+  const details = [
+    event.wedding_name ? `Boda: ${event.wedding_name}` : '',
+    event.responsible ? `Responsable: ${event.responsible}` : '',
+    event.notes ? `Notas: ${event.notes}` : '',
+    event.meet_url ? `Enlace Google Meet: ${event.meet_url}` : '',
+    'Organizado en LAZO — VLB Studio'
+  ].filter(Boolean).join('\n\n');
+
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: event.title,
+    dates: `${start}/${end}`,
+    details,
+    location: event.location || (event.meet_url || 'VLB Studio')
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+};
 
 interface GeneralCalendarModalProps {
   isOpen: boolean;
@@ -46,6 +85,10 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEventItem[] | null>(null);
   const [selectedDateStr, setSelectedDateStr] = useState<string>('');
+
+  // Google Calendar Sync Modal
+  const [showGoogleSyncModal, setShowGoogleSyncModal] = useState(false);
+  const [copiedIcsLink, setCopiedIcsLink] = useState(false);
 
   // Add / Edit Event Modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -292,6 +335,15 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
 
           <div className="flex items-center space-x-2.5 self-end md:self-auto">
             <button
+              onClick={() => setShowGoogleSyncModal(true)}
+              className="px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] hover:border-[#4285F4]/40 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer inline-flex items-center space-x-1.5"
+              title="Vincular y sincronizar con Google Calendar"
+            >
+              <CalendarIcon className="w-3.5 h-3.5 text-[#4285F4]" />
+              <span>Vincular Google Calendar</span>
+            </button>
+
+            <button
               onClick={() => handleOpenAdd()}
               className="px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs cursor-pointer inline-flex items-center space-x-1.5"
             >
@@ -515,7 +567,19 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                     )}
 
                     {/* Quick action buttons */}
-                    <div className="flex items-center justify-end space-x-2 pt-1 border-t border-[#EAE3DA]/60">
+                    <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1 border-t border-[#EAE3DA]/60">
+                      {/* 1-Click Google Calendar */}
+                      <a
+                        href={createGoogleCalendarUrl(evt)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1 text-xs font-semibold text-[#1967D2] bg-[#4285F4]/10 border border-[#4285F4]/30 rounded-lg hover:bg-[#4285F4]/20 transition inline-flex items-center space-x-1"
+                        title="Añadir esta cita a tu Google Calendar personal con 1 clic"
+                      >
+                        <CalendarIcon className="w-3 h-3 text-[#1967D2]" />
+                        <span>+ Google Calendar</span>
+                      </a>
+
                       {evt.meet_url && (
                         <a
                           href={evt.meet_url}
@@ -755,6 +819,136 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Vincular con Google Calendar */}
+        {showGoogleSyncModal && (
+          <div className="fixed inset-0 z-60 bg-[#2B2826]/55 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EAE3DA] space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-[#EAE3DA]">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-[#4285F4]/10 text-[#1967D2] flex items-center justify-center">
+                    <CalendarIcon className="w-5 h-5 text-[#1967D2]" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-[#2B2826]">
+                      Vincular con Google Calendar
+                    </h3>
+                    <p className="text-xs text-[#8A7E72]">
+                      Sincronización en vivo con tu celular y computadora
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowGoogleSyncModal(false)}
+                  className="p-1.5 text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#FAF8F5] rounded-xl"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Opción A: Suscripción en Vivo Automática */}
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[#2B2826]">
+                      Suscripción Automática en Vivo (Recomendada)
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-[#1967D2] bg-[#4285F4]/10 px-2 py-0.5 rounded-full border border-[#4285F4]/20">
+                    Sincronización Continua
+                  </span>
+                </div>
+                <p className="text-xs text-[#5A524C] leading-relaxed">
+                  Todas las citas de planeación, bodas y eventos de VLB Studio se sincronizarán y actualizarán automáticamente en la app de Google Calendar de tu teléfono (iPhone / Android) y computadora.
+                </p>
+
+                {/* Subscription Feed URL */}
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-bold text-[#8A7E72] uppercase tracking-wider">
+                    Enlace de suscripción iCal (.ics):
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={typeof window !== 'undefined' ? `${window.location.origin}/api/calendar/feed.ics` : '/api/calendar/feed.ics'}
+                      className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs font-mono bg-white text-[#2B2826] select-all focus:outline-none"
+                    />
+                    <button
+                      onClick={() => {
+                        const url = typeof window !== 'undefined' ? `${window.location.origin}/api/calendar/feed.ics` : '/api/calendar/feed.ics';
+                        navigator.clipboard.writeText(url);
+                        setCopiedIcsLink(true);
+                        setTimeout(() => setCopiedIcsLink(false), 2500);
+                      }}
+                      className="px-3 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] rounded-xl text-xs font-semibold shrink-0 transition flex items-center space-x-1 cursor-pointer"
+                    >
+                      {copiedIcsLink ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <span className="text-emerald-700 font-bold">¡Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 text-[#8A7E72]" />
+                          <span>Copiar</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Direct Action */}
+                <div className="pt-1 flex flex-col sm:flex-row gap-2">
+                  <a
+                    href={`https://calendar.google.com/calendar/r?cid=${encodeURIComponent(
+                      typeof window !== 'undefined' ? `${window.location.origin}/api/calendar/feed.ics` : ''
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 py-2.5 px-4 bg-[#1967D2] hover:bg-[#1557B0] text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer text-center"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    <span>Abrir y Añadir a Google Calendar</span>
+                  </a>
+                </div>
+              </div>
+
+              {/* Guía Rápida de Configuración */}
+              <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#EAE3DA] space-y-2">
+                <div className="text-xs font-bold text-[#2B2826] uppercase tracking-wider flex items-center space-x-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <span>¿Cómo activarlo en Google Calendar?</span>
+                </div>
+                <ol className="text-xs text-[#5A524C] space-y-1.5 list-decimal list-inside leading-relaxed pl-1">
+                  <li>
+                    Haz clic en <strong>"Abrir y Añadir a Google Calendar"</strong> (o copia el enlace de arriba).
+                  </li>
+                  <li>
+                    En Google Calendar Web, en la barra lateral izquierda busca <strong>"Otros calendarios"</strong> y presiona el botón <strong>+ &gt; Desde URL</strong>.
+                  </li>
+                  <li>
+                    Pega el enlace y pulsa <strong>Añadir calendario</strong>.
+                  </li>
+                  <li>
+                    ¡Listo! En tu celular, entra a la app de <strong>Google Calendar &gt; Ajustes</strong>, selecciona <strong>LAZO VLB Studio</strong> y activa la casilla de <strong>Sincronización</strong>.
+                  </li>
+                </ol>
+              </div>
+
+              <div className="flex justify-end pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowGoogleSyncModal(false)}
+                  className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs cursor-pointer"
+                >
+                  Entendido
+                </button>
+              </div>
             </div>
           </div>
         )}
