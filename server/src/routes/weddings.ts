@@ -58,7 +58,7 @@ router.get('/', authenticateToken, (req, res) => {
   // Attach assigned team to each wedding
   for (const w of weddings) {
     w.team = db.prepare(`
-      SELECT u.id, u.name, u.role, u.email, u.phone, a.assigned_role
+      SELECT u.id, u.name, u.role, u.email, u.phone, u.avatar_url, a.assigned_role
       FROM users u
       JOIN wedding_assignments a ON a.user_id = u.id
       WHERE a.wedding_id = ?
@@ -185,7 +185,7 @@ router.get('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
 
   // Assigned team
   const team = db.prepare(`
-    SELECT u.id, u.name, u.role, u.email, u.phone, a.assigned_role
+    SELECT u.id, u.name, u.role, u.email, u.phone, u.avatar_url, a.assigned_role
     FROM users u
     JOIN wedding_assignments a ON a.user_id = u.id
     WHERE a.wedding_id = ?

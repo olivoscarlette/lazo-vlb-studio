@@ -392,9 +392,17 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                   key={member.id}
                   className="p-4 rounded-xl border border-[#EAE3DA] bg-[#FCFAF7] hover:bg-[#F7F3EE] transition flex items-start space-x-3.5"
                 >
-                  <div className="w-10 h-10 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-base flex items-center justify-center shrink-0">
-                    {member.name?.charAt(0)?.toUpperCase() || 'V'}
-                  </div>
+                  {member.avatar_url ? (
+                    <img
+                      src={member.avatar_url}
+                      alt={member.name}
+                      className="w-10 h-10 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-base flex items-center justify-center shrink-0 border border-[#EAE3DA]">
+                      {member.name?.charAt(0)?.toUpperCase() || 'V'}
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
                       <span className="font-semibold text-sm text-[#332A28] truncate">{member.name}</span>

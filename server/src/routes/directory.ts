@@ -10,7 +10,7 @@ router.get('/:weddingId/directory', authenticateToken, requireWeddingAccess, (re
 
   // 1. Team assigned
   const team = db.prepare(`
-    SELECT u.id, u.name, u.role as user_role, u.phone, u.email, a.assigned_role as role_in_wedding
+    SELECT u.id, u.name, u.role as user_role, u.phone, u.email, u.avatar_url, a.assigned_role as role_in_wedding
     FROM users u
     JOIN wedding_assignments a ON a.user_id = u.id
     WHERE a.wedding_id = ?
@@ -40,6 +40,7 @@ router.get('/:weddingId/directory', authenticateToken, requireWeddingAccess, (re
       phone: t.phone,
       email: t.email,
       role: t.role_in_wedding || t.user_role,
+      avatar_url: t.avatar_url,
       category: 'Equipo VLB Studio'
     })),
     vendors: vendors.map(v => ({

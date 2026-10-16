@@ -328,9 +328,26 @@ export const DirectorioModule: React.FC = () => {
                   ) : null}
                 </div>
 
-                <h4 className="font-serif text-xl font-bold text-[#2B2826]">{contact.name}</h4>
-                <div className="text-sm text-[#8A7E72] font-medium mt-1">
-                  {contact.role || contact.category}
+                <div className="flex items-center space-x-3 mb-1">
+                  {contact.kind === 'TEAM' && (
+                    contact.avatar_url ? (
+                      <img
+                        src={contact.avatar_url}
+                        alt={contact.name}
+                        className="w-11 h-11 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
+                      />
+                    ) : (
+                      <div className="w-11 h-11 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-base flex items-center justify-center shrink-0 border border-[#EAE3DA]">
+                        {contact.name?.charAt(0)?.toUpperCase() || 'V'}
+                      </div>
+                    )
+                  )}
+                  <div className="min-w-0">
+                    <h4 className="font-serif text-xl font-bold text-[#2B2826] truncate">{contact.name}</h4>
+                    <div className="text-xs text-[#8A7E72] font-medium">
+                      {contact.role || contact.category}
+                    </div>
+                  </div>
                 </div>
 
                 {contact.email && (

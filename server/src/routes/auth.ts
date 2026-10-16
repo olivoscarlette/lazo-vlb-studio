@@ -185,7 +185,7 @@ router.put('/profile', authenticateToken, (req, res) => {
 
 // Admin: List all users (including assigned weddings for team members)
 router.get('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
-  const users = db.prepare('SELECT id, name, email, role, phone, wedding_id, created_at FROM users ORDER BY name ASC').all() as any[];
+  const users = db.prepare('SELECT id, name, email, role, phone, wedding_id, avatar_url, created_at FROM users ORDER BY name ASC').all() as any[];
   const assignments = db.prepare('SELECT user_id, wedding_id, assigned_role FROM wedding_assignments').all() as any[];
 
   const enriched = users.map(u => ({
@@ -199,7 +199,7 @@ router.get('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, re
 
 // Admin: Create User
 router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
-  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role } = req.body;
+  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role, avatar_url } = req.body;
   if (!name || !email || !password || !role) {
     return res.status(400).json({ error: 'Nombre, email, contraseña y rol son requeridos.' });
   }
@@ -214,9 +214,9 @@ router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, r
   const now = new Date().toISOString();
 
   db.prepare(`
-    INSERT INTO users (id, name, email, password_hash, role, phone, wedding_id, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, name.trim(), email.toLowerCase().trim(), hash, role, phone || null, wedding_id || null, now, now);
+    INSERT INTO users (id, name, email, password_hash, role, phone, wedding_id, avatar_url, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, name.trim(), email.toLowerCase().trim(), hash, role, phone || null, wedding_id || null, avatar_url || null, now, now);
 
   if (Array.isArray(assigned_wedding_ids) && (role === 'COORDINADOR' || role === 'STAFF')) {
     const insertAssign = db.prepare(`
@@ -235,14 +235,14 @@ router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, r
 
   return res.status(201).json({
     message: 'Usuario creado exitosamente.',
-    user: { id, name, email: email.toLowerCase().trim(), role, phone, wedding_id }
+    user: { id, name, email: email.toLowerCase().trim(), role, phone, wedding_id, avatar_url: avatar_url || null }
   });
 });
 
 // Admin: Edit User
 router.put('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
   const { id } = req.params;
-  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role } = req.body;
+  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role, avatar_url } = req.body;
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
   if (!user) {
@@ -263,9 +263,10 @@ router.put('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req
   }
 
   const finalRole = role || user.role;
+  const finalAvatar = avatar_url !== undefined ? avatar_url : user.avatar_url;
 
   db.prepare(`
-    UPDATE users SET name = ?, email = ?, password_hash = ?, role = ?, phone = ?, wedding_id = ?, updated_at = ?
+    UPDATE users SET name = ?, email = ?, password_hash = ?, role = ?, phone = ?, wedding_id = ?, avatar_url = ?, updated_at = ?
     WHERE id = ?
   `).run(
     name ? name.trim() : user.name,
@@ -274,6 +275,7 @@ router.put('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req
     finalRole,
     phone !== undefined ? phone : user.phone,
     wedding_id !== undefined ? wedding_id : user.wedding_id,
+    finalAvatar,
     now,
     id
   );

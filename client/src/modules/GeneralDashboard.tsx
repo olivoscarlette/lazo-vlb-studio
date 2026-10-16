@@ -287,6 +287,7 @@ export const GeneralDashboard: React.FC = () => {
       role: 'COORDINADOR',
       phone: '',
       wedding_id: '',
+      avatar_url: null,
       assigned_wedding_ids: weddings.map(w => w.id),
       assigned_role: 'Coordinadora Senior'
     });
@@ -303,6 +304,7 @@ export const GeneralDashboard: React.FC = () => {
       role: u.role,
       phone: u.phone || '',
       wedding_id: u.wedding_id || '',
+      avatar_url: u.avatar_url || null,
       assigned_wedding_ids: Array.isArray(u.assigned_wedding_ids) ? u.assigned_wedding_ids : [],
       assigned_role: u.assignments?.[0]?.assigned_role || (u.role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día Boda')
     });
@@ -1307,9 +1309,26 @@ export const GeneralDashboard: React.FC = () => {
                     ? weddings.filter(w => u.assigned_wedding_ids.includes(w.id)).map(w => w.name)
                     : [];
                   return (
-                    <tr key={u.id} className="hover:bg-stone-50/80">
-                      <td className="py-3.5 px-4 font-semibold text-stone-900">{u.name}</td>
-                      <td className="py-3.5 px-4 text-stone-600 font-mono">{u.email}</td>
+                    <tr key={u.id} className="hover:bg-stone-50/80 transition">
+                      <td className="py-3 px-4 font-semibold text-stone-900">
+                        <div className="flex items-center space-x-3">
+                          {u.avatar_url ? (
+                            <img
+                              src={u.avatar_url}
+                              alt={u.name}
+                              className="w-9 h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-sm flex items-center justify-center shrink-0 border border-[#EAE3DA]">
+                              {u.name?.charAt(0)?.toUpperCase() || 'U'}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <div className="font-semibold text-stone-900 truncate leading-snug">{u.name}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-stone-600 font-mono">{u.email}</td>
                       <td className="py-3.5 px-4">
                         <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                           u.role === 'ADMINISTRADOR'
@@ -2168,6 +2187,26 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             )}
             <form onSubmit={handleSaveUser} className="space-y-3">
+              <div className="flex items-center space-x-3 pb-3 border-b border-stone-100">
+                {userForm.avatar_url ? (
+                  <img
+                    src={userForm.avatar_url}
+                    alt={userForm.name}
+                    className="w-12 h-12 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-lg flex items-center justify-center border border-[#EAE3DA] shrink-0">
+                    {userForm.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </div>
+                )}
+                <div>
+                  <div className="text-xs font-bold text-stone-800">{userForm.name || 'Nuevo Miembro'}</div>
+                  <div className="text-[11px] text-stone-500">
+                    {userForm.avatar_url ? 'Foto de perfil personalizada activa' : 'Sin foto cargada (usa inicial)'}
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-stone-700 mb-1">Nombre Completo *</label>
                 <input
