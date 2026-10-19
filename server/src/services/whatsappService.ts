@@ -54,7 +54,11 @@ export class WhatsAppService {
       process.env.WHATSAPP_API_TOKEN ||
       process.env.WHATSAPP_ACCESS_TOKEN ||
       '';
-    const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+    const rawPhoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
+    // Use official Viva la Bride phone ID if unconfigured or pointing to old Meta sandbox test ID
+    const phoneNumberId = (!rawPhoneId || rawPhoneId === '1424004584122204')
+      ? '1385120218016720'
+      : rawPhoneId;
     const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'lazo_vlb_webhook_token_2026';
     const appSecret = process.env.META_APP_SECRET || '';
     const apiVersion = process.env.WHATSAPP_API_VERSION || 'v21.0';
