@@ -922,7 +922,7 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     onClick={handleToggleSidebar}
                     aria-label="Mostrar menú lateral"
-                    className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                     title="Mostrar menú lateral (⌘B)"
                   >
                     <PanelLeft className="w-5 h-5 text-[#9C665C]" />
@@ -1221,7 +1221,7 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     onClick={handleToggleSidebar}
                     aria-label="Mostrar menú lateral"
-                    className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                     title="Mostrar menú lateral (⌘B)"
                   >
                     <PanelLeft className="w-5 h-5 text-[#9C665C]" />
@@ -1251,7 +1251,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   onClick={handleToggleSidebar}
                   aria-label="Mostrar menú lateral"
-                  className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0 text-xs font-semibold"
+                  className="inline-flex md:hidden items-center space-x-2 px-3 py-1.5 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0 text-xs font-semibold"
                   title="Mostrar menú lateral (⌘B)"
                 >
                   <PanelLeft className="w-4 h-4 text-[#9C665C]" />
@@ -1278,7 +1278,7 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     onClick={handleToggleSidebar}
                     aria-label="Mostrar menú lateral"
-                    className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                     title="Mostrar menú lateral (⌘B)"
                   >
                     <PanelLeft className="w-5 h-5 text-[#9C665C]" />
@@ -1418,7 +1418,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   onClick={handleToggleSidebar}
                   aria-label="Mostrar menú lateral"
-                  className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                   title="Mostrar menú lateral (⌘B)"
                 >
                   <PanelLeft className="w-5 h-5 text-[#9C665C]" />
@@ -1843,7 +1843,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   onClick={handleToggleSidebar}
                   aria-label="Mostrar menú lateral"
-                  className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                   title="Mostrar menú lateral (⌘B)"
                 >
                   <PanelLeft className="w-5 h-5 text-[#9C665C]" />
@@ -2107,7 +2107,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   onClick={handleToggleSidebar}
                   aria-label="Mostrar menú lateral"
-                  className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                   title="Mostrar menú lateral (⌘B)"
                 >
                   <PanelLeft className="w-5 h-5 text-[#9C665C]" />

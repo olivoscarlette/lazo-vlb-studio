@@ -71,7 +71,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               <button
                 onClick={onToggleSidebar}
                 aria-label="Mostrar menú lateral"
-                className="inline-flex items-center space-x-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                className="inline-flex lg:hidden items-center space-x-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                 title="Mostrar menú lateral"
               >
                 <PanelLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#9C665C]" />
