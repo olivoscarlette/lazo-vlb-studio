@@ -1245,32 +1245,26 @@ export const GeneralDashboard: React.FC = () => {
 
         {/* PESTAÑA: WHATSAPP HUB */}
         {activeTab === 'whatsapp' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
-              <div className="flex items-center space-x-3.5">
-                {!sidebarOpen && (
-                  <button
-                    onClick={handleToggleSidebar}
-                    aria-label="Mostrar menú lateral"
-                    className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
-                    title="Mostrar menú lateral (⌘B)"
-                  >
-                    <PanelLeft className="w-5 h-5 text-[#9C665C]" />
-                    <span className="text-sm font-semibold hidden sm:inline">Menú</span>
-                  </button>
-                )}
-                <div>
-                  <h2 className="font-serif text-2xl font-bold text-[#332A28]">WhatsApp Hub</h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">Centro de mensajería ejecutiva y respuestas de confirmación de invitados.</p>
-                </div>
+          <div className="space-y-2">
+            {!sidebarOpen && (
+              <div className="flex items-center justify-between pb-1">
+                <button
+                  onClick={handleToggleSidebar}
+                  aria-label="Mostrar menú lateral"
+                  className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0 text-xs font-semibold"
+                  title="Mostrar menú lateral (⌘B)"
+                >
+                  <PanelLeft className="w-4 h-4 text-[#9C665C]" />
+                  <span>Menú</span>
+                </button>
+                <button
+                  onClick={() => setActiveTab('weddings')}
+                  className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+                >
+                  ← Volver a Bodas
+                </button>
               </div>
-              <button
-                onClick={() => setActiveTab('weddings')}
-                className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
-              >
-                ← Volver a Bodas
-              </button>
-            </div>
+            )}
             <WhatsAppHubModule />
           </div>
         )}

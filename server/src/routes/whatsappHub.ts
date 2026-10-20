@@ -422,21 +422,28 @@ router.post('/send', async (req, res) => {
       guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(guestId) as any;
     }
 
-    const guestName = guest ? `${guest.first_name} ${guest.last_name}`.trim() : 'Invitado';
-
-    const result = await WhatsAppService.sendRsvpInvitation({
-      guestName,
-      guestPhone: phone,
-      companionCount: guest?.companion_count || 0,
-      coupleNames,
-      weddingDate: wedding?.wedding_date || wedding?.date,
-      weddingId,
-      guestId
-    });
+    let result: any;
+    if (messageType === 'template') {
+      result = await WhatsAppService.sendRsvpInvitation({
+        guestName,
+        guestPhone: phone,
+        companionCount: guest?.companion_count || 0,
+        coupleNames,
+        weddingDate: wedding?.wedding_date || wedding?.date,
+        weddingId,
+        guestId
+      });
+    } else {
+      result = await WhatsAppService.sendTextMessage(phone, content, {
+        weddingId,
+        guestId,
+        sender: 'AGENT'
+      });
+    }
 
     const now = new Date().toISOString();
 
-    if (guestId && result.success) {
+    if (guestId && result.success && messageType === 'template') {
       db.prepare(`
         UPDATE guests
         SET whatsapp_status = 'ENVIADO',
