@@ -422,6 +422,8 @@ router.post('/send', async (req, res) => {
       guest = db.prepare('SELECT * FROM guests WHERE id = ?').get(guestId) as any;
     }
 
+    const guestName = guest ? `${guest.first_name} ${guest.last_name}`.trim() : 'Invitado';
+
     let result: any;
     if (messageType === 'template') {
       result = await WhatsAppService.sendRsvpInvitation({
