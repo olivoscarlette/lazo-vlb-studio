@@ -56,30 +56,36 @@ function formatWhatsAppTime(dateStr?: string) {
   return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
 }
 
-// Curated high-resolution realistic portrait avatars for contacts
-const AVATAR_PORTRAITS = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=160&auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=160&auto=format&fit=crop&q=80'
+// Luxury brand color palettes for guest avatars
+const AVATAR_PALETTES = [
+  { bg: 'bg-[#FDF0ED]', text: 'text-[#9C665C]', border: 'border-[#F3DCD7]' }, // Terracotta Rose
+  { bg: 'bg-[#FAF3E8]', text: 'text-[#8A6332]', border: 'border-[#EBDCC5]' }, // Warm Champagne / Gold
+  { bg: 'bg-[#EBF2ED]', text: 'text-[#3E6548]', border: 'border-[#D2E2D6]' }, // Sage Olive
+  { bg: 'bg-[#F2EEF5]', text: 'text-[#6A5378]', border: 'border-[#DFD6E5]' }, // Soft Mauve
+  { bg: 'bg-[#F5ECE9]', text: 'text-[#8A574E]', border: 'border-[#E8D2CC]' }, // Warm Blush
+  { bg: 'bg-[#F7F3EE]', text: 'text-[#5C504A]', border: 'border-[#E5DDD4]' }  // Alabaster Taupe
 ];
 
-function getContactAvatar(name: string, phone: string): string {
+function getInitials(name?: string, phone?: string): string {
+  if (!name || name === phone) {
+    const clean = (phone || '').replace(/\D/g, '');
+    return clean.slice(-2) || 'WA';
+  }
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return parts[0]?.slice(0, 2).toUpperCase() || 'W';
+}
+
+function getAvatarPalette(name?: string, phone?: string) {
   const seed = (name || phone || 'Guest').trim().toLowerCase();
   let hash = 0;
   for (let i = 0; i < seed.length; i++) {
     hash = (hash << 5) - hash + seed.charCodeAt(i);
   }
-  const index = Math.abs(hash) % AVATAR_PORTRAITS.length;
-  return AVATAR_PORTRAITS[index];
+  const index = Math.abs(hash) % AVATAR_PALETTES.length;
+  return AVATAR_PALETTES[index];
 }
 
 export const WhatsAppHubModule: React.FC = () => {
@@ -446,7 +452,8 @@ export const WhatsAppHubModule: React.FC = () => {
                 const isSelected =
                   activeConversation?.phone === conv.phone &&
                   activeConversation?.wedding_id === conv.wedding_id;
-                const avatarUrl = getContactAvatar(conv.guest_name, conv.phone);
+                const palette = getAvatarPalette(conv.guest_name, conv.phone);
+                const initials = getInitials(conv.guest_name, conv.phone);
 
                 return (
                   <div
@@ -458,19 +465,10 @@ export const WhatsAppHubModule: React.FC = () => {
                         : 'hover:bg-[#FCFAF7]'
                     }`}
                   >
-                    {/* Guest Profile Image like WhatsApp */}
+                    {/* Guest Elegant Avatar with Brand Colors */}
                     <div className="relative shrink-0">
-                      <img
-                        src={avatarUrl}
-                        alt={conv.guest_name}
-                        className="w-11 h-11 rounded-full object-cover border border-[#EAE3DA] shadow-2xs"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                        }}
-                      />
-                      <div className="hidden w-11 h-11 rounded-full bg-[#FAF3E8] text-[#9C665C] font-bold text-xs flex items-center justify-center border border-[#EAE3DA]">
-                        {conv.guest_name.slice(0, 2).toUpperCase()}
+                      <div className={`w-11 h-11 rounded-full ${palette.bg} ${palette.text} ${palette.border} border font-bold text-xs flex items-center justify-center shadow-2xs font-serif tracking-wider`}>
+                        {initials}
                       </div>
                       <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#25D366] border-2 border-white" />
                     </div>
@@ -534,11 +532,15 @@ export const WhatsAppHubModule: React.FC = () => {
               <div className="px-5 py-3 border-b border-[#EAE3DA] bg-[#FFFFFF] flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="relative shrink-0">
-                    <img
-                      src={getContactAvatar(activeConversation.guest_name, activeConversation.phone)}
-                      alt={activeConversation.guest_name}
-                      className="w-10 h-10 rounded-full object-cover border border-[#EAE3DA]"
-                    />
+                    {(() => {
+                      const activePalette = getAvatarPalette(activeConversation.guest_name, activeConversation.phone);
+                      const activeInitials = getInitials(activeConversation.guest_name, activeConversation.phone);
+                      return (
+                        <div className={`w-10 h-10 rounded-full ${activePalette.bg} ${activePalette.text} ${activePalette.border} border font-bold text-xs flex items-center justify-center font-serif tracking-wider shadow-2xs`}>
+                          {activeInitials}
+                        </div>
+                      );
+                    })()}
                     <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#25D366] border-2 border-white" />
                   </div>
                   <div>
