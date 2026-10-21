@@ -45,6 +45,62 @@ export interface MessageOptions {
   footerText?: string;
 }
 
+/**
+ * Formats a raw wedding date into an elegant, natural Spanish date string.
+ * e.g. "2026-10-24" -> "sábado 24 de octubre"
+ */
+export function formatWeddingDateHuman(dateStr?: string | null): string {
+  if (!dateStr) return 'la fecha del evento';
+  const trimmed = dateStr.trim();
+  if (trimmed.includes('de ') || trimmed.includes('De ')) return trimmed;
+
+  try {
+    const raw = trimmed.split('T')[0];
+    const parts = raw.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const day = parseInt(parts[2], 10);
+      const months = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      ];
+      const d = new Date(year, month - 1, day);
+      const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+      const dayName = daysOfWeek[d.getDay()];
+      const monthName = months[month - 1];
+
+      return `${dayName} ${day} de ${monthName}`;
+    }
+  } catch {}
+
+  return trimmed;
+}
+
+/**
+ * Cleans and formats couple names in natural Spanish.
+ * Strips duplicate "Boda de " prefixes and converts "&" to "y".
+ * e.g. "Boda Victoria & Ronnye" -> "Victoria y Ronnye"
+ */
+export function formatCoupleNames(coupleNamesOrWedding?: any): string {
+  if (!coupleNamesOrWedding) return 'los novios';
+  let str = '';
+  if (typeof coupleNamesOrWedding === 'string') {
+    str = coupleNamesOrWedding;
+  } else if (coupleNamesOrWedding.partner_1_name && coupleNamesOrWedding.partner_2_name) {
+    const p1 = coupleNamesOrWedding.partner_1_name.trim();
+    const p2 = coupleNamesOrWedding.partner_2_name.trim();
+    const connector = p2.toLowerCase().startsWith('i') || p2.toLowerCase().startsWith('hi') ? 'e' : 'y';
+    return `${p1} ${connector} ${p2}`;
+  } else if (coupleNamesOrWedding.name) {
+    str = coupleNamesOrWedding.name;
+  }
+
+  let cleaned = str.replace(/^Boda\s+(de\s+)?(los\s+)?/i, '').trim();
+  cleaned = cleaned.replace(/\s+&\s+/g, ' y ');
+  return cleaned || 'los novios';
+}
+
 export class WhatsAppService {
   /**
    * Retrieves WhatsApp credentials and API configuration from environment variables
@@ -576,6 +632,11 @@ export class WhatsAppService {
       };
     }
 
+    // Format wedding date and couple names in flawless, natural Spanish
+    const formattedDate = formatWeddingDateHuman(params.weddingDate);
+    const cleanCoupleNames = formatCoupleNames(params.coupleNames);
+    const totalSeats = 1 + (params.companionCount || 0);
+
     const rawTemplateEnv = process.env.WHATSAPP_RSVP_TEMPLATE;
     const preferredTemplates = rawTemplateEnv && rawTemplateEnv !== 'hello_world'
       ? [rawTemplateEnv, 'rsvp_viva_la_bride', 'rsvp_confirmacion_boda']
@@ -584,16 +645,17 @@ export class WhatsAppService {
     // Deduplicate template list
     const candidateTemplates = Array.from(new Set(preferredTemplates));
 
-    const contentSummary = `Hola ${params.guestName}, te enviamos la confirmación de asistencia (RSVP) para la boda de ${params.coupleNames || 'los novios'}.`;
+    // Store the exact message that is actually sent to the guest on WhatsApp
+    const contentSummary = `¡Hola ${params.guestName}! Nos llena de ilusión invitarte a la boda de ${cleanCoupleNames} este ${formattedDate}. Tienes ${totalSeats} lugar(es) reservado(s). Por favor confirma tu asistencia seleccionando una opción abajo:`;
 
     const components = [
       {
         type: 'body',
         parameters: [
           { type: 'text', text: params.guestName },
-          { type: 'text', text: params.coupleNames || 'los novios' },
-          { type: 'text', text: params.weddingDate || 'la fecha acordada' },
-          { type: 'text', text: (1 + params.companionCount).toString() }
+          { type: 'text', text: cleanCoupleNames },
+          { type: 'text', text: formattedDate },
+          { type: 'text', text: totalSeats.toString() }
         ]
       }
     ];

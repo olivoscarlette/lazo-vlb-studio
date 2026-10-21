@@ -88,6 +88,49 @@ function getAvatarPalette(name?: string, phone?: string) {
   return AVATAR_PALETTES[index];
 }
 
+function formatWeddingDateHuman(dateStr?: string | null): string {
+  if (!dateStr) return 'la fecha del evento';
+  const trimmed = dateStr.trim();
+  if (trimmed.includes('de ') || trimmed.includes('De ')) return trimmed;
+
+  try {
+    const raw = trimmed.split('T')[0];
+    const parts = raw.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10);
+      const day = parseInt(parts[2], 10);
+      const months = [
+        'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+        'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      ];
+      const d = new Date(year, month - 1, day);
+      const daysOfWeek = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+      const dayName = daysOfWeek[d.getDay()];
+      const monthName = months[month - 1];
+
+      return `${dayName} ${day} de ${monthName}`;
+    }
+  } catch {}
+
+  return trimmed;
+}
+
+function formatCoupleNames(partner1?: string, partner2?: string, weddingName?: string): string {
+  if (partner1 && partner2) {
+    const p1 = partner1.trim();
+    const p2 = partner2.trim();
+    const connector = p2.toLowerCase().startsWith('i') || p2.toLowerCase().startsWith('hi') ? 'e' : 'y';
+    return `${p1} ${connector} ${p2}`;
+  }
+  if (weddingName) {
+    let cleaned = weddingName.replace(/^Boda\s+(de\s+)?(los\s+)?/i, '').trim();
+    cleaned = cleaned.replace(/\s+&\s+/g, ' y ');
+    return cleaned;
+  }
+  return 'los novios';
+}
+
 export const WhatsAppHubModule: React.FC = () => {
   const { token, user } = useAuth();
 
@@ -252,7 +295,7 @@ export const WhatsAppHubModule: React.FC = () => {
     if (!activeConversation || !newMessage.trim() || sending) return;
 
     const trimmedContent = newMessage.trim();
-    const isTemplateMsg = Boolean(selectedTemplate);
+    const isOfficialTemplate = selectedTemplate === 1;
     setSending(true);
     setSendError(null);
 
@@ -264,9 +307,9 @@ export const WhatsAppHubModule: React.FC = () => {
       guest_id: activeConversation.guest_id,
       phone: activeConversation.phone,
       direction: 'OUTBOUND',
-      message_type: isTemplateMsg ? 'template' : 'text',
+      message_type: isOfficialTemplate ? 'template' : 'text',
       content: trimmedContent,
-      template_name: isTemplateMsg ? `plantilla_${selectedTemplate}` : undefined,
+      template_name: isOfficialTemplate ? 'rsvp_viva_la_bride' : undefined,
       status: 'PENDING',
       created_at: new Date().toISOString()
     };
@@ -288,7 +331,7 @@ export const WhatsAppHubModule: React.FC = () => {
           guestId: activeConversation.guest_id,
           phone: activeConversation.phone,
           content: trimmedContent,
-          messageType: isTemplateMsg ? 'template' : 'text'
+          messageType: isOfficialTemplate ? 'template' : 'text'
         })
       });
 
@@ -325,16 +368,18 @@ export const WhatsAppHubModule: React.FC = () => {
     const wedding = activeConversation.wedding_name;
     const seats = 1 + (activeConversation.companion_count || 0);
     const table = activeConversation.table_name || 'Mesa por asignar';
+    const dateFormatted = formatWeddingDateHuman(activeWedding?.wedding_date || activeWedding?.date);
+    const coupleClean = formatCoupleNames(activeWedding?.partner_1_name, activeWedding?.partner_2_name, wedding);
 
     let text = '';
     if (templateType === 1) {
-      text = `¡Hola ${name}! 👋 Te recordamos que la fecha límite para confirmar tu asistencia a la boda de ${wedding} se acerca. Tienes ${seats} lugar(es) reservado(s) a tu nombre. ¿Podrás acompañarnos? Por favor confírmanos por este medio.`;
+      text = `¡Hola ${name}! Nos llena de ilusión invitarte a la boda de ${coupleClean} este ${dateFormatted}. Tienes ${seats} lugar(es) reservado(s). Por favor confirma tu asistencia seleccionando una opción abajo:`;
     } else if (templateType === 2) {
       const venue = activeWedding?.reception_venue || 'Fábrica La Fama';
       const dressCode = activeWedding?.dress_code || 'Rigurosa Etiqueta / Formal';
-      text = `¡Hola ${name}! 📍 Te compartimos los detalles de la boda de ${wedding}: La recepción se llevará a cabo en ${venue}. Código de vestimenta: ${dressCode}. ¡Te esperamos con mucha alegría!`;
+      text = `¡Hola ${name}! 📍 Te compartimos los detalles de la boda de ${coupleClean}: La recepción se llevará a cabo en ${venue}. Código de vestimenta: ${dressCode}. ¡Te esperamos con mucha alegría!`;
     } else if (templateType === 3) {
-      text = `¡Hola ${name}! ✨ ¡Hoy es el gran día de ${wedding}! Te esperamos con mucha emoción. Tu mesa asignada es: ${table}. Al llegar, el equipo de coordinación VLB Studio te guiará a tu lugar. ¡A disfrutar!`;
+      text = `¡Hola ${name}! ✨ ¡Hoy es el gran día de ${coupleClean}! Te esperamos con mucha emoción. Tu mesa asignada es: ${table}. Al llegar, el equipo de coordinación VLB Studio te guiará a tu lugar. ¡A disfrutar!`;
     }
     setNewMessage(text);
   };
@@ -599,16 +644,22 @@ export const WhatsAppHubModule: React.FC = () => {
                         >
                           {msg.message_type === 'template' ? (
                             <div className="space-y-2">
-                              <div className="text-[10px] uppercase font-bold tracking-wider text-rose-200 flex items-center space-x-1 pb-1 border-b border-white/20">
-                                <span>Invitación Oficial RSVP 💍</span>
-                              </div>
-                              <p className="whitespace-pre-wrap">{msg.content}</p>
-                              <div className="pt-2 flex items-center gap-1.5 border-t border-white/20">
-                                <span className="px-2 py-1 bg-white/20 rounded-md text-[10px] font-semibold">
-                                  ✓ Confirmo asistencia
+                              <div className="text-[10px] uppercase font-bold tracking-wider text-rose-200 flex items-center justify-between pb-1 border-b border-white/20">
+                                <span className="flex items-center gap-1">
+                                  <span>💍</span>
+                                  <span>Invitación Oficial RSVP</span>
                                 </span>
-                                <span className="px-2 py-1 bg-white/20 rounded-md text-[10px] font-semibold">
-                                  ✕ No podré asistir
+                                <span className="text-[9px] opacity-80">Viva La Bride</span>
+                              </div>
+                              <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 border-t border-white/20">
+                                <span className="px-2.5 py-1 bg-white/20 rounded-md text-[10px] font-semibold text-center flex items-center justify-center gap-1 shadow-2xs">
+                                  <span>✓</span>
+                                  <span>Confirmo asistencia</span>
+                                </span>
+                                <span className="px-2.5 py-1 bg-white/15 rounded-md text-[10px] font-semibold text-center flex items-center justify-center gap-1 shadow-2xs">
+                                  <span>✕</span>
+                                  <span>No asistiré</span>
                                 </span>
                               </div>
                             </div>
@@ -670,9 +721,9 @@ export const WhatsAppHubModule: React.FC = () => {
                       ? 'bg-[#9C665C] text-white border-[#9C665C]'
                       : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] border-[#EAE3DA]'
                   }`}
-                  title="Cargar recordatorio RSVP y acompañantes"
+                  title="Cargar invitación interactiva oficial RSVP aprobada por Meta (Viva La Bride)"
                 >
-                  ⚡ 1. Recordatorio RSVP
+                  💍 1. Invitación RSVP (Oficial Meta)
                 </button>
                 <button
                   type="button"

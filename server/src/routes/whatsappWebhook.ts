@@ -99,28 +99,43 @@ async function processWebhookEvent(body: any) {
             const now = new Date().toISOString();
 
             // Locate Guest in database by matching phone number
+            // Robust multi-wedding support: If a phone belongs to guests in multiple weddings,
+            // disambiguate using the most recent outbound invitation or conversation thread.
             const allGuests = db.prepare(`
-              SELECT g.*, w.name as wedding_name
+              SELECT g.*, w.name as wedding_name, w.wedding_date
               FROM guests g
               JOIN weddings w ON w.id = g.wedding_id
               WHERE g.phone IS NOT NULL AND g.phone != ''
             `).all() as any[];
 
-            const matchedGuest = allGuests.find(g => getPhoneLast10(g.phone) === last10);
+            const matchingGuests = allGuests.filter(g => getPhoneLast10(g.phone) === last10);
 
-            let weddingId = matchedGuest?.wedding_id;
-            const guestId = matchedGuest?.id || null;
+            const latestMsg = db.prepare(`
+              SELECT wedding_id, guest_id FROM whatsapp_messages
+              WHERE phone = ? OR phone LIKE ?
+              ORDER BY created_at DESC LIMIT 1
+            `).get(normalizedPhone, `%${last10}`) as any;
 
-            if (!weddingId) {
-              const prevMsg = db.prepare(`
-                SELECT wedding_id FROM whatsapp_messages
-                WHERE phone = ? OR phone LIKE ?
-                ORDER BY created_at DESC LIMIT 1
-              `).get(normalizedPhone, `%${last10}`) as any;
-              if (prevMsg?.wedding_id) {
-                weddingId = prevMsg.wedding_id;
+            let matchedGuest: any = null;
+            if (matchingGuests.length === 1) {
+              matchedGuest = matchingGuests[0];
+            } else if (matchingGuests.length > 1) {
+              // 1. Prioritize wedding of the latest conversation/invitation
+              if (latestMsg?.wedding_id) {
+                matchedGuest = matchingGuests.find(g => g.wedding_id === latestMsg.wedding_id);
+              }
+              // 2. Prioritize exact guest_id
+              if (!matchedGuest && latestMsg?.guest_id) {
+                matchedGuest = matchingGuests.find(g => g.id === latestMsg.guest_id);
+              }
+              // 3. Fallback to first matching guest
+              if (!matchedGuest) {
+                matchedGuest = matchingGuests[0];
               }
             }
+
+            let weddingId = matchedGuest?.wedding_id || latestMsg?.wedding_id;
+            const guestId = matchedGuest?.id || latestMsg?.guest_id || null;
 
             if (!weddingId) {
               const latestWedding = db.prepare('SELECT id FROM weddings ORDER BY wedding_date DESC LIMIT 1').get() as any;
@@ -157,19 +172,19 @@ async function processWebhookEvent(body: any) {
             }
 
             if (matchedGuest && newGuestStatus) {
-              console.log(`[WhatsApp Webhook] Actualizando RSVP de ${matchedGuest.first_name} ${matchedGuest.last_name} -> "${newGuestStatus}"`);
+              console.log(`[WhatsApp Webhook] Actualizando RSVP de ${matchedGuest.first_name} ${matchedGuest.last_name} (${matchedGuest.wedding_name}) -> "${newGuestStatus}"`);
               if (newGuestStatus === 'No asistirá') {
                 db.prepare(`
                   UPDATE guests
                   SET status = ?, table_id = NULL, updated_at = ?
-                  WHERE id = ?
-                `).run(newGuestStatus, now, matchedGuest.id);
+                  WHERE id = ? AND wedding_id = ?
+                `).run(newGuestStatus, now, matchedGuest.id, matchedGuest.wedding_id);
               } else {
                 db.prepare(`
                   UPDATE guests
                   SET status = ?, updated_at = ?
-                  WHERE id = ?
-                `).run(newGuestStatus, now, matchedGuest.id);
+                  WHERE id = ? AND wedding_id = ?
+                `).run(newGuestStatus, now, matchedGuest.id, matchedGuest.wedding_id);
               }
             }
 
