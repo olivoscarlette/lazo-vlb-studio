@@ -577,9 +577,13 @@ export class WhatsAppService {
     }
 
     const rawTemplateEnv = process.env.WHATSAPP_RSVP_TEMPLATE;
-    const templateName = rawTemplateEnv && rawTemplateEnv !== 'hello_world'
-      ? rawTemplateEnv
-      : 'rsvp_confirmacion_boda';
+    const preferredTemplates = rawTemplateEnv && rawTemplateEnv !== 'hello_world'
+      ? [rawTemplateEnv, 'rsvp_viva_la_bride', 'rsvp_confirmacion_boda']
+      : ['rsvp_viva_la_bride', 'rsvp_confirmacion_boda'];
+
+    // Deduplicate template list
+    const candidateTemplates = Array.from(new Set(preferredTemplates));
+
     const contentSummary = `Hola ${params.guestName}, te enviamos la confirmación de asistencia (RSVP) para la boda de ${params.coupleNames || 'los novios'}.`;
 
     const components = [
@@ -594,35 +598,22 @@ export class WhatsAppService {
       }
     ];
 
-    let primaryResult = await this.sendTemplate(toPhone, templateName, 'es_MX', components, {
-      weddingId: params.weddingId,
-      guestId: params.guestId,
-      contentSummary
-    });
+    let lastResult: SendMessageResult = { success: false, error: 'No se pudo enviar ninguna plantilla.' };
 
-    if (primaryResult.success) {
-      return primaryResult;
-    }
-
-    // If template was created with language 'es' (Spanish general) instead of 'es_MX'
-    if (
-      primaryResult.error &&
-      (primaryResult.error.includes('132001') ||
-        primaryResult.error.includes('does not exist') ||
-        primaryResult.error.includes('translation'))
-    ) {
-      console.log(`[WhatsAppService] Reintentando plantilla "${templateName}" con idioma 'es'...`);
-      const esResult = await this.sendTemplate(toPhone, templateName, 'es', components, {
-        weddingId: params.weddingId,
-        guestId: params.guestId,
-        contentSummary
-      });
-
-      if (esResult.success) {
-        return esResult;
+    for (const tName of candidateTemplates) {
+      for (const lang of ['es_MX', 'es']) {
+        const result = await this.sendTemplate(toPhone, tName, lang, components, {
+          weddingId: params.weddingId,
+          guestId: params.guestId,
+          contentSummary
+        });
+        if (result.success) {
+          return result;
+        }
+        lastResult = result;
       }
     }
 
-    return primaryResult;
+    return lastResult;
   }
 }

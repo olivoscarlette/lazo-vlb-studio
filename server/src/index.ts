@@ -88,7 +88,7 @@ app.get('/api/health', (req, res) => {
     status: 'ok',
     app: 'LAZO — VLB Studio · Planning',
     version: '1.0.0',
-    build: '2026-10-19-whatsapp-hub-v2',
+    build: '2026-10-20-vlb-templates-live',
     timestamp: new Date().toISOString()
   });
 });
