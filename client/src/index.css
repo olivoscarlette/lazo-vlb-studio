@@ -1,13 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
-
-@font-face {
-  font-family: 'Atteron';
-  src: url('/fonts/Atteron.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
+@import url('https://fonts.googleapis.com/css2?family=Italiana&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
   /* Paleta Principal: Tonos Rosas Sutiles (Dusty Rose / Blush) & Marfil Cálido */
@@ -31,13 +23,16 @@
 
   --lazo-white: #FFFFFF;
 
-  --font-heading: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-body: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  /* Regla de 2 fuentes: Italiana para novios, Outfit para todo el sistema */
+  --font-novios: 'Italiana', Georgia, serif;
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 @theme {
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-serif: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-novios: 'Italiana', Georgia, serif;
 
   /* Explicit LAZO Design System Tokens */
   --color-lazo-rose: #C48B81;
@@ -145,19 +140,18 @@
     min-height: 100vh;
   }
 
-  /* Encabezados y fuentes con serif editorial de alta legibilidad */
-  h1, h2, h3, .font-serif, .lazo-heading {
-    font-family: var(--font-heading);
+  /* Encabezados y fuentes del sistema con Outfit (Sans geométrica de alta legibilidad) */
+  h1, h2, h3, h4, h5, h6, .font-serif, .lazo-heading {
+    font-family: var(--font-heading) !important;
     letter-spacing: -0.01em;
     line-height: 1.25;
   }
 
-  /* Tipografía Atteron exclusiva para nombres de novios con sus ligaduras editoriales y swashes de Canva */
-  .font-atteron {
-    font-family: 'Atteron', 'Cormorant Garamond', Georgia, serif;
-    font-feature-settings: "liga" 1, "dlig" 1, "calt" 1, "swsh" 1;
-    font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
-    letter-spacing: 0;
+  /* Tipografía Italiana EXCLUSIVA para nombres de los novios (Opción 1) */
+  .font-atteron, .font-novios {
+    font-family: 'Italiana', Georgia, serif !important;
+    font-weight: 400 !important;
+    letter-spacing: 0.02em;
     text-transform: capitalize;
   }
 
