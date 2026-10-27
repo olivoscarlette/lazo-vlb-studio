@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Italiana&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Prata&display=swap');
 
 :root {
   /* Paleta Principal: Tonos Rosas Sutiles (Dusty Rose / Blush) & Marfil Cálido */
@@ -23,8 +23,8 @@
 
   --lazo-white: #FFFFFF;
 
-  /* Regla de 2 fuentes: Italiana para novios, Outfit para todo el sistema */
-  --font-novios: 'Italiana', Georgia, serif;
+  /* Regla estricta de 2 fuentes: Prata para novios, Outfit para todo el sistema */
+  --font-novios: 'Prata', Georgia, serif;
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-body: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -32,7 +32,7 @@
 @theme {
   --font-serif: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-novios: 'Italiana', Georgia, serif;
+  --font-novios: 'Prata', Georgia, serif;
 
   /* Explicit LAZO Design System Tokens */
   --color-lazo-rose: #C48B81;
@@ -147,11 +147,11 @@
     line-height: 1.25;
   }
 
-  /* Tipografía Italiana EXCLUSIVA para nombres de los novios (Opción 1) */
+  /* Tipografía Prata EXCLUSIVA para nombres de los novios (Didone Editorial de Alta Gama) */
   .font-atteron, .font-novios {
-    font-family: 'Italiana', Georgia, serif !important;
+    font-family: 'Prata', Georgia, serif !important;
     font-weight: 400 !important;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     text-transform: capitalize;
   }
 
