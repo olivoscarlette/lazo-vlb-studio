@@ -146,8 +146,22 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
       <div className="luxury-card rounded-[28px] p-7 sm:p-9 border border-[#EFE8E1] relative overflow-hidden space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2.5">
-            <h1 className="font-atteron text-4xl sm:text-5xl lg:text-[54px] font-normal tracking-tight text-[#2B2826] leading-tight">
-              {coupleTitle}
+            <h1 className="font-atteron text-4xl sm:text-5xl lg:text-[54px] font-normal tracking-tight leading-tight">
+              {weddingData.partner_1_name && weddingData.partner_2_name ? (
+                <>
+                  <span className="text-[#2B2826]">{toTitleCase(weddingData.partner_1_name)}</span>{' '}
+                  <span className="text-[#C48B81] font-normal mx-1 sm:mx-2">&</span>{' '}
+                  <span className="text-[#7D6F6B]">{toTitleCase(weddingData.partner_2_name)}</span>
+                </>
+              ) : coupleTitle.includes('&') ? (
+                <>
+                  <span className="text-[#2B2826]">{coupleTitle.split('&')[0].trim()}</span>{' '}
+                  <span className="text-[#C48B81] font-normal mx-1 sm:mx-2">&</span>{' '}
+                  <span className="text-[#7D6F6B]">{coupleTitle.split('&').slice(1).join('&').trim()}</span>
+                </>
+              ) : (
+                <span className="text-[#2B2826]">{coupleTitle}</span>
+              )}
             </h1>
 
             {/* Countdown pill badge en tono blush */}

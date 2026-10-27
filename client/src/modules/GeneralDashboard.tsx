@@ -765,6 +765,39 @@ export const GeneralDashboard: React.FC = () => {
       .join(' ');
   };
 
+  const renderCoupleNames = (w: Wedding) => {
+    let p1 = w.partner_1_name ? toTitleCase(w.partner_1_name) : '';
+    let p2 = w.partner_2_name ? toTitleCase(w.partner_2_name) : '';
+
+    if (!p1 && !p2 && w.name) {
+      if (w.name.includes('&')) {
+        const parts = w.name.split('&');
+        p1 = toTitleCase(parts[0].trim());
+        p2 = toTitleCase(parts.slice(1).join('&').trim());
+      } else if (w.name.includes(' y ')) {
+        const parts = w.name.split(' y ');
+        p1 = toTitleCase(parts[0].trim());
+        p2 = toTitleCase(parts.slice(1).join(' y ').trim());
+      } else {
+        p1 = toTitleCase(w.name);
+      }
+    }
+
+    if (p1 && p2) {
+      return (
+        <>
+          <div className="truncate text-[#2B2826]">{p1}</div>
+          <div className="truncate text-[#7D6F6B]">
+            <span className="text-[#C48B81] font-normal mr-1.5">&</span>
+            {p2}
+          </div>
+        </>
+      );
+    }
+
+    return <div className="truncate text-[#2B2826]">{p1 || toTitleCase(w.name)}</div>;
+  };
+
   const userName = user?.name ? user.name.split(' ')[0] : 'Equipo';
   const unreadCount = Array.isArray(notifications) ? notifications.filter(n => !n.read).length : 0;
 
@@ -1109,15 +1142,8 @@ export const GeneralDashboard: React.FC = () => {
                       <div>
                         {/* Fila superior con Nombres y botón eliminar discreto */}
                         <div className="flex items-start justify-between gap-2 mb-4">
-                          <div className="font-atteron text-3xl sm:text-[34px] font-normal text-[#2B2826] leading-[1.2]">
-                            {w.partner_1_name && w.partner_2_name ? (
-                              <>
-                                <div className="truncate">{toTitleCase(w.partner_1_name)}</div>
-                                <div className="truncate">& {toTitleCase(w.partner_2_name)}</div>
-                              </>
-                            ) : (
-                              <div className="truncate">{toTitleCase(w.name)}</div>
-                            )}
+                          <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2]">
+                            {renderCoupleNames(w)}
                           </div>
 
                           {user?.role === 'ADMINISTRADOR' && (
