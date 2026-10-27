@@ -1,95 +1,106 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Atteron';
+  src: url('/fonts/Atteron.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  /* Paleta Principal: Rosa Quemado Editorial & Crema Cálido */
-  --lazo-rose: #9C665C;
-  --lazo-rose-dark: #8A574E;
-  --lazo-blush: #EFE2DF;
+  /* Paleta Principal: Tonos Rosas Sutiles (Dusty Rose / Blush) & Marfil Cálido */
+  --lazo-rose: #C48B81;
+  --lazo-rose-dark: #A86B60;
+  --lazo-rose-light: #D9A59B;
+  --lazo-blush: #F7EDEB;
+  --lazo-blush-border: #EEDAD6;
 
   /* Alias de compatibilidad para tokens existentes */
-  --lazo-green: #9C665C;
-  --lazo-green-dark: #8A574E;
-  --lazo-sage: #CCDACC;
+  --lazo-green: #C48B81;
+  --lazo-green-dark: #A86B60;
+  --lazo-sage: #D5DFD6;
 
-  --lazo-cream: #FCFAF7;
-  --lazo-beige: #F7F3EE;
-  --lazo-sand: #EAE3DA;
+  --lazo-cream: #FAF7F5;
+  --lazo-beige: #F5EFEB;
+  --lazo-sand: #EFE8E1;
 
-  --lazo-text: #332A28;
+  --lazo-text: #2B2826;
   --lazo-text-secondary: #7D6F6B;
 
   --lazo-white: #FFFFFF;
 
-  --font-heading: 'Cormorant Garamond', Georgia, serif;
+  --font-heading: 'Atteron', 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 @theme {
-  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-serif: 'Atteron', 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   /* Explicit LAZO Design System Tokens */
-  --color-lazo-rose: #9C665C;
-  --color-lazo-rose-dark: #8A574E;
-  --color-lazo-blush: #EFE2DF;
-  --color-lazo-green: #9C665C;
-  --color-lazo-green-dark: #8A574E;
-  --color-lazo-sage: #CCDACC;
-  --color-lazo-cream: #FCFAF7;
-  --color-lazo-beige: #F7F3EE;
-  --color-lazo-sand: #EAE3DA;
-  --color-lazo-text: #332A28;
+  --color-lazo-rose: #C48B81;
+  --color-lazo-rose-dark: #A86B60;
+  --color-lazo-rose-light: #D9A59B;
+  --color-lazo-blush: #F7EDEB;
+  --color-lazo-green: #C48B81;
+  --color-lazo-green-dark: #A86B60;
+  --color-lazo-sage: #D5DFD6;
+  --color-lazo-cream: #FAF7F5;
+  --color-lazo-beige: #F5EFEB;
+  --color-lazo-sand: #EFE8E1;
+  --color-lazo-text: #2B2826;
   --color-lazo-text-secondary: #7D6F6B;
   --color-lazo-white: #FFFFFF;
 
-  /* Harmonize neutral/stone scale to Warm Blush & Cream Editorial Palette */
-  --color-stone-50: #FCFAF7;
-  --color-stone-100: #F7F3EE;
-  --color-stone-200: #EAE3DA;
-  --color-stone-300: #DDD2C4;
-  --color-stone-400: #7D6F6B;
+  /* Harmonize neutral/stone scale to Warm Alabaster & Cream Palette */
+  --color-stone-50: #FAF7F5;
+  --color-stone-100: #F5EFEB;
+  --color-stone-200: #EFE8E1;
+  --color-stone-300: #E2D7CC;
+  --color-stone-400: #8A7E7A;
   --color-stone-500: #7D6F6B;
   --color-stone-600: #5E524E;
   --color-stone-700: #4A3F3C;
   --color-stone-800: #3E3432;
-  --color-stone-900: #332A28;
+  --color-stone-900: #2B2826;
 
   /* Estados de éxito: Tono Salvia Suave y Discreto (Confirmados / Pagados) */
-  --color-emerald-50: #F2F6F3;
-  --color-emerald-100: #E4ECE5;
-  --color-emerald-200: #CCDACC;
-  --color-emerald-300: #ADC2AE;
-  --color-emerald-400: #8FA990;
-  --color-emerald-500: #6E8C70;
-  --color-emerald-600: #577355;
-  --color-emerald-700: #455C44;
-  --color-emerald-800: #354B38;
-  --color-emerald-900: #263628;
+  --color-emerald-50: #F3F7F4;
+  --color-emerald-100: #E5EDE6;
+  --color-emerald-200: #D0DDD1;
+  --color-emerald-300: #B5C8B7;
+  --color-emerald-400: #97AF99;
+  --color-emerald-500: #78967A;
+  --color-emerald-600: #5F7D61;
+  --color-emerald-700: #4B634D;
+  --color-emerald-800: #384C3A;
+  --color-emerald-900: #263528;
 
-  /* Harmonize amber to Warm Champagne & Sand (Pendiente / En proceso) */
-  --color-amber-50: #FCFAF7;
-  --color-amber-100: #F7F3EE;
-  --color-amber-200: #EAE3DA;
-  --color-amber-300: #CEBFA9;
-  --color-amber-400: #BAA68D;
-  --color-amber-500: #9E896E;
-  --color-amber-600: #857056;
-  --color-amber-700: #6D5A43;
-  --color-amber-800: #564734;
-  --color-amber-900: #423627;
-  --color-amber-950: #332A28;
+  /* Harmonize amber to Warm Champagne & Sand */
+  --color-amber-50: #FAF7F5;
+  --color-amber-100: #F5EFEB;
+  --color-amber-200: #EFE8E1;
+  --color-amber-300: #D8CABB;
+  --color-amber-400: #C2B09F;
+  --color-amber-500: #A89582;
+  --color-amber-600: #8E7B68;
+  --color-amber-700: #736251;
+  --color-amber-800: #594B3D;
+  --color-amber-900: #40352A;
+  --color-amber-950: #2B2826;
 
-  /* Harmonize rose to Soft Muted Berry/Taupe (No asistirá / Alertas suaves) */
-  --color-rose-50: #FBF4F3;
-  --color-rose-100: #F5E8E7;
-  --color-rose-200: #EAD2D0;
-  --color-rose-300: #DBB5B2;
-  --color-rose-400: #C28C88;
-  --color-rose-500: #9C665C;
-  --color-rose-600: #8A574E;
-  --color-rose-700: #70443D;
-  --color-rose-800: #58352F;
-  --color-rose-900: #402622;
+  /* Harmonize rose to Dusty Rose / Blush Satin */
+  --color-rose-50: #FAF4F3;
+  --color-rose-100: #F7EDEB;
+  --color-rose-200: #EEDAD6;
+  --color-rose-300: #DFBFB9;
+  --color-rose-400: #D0A299;
+  --color-rose-500: #C48B81;
+  --color-rose-600: #B3796F;
+  --color-rose-700: #9B6158;
+  --color-rose-800: #7E4A42;
+  --color-rose-900: #5C322C;
 
   /* Harmonize blue & purple badges to soft blush/sand editorial tones */
   --color-blue-50: #FBF4F3;
@@ -133,10 +144,11 @@
     min-height: 100vh;
   }
 
-  /* Cormorant Garamond exclusivamente para títulos principales y números destacados */
+  /* Atteron con ligaduras editoriales para títulos principales y números destacados */
   h1, h2, h3, .font-serif, .lazo-heading, .lazo-metric {
     font-family: var(--font-heading);
-    letter-spacing: -0.01em;
+    letter-spacing: 0.01em;
+    font-feature-settings: "liga" 1, "dlig" 1, "calt" 1;
     line-height: 1.25;
   }
 
@@ -157,7 +169,7 @@
   input:focus, select:focus, textarea:focus {
     outline: none;
     border-color: var(--lazo-rose) !important;
-    box-shadow: 0 0 0 3px rgba(156, 102, 92, 0.16) !important;
+    box-shadow: 0 0 0 3px rgba(196, 139, 129, 0.18) !important;
   }
 }
 
@@ -192,7 +204,7 @@ span[class*="rounded-xl"],
   line-height: 1.375rem;
 }
 
-/* Botones Primarios: Rosa Quemado (#9C665C), hover (#8A574E) */
+/* Botones Primarios: Dusty Rose / Satin Glow */
 button.bg-stone-900,
 a.bg-stone-900,
 .btn-lazo-primary {
@@ -202,13 +214,17 @@ a.bg-stone-900,
   font-size: 0.875rem !important; /* 14px */
   font-weight: 600;
   line-height: 1.5;
-  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  border-radius: 9999px !important;
+  box-shadow: 0 6px 18px -3px rgba(196, 139, 129, 0.35) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 button.bg-stone-900:hover,
 a.bg-stone-900:hover,
 .btn-lazo-primary:hover {
   background-color: var(--lazo-rose-dark) !important;
+  box-shadow: 0 8px 24px -3px rgba(196, 139, 129, 0.45) !important;
+  transform: translateY(-1px);
 }
 
 /* Botones Secundarios: Fondo cálido suave y borde sutil */
@@ -220,27 +236,32 @@ a.bg-stone-100,
   border: 1px solid var(--lazo-sand) !important;
   font-size: 0.875rem !important; /* 14px */
   line-height: 1.5;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  border-radius: 9999px !important;
+  transition: all 0.2s ease;
 }
 
 button.bg-stone-100:hover,
 a.bg-stone-100:hover,
 .btn-lazo-secondary:hover {
   background-color: var(--lazo-beige) !important;
-  border-color: #DDD2C4 !important;
+  border-color: #E2D7CC !important;
 }
 
-/* Tarjetas Editoriales: Blanco cálido sobre fondos suaves con bordes sutiles */
-.luxury-card {
+/* Tarjetas Flotantes con Profundidad y Sombras Ambientales */
+.luxury-card,
+.floating-card {
   background-color: var(--lazo-white);
-  border: 1px solid var(--lazo-sand);
-  box-shadow: 0 2px 14px -3px rgba(156, 102, 92, 0.04);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #EFE8E1;
+  border-radius: 1.5rem !important; /* 24px */
+  box-shadow: 0 10px 30px -8px rgba(43, 40, 38, 0.05), 0 4px 14px -3px rgba(196, 139, 129, 0.04);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.luxury-card:hover {
-  border-color: #D6C7B7;
-  box-shadow: 0 6px 20px -3px rgba(156, 102, 92, 0.08);
+.luxury-card:hover,
+.floating-card:hover {
+  border-color: #E2D7CC;
+  box-shadow: 0 18px 42px -10px rgba(43, 40, 38, 0.08), 0 8px 22px -3px rgba(196, 139, 129, 0.08);
+  transform: translateY(-1.5px);
 }
 
 /* Tablas Operativas: Altamente legibles, texto 14px y padding generoso */

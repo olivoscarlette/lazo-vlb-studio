@@ -814,7 +814,7 @@ export const GeneralDashboard: React.FC = () => {
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-[#FCFAF7] flex flex-col md:flex-row text-[#332A28] max-w-full overflow-x-hidden">
+    <div className="min-h-screen bg-[#FAF7F5] flex flex-col md:flex-row text-[#2B2826] max-w-full overflow-x-hidden">
       {/* Mobile Backdrop Overlay for GeneralDashboard */}
       {sidebarOpen && (
         <div
@@ -825,7 +825,7 @@ export const GeneralDashboard: React.FC = () => {
 
       {/* 1. Sidebar Izquierdo Fijo/Acoplado — Idéntico a la maqueta editorial LAZO */}
       <aside
-        className={`shrink-0 bg-[#FCFAF7] border-r border-[#EAE3DA] flex flex-col transition-all duration-300 ${
+        className={`shrink-0 bg-[#FAF7F5] border-r border-[#EFE8E1] flex flex-col transition-all duration-300 ${
           // Mobile: drawer
           `fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] h-full shadow-2xl z-50 md:shadow-none md:sticky md:top-0 md:h-screen md:z-30 ${
             sidebarOpen
@@ -849,21 +849,21 @@ export const GeneralDashboard: React.FC = () => {
               <button
                 onClick={handleToggleSidebar}
                 aria-label="Contraer menú lateral"
-                className="p-1.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-xl transition cursor-pointer"
+                className="p-1.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-xl transition cursor-pointer"
                 title="Contraer menú lateral (⌘B)"
               >
-                <PanelLeftClose className="w-5 h-5 text-[#9C665C] hidden md:block" />
-                <X className="w-5 h-5 text-[#9C665C] md:hidden" />
+                <PanelLeftClose className="w-5 h-5 text-[#C48B81] hidden md:block" />
+                <X className="w-5 h-5 text-[#C48B81] md:hidden" />
               </button>
             </>
           ) : (
             <button
               onClick={handleToggleSidebar}
               aria-label="Expandir menú lateral"
-              className="p-2 text-[#7D6F6B] hover:text-[#9C665C] hover:bg-[#F7F3EE] rounded-xl transition cursor-pointer"
+              className="p-2 text-[#7D6F6B] hover:text-[#C48B81] hover:bg-[#F2ECE7] rounded-xl transition cursor-pointer"
               title="Expandir menú lateral (⌘B)"
             >
-              <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+              <PanelLeft className="w-5 h-5 text-[#C48B81]" />
             </button>
           )}
         </div>
@@ -891,18 +891,18 @@ export const GeneralDashboard: React.FC = () => {
                     : 'w-10 h-10 justify-center rounded-xl p-2.5'
                 } ${
                   active
-                    ? 'bg-[#EFE8DE] text-[#9C665C] font-semibold shadow-2xs'
-                    : 'text-[#7D6F6B] hover:bg-[#F7F3EE] hover:text-[#332A28] font-medium'
+                    ? 'bg-[#F7EDEB] text-[#C48B81] font-semibold shadow-xs'
+                    : 'text-[#7D6F6B] hover:bg-[#F2ECE7] hover:text-[#2B2826] font-medium'
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#9C665C]' : 'text-[#7D6F6B]'}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#C48B81]' : 'text-[#7D6F6B]'}`} />
                 {sidebarOpen && <span>{item.label}</span>}
               </button>
             );
           })}
         </nav>
 
-        <div className={`pt-4 border-t border-[#EAE3DA] flex items-center text-xs text-[#7D6F6B] transition-all ${
+        <div className={`pt-4 border-t border-[#EFE8E1] flex items-center text-xs text-[#7D6F6B] transition-all ${
           sidebarOpen ? 'px-3 justify-between' : 'justify-center p-2'
         }`}>
           {sidebarOpen && <span>VLB Studio · Planning</span>}
@@ -922,15 +922,15 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     onClick={handleToggleSidebar}
                     aria-label="Mostrar menú lateral"
-                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F2ECE7] text-[#2B2826] transition shadow-xs cursor-pointer shrink-0"
                     title="Mostrar menú lateral (⌘B)"
                   >
-                    <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                    <PanelLeft className="w-5 h-5 text-[#C48B81]" />
                     <span className="text-sm font-semibold hidden sm:inline">Menú</span>
                   </button>
                 )}
                 <div>
-                  <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#332A28]">
+                  <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#2B2826]">
                     Hola, {userName} 👋
                   </h1>
                   <p className="text-sm text-[#7D6F6B] mt-1">
@@ -942,7 +942,7 @@ export const GeneralDashboard: React.FC = () => {
               <div className="flex items-center space-x-3.5 self-start sm:self-auto">
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center space-x-2 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] px-5 py-2.5 rounded-xl text-sm font-semibold shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center space-x-2 bg-[#C48B81] hover:bg-[#A86B60] text-[#FFFFFF] px-5 py-2.5 rounded-full text-sm font-semibold shadow-xs hover:shadow-md hover:shadow-[#C48B81]/20 transition cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Nueva Boda</span>
@@ -958,40 +958,40 @@ export const GeneralDashboard: React.FC = () => {
                     <img
                       src={user.avatar_url}
                       alt={user?.name}
-                      className="w-10 h-10 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition"
+                      className="w-10 h-10 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-base flex items-center justify-center border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition">
+                    <div className="w-10 h-10 rounded-full bg-[#F7EDEB] text-[#A86B60] font-serif font-bold text-base flex items-center justify-center border border-[#ECD9D5] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition">
                       {userName.charAt(0)}
                     </div>
                   )}
-                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#6E8C70] border-2 border-[#FCFAF7]" title="En línea" />
+                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#6E8C70] border-2 border-[#FAF7F5]" title="En línea" />
                 </div>
 
                 {/* Campana de Notificaciones */}
                 <div className="relative">
                   <button
                     onClick={() => setShowNotifMenu(!showNotifMenu)}
-                    className="p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer relative"
+                    className="p-2.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer relative"
                     title="Notificaciones"
                   >
                     <Bell className="w-5 h-5" />
                     {unreadCount > 0 && (
-                      <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#9C665C]" />
+                      <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#C48B81]" />
                     )}
                   </button>
 
                   {showNotifMenu && (
-                    <div className="absolute right-0 mt-2 w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] py-2 z-50">
-                      <div className="px-4 py-2.5 border-b border-[#F7F3EE] flex items-center justify-between">
-                        <span className="font-serif text-lg font-semibold text-[#332A28]">Notificaciones</span>
+                    <div className="absolute right-0 mt-2 w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] py-2 z-50">
+                      <div className="px-4 py-2.5 border-b border-[#F2ECE7] flex items-center justify-between">
+                        <span className="font-serif text-lg font-semibold text-[#2B2826]">Notificaciones</span>
                         {unreadCount > 0 && (
-                          <span className="text-xs bg-[#EFE2DF] text-[#8A574E] px-2.5 py-0.5 rounded-full font-medium">
+                          <span className="text-xs bg-[#F7EDEB] text-[#A86B60] px-2.5 py-0.5 rounded-full font-medium">
                             {unreadCount} nuevas
                           </span>
                         )}
                       </div>
-                      <div className="max-h-72 overflow-y-auto divide-y divide-[#F7F3EE]">
+                      <div className="max-h-72 overflow-y-auto divide-y divide-[#F2ECE7]">
                         {notifications.length === 0 ? (
                           <div className="p-5 text-center text-sm text-[#7D6F6B]">
                             No hay notificaciones pendientes.
@@ -1001,9 +1001,9 @@ export const GeneralDashboard: React.FC = () => {
                             <div
                               key={n.id}
                               onClick={() => handleMarkAsRead(n.id)}
-                              className={`p-3.5 text-sm cursor-pointer hover:bg-[#FCFAF7] transition ${!n.read ? 'bg-[#EFE2DF]/40' : ''}`}
+                              className={`p-3.5 text-sm cursor-pointer hover:bg-[#FAF7F5] transition ${!n.read ? 'bg-[#F7EDEB]/50' : ''}`}
                             >
-                              <div className="font-semibold text-[#332A28] mb-0.5">{n.title}</div>
+                              <div className="font-semibold text-[#2B2826] mb-0.5">{n.title}</div>
                               <div className="text-xs text-[#7D6F6B] leading-snug">{n.message}</div>
                               <div className="text-xs text-[#7D6F6B] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
                             </div>
@@ -1018,7 +1018,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   onClick={logout}
                   title="Cerrar sesión"
-                  className="p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer"
+                  className="p-2.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -1034,17 +1034,17 @@ export const GeneralDashboard: React.FC = () => {
                   placeholder="Buscar boda por nombre o fecha..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 bg-[#FFFFFF] border border-[#EAE3DA] rounded-full text-sm text-[#332A28] placeholder-[#7D6F6B]/70 focus:outline-none focus:border-[#9C665C] shadow-2xs transition"
+                  className="w-full pl-11 pr-4 py-2.5 bg-[#FFFFFF] border border-[#EFE8E1] rounded-full text-sm text-[#2B2826] placeholder-[#7D6F6B]/70 focus:outline-none focus:border-[#C48B81] shadow-2xs transition"
                 />
               </div>
 
-              <div className="flex items-center space-x-1.5 bg-[#F7F3EE] p-1 rounded-full border border-[#EAE3DA] self-start sm:self-auto">
+              <div className="flex items-center space-x-1.5 bg-[#F2ECE7] p-1 rounded-full border border-[#EFE8E1] self-start sm:self-auto">
                 <button
                   onClick={() => setStatusFilter('ALL')}
                   className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
                     statusFilter === 'ALL'
-                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
                   Todas ({weddings.length})
@@ -1053,8 +1053,8 @@ export const GeneralDashboard: React.FC = () => {
                   onClick={() => setStatusFilter('UPCOMING')}
                   className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
                     statusFilter === 'UPCOMING'
-                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
                   Próximas
@@ -1063,8 +1063,8 @@ export const GeneralDashboard: React.FC = () => {
                   onClick={() => setStatusFilter('PLANNING')}
                   className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
                     statusFilter === 'PLANNING'
-                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
                   En planeación
@@ -1072,12 +1072,12 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Grid de Tarjetas de Boda Limpias y Claras (Idénticas a la imagen) */}
+            {/* Grid de Tarjetas de Boda Limpias y Claras con Sombra Flotante */}
             {loading ? (
               <div className="py-20 text-center text-[#7D6F6B] text-sm">Cargando bodas...</div>
             ) : filteredWeddings.length === 0 ? (
-              <div className="bg-[#FFFFFF] rounded-3xl p-12 text-center border border-dashed border-[#EAE3DA]">
-                <h3 className="font-serif text-xl font-semibold text-[#332A28]">No se encontraron bodas</h3>
+              <div className="bg-[#FFFFFF] rounded-3xl p-12 text-center border border-dashed border-[#EFE8E1]">
+                <h3 className="font-serif text-xl font-semibold text-[#2B2826]">No se encontraron bodas</h3>
                 <p className="text-[#7D6F6B] text-sm mt-1">Crea una nueva boda o ajusta tus filtros de búsqueda.</p>
               </div>
             ) : (
@@ -1093,12 +1093,12 @@ export const GeneralDashboard: React.FC = () => {
                     <div
                       key={w.id}
                       onClick={() => setCurrentWedding(w)}
-                      className="bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EAE3DA] shadow-xs hover:shadow-md hover:border-[#D6C7B7] transition-all duration-200 flex flex-col justify-between group cursor-pointer"
+                      className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#ECD9D5]"
                     >
                       <div>
                         {/* Fila superior con Nombres y botón eliminar discreto */}
                         <div className="flex items-start justify-between gap-2 mb-4">
-                          <div className="font-serif text-3xl sm:text-[32px] font-bold text-[#332A28] leading-[1.15]">
+                          <div className="font-serif text-3xl sm:text-[32px] font-bold text-[#2B2826] leading-[1.15]">
                             {w.partner_1_name && w.partner_2_name ? (
                               <>
                                 <div className="truncate">{w.partner_1_name}</div>
@@ -1123,21 +1123,21 @@ export const GeneralDashboard: React.FC = () => {
 
                         {/* Badge de cuenta regresiva */}
                         <div className="mb-3.5">
-                          <span className="inline-flex items-center text-xs font-medium text-[#70443D] bg-[#F7F3EE] border border-[#EAE3DA] px-3.5 py-1 rounded-full select-none">
+                          <span className="inline-flex items-center text-xs font-medium text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-3.5 py-1 rounded-full select-none">
                             {countdownText}
                           </span>
                         </div>
 
                         {/* Lugar / Sede */}
                         <div className="flex items-center space-x-1.5 text-xs text-[#7D6F6B] mb-5 truncate">
-                          <MapPin className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
+                          <MapPin className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
                           <span className="truncate">{venueName}</span>
                         </div>
 
                         {/* Barra delgada y estética */}
-                        <div className="w-full h-1.5 bg-[#F7F3EE] rounded-full overflow-hidden mb-2">
+                        <div className="w-full h-1.5 bg-[#F7EDEB] rounded-full overflow-hidden mb-2">
                           <div
-                            className="h-full bg-[#9C665C] rounded-full transition-all duration-500"
+                            className="h-full bg-gradient-to-r from-[#C48B81] to-[#D8A69E] rounded-full transition-all duration-500"
                             style={{ width: `${Math.max(confirmedPct > 0 ? confirmedPct : 10, 4)}%` }}
                           />
                         </div>
@@ -1161,7 +1161,7 @@ export const GeneralDashboard: React.FC = () => {
                                 <div
                                   key={member.id || i}
                                   title={`${member.name} (${member.assigned_role || member.role})`}
-                                  className="w-7 h-7 rounded-full bg-[#EFE2DF] text-[#8A574E] flex items-center justify-center border border-[#CCDACC] shadow-2xs select-none shrink-0"
+                                  className="w-7 h-7 rounded-full bg-[#F7EDEB] text-[#A86B60] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
                                 >
                                   <span className="text-[11px] font-bold uppercase leading-none">
                                     {member.name?.trim()?.charAt(0) || 'V'}
@@ -1171,7 +1171,7 @@ export const GeneralDashboard: React.FC = () => {
                               {w.team.length > 3 && (
                                 <div
                                   title={`+${w.team.length - 3} miembros adicionales`}
-                                  className="w-7 h-7 rounded-full bg-[#F7F3EE] text-[#7D6F6B] flex items-center justify-center border border-[#EAE3DA] shadow-2xs select-none shrink-0"
+                                  className="w-7 h-7 rounded-full bg-[#F2ECE7] text-[#7D6F6B] flex items-center justify-center border border-[#EFE8E1] shadow-2xs select-none shrink-0"
                                 >
                                   <span className="text-[10px] font-bold leading-none">
                                     +{w.team.length - 3}
@@ -1182,7 +1182,7 @@ export const GeneralDashboard: React.FC = () => {
                           ) : (
                             <div
                               title="VLB Studio"
-                              className="w-7 h-7 rounded-full bg-[#EFE2DF] text-[#8A574E] flex items-center justify-center border border-[#CCDACC] shadow-2xs select-none shrink-0"
+                              className="w-7 h-7 rounded-full bg-[#F7EDEB] text-[#A86B60] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
                             >
                               <span className="text-[11px] font-bold uppercase leading-none">
                                 V
@@ -1197,7 +1197,7 @@ export const GeneralDashboard: React.FC = () => {
                             e.stopPropagation();
                             setCurrentWedding(w);
                           }}
-                          className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-[#332A28] bg-[#FFFFFF] hover:bg-[#F7F3EE] border border-[#EAE3DA] transition shadow-2xs group-hover:border-[#9C665C] group-hover:text-[#9C665C] cursor-pointer"
+                          className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold text-[#2B2826] bg-[#FFFFFF] hover:bg-[#F7EDEB] border border-[#EFE8E1] transition shadow-2xs group-hover:border-[#C48B81] group-hover:text-[#C48B81] cursor-pointer"
                         >
                           <span>Abrir Boda</span>
                           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />

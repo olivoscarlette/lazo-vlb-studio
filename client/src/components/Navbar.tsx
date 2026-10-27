@@ -49,20 +49,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
   const getRoleBadgeStyle = (role: UserRole) => {
     switch (role) {
       case 'ADMINISTRADOR':
-        return 'bg-[#8A574E] text-[#FFFFFF] border-[#8A574E]';
+        return 'bg-[#C48B81] text-[#FFFFFF] border-[#C48B81] shadow-2xs';
       case 'COORDINADOR':
-        return 'bg-[#EFE2DF] text-[#70443D] border-[#CCDACC]';
+        return 'bg-[#F7EDEB] text-[#A86B60] border-[#EEDAD6]';
       case 'STAFF':
-        return 'bg-[#F7F3EE] text-[#332A28] border-[#EAE3DA]';
+        return 'bg-[#FAF7F5] text-[#2B2826] border-[#EFE8E1]';
       case 'NOVIOS':
-        return 'bg-[#FCFAF7] text-[#9C665C] border-[#EAE3DA]';
+        return 'bg-[#FAF7F5] text-[#C48B81] border-[#EEDAD6]';
     }
   };
 
   const showHamburger = Boolean(currentWedding || user.role !== 'ADMINISTRADOR');
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FCFAF7]/95 backdrop-blur-md border-b border-[#EAE3DA] h-16 sm:h-[72px]">
+    <header className="sticky top-0 z-50 bg-[#FAF7F5]/95 backdrop-blur-md border-b border-[#EFE8E1] h-16 sm:h-[72px] transition-all">
       <div className="w-full px-2.5 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-[72px]">
           {/* Left: Hamburger Menu Button + Brand Logo */}
@@ -71,10 +71,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               <button
                 onClick={onToggleSidebar}
                 aria-label="Mostrar menú lateral"
-                className="inline-flex lg:hidden items-center space-x-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                className="inline-flex lg:hidden items-center space-x-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F5EFEB] text-[#2B2826] transition shadow-xs cursor-pointer shrink-0"
                 title="Mostrar menú lateral"
               >
-                <PanelLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#9C665C]" />
+                <PanelLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#C48B81]" />
                 <span className="text-sm font-semibold hidden md:inline">
                   Menú
                 </span>
@@ -100,9 +100,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               <div className="relative">
                 <button
                   onClick={() => setShowWeddingMenu(!showWeddingMenu)}
-                  className="hidden sm:flex items-center space-x-2 text-sm font-medium text-[#332A28] bg-[#FFFFFF] hover:bg-[#F7F3EE] px-4 py-2 rounded-xl border border-[#EAE3DA] transition shadow-xs"
+                  className="hidden sm:flex items-center space-x-2 text-sm font-medium text-[#2B2826] bg-[#FFFFFF] hover:bg-[#FAF7F5] px-4 py-2 rounded-full border border-[#EFE8E1] transition shadow-xs"
                 >
-                  <Building2 className="w-4 h-4 text-[#9C665C]" />
+                  <Building2 className="w-4 h-4 text-[#C48B81]" />
                   <span className="truncate max-w-[180px]">
                     {currentWedding ? currentWedding.name : 'Seleccionar Boda'}
                   </span>
