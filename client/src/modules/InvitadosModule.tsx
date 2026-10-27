@@ -870,13 +870,17 @@ export const InvitadosModule: React.FC = () => {
                       {guest.phone ? (
                         <div className="inline-flex items-center space-x-2">
                           <a
-                            href={`https://wa.me/${guest.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                              `Hola ${guest.first_name}! 💍 Nos emociona mucho celebrar nuestra boda contigo (${
+                            href={(() => {
+                              let cleaned = guest.phone.replace(/\D/g, '');
+                              if (cleaned.length === 10) cleaned = '52' + cleaned;
+                              if (cleaned.length === 13 && cleaned.startsWith('521')) cleaned = '52' + cleaned.slice(3);
+                              const text = `Hola ${guest.first_name}! 💍 Nos emociona mucho celebrar nuestra boda contigo (${
                                 currentWedding?.partner_1_name && currentWedding?.partner_2_name
                                   ? `${currentWedding.partner_1_name} & ${currentWedding.partner_2_name}`
                                   : (currentWedding?.name || 'VLB Studio')
-                              }). ¿Nos confirmas tu asistencia? (Tienes ${1 + guest.companion_count} ${1 + guest.companion_count === 1 ? 'pase reservado' : 'pases reservados'}).`
-                            )}`}
+                              }). ¿Nos confirmas tu asistencia? (Tienes ${1 + guest.companion_count} ${1 + guest.companion_count === 1 ? 'pase reservado' : 'pases reservados'}).`;
+                              return `https://wa.me/${cleaned}?text=${encodeURIComponent(text)}`;
+                            })()}
                             target="_blank"
                             rel="noreferrer"
                             className="p-1.5 rounded-lg bg-[#E4ECE5] hover:bg-[#CCDACC] text-[#354B38] transition shadow-2xs shrink-0"

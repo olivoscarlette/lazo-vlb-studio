@@ -292,7 +292,9 @@ export const WhatsAppHubModule: React.FC = () => {
   // Fallback: Send message directly through wa.me (opens WhatsApp Web/App with prefilled text & logs to DB)
   const handleSendDirectWaMe = async (textToSend: string) => {
     if (!activeConversation || !textToSend.trim()) return;
-    const cleanPhone = activeConversation.phone.replace(/\D/g, '');
+    let cleanPhone = activeConversation.phone.replace(/\D/g, '');
+    if (cleanPhone.length === 10) cleanPhone = '52' + cleanPhone;
+    if (cleanPhone.length === 13 && cleanPhone.startsWith('521')) cleanPhone = '52' + cleanPhone.slice(3);
     const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(textToSend.trim())}`;
     
     window.open(waUrl, '_blank');
