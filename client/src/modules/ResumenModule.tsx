@@ -150,14 +150,14 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               {weddingData.partner_1_name && weddingData.partner_2_name ? (
                 <>
                   <span className="text-[#2B2826]">{toTitleCase(weddingData.partner_1_name)}</span>{' '}
-                  <span className="text-[#C48B81] font-normal mx-1 sm:mx-2">&</span>{' '}
-                  <span className="text-[#7D6F6B]">{toTitleCase(weddingData.partner_2_name)}</span>
+                  <span className="text-[#C48B81] mx-1 sm:mx-2">&</span>{' '}
+                  <span className="text-[#A86B60]">{toTitleCase(weddingData.partner_2_name)}</span>
                 </>
               ) : coupleTitle.includes('&') ? (
                 <>
                   <span className="text-[#2B2826]">{coupleTitle.split('&')[0].trim()}</span>{' '}
-                  <span className="text-[#C48B81] font-normal mx-1 sm:mx-2">&</span>{' '}
-                  <span className="text-[#7D6F6B]">{coupleTitle.split('&').slice(1).join('&').trim()}</span>
+                  <span className="text-[#C48B81] mx-1 sm:mx-2">&</span>{' '}
+                  <span className="text-[#A86B60]">{coupleTitle.split('&').slice(1).join('&').trim()}</span>
                 </>
               ) : (
                 <span className="text-[#2B2826]">{coupleTitle}</span>

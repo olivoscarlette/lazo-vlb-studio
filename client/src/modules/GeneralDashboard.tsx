@@ -787,8 +787,8 @@ export const GeneralDashboard: React.FC = () => {
       return (
         <>
           <div className="truncate text-[#2B2826]">{p1}</div>
-          <div className="truncate text-[#7D6F6B]">
-            <span className="text-[#C48B81] font-normal mr-1.5">&</span>
+          <div className="truncate text-[#A86B60]">
+            <span className="text-[#C48B81] mr-1.5">&</span>
             {p2}
           </div>
         </>
