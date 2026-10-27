@@ -152,11 +152,12 @@
     line-height: 1.25;
   }
 
-  /* Tipografía Atteron exclusiva para nombres de novios y títulos románticos en Title Case */
+  /* Tipografía Atteron exclusiva para nombres de novios con sus ligaduras editoriales y swashes de Canva */
   .font-atteron {
     font-family: 'Atteron', 'Cormorant Garamond', Georgia, serif;
-    font-feature-settings: "liga" 0, "dlig" 0, "calt" 0;
-    letter-spacing: 0.03em;
+    font-feature-settings: "liga" 1, "dlig" 1, "calt" 1, "swsh" 1;
+    font-variant-ligatures: common-ligatures discretionary-ligatures contextual;
+    letter-spacing: 0;
     text-transform: capitalize;
   }
 

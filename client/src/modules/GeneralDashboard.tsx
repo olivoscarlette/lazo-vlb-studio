@@ -756,6 +756,15 @@ export const GeneralDashboard: React.FC = () => {
     return `Realizada · ${formattedDate}`;
   };
 
+  const toTitleCase = (str: string) => {
+    if (!str) return '';
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(w => (w === '&' || w === 'y' ? '&' : w.charAt(0).toUpperCase() + w.slice(1)))
+      .join(' ');
+  };
+
   const userName = user?.name ? user.name.split(' ')[0] : 'Equipo';
   const unreadCount = Array.isArray(notifications) ? notifications.filter(n => !n.read).length : 0;
 
@@ -1100,14 +1109,14 @@ export const GeneralDashboard: React.FC = () => {
                       <div>
                         {/* Fila superior con Nombres y botón eliminar discreto */}
                         <div className="flex items-start justify-between gap-2 mb-4">
-                          <div className="font-atteron text-3xl sm:text-[32px] font-bold text-[#2B2826] leading-[1.15]">
+                          <div className="font-atteron text-3xl sm:text-[34px] font-normal text-[#2B2826] leading-[1.2]">
                             {w.partner_1_name && w.partner_2_name ? (
                               <>
-                                <div className="truncate">{w.partner_1_name}</div>
-                                <div className="truncate">& {w.partner_2_name}</div>
+                                <div className="truncate">{toTitleCase(w.partner_1_name)}</div>
+                                <div className="truncate">& {toTitleCase(w.partner_2_name)}</div>
                               </>
                             ) : (
-                              <div className="truncate">{w.name}</div>
+                              <div className="truncate">{toTitleCase(w.name)}</div>
                             )}
                           </div>
 
