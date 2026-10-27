@@ -82,13 +82,25 @@ app.use(express.json({
 }));
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 
+// Build & Live Sync Identifier
+const CURRENT_BUILD = process.env.RAILWAY_GIT_COMMIT_SHA || process.env.BUILD_ID || '2026-10-27-live-sync-v1';
+
 // Health Check
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     app: 'LAZO — VLB Studio · Planning',
     version: '1.0.0',
-    build: '2026-10-27-fixed-sidebar-novios-nav',
+    build: CURRENT_BUILD,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Live Version Endpoint para Auto-Recarga Automática
+app.get('/api/version', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.json({
+    build: CURRENT_BUILD,
     timestamp: new Date().toISOString()
   });
 });

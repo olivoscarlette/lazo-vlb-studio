@@ -3,6 +3,7 @@ import { useAuth, AuthProvider } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Sidebar, WorkspaceTab } from './components/Sidebar';
 import { NoviosTopNav } from './components/NoviosTopNav';
+import { VersionWatcher } from './components/VersionWatcher';
 import { GeneralDashboard } from './modules/GeneralDashboard';
 import { ResumenModule } from './modules/ResumenModule';
 import { InvitadosModule } from './modules/InvitadosModule';
@@ -350,6 +351,7 @@ const AppContent: React.FC = () => {
 export default function App() {
   return (
     <AuthProvider>
+      <VersionWatcher />
       <AppContent />
     </AuthProvider>
   );
