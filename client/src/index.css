@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 @font-face {
   font-family: 'Atteron';
@@ -30,13 +31,13 @@
 
   --lazo-white: #FFFFFF;
 
-  --font-heading: 'Cormorant Garamond', Georgia, serif;
-  --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-heading: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-body: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
 }
 
 @theme {
   --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-sans: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
 
   /* Explicit LAZO Design System Tokens */
   --color-lazo-rose: #C48B81;
@@ -154,8 +155,9 @@
   /* Tipografía Atteron exclusiva para nombres de novios y títulos románticos en Title Case */
   .font-atteron {
     font-family: 'Atteron', 'Cormorant Garamond', Georgia, serif;
-    font-feature-settings: "liga" 1, "calt" 1;
-    letter-spacing: 0.02em;
+    font-feature-settings: "liga" 0, "dlig" 0, "calt" 0;
+    letter-spacing: 0.03em;
+    text-transform: capitalize;
   }
 
   /* Sans-serif limpia, espaciosa y legible para toda la información operativa */

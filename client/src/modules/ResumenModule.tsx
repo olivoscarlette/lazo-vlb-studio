@@ -83,9 +83,26 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   // Requirement 4: Strictly only ADMINISTRADOR and COORDINADOR can see internal team
   const canSeeStaffSection = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR';
 
-  const coupleTitle = weddingData.partner_1_name && weddingData.partner_2_name
-    ? `${weddingData.partner_1_name} & ${weddingData.partner_2_name}`
-    : weddingData.name;
+  // Helper para convertir nombres a Title Case y evitar empalmes de letras mayúsculas en Atteron
+  const toTitleCase = (str: string) => {
+    if (!str) return '';
+    return str
+      .toLowerCase()
+      .split(' ')
+      .map(w => (w === '&' || w === 'y' ? '&' : w.charAt(0).toUpperCase() + w.slice(1)))
+      .join(' ');
+  };
+
+  const coupleTitle = toTitleCase(
+    weddingData.partner_1_name && weddingData.partner_2_name
+      ? `${weddingData.partner_1_name} & ${weddingData.partner_2_name}`
+      : weddingData.name
+  );
+
+  // Finanzas con cálculo seguro y porcentaje real
+  const budgetSpent = Number(finance.costo_real) || 0;
+  const budgetGoal = Number(weddingData.budget) || Number(finance.presupuesto_estimado) || (budgetSpent > 0 ? budgetSpent : 150000);
+  const budgetPercent = budgetGoal > 0 ? Math.min(100, Math.round((budgetSpent / budgetGoal) * 100)) : 0;
 
   const getCountdownText = (dateStr: string) => {
     if (!dateStr) return '';
@@ -257,7 +274,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         >
           <div>
             <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-4">
-              <span className="font-serif text-lg font-bold text-[#2B2826]">RSVP Guest Tracker</span>
+              <span className="font-sans text-base sm:text-lg font-bold text-[#2B2826] tracking-tight">RSVP Guest Tracker</span>
               <Users className="w-4 h-4 text-[#C48B81] group-hover:scale-110 transition-transform" />
             </div>
 
@@ -287,7 +304,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-serif font-bold text-[#2B2826] leading-none">
+                  <span className="text-3xl font-sans font-bold text-[#2B2826] leading-none">
                     {rsvpPercent}%
                   </span>
                   <span className="text-[11px] text-[#7D6F6B] font-medium mt-1">
@@ -316,17 +333,17 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         >
           <div>
             <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-4">
-              <span className="font-serif text-lg font-bold text-[#2B2826]">Presupuesto</span>
+              <span className="font-sans text-base sm:text-lg font-bold text-[#2B2826] tracking-tight">Presupuesto</span>
               <DollarSign className="w-4 h-4 text-[#C48B81] group-hover:scale-110 transition-transform" />
             </div>
 
             <div className="py-2">
               <div className="flex items-baseline space-x-1.5">
-                <span className="text-3xl sm:text-4xl font-serif font-bold text-[#2B2826]">
-                  ${(finance.costo_real || 0).toLocaleString()}
+                <span className="text-3xl sm:text-4xl font-sans font-bold text-[#2B2826] tracking-tight">
+                  ${budgetSpent.toLocaleString()}
                 </span>
                 <span className="text-sm text-[#7D6F6B] font-normal">
-                  / ${(weddingData.budget || finance.presupuesto_estimado || 150000).toLocaleString()}
+                  / ${budgetGoal.toLocaleString()}
                 </span>
               </div>
 
@@ -334,19 +351,14 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <div className="w-full h-2.5 bg-[#F7EDEB] rounded-full overflow-hidden mt-5 mb-2">
                 <div
                   className="h-full bg-gradient-to-r from-[#D9A59B] to-[#C48B81] rounded-full transition-all duration-700"
-                  style={{
-                    width: `${Math.min(
-                      100,
-                      Math.round(((finance.costo_real || 0) / (weddingData.budget || finance.presupuesto_estimado || 1)) * 100)
-                    )}%`
-                  }}
+                  style={{ width: `${budgetPercent}%` }}
                 />
               </div>
 
               <div className="flex items-center justify-between text-xs text-[#7D6F6B] mt-2">
                 <span>Total Comprometido</span>
                 <span className="font-semibold text-[#2B2826]">
-                  {Math.round(((finance.costo_real || 0) / (weddingData.budget || finance.presupuesto_estimado || 1)) * 100)}%
+                  {budgetPercent}%
                 </span>
               </div>
             </div>
@@ -382,7 +394,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
           <div>
             <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-4">
               <div>
-                <h3 className="font-serif text-lg font-bold text-[#2B2826]">Próximas Tareas</h3>
+                <h3 className="font-sans text-base sm:text-lg font-bold text-[#2B2826] tracking-tight">Próximas Tareas</h3>
                 <p className="text-[11px] text-[#7D6F6B] font-normal normal-case mt-0.5">Timeline & Checklist</p>
               </div>
               <CheckCircle2 className="w-4 h-4 text-[#C48B81] group-hover:scale-110 transition-transform" />
