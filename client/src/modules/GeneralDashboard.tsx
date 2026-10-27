@@ -823,11 +823,11 @@ export const GeneralDashboard: React.FC = () => {
         />
       )}
 
-      {/* 1. Sidebar Izquierdo Fijo/Acoplado — Idéntico a la maqueta editorial LAZO */}
+      {/* 1. Sidebar Izquierdo Fijo/Acoplado — Sigue la pantalla y nunca se corta al hacer scroll */}
       <aside
         className={`shrink-0 bg-[#FAF7F5] border-r border-[#EFE8E1] flex flex-col transition-all duration-300 ${
           // Mobile: drawer
-          `fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] h-full shadow-2xl z-50 md:shadow-none md:sticky md:top-0 md:h-screen md:z-30 ${
+          `fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] h-full shadow-2xl z-50 md:shadow-none md:fixed md:top-0 md:bottom-0 md:left-0 md:h-screen md:z-30 ${
             sidebarOpen
               ? 'translate-x-0 opacity-100'
               : '-translate-x-full opacity-0 pointer-events-none md:translate-x-0 md:opacity-100 md:pointer-events-auto'
@@ -910,8 +910,10 @@ export const GeneralDashboard: React.FC = () => {
         </div>
       </aside>
 
-      {/* 2. Área Principal de Contenido */}
-      <main className="flex-1 min-w-0 max-w-full overflow-x-hidden p-3.5 sm:p-8 lg:p-10 overflow-y-auto">
+      {/* 2. Área Principal de Contenido — Adaptada al sidebar fijo */}
+      <main className={`flex-1 min-w-0 max-w-full overflow-x-hidden p-3.5 sm:p-8 lg:p-10 overflow-y-auto transition-all duration-300 ${
+        sidebarOpen ? 'md:ml-64 lg:ml-72' : 'md:ml-16 lg:ml-[4.25rem]'
+      }`}>
         {/* PESTAÑA PRINCIPAL: BODAS */}
         {activeTab === 'weddings' && (
           <div>
@@ -1098,7 +1100,7 @@ export const GeneralDashboard: React.FC = () => {
                       <div>
                         {/* Fila superior con Nombres y botón eliminar discreto */}
                         <div className="flex items-start justify-between gap-2 mb-4">
-                          <div className="font-serif text-3xl sm:text-[32px] font-bold text-[#2B2826] leading-[1.15]">
+                          <div className="font-atteron text-3xl sm:text-[32px] font-bold text-[#2B2826] leading-[1.15]">
                             {w.partner_1_name && w.partner_2_name ? (
                               <>
                                 <div className="truncate">{w.partner_1_name}</div>

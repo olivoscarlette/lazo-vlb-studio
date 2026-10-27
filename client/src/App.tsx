@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth, AuthProvider } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Sidebar, WorkspaceTab } from './components/Sidebar';
+import { NoviosTopNav } from './components/NoviosTopNav';
 import { GeneralDashboard } from './modules/GeneralDashboard';
 import { ResumenModule } from './modules/ResumenModule';
 import { InvitadosModule } from './modules/InvitadosModule';
@@ -213,59 +214,74 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     }
   };
 
+  const isNovios = user?.role === 'NOVIOS';
+
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] bg-[#FCFAF7] relative max-w-full overflow-x-hidden">
-      {/* Sidebar Responsive: Docked on desktop, drawer on mobile */}
-      <Sidebar
-        currentTab={activeTab}
-        onSelectTab={setActiveTab}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        onToggle={() => setSidebarOpen(prev => !prev)}
-        weddingDayMode={weddingDayMode}
-        onToggleWeddingDayMode={handleToggleWeddingDayMode}
-      />
+    <div className="flex flex-col min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] bg-[#FAF7F5] relative max-w-full">
+      {/* Barra de navegación superior exclusiva para Novios (idéntica a la propuesta visual 3) */}
+      {isNovios && (
+        <NoviosTopNav currentTab={activeTab} onSelectTab={setActiveTab} />
+      )}
 
-      {/* Main Workspace Area: Expands smoothly to full width when sidebar is collapsed */}
-      <main
-        className={`flex-1 min-w-0 w-full max-w-full transition-all duration-300 ease-in-out p-3 sm:p-6 lg:p-8 overflow-y-auto overflow-x-hidden bg-[#FCFAF7] ${
-          !sidebarOpen ? 'max-w-none' : 'max-w-7xl mx-auto'
-        }`}
-      >
-        {/* Banner exclusivo de Modo Día de la Boda */}
-        {weddingDayMode && (
-          <div className="mb-6 bg-gradient-to-r from-[#9C665C] via-[#85534A] to-[#6E433D] text-white p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center space-x-3.5">
-              <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shrink-0">
-                💍
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="font-bold text-sm tracking-wide uppercase">MODO DÍA DE LA BODA ACTIVO</span>
-                  <span className="bg-emerald-400 text-emerald-950 font-black text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
-                    EN VIVO
-                  </span>
-                </div>
-                <p className="text-xs text-stone-200 mt-0.5">
-                  Herramientas operativas en tiempo real: Cronograma en vivo, Asignación de Mesas y Listado de Invitados para recepción.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2 shrink-0 self-start sm:self-center">
-              <button
-                onClick={handleToggleWeddingDayMode}
-                className="px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-semibold rounded-xl border border-white/20 transition cursor-pointer"
-                title="Volver al menú de planeación general"
-              >
-                Ver Planeación Completa
-              </button>
-            </div>
-          </div>
+      <div className="flex flex-1 relative w-full">
+        {/* Sidebar Responsive: Solo para Admin, Coordinador o Staff — En desktop queda fijo y sigue el scroll */}
+        {!isNovios && (
+          <Sidebar
+            currentTab={activeTab}
+            onSelectTab={setActiveTab}
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            onToggle={() => setSidebarOpen(prev => !prev)}
+            weddingDayMode={weddingDayMode}
+            onToggleWeddingDayMode={handleToggleWeddingDayMode}
+          />
         )}
 
-        {renderModuleContent()}
-      </main>
+        {/* Main Workspace Area: Expands smoothly to full width when sidebar is collapsed or for Novios */}
+        <main
+          className={`flex-1 min-w-0 w-full max-w-full transition-all duration-300 ease-in-out p-3 sm:p-6 lg:p-8 overflow-y-auto bg-[#FAF7F5] ${
+            isNovios
+              ? 'max-w-7xl mx-auto'
+              : sidebarOpen
+              ? 'lg:pl-80 xl:pl-88 max-w-none'
+              : 'lg:pl-[4.75rem] max-w-none'
+          }`}
+        >
+          {/* Banner exclusivo de Modo Día de la Boda */}
+          {weddingDayMode && (
+            <div className="mb-6 bg-gradient-to-r from-[#9C665C] via-[#85534A] to-[#6E433D] text-white p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-3.5">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shrink-0">
+                  💍
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="font-bold text-sm tracking-wide uppercase">MODO DÍA DE LA BODA ACTIVO</span>
+                    <span className="bg-emerald-400 text-emerald-950 font-black text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                      EN VIVO
+                    </span>
+                  </div>
+                  <p className="text-xs text-stone-200 mt-0.5">
+                    Herramientas operativas en tiempo real: Cronograma en vivo, Asignación de Mesas y Listado de Invitados para recepción.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2 shrink-0 self-start sm:self-center">
+                <button
+                  onClick={handleToggleWeddingDayMode}
+                  className="px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-semibold rounded-xl border border-white/20 transition cursor-pointer"
+                  title="Volver al menú de planeación general"
+                >
+                  Ver Planeación Completa
+                </button>
+              </div>
+            </div>
+          )}
+
+          {renderModuleContent()}
+        </main>
+      </div>
     </div>
   );
 };

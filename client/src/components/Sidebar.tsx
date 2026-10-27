@@ -52,7 +52,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const { user, currentWedding, setCurrentWedding } = useAuth();
 
-  if (!user || !currentWedding) return null;
+  if (!user || !currentWedding || user.role === 'NOVIOS') return null;
 
   const isNovios = user.role === 'NOVIOS';
 
@@ -140,8 +140,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           `fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] h-full shadow-2xl z-50 lg:shadow-none ${
             isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'
           } ` +
-          // Desktop classes: Docked sticky column when open, compact icon rail when closed
-          `lg:sticky lg:top-[72px] lg:h-[calc(100vh-72px)] lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto ${
+          // Desktop classes: Fixed column adhering to the viewport top-to-bottom so it never cuts off
+          `lg:fixed lg:top-16 sm:lg:top-[72px] lg:bottom-0 lg:left-0 lg:z-30 lg:h-[calc(100vh-72px)] lg:translate-x-0 lg:opacity-100 lg:pointer-events-auto ${
             isOpen ? 'lg:w-72 xl:w-80' : 'lg:w-[4.25rem]'
           }`
         }`}

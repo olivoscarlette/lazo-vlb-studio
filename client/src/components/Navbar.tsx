@@ -59,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
     }
   };
 
-  const showHamburger = Boolean(currentWedding || user.role !== 'ADMINISTRADOR');
+  const showHamburger = Boolean(user.role !== 'NOVIOS' && (currentWedding || user.role !== 'ADMINISTRADOR'));
 
   return (
     <header className="sticky top-0 z-50 bg-[#FAF7F5]/95 backdrop-blur-md border-b border-[#EFE8E1] h-16 sm:h-[72px] transition-all">

@@ -129,7 +129,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
       <div className="luxury-card rounded-[28px] p-7 sm:p-9 border border-[#EFE8E1] relative overflow-hidden space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2.5">
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#2B2826] leading-tight">
+            <h1 className="font-atteron text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-[#2B2826] leading-tight">
               {coupleTitle}
             </h1>
 

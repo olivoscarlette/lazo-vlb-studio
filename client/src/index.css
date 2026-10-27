@@ -30,12 +30,12 @@
 
   --lazo-white: #FFFFFF;
 
-  --font-heading: 'Atteron', 'Cormorant Garamond', Georgia, serif;
+  --font-heading: 'Cormorant Garamond', Georgia, serif;
   --font-body: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 @theme {
-  --font-serif: 'Atteron', 'Cormorant Garamond', Georgia, serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 
   /* Explicit LAZO Design System Tokens */
@@ -144,12 +144,18 @@
     min-height: 100vh;
   }
 
-  /* Atteron con ligaduras editoriales para títulos principales y números destacados */
-  h1, h2, h3, .font-serif, .lazo-heading, .lazo-metric {
+  /* Encabezados y fuentes con serif editorial de alta legibilidad */
+  h1, h2, h3, .font-serif, .lazo-heading {
     font-family: var(--font-heading);
-    letter-spacing: 0.01em;
-    font-feature-settings: "liga" 1, "dlig" 1, "calt" 1;
+    letter-spacing: -0.01em;
     line-height: 1.25;
+  }
+
+  /* Tipografía Atteron exclusiva para nombres de novios y títulos románticos en Title Case */
+  .font-atteron {
+    font-family: 'Atteron', 'Cormorant Garamond', Georgia, serif;
+    font-feature-settings: "liga" 1, "calt" 1;
+    letter-spacing: 0.02em;
   }
 
   /* Sans-serif limpia, espaciosa y legible para toda la información operativa */
