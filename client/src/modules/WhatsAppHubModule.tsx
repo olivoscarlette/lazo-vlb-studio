@@ -289,6 +289,36 @@ export const WhatsAppHubModule: React.FC = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Fallback: Send message directly through wa.me (opens WhatsApp Web/App with prefilled text & logs to DB)
+  const handleSendDirectWaMe = async (textToSend: string) => {
+    if (!activeConversation || !textToSend.trim()) return;
+    const cleanPhone = activeConversation.phone.replace(/\D/g, '');
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(textToSend.trim())}`;
+    
+    window.open(waUrl, '_blank');
+
+    try {
+      await fetch('/api/whatsapp/log-direct', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          weddingId: activeConversation.wedding_id,
+          guestId: activeConversation.guest_id,
+          phone: activeConversation.phone,
+          content: textToSend.trim(),
+          templateType: 'direct_wa_me'
+        })
+      });
+      setNewMessage('');
+      setSendError(null);
+      await fetchChatMessagesSilently(activeConversation);
+      await fetchConversations(true);
+    } catch {}
+  };
+
   // Send message strictly via Meta WhatsApp Cloud API (with Optimistic Real-Time UI)
   const handleSendMessageMeta = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -693,17 +723,30 @@ export const WhatsAppHubModule: React.FC = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Error Toast if Meta rejects */}
+              {/* Error Toast if Meta rejects with 1-click fallback */}
               {sendError && (
-                <div className="mx-4 my-2 px-3.5 py-2 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 flex items-center justify-between">
-                  <span>{sendError}</span>
-                  <button
-                    type="button"
-                    onClick={() => setSendError(null)}
-                    className="font-bold ml-2 text-rose-900 cursor-pointer"
-                  >
-                    ✕
-                  </button>
+                <div className="mx-4 my-2 px-3.5 py-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                  <div className="flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    <span>{sendError}</span>
+                  </div>
+                  <div className="flex items-center space-x-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleSendDirectWaMe(newMessage || 'Hola')}
+                      className="px-3 py-1 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-semibold rounded-lg shadow-2xs transition cursor-pointer flex items-center space-x-1"
+                      title="Enviar de inmediato abriendo WhatsApp Web o App"
+                    >
+                      <span>Abrir en WhatsApp (1 clic)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSendError(null)}
+                      className="font-bold text-rose-900 cursor-pointer p-1"
+                    >
+                      ✕
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -773,11 +816,23 @@ export const WhatsAppHubModule: React.FC = () => {
                     type="button"
                     onClick={() => handleSendMessageMeta()}
                     disabled={sending || !newMessage.trim()}
-                    className="px-4 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-40 flex items-center space-x-1.5 shrink-0"
-                    title="Enviar mensaje por WhatsApp Meta API (Enter)"
+                    className="px-3.5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-40 flex items-center space-x-1.5 shrink-0"
+                    title="Enviar mensaje automático por Meta Cloud API (Enter)"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>{sending ? '...' : 'Enviar'}</span>
+                    <span>{sending ? '...' : 'Enviar API'}</span>
+                  </button>
+
+                  {/* Send Direct wa.me Button: Opens WhatsApp Web/App directly with text prefilled */}
+                  <button
+                    type="button"
+                    onClick={() => handleSendDirectWaMe(newMessage)}
+                    disabled={!newMessage.trim()}
+                    className="px-3.5 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-40 flex items-center space-x-1.5 shrink-0"
+                    title="Abrir y enviar directamente en WhatsApp Web o App (1 clic)"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">WhatsApp Web</span>
                   </button>
                 </div>
 

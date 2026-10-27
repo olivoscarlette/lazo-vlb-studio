@@ -109,14 +109,14 @@ export class WhatsAppService {
     const token =
       process.env.WHATSAPP_API_TOKEN ||
       process.env.WHATSAPP_ACCESS_TOKEN ||
-      '';
+      'EAAaS7lbIJrMBSjkjgMjwx2rvqRdHkSAZBFWX15IJU4PnlZBooGD9TOyz4jbyaWBbZCXiYQ8eEZBgpZCSRTuI1ppouZCv9IgfgLzBBIcCm9GSlAT9uJaxhKC6q6PgXduzoEr3ImMbnPTZC9rKPAe92hm8ih1iQ0SDw3J9ZCXBuZAkcKp5ZC6rgPhu9gdCF7wtYZC2u2NUwZDZD';
     const rawPhoneId = process.env.WHATSAPP_PHONE_NUMBER_ID || '';
     // Use official Viva la Bride phone ID if unconfigured or pointing to old Meta sandbox test ID
     const phoneNumberId = (!rawPhoneId || rawPhoneId === '1424004584122204')
       ? '1385120218016720'
       : rawPhoneId;
     const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'lazo_vlb_webhook_token_2026';
-    const appSecret = process.env.META_APP_SECRET || '';
+    const appSecret = process.env.META_APP_SECRET || '76caf87044afd84596790ca5cea3f755';
     const apiVersion = process.env.WHATSAPP_API_VERSION || 'v21.0';
 
     const isConfigured = Boolean(token && phoneNumberId && token !== 'test_token');
