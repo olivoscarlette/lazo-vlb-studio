@@ -60,7 +60,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const sections: { title: string; items: MenuItemDef[] }[] = weddingDayMode
     ? [
         {
-          title: '⚡ OPERACIÓN EN VIVO',
+          title: 'OPERACIÓN EN VIVO',
           items: [
             { id: 'timeline', label: 'Modo Operación', icon: Clock3 },
             { id: 'mesas', label: 'Asignación de Mesas', icon: Grid2x2Check },
@@ -203,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             return (
               <div key={section.title} className={isOpen ? 'space-y-1' : 'space-y-1.5'}>
                 {isOpen ? (
-                  <div className="px-3 pt-1 pb-0.5 text-[11px] font-bold tracking-widest text-[#8A7E72] uppercase select-none truncate">
+                  <div className="px-3 pt-2 pb-1 text-[10px] font-bold tracking-[0.16em] text-[#8A7E7A] uppercase select-none truncate">
                     {section.title}
                   </div>
                 ) : sIdx > 0 ? (
@@ -225,11 +225,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           : 'justify-center p-2.5 rounded-xl'
                       } ${
                         active
-                          ? 'bg-[#F7EDEB] text-[#C48B81] font-semibold shadow-xs'
-                          : 'text-[#5E524E] hover:bg-[#F2ECE7] hover:text-[#2B2826] font-medium'
+                          ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold border border-[#EEDAD6]/80 shadow-2xs'
+                          : 'text-[#5E524E] hover:bg-[#F5EFEB] hover:text-[#2B2826] font-medium'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#C48B81]' : 'text-[#8A7E72]'}`} />
+                      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#C48B81]' : 'text-[#8A7E7A]'}`} />
                       {isOpen && <span className="truncate">{item.label}</span>}
                     </button>
                   );

@@ -58,7 +58,7 @@ function formatWhatsAppTime(dateStr?: string) {
 
 // Luxury brand color palettes for guest avatars
 const AVATAR_PALETTES = [
-  { bg: 'bg-[#FDF0ED]', text: 'text-[#9C665C]', border: 'border-[#F3DCD7]' }, // Terracotta Rose
+  { bg: 'bg-[#FDF0ED]', text: 'text-[#C48B81]', border: 'border-[#F3DCD7]' }, // Terracotta Rose
   { bg: 'bg-[#FAF3E8]', text: 'text-[#8A6332]', border: 'border-[#EBDCC5]' }, // Warm Champagne / Gold
   { bg: 'bg-[#EBF2ED]', text: 'text-[#3E6548]', border: 'border-[#D2E2D6]' }, // Sage Olive
   { bg: 'bg-[#F2EEF5]', text: 'text-[#6A5378]', border: 'border-[#DFD6E5]' }, // Soft Mauve
@@ -459,9 +459,9 @@ export const WhatsAppHubModule: React.FC = () => {
   };
 
   return (
-    <div className="bg-[#FFFFFF] rounded-2xl border border-[#EAE3DA] shadow-xs overflow-hidden h-[calc(100vh-8.5rem)] min-h-[640px] flex flex-col">
+    <div className="bg-[#FFFFFF] rounded-2xl border border-[#EFE8E1] shadow-xs overflow-hidden h-[calc(100vh-8.5rem)] min-h-[640px] flex flex-col">
       {/* Sleek Minimal Header */}
-      <div className="px-5 py-3 border-b border-[#EAE3DA] bg-[#FCFAF7] flex items-center justify-between">
+      <div className="px-5 py-3 border-b border-[#EFE8E1] bg-[#FCFAF7] flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <div className="w-9 h-9 rounded-xl bg-[#25D366]/10 text-[#25D366] flex items-center justify-center font-bold">
             <MessageSquare className="w-4 h-4 text-[#25D366]" />
@@ -492,9 +492,9 @@ export const WhatsAppHubModule: React.FC = () => {
       {/* Main 2-Column Split: Conversations List (Left) + Chat Stream & Composer (Right) */}
       <div className="flex-1 flex overflow-hidden">
         {/* LEFT COLUMN: Search, Filters & Contact Avatars List */}
-        <div className="w-full sm:w-88 md:w-[360px] lg:w-[390px] border-r border-[#EAE3DA] flex flex-col bg-[#FFFFFF]">
+        <div className="w-full sm:w-88 md:w-[360px] lg:w-[390px] border-r border-[#EFE8E1] flex flex-col bg-[#FFFFFF]">
           {/* Search Bar & Wedding Filter */}
-          <div className="p-3 border-b border-[#EAE3DA] space-y-2 bg-[#FAF8F5]">
+          <div className="p-3 border-b border-[#EFE8E1] space-y-2 bg-[#FAF8F5]">
             <div className="relative">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
               <input
@@ -502,7 +502,7 @@ export const WhatsAppHubModule: React.FC = () => {
                 placeholder="Buscar por nombre, boda o teléfono..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] placeholder:text-[#7D6F6B]/60 focus:outline-none focus:border-[#9C665C]"
+                className="w-full pl-9 pr-3 py-2 text-xs bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl text-[#332A28] placeholder:text-[#7D6F6B]/60 focus:outline-none focus:border-[#C48B81]"
               />
             </div>
 
@@ -510,7 +510,7 @@ export const WhatsAppHubModule: React.FC = () => {
             <select
               value={selectedWeddingId}
               onChange={e => setSelectedWeddingId(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs font-semibold bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] cursor-pointer truncate"
+              className="w-full px-3 py-1.5 text-xs font-semibold bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl text-[#332A28] focus:outline-none focus:border-[#C48B81] cursor-pointer truncate"
             >
               <option value="all">💍 Todas las Bodas VLB</option>
               {weddings.map(w => (
@@ -525,8 +525,8 @@ export const WhatsAppHubModule: React.FC = () => {
                 onClick={() => setFilterType('todas')}
                 className={`flex-1 py-1 text-[11px] font-semibold rounded-lg transition ${
                   filterType === 'todas'
-                    ? 'bg-[#9C665C] text-white shadow-2xs'
-                    : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EAE3DA]'
+                    ? 'bg-[#C48B81] text-white shadow-2xs'
+                    : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EFE8E1]'
                 }`}
               >
                 Todas
@@ -536,8 +536,8 @@ export const WhatsAppHubModule: React.FC = () => {
                 onClick={() => setFilterType('pendientes')}
                 className={`flex-1 py-1 text-[11px] font-semibold rounded-lg transition ${
                   filterType === 'pendientes'
-                    ? 'bg-[#9C665C] text-white shadow-2xs'
-                    : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EAE3DA]'
+                    ? 'bg-[#C48B81] text-white shadow-2xs'
+                    : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EFE8E1]'
                 }`}
               >
                 Pendientes
@@ -547,8 +547,8 @@ export const WhatsAppHubModule: React.FC = () => {
                 onClick={() => setFilterType('confirmados')}
                 className={`flex-1 py-1 text-[11px] font-semibold rounded-lg transition ${
                   filterType === 'confirmados'
-                    ? 'bg-[#9C665C] text-white shadow-2xs'
-                    : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EAE3DA]'
+                    ? 'bg-[#C48B81] text-white shadow-2xs'
+                    : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EFE8E1]'
                 }`}
               >
                 Confirmados
@@ -580,7 +580,7 @@ export const WhatsAppHubModule: React.FC = () => {
                     onClick={() => handleSelectConversation(conv)}
                     className={`p-3 cursor-pointer transition flex items-center space-x-3 select-none ${
                       isSelected
-                        ? 'bg-[#FDF6F5] border-l-4 border-l-[#9C665C]'
+                        ? 'bg-[#FDF6F5] border-l-4 border-l-[#C48B81]'
                         : 'hover:bg-[#FCFAF7]'
                     }`}
                   >
@@ -609,13 +609,13 @@ export const WhatsAppHubModule: React.FC = () => {
 
                       <div className="flex items-center space-x-1 text-[11px] text-[#7D6F6B] truncate mt-0.5">
                         {conv.last_message_direction === 'OUTBOUND' && (
-                          <CheckCheck className="w-3.5 h-3.5 shrink-0 text-[#9C665C]" />
+                          <CheckCheck className="w-3.5 h-3.5 shrink-0 text-[#C48B81]" />
                         )}
                         <span className="truncate">{conv.last_message_content || 'Sin mensajes'}</span>
                       </div>
 
                       <div className="flex items-center justify-between gap-1 mt-1">
-                        <span className="text-[10px] text-[#9C665C] font-medium truncate max-w-[150px]">
+                        <span className="text-[10px] text-[#C48B81] font-medium truncate max-w-[150px]">
                           💍 {conv.wedding_name}
                         </span>
                         <div className="flex items-center space-x-1 shrink-0">
@@ -623,7 +623,7 @@ export const WhatsAppHubModule: React.FC = () => {
                             conv.guest_status === 'Confirmado'
                               ? 'bg-[#E4ECE5] text-[#2B5235]'
                               : conv.guest_status === 'No asistirá'
-                              ? 'bg-[#FDF6F5] text-[#9C665C]'
+                              ? 'bg-[#FDF6F5] text-[#C48B81]'
                               : 'bg-[#FAF3E8] text-[#7C5824]'
                           }`}>
                             {conv.guest_status === 'Pendiente de confirmar' ? 'Pendiente' : conv.guest_status}
@@ -648,7 +648,7 @@ export const WhatsAppHubModule: React.FC = () => {
           {activeConversation ? (
             <>
               {/* Active Chat Header */}
-              <div className="px-5 py-3 border-b border-[#EAE3DA] bg-[#FFFFFF] flex items-center justify-between">
+              <div className="px-5 py-3 border-b border-[#EFE8E1] bg-[#FFFFFF] flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="relative shrink-0">
                     {(() => {
@@ -673,19 +673,19 @@ export const WhatsAppHubModule: React.FC = () => {
                       <span>•</span>
                       <span className="font-mono">{activeConversation.phone}</span>
                       <span>•</span>
-                      <span className="font-semibold text-[#9C665C]">{activeConversation.wedding_name}</span>
+                      <span className="font-semibold text-[#C48B81]">{activeConversation.wedding_name}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Guest Context Details in Top Bar */}
                 <div className="flex items-center space-x-2 text-xs">
-                  <span className="bg-[#FAF8F5] text-[#332A28] px-2.5 py-1 rounded-lg border border-[#EAE3DA] font-medium text-[11px] flex items-center gap-1">
-                    <Utensils className="w-3 h-3 text-[#9C665C]" />
+                  <span className="bg-[#FAF8F5] text-[#332A28] px-2.5 py-1 rounded-lg border border-[#EFE8E1] font-medium text-[11px] flex items-center gap-1">
+                    <Utensils className="w-3 h-3 text-[#C48B81]" />
                     <span>Mesa: {activeConversation.table_name || 'Sin mesa'}</span>
                   </span>
-                  <span className="bg-[#FAF8F5] text-[#332A28] px-2.5 py-1 rounded-lg border border-[#EAE3DA] font-medium text-[11px] flex items-center gap-1">
-                    <Users className="w-3 h-3 text-[#9C665C]" />
+                  <span className="bg-[#FAF8F5] text-[#332A28] px-2.5 py-1 rounded-lg border border-[#EFE8E1] font-medium text-[11px] flex items-center gap-1">
+                    <Users className="w-3 h-3 text-[#C48B81]" />
                     <span>Pases: {1 + (activeConversation.companion_count || 0)}</span>
                   </span>
                 </div>
@@ -712,8 +712,8 @@ export const WhatsAppHubModule: React.FC = () => {
                         <div
                           className={`max-w-md px-4 py-3 rounded-2xl shadow-xs text-xs leading-relaxed ${
                             isOutbound
-                              ? 'bg-[#9C665C] text-white rounded-br-xs'
-                              : 'bg-[#FFFFFF] text-[#332A28] border border-[#EAE3DA] rounded-bl-xs'
+                              ? 'bg-[#C48B81] text-white rounded-br-xs'
+                              : 'bg-[#FFFFFF] text-[#332A28] border border-[#EFE8E1] rounded-bl-xs'
                           }`}
                         >
                           {msg.message_type === 'template' ? (
@@ -785,9 +785,9 @@ export const WhatsAppHubModule: React.FC = () => {
               )}
 
               {/* Quick Template Buttons Bar */}
-              <div className="px-4 py-2 bg-[#FFFFFF] border-t border-[#EAE3DA] flex items-center gap-2 overflow-x-auto">
+              <div className="px-4 py-2 bg-[#FFFFFF] border-t border-[#EFE8E1] flex items-center gap-2 overflow-x-auto">
                 <span className="text-[11px] font-bold text-[#7D6F6B] uppercase tracking-wider whitespace-nowrap flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-[#9C665C]" />
+                  <Sparkles className="w-3 h-3 text-[#C48B81]" />
                   <span>Plantillas:</span>
                 </span>
                 <button
@@ -795,8 +795,8 @@ export const WhatsAppHubModule: React.FC = () => {
                   onClick={() => handleApplyTemplate(1)}
                   className={`px-2.5 py-1 rounded-lg border text-xs font-semibold whitespace-nowrap transition cursor-pointer shadow-2xs ${
                     selectedTemplate === 1
-                      ? 'bg-[#9C665C] text-white border-[#9C665C]'
-                      : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] border-[#EAE3DA]'
+                      ? 'bg-[#C48B81] text-white border-[#C48B81]'
+                      : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] border-[#EFE8E1]'
                   }`}
                   title="Cargar invitación interactiva oficial RSVP aprobada por Meta (Viva La Bride)"
                 >
@@ -807,8 +807,8 @@ export const WhatsAppHubModule: React.FC = () => {
                   onClick={() => handleApplyTemplate(2)}
                   className={`px-2.5 py-1 rounded-lg border text-xs font-semibold whitespace-nowrap transition cursor-pointer shadow-2xs ${
                     selectedTemplate === 2
-                      ? 'bg-[#9C665C] text-white border-[#9C665C]'
-                      : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] border-[#EAE3DA]'
+                      ? 'bg-[#C48B81] text-white border-[#C48B81]'
+                      : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] border-[#EFE8E1]'
                   }`}
                   title="Cargar recordatorio editorial de 7 días antes (Ubicación, Dress Code y Horarios)"
                 >
@@ -819,8 +819,8 @@ export const WhatsAppHubModule: React.FC = () => {
                   onClick={() => handleApplyTemplate(3)}
                   className={`px-2.5 py-1 rounded-lg border text-xs font-semibold whitespace-nowrap transition cursor-pointer shadow-2xs ${
                     selectedTemplate === 3
-                      ? 'bg-[#9C665C] text-white border-[#9C665C]'
-                      : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] border-[#EAE3DA]'
+                      ? 'bg-[#C48B81] text-white border-[#C48B81]'
+                      : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] border-[#EFE8E1]'
                   }`}
                   title="Cargar asignación de mesa para el Día del Evento"
                 >
@@ -829,7 +829,7 @@ export const WhatsAppHubModule: React.FC = () => {
               </div>
 
               {/* Floating-style Message Composer */}
-              <div className="p-3.5 bg-[#FFFFFF] border-t border-[#EAE3DA]">
+              <div className="p-3.5 bg-[#FFFFFF] border-t border-[#EFE8E1]">
                 <div className="flex items-end space-x-2">
                   <textarea
                     rows={2}
@@ -845,15 +845,15 @@ export const WhatsAppHubModule: React.FC = () => {
                         handleSendMessageMeta();
                       }
                     }}
-                    className="flex-1 px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE3DA] rounded-xl text-[#332A28] placeholder:text-[#7D6F6B]/60 focus:outline-none focus:border-[#9C665C] leading-relaxed resize-none"
+                    className="flex-1 px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EFE8E1] rounded-xl text-[#332A28] placeholder:text-[#7D6F6B]/60 focus:outline-none focus:border-[#C48B81] leading-relaxed resize-none"
                   />
 
-                  {/* Send Button: Clean, native WhatsApp style */}
+                  {/* Send Button: Luxury Editorial Concierge Style */}
                   <button
                     type="button"
                     onClick={() => handleSendMessageMeta()}
                     disabled={sending || !newMessage.trim()}
-                    className="px-5 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-40 flex items-center space-x-2 shrink-0"
+                    className="px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold rounded-xl transition shadow-2xs cursor-pointer disabled:opacity-40 flex items-center space-x-2 shrink-0"
                     title="Enviar mensaje (Enter)"
                   >
                     <Send className="w-3.5 h-3.5" />
@@ -878,7 +878,7 @@ export const WhatsAppHubModule: React.FC = () => {
                       type="button"
                       onClick={handleCopyMessage}
                       disabled={!newMessage.trim()}
-                      className="text-[#9C665C] hover:underline cursor-pointer disabled:opacity-30"
+                      className="text-[#C48B81] hover:underline cursor-pointer disabled:opacity-30"
                     >
                       {copied ? '¡Copiado! ✓' : 'Copiar borrador'}
                     </button>
@@ -889,7 +889,7 @@ export const WhatsAppHubModule: React.FC = () => {
           ) : (
             /* Empty State */
             <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-[#7D6F6B]">
-              <div className="w-14 h-14 rounded-2xl bg-[#FAF8F5] flex items-center justify-center mb-3 text-[#9C665C] border border-[#EAE3DA]">
+              <div className="w-14 h-14 rounded-2xl bg-[#FAF8F5] flex items-center justify-center mb-3 text-[#C48B81] border border-[#EFE8E1]">
                 <MessageSquare className="w-7 h-7" />
               </div>
               <h3 className="font-serif text-xl font-bold text-[#332A28] mb-1">

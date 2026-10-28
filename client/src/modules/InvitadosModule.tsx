@@ -827,7 +827,7 @@ export const InvitadosModule: React.FC = () => {
                   }}
                   className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
+                  <Download className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
                   <div>
                     <div className="font-semibold text-[#2B2826]">Descargar plantilla vacía</div>
                     <div className="text-[10px] text-[#786C68]">Formato oficial para importar</div>
@@ -843,7 +843,7 @@ export const InvitadosModule: React.FC = () => {
                   }}
                   className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
                 >
-                  <Upload className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
+                  <Upload className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
                   <div>
                     <div className="font-semibold text-[#2B2826]">Importar archivo Excel</div>
                     <div className="text-[10px] text-[#786C68]">Cargar lista desde archivo</div>
@@ -876,13 +876,13 @@ export const InvitadosModule: React.FC = () => {
             <button
               onClick={handleSendBulkWhatsapp}
               disabled={bulkSendingWhatsapp}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#C48B81] hover:bg-[#A86B60] disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer"
               title="Enviar plantilla oficial de WhatsApp RSVP a los invitados pendientes"
             >
               {bulkSendingWhatsapp ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Send className="w-3.5 h-3.5 text-emerald-100" />
+                <Send className="w-3.5 h-3.5" />
               )}
               <span>{bulkSendingWhatsapp ? 'Enviando...' : 'Enviar RSVP WhatsApp'}</span>
             </button>
@@ -892,17 +892,17 @@ export const InvitadosModule: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowBroadcastModal(true)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] text-xs font-semibold rounded-xl transition border border-[#EAE3DA] shadow-2xs cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#FAF7F5] hover:bg-[#F5EFEB] text-[#2B2826] text-xs font-semibold rounded-xl transition border border-[#EFE8E1] shadow-2xs cursor-pointer"
               title="Programar envíos automáticos de WhatsApp (Recordatorio 7 días antes y Asignación de mesa)"
             >
-              <Clock className="w-3.5 h-3.5 text-[#9C665C]" />
+              <Clock className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>⏰ Programar Recordatorios & Mesas</span>
             </button>
           )}
 
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer shrink-0"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#2B2826] hover:bg-[#1E1B19] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer shrink-0"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Nuevo Invitado</span>
@@ -916,8 +916,8 @@ export const InvitadosModule: React.FC = () => {
           onClick={() => { setStatusFilter(''); setTableFilter(''); setPage(1); }}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
             statusFilter === '' && tableFilter === ''
-              ? 'bg-[#9C665C] text-white shadow-xs'
-              : 'bg-[#FFFFFF] text-[#5E524E] border border-[#EAE3DA] hover:bg-[#F7F3EE]'
+              ? 'bg-[#C48B81] text-white shadow-xs'
+              : 'bg-[#FFFFFF] text-[#5E524E] border border-[#EFE8E1] hover:bg-[#F7F3EE]'
           }`}
         >
           Todos ({summary.total})
@@ -937,7 +937,7 @@ export const InvitadosModule: React.FC = () => {
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
             statusFilter === 'Pendiente de confirmar' && tableFilter === ''
               ? 'bg-[#8A574E] text-white shadow-xs'
-              : 'bg-[#FFFFFF] text-[#6D5A43] border border-[#EAE3DA] hover:bg-[#F7F3EE]'
+              : 'bg-[#FFFFFF] text-[#6D5A43] border border-[#EFE8E1] hover:bg-[#F7F3EE]'
           }`}
         >
           Pendientes ({summary.pending})
@@ -956,8 +956,8 @@ export const InvitadosModule: React.FC = () => {
           onClick={() => { setTableFilter('unassigned'); setStatusFilter(''); setPage(1); }}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
             tableFilter === 'unassigned'
-              ? 'bg-[#9C665C] text-white shadow-xs'
-              : 'bg-[#FFFFFF] text-[#7D6F6B] border border-[#EAE3DA] hover:bg-[#F7F3EE]'
+              ? 'bg-[#C48B81] text-white shadow-xs'
+              : 'bg-[#FFFFFF] text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#F7F3EE]'
           }`}
         >
           Sin Mesa Asignada ({(summary as any).unassigned ?? '—'})
@@ -995,7 +995,7 @@ export const InvitadosModule: React.FC = () => {
         <div
           onClick={() => { setStatusFilter(''); setPage(1); }}
           className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none ${
-            statusFilter === '' ? 'ring-2 ring-[#9C665C] bg-[#FFFFFF]' : 'hover:border-[#9C665C]'
+            statusFilter === '' ? 'ring-2 ring-[#C48B81] bg-[#FFFFFF]' : 'hover:border-[#C48B81]'
           }`}
           title="Ver todos los invitados"
         >
@@ -1007,7 +1007,7 @@ export const InvitadosModule: React.FC = () => {
         <div
           onClick={() => { setStatusFilter('Confirmado'); setPage(1); }}
           className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#EFE2DF]/45 border-[#DFC9C4] ${
-            statusFilter === 'Confirmado' ? 'ring-2 ring-[#9C665C] shadow-xs' : 'hover:border-[#9C665C]'
+            statusFilter === 'Confirmado' ? 'ring-2 ring-[#C48B81] shadow-xs' : 'hover:border-[#C48B81]'
           }`}
           title="Filtrar solo Confirmados"
         >
@@ -1019,7 +1019,7 @@ export const InvitadosModule: React.FC = () => {
         <div
           onClick={() => { setStatusFilter('Pendiente de confirmar'); setPage(1); }}
           className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#EFE8DE]/60 border-[#DDD2C4] ${
-            statusFilter === 'Pendiente de confirmar' ? 'ring-2 ring-[#9C665C] shadow-xs' : 'hover:border-[#9C665C]'
+            statusFilter === 'Pendiente de confirmar' ? 'ring-2 ring-[#C48B81] shadow-xs' : 'hover:border-[#C48B81]'
           }`}
           title="Filtrar solo Pendientes de confirmar"
         >
@@ -1031,7 +1031,7 @@ export const InvitadosModule: React.FC = () => {
         <div
           onClick={() => { setStatusFilter('No asistirá'); setPage(1); }}
           className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#F5ECEB]/60 border-[#DBC1BE] ${
-            statusFilter === 'No asistirá' ? 'ring-2 ring-[#9C665C] shadow-xs' : 'hover:border-[#9C665C]'
+            statusFilter === 'No asistirá' ? 'ring-2 ring-[#C48B81] shadow-xs' : 'hover:border-[#C48B81]'
           }`}
           title="Filtrar quienes No asistirán"
         >
@@ -1153,12 +1153,12 @@ export const InvitadosModule: React.FC = () => {
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div
                         onClick={() => handleOpenEdit(guest)}
-                        className="cursor-pointer font-semibold text-sm text-[#2B2826] group-hover:text-[#9C665C] inline-flex items-center space-x-2 whitespace-nowrap"
+                        className="cursor-pointer font-semibold text-sm text-[#2B2826] group-hover:text-[#C48B81] inline-flex items-center space-x-2 whitespace-nowrap"
                       >
                         <span className="underline decoration-[#D2C4B4] decoration-1 underline-offset-4 whitespace-nowrap">
                           {guest.first_name} {guest.last_name}
                         </span>
-                        <Edit2 className="w-3.5 h-3.5 text-[#C7B6A6] group-hover:text-[#9C665C] transition shrink-0" />
+                        <Edit2 className="w-3.5 h-3.5 text-[#C7B6A6] group-hover:text-[#C48B81] transition shrink-0" />
                       </div>
                     </td>
 
@@ -1219,10 +1219,10 @@ export const InvitadosModule: React.FC = () => {
                           onChange={e => handleInlineStatusChange(guest, e.target.value as any)}
                           className={`w-36 text-xs font-semibold rounded-xl px-2.5 py-1.5 border transition focus:outline-none cursor-pointer ${
                             guest.status === 'Confirmado'
-                              ? 'bg-[#E4ECE5] text-[#354B38] border-[#CCDACC]'
+                              ? 'bg-[#E5EDE6] text-[#384C3A] border-[#D0DDD1]'
                               : guest.status === 'No asistirá'
-                              ? 'bg-[#FBF4F3] text-[#70443D] border-[#EAD2D0]'
-                              : 'bg-[#F7F3EE] text-[#6D5A43] border-[#EAE3DA]'
+                              ? 'bg-[#FAF4F3] text-[#9B6158] border-[#EEDAD6]'
+                              : 'bg-[#FAF7F5] text-[#7D6F6B] border-[#EFE8E1]'
                           }`}
                         >
                           <option value="Pendiente de confirmar">Pendiente</option>
@@ -1283,10 +1283,10 @@ export const InvitadosModule: React.FC = () => {
                         ) : (
                           <button
                             onClick={() => handleSendSingleWhatsapp(guest)}
-                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition shadow-xs"
+                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-white bg-[#C48B81] hover:bg-[#A86B60] rounded-lg transition shadow-2xs"
                             title="Enviar plantilla oficial de WhatsApp RSVP"
                           >
-                            <Send className="w-3 h-3 text-emerald-100" />
+                            <Send className="w-3 h-3 text-white" />
                             <span>Enviar RSVP</span>
                           </button>
                         )}
@@ -1305,7 +1305,7 @@ export const InvitadosModule: React.FC = () => {
                           className={`w-full max-w-[190px] font-medium rounded-lg px-2.5 py-1 border transition focus:outline-none cursor-pointer ${
                             guest.table_id
                               ? 'bg-[#EFE8DE] text-[#332C2A] border-[#DDD2C4] font-semibold'
-                              : 'bg-white text-[#786C68] border-[#DDD2C4] hover:border-[#9C665C]'
+                              : 'bg-white text-[#786C68] border-[#DDD2C4] hover:border-[#C48B81]'
                           }`}
                         >
                           <option value="">Sin mesa</option>
@@ -1890,14 +1890,14 @@ export const InvitadosModule: React.FC = () => {
                       placeholder="https://www.canva.com/design/... o https://laboda.com"
                       value={invitationForm.invitation_url}
                       onChange={e => setInvitationForm({ ...invitationForm, invitation_url: e.target.value })}
-                      className="flex-1 px-3.5 py-2 text-xs bg-white border border-[#EAE3DA] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                      className="flex-1 px-3.5 py-2 text-xs bg-white border border-[#EFE8E1] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
                     />
                     {invitationForm.invitation_url && (
                       <a
                         href={invitationForm.invitation_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-2 rounded-xl bg-white border border-[#EAE3DA] text-[#7D6F6B] hover:text-[#C48B81] transition shrink-0"
+                        className="p-2 rounded-xl bg-white border border-[#EFE8E1] text-[#7D6F6B] hover:text-[#C48B81] transition shrink-0"
                         title="Probar enlace"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
@@ -1923,7 +1923,7 @@ export const InvitadosModule: React.FC = () => {
                           href={invitationForm.invitation_pdf_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="px-2 py-1 text-[11px] font-semibold bg-[#FAF7F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] rounded-lg transition"
+                          className="px-2 py-1 text-[11px] font-semibold bg-[#FAF7F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] rounded-lg transition"
                         >
                           Ver PDF
                         </a>
@@ -1946,7 +1946,7 @@ export const InvitadosModule: React.FC = () => {
                       <p className="text-[10px] text-[#7D6F6B] mt-0.5 mb-2.5">
                         El bot de WhatsApp lo enviará como archivo nativo descargable.
                       </p>
-                      <label className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold rounded-xl cursor-pointer transition shadow-2xs">
+                      <label className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#C48B81] hover:bg-[#8A574E] text-white text-xs font-bold rounded-xl cursor-pointer transition shadow-2xs">
                         {uploadingPdfModal ? (
                           <>
                             <Loader2 className="w-3 h-3 animate-spin" />
@@ -1982,7 +1982,7 @@ export const InvitadosModule: React.FC = () => {
                     placeholder="Ej. Formal Riguroso, Playa"
                     value={invitationForm.dress_code}
                     onChange={e => setInvitationForm({ ...invitationForm, dress_code: e.target.value })}
-                    className="w-full px-3 py-2 text-xs bg-[#FAF7F5] border border-[#EAE3DA] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                    className="w-full px-3 py-2 text-xs bg-[#FAF7F5] border border-[#EFE8E1] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
                   />
                 </div>
 
@@ -1995,7 +1995,7 @@ export const InvitadosModule: React.FC = () => {
                     className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center justify-between cursor-pointer transition ${
                       invitationForm.no_children
                         ? 'bg-[#F7EDEB] border-[#C48B81] text-[#A86B60]'
-                        : 'bg-[#FAF7F5] border-[#EAE3DA] text-[#7D6F6B]'
+                        : 'bg-[#FAF7F5] border-[#EFE8E1] text-[#7D6F6B]'
                     }`}
                   >
                     <span>Solo Adultos (No Niños)</span>
