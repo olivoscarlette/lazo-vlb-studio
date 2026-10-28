@@ -484,7 +484,7 @@ export const WhatsAppHubModule: React.FC = () => {
 
         {/* Real-Time Live Status Indicator */}
         <div className="hidden sm:flex items-center space-x-2 text-[11px] text-[#7D6F6B]">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+          <span className="w-2 h-2 rounded-full bg-[#C48B81] animate-pulse" />
           <span>Sincronizado en tiempo real</span>
         </div>
       </div>

@@ -601,10 +601,10 @@ export const ReunionesModule: React.FC = () => {
 
             {/* Real-time Conflict Alert (Foto 3 / Extra req) */}
             {scheduleConflictAlert && (
-              <div className="mb-3 p-3.5 rounded-xl bg-amber-50 text-amber-900 text-xs border border-amber-200 flex items-start space-x-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div className="mb-3 p-3.5 rounded-xl bg-[#FAF4F0] text-[#8A6D5E] text-xs border border-[#EFE8E1] flex items-start space-x-2">
+                <AlertTriangle className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
                 <div>
-                  <div className="font-bold">¡Alerta de empalme de horario!</div>
+                  <div className="font-bold text-[#2B2826]">¡Alerta de empalme de horario!</div>
                   <div className="mt-0.5">{scheduleConflictAlert}</div>
                 </div>
               </div>

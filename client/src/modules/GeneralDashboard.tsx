@@ -1475,8 +1475,8 @@ export const GeneralDashboard: React.FC = () => {
             </button>
           </div>
           {catalogMsg && (
-            <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="p-4 rounded-2xl bg-[#E5EDE6] border border-[#D5E2D7] text-[#384C3A] text-xs font-semibold flex items-center space-x-2">
+              <CheckCircle2 className="w-4 h-4 text-[#384C3A] shrink-0" />
               <span>{catalogMsg}</span>
             </div>
           )}
@@ -2190,7 +2190,7 @@ export const GeneralDashboard: React.FC = () => {
             </div>
 
             {restoreMsg && (
-              <div className="mt-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold">
+              <div className="mt-4 p-3 rounded-xl bg-[#E5EDE6] border border-[#D5E2D7] text-[#384C3A] text-xs font-semibold">
                 {restoreMsg}
               </div>
             )}

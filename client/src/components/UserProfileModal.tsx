@@ -205,8 +205,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
             )}
 
             {success && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs flex items-center space-x-2">
-                <Check className="w-4 h-4 shrink-0 text-emerald-600" />
+              <div className="p-3 bg-[#E5EDE6] border border-[#D5E2D7] rounded-xl text-[#384C3A] text-xs flex items-center space-x-2">
+                <Check className="w-4 h-4 shrink-0 text-[#384C3A]" />
                 <span>{success}</span>
               </div>
             )}
@@ -263,10 +263,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                   <button
                     type="button"
                     onClick={handleRemovePhoto}
-                    className="px-3 py-1.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-xs font-semibold text-red-700 flex items-center space-x-1 transition cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl border border-[#ECD9D5] bg-[#F7EDEB] hover:bg-[#F3DCD7] text-xs font-semibold text-[#A86B60] flex items-center space-x-1 transition cursor-pointer"
                     title="Eliminar foto personalizada"
                   >
-                    <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                    <Trash2 className="w-3.5 h-3.5 text-[#C48B81]" />
                     <span>Quitar foto</span>
                   </button>
                 )}

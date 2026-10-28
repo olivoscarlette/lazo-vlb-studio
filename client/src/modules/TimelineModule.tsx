@@ -435,7 +435,7 @@ export const TimelineModule: React.FC = () => {
               onClick={() => setViewMode(viewMode === 'operation' ? 'planning' : 'operation')}
               className="px-4 py-2 rounded-xl text-xs font-medium bg-[#EFECE6] hover:bg-[#E5DFD5] text-[#332C2A] border border-[#EFE8E1] transition"
             >
-              {viewMode === 'operation' ? 'Ver cronograma de planeación' : '⚡ Ir a Modo Operación'}
+              {viewMode === 'operation' ? 'Ver cronograma de planeación' : 'Ir a Modo Operación'}
             </button>
           </div>
         </div>

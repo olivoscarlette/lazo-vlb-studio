@@ -273,15 +273,15 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
           <div
             className={`mx-6 mt-4 p-3.5 rounded-xl text-xs flex items-center justify-between shadow-2xs ${
               feedback.type === 'success'
-                ? 'bg-emerald-50 text-emerald-900 border border-emerald-200'
-                : 'bg-rose-50 text-rose-900 border border-rose-200'
+                ? 'bg-[#E5EDE6] text-[#384C3A] border border-[#D5E2D7]'
+                : 'bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]'
             }`}
           >
             <div className="flex items-center space-x-2">
               {feedback.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-[#384C3A] shrink-0" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-[#A86B60] shrink-0" />
               )}
               <span>{feedback.text}</span>
             </div>
@@ -399,7 +399,7 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
 
               {/* Status Banner */}
               {scheduleData?.reminder7Days?.status === 'SENT' && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center justify-between">
+                <div className="p-3 bg-[#E5EDE6] border border-[#D5E2D7] rounded-xl text-xs text-[#384C3A] flex items-center justify-between">
                   <span>
                     ✓ Este recordatorio ya fue enviado automáticamente el{' '}
                     <strong>{scheduleData.reminder7Days.sentAt?.split('T')[0]}</strong>.
@@ -407,7 +407,7 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleReset('REMINDER')}
-                    className="text-xs font-bold text-emerald-800 hover:underline cursor-pointer ml-2"
+                    className="text-xs font-bold text-[#384C3A] hover:underline cursor-pointer ml-2"
                   >
                     Reprogramar
                   </button>
@@ -573,7 +573,7 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
 
               {/* Status Banner */}
               {scheduleData?.dayOfSeating?.status === 'SENT' && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 flex items-center justify-between">
+                <div className="p-3 bg-[#E5EDE6] border border-[#D5E2D7] rounded-xl text-xs text-[#384C3A] flex items-center justify-between">
                   <span>
                     ✓ La asignación de mesas ya fue enviada el{' '}
                     <strong>{scheduleData.dayOfSeating.sentAt?.split('T')[0]}</strong>.
@@ -581,7 +581,7 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleReset('SEATING')}
-                    className="text-xs font-bold text-emerald-800 hover:underline cursor-pointer ml-2"
+                    className="text-xs font-bold text-[#384C3A] hover:underline cursor-pointer ml-2"
                   >
                     Reprogramar
                   </button>
