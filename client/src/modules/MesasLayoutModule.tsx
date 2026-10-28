@@ -3,8 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { Table, LayoutElement, LayoutVersion, Guest } from '../types';
 import {
   Plus, RotateCw, Trash2, Save, History,
-  Lock, AlertTriangle, Move, Eye, Layers, Image as ImageIcon,
-  Maximize2, Minimize2, Unlock, Users, ChevronDown, ChevronUp
+  Lock, AlertTriangle, Move, Eye, EyeOff, Layers, Image as ImageIcon,
+  Maximize2, Minimize2, Unlock, Users, ChevronDown, ChevronUp,
+  FileUp, Loader2, ChevronLeft, ChevronRight, CheckCircle2, X
 } from 'lucide-react';
 
 export const MesasLayoutModule: React.FC = () => {
@@ -28,10 +29,20 @@ export const MesasLayoutModule: React.FC = () => {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragType, setDragType] = useState<'table' | 'element' | null>(null);
 
-  // Reference Venue Floor Plan Image
+  // Reference Venue Floor Plan (PDF & Images)
   const [floorPlanUrl, setFloorPlanUrl] = useState<string>(currentWedding?.floor_plan_url || '');
-  const [floorPlanOpacity, setFloorPlanOpacity] = useState<number>(0.35);
+  const [floorPlanOpacity, setFloorPlanOpacity] = useState<number>(0.4);
+  const [floorPlanVisible, setFloorPlanVisible] = useState<boolean>(true);
+  const [floorPlanFitMode, setFloorPlanFitMode] = useState<'contain' | 'cover'>('contain');
   const [showFloorPlanModal, setShowFloorPlanModal] = useState(false);
+  const [floorPlanProcessing, setFloorPlanProcessing] = useState(false);
+  const [floorPlanPageCount, setFloorPlanPageCount] = useState(1);
+  const [floorPlanSelectedPage, setFloorPlanSelectedPage] = useState(1);
+  const [floorPlanPdfBuffer, setFloorPlanPdfBuffer] = useState<ArrayBuffer | null>(null);
+  const [floorPlanFilename, setFloorPlanFilename] = useState<string>('');
+  const [uploadingFloorPlan, setUploadingFloorPlan] = useState(false);
+  const [floorPlanError, setFloorPlanError] = useState<string | null>(null);
+  const [floorPlanPendingBlob, setFloorPlanPendingBlob] = useState<Blob | null>(null);
 
   // New Table Modal
   const [showNewTableModal, setShowNewTableModal] = useState(false);
@@ -235,33 +246,148 @@ export const MesasLayoutModule: React.FC = () => {
     } catch {}
   };
 
-  // Save Floor Plan Reference Image
+  // Save Floor Plan Reference Image (Uploaded File / PDF / URL)
   const handleSaveFloorPlan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentWedding || isLocked) return;
+
+    setUploadingFloorPlan(true);
+    setFloorPlanError(null);
+
     try {
-      const res = await fetch(`/api/weddings/${currentWedding.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ floor_plan_url: floorPlanUrl || null })
-      });
-      if (res.ok) {
-        setShowFloorPlanModal(false);
-        await refreshWedding();
+      if (floorPlanPendingBlob) {
+        const formData = new FormData();
+        const baseName = floorPlanFilename
+          ? floorPlanFilename.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_')
+          : 'plano_base';
+        const finalFilename = `${baseName}_p${floorPlanSelectedPage}.png`;
+        formData.append('floor_plan_file', floorPlanPendingBlob, finalFilename);
+
+        const res = await fetch(`/api/weddings/${currentWedding.id}/floor-plan-file`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setFloorPlanUrl(data.floor_plan_url);
+          setFloorPlanPendingBlob(null);
+          setShowFloorPlanModal(false);
+          await refreshWedding();
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          setFloorPlanError(errData.error || 'Error al guardar el plano en el servidor.');
+        }
+      } else {
+        const res = await fetch(`/api/weddings/${currentWedding.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ floor_plan_url: floorPlanUrl || null })
+        });
+        if (res.ok) {
+          setShowFloorPlanModal(false);
+          await refreshWedding();
+        }
       }
-    } catch {}
+    } catch (err: any) {
+      setFloorPlanError(err.message || 'Error de conexión al guardar el plano.');
+    } finally {
+      setUploadingFloorPlan(false);
+    }
   };
 
-  const handleFloorPlanFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleRemoveFloorPlan = async () => {
+    if (!currentWedding || isLocked) return;
+    if (!confirm('¿Deseas quitar el plano base de este espacio?')) return;
+    try {
+      await fetch(`/api/weddings/${currentWedding.id}/floor-plan-file`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFloorPlanUrl('');
+      setFloorPlanPendingBlob(null);
+      setFloorPlanPdfBuffer(null);
+      setFloorPlanFilename('');
+      setShowFloorPlanModal(false);
+      await refreshWedding();
+    } catch (e) {
+      console.warn('Error removing floor plan:', e);
+    }
+  };
+
+  const handleFloorPlanFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setFloorPlanUrl(reader.result);
+
+    setFloorPlanError(null);
+    setFloorPlanFilename(file.name);
+
+    const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+    if (isPdf) {
+      setFloorPlanProcessing(true);
+      try {
+        const buffer = await file.arrayBuffer();
+        setFloorPlanPdfBuffer(buffer);
+        const { convertPdfPageToImage } = await import('../utils/pdfToImage');
+        const result = await convertPdfPageToImage(buffer, 1, 2.0);
+        setFloorPlanUrl(result.dataUrl);
+        setFloorPlanPageCount(result.pageCount);
+        setFloorPlanSelectedPage(1);
+
+        // Convert dataUrl to blob
+        const byteString = atob(result.dataUrl.split(',')[1]);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([ab], { type: 'image/png' });
+        setFloorPlanPendingBlob(blob);
+      } catch (err: any) {
+        console.error('Error rendering PDF:', err);
+        setFloorPlanError('No se pudo procesar el archivo PDF. Verifica que sea un PDF válido.');
+      } finally {
+        setFloorPlanProcessing(false);
       }
-    };
-    reader.readAsDataURL(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          setFloorPlanUrl(reader.result);
+          setFloorPlanPageCount(1);
+          setFloorPlanSelectedPage(1);
+          setFloorPlanPdfBuffer(null);
+          setFloorPlanPendingBlob(file);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSelectPdfPage = async (newPage: number) => {
+    if (!floorPlanPdfBuffer || newPage < 1 || newPage > floorPlanPageCount) return;
+    setFloorPlanProcessing(true);
+    try {
+      const { convertPdfPageToImage } = await import('../utils/pdfToImage');
+      const result = await convertPdfPageToImage(floorPlanPdfBuffer, newPage, 2.0);
+      setFloorPlanUrl(result.dataUrl);
+      setFloorPlanSelectedPage(newPage);
+
+      const byteString = atob(result.dataUrl.split(',')[1]);
+      const ab = new ArrayBuffer(byteString.length);
+      const ia = new Uint8Array(ab);
+      for (let i = 0; i < byteString.length; i++) {
+        ia[i] = byteString.charCodeAt(i);
+      }
+      const blob = new Blob([ab], { type: 'image/png' });
+      setFloorPlanPendingBlob(blob);
+    } catch (err) {
+      console.error('Error switching PDF page:', err);
+    } finally {
+      setFloorPlanProcessing(false);
+    }
   };
 
   // Add Table
@@ -480,18 +606,20 @@ export const MesasLayoutModule: React.FC = () => {
               backgroundSize: '24px 24px'
             }}
           >
-            {/* Optional Reference Venue Floor Plan Image */}
-            {floorPlanUrl && (
+            {/* Optional Reference Venue Floor Plan Image / Rendered PDF */}
+            {floorPlanUrl && floorPlanVisible && (
               <img
                 src={floorPlanUrl}
                 alt="Plano de referencia del lugar"
-                className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                className={`absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-200 ${
+                  floorPlanFitMode === 'cover' ? 'object-cover' : 'object-contain'
+                }`}
                 style={{ opacity: floorPlanOpacity }}
               />
             )}
 
             {/* Legend / Status Overlay */}
-            <div className="absolute top-4 left-4 z-10 bg-[#FFFFFF]/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-[#EFE8E1] text-[11px] space-y-1 shadow-xs">
+            <div className="absolute top-4 left-4 z-10 bg-[#FFFFFF]/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-[#EFE8E1] text-[11px] space-y-1.5 shadow-xs">
               <div className="font-semibold text-[#332C2A] flex items-center space-x-1.5 pointer-events-none">
                 <Move className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>{isLocked ? 'Modo Solo Lectura' : 'Arrastra mesas para acomodar'}</span>
@@ -500,17 +628,43 @@ export const MesasLayoutModule: React.FC = () => {
                 {tables.length} mesas · {tables.reduce((acc, t) => acc + (t.used_seats || 0), 0)} lugares asignados
               </div>
               {floorPlanUrl && (
-                <div className="pt-1 border-t border-[#EFE8DE] flex items-center space-x-2">
-                  <span className="text-[10px] text-[#786C68]">Opacidad Plano:</span>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="0.9"
-                    step="0.05"
-                    value={floorPlanOpacity}
-                    onChange={e => setFloorPlanOpacity(parseFloat(e.target.value))}
-                    className="w-20 accent-[#C48B81]"
-                  />
+                <div className="pt-2 border-t border-[#EFE8DE] space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-medium text-[#786C68]">Plano Base:</span>
+                    <div className="flex items-center space-x-1">
+                      <button
+                        type="button"
+                        onClick={() => setFloorPlanVisible(!floorPlanVisible)}
+                        className="p-1 rounded-md text-[#786C68] hover:text-[#2B2826] hover:bg-[#F2ECE7] transition cursor-pointer"
+                        title={floorPlanVisible ? 'Ocultar plano temporalmente' : 'Mostrar plano base'}
+                      >
+                        {floorPlanVisible ? <Eye className="w-3.5 h-3.5 text-[#C48B81]" /> : <EyeOff className="w-3.5 h-3.5 text-stone-400" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFloorPlanFitMode(floorPlanFitMode === 'contain' ? 'cover' : 'contain')}
+                        className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#FAF8F5] hover:bg-[#F2ECE7] border border-[#EFE8E1] text-[#7D6F6B] transition cursor-pointer"
+                        title="Cambiar ajuste: Contener o Cubrir todo el lienzo"
+                      >
+                        {floorPlanFitMode === 'contain' ? 'Ajustar' : 'Llenar'}
+                      </button>
+                    </div>
+                  </div>
+                  {floorPlanVisible && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-[9px] text-[#8A7E7A]">Opacidad:</span>
+                      <input
+                        type="range"
+                        min="0.1"
+                        max="1.0"
+                        step="0.05"
+                        value={floorPlanOpacity}
+                        onChange={e => setFloorPlanOpacity(parseFloat(e.target.value))}
+                        className="w-20 accent-[#C48B81] cursor-pointer"
+                      />
+                      <span className="text-[9px] font-mono text-[#8A7E7A]">{Math.round(floorPlanOpacity * 100)}%</span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -1035,55 +1189,169 @@ export const MesasLayoutModule: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Plano Base de Referencia del Lugar */}
+      {/* Modal: Plano Base de Referencia del Lugar (PDF & Imágenes) */}
       {showFloorPlanModal && (
-        <div className="fixed inset-0 bg-stone-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-stone-200">
-            <h3 className="font-serif text-xl font-bold text-stone-900 mb-2">Plano Base del Lugar</h3>
-            <p className="text-xs text-stone-500 mb-4">
-              Carga o vincula el plano arquitectónico de la hacienda o salón para utilizarlo como referencia visual debajo de tus mesas.
-            </p>
-            <form onSubmit={handleSaveFloorPlan} className="space-y-4">
+        <div className="fixed inset-0 bg-[#2B2826]/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-[#EFE8E1] space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-start justify-between">
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Subir Imagen desde tu equipo (PNG / JPG)</label>
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#C48B81]">
+                  Plantilla de Fondo · Layout 2D
+                </span>
+                <h3 className="font-serif text-2xl text-[#2B2826] mt-0.5">
+                  Plano Base del Lugar
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFloorPlanModal(false)}
+                className="p-1.5 rounded-xl text-stone-400 hover:text-stone-700 hover:bg-[#FAF8F5] transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-[#7D6F6B] leading-relaxed">
+              Carga el plano arquitectónico en <strong>PDF</strong> o imagen (PNG/JPG) de la hacienda o salón para utilizarlo como referencia visual exacta debajo de tus mesas.
+            </p>
+
+            {floorPlanError && (
+              <div className="p-3 bg-[#F7EDEB] border border-[#ECD9D5] text-[#A86B60] rounded-xl text-xs flex items-center space-x-2">
+                <AlertTriangle className="w-4 h-4 shrink-0" />
+                <span>{floorPlanError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveFloorPlan} className="space-y-4">
+              {/* Dropzone / File Picker */}
+              <div className="relative border-2 border-dashed border-[#EFE8E1] hover:border-[#C48B81] bg-[#FAF8F5] hover:bg-[#F7EDEB]/40 rounded-2xl p-6 text-center transition cursor-pointer group">
                 <input
                   type="file"
-                  accept="image/*"
+                  accept=".pdf,application/pdf,image/png,image/jpeg,image/jpg,image/webp"
                   onChange={handleFloorPlanFileUpload}
-                  className="w-full text-xs text-stone-600 file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-stone-100 file:text-stone-800 hover:file:bg-stone-200"
+                  disabled={floorPlanProcessing}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 />
+
+                {floorPlanProcessing ? (
+                  <div className="flex flex-col items-center justify-center py-3 space-y-2">
+                    <Loader2 className="w-7 h-7 text-[#C48B81] animate-spin" />
+                    <span className="text-xs font-semibold text-[#A86B60]">
+                      Procesando plano PDF en alta resolución...
+                    </span>
+                    <span className="text-[11px] text-[#7D6F6B]">
+                      Extrayendo vectores y generando vista nítida
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <div className="w-11 h-11 rounded-2xl bg-white flex items-center justify-center border border-[#EFE8E1] group-hover:scale-105 transition shadow-2xs">
+                      <FileUp className="w-5 h-5 text-[#C48B81]" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold text-[#2B2826] block">
+                        Haz clic o arrastra aquí tu plano en <span className="text-[#A86B60] font-bold">PDF</span> o Imagen
+                      </span>
+                      <span className="text-[11px] text-[#7D6F6B] mt-0.5 block">
+                        Soporta archivos arquitectónicos PDF, PNG, JPG y WebP (hasta 30 MB)
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">O URL de imagen de plano</label>
-                <input
-                  type="text"
-                  placeholder="https://... o imagen cargada"
-                  value={floorPlanUrl}
-                  onChange={e => setFloorPlanUrl(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900"
-                />
-              </div>
-              <div className="flex justify-between items-center pt-4 border-t border-stone-100">
-                <button
-                  type="button"
-                  onClick={() => setFloorPlanUrl('')}
-                  className="text-xs text-rose-600 hover:underline font-semibold"
-                >
-                  Quitar Plano
-                </button>
-                <div className="flex space-x-2">
+
+              {/* Multi-page PDF Switcher */}
+              {floorPlanPageCount > 1 && (
+                <div className="p-3 bg-[#FAF8F5] border border-[#EFE8E1] rounded-2xl flex items-center justify-between text-xs">
+                  <div className="flex items-center space-x-1.5 text-[#5A524C]">
+                    <span className="font-semibold">Plano multipágina:</span>
+                    <span className="text-[#8A7E7A]">Elige la planta o salón a utilizar</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      disabled={floorPlanSelectedPage <= 1 || floorPlanProcessing}
+                      onClick={() => handleSelectPdfPage(floorPlanSelectedPage - 1)}
+                      className="p-1 rounded-lg border border-[#EFE8E1] bg-white hover:bg-[#FAF8F5] disabled:opacity-40 cursor-pointer"
+                      title="Página anterior"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="font-mono font-semibold text-xs text-[#2B2826]">
+                      {floorPlanSelectedPage} / {floorPlanPageCount}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={floorPlanSelectedPage >= floorPlanPageCount || floorPlanProcessing}
+                      onClick={() => handleSelectPdfPage(floorPlanSelectedPage + 1)}
+                      className="p-1 rounded-lg border border-[#EFE8E1] bg-white hover:bg-[#FAF8F5] disabled:opacity-40 cursor-pointer"
+                      title="Página siguiente"
+                    >
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Preview Thumbnail if present */}
+              {floorPlanUrl && (
+                <div className="p-3 bg-[#FAF8F5] border border-[#EFE8E1] rounded-2xl flex items-center space-x-3.5">
+                  <div className="w-16 h-16 rounded-xl bg-white border border-[#EFE8E1] overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
+                    <img
+                      src={floorPlanUrl}
+                      alt="Vista previa del plano"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#2B2826] truncate">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#384C3A] shrink-0" />
+                      <span className="truncate">{floorPlanFilename || 'Plano base listo'}</span>
+                    </div>
+                    <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                      {floorPlanPageCount > 1 ? `Página ${floorPlanSelectedPage} de ${floorPlanPageCount} renderizada` : 'Plano cargado correctamente'}
+                    </p>
+                    <div className="flex items-center space-x-2 mt-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setFloorPlanFitMode(floorPlanFitMode === 'contain' ? 'cover' : 'contain')}
+                        className="text-[10px] font-semibold text-[#A86B60] hover:underline cursor-pointer"
+                      >
+                        Ajuste: {floorPlanFitMode === 'contain' ? 'Contener completo' : 'Llenar lienzo'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Footer Actions */}
+              <div className="flex items-center justify-between pt-4 border-t border-[#EFE8E1]">
+                {floorPlanUrl ? (
+                  <button
+                    type="button"
+                    onClick={handleRemoveFloorPlan}
+                    className="text-xs text-[#A86B60] hover:text-stone-900 font-semibold transition cursor-pointer"
+                  >
+                    Quitar Plano
+                  </button>
+                ) : <div />}
+
+                <div className="flex items-center space-x-2">
                   <button
                     type="button"
                     onClick={() => setShowFloorPlanModal(false)}
-                    className="px-4 py-2 text-xs text-stone-600 hover:bg-stone-100 rounded-xl"
+                    className="px-4 py-2 text-xs font-medium text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] rounded-xl transition cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 text-xs font-bold uppercase tracking-wider bg-stone-900 text-white rounded-xl hover:bg-stone-800"
+                    disabled={uploadingFloorPlan || floorPlanProcessing || !floorPlanUrl}
+                    className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#2B2826] hover:bg-stone-800 disabled:opacity-50 text-white rounded-full transition shadow-xs cursor-pointer flex items-center space-x-1.5"
                   >
-                    Guardar Plano
+                    {uploadingFloorPlan && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    <span>{uploadingFloorPlan ? 'Guardando...' : 'Aplicar Plano Base'}</span>
                   </button>
                 </div>
               </div>

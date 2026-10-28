@@ -35,6 +35,36 @@ const uploadInvitation = multer({
   }
 });
 
+const FLOORPLANS_DIR = path.resolve(process.cwd(), 'data', 'uploads', 'floorplans');
+if (!fs.existsSync(FLOORPLANS_DIR)) {
+  fs.mkdirSync(FLOORPLANS_DIR, { recursive: true });
+}
+
+const floorPlanStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, FLOORPLANS_DIR);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.png';
+    const uniqueSuffix = 'floorplan_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+const uploadFloorPlan = multer({
+  storage: floorPlanStorage,
+  limits: { fileSize: 30 * 1024 * 1024 }, // 30MB limit for high-res architectural blueprints
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'application/pdf'];
+    const isAllowedExt = /\.(png|jpe?g|webp|pdf)$/i.test(file.originalname);
+    if (allowed.includes(file.mimetype) || isAllowedExt) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos en formato PDF, PNG, JPG o WebP para el plano base.'));
+    }
+  }
+});
+
 // GET /api/weddings - General Dashboard list (scoped by role)
 router.get('/', authenticateToken, (req, res) => {
   const user = req.user!;
@@ -422,6 +452,94 @@ router.delete('/:weddingId/invitation-file', authenticateToken, requireWeddingAc
   logAudit(weddingId, user.id, user.name, 'ELIMINAR_INVITACION_PDF', 'WEDDING', weddingId, `Invitación en PDF eliminada`);
 
   return res.json({ success: true, message: 'Invitación en PDF eliminada.' });
+});
+
+// POST /api/weddings/:weddingId/floor-plan-file - Subir plano base del lugar (PDF o Imagen)
+router.post('/:weddingId/floor-plan-file', authenticateToken, requireWeddingAccess, (req, res, next) => {
+  uploadFloorPlan.single('floor_plan_file')(req, res, err => {
+    if (err) {
+      return res.status(400).json({ error: err.message || 'Error al subir archivo del plano base.' });
+    }
+    next();
+  });
+}, (req, res) => {
+  const { weddingId } = req.params;
+  const user = req.user!;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: 'Debes seleccionar un archivo PDF o imagen para el plano base.' });
+  }
+
+  const now = new Date().toISOString();
+  const floorPlanUrl = `/uploads/floorplans/${file.filename}`;
+  const originalFilename = file.originalname;
+
+  // Remove old file if it was a local uploaded floor plan
+  const existing = db.prepare('SELECT floor_plan_url FROM weddings WHERE id = ?').get(weddingId) as any;
+  if (existing?.floor_plan_url && existing.floor_plan_url.startsWith('/uploads/floorplans/')) {
+    try {
+      const oldPath = path.resolve(process.cwd(), 'data', existing.floor_plan_url.replace(/^\//, ''));
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    } catch (e) {
+      console.warn('Error deleting old floor plan file:', e);
+    }
+  }
+
+  db.prepare(`
+    UPDATE weddings
+    SET floor_plan_url = ?,
+        updated_at = ?
+    WHERE id = ?
+  `).run(floorPlanUrl, now, weddingId);
+
+  logAudit(weddingId, user.id, user.name, 'SUBIR_PLANO_BASE', 'WEDDING', weddingId, `Plano base del lugar subido: ${originalFilename}`);
+
+  const updated = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+  return res.json({
+    success: true,
+    message: 'Plano base guardado exitosamente.',
+    floor_plan_url: floorPlanUrl,
+    floor_plan_filename: originalFilename,
+    wedding: updated
+  });
+});
+
+// DELETE /api/weddings/:weddingId/floor-plan-file - Remover plano base
+router.delete('/:weddingId/floor-plan-file', authenticateToken, requireWeddingAccess, (req, res) => {
+  const { weddingId } = req.params;
+  const user = req.user!;
+
+  const existing = db.prepare('SELECT floor_plan_url FROM weddings WHERE id = ?').get(weddingId) as any;
+  if (existing?.floor_plan_url && existing.floor_plan_url.startsWith('/uploads/floorplans/')) {
+    try {
+      const oldPath = path.resolve(process.cwd(), 'data', existing.floor_plan_url.replace(/^\//, ''));
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    } catch (e) {
+      console.warn('Error deleting floor plan file:', e);
+    }
+  }
+
+  const now = new Date().toISOString();
+  db.prepare(`
+    UPDATE weddings
+    SET floor_plan_url = NULL,
+        updated_at = ?
+    WHERE id = ?
+  `).run(now, weddingId);
+
+  logAudit(weddingId, user.id, user.name, 'ELIMINAR_PLANO_BASE', 'WEDDING', weddingId, `Plano base removido`);
+
+  const updated = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+  return res.json({
+    success: true,
+    message: 'Plano base removido exitosamente.',
+    wedding: updated
+  });
 });
 
 // POST /api/weddings/:weddingId/team - Assign team member

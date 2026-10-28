@@ -133,6 +133,10 @@ const invitationsDir = path.resolve(uploadsDir, 'invitations');
 if (!fs.existsSync(invitationsDir)) {
   fs.mkdirSync(invitationsDir, { recursive: true });
 }
+const floorplansDir = path.resolve(uploadsDir, 'floorplans');
+if (!fs.existsSync(floorplansDir)) {
+  fs.mkdirSync(floorplansDir, { recursive: true });
+}
 app.use('/uploads', express.static(uploadsDir));
 
 // Serve static client build if it exists
