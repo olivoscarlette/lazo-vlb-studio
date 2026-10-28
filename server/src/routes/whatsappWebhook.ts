@@ -243,16 +243,55 @@ async function handleAutomatedRsvpStep(params: {
         WHERE id = ? AND wedding_id = ?
       `).run(now, matchedGuest.id, weddingId);
 
-      await WhatsAppService.sendTextMessage(
-        normalizedPhone,
-        `Por favor indícanos cuántas personas asistirán en total (número):`,
-        { weddingId, guestId: matchedGuest.id }
-      );
+      // Si tiene 2 o 3 lugares, ofrecemos botones de opción rápida; si tiene más, mensaje con límite estricto
+      if (totalSeats === 2) {
+        await WhatsAppService.sendInteractiveButtons(
+          normalizedPhone,
+          `Tienes reservados 2 lugares en total a tu nombre.\n\nPor favor selecciona cuántas personas asistirán:`,
+          [
+            { id: 'places_1', title: '1 persona' },
+            { id: 'places_2', title: '2 personas' }
+          ],
+          { weddingId, guestId: matchedGuest.id }
+        );
+      } else if (totalSeats === 3) {
+        await WhatsAppService.sendInteractiveButtons(
+          normalizedPhone,
+          `Tienes reservados 3 lugares en total a tu nombre.\n\nPor favor selecciona cuántas personas asistirán:`,
+          [
+            { id: 'places_1', title: '1 persona' },
+            { id: 'places_2', title: '2 personas' },
+            { id: 'places_3', title: '3 personas' }
+          ],
+          { weddingId, guestId: matchedGuest.id }
+        );
+      } else {
+        await WhatsAppService.sendTextMessage(
+          normalizedPhone,
+          `Tienes reservados ${totalSeats} lugares en total a tu nombre.\n\nPor favor indícanos cuántas personas asistirán en total (puedes confirmar de 1 a ${totalSeats} personas):`,
+          { weddingId, guestId: matchedGuest.id }
+        );
+      }
       return;
     } else {
       // Check if user answered with a number directly
       const parsedNum = parseInt(content.replace(/\D/g, ''), 10);
       if (!isNaN(parsedNum) && parsedNum > 0) {
+        if (parsedNum > totalSeats) {
+          db.prepare(`
+            UPDATE guests
+            SET rsvp_step = 'AWAITING_PLACES_NUMBER', updated_at = ?
+            WHERE id = ? AND wedding_id = ?
+          `).run(now, matchedGuest.id, weddingId);
+
+          await WhatsAppService.sendTextMessage(
+            normalizedPhone,
+            `Lo sentimos, solo tienes reservado un máximo de ${totalSeats} ${totalSeats === 1 ? 'lugar' : 'lugares'} a tu nombre.\n\nPor favor indícanos un número entre 1 y ${totalSeats}:`,
+            { weddingId, guestId: matchedGuest.id }
+          );
+          return;
+        }
+
         db.prepare(`
           UPDATE guests
           SET confirmed_places = ?, updated_at = ?
@@ -265,10 +304,30 @@ async function handleAutomatedRsvpStep(params: {
     }
   }
 
-  // 4. Step: AWAITING_PLACES_NUMBER
+  // 4. Step: AWAITING_PLACES_NUMBER (Límite estricto: solo modificar para abajo)
   if (currentStep === 'AWAITING_PLACES_NUMBER') {
-    const parsedNum = parseInt(content.replace(/\D/g, ''), 10);
+    let parsedNum = 0;
+    if (lowerButtonId === 'places_1' || lowerContent === '1' || lowerContent === '1 persona' || lowerContent === 'uno' || lowerContent === 'una') {
+      parsedNum = 1;
+    } else if (lowerButtonId === 'places_2' || lowerContent === '2' || lowerContent === '2 personas' || lowerContent === 'dos') {
+      parsedNum = 2;
+    } else if (lowerButtonId === 'places_3' || lowerContent === '3' || lowerContent === '3 personas' || lowerContent === 'tres') {
+      parsedNum = 3;
+    } else {
+      const match = content.match(/\d+/);
+      parsedNum = match ? parseInt(match[0], 10) : NaN;
+    }
+
     if (!isNaN(parsedNum) && parsedNum > 0) {
+      if (parsedNum > totalSeats) {
+        await WhatsAppService.sendTextMessage(
+          normalizedPhone,
+          `Lo sentimos, solo tienes reservado un máximo de ${totalSeats} ${totalSeats === 1 ? 'lugar' : 'lugares'} a tu nombre en esta ocasión.\n\nPor favor indícanos cuántas personas asistirán (entre 1 y ${totalSeats}):`,
+          { weddingId, guestId: matchedGuest.id }
+        );
+        return;
+      }
+
       db.prepare(`
         UPDATE guests
         SET confirmed_places = ?, updated_at = ?
@@ -280,7 +339,7 @@ async function handleAutomatedRsvpStep(params: {
     } else {
       await WhatsAppService.sendTextMessage(
         normalizedPhone,
-        `Por favor escribe sólo el número de asistentes en total (por ejemplo: 1, 2):`,
+        `Por favor escribe sólo el número de personas que asistirán (entre 1 y ${totalSeats}):`,
         { weddingId, guestId: matchedGuest.id }
       );
       return;
@@ -329,11 +388,23 @@ async function handleAutomatedRsvpStep(params: {
       return;
     } else {
       // The user typed their restriction directly as text! (e.g. "Soy vegetariano")
+      const restrictionText = content.trim();
+      const guestNow = db.prepare('SELECT observations FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+      const currentObs = (guestNow?.observations || matchedGuest.observations || '').trim();
+      let newObs = restrictionText;
+      if (currentObs) {
+        if (currentObs.toLowerCase().includes('alergia') || currentObs.toLowerCase().includes('restricci')) {
+          newObs = restrictionText;
+        } else {
+          newObs = `${currentObs} | Alergias: ${restrictionText}`;
+        }
+      }
+
       db.prepare(`
         UPDATE guests
-        SET dietary_requirements = ?, rsvp_step = 'COMPLETED', updated_at = ?
+        SET dietary_requirements = ?, observations = ?, rsvp_step = 'COMPLETED', updated_at = ?
         WHERE id = ? AND wedding_id = ?
-      `).run(content.trim(), now, matchedGuest.id, weddingId);
+      `).run(restrictionText, newObs, now, matchedGuest.id, weddingId);
 
       const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
       await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
@@ -343,11 +414,23 @@ async function handleAutomatedRsvpStep(params: {
 
   // 6. Step: AWAITING_DIETARY_DETAIL
   if (currentStep === 'AWAITING_DIETARY_DETAIL') {
+    const restrictionText = content.trim();
+    const guestNow = db.prepare('SELECT observations FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+    const currentObs = (guestNow?.observations || matchedGuest.observations || '').trim();
+    let newObs = restrictionText;
+    if (currentObs) {
+      if (currentObs.toLowerCase().includes('alergia') || currentObs.toLowerCase().includes('restricci')) {
+        newObs = restrictionText;
+      } else {
+        newObs = `${currentObs} | Alergias: ${restrictionText}`;
+      }
+    }
+
     db.prepare(`
       UPDATE guests
-      SET dietary_requirements = ?, rsvp_step = 'COMPLETED', updated_at = ?
+      SET dietary_requirements = ?, observations = ?, rsvp_step = 'COMPLETED', updated_at = ?
       WHERE id = ? AND wedding_id = ?
-    `).run(content.trim(), now, matchedGuest.id, weddingId);
+    `).run(restrictionText, newObs, now, matchedGuest.id, weddingId);
 
     const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
     await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);

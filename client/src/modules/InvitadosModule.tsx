@@ -257,7 +257,7 @@ export const InvitadosModule: React.FC = () => {
       priority: guest.priority || 'Media',
       status: guest.status,
       table_id: guest.table_id || '',
-      observations: guest.observations || '',
+      observations: guest.observations || (guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna' ? `Alergias: ${guest.dietary_requirements}` : ''),
       dietary_requirements: guest.dietary_requirements || '',
       confirmed_places: guest.confirmed_places || (guest.status === 'Confirmado' ? 1 + guest.companion_count : 0)
     });
@@ -369,9 +369,11 @@ export const InvitadosModule: React.FC = () => {
           'WHATSAPP': g.phone,
           'ACOMPAÑANTES': g.companion_count,
           'TOTAL LUGARES': 1 + (g.companion_count || 0),
+          'LUGARES CONFIRMADOS': g.confirmed_places || (g.status === 'Confirmado' ? (1 + (g.companion_count || 0)) : 0),
           'ESTATUS': g.status,
           'MESA': g.status === 'No asistirá' ? 'Liberada' : (g.table_name || 'Sin mesa'),
-          'OBSERVACIONES': g.observations || ''
+          'OBSERVACIONES': g.observations || (g.dietary_requirements && g.dietary_requirements !== 'Ninguna' ? `Alergias: ${g.dietary_requirements}` : ''),
+          'ALERGIAS / RESTRICCIONES': (g.dietary_requirements && g.dietary_requirements !== 'Ninguna') ? g.dietary_requirements : 'Sin restricciones'
         }));
 
       const wb = XLSX.utils.book_new();
@@ -1323,6 +1325,10 @@ export const InvitadosModule: React.FC = () => {
                     <td className="py-3 px-4 max-w-xs truncate text-[#5E524E] whitespace-nowrap">
                       {guest.observations ? (
                         <span title={guest.observations}>{guest.observations}</span>
+                      ) : (guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna') ? (
+                        <span title={`Alergias: ${guest.dietary_requirements}`} className="text-[#8A6D5E] font-medium">
+                          🥗 {guest.dietary_requirements}
+                        </span>
                       ) : (
                         <span className="text-[#D2C4B4] italic">—</span>
                       )}
@@ -1459,14 +1465,24 @@ export const InvitadosModule: React.FC = () => {
               {formData.status === 'Confirmado' && (
                 <div className="grid grid-cols-2 gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200">
                   <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Lugares Confirmados
-                    </label>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="text-[11px] font-bold text-stone-700">
+                        Lugares Confirmados
+                      </label>
+                      <span className="text-[10px] text-stone-400">
+                        Máx: {1 + formData.companion_count}
+                      </span>
+                    </div>
                     <input
                       type="number"
                       min="1"
+                      max={1 + formData.companion_count}
                       value={formData.confirmed_places || (1 + formData.companion_count)}
-                      onChange={e => setFormData({ ...formData, confirmed_places: parseInt(e.target.value, 10) || 1 })}
+                      onChange={e => {
+                        const val = parseInt(e.target.value, 10) || 1;
+                        const maxVal = 1 + formData.companion_count;
+                        setFormData({ ...formData, confirmed_places: Math.min(maxVal, Math.max(1, val)) });
+                      }}
                       className="w-full px-3 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-stone-900"
                     />
                   </div>
@@ -1501,6 +1517,17 @@ export const InvitadosModule: React.FC = () => {
                       </option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {/* Dietary requirements callout if captured via WhatsApp */}
+              {!isNewGuest && editingGuest?.dietary_requirements && editingGuest.dietary_requirements !== 'Ninguna' && (
+                <div className="p-3 bg-[#FAF4F0] border border-[#EFE8E1] rounded-xl text-xs flex items-center space-x-2.5">
+                  <span className="text-base shrink-0">🥗</span>
+                  <div className="min-w-0">
+                    <span className="font-semibold text-[#2B2826] block text-[11px]">Restricciones registradas vía WhatsApp:</span>
+                    <span className="text-[#8A6D5E] font-medium text-xs break-words">{editingGuest.dietary_requirements}</span>
+                  </div>
                 </div>
               )}
 
