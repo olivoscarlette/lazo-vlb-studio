@@ -327,7 +327,8 @@ export const WhatsAppHubModule: React.FC = () => {
     if (!activeConversation || !newMessage.trim() || sending) return;
 
     const trimmedContent = newMessage.trim();
-    const isOfficialTemplate = selectedTemplate === 1;
+    // Only send as official template if template 1 is active AND the content hasn't been replaced by custom chat text
+    const isOfficialTemplate = selectedTemplate === 1 && trimmedContent.includes('Nos llena de ilusión invitarte');
     setSending(true);
     setSendError(null);
 
@@ -803,7 +804,10 @@ export const WhatsAppHubModule: React.FC = () => {
                     rows={2}
                     placeholder={`Escribe un mensaje para ${activeConversation.guest_name}... (Presiona Enter para enviar)`}
                     value={newMessage}
-                    onChange={e => setNewMessage(e.target.value)}
+                    onChange={e => {
+                      setNewMessage(e.target.value);
+                      if (selectedTemplate) setSelectedTemplate(null);
+                    }}
                     onKeyDown={e => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();

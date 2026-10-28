@@ -48,6 +48,14 @@ export const InvitadosModule: React.FC = () => {
   const [bulkSendingWhatsapp, setBulkSendingWhatsapp] = useState(false);
   const [whatsappBanner, setWhatsappBanner] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
+  // WhatsApp Conversation Modal states
+  const [chatGuest, setChatGuest] = useState<Guest | null>(null);
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [sendingChat, setSendingChat] = useState(false);
+  const [chatError, setChatError] = useState<string | null>(null);
+  const [loadingChat, setLoadingChat] = useState(false);
+
   // Permiso exclusivo: solo Administradores y Coordinadores pueden enviar WhatsApps
   const canSendWhatsApp = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR';
 
@@ -475,6 +483,71 @@ export const InvitadosModule: React.FC = () => {
       setWhatsappBanner({ text: err.message || 'Error de conexión', type: 'error' });
     } finally {
       setSendingWhatsappIds(prev => ({ ...prev, [guest.id]: false }));
+    }
+  };
+
+  const handleOpenGuestChat = async (guest: Guest) => {
+    setChatGuest(guest);
+    setChatInput('');
+    setChatError(null);
+    setLoadingChat(true);
+    if (!currentWedding || !token || !guest.phone) {
+      setLoadingChat(false);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/whatsapp/conversations/${currentWedding.id}/${encodeURIComponent(guest.phone)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setChatMessages(data.messages || []);
+      }
+    } catch {
+    } finally {
+      setLoadingChat(false);
+    }
+  };
+
+  const handleSendChatReply = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!chatGuest || !chatInput.trim() || !currentWedding || !token || sendingChat) return;
+    setSendingChat(true);
+    setChatError(null);
+    const textToSend = chatInput.trim();
+
+    try {
+      const res = await fetch('/api/whatsapp/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          weddingId: currentWedding.id,
+          guestId: chatGuest.id,
+          phone: chatGuest.phone,
+          content: textToSend,
+          messageType: 'text'
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setChatInput('');
+        const convRes = await fetch(`/api/whatsapp/conversations/${currentWedding.id}/${encodeURIComponent(chatGuest.phone)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          setChatMessages(convData.messages || []);
+        }
+      } else {
+        setChatError(data.error || 'No se pudo enviar el mensaje por Meta Cloud API.');
+      }
+    } catch (err: any) {
+      setChatError(err.message || 'Error de conexión');
+    } finally {
+      setSendingChat(false);
     }
   };
 
@@ -936,14 +1009,23 @@ export const InvitadosModule: React.FC = () => {
                           </span>
                         ) : guest.whatsapp_status === 'ENVIADO' ? (
                           <div className="inline-flex items-center space-x-1.5">
-                            <span
-                              className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 rounded-lg border border-emerald-200 cursor-pointer hover:bg-emerald-100 transition"
-                              onClick={() => handleSendSingleWhatsapp(guest)}
-                              title={`Reenviar invitación (Último envío: ${guest.last_whatsapp_sent_at ? new Date(guest.last_whatsapp_sent_at).toLocaleDateString() : 'hoy'})`}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenGuestChat(guest)}
+                              className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-[#8A574E] bg-[#F7EDEB] rounded-lg border border-[#ECD9D5] hover:bg-[#EEDAD6] transition shadow-2xs cursor-pointer"
+                              title="Abrir conversación para chatear y responderle al invitado"
                             >
-                              <Check className="w-3 h-3 text-emerald-600" />
-                              <span>Enviado ✓</span>
-                            </span>
+                              <MessageSquare className="w-3 h-3 text-[#C48B81]" />
+                              <span>Conversación</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleSendSingleWhatsapp(guest)}
+                              className="p-1 text-stone-400 hover:text-emerald-700 transition cursor-pointer"
+                              title={`Reenviar plantilla RSVP inicial (Último envío: ${guest.last_whatsapp_sent_at ? new Date(guest.last_whatsapp_sent_at).toLocaleDateString() : 'hoy'})`}
+                            >
+                              <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            </button>
                           </div>
                         ) : guest.whatsapp_status === 'ERROR' ? (
                           <button
@@ -1297,6 +1379,137 @@ export const InvitadosModule: React.FC = () => {
                 {importing ? 'Importando...' : `Confirmar Importación (${importRows.length})`}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Conversación con el Invitado (Para chatear y responderle lo que quieras) */}
+      {chatGuest && (
+        <div className="fixed inset-0 z-50 bg-[#2B2826]/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FFFFFF] border border-[#EFE8E1] rounded-[24px] max-w-xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="p-4 sm:p-5 border-b border-[#EFE8E1] bg-[#FAF7F5] flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-[#2B2826] flex items-center space-x-2">
+                  <MessageSquare className="w-4 h-4 text-[#C48B81]" />
+                  <span>{chatGuest.first_name} {chatGuest.last_name}</span>
+                </h3>
+                <p className="text-xs text-[#7D6F6B] mt-0.5">
+                  {chatGuest.phone} · {1 + (chatGuest.companion_count || 0)} pase(s) asignado(s)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setChatGuest(null)}
+                className="w-8 h-8 rounded-full bg-white border border-[#EFE8E1] text-[#7D6F6B] hover:text-[#2B2826] flex items-center justify-center text-sm font-bold transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Chat Bubbles */}
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[#FCFAF7] min-h-[260px] max-h-[380px]">
+              {loadingChat ? (
+                <div className="py-12 text-center text-xs text-[#7D6F6B] flex items-center justify-center space-x-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#C48B81]" />
+                  <span>Cargando conversación...</span>
+                </div>
+              ) : chatMessages.length === 0 ? (
+                <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                  <p>Aún no hay mensajes registrados con este invitado.</p>
+                </div>
+              ) : (
+                chatMessages.map(m => {
+                  const isOutbound = m.direction === 'OUTBOUND';
+                  return (
+                    <div
+                      key={m.id}
+                      className={`flex flex-col ${isOutbound ? 'items-end' : 'items-start'}`}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-3.5 py-2 text-xs leading-relaxed shadow-2xs ${
+                          isOutbound
+                            ? 'bg-[#F7EDEB] text-[#2B2826] border border-[#ECD9D5] rounded-tr-xs'
+                            : 'bg-white text-[#2B2826] border border-[#EFE8E1] rounded-tl-xs'
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap">{m.content}</p>
+                      </div>
+                      <span className="text-[10px] text-[#7D6F6B]/60 mt-1 px-1">
+                        {new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Error banner if Meta fails */}
+            {chatError && (
+              <div className="px-4 py-2 bg-rose-50 border-t border-rose-200 text-xs text-rose-800 flex items-center justify-between">
+                <span>{chatError}</span>
+                <button
+                  type="button"
+                  onClick={() => setChatError(null)}
+                  className="font-bold text-rose-900 ml-2 cursor-pointer"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
+            {/* Composer */}
+            <form onSubmit={handleSendChatReply} className="p-4 bg-white border-t border-[#EFE8E1] space-y-3">
+              <textarea
+                rows={2}
+                placeholder={`Escribe tu mensaje para responder a ${chatGuest.first_name}... (Presiona Enter para enviar)`}
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendChatReply();
+                  }
+                }}
+                className="w-full px-3.5 py-2 text-xs bg-[#FAF7F5] border border-[#EFE8E1] rounded-xl text-[#2B2826] placeholder:text-[#7D6F6B]/60 focus:outline-none focus:border-[#C48B81] resize-none"
+              />
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    let cleaned = chatGuest.phone.replace(/\D/g, '');
+                    if (cleaned.length === 10) cleaned = '52' + cleaned;
+                    if (cleaned.length === 13 && cleaned.startsWith('521')) cleaned = '52' + cleaned.slice(3);
+                    window.open(`https://wa.me/${cleaned}?text=${encodeURIComponent(chatInput || 'Hola')}`, '_blank');
+                  }}
+                  className="px-3 py-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-semibold rounded-xl shadow-2xs transition cursor-pointer flex items-center space-x-1.5"
+                  title="Abrir WhatsApp Web o App en 1 clic"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>WhatsApp Web</span>
+                </button>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSendSingleWhatsapp(chatGuest)}
+                    className="px-3 py-1.5 text-xs text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF7F5] rounded-xl border border-[#EFE8E1] transition cursor-pointer"
+                    title="Reenviar plantilla oficial de invitación RSVP"
+                  >
+                    Reenviar Plantilla RSVP
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={sendingChat || !chatInput.trim()}
+                    className="px-4 py-1.5 bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer disabled:opacity-40 flex items-center space-x-1.5"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    <span>{sendingChat ? 'Enviando...' : 'Enviar Respuesta'}</span>
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
