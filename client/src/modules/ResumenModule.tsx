@@ -531,8 +531,9 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         </div>
       </div>
 
-      {/* Invitación Formal & Flujo Automatizado de RSVP (WhatsApp Cloud API / SiConfirmo Style) */}
-      <div className="luxury-card rounded-[28px] p-6 sm:p-8 border border-[#EFE8E1] bg-white shadow-xs">
+      {/* Invitación Formal & Flujo Automatizado de RSVP (Exclusivo Administrador y Coordinador) */}
+      {canSeeStaffSection && (
+        <div className="luxury-card rounded-[28px] p-6 sm:p-8 border border-[#EFE8E1] bg-white shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-[#F5EFEB]">
           <div>
             <div className="flex items-center space-x-2 text-xs font-semibold text-[#A86B60] uppercase tracking-wider">
@@ -855,6 +856,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
           </div>
         </div>
       </div>
+      )}
 
       {/* Requirement 4: Equipo VLB Studio / Staff Asignado (OCULTO PARA NOVIOS, VISIBLE SOLO PARA ADMIN Y COORD) */}
       {canSeeStaffSection && (

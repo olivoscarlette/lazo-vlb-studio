@@ -851,22 +851,24 @@ export const InvitadosModule: React.FC = () => {
             )}
           </div>
 
-          {/* Botón para Configurar Invitación Formal (PDF / Enlace) */}
-          <button
-            type="button"
-            onClick={() => setShowInvitationModal(true)}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F7EDEB] hover:bg-[#EFE2DF] text-[#A86B60] text-xs font-semibold rounded-xl transition border border-[#ECD9D5] shadow-2xs cursor-pointer"
-            title="Subir archivo PDF o pegar enlace de Canva para la invitación"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
-            <span>
-              {currentWedding?.invitation_type === 'PDF' && currentWedding?.invitation_pdf_url
-                ? '📄 Invitación PDF lista'
-                : currentWedding?.invitation_url
-                ? '🔗 Enlace Canva listo'
-                : '💌 Subir Invitación (PDF / Enlace)'}
-            </span>
-          </button>
+          {/* Botón para Configurar Invitación Formal (PDF / Enlace) — Exclusivo Admin y Coordinadores */}
+          {canSendWhatsApp && (
+            <button
+              type="button"
+              onClick={() => setShowInvitationModal(true)}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F7EDEB] hover:bg-[#EFE2DF] text-[#A86B60] text-xs font-semibold rounded-xl transition border border-[#ECD9D5] shadow-2xs cursor-pointer"
+              title="Subir archivo PDF o pegar enlace de Canva para la invitación"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>
+                {currentWedding?.invitation_type === 'PDF' && currentWedding?.invitation_pdf_url
+                  ? '📄 Invitación PDF lista'
+                  : currentWedding?.invitation_url
+                  ? '🔗 Enlace Canva listo'
+                  : '💌 Subir Invitación (PDF / Enlace)'}
+              </span>
+            </button>
+          )}
 
           {canSendWhatsApp && (
             <button
@@ -1107,24 +1109,7 @@ export const InvitadosModule: React.FC = () => {
                 <th className="py-3.5 px-4 whitespace-nowrap min-w-[175px]">WHATSAPP</th>
                 <th className="py-3.5 px-4 text-center whitespace-nowrap"># ACOMPAÑANTES</th>
                 <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">ESTATUS</th>
-                {/* Botón para Configurar Invitación Formal (PDF / Enlace) */}
-          <button
-            type="button"
-            onClick={() => setShowInvitationModal(true)}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F7EDEB] hover:bg-[#EFE2DF] text-[#A86B60] text-xs font-semibold rounded-xl transition border border-[#ECD9D5] shadow-2xs cursor-pointer"
-            title="Subir archivo PDF o pegar enlace de Canva para la invitación"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
-            <span>
-              {currentWedding?.invitation_type === 'PDF' && currentWedding?.invitation_pdf_url
-                ? '📄 Invitación PDF lista'
-                : currentWedding?.invitation_url
-                ? '🔗 Enlace Canva listo'
-                : '💌 Subir Invitación (PDF / Enlace)'}
-            </span>
-          </button>
-
-          {canSendWhatsApp && (
+                {canSendWhatsApp && (
                   <th className="py-3.5 px-4 text-center whitespace-nowrap">RSVP WHATSAPP</th>
                 )}
                 <th className="py-3.5 px-4 whitespace-nowrap">MESA</th>
@@ -1245,24 +1230,7 @@ export const InvitadosModule: React.FC = () => {
                     </td>
 
                     {/* RSVP WhatsApp Action & Status — Only visible for ADMINISTRADOR & COORDINADOR */}
-                    {/* Botón para Configurar Invitación Formal (PDF / Enlace) */}
-          <button
-            type="button"
-            onClick={() => setShowInvitationModal(true)}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F7EDEB] hover:bg-[#EFE2DF] text-[#A86B60] text-xs font-semibold rounded-xl transition border border-[#ECD9D5] shadow-2xs cursor-pointer"
-            title="Subir archivo PDF o pegar enlace de Canva para la invitación"
-          >
-            <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
-            <span>
-              {currentWedding?.invitation_type === 'PDF' && currentWedding?.invitation_pdf_url
-                ? '📄 Invitación PDF lista'
-                : currentWedding?.invitation_url
-                ? '🔗 Enlace Canva listo'
-                : '💌 Subir Invitación (PDF / Enlace)'}
-            </span>
-          </button>
-
-          {canSendWhatsApp && (
+                    {canSendWhatsApp && (
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         {sendingWhatsappIds[guest.id] ? (
                           <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 rounded-lg border border-emerald-200">
