@@ -726,30 +726,20 @@ export const WhatsAppHubModule: React.FC = () => {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Error Toast if Meta rejects with 1-click fallback */}
+              {/* Error Toast */}
               {sendError && (
-                <div className="mx-4 my-2 px-3.5 py-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-2xs">
+                <div className="mx-4 my-2 px-3.5 py-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center justify-between gap-2 shadow-2xs">
                   <div className="flex items-center space-x-2">
                     <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
                     <span>{sendError}</span>
                   </div>
-                  <div className="flex items-center space-x-2 shrink-0">
-                    <button
-                      type="button"
-                      onClick={() => handleSendDirectWaMe(newMessage || 'Hola')}
-                      className="px-3 py-1 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-semibold rounded-lg shadow-2xs transition cursor-pointer flex items-center space-x-1"
-                      title="Enviar de inmediato abriendo WhatsApp Web o App"
-                    >
-                      <span>Abrir en WhatsApp (1 clic)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSendError(null)}
-                      className="font-bold text-rose-900 cursor-pointer p-1"
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSendError(null)}
+                    className="font-bold text-rose-900 cursor-pointer p-1"
+                  >
+                    ✕
+                  </button>
                 </div>
               )}
 
@@ -817,28 +807,16 @@ export const WhatsAppHubModule: React.FC = () => {
                     className="flex-1 px-3.5 py-2 text-xs bg-[#FAF8F5] border border-[#EAE3DA] rounded-xl text-[#332A28] placeholder:text-[#7D6F6B]/60 focus:outline-none focus:border-[#9C665C] leading-relaxed resize-none"
                   />
 
-                  {/* Send Button: strictly through Meta Cloud API */}
+                  {/* Send Button: Clean, native WhatsApp style */}
                   <button
                     type="button"
                     onClick={() => handleSendMessageMeta()}
                     disabled={sending || !newMessage.trim()}
-                    className="px-3.5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-40 flex items-center space-x-1.5 shrink-0"
-                    title="Enviar mensaje automático por Meta Cloud API (Enter)"
+                    className="px-5 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-40 flex items-center space-x-2 shrink-0"
+                    title="Enviar mensaje (Enter)"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>{sending ? '...' : 'Enviar API'}</span>
-                  </button>
-
-                  {/* Send Direct wa.me Button: Opens WhatsApp Web/App directly with text prefilled */}
-                  <button
-                    type="button"
-                    onClick={() => handleSendDirectWaMe(newMessage)}
-                    disabled={!newMessage.trim()}
-                    className="px-3.5 py-2.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer disabled:opacity-40 flex items-center space-x-1.5 shrink-0"
-                    title="Abrir y enviar directamente en WhatsApp Web o App (1 clic)"
-                  >
-                    <MessageSquare className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">WhatsApp Web</span>
+                    <span>{sending ? 'Enviando...' : 'Enviar'}</span>
                   </button>
                 </div>
 

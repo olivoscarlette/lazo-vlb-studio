@@ -1474,40 +1474,15 @@ export const InvitadosModule: React.FC = () => {
                 className="w-full px-3.5 py-2 text-xs bg-[#FAF7F5] border border-[#EFE8E1] rounded-xl text-[#2B2826] placeholder:text-[#7D6F6B]/60 focus:outline-none focus:border-[#C48B81] resize-none"
               />
 
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+              <div className="flex items-center justify-end gap-2 pt-1">
                 <button
-                  type="button"
-                  onClick={() => {
-                    let cleaned = chatGuest.phone.replace(/\D/g, '');
-                    if (cleaned.length === 10) cleaned = '52' + cleaned;
-                    if (cleaned.length === 13 && cleaned.startsWith('521')) cleaned = '52' + cleaned.slice(3);
-                    window.open(`https://wa.me/${cleaned}?text=${encodeURIComponent(chatInput || 'Hola')}`, '_blank');
-                  }}
-                  className="px-3 py-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-semibold rounded-xl shadow-2xs transition cursor-pointer flex items-center space-x-1.5"
-                  title="Abrir WhatsApp Web o App en 1 clic"
+                  type="submit"
+                  disabled={sendingChat || !chatInput.trim()}
+                  className="px-5 py-2 bg-[#25D366] hover:bg-[#20bd5a] text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer disabled:opacity-40 flex items-center space-x-1.5"
                 >
-                  <MessageSquare className="w-3.5 h-3.5" />
-                  <span>WhatsApp Web</span>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>{sendingChat ? 'Enviando...' : 'Enviar'}</span>
                 </button>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => handleSendSingleWhatsapp(chatGuest)}
-                    className="px-3 py-1.5 text-xs text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF7F5] rounded-xl border border-[#EFE8E1] transition cursor-pointer"
-                    title="Reenviar plantilla oficial de invitación RSVP"
-                  >
-                    Reenviar Plantilla RSVP
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={sendingChat || !chatInput.trim()}
-                    className="px-4 py-1.5 bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer disabled:opacity-40 flex items-center space-x-1.5"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>{sendingChat ? 'Enviando...' : 'Enviar Respuesta'}</span>
-                  </button>
-                </div>
               </div>
             </form>
           </div>
