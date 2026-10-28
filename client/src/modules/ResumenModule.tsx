@@ -6,6 +6,7 @@ import {
   ArrowRight, Calendar, Landmark, Church,
   Upload, FileText, Link as LinkIcon, ExternalLink, Trash2, Bot, Check, AlertCircle, Loader2
 } from 'lucide-react';
+import { BroadcastScheduleModal } from '../components/BroadcastScheduleModal';
 
 interface ResumenProps {
   onNavigateTab: (tab: any) => void;
@@ -21,6 +22,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [invitationFeedback, setInvitationFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
 
   const handleUploadInvitationPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -847,6 +849,111 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
       </div>
       )}
 
+      {/* Envíos Automáticos Programados por WhatsApp (7 Días Antes & Día del Evento) */}
+      {canSeeStaffSection && (
+        <div className="luxury-card rounded-[28px] p-6 sm:p-8 border border-[#EFE8E1] bg-white shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#F5EFEB]">
+            <div>
+              <div className="flex items-center space-x-2 text-xs font-semibold text-[#A86B60] uppercase tracking-wider">
+                <Clock className="w-4 h-4 text-[#C48B81]" />
+                <span>Difusiones Automatizadas por WhatsApp</span>
+              </div>
+              <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#2B2826] mt-1">
+                Recordatorio 7 Días Antes & Mesas Día del Evento
+              </h3>
+              <p className="text-xs sm:text-sm text-[#7D6F6B] mt-1 leading-relaxed">
+                Mensajes programados que se disparan automáticamente a los invitados confirmados para compartir la ubicación, dress code y su asignación de mesa.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowBroadcastModal(true)}
+              className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs cursor-pointer shrink-0"
+            >
+              <Clock className="w-4 h-4" />
+              <span>Configurar & Programar</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6">
+            {/* Card 1: Recordatorio 7 Días */}
+            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#EBDCC5]/50 text-[#8A6332]">
+                    📍 Plantilla 2 · Recordatorio
+                  </span>
+                  <span className="text-xs font-semibold text-[#25D366] flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
+                    <span>7 Días Antes ({weddingData?.reminder_7days_time || '11:00'} hrs)</span>
+                  </span>
+                </div>
+                <h4 className="font-serif text-lg font-bold text-[#332A28] mt-2">
+                  Ubicación, Dress Code y Horarios
+                </h4>
+                <p className="text-xs text-[#7D6F6B] mt-1 leading-relaxed">
+                  Envía el recordatorio editorial formal con templo, recepción, dress code y mapas a todos los invitados que tengan estatus <strong>Confirmado</strong>.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-[#EAE3DA]/60 flex items-center justify-between">
+                <span className="text-[11px] text-[#7D6F6B]">
+                  Estatus:{' '}
+                  <strong className="text-[#332A28]">
+                    {weddingData?.reminder_7days_status === 'SENT' ? 'Enviado ✓' : 'Programado'}
+                  </strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowBroadcastModal(true)}
+                  className="text-xs font-bold text-[#9C665C] hover:underline cursor-pointer"
+                >
+                  Editar texto u hora →
+                </button>
+              </div>
+            </div>
+
+            {/* Card 2: Mesa Día del Evento */}
+            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex flex-col justify-between space-y-4">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#E4ECE5] text-[#2B5235]">
+                    🍽️ Plantilla 3 · Día de la Boda
+                  </span>
+                  <span className="text-xs font-semibold text-[#25D366] flex items-center space-x-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
+                    <span>Día del Evento ({weddingData?.dayof_seating_time || '12:00'} hrs)</span>
+                  </span>
+                </div>
+                <h4 className="font-serif text-lg font-bold text-[#332A28] mt-2">
+                  Asignación de Mesa y Bienvenida
+                </h4>
+                <p className="text-xs text-[#7D6F6B] mt-1 leading-relaxed">
+                  El día de la boda entrega el número y nombre de mesa asignada a los confirmados para que lleguen directamente a su lugar con el equipo VLB.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-[#EAE3DA]/60 flex items-center justify-between">
+                <span className="text-[11px] text-[#7D6F6B]">
+                  Estatus:{' '}
+                  <strong className="text-[#332A28]">
+                    {weddingData?.dayof_seating_status === 'SENT' ? 'Enviado ✓' : 'Programado'}
+                  </strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowBroadcastModal(true)}
+                  className="text-xs font-bold text-[#9C665C] hover:underline cursor-pointer"
+                >
+                  Editar texto u hora →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Requirement 4: Equipo VLB Studio / Staff Asignado (OCULTO PARA NOVIOS, VISIBLE SOLO PARA ADMIN Y COORD) */}
       {canSeeStaffSection && (
         <div className="luxury-card rounded-2xl p-6 sm:p-7 border border-[#EAE3DA] bg-[#FFFFFF] shadow-xs">
@@ -1053,6 +1160,31 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Modal de Programación de Envíos WhatsApp (Recordatorio 7 días & Asignación de mesa) */}
+      {showBroadcastModal && currentWedding && (
+        <BroadcastScheduleModal
+          isOpen={showBroadcastModal}
+          onClose={() => {
+            setShowBroadcastModal(false);
+            // Refresh wedding data to pick up new statuses
+            if (currentWedding?.id) {
+              fetch(`/api/weddings/${currentWedding.id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              })
+                .then(r => r.json())
+                .then(d => {
+                  if (d.wedding) setWeddingData(d.wedding);
+                })
+                .catch(() => {});
+            }
+          }}
+          weddingId={currentWedding.id}
+          token={token}
+          weddingName={currentWedding.name}
+          weddingDate={currentWedding.wedding_date || currentWedding.date}
+        />
       )}
     </div>
   );

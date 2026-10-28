@@ -22,6 +22,7 @@ import catalogsBackupRouter from './routes/catalogsBackup.js';
 import whatsappHubRouter from './routes/whatsappHub.js';
 import whatsappWebhookRouter from './routes/whatsappWebhook.js';
 import calendarRouter from './routes/calendar.js';
+import { BroadcastScheduler } from './services/broadcastScheduler.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -164,6 +165,12 @@ if (process.env.NODE_ENV !== 'test') {
     console.log(`Servidor activo en http://localhost:${PORT}`);
     console.log(`Base de datos SQLite persistente inicializada.`);
     console.log(`==================================================`);
+
+    // Iniciar monitor de difusión automática de WhatsApp (7 días antes y Día del Evento)
+    BroadcastScheduler.checkAndRunScheduledBroadcasts();
+    setInterval(() => {
+      BroadcastScheduler.checkAndRunScheduledBroadcasts();
+    }, 60 * 1000);
   });
 }
 

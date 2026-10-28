@@ -8,6 +8,7 @@ import {
   Send, Loader2, Check, FileText, Sparkles, Link as LinkIcon, ExternalLink, Trash2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { BroadcastScheduleModal } from '../components/BroadcastScheduleModal';
 
 export const InvitadosModule: React.FC = () => {
   const { currentWedding, setCurrentWedding, token, user } = useAuth();
@@ -17,6 +18,7 @@ export const InvitadosModule: React.FC = () => {
 
   // Invitation Modal states
   const [showInvitationModal, setShowInvitationModal] = useState(false);
+  const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [invitationForm, setInvitationForm] = useState({
     invitation_type: 'LINK' as 'LINK' | 'PDF',
     invitation_url: '',
@@ -883,6 +885,18 @@ export const InvitadosModule: React.FC = () => {
                 <Send className="w-3.5 h-3.5 text-emerald-100" />
               )}
               <span>{bulkSendingWhatsapp ? 'Enviando...' : 'Enviar RSVP WhatsApp'}</span>
+            </button>
+          )}
+
+          {canSendWhatsApp && (
+            <button
+              type="button"
+              onClick={() => setShowBroadcastModal(true)}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] text-xs font-semibold rounded-xl transition border border-[#EAE3DA] shadow-2xs cursor-pointer"
+              title="Programar envíos automáticos de WhatsApp (Recordatorio 7 días antes y Asignación de mesa)"
+            >
+              <Clock className="w-3.5 h-3.5 text-[#9C665C]" />
+              <span>⏰ Programar Recordatorios & Mesas</span>
             </button>
           )}
 
@@ -2015,6 +2029,18 @@ export const InvitadosModule: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Programación de Envíos WhatsApp (Recordatorio 7 días & Asignación de mesa) */}
+      {showBroadcastModal && currentWedding && (
+        <BroadcastScheduleModal
+          isOpen={showBroadcastModal}
+          onClose={() => setShowBroadcastModal(false)}
+          weddingId={currentWedding.id}
+          token={token}
+          weddingName={currentWedding.name}
+          weddingDate={currentWedding.wedding_date || currentWedding.date}
+        />
       )}
     </div>
   );

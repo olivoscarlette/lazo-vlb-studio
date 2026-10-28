@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { db } from '../db/index.js';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
 import { WhatsAppService } from '../services/whatsappService.js';
+import { BroadcastScheduler } from '../services/broadcastScheduler.js';
 
 const router = Router();
 
@@ -545,6 +546,117 @@ router.post('/log-direct', async (req, res) => {
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Error al registrar mensaje directo: ' + err.message });
+  }
+});
+
+/**
+ * GET /api/whatsapp/scheduled/:weddingId
+ * Returns schedule status, dates, and recipient counts
+ */
+router.get('/scheduled/:weddingId', (req, res) => {
+  try {
+    const { weddingId } = req.params;
+    const info = BroadcastScheduler.getBroadcastInfo(weddingId);
+    if (!info) {
+      return res.status(404).json({ error: 'Boda no encontrada.' });
+    }
+    res.json({ success: true, schedule: info });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al obtener programación: ' + err.message });
+  }
+});
+
+/**
+ * PUT /api/whatsapp/scheduled/:weddingId
+ * Updates automated broadcast settings and templates
+ */
+router.put('/scheduled/:weddingId', (req, res) => {
+  try {
+    const { weddingId } = req.params;
+    BroadcastScheduler.updateBroadcastSettings(weddingId, req.body);
+    const updated = BroadcastScheduler.getBroadcastInfo(weddingId);
+    res.json({ success: true, schedule: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al actualizar programación: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/whatsapp/scheduled/:weddingId/send-test
+ * Sends a single test preview to a provided phone
+ */
+router.post('/scheduled/:weddingId/send-test', async (req, res) => {
+  try {
+    const { weddingId } = req.params;
+    const { type, testPhone } = req.body;
+    if (!testPhone) {
+      return res.status(400).json({ error: 'El número de teléfono para la prueba es obligatorio.' });
+    }
+
+    let result;
+    if (type === 'SEATING') {
+      result = await BroadcastScheduler.sendSeatingBroadcast(weddingId, { isTest: true, testPhone });
+    } else {
+      result = await BroadcastScheduler.sendReminderBroadcast(weddingId, { isTest: true, testPhone });
+    }
+
+    res.json({ success: result.success, result });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al enviar prueba: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/whatsapp/scheduled/:weddingId/send-now
+ * Manually fires the batch broadcast to all eligible guests immediately
+ */
+router.post('/scheduled/:weddingId/send-now', async (req, res) => {
+  try {
+    const { weddingId } = req.params;
+    const { type } = req.body;
+
+    let result;
+    if (type === 'SEATING') {
+      result = await BroadcastScheduler.sendSeatingBroadcast(weddingId);
+    } else {
+      result = await BroadcastScheduler.sendReminderBroadcast(weddingId);
+    }
+
+    const updated = BroadcastScheduler.getBroadcastInfo(weddingId);
+    res.json({ success: true, result, schedule: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al ejecutar envío masivo: ' + err.message });
+  }
+});
+
+/**
+ * POST /api/whatsapp/scheduled/:weddingId/reset
+ * Resets a broadcast status back to PENDING so it can fire again
+ */
+router.post('/scheduled/:weddingId/reset', (req, res) => {
+  try {
+    const { weddingId } = req.params;
+    const { type } = req.body;
+    const now = new Date().toISOString();
+
+    if (type === 'SEATING') {
+      db.prepare(`
+        UPDATE weddings 
+        SET dayof_seating_status = 'PENDING', dayof_seating_sent_at = NULL, updated_at = ? 
+        WHERE id = ?
+      `).run(now, weddingId);
+    } else {
+      db.prepare(`
+        UPDATE weddings 
+        SET reminder_7days_status = 'PENDING', reminder_7days_sent_at = NULL, updated_at = ? 
+        WHERE id = ?
+      `).run(now, weddingId);
+    }
+
+    const updated = BroadcastScheduler.getBroadcastInfo(weddingId);
+    res.json({ success: true, schedule: updated });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al reiniciar estado: ' + err.message });
   }
 });
 

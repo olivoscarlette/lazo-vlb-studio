@@ -441,11 +441,19 @@ export const WhatsAppHubModule: React.FC = () => {
     if (templateType === 1) {
       text = `Hola ${name},\n\nEs un honor para nosotros invitarte a celebrar la boda de\n${coupleClean}\n\n🗓 ${dateFormatted}\n🎟 Pases reservados: ${seats} persona(s)\n\nNos encantaría compartir este día tan especial contigo.\nPor favor, ayúdanos confirmando tu asistencia seleccionando una opción abajo:\n\n[ Confirmar Asistencia ] [ No podré asistir ]`;
     } else if (templateType === 2) {
-      const venue = activeWedding?.reception_venue || 'Fábrica La Fama';
+      const ceremony = activeWedding?.ceremony_venue || 'Templo / Parroquia';
+      const cTime = activeWedding?.ceremony_time || 'Por confirmar';
+      const reception = activeWedding?.reception_venue || 'Sede de recepción';
+      const rTime = activeWedding?.reception_time || 'Por confirmar';
       const dressCode = activeWedding?.dress_code || 'Rigurosa Etiqueta / Formal';
-      text = `¡Hola ${name}! 📍 Te compartimos los detalles de la boda de ${coupleClean}: La recepción se llevará a cabo en ${venue}. Código de vestimenta: ${dressCode}. ¡Te esperamos con mucha alegría!`;
+      const locationLink = activeWedding?.invitation_type === 'PDF' && activeWedding?.invitation_pdf_url
+        ? activeWedding.invitation_pdf_url
+        : (activeWedding?.invitation_url || '');
+      const locationLine = locationLink ? `\n📍 Ubicación / Invitación digital: ${locationLink}` : '';
+
+      text = `RECORDATORIO & DETALLES ✨\n\nBoda ${coupleClean}\n¡Estamos a solo 7 días de celebrar juntos!\n\nTe compartimos la información esencial para que disfrutes al máximo este gran día:\n\n• Ceremonia: ${ceremony} · ${cTime}\n• Recepción: ${reception} · ${rTime}\n• Código de vestimenta: ${dressCode}\n• Pases confirmados: ${seats} persona(s)${locationLine}\n\n¡Nos dará muchísimo gusto recibirte!`;
     } else if (templateType === 3) {
-      text = `¡Hola ${name}! ✨ ¡Hoy es el gran día de ${coupleClean}! Te esperamos con mucha emoción. Tu mesa asignada es: ${table}. Al llegar, el equipo de coordinación VLB Studio te guiará a tu lugar. ¡A disfrutar!`;
+      text = `¡HOY CELEBRAMOS! 🥂✨\n\nHola ${name},\n¡El gran día de ${coupleClean} ha llegado!\n\nHemos preparado tu lugar con mucho cariño:\n🍽️ Tu mesa asignada: ${table}\n🎟️ Pases reservados: ${seats} persona(s)\n\nAl llegar a la recepción, el equipo de coordinación de Viva la Bride Studio estará listo para darte la bienvenida y acompañarte a tu lugar.\n\n¡A disfrutar y celebrar juntos!`;
     }
     setNewMessage(text);
   };
@@ -802,9 +810,9 @@ export const WhatsAppHubModule: React.FC = () => {
                       ? 'bg-[#9C665C] text-white border-[#9C665C]'
                       : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] border-[#EAE3DA]'
                   }`}
-                  title="Cargar ubicación, dress code y horarios"
+                  title="Cargar recordatorio editorial de 7 días antes (Ubicación, Dress Code y Horarios)"
                 >
-                  📍 2. Ubicación & Dress Code
+                  📍 2. Recordatorio & Dress Code (7 días)
                 </button>
                 <button
                   type="button"
@@ -814,9 +822,9 @@ export const WhatsAppHubModule: React.FC = () => {
                       ? 'bg-[#9C665C] text-white border-[#9C665C]'
                       : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#332A28] border-[#EAE3DA]'
                   }`}
-                  title="Cargar asignación de mesa para el Día Boda"
+                  title="Cargar asignación de mesa para el Día del Evento"
                 >
-                  🍽️ 3. Mesa Día Boda
+                  🍽️ 3. Mesa Día Boda (Día del evento)
                 </button>
               </div>
 

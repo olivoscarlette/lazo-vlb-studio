@@ -426,6 +426,38 @@ export function initDatabase() {
     db.exec('ALTER TABLE weddings ADD COLUMN no_children INTEGER DEFAULT 0;');
   } catch {}
 
+  // Weddings - Scheduled WhatsApp Broadcasts (7-day reminder & Day-of Seating)
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN reminder_7days_enabled INTEGER DEFAULT 1;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN reminder_7days_time TEXT DEFAULT '11:00';");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN reminder_7days_status TEXT DEFAULT 'PENDING';");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN reminder_7days_sent_at TEXT;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN reminder_template_text TEXT;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN dayof_seating_enabled INTEGER DEFAULT 1;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN dayof_seating_time TEXT DEFAULT '12:00';");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN dayof_seating_status TEXT DEFAULT 'PENDING';");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN dayof_seating_sent_at TEXT;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN seating_template_text TEXT;");
+  } catch {}
+
   // Guests - Automated RSVP Bot Migrations
   try {
     db.exec('ALTER TABLE guests ADD COLUMN dietary_requirements TEXT;');
@@ -435,6 +467,12 @@ export function initDatabase() {
   } catch {}
   try {
     db.exec("ALTER TABLE guests ADD COLUMN rsvp_step TEXT DEFAULT 'NONE';");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN reminder_sent_at TEXT;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN seating_sent_at TEXT;");
   } catch {}
 
   db.exec(`
