@@ -4,7 +4,7 @@ import {
   MessageSquare, Search, Send, CheckCheck,
   Check, Clock, User, Phone, Users, Sparkles, Filter, ChevronRight,
   ShieldCheck, AlertCircle, HeartHandshake, Calendar, Copy, CheckCircle2,
-  XCircle, Utensils, MapPin, Tag
+  XCircle, Utensils, MapPin, Tag, FileText
 } from 'lucide-react';
 
 interface WhatsAppConversation {
@@ -388,6 +388,39 @@ export const WhatsAppHubModule: React.FC = () => {
       setMessages(prev =>
         prev.map(m => m.id === tempId ? { ...m, status: 'FAILED' } : m)
       );
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleSendInvitationMeta = async () => {
+    if (!activeConversation || !token || sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const res = await fetch('/api/whatsapp/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          weddingId: activeConversation.wedding_id,
+          guestId: activeConversation.guest_id,
+          phone: activeConversation.phone,
+          content: 'Invitación oficial',
+          messageType: 'invitation'
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        await fetchChatMessages(activeConversation);
+        fetchConversations(true);
+      } else {
+        setSendError(data.error || 'Error al enviar la invitación');
+      }
+    } catch (err: any) {
+      setSendError(err.message || 'Error de conexión');
     } finally {
       setSending(false);
     }
@@ -822,14 +855,26 @@ export const WhatsAppHubModule: React.FC = () => {
 
                 <div className="flex items-center justify-between text-[11px] text-[#7D6F6B] mt-1.5 px-1">
                   <span>Presiona <strong>Enter</strong> para enviar, <strong>Shift + Enter</strong> para salto de línea</span>
-                  <button
-                    type="button"
-                    onClick={handleCopyMessage}
-                    disabled={!newMessage.trim()}
-                    className="text-[#9C665C] hover:underline cursor-pointer disabled:opacity-30"
-                  >
-                    {copied ? '¡Copiado! ✓' : 'Copiar borrador'}
-                  </button>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      type="button"
+                      onClick={handleSendInvitationMeta}
+                      disabled={sending}
+                      className="text-[#A86B60] hover:underline cursor-pointer disabled:opacity-30 font-semibold flex items-center space-x-1"
+                      title="Enviar invitación formal configurada (PDF o Enlace) por WhatsApp"
+                    >
+                      <FileText className="w-3 h-3" />
+                      <span>Enviar Invitación Formal</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCopyMessage}
+                      disabled={!newMessage.trim()}
+                      className="text-[#9C665C] hover:underline cursor-pointer disabled:opacity-30"
+                    >
+                      {copied ? '¡Copiado! ✓' : 'Copiar borrador'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </>

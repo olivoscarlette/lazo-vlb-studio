@@ -1,8 +1,39 @@
 import { Router } from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 import { db } from '../db/index.js';
 import { authenticateToken, requireRole, requireWeddingAccess, logAudit } from '../middleware/auth.js';
 
 const router = Router();
+
+const INVITATIONS_DIR = path.resolve(process.cwd(), 'data', 'uploads', 'invitations');
+if (!fs.existsSync(INVITATIONS_DIR)) {
+  fs.mkdirSync(INVITATIONS_DIR, { recursive: true });
+}
+
+const invitationStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, INVITATIONS_DIR);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.pdf';
+    const uniqueSuffix = 'invitation_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+const uploadInvitation = multer({
+  storage: invitationStorage,
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten archivos en formato PDF para la invitación formal.'));
+    }
+  }
+});
 
 // GET /api/weddings - General Dashboard list (scoped by role)
 router.get('/', authenticateToken, (req, res) => {
@@ -261,6 +292,8 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     name, partner_1_name, partner_2_name, wedding_date,
     ceremony_time, reception_time, ceremony_venue, reception_venue,
     estimated_guests, status, notes, package_type, floor_plan_url,
+    invitation_type, invitation_url, invitation_pdf_url, invitation_pdf_filename,
+    dress_code, no_children,
     expected_updated_at
   } = req.body;
 
@@ -282,7 +315,9 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     UPDATE weddings SET
       name = ?, partner_1_name = ?, partner_2_name = ?, wedding_date = ?,
       ceremony_time = ?, reception_time = ?, ceremony_venue = ?, reception_venue = ?,
-      estimated_guests = ?, status = ?, notes = ?, package_type = ?, floor_plan_url = ?, updated_at = ?
+      estimated_guests = ?, status = ?, notes = ?, package_type = ?, floor_plan_url = ?,
+      invitation_type = ?, invitation_url = ?, invitation_pdf_url = ?, invitation_pdf_filename = ?,
+      dress_code = ?, no_children = ?, updated_at = ?
     WHERE id = ?
   `).run(
     name || wedding.name,
@@ -298,13 +333,95 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     notes ?? wedding.notes,
     package_type || wedding.package_type,
     floor_plan_url !== undefined ? floor_plan_url : wedding.floor_plan_url,
+    invitation_type !== undefined ? invitation_type : (wedding.invitation_type || 'LINK'),
+    invitation_url !== undefined ? invitation_url : wedding.invitation_url,
+    invitation_pdf_url !== undefined ? invitation_pdf_url : wedding.invitation_pdf_url,
+    invitation_pdf_filename !== undefined ? invitation_pdf_filename : wedding.invitation_pdf_filename,
+    dress_code !== undefined ? dress_code : wedding.dress_code,
+    no_children !== undefined ? (no_children ? 1 : 0) : (wedding.no_children || 0),
     now,
     weddingId
   );
 
   logAudit(weddingId, user.id, user.name, 'ACTUALIZAR_BODA', 'WEDDING', weddingId, `Actualización de datos operativos de la boda`);
 
-  return res.json({ message: 'Boda actualizada correctamente.', updated_at: now });
+  const updatedWedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+  return res.json({ message: 'Boda actualizada correctamente.', updated_at: now, wedding: updatedWedding });
+});
+
+// POST /api/weddings/:weddingId/invitation-file - Subir archivo PDF de la invitación
+router.post('/:weddingId/invitation-file', authenticateToken, requireWeddingAccess, (req, res, next) => {
+  uploadInvitation.single('invitation_file')(req, res, err => {
+    if (err) {
+      return res.status(400).json({ error: err.message || 'Error al subir archivo de invitación.' });
+    }
+    next();
+  });
+}, (req, res) => {
+  const { weddingId } = req.params;
+  const user = req.user!;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: 'Debes seleccionar un archivo PDF para la invitación.' });
+  }
+
+  const now = new Date().toISOString();
+  const pdfUrl = `/uploads/invitations/${file.filename}`;
+  const originalFilename = file.originalname;
+
+  db.prepare(`
+    UPDATE weddings
+    SET invitation_type = 'PDF',
+        invitation_pdf_url = ?,
+        invitation_pdf_filename = ?,
+        updated_at = ?
+    WHERE id = ?
+  `).run(pdfUrl, originalFilename, now, weddingId);
+
+  logAudit(weddingId, user.id, user.name, 'SUBIR_INVITACION_PDF', 'WEDDING', weddingId, `Invitación formal en PDF subida: ${originalFilename}`);
+
+  const updated = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+  return res.json({
+    success: true,
+    message: 'Invitación en PDF guardada exitosamente.',
+    invitation_type: 'PDF',
+    invitation_pdf_url: pdfUrl,
+    invitation_pdf_filename: originalFilename,
+    wedding: updated
+  });
+});
+
+// DELETE /api/weddings/:weddingId/invitation-file - Eliminar archivo PDF de la invitación
+router.delete('/:weddingId/invitation-file', authenticateToken, requireWeddingAccess, (req, res) => {
+  const { weddingId } = req.params;
+  const user = req.user!;
+
+  const wedding = db.prepare('SELECT invitation_pdf_url FROM weddings WHERE id = ?').get(weddingId) as any;
+  if (wedding?.invitation_pdf_url) {
+    try {
+      const filePath = path.resolve(process.cwd(), 'data', wedding.invitation_pdf_url.replace(/^\//, ''));
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch (e) {
+      console.warn('Error deleting old invitation file:', e);
+    }
+  }
+
+  const now = new Date().toISOString();
+  db.prepare(`
+    UPDATE weddings
+    SET invitation_type = 'LINK',
+        invitation_pdf_url = NULL,
+        invitation_pdf_filename = NULL,
+        updated_at = ?
+    WHERE id = ?
+  `).run(now, weddingId);
+
+  logAudit(weddingId, user.id, user.name, 'ELIMINAR_INVITACION_PDF', 'WEDDING', weddingId, `Invitación en PDF eliminada`);
+
+  return res.json({ success: true, message: 'Invitación en PDF eliminada.' });
 });
 
 // POST /api/weddings/:weddingId/team - Assign team member

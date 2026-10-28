@@ -391,6 +391,50 @@ export class WhatsAppService {
   }
 
   /**
+   * Sends a document / PDF message via Meta Cloud API
+   */
+  public static async sendDocumentMessage(
+    to: string,
+    documentUrl: string,
+    filename: string,
+    caption?: string,
+    options?: MessageOptions
+  ): Promise<SendMessageResult> {
+    const normalizedTo = this.normalizePhoneNumber(to);
+    if (!normalizedTo || normalizedTo.length < 10) {
+      return { success: false, error: 'Número de teléfono inválido.' };
+    }
+
+    if (!documentUrl || !documentUrl.trim()) {
+      return { success: false, error: 'La URL del documento es obligatoria.' };
+    }
+
+    const payload = {
+      messaging_product: 'whatsapp',
+      recipient_type: 'individual',
+      to: normalizedTo,
+      type: 'document',
+      document: {
+        link: documentUrl.trim(),
+        filename: filename || 'Invitacion_Boda.pdf',
+        caption: caption ? caption.trim() : undefined
+      }
+    };
+
+    const result = await this.executeMetaApiCall(payload);
+    this.recordOutboundMessage({
+      to: normalizedTo,
+      content: caption ? `[PDF: ${filename}] ${caption}` : `[PDF: ${filename}]`,
+      messageType: 'document',
+      result,
+      options,
+      rawPayload: payload
+    });
+
+    return result;
+  }
+
+  /**
    * Sends an interactive message with Quick Reply buttons (up to 3 buttons)
    */
   public static async sendInteractiveButtons(

@@ -123,6 +123,17 @@ app.use('/api/whatsapp', whatsappHubRouter);
 app.use('/api/calendar', calendarRouter);
 app.use('/api', catalogsBackupRouter);
 
+// Serve uploaded public documents & invitations (e.g. for WhatsApp Cloud API)
+const uploadsDir = path.resolve(process.cwd(), 'data', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+const invitationsDir = path.resolve(uploadsDir, 'invitations');
+if (!fs.existsSync(invitationsDir)) {
+  fs.mkdirSync(invitationsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
+
 // Serve static client build if it exists
 const clientDistPath = fs.existsSync(path.resolve(process.cwd(), 'client/dist'))
   ? path.resolve(process.cwd(), 'client/dist')

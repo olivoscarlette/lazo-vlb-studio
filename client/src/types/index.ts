@@ -52,6 +52,12 @@ export interface Wedding {
   notes?: string;
   package_type: string;
   floor_plan_url?: string | null;
+  invitation_type?: 'LINK' | 'PDF';
+  invitation_url?: string | null;
+  invitation_pdf_url?: string | null;
+  invitation_pdf_filename?: string | null;
+  dress_code?: string | null;
+  no_children?: number | boolean | null;
   updated_at?: string;
   team?: WeddingTeamMember[];
   stats?: WeddingStats;
@@ -79,6 +85,9 @@ export interface Guest {
   whatsapp_status?: 'NO_ENVIADO' | 'ENVIADO' | 'ENTREGADO' | 'LEÍDO' | 'ERROR';
   last_whatsapp_sent_at?: string | null;
   whatsapp_message_id?: string | null;
+  dietary_requirements?: string | null;
+  confirmed_places?: number;
+  rsvp_step?: 'NONE' | 'INVITATION_SENT' | 'CONFIRMING_PLACES' | 'AWAITING_PLACES_NUMBER' | 'CONFIRMING_DIET' | 'AWAITING_DIET_TEXT' | 'COMPLETED' | 'DECLINED';
   created_at: string;
   updated_at: string;
 }

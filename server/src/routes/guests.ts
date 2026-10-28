@@ -159,7 +159,7 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
 // POST /api/weddings/:weddingId/guests - Add single guest
 router.post('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
-  const { first_name, last_name, phone, companion_count, priority, status, table_id, observations } = req.body;
+  const { first_name, last_name, phone, companion_count, priority, status, table_id, observations, dietary_requirements, confirmed_places } = req.body;
 
   if (!first_name || !last_name || !phone) {
     return res.status(400).json({ error: 'Nombre, Apellido y WhatsApp / Teléfono son obligatorios.' });
@@ -170,23 +170,25 @@ router.post('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req,
   const validStatus = status || 'Pendiente de confirmar';
   const validPriority = ['Alta', 'Media', 'Baja'].includes(priority) ? priority : 'Media';
   const compCount = Math.max(0, parseInt(companion_count, 10) || 0);
+  const confPlaces = confirmed_places !== undefined ? parseInt(confirmed_places, 10) : (validStatus === 'Confirmado' ? 1 + compCount : 0);
 
   // If status is 'No asistirá', table_id cannot be assigned
   const finalTableId = validStatus === 'No asistirá' ? null : (table_id || null);
 
   db.prepare(`
-    INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, priority, status, table_id, observations, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, priority, status, table_id, observations, dietary_requirements, confirmed_places, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id, weddingId, first_name.trim(), last_name.trim(), phone.trim(),
-    compCount, validPriority, validStatus, finalTableId, observations ? observations.trim() : null, now, now
+    compCount, validPriority, validStatus, finalTableId, observations ? observations.trim() : null,
+    dietary_requirements ? dietary_requirements.trim() : null, confPlaces, now, now
   );
 
   logAudit(weddingId, req.user!.id, req.user!.name, 'AGREGAR_INVITADO', 'GUEST', id, `Alta de invitado ${first_name} ${last_name}`);
 
   return res.status(201).json({
     message: 'Invitado registrado correctamente.',
-    guest: { id, first_name, last_name, phone, companion_count: compCount, priority: validPriority, status: validStatus, table_id: finalTableId, observations }
+    guest: { id, first_name, last_name, phone, companion_count: compCount, priority: validPriority, status: validStatus, table_id: finalTableId, observations, dietary_requirements, confirmed_places: confPlaces }
   });
 });
 
@@ -202,7 +204,7 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
 
   const {
     first_name, last_name, phone, companion_count, priority,
-    status, table_id, observations, expected_updated_at
+    status, table_id, observations, dietary_requirements, confirmed_places, expected_updated_at
   } = req.body;
 
   if (expected_updated_at && guest.updated_at !== expected_updated_at) {
@@ -243,14 +245,19 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
   const newPhone = phone !== undefined ? phone.trim() : guest.phone;
   const newCompCount = companion_count !== undefined ? Math.max(0, parseInt(companion_count, 10) || 0) : guest.companion_count;
   const newObs = observations !== undefined ? (observations ? observations.trim() : null) : guest.observations;
+  const newDiet = dietary_requirements !== undefined ? (dietary_requirements ? dietary_requirements.trim() : null) : guest.dietary_requirements;
+  const newConfirmedPlaces = confirmed_places !== undefined
+    ? parseInt(confirmed_places, 10)
+    : (newStatus === 'Confirmado' && (!guest.confirmed_places || guest.confirmed_places === 0) ? (1 + newCompCount) : guest.confirmed_places);
   const now = new Date().toISOString();
 
   db.prepare(`
     UPDATE guests SET
       first_name = ?, last_name = ?, phone = ?, companion_count = ?,
-      priority = ?, status = ?, table_id = ?, observations = ?, updated_at = ?
+      priority = ?, status = ?, table_id = ?, observations = ?,
+      dietary_requirements = ?, confirmed_places = ?, updated_at = ?
     WHERE id = ? AND wedding_id = ?
-  `).run(newFirstName, newLastName, newPhone, newCompCount, newPriority, newStatus, newTableId, newObs, now, guestId, weddingId);
+  `).run(newFirstName, newLastName, newPhone, newCompCount, newPriority, newStatus, newTableId, newObs, newDiet, newConfirmedPlaces, now, guestId, weddingId);
 
   logAudit(weddingId, user.id, user.name, 'ACTUALIZAR_INVITADO', 'GUEST', guestId, `Actualización de ${newFirstName} ${newLastName} (Prioridad: ${newPriority}, Estatus: ${newStatus}, Mesa: ${newTableId || 'Ninguna'})`);
 
@@ -266,6 +273,8 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
       status: newStatus,
       table_id: newTableId,
       observations: newObs,
+      dietary_requirements: newDiet,
+      confirmed_places: newConfirmedPlaces,
       updated_at: now
     }
   });
@@ -495,6 +504,7 @@ router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requ
       db.prepare(`
         UPDATE guests
         SET whatsapp_status = 'ENVIADO',
+            rsvp_step = 'INVITATION_SENT',
             last_whatsapp_sent_at = ?,
             whatsapp_message_id = ?,
             updated_at = ?
@@ -564,6 +574,7 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
     const updateStmt = db.prepare(`
       UPDATE guests
       SET whatsapp_status = ?,
+          rsvp_step = ?,
           last_whatsapp_sent_at = ?,
           whatsapp_message_id = ?,
           updated_at = ?
@@ -590,10 +601,10 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
       if (result.success) {
         sentCount++;
         if (result.simulated) isSimulated = true;
-        updateStmt.run('ENVIADO', now, result.messageId || null, now, g.id);
+        updateStmt.run('ENVIADO', 'INVITATION_SENT', now, result.messageId || null, now, g.id);
       } else {
         errorCount++;
-        updateStmt.run('ERROR', now, null, now, g.id);
+        updateStmt.run('ERROR', g.rsvp_step || 'NONE', now, null, now, g.id);
       }
     }
 

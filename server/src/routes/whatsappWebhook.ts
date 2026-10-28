@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { db } from '../db/index.js';
 import { verifyMetaSignature, AuthenticatedMetaRequest } from '../middleware/metaSignature.js';
-import { WhatsAppService } from '../services/whatsappService.js';
+import { WhatsAppService, formatCoupleNames, formatWeddingDateHuman } from '../services/whatsappService.js';
 
 const router = Router();
 
@@ -15,13 +15,354 @@ function getPhoneLast10(phone: string): string {
 }
 
 /**
+ * Sends the final event card and attached PDF/link invitation
+ */
+async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, phone: string) {
+  const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+  if (!wedding) return;
+
+  const coupleNames = formatCoupleNames(wedding);
+  const formattedDate = formatWeddingDateHuman(wedding.wedding_date);
+  const places = guest.confirmed_places || (1 + (guest.companion_count || 0));
+
+  let summary = `✨ *¡Tu asistencia está confirmada!* ✨\n\n` +
+    `Nos llena de ilusión compartir este gran día contigo.\n\n` +
+    `💍 *Boda de ${coupleNames}*\n` +
+    `📅 *Fecha:* ${formattedDate}\n`;
+
+  if (wedding.ceremony_venue || wedding.ceremony_time) {
+    summary += `⛪ *Ceremonia:* ${wedding.ceremony_venue || 'Por definir'}${wedding.ceremony_time ? ` (${wedding.ceremony_time} hrs)` : ''}\n`;
+  }
+  if (wedding.reception_venue || wedding.reception_time) {
+    summary += `🥂 *Recepción:* ${wedding.reception_venue || 'Por definir'}${wedding.reception_time ? ` (${wedding.reception_time} hrs)` : ''}\n`;
+  }
+  if (wedding.dress_code) {
+    summary += `👗 *Código de vestimenta:* ${wedding.dress_code}\n`;
+  }
+  if (wedding.no_children) {
+    summary += `👶 *Nota:* Evento sólo para adultos (No niños)\n`;
+  }
+  summary += `👥 *Asistentes confirmados:* ${places}\n`;
+
+  if (guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna') {
+    summary += `🥗 *Restricciones registradas:* ${guest.dietary_requirements}\n`;
+  }
+
+  if (wedding.invitation_type === 'LINK' && wedding.invitation_url) {
+    summary += `\n💌 *Tu invitación digital:*\n${wedding.invitation_url}\n`;
+  }
+
+  summary += `\n¡Te esperamos con muchas ganas de celebrar! 🥂🎉`;
+
+  await WhatsAppService.sendTextMessage(phone, summary, {
+    weddingId,
+    guestId: guest.id,
+    previewUrl: true
+  });
+
+  // If PDF invitation is configured, send the PDF document directly to WhatsApp
+  if (wedding.invitation_type === 'PDF' && wedding.invitation_pdf_url) {
+    const appUrl = process.env.APP_URL || 'https://lazo-vlb.up.railway.app';
+    const fullPdfUrl = wedding.invitation_pdf_url.startsWith('http')
+      ? wedding.invitation_pdf_url
+      : `${appUrl}${wedding.invitation_pdf_url}`;
+
+    await WhatsAppService.sendDocumentMessage(
+      phone,
+      fullPdfUrl,
+      wedding.invitation_pdf_filename || `Invitacion_${coupleNames.replace(/\s+/g, '_')}.pdf`,
+      `💌 Aquí tienes tu invitación formal para la boda de ${coupleNames}.`,
+      { weddingId, guestId: guest.id }
+    );
+  }
+}
+
+/**
+ * Multi-step Conversational RSVP Bot State Machine
+ */
+async function handleAutomatedRsvpStep(params: {
+  matchedGuest: any;
+  weddingId: string;
+  normalizedPhone: string;
+  content: string;
+  selectedButtonId: string;
+}) {
+  const { matchedGuest, weddingId, normalizedPhone, content, selectedButtonId } = params;
+  const now = new Date().toISOString();
+  const lowerContent = content.toLowerCase().trim();
+  const lowerButtonId = selectedButtonId.toLowerCase().trim();
+  const currentStep = (matchedGuest.rsvp_step || 'NONE').toUpperCase();
+  const totalSeats = 1 + (matchedGuest.companion_count || 0);
+
+  // 1. Check for DECLINE intent across any stage
+  const isDecline =
+    lowerButtonId.includes('decline') ||
+    lowerButtonId.includes('rsvp_decline') ||
+    lowerContent.includes('no asistiré') ||
+    lowerContent.includes('no asistire') ||
+    lowerContent.includes('no podré') ||
+    lowerContent.includes('no podre') ||
+    lowerContent.includes('no voy') ||
+    lowerContent.includes('no podré asistir') ||
+    lowerContent.includes('no podre asistir') ||
+    lowerContent.includes('declino') ||
+    (currentStep === 'NONE' && lowerContent === 'no');
+
+  if (isDecline) {
+    console.log(`[WhatsApp RSVP Bot] Invitado ${matchedGuest.first_name} ${matchedGuest.last_name} declinó.`);
+    db.prepare(`
+      UPDATE guests
+      SET status = 'No asistirá',
+          rsvp_step = 'DECLINED',
+          table_id = NULL,
+          updated_at = ?
+      WHERE id = ? AND wedding_id = ?
+    `).run(now, matchedGuest.id, weddingId);
+
+    await WhatsAppService.sendTextMessage(
+      normalizedPhone,
+      `Lamentamos mucho que no puedas acompañarnos en este día tan especial. ¡Te tendremos muy presente en nuestros corazones! 💕`,
+      { weddingId, guestId: matchedGuest.id }
+    );
+    return;
+  }
+
+  // 2. Initial Confirmation (From Invitation Template or Initial Message)
+  if (currentStep === 'NONE' || currentStep === 'INVITATION_SENT') {
+    const isConfirm =
+      lowerButtonId.includes('confirm') ||
+      lowerButtonId.includes('rsvp_confirm') ||
+      lowerButtonId.includes('yes') ||
+      lowerContent.includes('confirmo') ||
+      lowerContent.includes('asistiré') ||
+      lowerContent.includes('asistire') ||
+      lowerContent.includes('si asistiré') ||
+      lowerContent.includes('sí asistiré') ||
+      lowerContent.includes('confirmo asistencia') ||
+      lowerContent === 'sí' ||
+      lowerContent === 'si' ||
+      lowerContent === 'claro';
+
+    if (isConfirm) {
+      console.log(`[WhatsApp RSVP Bot] Invitado ${matchedGuest.first_name} ${matchedGuest.last_name} confirmó asistencia inicial.`);
+      db.prepare(`
+        UPDATE guests
+        SET status = 'Confirmado', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(now, matchedGuest.id, weddingId);
+
+      if (totalSeats > 1) {
+        db.prepare(`
+          UPDATE guests
+          SET rsvp_step = 'CONFIRMING_PLACES', updated_at = ?
+          WHERE id = ? AND wedding_id = ?
+        `).run(now, matchedGuest.id, weddingId);
+
+        await WhatsAppService.sendInteractiveButtons(
+          normalizedPhone,
+          `¡Qué alegría contar contigo! 🎉\n\nTienes reservado(s) *${totalSeats} lugares* a tu nombre.\n\n¿La cantidad de asistentes es correcta?`,
+          [
+            { id: 'places_yes', title: 'Sí, es correcta' },
+            { id: 'places_no', title: 'No, cambiar' }
+          ],
+          { weddingId, guestId: matchedGuest.id }
+        );
+      } else {
+        // Individual guest (1 seat)
+        db.prepare(`
+          UPDATE guests
+          SET confirmed_places = 1, rsvp_step = 'CONFIRMING_DIET', updated_at = ?
+          WHERE id = ? AND wedding_id = ?
+        `).run(now, matchedGuest.id, weddingId);
+
+        await WhatsAppService.sendInteractiveButtons(
+          normalizedPhone,
+          `¡Qué alegría contar contigo! 🎉 Tu lugar está reservado.\n\n¿Tienes alguna alergia o restricción alimentaria?`,
+          [
+            { id: 'diet_yes', title: 'Sí' },
+            { id: 'diet_no', title: 'No' }
+          ],
+          { weddingId, guestId: matchedGuest.id }
+        );
+      }
+      return;
+    }
+  }
+
+  // 3. Step: CONFIRMING_PLACES
+  if (currentStep === 'CONFIRMING_PLACES') {
+    const isYes =
+      lowerButtonId === 'places_yes' ||
+      lowerContent === 'sí' ||
+      lowerContent === 'si' ||
+      lowerContent.includes('correcta') ||
+      lowerContent.includes('es correcta') ||
+      lowerContent.includes('así es') ||
+      lowerContent.includes('asi es');
+
+    const isNo =
+      lowerButtonId === 'places_no' ||
+      lowerContent === 'no' ||
+      lowerContent.includes('cambiar') ||
+      lowerContent.includes('modificar') ||
+      lowerContent.includes('somos menos') ||
+      lowerContent.includes('somos más');
+
+    if (isYes) {
+      db.prepare(`
+        UPDATE guests
+        SET confirmed_places = ?, rsvp_step = 'CONFIRMING_DIET', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(totalSeats, now, matchedGuest.id, weddingId);
+
+      await WhatsAppService.sendInteractiveButtons(
+        normalizedPhone,
+        `¡Excelente! 🥂\n\n¿Alguna de las personas que asistirán tiene alguna alergia o restricción alimentaria?`,
+        [
+          { id: 'diet_yes', title: 'Sí' },
+          { id: 'diet_no', title: 'No' }
+        ],
+        { weddingId, guestId: matchedGuest.id }
+      );
+      return;
+    } else if (isNo) {
+      db.prepare(`
+        UPDATE guests
+        SET rsvp_step = 'AWAITING_PLACES_NUMBER', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(now, matchedGuest.id, weddingId);
+
+      await WhatsAppService.sendTextMessage(
+        normalizedPhone,
+        `Por favor escríbenos aquí el número total de personas que asistirán (por ejemplo: 1, 2, etc.):`,
+        { weddingId, guestId: matchedGuest.id }
+      );
+      return;
+    } else {
+      // Check if user answered with a number directly
+      const parsedNum = parseInt(content.replace(/\D/g, ''), 10);
+      if (!isNaN(parsedNum) && parsedNum > 0) {
+        db.prepare(`
+          UPDATE guests
+          SET confirmed_places = ?, rsvp_step = 'CONFIRMING_DIET', updated_at = ?
+          WHERE id = ? AND wedding_id = ?
+        `).run(parsedNum, now, matchedGuest.id, weddingId);
+
+        await WhatsAppService.sendInteractiveButtons(
+          normalizedPhone,
+          `Perfecto, registramos *${parsedNum} persona(s)*. 🥂\n\n¿Alguna persona tiene alguna alergia o restricción alimentaria?`,
+          [
+            { id: 'diet_yes', title: 'Sí' },
+            { id: 'diet_no', title: 'No' }
+          ],
+          { weddingId, guestId: matchedGuest.id }
+        );
+        return;
+      }
+    }
+  }
+
+  // 4. Step: AWAITING_PLACES_NUMBER
+  if (currentStep === 'AWAITING_PLACES_NUMBER') {
+    const parsedNum = parseInt(content.replace(/\D/g, ''), 10);
+    if (!isNaN(parsedNum) && parsedNum > 0) {
+      db.prepare(`
+        UPDATE guests
+        SET confirmed_places = ?, rsvp_step = 'CONFIRMING_DIET', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(parsedNum, now, matchedGuest.id, weddingId);
+
+      await WhatsAppService.sendInteractiveButtons(
+        normalizedPhone,
+        `Perfecto, registramos *${parsedNum} persona(s)*. 🥂\n\n¿Alguna persona tiene alguna alergia o restricción alimentaria?`,
+        [
+          { id: 'diet_yes', title: 'Sí' },
+          { id: 'diet_no', title: 'No' }
+        ],
+        { weddingId, guestId: matchedGuest.id }
+      );
+      return;
+    } else {
+      await WhatsAppService.sendTextMessage(
+        normalizedPhone,
+        `Por favor escribe sólo el número de asistentes en total (por ejemplo: 1, 2):`,
+        { weddingId, guestId: matchedGuest.id }
+      );
+      return;
+    }
+  }
+
+  // 5. Step: CONFIRMING_DIET
+  if (currentStep === 'CONFIRMING_DIET') {
+    const isDietNo =
+      lowerButtonId === 'diet_no' ||
+      lowerContent === 'no' ||
+      lowerContent.includes('ningun') ||
+      lowerContent.includes('ninguna') ||
+      lowerContent.includes('sin alergias') ||
+      lowerContent.includes('todo bien') ||
+      lowerContent.includes('comemos de todo');
+
+    const isDietYes =
+      lowerButtonId === 'diet_yes' ||
+      lowerContent === 'sí' ||
+      lowerContent === 'si' ||
+      lowerContent.includes('tengo alergia');
+
+    if (isDietNo) {
+      db.prepare(`
+        UPDATE guests
+        SET dietary_requirements = 'Ninguna', rsvp_step = 'COMPLETED', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(now, matchedGuest.id, weddingId);
+
+      const refreshedGuest = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+      await sendFinalEventCardAndInvitation(refreshedGuest || matchedGuest, weddingId, normalizedPhone);
+      return;
+    } else if (isDietYes) {
+      db.prepare(`
+        UPDATE guests
+        SET rsvp_step = 'AWAITING_DIET_TEXT', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(now, matchedGuest.id, weddingId);
+
+      await WhatsAppService.sendTextMessage(
+        normalizedPhone,
+        `Por favor cuéntanos cuáles son las alergias o restricciones para tomarlas en cuenta (por ejemplo: vegetariano, alergia a mariscos, intolerancia al gluten, etc.):`,
+        { weddingId, guestId: matchedGuest.id }
+      );
+      return;
+    } else {
+      // The guest may have typed the diet restriction directly!
+      db.prepare(`
+        UPDATE guests
+        SET dietary_requirements = ?, rsvp_step = 'COMPLETED', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(content.trim(), now, matchedGuest.id, weddingId);
+
+      const refreshedGuest = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+      await sendFinalEventCardAndInvitation(refreshedGuest || matchedGuest, weddingId, normalizedPhone);
+      return;
+    }
+  }
+
+  // 6. Step: AWAITING_DIET_TEXT
+  if (currentStep === 'AWAITING_DIET_TEXT') {
+    db.prepare(`
+      UPDATE guests
+      SET dietary_requirements = ?, rsvp_step = 'COMPLETED', updated_at = ?
+      WHERE id = ? AND wedding_id = ?
+    `).run(content.trim(), now, matchedGuest.id, weddingId);
+
+    const refreshedGuest = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+    await sendFinalEventCardAndInvitation(refreshedGuest || matchedGuest, weddingId, normalizedPhone);
+    return;
+  }
+}
+
+/**
  * GET /webhook (or /api/whatsapp/webhook)
  * Webhook Verification required by Meta for Developers
- *
- * Meta sends:
- * - hub.mode: 'subscribe'
- * - hub.verify_token: your custom token
- * - hub.challenge: numeric challenge to echo back
  */
 router.get('/webhook', (req, res) => {
   const config = WhatsAppService.getConfig();
@@ -59,7 +400,6 @@ async function processWebhookEvent(body: any) {
         // 1. INCOMING MESSAGES (Text, Buttons, Lists, Media)
         // --------------------------------------------------------------------
         if (value.messages && Array.isArray(value.messages)) {
-          // Extract contact profile name provided by Meta if available
           const senderProfile = value.contacts?.[0]?.profile?.name || '';
 
           for (const message of value.messages) {
@@ -93,14 +433,12 @@ async function processWebhookEvent(body: any) {
               content = `[Mensaje tipo: ${msgType}]`;
             }
 
-            console.log(`[WhatsApp Webhook] Mensaje entrante de ${normalizedPhone}: "${content}"`);
+            console.log(`[WhatsApp Webhook] Mensaje entrante de ${normalizedPhone}: "${content}" (Button ID: "${selectedButtonId}")`);
 
             const last10 = getPhoneLast10(normalizedPhone);
             const now = new Date().toISOString();
 
             // Locate Guest in database by matching phone number
-            // Robust multi-wedding support: If a phone belongs to guests in multiple weddings,
-            // disambiguate using the most recent outbound invitation or conversation thread.
             const allGuests = db.prepare(`
               SELECT g.*, w.name as wedding_name, w.wedding_date
               FROM guests g
@@ -120,15 +458,12 @@ async function processWebhookEvent(body: any) {
             if (matchingGuests.length === 1) {
               matchedGuest = matchingGuests[0];
             } else if (matchingGuests.length > 1) {
-              // 1. Prioritize wedding of the latest conversation/invitation
               if (latestMsg?.wedding_id) {
                 matchedGuest = matchingGuests.find(g => g.wedding_id === latestMsg.wedding_id);
               }
-              // 2. Prioritize exact guest_id
               if (!matchedGuest && latestMsg?.guest_id) {
                 matchedGuest = matchingGuests.find(g => g.id === latestMsg.guest_id);
               }
-              // 3. Fallback to first matching guest
               if (!matchedGuest) {
                 matchedGuest = matchingGuests[0];
               }
@@ -140,52 +475,6 @@ async function processWebhookEvent(body: any) {
             if (!weddingId) {
               const latestWedding = db.prepare('SELECT id FROM weddings ORDER BY wedding_date DESC LIMIT 1').get() as any;
               weddingId = latestWedding?.id || 'default_wedding';
-            }
-
-            // Detect and process RSVP Intent
-            const lowerContent = content.toLowerCase().trim();
-            const lowerButtonId = selectedButtonId.toLowerCase().trim();
-            let newGuestStatus: string | null = null;
-
-            if (
-              lowerButtonId.includes('no') ||
-              lowerContent.includes('no asistiré') ||
-              lowerContent.includes('no asistire') ||
-              lowerContent.includes('no podré') ||
-              lowerContent.includes('no podre') ||
-              lowerContent.includes('no voy') ||
-              lowerContent === 'no'
-            ) {
-              newGuestStatus = 'No asistirá';
-            } else if (
-              lowerButtonId.includes('yes') ||
-              lowerButtonId.includes('confirm') ||
-              lowerContent.includes('confirmo') ||
-              lowerContent.includes('asistiré') ||
-              lowerContent.includes('asistire') ||
-              lowerContent.includes('si asistiré') ||
-              lowerContent.includes('sí asistiré') ||
-              lowerContent === 'sí' ||
-              lowerContent === 'si'
-            ) {
-              newGuestStatus = 'Confirmado';
-            }
-
-            if (matchedGuest && newGuestStatus) {
-              console.log(`[WhatsApp Webhook] Actualizando RSVP de ${matchedGuest.first_name} ${matchedGuest.last_name} (${matchedGuest.wedding_name}) -> "${newGuestStatus}"`);
-              if (newGuestStatus === 'No asistirá') {
-                db.prepare(`
-                  UPDATE guests
-                  SET status = ?, table_id = NULL, updated_at = ?
-                  WHERE id = ? AND wedding_id = ?
-                `).run(newGuestStatus, now, matchedGuest.id, matchedGuest.wedding_id);
-              } else {
-                db.prepare(`
-                  UPDATE guests
-                  SET status = ?, updated_at = ?
-                  WHERE id = ? AND wedding_id = ?
-                `).run(newGuestStatus, now, matchedGuest.id, matchedGuest.wedding_id);
-              }
             }
 
             // Persist Message in DB
@@ -228,6 +517,20 @@ async function processWebhookEvent(body: any) {
               lastMessagePreview: content.slice(0, 100),
               incrementUnread: true
             });
+
+            // Mark incoming message as read on Meta
+            WhatsAppService.markAsRead(messageId).catch(() => {});
+
+            // Process automated conversational RSVP state machine
+            if (matchedGuest) {
+              await handleAutomatedRsvpStep({
+                matchedGuest,
+                weddingId,
+                normalizedPhone,
+                content,
+                selectedButtonId
+              });
+            }
           }
         }
 
@@ -283,10 +586,8 @@ async function processWebhookEvent(body: any) {
  * Validates cryptographic signature with META_APP_SECRET and immediately returns 200 OK.
  */
 router.post('/webhook', verifyMetaSignature, (req: AuthenticatedMetaRequest, res: Response) => {
-  // 1. Immediately acknowledge 200 OK to Meta to prevent retry storms and webhook timeouts
   res.status(200).send('EVENT_RECEIVED');
 
-  // 2. Process payload asynchronously in background
   setImmediate(() => {
     processWebhookEvent(req.body);
   });

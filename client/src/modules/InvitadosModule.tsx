@@ -5,7 +5,7 @@ import {
   Users, UserPlus, FileSpreadsheet, Download, Upload,
   Search, Filter, ChevronLeft, ChevronRight, Phone, MessageSquare,
   AlertTriangle, CheckCircle, Clock, XCircle, Edit2, AlertCircle,
-  Send, Loader2, Check
+  Send, Loader2, Check, FileText
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
@@ -53,6 +53,7 @@ export const InvitadosModule: React.FC = () => {
   const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [sendingChat, setSendingChat] = useState(false);
+  const [sendingInvitation, setSendingInvitation] = useState(false);
   const [chatError, setChatError] = useState<string | null>(null);
   const [loadingChat, setLoadingChat] = useState(false);
 
@@ -68,7 +69,9 @@ export const InvitadosModule: React.FC = () => {
     priority: 'Media' as 'Alta' | 'Media' | 'Baja',
     status: 'Pendiente de confirmar' as Guest['status'],
     table_id: '',
-    observations: ''
+    observations: '',
+    dietary_requirements: '',
+    confirmed_places: 0
   });
   const [formError, setFormError] = useState('');
 
@@ -238,7 +241,9 @@ export const InvitadosModule: React.FC = () => {
       priority: guest.priority || 'Media',
       status: guest.status,
       table_id: guest.table_id || '',
-      observations: guest.observations || ''
+      observations: guest.observations || '',
+      dietary_requirements: guest.dietary_requirements || '',
+      confirmed_places: guest.confirmed_places || (guest.status === 'Confirmado' ? 1 + guest.companion_count : 0)
     });
     setFormError('');
   };
@@ -255,7 +260,9 @@ export const InvitadosModule: React.FC = () => {
       priority: 'Media',
       status: 'Pendiente de confirmar',
       table_id: '',
-      observations: ''
+      observations: '',
+      dietary_requirements: '',
+      confirmed_places: 0
     });
     setFormError('');
   };
@@ -548,6 +555,44 @@ export const InvitadosModule: React.FC = () => {
       setChatError(err.message || 'Error de conexión');
     } finally {
       setSendingChat(false);
+    }
+  };
+
+  const handleSendInvitationDirect = async () => {
+    if (!chatGuest || !currentWedding || !token || sendingInvitation) return;
+    setSendingInvitation(true);
+    setChatError(null);
+    try {
+      const res = await fetch('/api/whatsapp/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          weddingId: currentWedding.id,
+          guestId: chatGuest.id,
+          phone: chatGuest.phone,
+          content: 'Invitación oficial',
+          messageType: 'invitation'
+        })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        const convRes = await fetch(`/api/whatsapp/conversations/${currentWedding.id}/${encodeURIComponent(chatGuest.phone)}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (convRes.ok) {
+          const convData = await convRes.json();
+          setChatMessages(convData.messages || []);
+        }
+      } else {
+        setChatError(data.error || 'No se pudo enviar la invitación por Meta Cloud API.');
+      }
+    } catch (err: any) {
+      setChatError(err.message || 'Error de conexión');
+    } finally {
+      setSendingInvitation(false);
     }
   };
 
@@ -968,35 +1013,55 @@ export const InvitadosModule: React.FC = () => {
                       )}
                     </td>
 
-                    {/* Companion count — Single line */}
+                    {/* Companion count — Single line with confirmed places badge */}
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                      <div className="inline-flex items-center space-x-1.5 whitespace-nowrap">
-                        <span className="font-semibold text-xs text-[#2B2826] bg-[#EFE8DE] px-2.5 py-0.5 rounded-full border border-[#DDD2C4]">
-                          {guest.companion_count}
-                        </span>
-                        <span className="text-xs text-[#7D6F6B] whitespace-nowrap">
-                          ({1 + guest.companion_count} {1 + guest.companion_count === 1 ? 'lugar' : 'lugares'})
-                        </span>
+                      <div className="inline-flex flex-col items-center">
+                        <div className="inline-flex items-center space-x-1.5 whitespace-nowrap">
+                          <span className="font-semibold text-xs text-[#2B2826] bg-[#EFE8DE] px-2.5 py-0.5 rounded-full border border-[#DDD2C4]">
+                            {guest.companion_count}
+                          </span>
+                          <span className="text-xs text-[#7D6F6B] whitespace-nowrap">
+                            ({1 + guest.companion_count} {1 + guest.companion_count === 1 ? 'pase' : 'pases'})
+                          </span>
+                        </div>
+                        {guest.confirmed_places ? (
+                          <span className="text-[10px] font-semibold text-[#354B38] bg-[#E4ECE5] px-2 py-0.5 rounded-full mt-1">
+                            ✓ {guest.confirmed_places} confirmados
+                          </span>
+                        ) : null}
                       </div>
                     </td>
 
-                    {/* Inline Estatus Dropdown — Soft Sage / Terracotta */}
-                    <td className="py-3.5 px-4 whitespace-nowrap w-[160px]">
-                      <select
-                        value={guest.status}
-                        onChange={e => handleInlineStatusChange(guest, e.target.value as any)}
-                        className={`w-38 text-xs font-semibold rounded-xl px-2.5 py-1.5 border transition focus:outline-none cursor-pointer ${
-                          guest.status === 'Confirmado'
-                            ? 'bg-[#E4ECE5] text-[#354B38] border-[#CCDACC]'
-                            : guest.status === 'No asistirá'
-                            ? 'bg-[#FBF4F3] text-[#70443D] border-[#EAD2D0]'
-                            : 'bg-[#F7F3EE] text-[#6D5A43] border-[#EAE3DA]'
-                        }`}
-                      >
-                        <option value="Pendiente de confirmar">Pendiente</option>
-                        <option value="Confirmado">Confirmado</option>
-                        <option value="No asistirá">No asistirá</option>
-                      </select>
+                    {/* Inline Estatus Dropdown & Dietary / Bot State badge */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <div className="flex flex-col space-y-1">
+                        <select
+                          value={guest.status}
+                          onChange={e => handleInlineStatusChange(guest, e.target.value as any)}
+                          className={`w-36 text-xs font-semibold rounded-xl px-2.5 py-1.5 border transition focus:outline-none cursor-pointer ${
+                            guest.status === 'Confirmado'
+                              ? 'bg-[#E4ECE5] text-[#354B38] border-[#CCDACC]'
+                              : guest.status === 'No asistirá'
+                              ? 'bg-[#FBF4F3] text-[#70443D] border-[#EAD2D0]'
+                              : 'bg-[#F7F3EE] text-[#6D5A43] border-[#EAE3DA]'
+                          }`}
+                        >
+                          <option value="Pendiente de confirmar">Pendiente</option>
+                          <option value="Confirmado">Confirmado</option>
+                          <option value="No asistirá">No asistirá</option>
+                        </select>
+
+                        {guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna' && (
+                          <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 truncate max-w-[144px]" title={guest.dietary_requirements}>
+                            🥗 {guest.dietary_requirements}
+                          </span>
+                        )}
+                        {guest.rsvp_step === 'COMPLETED' && (
+                          <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-md border border-[#ECD9D5] truncate max-w-[144px]">
+                            ✨ Bot: Completado
+                          </span>
+                        )}
+                      </div>
                     </td>
 
                     {/* RSVP WhatsApp Action & Status — Only visible for ADMINISTRADOR & COORDINADOR */}
@@ -1212,6 +1277,36 @@ export const InvitadosModule: React.FC = () => {
                 </div>
               </div>
 
+              {formData.status === 'Confirmado' && (
+                <div className="grid grid-cols-2 gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200">
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                      Lugares Confirmados
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.confirmed_places || (1 + formData.companion_count)}
+                      onChange={e => setFormData({ ...formData, confirmed_places: parseInt(e.target.value, 10) || 1 })}
+                      className="w-full px-3 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-stone-900"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                      Alergias / Restricciones
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Vegetariano, celíaco"
+                      value={formData.dietary_requirements || ''}
+                      onChange={e => setFormData({ ...formData, dietary_requirements: e.target.value })}
+                      className="w-full px-3 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-stone-900"
+                    />
+                  </div>
+                </div>
+              )}
+
               {formData.status !== 'No asistirá' && (
                 <div>
                   <label className="block text-[11px] font-bold text-stone-700 mb-1">Mesa Asignada</label>
@@ -1394,9 +1489,26 @@ export const InvitadosModule: React.FC = () => {
                   <MessageSquare className="w-4 h-4 text-[#C48B81]" />
                   <span>{chatGuest.first_name} {chatGuest.last_name}</span>
                 </h3>
-                <p className="text-xs text-[#7D6F6B] mt-0.5">
-                  {chatGuest.phone} · {1 + (chatGuest.companion_count || 0)} pase(s) asignado(s)
-                </p>
+                <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                  <span className="text-xs text-[#7D6F6B]">
+                    {chatGuest.phone} · {1 + (chatGuest.companion_count || 0)} pase(s)
+                  </span>
+                  {chatGuest.confirmed_places ? (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#E4ECE5] text-[#354B38]">
+                      ✓ {chatGuest.confirmed_places} confirmados
+                    </span>
+                  ) : null}
+                  {chatGuest.dietary_requirements && chatGuest.dietary_requirements !== 'Ninguna' && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                      🥗 {chatGuest.dietary_requirements}
+                    </span>
+                  )}
+                  {chatGuest.rsvp_step === 'COMPLETED' && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F7EDEB] text-[#A86B60]">
+                      ✨ Bot: Completado
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
@@ -1474,7 +1586,18 @@ export const InvitadosModule: React.FC = () => {
                 className="w-full px-3.5 py-2 text-xs bg-[#FAF7F5] border border-[#EFE8E1] rounded-xl text-[#2B2826] placeholder:text-[#7D6F6B]/60 focus:outline-none focus:border-[#C48B81] resize-none"
               />
 
-              <div className="flex items-center justify-end gap-2 pt-1">
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleSendInvitationDirect}
+                  disabled={sendingInvitation || sendingChat}
+                  className="px-3.5 py-2 bg-[#F7EDEB] hover:bg-[#EFE2DF] text-[#A86B60] border border-[#ECD9D5] text-xs font-semibold rounded-xl transition cursor-pointer flex items-center space-x-1.5 disabled:opacity-40"
+                  title="Enviar la invitación formal de la boda (PDF o Enlace) por WhatsApp"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>{sendingInvitation ? 'Enviando...' : 'Enviar Invitación (PDF/Web)'}</span>
+                </button>
+
                 <button
                   type="submit"
                   disabled={sendingChat || !chatInput.trim()}

@@ -3,7 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import {
   MapPin, Users, DollarSign, CheckCircle2,
   Clock, Sparkles, Edit3, ShieldCheck, Mail, Phone,
-  ArrowRight, Calendar, Landmark, Church
+  ArrowRight, Calendar, Landmark, Church,
+  Upload, FileText, Link as LinkIcon, ExternalLink, Trash2, Bot, Check, AlertCircle, Loader2
 } from 'lucide-react';
 
 interface ResumenProps {
@@ -17,6 +18,91 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   const [showEditWeddingModal, setShowEditWeddingModal] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
   const [packagesList, setPackagesList] = useState<{ name: string; maxMeetings: number; description: string }[]>([]);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [invitationFeedback, setInvitationFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  const handleUploadInvitationPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentWedding || !token) return;
+
+    if (!file.name.toLowerCase().endsWith('.pdf') && file.type !== 'application/pdf') {
+      setInvitationFeedback({ text: 'El archivo debe estar en formato PDF.', type: 'error' });
+      return;
+    }
+
+    setUploadingPdf(true);
+    setInvitationFeedback(null);
+    const formData = new FormData();
+    formData.append('invitation_file', file);
+
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/invitation-file`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setInvitationFeedback({ text: '¡Invitación en PDF guardada y lista para WhatsApp!', type: 'success' });
+        fetchWeddingDetails();
+        setCurrentWedding({ ...currentWedding, invitation_type: 'PDF', invitation_pdf_url: data.invitation_pdf_url, invitation_pdf_filename: data.invitation_pdf_filename });
+      } else {
+        setInvitationFeedback({ text: data.error || 'Error al subir PDF.', type: 'error' });
+      }
+    } catch (err: any) {
+      setInvitationFeedback({ text: err.message || 'Error de conexión', type: 'error' });
+    } finally {
+      setUploadingPdf(false);
+    }
+  };
+
+  const handleDeleteInvitationPdf = async () => {
+    if (!currentWedding || !token) return;
+    if (!confirm('¿Deseas eliminar la invitación en PDF y volver al modo de enlace web?')) return;
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/invitation-file`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setInvitationFeedback({ text: 'Invitación en PDF eliminada.', type: 'success' });
+        fetchWeddingDetails();
+        setCurrentWedding({ ...currentWedding, invitation_type: 'LINK', invitation_pdf_url: null, invitation_pdf_filename: null });
+      }
+    } catch {}
+  };
+
+  const handleSaveInvitationSettings = async () => {
+    if (!currentWedding || !token) return;
+    setSavingSettings(true);
+    setInvitationFeedback(null);
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          invitation_type: weddingData.invitation_type || 'LINK',
+          invitation_url: weddingData.invitation_url || '',
+          dress_code: weddingData.dress_code || '',
+          no_children: Boolean(weddingData.no_children)
+        })
+      });
+      if (res.ok) {
+        setInvitationFeedback({ text: 'Configuración guardada exitosamente.', type: 'success' });
+        fetchWeddingDetails();
+      } else {
+        setInvitationFeedback({ text: 'No se pudo guardar la configuración.', type: 'error' });
+      }
+    } catch (err: any) {
+      setInvitationFeedback({ text: 'Error al guardar.', type: 'error' });
+    } finally {
+      setSavingSettings(false);
+    }
+  };
 
   const fetchWeddingDetails = async () => {
     if (!currentWedding) return;
@@ -441,6 +527,331 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
           <div className="pt-3 border-t border-[#F5EFEB] flex items-center justify-between text-xs text-[#C48B81] font-semibold">
             <span>Ver Checklist Completo</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </div>
+      </div>
+
+      {/* Invitación Formal & Flujo Automatizado de RSVP (WhatsApp Cloud API / SiConfirmo Style) */}
+      <div className="luxury-card rounded-[28px] p-6 sm:p-8 border border-[#EFE8E1] bg-white shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-[#F5EFEB]">
+          <div>
+            <div className="flex items-center space-x-2 text-xs font-semibold text-[#A86B60] uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-[#C48B81]" />
+              <span>RSVP Interactivo & Invitación Digital</span>
+            </div>
+            <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#2B2826] mt-1">
+              Invitación de la Boda & Bot de WhatsApp
+            </h3>
+            <p className="text-xs sm:text-sm text-[#7D6F6B] mt-1 leading-relaxed">
+              Configura cómo reciben tus invitados la invitación formal (PDF o Enlace Canva/Web) y supervisa el flujo de confirmación automática de 4 pasos.
+            </p>
+          </div>
+
+          <div className="flex items-center space-x-2 self-start lg:self-center">
+            <span className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#E4ECE5] text-[#354B38] border border-[#CCDACC]">
+              <span className="w-2 h-2 rounded-full bg-[#25D366] animate-pulse"></span>
+              <span>Bot Meta API Activo</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => onNavigateTab('invitados')}
+              className="px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs flex items-center space-x-1.5 cursor-pointer"
+            >
+              <span>Enviar a Invitados</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Feedback message banner */}
+        {invitationFeedback && (
+          <div className={`mt-4 p-3 rounded-xl text-xs flex items-center justify-between ${
+            invitationFeedback.type === 'success'
+              ? 'bg-[#E4ECE5] text-[#354B38] border border-[#CCDACC]'
+              : 'bg-rose-50 text-rose-800 border border-rose-200'
+          }`}>
+            <span>{invitationFeedback.text}</span>
+            <button
+              type="button"
+              onClick={() => setInvitationFeedback(null)}
+              className="font-bold ml-2 cursor-pointer"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 pt-6">
+          {/* Columna Izquierda: Configuración de la Invitación (7 cols) */}
+          <div className="lg:col-span-7 space-y-5">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#7D6F6B] mb-2">
+                Tipo de Invitación Formal
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setWeddingData({ ...weddingData, invitation_type: 'LINK' })}
+                  className={`p-3.5 rounded-2xl border text-left transition flex items-center space-x-3 cursor-pointer ${
+                    (weddingData.invitation_type || 'LINK') === 'LINK'
+                      ? 'bg-[#F7EDEB] border-[#C48B81] text-[#2B2826] shadow-2xs'
+                      : 'bg-[#FAF7F5] border-[#EFE8E1] text-[#7D6F6B] hover:bg-white'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                    (weddingData.invitation_type || 'LINK') === 'LINK'
+                      ? 'bg-white text-[#C48B81]'
+                      : 'bg-white text-[#7D6F6B]'
+                  }`}>
+                    <LinkIcon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold">Enlace Digital</div>
+                    <div className="text-[11px] text-[#7D6F6B] opacity-80">Canva, microsite o web</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setWeddingData({ ...weddingData, invitation_type: 'PDF' })}
+                  className={`p-3.5 rounded-2xl border text-left transition flex items-center space-x-3 cursor-pointer ${
+                    weddingData.invitation_type === 'PDF'
+                      ? 'bg-[#F7EDEB] border-[#C48B81] text-[#2B2826] shadow-2xs'
+                      : 'bg-[#FAF7F5] border-[#EFE8E1] text-[#7D6F6B] hover:bg-white'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                    weddingData.invitation_type === 'PDF'
+                      ? 'bg-white text-[#C48B81]'
+                      : 'bg-white text-[#7D6F6B]'
+                  }`}>
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold">Archivo PDF</div>
+                    <div className="text-[11px] text-[#7D6F6B] opacity-80">Documento adjunto oficial</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Input según el modo seleccionado */}
+            {(weddingData.invitation_type || 'LINK') === 'LINK' ? (
+              <div className="p-4 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] space-y-2">
+                <label className="block text-xs font-bold text-[#2B2826]">
+                  URL de la Invitación Web o Canva
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="url"
+                    placeholder="https://www.canva.com/design/... o https://laboda.com"
+                    value={weddingData.invitation_url || ''}
+                    onChange={e => setWeddingData({ ...weddingData, invitation_url: e.target.value })}
+                    className="flex-1 px-3.5 py-2.5 text-xs bg-white border border-[#EAE3DA] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                  />
+                  {weddingData.invitation_url && (
+                    <a
+                      href={weddingData.invitation_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-2.5 rounded-xl bg-white border border-[#EAE3DA] text-[#7D6F6B] hover:text-[#C48B81] transition shadow-2xs shrink-0"
+                      title="Probar enlace en nueva pestaña"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+                <p className="text-[11px] text-[#7D6F6B] leading-relaxed">
+                  El bot enviará este enlace directamente al invitado en WhatsApp con vista previa para que pueda abrir su invitación con 1 toque.
+                </p>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] space-y-3">
+                <label className="block text-xs font-bold text-[#2B2826]">
+                  Archivo PDF de la Invitación
+                </label>
+                {weddingData.invitation_pdf_url ? (
+                  <div className="p-3.5 rounded-xl bg-white border border-[#CCDACC] flex items-center justify-between">
+                    <div className="flex items-center space-x-2.5 min-w-0">
+                      <FileText className="w-5 h-5 text-[#25D366] shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-[#2B2826] truncate">
+                          {weddingData.invitation_pdf_filename || 'Invitacion_Boda.pdf'}
+                        </div>
+                        <div className="text-[10px] text-[#354B38] font-medium">
+                          ✓ Listo para entrega nativa en WhatsApp
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1.5 shrink-0 ml-3">
+                      <a
+                        href={weddingData.invitation_pdf_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1.5 text-[11px] font-semibold bg-[#FAF7F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] rounded-lg transition"
+                      >
+                        Ver PDF
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleDeleteInvitationPdf}
+                        className="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                        title="Eliminar PDF"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4 px-3 border-2 border-dashed border-[#DDD2C4] rounded-xl bg-white">
+                    <FileText className="w-8 h-8 mx-auto text-[#C7B6A6] mb-2" />
+                    <p className="text-xs text-[#2B2826] font-semibold">
+                      Aún no has subido el archivo PDF
+                    </p>
+                    <p className="text-[11px] text-[#7D6F6B] mt-0.5 mb-3">
+                      Sube el PDF diseñado de la boda (máximo 25 MB).
+                    </p>
+                    <label className="inline-flex items-center space-x-2 px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold rounded-xl cursor-pointer transition shadow-2xs">
+                      {uploadingPdf ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Subiendo archivo...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Seleccionar archivo PDF</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        onChange={handleUploadInvitationPdf}
+                        disabled={uploadingPdf}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                )}
+                {weddingData.invitation_pdf_url && (
+                  <div className="pt-1">
+                    <label className="inline-flex items-center space-x-1.5 text-xs text-[#9C665C] hover:underline cursor-pointer font-semibold">
+                      <Upload className="w-3 h-3" />
+                      <span>{uploadingPdf ? 'Reemplazando...' : 'Reemplazar por otro PDF'}</span>
+                      <input
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        onChange={handleUploadInvitationPdf}
+                        disabled={uploadingPdf}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Código de Vestimenta y Sólo Adultos */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              <div>
+                <label className="block text-xs font-bold text-[#2B2826] mb-1">
+                  Código de Vestimenta
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Formal Riguroso, Playa Elegante"
+                  value={weddingData.dress_code || ''}
+                  onChange={e => setWeddingData({ ...weddingData, dress_code: e.target.value })}
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#FAF7F5] border border-[#EAE3DA] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2B2826] mb-1">
+                  Restricción de Edad
+                </label>
+                <div
+                  onClick={() => setWeddingData({ ...weddingData, no_children: !weddingData.no_children })}
+                  className={`px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between cursor-pointer transition ${
+                    weddingData.no_children
+                      ? 'bg-[#F7EDEB] border-[#C48B81] text-[#A86B60]'
+                      : 'bg-[#FAF7F5] border-[#EAE3DA] text-[#7D6F6B]'
+                  }`}
+                >
+                  <span>Solo Adultos (No Niños)</span>
+                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                    weddingData.no_children ? 'bg-[#C48B81] border-[#C48B81] text-white' : 'border-[#C7B6A6]'
+                  }`}>
+                    {weddingData.no_children && <Check className="w-3 h-3" />}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={handleSaveInvitationSettings}
+                disabled={savingSettings}
+                className="px-5 py-2.5 bg-[#2B2826] hover:bg-[#1E1B19] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs cursor-pointer disabled:opacity-40"
+              >
+                {savingSettings ? 'Guardando...' : 'Guardar Configuración'}
+              </button>
+            </div>
+          </div>
+
+          {/* Columna Derecha: Flujo Visual de 4 Pasos del Bot (5 cols) */}
+          <div className="lg:col-span-5 bg-[#FAF7F5] border border-[#EFE8E1] rounded-2xl p-5 sm:p-6 space-y-4">
+            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#7D6F6B]">
+              <Bot className="w-4 h-4 text-[#C48B81]" />
+              <span>Flujo Inteligente de 4 Pasos</span>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              {/* Paso 1 */}
+              <div className="p-3 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#2B2826]">1. Invitación Inicial</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60] font-semibold">Meta Template</span>
+                </div>
+                <p className="text-[11px] text-[#7D6F6B]">
+                  Envía la invitación personalizada con botones nativos de WhatsApp: <strong>[Confirmo]</strong> y <strong>[Declino]</strong>.
+                </p>
+              </div>
+
+              {/* Paso 2 */}
+              <div className="p-3 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#2B2826]">2. Validación de Asistentes</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E5EDE6] text-[#4B634D] font-semibold">Bot Interactivo</span>
+                </div>
+                <p className="text-[11px] text-[#7D6F6B]">
+                  Pregunta: <em>"¿La cantidad de asistentes (X personas) es correcta?"</em> con botones <strong>[Sí, es correcta]</strong> o <strong>[No, cambiar]</strong>.
+                </p>
+              </div>
+
+              {/* Paso 3 */}
+              <div className="p-3 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#2B2826]">3. Alergias & Menú</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E5EDE6] text-[#4B634D] font-semibold">Registro en BD</span>
+                </div>
+                <p className="text-[11px] text-[#7D6F6B]">
+                  Pregunta si tienen alergias alimentarias. Si responden que sí, guarda las restricciones directo en la ficha del invitado.
+                </p>
+              </div>
+
+              {/* Paso 4 */}
+              <div className="p-3 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#2B2826]">4. Ficha Final & Entrega</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60] font-semibold">PDF o Enlace</span>
+                </div>
+                <p className="text-[11px] text-[#7D6F6B]">
+                  El bot entrega la ficha confirmada (horarios, sedes, dress code) y adjunta el <strong>archivo PDF</strong> o el <strong>enlace web</strong> oficial.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

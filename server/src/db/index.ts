@@ -55,6 +55,12 @@ export function initDatabase() {
       notes TEXT,
       package_type TEXT DEFAULT 'Integral',
       floor_plan_url TEXT,
+      invitation_type TEXT DEFAULT 'LINK',
+      invitation_url TEXT,
+      invitation_pdf_url TEXT,
+      invitation_pdf_filename TEXT,
+      dress_code TEXT,
+      no_children INTEGER DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -123,6 +129,9 @@ export function initDatabase() {
       whatsapp_status TEXT DEFAULT 'NO_ENVIADO',
       last_whatsapp_sent_at TEXT,
       whatsapp_message_id TEXT,
+      dietary_requirements TEXT,
+      confirmed_places INTEGER DEFAULT 0,
+      rsvp_step TEXT DEFAULT 'NONE',
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE CASCADE,
@@ -396,6 +405,37 @@ export function initDatabase() {
   } catch {
     // Column already exists
   }
+
+  // Weddings - Invitation & Event Details Migrations
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN invitation_type TEXT DEFAULT 'LINK';");
+  } catch {}
+  try {
+    db.exec('ALTER TABLE weddings ADD COLUMN invitation_url TEXT;');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE weddings ADD COLUMN invitation_pdf_url TEXT;');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE weddings ADD COLUMN invitation_pdf_filename TEXT;');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE weddings ADD COLUMN dress_code TEXT;');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE weddings ADD COLUMN no_children INTEGER DEFAULT 0;');
+  } catch {}
+
+  // Guests - Automated RSVP Bot Migrations
+  try {
+    db.exec('ALTER TABLE guests ADD COLUMN dietary_requirements TEXT;');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE guests ADD COLUMN confirmed_places INTEGER DEFAULT 0;');
+  } catch {}
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN rsvp_step TEXT DEFAULT 'NONE';");
+  } catch {}
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS calendar_events (

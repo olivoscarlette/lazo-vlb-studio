@@ -435,6 +435,29 @@ router.post('/send', async (req, res) => {
         weddingId,
         guestId
       });
+    } else if (messageType === 'invitation') {
+      if (wedding?.invitation_type === 'PDF' && wedding?.invitation_pdf_url) {
+        const appUrl = process.env.APP_URL || 'https://lazo-vlb.up.railway.app';
+        const fullPdfUrl = wedding.invitation_pdf_url.startsWith('http')
+          ? wedding.invitation_pdf_url
+          : `${appUrl}${wedding.invitation_pdf_url}`;
+
+        result = await WhatsAppService.sendDocumentMessage(
+          phone,
+          fullPdfUrl,
+          wedding.invitation_pdf_filename || `Invitacion_${coupleNames.replace(/\s+/g, '_')}.pdf`,
+          `💌 Aquí tienes tu invitación formal para la boda de ${coupleNames}.`,
+          { weddingId, guestId, sender: 'AGENT' }
+        );
+      } else {
+        const linkMsg = `💌 *Invitación de Boda - ${coupleNames}*\n\nPuedes ver la invitación digital aquí:\n${wedding?.invitation_url || 'https://labodadeferyvic.com'}`;
+        result = await WhatsAppService.sendTextMessage(phone, linkMsg, {
+          weddingId,
+          guestId,
+          previewUrl: true,
+          sender: 'AGENT'
+        });
+      }
     } else {
       result = await WhatsAppService.sendTextMessage(phone, content, {
         weddingId,
