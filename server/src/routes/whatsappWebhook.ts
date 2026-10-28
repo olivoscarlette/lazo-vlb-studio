@@ -25,34 +25,29 @@ async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, ph
   const formattedDate = formatWeddingDateHuman(wedding.wedding_date);
   const places = guest.confirmed_places || (1 + (guest.companion_count || 0));
 
-  let summary = `✨ *¡Tu asistencia está confirmada!* ✨\n\n` +
-    `Nos llena de ilusión compartir este gran día contigo.\n\n` +
-    `💍 *Boda de ${coupleNames}*\n` +
-    `📅 *Fecha:* ${formattedDate}\n`;
+  let summary = `ASISTENCIA CONFIRMADA ✨\n\n` +
+    `Boda ${coupleNames}\n` +
+    `${formattedDate}\n\n`;
 
   if (wedding.ceremony_venue || wedding.ceremony_time) {
-    summary += `⛪ *Ceremonia:* ${wedding.ceremony_venue || 'Por definir'}${wedding.ceremony_time ? ` (${wedding.ceremony_time} hrs)` : ''}\n`;
+    summary += `• Ceremonia: ${wedding.ceremony_venue || 'Por definir'}${wedding.ceremony_time ? ` · ${wedding.ceremony_time} hrs` : ''}\n`;
   }
   if (wedding.reception_venue || wedding.reception_time) {
-    summary += `🥂 *Recepción:* ${wedding.reception_venue || 'Por definir'}${wedding.reception_time ? ` (${wedding.reception_time} hrs)` : ''}\n`;
+    summary += `• Recepción: ${wedding.reception_venue || 'Por definir'}${wedding.reception_time ? ` · ${wedding.reception_time} hrs` : ''}\n`;
   }
   if (wedding.dress_code) {
-    summary += `👗 *Código de vestimenta:* ${wedding.dress_code}\n`;
+    summary += `• Código de vestimenta: ${wedding.dress_code}\n`;
   }
   if (wedding.no_children) {
-    summary += `👶 *Nota:* Evento sólo para adultos (No niños)\n`;
+    summary += `• Nota: Recepción sólo para adultos\n`;
   }
-  summary += `👥 *Asistentes confirmados:* ${places}\n`;
-
-  if (guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna') {
-    summary += `🥗 *Restricciones registradas:* ${guest.dietary_requirements}\n`;
-  }
+  summary += `• Pases confirmados: ${places} persona(s)\n\n`;
 
   if (wedding.invitation_type === 'LINK' && wedding.invitation_url) {
-    summary += `\n💌 *Tu invitación digital:*\n${wedding.invitation_url}\n`;
+    summary += `💌 Tu invitación digital:\n${wedding.invitation_url}\n\n`;
   }
 
-  summary += `\n¡Te esperamos con muchas ganas de celebrar! 🥂🎉`;
+  summary += `¡Estamos contando los días para celebrar juntos!`;
 
   await WhatsAppService.sendTextMessage(phone, summary, {
     weddingId,
@@ -98,6 +93,8 @@ async function handleAutomatedRsvpStep(params: {
   const isDecline =
     lowerButtonId.includes('decline') ||
     lowerButtonId.includes('rsvp_decline') ||
+    lowerButtonId.includes('no podré') ||
+    lowerButtonId.includes('no podre') ||
     lowerContent.includes('no asistiré') ||
     lowerContent.includes('no asistire') ||
     lowerContent.includes('no podré') ||
@@ -121,7 +118,7 @@ async function handleAutomatedRsvpStep(params: {
 
     await WhatsAppService.sendTextMessage(
       normalizedPhone,
-      `Lamentamos mucho que no puedas acompañarnos en este día tan especial. ¡Te tendremos muy presente en nuestros corazones! 💕`,
+      `Muchas gracias por avisarnos, ${matchedGuest.first_name}.\n\nLamentamos que no puedas acompañarnos físicamente, ¡te tendremos muy presente y te mandamos un abrazo con mucho cariño! 💕`,
       { weddingId, guestId: matchedGuest.id }
     );
     return;
@@ -134,6 +131,7 @@ async function handleAutomatedRsvpStep(params: {
       lowerButtonId.includes('rsvp_confirm') ||
       lowerButtonId.includes('yes') ||
       lowerContent.includes('confirmo') ||
+      lowerContent.includes('confirmar') ||
       lowerContent.includes('asistiré') ||
       lowerContent.includes('asistire') ||
       lowerContent.includes('si asistiré') ||
@@ -160,10 +158,10 @@ async function handleAutomatedRsvpStep(params: {
 
         await WhatsAppService.sendInteractiveButtons(
           normalizedPhone,
-          `¡Qué alegría contar contigo! 🎉\n\nTienes reservado(s) *${totalSeats} lugares* a tu nombre.\n\n¿La cantidad de asistentes es correcta?`,
+          `¡Qué gran noticia saber que nos acompañarás!\n\nTienes reservados ${totalSeats} lugares en total a tu nombre.\n¿Confirmas la asistencia de todas las personas?`,
           [
-            { id: 'places_yes', title: 'Sí, es correcta' },
-            { id: 'places_no', title: 'No, cambiar' }
+            { id: 'places_yes', title: 'Asistiremos todos' },
+            { id: 'places_no', title: 'Modificar número' }
           ],
           { weddingId, guestId: matchedGuest.id }
         );
@@ -171,19 +169,12 @@ async function handleAutomatedRsvpStep(params: {
         // Individual guest (1 seat)
         db.prepare(`
           UPDATE guests
-          SET confirmed_places = 1, rsvp_step = 'CONFIRMING_DIET', updated_at = ?
+          SET confirmed_places = 1, rsvp_step = 'COMPLETED', updated_at = ?
           WHERE id = ? AND wedding_id = ?
         `).run(now, matchedGuest.id, weddingId);
 
-        await WhatsAppService.sendInteractiveButtons(
-          normalizedPhone,
-          `¡Qué alegría contar contigo! 🎉 Tu lugar está reservado.\n\n¿Tienes alguna alergia o restricción alimentaria?`,
-          [
-            { id: 'diet_yes', title: 'Sí' },
-            { id: 'diet_no', title: 'No' }
-          ],
-          { weddingId, guestId: matchedGuest.id }
-        );
+        const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+        await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
       }
       return;
     }
@@ -195,6 +186,8 @@ async function handleAutomatedRsvpStep(params: {
       lowerButtonId === 'places_yes' ||
       lowerContent === 'sí' ||
       lowerContent === 'si' ||
+      lowerContent.includes('asistiremos todos') ||
+      lowerContent.includes('todos') ||
       lowerContent.includes('correcta') ||
       lowerContent.includes('es correcta') ||
       lowerContent.includes('así es') ||
@@ -203,27 +196,20 @@ async function handleAutomatedRsvpStep(params: {
     const isNo =
       lowerButtonId === 'places_no' ||
       lowerContent === 'no' ||
-      lowerContent.includes('cambiar') ||
       lowerContent.includes('modificar') ||
+      lowerContent.includes('cambiar') ||
       lowerContent.includes('somos menos') ||
       lowerContent.includes('somos más');
 
     if (isYes) {
       db.prepare(`
         UPDATE guests
-        SET confirmed_places = ?, rsvp_step = 'CONFIRMING_DIET', updated_at = ?
+        SET confirmed_places = ?, rsvp_step = 'COMPLETED', updated_at = ?
         WHERE id = ? AND wedding_id = ?
       `).run(totalSeats, now, matchedGuest.id, weddingId);
 
-      await WhatsAppService.sendInteractiveButtons(
-        normalizedPhone,
-        `¡Excelente! 🥂\n\n¿Alguna de las personas que asistirán tiene alguna alergia o restricción alimentaria?`,
-        [
-          { id: 'diet_yes', title: 'Sí' },
-          { id: 'diet_no', title: 'No' }
-        ],
-        { weddingId, guestId: matchedGuest.id }
-      );
+      const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+      await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
       return;
     } else if (isNo) {
       db.prepare(`
@@ -234,7 +220,7 @@ async function handleAutomatedRsvpStep(params: {
 
       await WhatsAppService.sendTextMessage(
         normalizedPhone,
-        `Por favor escríbenos aquí el número total de personas que asistirán (por ejemplo: 1, 2, etc.):`,
+        `Por favor indícanos cuántas personas asistirán en total (número):`,
         { weddingId, guestId: matchedGuest.id }
       );
       return;
@@ -244,19 +230,12 @@ async function handleAutomatedRsvpStep(params: {
       if (!isNaN(parsedNum) && parsedNum > 0) {
         db.prepare(`
           UPDATE guests
-          SET confirmed_places = ?, rsvp_step = 'CONFIRMING_DIET', updated_at = ?
+          SET confirmed_places = ?, rsvp_step = 'COMPLETED', updated_at = ?
           WHERE id = ? AND wedding_id = ?
         `).run(parsedNum, now, matchedGuest.id, weddingId);
 
-        await WhatsAppService.sendInteractiveButtons(
-          normalizedPhone,
-          `Perfecto, registramos *${parsedNum} persona(s)*. 🥂\n\n¿Alguna persona tiene alguna alergia o restricción alimentaria?`,
-          [
-            { id: 'diet_yes', title: 'Sí' },
-            { id: 'diet_no', title: 'No' }
-          ],
-          { weddingId, guestId: matchedGuest.id }
-        );
+        const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+        await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
         return;
       }
     }
@@ -268,19 +247,12 @@ async function handleAutomatedRsvpStep(params: {
     if (!isNaN(parsedNum) && parsedNum > 0) {
       db.prepare(`
         UPDATE guests
-        SET confirmed_places = ?, rsvp_step = 'CONFIRMING_DIET', updated_at = ?
+        SET confirmed_places = ?, rsvp_step = 'COMPLETED', updated_at = ?
         WHERE id = ? AND wedding_id = ?
       `).run(parsedNum, now, matchedGuest.id, weddingId);
 
-      await WhatsAppService.sendInteractiveButtons(
-        normalizedPhone,
-        `Perfecto, registramos *${parsedNum} persona(s)*. 🥂\n\n¿Alguna persona tiene alguna alergia o restricción alimentaria?`,
-        [
-          { id: 'diet_yes', title: 'Sí' },
-          { id: 'diet_no', title: 'No' }
-        ],
-        { weddingId, guestId: matchedGuest.id }
-      );
+      const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+      await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
       return;
     } else {
       await WhatsAppService.sendTextMessage(
@@ -290,73 +262,6 @@ async function handleAutomatedRsvpStep(params: {
       );
       return;
     }
-  }
-
-  // 5. Step: CONFIRMING_DIET
-  if (currentStep === 'CONFIRMING_DIET') {
-    const isDietNo =
-      lowerButtonId === 'diet_no' ||
-      lowerContent === 'no' ||
-      lowerContent.includes('ningun') ||
-      lowerContent.includes('ninguna') ||
-      lowerContent.includes('sin alergias') ||
-      lowerContent.includes('todo bien') ||
-      lowerContent.includes('comemos de todo');
-
-    const isDietYes =
-      lowerButtonId === 'diet_yes' ||
-      lowerContent === 'sí' ||
-      lowerContent === 'si' ||
-      lowerContent.includes('tengo alergia');
-
-    if (isDietNo) {
-      db.prepare(`
-        UPDATE guests
-        SET dietary_requirements = 'Ninguna', rsvp_step = 'COMPLETED', updated_at = ?
-        WHERE id = ? AND wedding_id = ?
-      `).run(now, matchedGuest.id, weddingId);
-
-      const refreshedGuest = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
-      await sendFinalEventCardAndInvitation(refreshedGuest || matchedGuest, weddingId, normalizedPhone);
-      return;
-    } else if (isDietYes) {
-      db.prepare(`
-        UPDATE guests
-        SET rsvp_step = 'AWAITING_DIET_TEXT', updated_at = ?
-        WHERE id = ? AND wedding_id = ?
-      `).run(now, matchedGuest.id, weddingId);
-
-      await WhatsAppService.sendTextMessage(
-        normalizedPhone,
-        `Por favor cuéntanos cuáles son las alergias o restricciones para tomarlas en cuenta (por ejemplo: vegetariano, alergia a mariscos, intolerancia al gluten, etc.):`,
-        { weddingId, guestId: matchedGuest.id }
-      );
-      return;
-    } else {
-      // The guest may have typed the diet restriction directly!
-      db.prepare(`
-        UPDATE guests
-        SET dietary_requirements = ?, rsvp_step = 'COMPLETED', updated_at = ?
-        WHERE id = ? AND wedding_id = ?
-      `).run(content.trim(), now, matchedGuest.id, weddingId);
-
-      const refreshedGuest = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
-      await sendFinalEventCardAndInvitation(refreshedGuest || matchedGuest, weddingId, normalizedPhone);
-      return;
-    }
-  }
-
-  // 6. Step: AWAITING_DIET_TEXT
-  if (currentStep === 'AWAITING_DIET_TEXT') {
-    db.prepare(`
-      UPDATE guests
-      SET dietary_requirements = ?, rsvp_step = 'COMPLETED', updated_at = ?
-      WHERE id = ? AND wedding_id = ?
-    `).run(content.trim(), now, matchedGuest.id, weddingId);
-
-    const refreshedGuest = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
-    await sendFinalEventCardAndInvitation(refreshedGuest || matchedGuest, weddingId, normalizedPhone);
-    return;
   }
 }
 

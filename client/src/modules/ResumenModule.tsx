@@ -801,55 +801,44 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             </div>
           </div>
 
-          {/* Columna Derecha: Flujo Visual de 4 Pasos del Bot (5 cols) */}
+          {/* Columna Derecha: Flujo Visual del Bot (5 cols) */}
           <div className="lg:col-span-5 bg-[#FAF7F5] border border-[#EFE8E1] rounded-2xl p-5 sm:p-6 space-y-4">
             <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#7D6F6B]">
               <Bot className="w-4 h-4 text-[#C48B81]" />
-              <span>Flujo Inteligente de 4 Pasos</span>
+              <span>Flujo Conversacional Oficial</span>
             </div>
 
             <div className="space-y-3 text-xs">
               {/* Paso 1 */}
-              <div className="p-3 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
+              <div className="p-3.5 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[#2B2826]">1. Invitación Inicial</span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60] font-semibold">Meta Template</span>
                 </div>
                 <p className="text-[11px] text-[#7D6F6B]">
-                  Envía la invitación personalizada con botones nativos de WhatsApp: <strong>[Confirmo]</strong> y <strong>[Declino]</strong>.
+                  Envía la invitación personalizada formal con botones: <strong>[Confirmar Asistencia]</strong> y <strong>[No podré asistir]</strong>.
                 </p>
               </div>
 
               {/* Paso 2 */}
-              <div className="p-3 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
+              <div className="p-3.5 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[#2B2826]">2. Validación de Asistentes</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E5EDE6] text-[#4B634D] font-semibold">Bot Interactivo</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E5EDE6] text-[#4B634D] font-semibold">Interactivo</span>
                 </div>
                 <p className="text-[11px] text-[#7D6F6B]">
-                  Pregunta: <em>"¿La cantidad de asistentes (X personas) es correcta?"</em> con botones <strong>[Sí, es correcta]</strong> o <strong>[No, cambiar]</strong>.
+                  Si tiene 2+ pases: <em>"¿Confirmas la asistencia de todas las personas?"</em> con botones <strong>[Asistiremos todos]</strong> o <strong>[Modificar número]</strong>.
                 </p>
               </div>
 
               {/* Paso 3 */}
-              <div className="p-3 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
+              <div className="p-3.5 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#2B2826]">3. Alergias & Menú</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E5EDE6] text-[#4B634D] font-semibold">Registro en BD</span>
-                </div>
-                <p className="text-[11px] text-[#7D6F6B]">
-                  Pregunta si tienen alergias alimentarias. Si responden que sí, guarda las restricciones directo en la ficha del invitado.
-                </p>
-              </div>
-
-              {/* Paso 4 */}
-              <div className="p-3 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#2B2826]">4. Ficha Final & Entrega</span>
+                  <span className="font-bold text-[#2B2826]">3. Ficha Final & Entrega ✨</span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60] font-semibold">PDF o Enlace</span>
                 </div>
                 <p className="text-[11px] text-[#7D6F6B]">
-                  El bot entrega la ficha confirmada (horarios, sedes, dress code) y adjunta el <strong>archivo PDF</strong> o el <strong>enlace web</strong> oficial.
+                  Entrega la confirmación formal (ceremonia, recepción, dress code, pases confirmados) y adjunta el <strong>archivo PDF</strong> o <strong>enlace Canva</strong>.
                 </p>
               </div>
             </div>

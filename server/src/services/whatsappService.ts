@@ -690,7 +690,7 @@ export class WhatsAppService {
     const candidateTemplates = Array.from(new Set(preferredTemplates));
 
     // Store the exact message that is actually sent to the guest on WhatsApp
-    const contentSummary = `¡Hola ${params.guestName}! Nos llena de ilusión invitarte a la boda de ${cleanCoupleNames} este ${formattedDate}. Tienes ${totalSeats} lugar(es) reservado(s). Por favor confirma tu asistencia seleccionando una opción abajo:`;
+    const contentSummary = `Hola ${params.guestName},\n\nEs un honor para nosotros invitarte a celebrar la boda de\n${cleanCoupleNames}\n\n🗓 ${formattedDate}\n🎟 Pases reservados: ${totalSeats} persona(s)\n\nNos encantaría compartir este día tan especial contigo.\nPor favor, ayúdanos confirmando tu asistencia seleccionando una opción abajo:\n\n[ Confirmar Asistencia ]  [ No podré asistir ]`;
 
     const components = [
       {

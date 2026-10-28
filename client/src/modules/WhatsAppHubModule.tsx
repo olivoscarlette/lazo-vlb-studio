@@ -439,7 +439,7 @@ export const WhatsAppHubModule: React.FC = () => {
 
     let text = '';
     if (templateType === 1) {
-      text = `¡Hola ${name}! Nos llena de ilusión invitarte a la boda de ${coupleClean} este ${dateFormatted}. Tienes ${seats} lugar(es) reservado(s). Por favor confirma tu asistencia seleccionando una opción abajo:`;
+      text = `Hola ${name},\n\nEs un honor para nosotros invitarte a celebrar la boda de\n${coupleClean}\n\n🗓 ${dateFormatted}\n🎟 Pases reservados: ${seats} persona(s)\n\nNos encantaría compartir este día tan especial contigo.\nPor favor, ayúdanos confirmando tu asistencia seleccionando una opción abajo:\n\n[ Confirmar Asistencia ] [ No podré asistir ]`;
     } else if (templateType === 2) {
       const venue = activeWedding?.reception_venue || 'Fábrica La Fama';
       const dressCode = activeWedding?.dress_code || 'Rigurosa Etiqueta / Formal';
