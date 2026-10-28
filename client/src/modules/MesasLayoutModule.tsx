@@ -257,10 +257,13 @@ export const MesasLayoutModule: React.FC = () => {
     try {
       if (floorPlanPendingBlob) {
         const formData = new FormData();
+        const isRawPdf = floorPlanPendingBlob.type === 'application/pdf' || floorPlanFilename?.toLowerCase().endsWith('.pdf');
         const baseName = floorPlanFilename
           ? floorPlanFilename.replace(/\.[^/.]+$/, '').replace(/[^a-zA-Z0-9_-]/g, '_')
           : 'plano_base';
-        const finalFilename = `${baseName}_p${floorPlanSelectedPage}.png`;
+        const finalFilename = isRawPdf && floorPlanPendingBlob.type === 'application/pdf'
+          ? `${baseName}.pdf`
+          : `${baseName}_p${floorPlanSelectedPage}.png`;
         formData.append('floor_plan_file', floorPlanPendingBlob, finalFilename);
 
         const res = await fetch(`/api/weddings/${currentWedding.id}/floor-plan-file`, {
@@ -346,8 +349,12 @@ export const MesasLayoutModule: React.FC = () => {
         const blob = new Blob([ab], { type: 'image/png' });
         setFloorPlanPendingBlob(blob);
       } catch (err: any) {
-        console.error('Error rendering PDF:', err);
-        setFloorPlanError('No se pudo procesar el archivo PDF. Verifica que sea un PDF válido.');
+        console.warn('PDF.js render notice, fallback to direct upload:', err);
+        // Resilient fallback: use file as direct upload and preview
+        setFloorPlanPendingBlob(file);
+        setFloorPlanUrl(URL.createObjectURL(file));
+        setFloorPlanPageCount(1);
+        setFloorPlanSelectedPage(1);
       } finally {
         setFloorPlanProcessing(false);
       }
@@ -608,14 +615,23 @@ export const MesasLayoutModule: React.FC = () => {
           >
             {/* Optional Reference Venue Floor Plan Image / Rendered PDF */}
             {floorPlanUrl && floorPlanVisible && (
-              <img
-                src={floorPlanUrl}
-                alt="Plano de referencia del lugar"
-                className={`absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-200 ${
-                  floorPlanFitMode === 'cover' ? 'object-cover' : 'object-contain'
-                }`}
-                style={{ opacity: floorPlanOpacity }}
-              />
+              floorPlanUrl.toLowerCase().includes('.pdf') ? (
+                <iframe
+                  src={`${floorPlanUrl}#toolbar=0&navpanes=0&scrollbar=0&view=Fit`}
+                  title="Plano arquitectónico de referencia"
+                  className="absolute inset-0 w-full h-full pointer-events-none border-0 select-none"
+                  style={{ opacity: floorPlanOpacity }}
+                />
+              ) : (
+                <img
+                  src={floorPlanUrl}
+                  alt="Plano de referencia del lugar"
+                  className={`absolute inset-0 w-full h-full pointer-events-none transition-opacity duration-200 ${
+                    floorPlanFitMode === 'cover' ? 'object-cover' : 'object-contain'
+                  }`}
+                  style={{ opacity: floorPlanOpacity }}
+                />
+              )
             )}
 
             {/* Legend / Status Overlay */}
@@ -1298,11 +1314,18 @@ export const MesasLayoutModule: React.FC = () => {
               {floorPlanUrl && (
                 <div className="p-3 bg-[#FAF8F5] border border-[#EFE8E1] rounded-2xl flex items-center space-x-3.5">
                   <div className="w-16 h-16 rounded-xl bg-white border border-[#EFE8E1] overflow-hidden flex items-center justify-center shrink-0 shadow-2xs">
-                    <img
-                      src={floorPlanUrl}
-                      alt="Vista previa del plano"
-                      className="w-full h-full object-contain"
-                    />
+                    {floorPlanUrl.startsWith('data:image/') || (!floorPlanUrl.toLowerCase().includes('.pdf') && !floorPlanUrl.startsWith('blob:')) ? (
+                      <img
+                        src={floorPlanUrl}
+                        alt="Vista previa del plano"
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-[#C48B81]">
+                        <FileUp className="w-6 h-6" />
+                        <span className="text-[9px] font-bold uppercase mt-0.5">PDF</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-1.5 text-xs font-semibold text-[#2B2826] truncate">

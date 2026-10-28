@@ -1,19 +1,15 @@
 import * as pdfjsLib from 'pdfjs-dist';
+// @ts-ignore
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 
-// Configure the worker for Vite
-// In modern Vite, we can either set workerSrc to the worker URL or disable worker if not available
+// Configure worker immediately
 if (typeof window !== 'undefined') {
   try {
-    // Vite ?url import for worker
-    // @ts-ignore
-    import('pdfjs-dist/build/pdf.worker.mjs?url').then((workerModule) => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = workerModule.default;
-    }).catch(() => {
-      // Fallback: use unpkg CDN worker if dynamic import fails
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-    });
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      pdfWorkerUrl ||
+      `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
   } catch (e) {
-    console.warn('PDF worker setup error:', e);
+    console.warn('PDF worker initialization:', e);
   }
 }
 
@@ -25,7 +21,7 @@ export interface ConvertPdfResult {
 }
 
 /**
- * Converts a PDF ArrayBuffer or File into a high-resolution PNG image data URL
+ * Converts a PDF ArrayBuffer into a high-resolution PNG image data URL
  * of the specified page (defaults to page 1).
  */
 export async function convertPdfPageToImage(
@@ -33,7 +29,20 @@ export async function convertPdfPageToImage(
   pageNumber: number = 1,
   scale: number = 2.0 // 2x scale for crisp blueprints on retina displays
 ): Promise<ConvertPdfResult> {
-  const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+  // Ensure workerSrc is always assigned before getDocument
+  if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      pdfWorkerUrl ||
+      `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+  }
+
+  const loadingTask = pdfjsLib.getDocument({
+    data: new Uint8Array(pdfData),
+    cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
+    cMapPacked: true,
+    standardFontDataUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/standard_fonts/`,
+  });
+
   const pdfDoc = await loadingTask.promise;
   const numPages = pdfDoc.numPages;
 
@@ -48,7 +57,7 @@ export async function convertPdfPageToImage(
 
   const context = canvas.getContext('2d');
   if (!context) {
-    throw new Error('No se pudo inicializar el contexto 2D para renderizar el PDF.');
+    throw new Error('No se pudo inicializar el contexto 2D para renderizar el plano.');
   }
 
   // Draw background white in case PDF has transparent background
@@ -62,7 +71,7 @@ export async function convertPdfPageToImage(
 
   await page.render(renderContext).promise;
 
-  const dataUrl = canvas.toDataURL('image/png', 0.92);
+  const dataUrl = canvas.toDataURL('image/png', 0.95);
 
   return {
     dataUrl,
