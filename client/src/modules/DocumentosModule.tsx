@@ -104,13 +104,13 @@ export const DocumentosModule: React.FC = () => {
       case 'comprobante_pago':
         return 'bg-[#E4ECE5] text-[#2B5235] border border-[#BDD4C1]';
       case 'proveedor':
-        return 'bg-[#FDF6F5] text-[#9C665C] border border-[#F0D5D1]';
+        return 'bg-[#F7EDEB] text-[#C48B81] border border-[#F0D5D1]';
       case 'operativo':
-        return 'bg-[#FAF8F5] text-[#5A524C] border border-[#EAE3DA]';
+        return 'bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]';
       case 'civil_iglesia':
-        return 'bg-[#FAF8F5] text-[#70443D] border border-[#EAE3DA]';
+        return 'bg-[#FAF8F5] text-[#70443D] border border-[#EFE8E1]';
       default:
-        return 'bg-[#FAF8F5] text-[#5A524C] border border-[#EAE3DA]';
+        return 'bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]';
     }
   };
 
@@ -152,7 +152,7 @@ export const DocumentosModule: React.FC = () => {
 
         <button
           onClick={() => { setShowUploadModal(true); setSelectedFile(null); setUploadError(''); }}
-          className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-sm font-semibold rounded-xl shadow-xs transition cursor-pointer"
+          className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-semibold rounded-xl shadow-xs transition cursor-pointer"
         >
           <Upload className="w-4 h-4" />
           <span>Subir Documento</span>
@@ -160,8 +160,8 @@ export const DocumentosModule: React.FC = () => {
       </div>
 
       {/* Security Privacy Notice */}
-      <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] text-[#5A524C] flex items-center space-x-3 text-sm">
-        <Lock className="w-4 h-4 text-[#9C665C] shrink-0" />
+      <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] text-[#5A524C] flex items-center space-x-3 text-sm">
+        <Lock className="w-4 h-4 text-[#C48B81] shrink-0" />
         <div>
           <strong className="font-semibold text-[#2B2826]">Almacenamiento Privado y Encriptado:</strong> Los archivos no son accesibles mediante URL pública. Cada descarga requiere autenticación activa y verificación de permisos en esta boda.
         </div>
@@ -173,8 +173,8 @@ export const DocumentosModule: React.FC = () => {
           onClick={() => setCategoryFilter('ALL')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             categoryFilter === 'ALL'
-              ? 'bg-[#9C665C] text-white shadow-xs'
-              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+              ? 'bg-[#C48B81] text-white shadow-xs'
+              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
           }`}
         >
           Todos ({documents.length})
@@ -183,8 +183,8 @@ export const DocumentosModule: React.FC = () => {
           onClick={() => setCategoryFilter('contrato')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             categoryFilter === 'contrato'
-              ? 'bg-[#9C665C] text-white shadow-xs'
-              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+              ? 'bg-[#C48B81] text-white shadow-xs'
+              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
           }`}
         >
           Contratos ({countContratos})
@@ -193,8 +193,8 @@ export const DocumentosModule: React.FC = () => {
           onClick={() => setCategoryFilter('comprobante_pago')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             categoryFilter === 'comprobante_pago'
-              ? 'bg-[#9C665C] text-white shadow-xs'
-              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+              ? 'bg-[#C48B81] text-white shadow-xs'
+              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
           }`}
         >
           Comprobantes ({countPagos})
@@ -203,8 +203,8 @@ export const DocumentosModule: React.FC = () => {
           onClick={() => setCategoryFilter('proveedor')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
             categoryFilter === 'proveedor'
-              ? 'bg-[#9C665C] text-white shadow-xs'
-              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+              ? 'bg-[#C48B81] text-white shadow-xs'
+              : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
           }`}
         >
           Cotizaciones ({countCotizaciones})
@@ -212,11 +212,11 @@ export const DocumentosModule: React.FC = () => {
       </div>
 
       {/* Documents Table */}
-      <div className="bg-white rounded-3xl overflow-hidden border border-[#EAE3DA] shadow-xs">
+      <div className="bg-white rounded-3xl overflow-hidden border border-[#EFE8E1] shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
             <thead>
-              <tr className="bg-[#FAF8F5] border-b border-[#EAE3DA] text-[11px] font-bold uppercase tracking-wider text-[#8A7E72]">
+              <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-[11px] font-bold uppercase tracking-wider text-[#8A7E72]">
                 <th className="py-3.5 px-5">DOCUMENTO</th>
                 <th className="py-3.5 px-4">CATEGORÍA</th>
                 <th className="py-3.5 px-4">TAMAÑO</th>
@@ -226,7 +226,7 @@ export const DocumentosModule: React.FC = () => {
                 <th className="py-3.5 px-4 text-center">ACCIONES</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#EAE3DA]">
+            <tbody className="divide-y divide-[#EFE8E1]">
               {loading ? (
                 <tr><td colSpan={7} className="py-12 text-center text-[#8A7E72]">Cargando documentos...</td></tr>
               ) : filteredDocs.length === 0 ? (
@@ -236,7 +236,7 @@ export const DocumentosModule: React.FC = () => {
                   <tr key={doc.id} className="hover:bg-[#FAF8F5]/70 transition">
                     <td className="py-3.5 px-5">
                       <div className="flex items-center space-x-2.5">
-                        <FileCheck className="w-4 h-4 text-[#9C665C] shrink-0" />
+                        <FileCheck className="w-4 h-4 text-[#C48B81] shrink-0" />
                         <span className="font-semibold text-[#2B2826] max-w-xs truncate">{doc.original_name}</span>
                       </div>
                     </td>
@@ -253,7 +253,7 @@ export const DocumentosModule: React.FC = () => {
                       <div className="flex items-center justify-center space-x-2">
                         <button
                           onClick={() => handleDownload(doc.id, doc.original_name)}
-                          className="p-2 text-[#5A524C] hover:text-[#9C665C] bg-[#FAF8F5] hover:bg-[#EFE8E0] rounded-xl transition border border-[#EAE3DA] cursor-pointer"
+                          className="p-2 text-[#5A524C] hover:text-[#C48B81] bg-[#FAF8F5] hover:bg-[#EFE8E0] rounded-xl transition border border-[#EFE8E1] cursor-pointer"
                           title="Descargar archivo privado"
                         >
                           <Download className="w-4 h-4" />
@@ -280,7 +280,7 @@ export const DocumentosModule: React.FC = () => {
       {/* Modal: Subir Documento */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-[#2B2826]/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#EAE3DA] animate-in fade-in zoom-in-95">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-[#EFE8E1] animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Subir Documento Privado</h3>
               <button
@@ -308,7 +308,7 @@ export const DocumentosModule: React.FC = () => {
                   type="file"
                   required
                   onChange={e => setSelectedFile(e.target.files?.[0] || null)}
-                  className="w-full text-xs text-[#5A524C] file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#FAF8F5] file:text-[#2B2826] hover:file:bg-[#EFE8E0] file:border file:border-[#EAE3DA] file:cursor-pointer"
+                  className="w-full text-xs text-[#5A524C] file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#FAF8F5] file:text-[#2B2826] hover:file:bg-[#EFE8E0] file:border file:border-[#EFE8E1] file:cursor-pointer"
                 />
               </div>
 
@@ -317,7 +317,7 @@ export const DocumentosModule: React.FC = () => {
                 <select
                   value={category}
                   onChange={e => setCategory(e.target.value as any)}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] bg-white rounded-xl text-sm focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] bg-white rounded-xl text-sm focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 >
                   <option value="contrato">Contrato Legal</option>
                   <option value="comprobante_pago">Comprobante de Pago</option>
@@ -334,11 +334,11 @@ export const DocumentosModule: React.FC = () => {
                   placeholder="Detalles sobre este comprobante o documento..."
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] bg-white rounded-xl text-sm focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] bg-white rounded-xl text-sm focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EFE8E1]">
                 <button
                   type="button"
                   onClick={() => setShowUploadModal(false)}
@@ -349,7 +349,7 @@ export const DocumentosModule: React.FC = () => {
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer"
+                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer"
                 >
                   {uploading ? 'Subiendo...' : 'Subir y Resguardar'}
                 </button>

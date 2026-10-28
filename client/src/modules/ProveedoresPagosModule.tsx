@@ -121,14 +121,14 @@ export const ProveedoresPagosModule: React.FC = () => {
       return {
         status: 'LIQUIDADO',
         label: 'Liquidado ✓',
-        badgeClass: 'bg-emerald-50 text-emerald-800 border-emerald-200'
+        badgeClass: 'bg-[#E5EDE6] text-[#384C3A] border-[#D5E2D7]'
       };
     }
     if (!dueDate) {
       return {
         status: 'SIN_FECHA',
         label: 'Sin fecha límite',
-        badgeClass: 'text-[#8E807A] bg-[#F9F6F2] border-[#DDD2C4]'
+        badgeClass: 'text-[#8E807A] bg-[#F9F6F2] border-[#EFE8E1]'
       };
     }
     try {
@@ -143,7 +143,7 @@ export const ProveedoresPagosModule: React.FC = () => {
         return {
           status: 'VENCIDO',
           label: `⚠️ Vencido hace ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'día' : 'días'}`,
-          badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
+          badgeClass: 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5] font-semibold',
           isAlert: true
         };
       }
@@ -151,7 +151,7 @@ export const ProveedoresPagosModule: React.FC = () => {
         return {
           status: 'HOY',
           label: '⚠️ ¡Vence hoy!',
-          badgeClass: 'bg-rose-100 text-rose-800 border-rose-300 font-bold',
+          badgeClass: 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5] font-semibold',
           isAlert: true
         };
       }
@@ -159,14 +159,14 @@ export const ProveedoresPagosModule: React.FC = () => {
         return {
           status: 'PROXIMO',
           label: `⏳ Vence en ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`,
-          badgeClass: 'bg-amber-100 text-amber-800 border-amber-300 font-semibold',
+          badgeClass: 'bg-[#F5EFEB] text-[#7D6F6B] border-[#EFE8E1] font-semibold',
           isAlert: true
         };
       }
       return {
         status: 'EN_TIEMPO',
         label: dueDate,
-        badgeClass: 'bg-[#EFE8DE] text-[#4A3F3C] border-[#DDD2C4]'
+        badgeClass: 'bg-[#EFE8DE] text-[#4A3F3C] border-[#EFE8E1]'
       };
     } catch {
       return {
@@ -324,14 +324,14 @@ export const ProveedoresPagosModule: React.FC = () => {
         <div className="flex items-center space-x-2">
           <button
             onClick={() => setShowPaymentModal(true)}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-lg border border-[#EAE3DA] transition shadow-2xs cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-lg border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
           >
             <DollarSign className="w-3.5 h-3.5 text-[#6E8C70]" />
             <span>Registrar Pago</span>
           </button>
           <button
             onClick={handleOpenAddVendor}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-lg shadow-2xs transition cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-lg shadow-2xs transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Nuevo Proveedor</span>
@@ -341,10 +341,10 @@ export const ProveedoresPagosModule: React.FC = () => {
 
       {/* Financial Summary: 3 grandes cifras destacadas */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
+        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
             <span>TOTAL CONTRATADO</span>
-            <DollarSign className="w-4 h-4 text-[#9C665C]" />
+            <DollarSign className="w-4 h-4 text-[#C48B81]" />
           </div>
           <div className="text-3xl font-serif font-bold text-[#2B2826]">
             ${financialSummary.costo_real.toLocaleString()}
@@ -354,7 +354,7 @@ export const ProveedoresPagosModule: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
+        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-xs font-semibold text-[#577355] uppercase tracking-wider mb-2">
             <span>MONTO PAGADO</span>
             <CheckCircle2 className="w-4 h-4 text-[#6E8C70]" />
@@ -367,15 +367,15 @@ export const ProveedoresPagosModule: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#8A574E] uppercase tracking-wider mb-2">
+        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#A86B60] uppercase tracking-wider mb-2">
             <span>SALDO RESTANTE</span>
-            <Clock className="w-4 h-4 text-[#9C665C]" />
+            <Clock className="w-4 h-4 text-[#C48B81]" />
           </div>
-          <div className="text-3xl font-serif font-bold text-[#8A574E]">
+          <div className="text-3xl font-serif font-bold text-[#A86B60]">
             ${financialSummary.restante.toLocaleString()}
           </div>
-          <div className="text-xs text-[#8A574E] font-medium mt-2">
+          <div className="text-xs text-[#A86B60] font-medium mt-2">
             Saldo pendiente por liquidar
           </div>
         </div>
@@ -393,12 +393,12 @@ export const ProveedoresPagosModule: React.FC = () => {
 
         return (
           <div className="bg-[#FFF8F5] border border-[#EAD2D0] p-5 rounded-2xl shadow-xs flex items-start gap-3.5">
-            <AlertTriangle className="w-5 h-5 text-[#9C665C] shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-[#C48B81] shrink-0 mt-0.5" />
             <div className="flex-1">
               <h4 className="text-sm font-bold text-[#70443D]">
                 Alerta de Pagos Próximos y Liquidaciones ({urgentVendors.length})
               </h4>
-              <p className="text-xs text-[#8A574E] mt-0.5">
+              <p className="text-xs text-[#A86B60] mt-0.5">
                 Los siguientes proveedores tienen saldo pendiente con fecha límite próxima (próximos 15-30 días) o vencida:
               </p>
               <div className="flex flex-wrap gap-2.5 mt-3">
@@ -410,7 +410,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-[#EAD2D0] shadow-2xs"
                     >
                       <span className="font-bold text-[#2B2826]">{v.name}:</span>
-                      <span className="text-[#8A574E]">${(v.saldo_restante || 0).toLocaleString()}</span>
+                      <span className="text-[#A86B60]">${(v.saldo_restante || 0).toLocaleString()}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full ${status.badgeClass}`}>
                         {status.label}
                       </span>
@@ -426,7 +426,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                           });
                           setShowPaymentModal(true);
                         }}
-                        className="text-xs text-[#9C665C] hover:underline font-bold ml-1 cursor-pointer"
+                        className="text-xs text-[#C48B81] hover:underline font-bold ml-1 cursor-pointer"
                       >
                         Pagar →
                       </button>
@@ -440,7 +440,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       })()}
 
       {/* Vendors List Section */}
-      <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EAE3DA] shadow-xs space-y-4">
+      <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EFE8E1] shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <span className="text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">Directorio Operativo</span>
@@ -453,8 +453,8 @@ export const ProveedoresPagosModule: React.FC = () => {
               onClick={() => setLocationFilter('TODAS')}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'TODAS'
-                  ? 'bg-[#9C665C] text-white shadow-2xs'
-                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
+                  ? 'bg-[#C48B81] text-white shadow-2xs'
+                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8E1] hover:text-[#2B2826]'
               }`}
             >
               Todas ({vendors.length})
@@ -463,8 +463,8 @@ export const ProveedoresPagosModule: React.FC = () => {
               onClick={() => setLocationFilter('CIVIL')}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'CIVIL'
-                  ? 'bg-[#9C665C] text-white shadow-2xs'
-                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
+                  ? 'bg-[#C48B81] text-white shadow-2xs'
+                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8E1] hover:text-[#2B2826]'
               }`}
             >
               Civil ({vendors.filter(v => v.locations?.some(l => l.toUpperCase().includes('CIVIL'))).length})
@@ -473,8 +473,8 @@ export const ProveedoresPagosModule: React.FC = () => {
               onClick={() => setLocationFilter('RECEPCIÓN')}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'RECEPCIÓN'
-                  ? 'bg-[#9C665C] text-white shadow-2xs'
-                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
+                  ? 'bg-[#C48B81] text-white shadow-2xs'
+                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8E1] hover:text-[#2B2826]'
               }`}
             >
               Recepción ({vendors.filter(v => v.locations?.some(l => l.toUpperCase().includes('RECEPCI') || l.toUpperCase().includes('BODA'))).length})
@@ -483,8 +483,8 @@ export const ProveedoresPagosModule: React.FC = () => {
               onClick={() => setLocationFilter('GENERAL')}
               className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'GENERAL'
-                  ? 'bg-[#9C665C] text-white shadow-2xs'
-                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EAE3DA] hover:text-[#2B2826]'
+                  ? 'bg-[#C48B81] text-white shadow-2xs'
+                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8E1] hover:text-[#2B2826]'
               }`}
             >
               General ({vendors.filter(v => !v.locations?.length || v.locations?.some(l => l.toUpperCase().includes('GENERAL'))).length})
@@ -495,7 +495,7 @@ export const ProveedoresPagosModule: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#FAF8F5] border-b border-[#EAE3DA] text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72]">
+              <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72]">
                 <th className="py-2.5 px-3 whitespace-nowrap">PROVEEDOR</th>
                 <th className="py-2.5 px-3 whitespace-nowrap">CATEGORÍA</th>
                 <th className="py-2.5 px-3 whitespace-nowrap">TELÉFONO</th>
@@ -520,18 +520,18 @@ export const ProveedoresPagosModule: React.FC = () => {
                       <td className="py-2.5 px-3 whitespace-nowrap">
                         <div
                           onClick={() => handleOpenEditVendor(v)}
-                          className="cursor-pointer font-bold text-[#2B2826] hover:text-[#9C665C] inline-flex items-center space-x-1 whitespace-nowrap transition"
+                          className="cursor-pointer font-bold text-[#2B2826] hover:text-[#C48B81] inline-flex items-center space-x-1 whitespace-nowrap transition"
                           title="Clic para editar información"
                         >
-                          <span className="underline decoration-[#EAE3DA] decoration-1 underline-offset-4">{v.name}</span>
-                          <Edit3 className="w-3.5 h-3.5 text-[#8A7E72] group-hover:text-[#9C665C] transition shrink-0" />
+                          <span className="underline decoration-[#EFE8E1] decoration-1 underline-offset-4">{v.name}</span>
+                          <Edit3 className="w-3.5 h-3.5 text-[#8A7E72] group-hover:text-[#C48B81] transition shrink-0" />
                         </div>
                         {v.contact_person && (
                           <div className="text-[11px] text-[#8A7E72] whitespace-nowrap mt-0.5">Contacto: {v.contact_person}</div>
                         )}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
-                        <span className="inline-flex items-center bg-[#FAF8F5] text-[#5A524C] px-2 py-0.5 rounded-md text-[11px] font-medium border border-[#EAE3DA] whitespace-nowrap shrink-0">
+                        <span className="inline-flex items-center bg-[#FAF8F5] text-[#5A524C] px-2 py-0.5 rounded-md text-[11px] font-medium border border-[#EFE8E1] whitespace-nowrap shrink-0">
                           {v.type}
                         </span>
                       </td>
@@ -540,7 +540,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                           href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1.5 text-[#5A524C] hover:text-[#9C665C] whitespace-nowrap shrink-0"
+                          className="inline-flex items-center space-x-1.5 text-[#5A524C] hover:text-[#C48B81] whitespace-nowrap shrink-0"
                           title="Contactar vía WhatsApp"
                         >
                           <MessageSquare className="w-3.5 h-3.5 text-[#2B5235] shrink-0" />
@@ -554,10 +554,10 @@ export const ProveedoresPagosModule: React.FC = () => {
                               key={loc}
                               className={`inline-flex items-center text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider whitespace-nowrap shrink-0 ${
                                 loc === 'CIVIL'
-                                  ? 'bg-[#FDF6F5] text-[#9C665C] border border-[#F3DCD7]'
+                                  ? 'bg-[#F7EDEB] text-[#C48B81] border border-[#ECD9D5]'
                                   : loc === 'IGLESIA'
                                   ? 'bg-[#FAF3E8] text-[#7C5824] border border-[#E8D7B8]'
-                                  : 'bg-[#FAF8F5] text-[#5A524C] border border-[#EAE3DA]'
+                                  : 'bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]'
                               }`}
                             >
                               {loc}
@@ -580,7 +580,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                       <td className="py-2.5 px-3 text-right font-semibold text-[#2B5235] whitespace-nowrap">
                         ${(v.total_pagado || 0).toLocaleString()}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-bold text-[#8A574E] whitespace-nowrap">
+                      <td className="py-2.5 px-3 text-right font-bold text-[#A86B60] whitespace-nowrap">
                         ${(v.saldo_restante || 0).toLocaleString()}
                       </td>
                       <td className="py-2.5 px-2 text-center whitespace-nowrap">
@@ -602,7 +602,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       </div>
 
       {/* Payments Ledger Section */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
+      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
             <span className="text-xs uppercase font-bold tracking-widest text-[#8A7E72]">Historial Contable</span>
@@ -614,7 +614,7 @@ export const ProveedoresPagosModule: React.FC = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#FAF8F5] border-b border-[#EAE3DA] text-xs font-semibold uppercase tracking-wider text-[#8A7E72]">
+              <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-xs font-semibold uppercase tracking-wider text-[#8A7E72]">
                 <th className="py-3.5 px-4 whitespace-nowrap">FECHA</th>
                 <th className="py-3.5 px-4 whitespace-nowrap">CONCEPTO</th>
                 <th className="py-3.5 px-4 whitespace-nowrap">PROVEEDOR ASOCIADO</th>
@@ -634,7 +634,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                     <td className="py-3 px-4 font-semibold text-[#2B2826] whitespace-nowrap">{p.concept}</td>
                     <td className="py-3 px-4 text-[#5A524C] whitespace-nowrap">{p.vendor_name || 'General / Boda'}</td>
                     <td className="py-3 px-4 whitespace-nowrap">
-                      <span className="inline-block bg-[#FAF8F5] text-[#5A524C] px-2.5 py-0.5 rounded-md text-xs border border-[#EAE3DA] whitespace-nowrap">
+                      <span className="inline-block bg-[#FAF8F5] text-[#5A524C] px-2.5 py-0.5 rounded-md text-xs border border-[#EFE8E1] whitespace-nowrap">
                         {p.payment_method}
                       </span>
                     </td>
@@ -662,7 +662,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       {/* Modal: Registrar o Editar Proveedor */}
       {showVendorModal && (
         <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA] max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1] max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-[#FAF8F5]">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
                 {editingVendor ? 'Editar Proveedor' : 'Registrar Proveedor'}
@@ -686,7 +686,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                   placeholder="Ej. Magnolia Floral Studio"
                   value={vendorForm.name}
                   onChange={e => setVendorForm({ ...vendorForm, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
@@ -698,7 +698,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                   placeholder="+52 55 1234 5678"
                   value={vendorForm.phone}
                   onChange={e => setVendorForm({ ...vendorForm, phone: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm font-mono text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm font-mono text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
@@ -708,7 +708,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                   <select
                     value={vendorForm.type}
                     onChange={e => setVendorForm({ ...vendorForm, type: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   >
                     {catalogTypes.map(t => (
                       <option key={t} value={t}>{t}</option>
@@ -723,7 +723,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                     placeholder="0"
                     value={vendorForm.costo_real}
                     onChange={e => setVendorForm({ ...vendorForm, costo_real: parseFloat(e.target.value) || 0 })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
               </div>
@@ -734,7 +734,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                   type="date"
                   value={vendorForm.payment_due_date || ''}
                   onChange={e => setVendorForm({ ...vendorForm, payment_due_date: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
                 <p className="text-xs text-[#8A7E72] mt-1">
                   Se generarán alertas automáticas si faltan 15 días o menos y aún existe saldo pendiente.
@@ -756,8 +756,8 @@ export const ProveedoresPagosModule: React.FC = () => {
                         onClick={() => handleToggleLocation(loc)}
                         className={`py-2 px-3 rounded-xl text-xs font-semibold border flex items-center justify-between transition cursor-pointer ${
                           checked
-                            ? 'bg-[#9C665C] text-white border-[#9C665C] shadow-xs'
-                            : 'bg-white text-[#5A524C] border-[#EAE3DA] hover:bg-[#FAF8F5]'
+                            ? 'bg-[#C48B81] text-white border-[#C48B81] shadow-xs'
+                            : 'bg-white text-[#5A524C] border-[#EFE8E1] hover:bg-[#FAF8F5]'
                         }`}
                       >
                         <span>{loc}</span>
@@ -775,7 +775,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                   placeholder="Nombre del asesor o director"
                   value={vendorForm.contact_person}
                   onChange={e => setVendorForm({ ...vendorForm, contact_person: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
@@ -786,11 +786,11 @@ export const ProveedoresPagosModule: React.FC = () => {
                   placeholder="Detalles de entregables, horarios y condiciones..."
                   value={vendorForm.notes}
                   onChange={e => setVendorForm({ ...vendorForm, notes: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EFE8E1]">
                 <button
                   type="button"
                   onClick={() => setShowVendorModal(false)}
@@ -800,7 +800,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#9C665C] text-white rounded-xl hover:bg-[#8A574E] shadow-xs transition"
+                  className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#C48B81] text-white rounded-xl hover:bg-[#A86B60] shadow-xs transition"
                 >
                   {editingVendor ? 'Actualizar Proveedor' : 'Guardar Proveedor'}
                 </button>
@@ -813,7 +813,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       {/* Modal: Registrar Pago */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA]">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between pb-3 border-b border-[#FAF8F5]">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Registrar Pago Realizado</h3>
               <button onClick={() => setShowPaymentModal(false)} className="text-[#8A7E72] hover:text-[#2B2826] p-1 rounded-lg">✕</button>
@@ -832,7 +832,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                 <select
                   value={paymentForm.vendor_id}
                   onChange={e => setPaymentForm({ ...paymentForm, vendor_id: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 >
                   <option value="">Gasto general de la boda</option>
                   {vendors.map(v => (
@@ -849,7 +849,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                   placeholder="Ej. Anticipo 50% de banquete"
                   value={paymentForm.concept}
                   onChange={e => setPaymentForm({ ...paymentForm, concept: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
@@ -863,7 +863,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                     placeholder="15000"
                     value={paymentForm.amount}
                     onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
                 <div>
@@ -873,7 +873,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                     required
                     value={paymentForm.payment_date}
                     onChange={e => setPaymentForm({ ...paymentForm, payment_date: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
               </div>
@@ -883,7 +883,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                 <select
                   value={paymentForm.payment_method}
                   onChange={e => setPaymentForm({ ...paymentForm, payment_method: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 >
                   <option value="Transferencia SPEI">Transferencia SPEI</option>
                   <option value="Tarjeta de Crédito">Tarjeta de Crédito</option>
@@ -899,11 +899,11 @@ export const ProveedoresPagosModule: React.FC = () => {
                   placeholder="Número de folio, comprobante o condiciones del abono..."
                   value={paymentForm.notes}
                   onChange={e => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EFE8E1]">
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
@@ -913,7 +913,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#9C665C] text-white rounded-xl hover:bg-[#8A574E] shadow-xs transition"
+                  className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#C48B81] text-white rounded-xl hover:bg-[#A86B60] shadow-xs transition"
                 >
                   Registrar Pago
                 </button>

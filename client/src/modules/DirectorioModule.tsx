@@ -248,8 +248,8 @@ export const DirectorioModule: React.FC = () => {
               onClick={() => setFilterType(t)}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
                 filterType === t
-                  ? 'bg-[#9C665C] text-white shadow-xs'
-                  : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+                  ? 'bg-[#C48B81] text-white shadow-xs'
+                  : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
               }`}
             >
               {t === 'ALL' ? 'Todos los Contactos' : t === 'TEAM' ? `Equipo VLB (${directory.team.length})` : `Proveedores (${directory.vendors.length})`}
@@ -259,7 +259,7 @@ export const DirectorioModule: React.FC = () => {
           {isAdmin && (
             <button
               onClick={handleOpenAddModal}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#9C665C] hover:bg-[#8A574E] text-white transition shadow-xs"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#C48B81] hover:bg-[#A86B60] text-white transition shadow-xs"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>+ Asignar Miembro VLB</span>
@@ -276,7 +276,7 @@ export const DirectorioModule: React.FC = () => {
           placeholder="Buscar por nombre, cargo, proveedor o teléfono..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+          className="w-full pl-10 pr-4 py-2.5 bg-white border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
         />
       </div>
 
@@ -284,7 +284,7 @@ export const DirectorioModule: React.FC = () => {
       {loading ? (
         <div className="py-12 text-center text-[#8A7E72] text-sm">Cargando directorio...</div>
       ) : filteredContacts.length === 0 ? (
-        <div className="bg-white rounded-3xl p-12 text-center text-[#8A7E72] text-sm border border-dashed border-[#EAE3DA]">
+        <div className="bg-white rounded-3xl p-12 text-center text-[#8A7E72] text-sm border border-dashed border-[#EFE8E1]">
           No se encontraron contactos en el directorio para los filtros seleccionados.
         </div>
       ) : (
@@ -292,14 +292,14 @@ export const DirectorioModule: React.FC = () => {
           {filteredContacts.map((contact, i) => (
             <div
               key={i}
-              className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs hover:border-[#DDD2C4] flex flex-col justify-between transition-all"
+              className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs hover:border-[#EFE8E1] flex flex-col justify-between transition-all"
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full ${
                     contact.kind === 'TEAM'
-                      ? 'bg-[#FDF6F5] text-[#9C665C] border border-[#F3DCD7]'
-                      : 'bg-[#FAF8F5] text-[#5A524C] border border-[#EAE3DA]'
+                      ? 'bg-[#F7EDEB] text-[#C48B81] border border-[#ECD9D5]'
+                      : 'bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]'
                   }`}>
                     {contact.kind === 'TEAM' ? 'Equipo VLB' : contact.type || 'Proveedor'}
                   </span>
@@ -337,7 +337,7 @@ export const DirectorioModule: React.FC = () => {
                         className="w-11 h-11 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
                       />
                     ) : (
-                      <div className="w-11 h-11 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-base flex items-center justify-center shrink-0 border border-[#EAE3DA]">
+                      <div className="w-11 h-11 rounded-full bg-[#EFE2DF] text-[#A86B60] font-serif font-bold text-base flex items-center justify-center shrink-0 border border-[#EFE8E1]">
                         {contact.name?.charAt(0)?.toUpperCase() || 'V'}
                       </div>
                     )
@@ -373,7 +373,7 @@ export const DirectorioModule: React.FC = () => {
                     </a>
                     <a
                       href={`tel:${contact.phone}`}
-                      className="inline-flex items-center justify-center p-2.5 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] rounded-xl border border-[#EAE3DA] transition"
+                      className="inline-flex items-center justify-center p-2.5 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] rounded-xl border border-[#EFE8E1] transition"
                       title="Llamar"
                     >
                       <Phone className="w-4 h-4" />
@@ -391,7 +391,7 @@ export const DirectorioModule: React.FC = () => {
       {/* Modal: Asignar o Crear Miembro de Equipo VLB */}
       {showAddModal && (
         <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA]">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Equipo VLB en esta Boda</h3>
               <button onClick={() => setShowAddModal(false)} className="text-[#8A7E72] hover:text-[#2B2826] p-1 rounded-lg">
@@ -399,12 +399,12 @@ export const DirectorioModule: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex space-x-2 mb-4 bg-[#FAF8F5] p-1 rounded-xl border border-[#EAE3DA]">
+            <div className="flex space-x-2 mb-4 bg-[#FAF8F5] p-1 rounded-xl border border-[#EFE8E1]">
               <button
                 type="button"
                 onClick={() => setAddMode('EXISTING')}
                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
-                  addMode === 'EXISTING' ? 'bg-[#9C665C] text-white shadow-xs' : 'text-[#5A524C]'
+                  addMode === 'EXISTING' ? 'bg-[#C48B81] text-white shadow-xs' : 'text-[#5A524C]'
                 }`}
               >
                 Asignar Existente ({unassignedUsers.length})
@@ -413,7 +413,7 @@ export const DirectorioModule: React.FC = () => {
                 type="button"
                 onClick={() => setAddMode('NEW')}
                 className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${
-                  addMode === 'NEW' ? 'bg-[#9C665C] text-white shadow-xs' : 'text-[#5A524C]'
+                  addMode === 'NEW' ? 'bg-[#C48B81] text-white shadow-xs' : 'text-[#5A524C]'
                 }`}
               >
                 + Crear Nuevo Miembro
@@ -429,7 +429,7 @@ export const DirectorioModule: React.FC = () => {
             <form onSubmit={handleSaveTeamMember} className="space-y-4">
               {addMode === 'EXISTING' ? (
                 unassignedUsers.length === 0 ? (
-                  <div className="p-4 text-center text-sm text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-[#EAE3DA]">
+                  <div className="p-4 text-center text-sm text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-[#EFE8E1]">
                     Todos los miembros actuales del equipo VLB ya están asignados a esta boda. Usa la pestaña <strong>"+ Crear Nuevo Miembro"</strong> arriba.
                   </div>
                 ) : (
@@ -440,7 +440,7 @@ export const DirectorioModule: React.FC = () => {
                         required
                         value={assignForm.user_id}
                         onChange={e => setAssignForm({ ...assignForm, user_id: e.target.value })}
-                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                        className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                       >
                         <option value="">Selecciona un miembro...</option>
                         {unassignedUsers.map(u => (
@@ -458,7 +458,7 @@ export const DirectorioModule: React.FC = () => {
                         placeholder="Ej. Coordinadora Principal, Staff Día Boda..."
                         value={assignForm.assigned_role}
                         onChange={e => setAssignForm({ ...assignForm, assigned_role: e.target.value })}
-                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                        className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                       />
                     </div>
                   </>
@@ -473,7 +473,7 @@ export const DirectorioModule: React.FC = () => {
                       placeholder="Ej. Valeria Lozano"
                       value={newMemberForm.name}
                       onChange={e => setNewMemberForm({ ...newMemberForm, name: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                      className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -485,7 +485,7 @@ export const DirectorioModule: React.FC = () => {
                         placeholder="nombre@vlb.studio"
                         value={newMemberForm.email}
                         onChange={e => setNewMemberForm({ ...newMemberForm, email: e.target.value })}
-                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                        className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                       />
                     </div>
                     <div>
@@ -496,7 +496,7 @@ export const DirectorioModule: React.FC = () => {
                         placeholder="Contraseña"
                         value={newMemberForm.password}
                         onChange={e => setNewMemberForm({ ...newMemberForm, password: e.target.value })}
-                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                        className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                       />
                     </div>
                   </div>
@@ -506,7 +506,7 @@ export const DirectorioModule: React.FC = () => {
                       <select
                         value={newMemberForm.role}
                         onChange={e => setNewMemberForm({ ...newMemberForm, role: e.target.value })}
-                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                        className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                       >
                         <option value="COORDINADOR">COORDINADOR (Planner)</option>
                         <option value="STAFF">STAFF (Operativo)</option>
@@ -520,7 +520,7 @@ export const DirectorioModule: React.FC = () => {
                         placeholder="+52 55..."
                         value={newMemberForm.phone}
                         onChange={e => setNewMemberForm({ ...newMemberForm, phone: e.target.value })}
-                        className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                        className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                       />
                     </div>
                   </div>
@@ -532,13 +532,13 @@ export const DirectorioModule: React.FC = () => {
                       placeholder="Ej. Coordinadora Senior, Staff Recepción..."
                       value={newMemberForm.assigned_role}
                       onChange={e => setNewMemberForm({ ...newMemberForm, assigned_role: e.target.value })}
-                      className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                      className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                     />
                   </div>
                 </>
               )}
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EFE8E1]">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
@@ -550,7 +550,7 @@ export const DirectorioModule: React.FC = () => {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-xs transition"
+                    className="px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-xs transition"
                   >
                     {saving ? 'Guardando...' : 'Guardar en Equipo'}
                   </button>
@@ -564,7 +564,7 @@ export const DirectorioModule: React.FC = () => {
       {/* Modal: Editar Miembro del Equipo VLB */}
       {editingMember && (
         <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA]">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Editar Miembro del Equipo</h3>
               <button onClick={() => setEditingMember(null)} className="text-[#8A7E72] hover:text-[#2B2826] p-1 rounded-lg">
@@ -586,7 +586,7 @@ export const DirectorioModule: React.FC = () => {
                   required
                   value={editMemberForm.name}
                   onChange={e => setEditMemberForm({ ...editMemberForm, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
               <div>
@@ -596,7 +596,7 @@ export const DirectorioModule: React.FC = () => {
                   required
                   value={editMemberForm.assigned_role}
                   onChange={e => setEditMemberForm({ ...editMemberForm, assigned_role: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -607,7 +607,7 @@ export const DirectorioModule: React.FC = () => {
                     required
                     value={editMemberForm.email}
                     onChange={e => setEditMemberForm({ ...editMemberForm, email: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
                 <div>
@@ -616,7 +616,7 @@ export const DirectorioModule: React.FC = () => {
                     type="text"
                     value={editMemberForm.phone}
                     onChange={e => setEditMemberForm({ ...editMemberForm, phone: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
               </div>
@@ -627,11 +627,11 @@ export const DirectorioModule: React.FC = () => {
                   placeholder="Dejar en blanco para conservar la actual"
                   value={editMemberForm.password}
                   onChange={e => setEditMemberForm({ ...editMemberForm, password: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EFE8E1]">
                 <button
                   type="button"
                   onClick={() => setEditingMember(null)}
@@ -642,7 +642,7 @@ export const DirectorioModule: React.FC = () => {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-xs transition"
+                  className="px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-bold uppercase tracking-wider rounded-xl shadow-xs transition"
                 >
                   {saving ? 'Guardando...' : 'Guardar Cambios'}
                 </button>

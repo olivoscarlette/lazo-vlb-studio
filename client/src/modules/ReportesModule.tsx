@@ -59,7 +59,7 @@ export const ReportesModule: React.FC = () => {
 
         <button
           onClick={handlePrint}
-          className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-sm font-semibold rounded-xl shadow-xs transition cursor-pointer"
+          className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-semibold rounded-xl shadow-xs transition cursor-pointer"
         >
           <Printer className="w-4 h-4" />
           <span>Imprimir Reporte</span>
@@ -76,15 +76,15 @@ export const ReportesModule: React.FC = () => {
       </div>
 
       {/* 1. Sección Invitados y Confirmaciones */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EAE3DA] shadow-xs">
-        <div className="flex items-center justify-between mb-5 border-b border-[#EAE3DA] pb-4">
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] shadow-xs">
+        <div className="flex items-center justify-between mb-5 border-b border-[#EFE8E1] pb-4">
           <div className="flex items-center space-x-2.5">
-            <Users className="w-5 h-5 text-[#9C665C]" />
+            <Users className="w-5 h-5 text-[#C48B81]" />
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826]">
               1. Resumen de Invitados y RSVP
             </h3>
           </div>
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA]">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1]">
             {guests.total} invitados registrados
           </span>
         </div>
@@ -106,15 +106,15 @@ export const ReportesModule: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#FDF6F5]/50 border border-[#F0D5D1]">
-            <div className="text-[11px] font-bold text-[#9C665C] uppercase tracking-wider">No Asistirán</div>
-            <div className="text-3xl font-serif font-bold text-[#9C665C] mt-1">{guests.no_asistiran}</div>
-            <div className="text-xs text-[#9C665C] font-medium mt-1">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#F7EDEB]/50 border border-[#F0D5D1]">
+            <div className="text-[11px] font-bold text-[#C48B81] uppercase tracking-wider">No Asistirán</div>
+            <div className="text-3xl font-serif font-bold text-[#C48B81] mt-1">{guests.no_asistiran}</div>
+            <div className="text-xs text-[#C48B81] font-medium mt-1">
               Lugares liberados
             </div>
           </div>
 
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
             <div className="text-[11px] font-bold text-[#8A7E72] uppercase tracking-wider">Total Acompañantes</div>
             <div className="text-3xl font-serif font-bold text-[#2B2826] mt-1">{guests.acompanantes_totales}</div>
             <div className="text-xs text-[#8A7E72] mt-1">
@@ -125,21 +125,21 @@ export const ReportesModule: React.FC = () => {
       </div>
 
       {/* 2. Sección Mesas y Capacidad */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EAE3DA] shadow-xs">
-        <div className="flex items-center justify-between mb-5 border-b border-[#EAE3DA] pb-4">
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] shadow-xs">
+        <div className="flex items-center justify-between mb-5 border-b border-[#EFE8E1] pb-4">
           <div className="flex items-center space-x-2.5">
-            <Grid2x2Check className="w-5 h-5 text-[#9C665C]" />
+            <Grid2x2Check className="w-5 h-5 text-[#C48B81]" />
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826]">
               2. Ocupación y Capacidad de Mesas
             </h3>
           </div>
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA]">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1]">
             {tables.total_mesas} mesas configuradas
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+          <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
             <div className="text-[11px] font-bold text-[#8A7E72] uppercase tracking-wider">Capacidad Total del Salón</div>
             <div className="text-3xl font-serif font-bold text-[#2B2826] mt-1">{tables.capacidad_total} lugares</div>
             <div className="text-xs text-[#8A7E72] mt-1">Suma de aforo de todas las mesas</div>
@@ -160,21 +160,21 @@ export const ReportesModule: React.FC = () => {
       </div>
 
       {/* 3. Sección Finanzas (COSTO REAL, MONTO PAGADO, RESTANTE) */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EAE3DA] shadow-xs">
-        <div className="flex items-center justify-between mb-5 border-b border-[#EAE3DA] pb-4">
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] shadow-xs">
+        <div className="flex items-center justify-between mb-5 border-b border-[#EFE8E1] pb-4">
           <div className="flex items-center space-x-2.5">
-            <DollarSign className="w-5 h-5 text-[#9C665C]" />
+            <DollarSign className="w-5 h-5 text-[#C48B81]" />
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826]">
               3. Estado Financiero de Proveedores
             </h3>
           </div>
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA]">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1]">
             {finance.total_proveedores} contratos
           </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+          <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
             <div className="text-[11px] font-bold text-[#8A7E72] uppercase tracking-wider">COSTO REAL CONTRATADO</div>
             <div className="text-3xl font-serif font-bold text-[#2B2826] mt-1">
               ${finance.costo_real.toLocaleString()}
@@ -205,21 +205,21 @@ export const ReportesModule: React.FC = () => {
       </div>
 
       {/* 4. Sección Checklist y Operación */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EAE3DA] shadow-xs">
-        <div className="flex items-center justify-between mb-5 border-b border-[#EAE3DA] pb-4">
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] shadow-xs">
+        <div className="flex items-center justify-between mb-5 border-b border-[#EFE8E1] pb-4">
           <div className="flex items-center space-x-2.5">
-            <CheckSquare className="w-5 h-5 text-[#9C665C]" />
+            <CheckSquare className="w-5 h-5 text-[#C48B81]" />
             <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826]">
               4. Estado del Checklist Nupcial
             </h3>
           </div>
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA]">
+          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1]">
             {tasks.avance_porcentaje}% avance global
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
             <div className="text-[11px] font-bold text-[#8A7E72] uppercase tracking-wider">Total Tareas</div>
             <div className="text-3xl font-serif font-bold text-[#2B2826] mt-1">{tasks.total}</div>
           </div>
@@ -231,7 +231,7 @@ export const ReportesModule: React.FC = () => {
             <div className="text-[11px] font-bold text-[#7C5824] uppercase tracking-wider">En Proceso</div>
             <div className="text-3xl font-serif font-bold text-[#7C5824] mt-1">{tasks.en_proceso}</div>
           </div>
-          <div className="p-4 sm:p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
             <div className="text-[11px] font-bold text-[#8A7E72] uppercase tracking-wider">Pendientes</div>
             <div className="text-3xl font-serif font-bold text-[#5A524C] mt-1">{tasks.pendientes}</div>
           </div>

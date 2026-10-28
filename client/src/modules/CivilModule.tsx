@@ -243,7 +243,7 @@ export const CivilModule: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
+          <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
             Protocolo Legal
           </span>
           <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
@@ -262,44 +262,44 @@ export const CivilModule: React.FC = () => {
 
 
       {/* Ceremony Overview Details Card — Fixed / Read-Only by Default */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
+      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-[#FAF8F5]">
           <div className="flex items-center space-x-2.5">
-            <Landmark className="w-5 h-5 text-[#9C665C]" />
+            <Landmark className="w-5 h-5 text-[#C48B81]" />
             <div>
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="font-serif text-xl font-semibold text-[#2B2826]">
                   Datos Oficiales de la Ceremonia Civil
                 </h3>
                 {civil.date && currentWedding?.wedding_date && civil.date !== currentWedding.wedding_date ? (
-                  <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#FDF6F5] text-[#9C665C] border border-[#F0D5D1]">
+                  <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#F7EDEB] text-[#C48B81] border border-[#F0D5D1]">
                     📅 Otro Día · Fecha Independiente ({civil.date})
                   </span>
                 ) : (
-                  <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA]">
+                  <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1]">
                     📅 Mismo Día de la Boda
                   </span>
                 )}
               </div>
               <p className="text-xs text-[#8A7E72] flex items-center space-x-1 mt-0.5">
-                <Lock className="w-3 h-3 text-[#9C665C]" />
+                <Lock className="w-3 h-3 text-[#C48B81]" />
                 <span>Información protegida contra cambios accidentales.</span>
               </p>
             </div>
           </div>
 
           {isNovios ? (
-            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA] text-xs font-medium">
-              <Lock className="w-3.5 h-3.5 text-[#9C665C]" />
+            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1] text-xs font-medium">
+              <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Registro Oficial VLB</span>
             </span>
           ) : !isEditingDetails ? (
             <button
               type="button"
               onClick={handleStartEditDetails}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] text-xs font-semibold transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold transition cursor-pointer"
             >
-              <Edit3 className="w-3.5 h-3.5 text-[#9C665C]" />
+              <Edit3 className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Editar Datos</span>
             </button>
           ) : (
@@ -307,7 +307,7 @@ export const CivilModule: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEditingDetails(false)}
-                className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] text-xs font-medium transition cursor-pointer"
+                className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cancelar</span>
@@ -315,7 +315,7 @@ export const CivilModule: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSaveDetails}
-                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold transition shadow-xs cursor-pointer"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>Guardar Cambios</span>
@@ -328,14 +328,14 @@ export const CivilModule: React.FC = () => {
           /* Fixed Read-Only View */
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
                 <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
                   <span className="flex items-center space-x-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
+                    <Calendar className="w-3.5 h-3.5 text-[#C48B81]" />
                     <span>Fecha Civil</span>
                   </span>
                   {civil.date && currentWedding?.wedding_date && civil.date !== currentWedding.wedding_date && (
-                    <span className="text-[#9C665C] font-semibold">Otro día</span>
+                    <span className="text-[#C48B81] font-semibold">Otro día</span>
                   )}
                 </div>
                 <div className="text-sm font-semibold text-[#2B2826]">
@@ -343,9 +343,9 @@ export const CivilModule: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
                 <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
-                  <Clock className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <Clock className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span>Hora</span>
                 </div>
                 <div className="text-sm font-semibold text-[#2B2826]">
@@ -353,9 +353,9 @@ export const CivilModule: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
                 <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <MapPin className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span>Ubicación / Juzgado</span>
                 </div>
                 <div className="text-sm font-semibold text-[#2B2826]">
@@ -363,9 +363,9 @@ export const CivilModule: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
                 <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
-                  <User className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <User className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span>Juez u Oficial del Registro</span>
                 </div>
                 <div className="text-sm font-semibold text-[#2B2826]">
@@ -374,7 +374,7 @@ export const CivilModule: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+            <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
               <div className="text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
                 Notas y Protocolo de Firma
               </div>
@@ -386,7 +386,7 @@ export const CivilModule: React.FC = () => {
         ) : (
           /* Editable Form Mode */
           <form onSubmit={handleSaveDetails} className="space-y-4">
-            <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#EAE3DA] flex flex-wrap items-center justify-between gap-3">
+            <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div className="text-xs font-semibold text-[#2B2826]">¿Cuándo se realiza la Ceremonia Civil?</div>
                 <div className="text-xs text-[#8A7E72]">
@@ -400,7 +400,7 @@ export const CivilModule: React.FC = () => {
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition border cursor-pointer ${
                     detailsDraft.date === currentWedding?.wedding_date
                       ? 'bg-[#2B2826] text-white border-[#2B2826]'
-                      : 'bg-white text-[#2B2826] border-[#EAE3DA] hover:border-[#9C665C]'
+                      : 'bg-white text-[#2B2826] border-[#EFE8E1] hover:border-[#C48B81]'
                   }`}
                 >
                   Mismo día de la boda ({currentWedding?.wedding_date})
@@ -414,8 +414,8 @@ export const CivilModule: React.FC = () => {
                   }}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition border cursor-pointer ${
                     detailsDraft.date !== currentWedding?.wedding_date
-                      ? 'bg-[#9C665C] text-white border-[#9C665C]'
-                      : 'bg-white text-[#2B2826] border-[#EAE3DA] hover:border-[#9C665C]'
+                      ? 'bg-[#C48B81] text-white border-[#C48B81]'
+                      : 'bg-white text-[#2B2826] border-[#EFE8E1] hover:border-[#C48B81]'
                   }`}
                 >
                   Otro día diferente
@@ -432,7 +432,7 @@ export const CivilModule: React.FC = () => {
                   type="date"
                   value={detailsDraft.date}
                   onChange={e => setDetailsDraft({ ...detailsDraft, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
               <div>
@@ -441,7 +441,7 @@ export const CivilModule: React.FC = () => {
                   type="time"
                   value={detailsDraft.time}
                   onChange={e => setDetailsDraft({ ...detailsDraft, time: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
               <div>
@@ -451,7 +451,7 @@ export const CivilModule: React.FC = () => {
                   placeholder="Juzgado, Restaurante, Terraza..."
                   value={detailsDraft.location}
                   onChange={e => setDetailsDraft({ ...detailsDraft, location: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
               <div>
@@ -461,7 +461,7 @@ export const CivilModule: React.FC = () => {
                   placeholder="Lic. Fernando Morales (Oficialía 14)"
                   value={detailsDraft.juez_oficial}
                   onChange={e => setDetailsDraft({ ...detailsDraft, juez_oficial: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
             </div>
@@ -473,7 +473,7 @@ export const CivilModule: React.FC = () => {
                 placeholder="Mobiliario especial, pluma de firmas, copas de brindis nupcial..."
                 value={detailsDraft.notes}
                 onChange={e => setDetailsDraft({ ...detailsDraft, notes: e.target.value })}
-                className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
               />
             </div>
           </form>
@@ -484,33 +484,33 @@ export const CivilModule: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Testigos List (Selected from Confirmed Guests) */}
         {/* Testigos List (Selected from Confirmed Guests) */}
-        <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
+                <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
                   Firmantes · Desde Invitados Confirmados
                 </span>
                 <h3 className="font-serif text-lg font-semibold text-[#2B2826]">Testigos de Honor</h3>
               </div>
-              <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
+              <span className="text-xs font-semibold text-[#A86B60] bg-[#FAF8F5] border border-[#EFE8E1] px-3 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
                 {civil.witnesses.length} asignados
               </span>
             </div>
 
             <div className="space-y-2 mb-5">
               {civil.witnesses.length === 0 ? (
-                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
+                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
                   No se han asignado testigos aún. Selecciónalos de la lista de invitados confirmados abajo.
                 </p>
               ) : (
                 civil.witnesses.map((w, index) => (
                   <div
                     key={index}
-                    className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-center justify-between text-xs font-medium text-[#2B2826]"
+                    className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex items-center justify-between text-xs font-medium text-[#2B2826]"
                   >
                     <div className="flex items-center space-x-2.5">
-                      <User className="w-4 h-4 text-[#9C665C]" />
+                      <User className="w-4 h-4 text-[#C48B81]" />
                       <span>{w}</span>
                     </div>
                     <button
@@ -538,7 +538,7 @@ export const CivilModule: React.FC = () => {
                   onClick={() => setWitnessInputMode('guest')}
                   className={`px-2 py-0.5 rounded-lg font-medium transition cursor-pointer ${
                     witnessInputMode === 'guest'
-                      ? 'bg-[#9C665C] text-white'
+                      ? 'bg-[#C48B81] text-white'
                       : 'text-[#786C68] hover:text-[#2B2826]'
                   }`}
                 >
@@ -549,7 +549,7 @@ export const CivilModule: React.FC = () => {
                   onClick={() => setWitnessInputMode('custom')}
                   className={`px-2 py-0.5 rounded-lg font-medium transition cursor-pointer ${
                     witnessInputMode === 'custom'
-                      ? 'bg-[#9C665C] text-white'
+                      ? 'bg-[#C48B81] text-white'
                       : 'text-[#786C68] hover:text-[#2B2826]'
                   }`}
                 >
@@ -563,7 +563,7 @@ export const CivilModule: React.FC = () => {
                 <select
                   value={selectedWitnessGuest}
                   onChange={e => setSelectedWitnessGuest(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                  className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 >
                   <option value="">— Seleccionar de {confirmedGuests.length} confirmados —</option>
                   {availableConfirmedNames.map(name => (
@@ -578,13 +578,13 @@ export const CivilModule: React.FC = () => {
                   placeholder="Nombre completo del testigo..."
                   value={customWitnessName}
                   onChange={e => setCustomWitnessName(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                  className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 />
               )}
               <button
                 type="submit"
                 disabled={witnessInputMode === 'guest' ? !selectedWitnessGuest : !customWitnessName.trim()}
-                className="px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer shrink-0"
+                className="px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer shrink-0"
               >
                 Agregar
               </button>
@@ -593,11 +593,11 @@ export const CivilModule: React.FC = () => {
         </div>
 
         {/* Trámites y Requisitos Prenupciales (with VLB Master Template Loader) */}
-        <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div>
-                <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">Expediente VLB</span>
+                <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">Expediente VLB</span>
                 <h3 className="font-serif text-lg font-semibold text-[#2B2826]">Requisitos y Trámites Legales</h3>
               </div>
               <div className="flex items-center space-x-2">
@@ -605,14 +605,14 @@ export const CivilModule: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleLoadMasterRequirements}
-                    className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] transition cursor-pointer"
+                    className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
                     title="Cargar requisitos estándar de VLB Studio"
                   >
-                    <Download className="w-3.5 h-3.5 text-[#9C665C]" />
+                    <Download className="w-3.5 h-3.5 text-[#C48B81]" />
                     <span>Cargar Plantilla VLB</span>
                   </button>
                 )}
-                <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EAE3DA] px-2.5 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
+                <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EFE8E1] px-2.5 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
                   {civil.requirements_status.filter(r => r.completed).length} / {civil.requirements_status.length}
                 </span>
               </div>
@@ -620,7 +620,7 @@ export const CivilModule: React.FC = () => {
 
             <div className="space-y-2 mb-5 max-h-64 overflow-y-auto pr-1">
               {civil.requirements_status.length === 0 ? (
-                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
+                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
                   No hay requisitos cargados. Haz clic en "Cargar Plantilla VLB" o agrega uno abajo.
                 </p>
               ) : (
@@ -631,7 +631,7 @@ export const CivilModule: React.FC = () => {
                     className={`p-2.5 rounded-2xl border flex items-center justify-between cursor-pointer text-xs transition ${
                       r.completed
                         ? 'bg-[#E4ECE5] border-[#D0DED2] text-[#2B5235] font-medium'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#2B2826] hover:bg-[#FAF8F5]'
+                        : 'bg-[#FCFAF7] border-[#EFE8E1] text-[#2B2826] hover:bg-[#FAF8F5]'
                     }`}
                   >
                     <div className="flex items-center space-x-3">
@@ -665,11 +665,11 @@ export const CivilModule: React.FC = () => {
                 placeholder="Agregar requisito adicional a esta boda..."
                 value={newReq}
                 onChange={e => setNewReq(e.target.value)}
-                className="flex-1 px-3 py-2.5 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                className="flex-1 px-3 py-2.5 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
               />
               <button
                 type="submit"
-                className="px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                className="px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
               >
                 Agregar
               </button>
@@ -679,10 +679,10 @@ export const CivilModule: React.FC = () => {
       </div>
 
       {/* Música en la Ceremonia Civil */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs space-y-5">
+      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="flex items-center space-x-1.5 text-[#9C665C] text-xs font-semibold uppercase tracking-wider">
+            <div className="flex items-center space-x-1.5 text-[#C48B81] text-xs font-semibold uppercase tracking-wider">
               <Music className="w-3.5 h-3.5" />
               <span>Ambientación Sonora</span>
             </div>
@@ -694,7 +694,7 @@ export const CivilModule: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center space-x-2 bg-[#FAF8F5] p-1.5 rounded-2xl border border-[#EAE3DA]">
+          <div className="flex items-center space-x-2 bg-[#FAF8F5] p-1.5 rounded-2xl border border-[#EFE8E1]">
             <button
               type="button"
               onClick={() => handleToggleMusic(false)}
@@ -711,7 +711,7 @@ export const CivilModule: React.FC = () => {
               onClick={() => handleToggleMusic(true)}
               className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                 civil.has_music
-                  ? 'bg-[#9C665C] text-white shadow-xs'
+                  ? 'bg-[#C48B81] text-white shadow-xs'
                   : 'text-[#786C68] hover:text-[#2B2826]'
               }`}
             >
@@ -733,7 +733,7 @@ export const CivilModule: React.FC = () => {
 
             {/* Song List */}
             {(!civil.music_songs || civil.music_songs.length === 0) ? (
-              <div className="p-6 text-center text-xs text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
+              <div className="p-6 text-center text-xs text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
                 Aún no has agregado canciones. Usa el formulario de abajo para registrar el primer momento musical.
               </div>
             ) : (
@@ -741,7 +741,7 @@ export const CivilModule: React.FC = () => {
                 {civil.music_songs.map((song, idx) => (
                   <div
                     key={song.id || idx}
-                    className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-start justify-between gap-3 text-xs"
+                    className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex items-start justify-between gap-3 text-xs"
                   >
                     <div className="space-y-1 min-w-0">
                       <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#EFE2DF] text-[#7A4E49] border border-[#DFC9C4]">
@@ -756,7 +756,7 @@ export const CivilModule: React.FC = () => {
                         </div>
                       )}
                       {song.notes && (
-                        <div className="text-[10px] text-[#8A7E72] italic bg-[#FAF8F5] p-1.5 rounded-lg border border-[#EAE3DA]/60">
+                        <div className="text-[10px] text-[#8A7E72] italic bg-[#FAF8F5] p-1.5 rounded-lg border border-[#EFE8E1]/60">
                           {song.notes}
                         </div>
                       )}
@@ -776,7 +776,7 @@ export const CivilModule: React.FC = () => {
             )}
 
             {/* Add Song Form */}
-            <form onSubmit={handleAddSong} className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EAE3DA] space-y-3">
+            <form onSubmit={handleAddSong} className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-3">
               <div className="text-xs font-semibold text-[#2B2826]">
                 + Registrar Nueva Canción
               </div>
@@ -791,7 +791,7 @@ export const CivilModule: React.FC = () => {
                     placeholder="Ej. Entrada de Novios, Firmas..."
                     value={songDraft.moment}
                     onChange={e => setSongDraft({ ...songDraft, moment: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
                   />
                 </div>
                 <div>
@@ -804,7 +804,7 @@ export const CivilModule: React.FC = () => {
                     placeholder="Ej. Canon en Re Mayor"
                     value={songDraft.title}
                     onChange={e => setSongDraft({ ...songDraft, title: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
                   />
                 </div>
                 <div>
@@ -816,7 +816,7 @@ export const CivilModule: React.FC = () => {
                     placeholder="Ej. Pachelbel / Versión Acústica"
                     value={songDraft.artist}
                     onChange={e => setSongDraft({ ...songDraft, artist: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
                   />
                 </div>
               </div>
@@ -827,11 +827,11 @@ export const CivilModule: React.FC = () => {
                   placeholder="Notas adicionales (ej. iniciar en el minuto 0:45, volumen suave...)"
                   value={songDraft.notes}
                   onChange={e => setSongDraft({ ...songDraft, notes: e.target.value })}
-                  className="w-full sm:flex-1 px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                  className="w-full sm:flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
                 />
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer shrink-0"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer shrink-0"
                 >
                   Agregar Canción
                 </button>
@@ -842,10 +842,10 @@ export const CivilModule: React.FC = () => {
       </div>
 
       {/* AUTOMATIC REUSE: Reused Vendors Card for Civil */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
+      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="flex items-center space-x-1.5 text-[#9C665C] text-xs font-semibold uppercase tracking-wider">
+            <div className="flex items-center space-x-1.5 text-[#C48B81] text-xs font-semibold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Reutilización Automática de Proveedores</span>
             </div>
@@ -856,13 +856,13 @@ export const CivilModule: React.FC = () => {
               Reflejados automáticamente desde el módulo Proveedores y Pagos con la etiqueta <strong>CIVIL</strong>. Sin doble captura.
             </p>
           </div>
-          <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
+          <span className="text-xs font-semibold text-[#A86B60] bg-[#FAF8F5] border border-[#EFE8E1] px-3 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
             {reusedVendors.length} proveedores
           </span>
         </div>
 
         {reusedVendors.length === 0 ? (
-          <div className="p-8 text-center text-xs text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
+          <div className="p-8 text-center text-xs text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
             No hay proveedores etiquetados con participación en "CIVIL". Ve a <strong>Proveedores y Pagos</strong> y selecciona la casilla CIVIL en el proveedor correspondiente.
           </div>
         ) : (
@@ -870,12 +870,12 @@ export const CivilModule: React.FC = () => {
             {reusedVendors.map(v => (
               <div
                 key={v.id}
-                className="bg-[#FCFAF7] p-4 rounded-2xl border border-[#EAE3DA] shadow-xs flex flex-col justify-between"
+                className="bg-[#FCFAF7] p-4 rounded-2xl border border-[#EFE8E1] shadow-xs flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-[#8A7E72] uppercase tracking-wider">{v.type}</span>
-                    <span className="text-[10px] bg-[#FAF8F5] text-[#9C665C] font-semibold border border-[#EAE3DA] px-2 py-0.5 rounded-full">CIVIL</span>
+                    <span className="text-[10px] bg-[#FAF8F5] text-[#C48B81] font-semibold border border-[#EFE8E1] px-2 py-0.5 rounded-full">CIVIL</span>
                   </div>
                   <h4 className="font-semibold text-[#2B2826] text-sm">{v.name}</h4>
                   {v.contact_person && (
@@ -886,14 +886,14 @@ export const CivilModule: React.FC = () => {
                   )}
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-[#EAE3DA] flex items-center justify-between">
+                <div className="mt-4 pt-3 border-t border-[#EFE8E1] flex items-center justify-between">
                   <a
                     href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center space-x-1.5 text-xs text-emerald-700 hover:text-emerald-900 font-mono"
+                    className="inline-flex items-center space-x-1.5 text-xs text-[#A86B60] hover:text-[#2B2826] font-mono transition"
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                    <MessageSquare className="w-3.5 h-3.5 text-[#C48B81]" />
                     <span>{v.phone}</span>
                   </a>
                 </div>

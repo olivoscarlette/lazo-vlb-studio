@@ -28,9 +28,9 @@ export const NoviosTopNav: React.FC<NoviosTopNavProps> = ({ currentTab, onSelect
 
   return (
     <div className="w-full bg-[#FAF7F5]/95 backdrop-blur-md border-b border-[#EFE8E1] sticky top-16 sm:top-[72px] z-40 transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
         <nav
-          className="flex items-center space-x-6 sm:space-x-8 md:space-x-9 overflow-x-auto no-scrollbar scroll-smooth py-1"
+          className="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto no-scrollbar scroll-smooth"
           aria-label="Navegación Novios"
         >
           {tabs.map(tab => {
@@ -40,23 +40,13 @@ export const NoviosTopNav: React.FC<NoviosTopNavProps> = ({ currentTab, onSelect
               <button
                 key={tab.id}
                 onClick={() => onSelectTab(tab.id)}
-                className={`group relative py-3 text-xs sm:text-sm font-medium transition-colors cursor-pointer shrink-0 select-none outline-none focus:outline-none ${
+                className={`px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-all cursor-pointer shrink-0 select-none outline-none focus:outline-none ${
                   isActive
-                    ? 'text-[#2B2826] font-semibold'
-                    : 'text-[#7D6F6B] hover:text-[#C48B81]'
+                    ? 'bg-white text-[#2B2826] shadow-xs border border-[#EFE8E1]'
+                    : 'text-[#7D6F6B] hover:text-[#2B2826] hover:bg-white/50'
                 }`}
               >
                 <span>{tab.label}</span>
-
-                {/* Indicador activo: Punto y Línea en Rosa Terracota (Idéntico a la imagen editorial) */}
-                {isActive && (
-                  <div className="absolute left-0 right-0 -bottom-1 flex flex-col items-center pointer-events-none">
-                    {/* Punto superior centrado */}
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] mb-1" />
-                    {/* Línea inferior en rosa satinado */}
-                    <span className="w-full h-[2px] bg-[#C48B81] rounded-full" />
-                  </div>
-                )}
               </button>
             );
           })}

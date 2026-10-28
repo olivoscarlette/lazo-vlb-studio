@@ -362,7 +362,7 @@ export const ReligiosaModule: React.FC = () => {
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
+            <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
               Liturgia y Templo
             </span>
             <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
@@ -374,11 +374,11 @@ export const ReligiosaModule: React.FC = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-10 border border-[#EAE3DA] shadow-xs text-center max-w-xl mx-auto my-8">
-          <div className="w-16 h-16 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-center justify-center mx-auto mb-5 text-[#9C665C]">
+        <div className="bg-white rounded-3xl p-10 border border-[#EFE8E1] shadow-xs text-center max-w-xl mx-auto my-8">
+          <div className="w-16 h-16 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex items-center justify-center mx-auto mb-5 text-[#C48B81]">
             <Church className="w-8 h-8 stroke-[1.5]" />
           </div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#8A7E72] bg-[#FAF8F5] px-3 py-1 rounded-full border border-[#EAE3DA]">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#8A7E72] bg-[#FAF8F5] px-3 py-1 rounded-full border border-[#EFE8E1]">
             Módulo Opcional
           </span>
           <h3 className="font-serif text-2xl font-semibold text-[#2B2826] mt-3 mb-2">
@@ -394,7 +394,7 @@ export const ReligiosaModule: React.FC = () => {
                 setIsConfiguring(true);
                 setIsEditingDetails(true);
               }}
-              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-white text-sm font-semibold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-semibold transition shadow-xs cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Configurar Ceremonia Religiosa</span>
@@ -410,7 +410,7 @@ export const ReligiosaModule: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
+          <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
             Liturgia y Templo
           </span>
           <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
@@ -426,7 +426,7 @@ export const ReligiosaModule: React.FC = () => {
             <button
               type="button"
               onClick={handleDeactivateCeremony}
-              className="text-xs font-semibold text-[#8A7E72] hover:text-rose-600 px-3 py-1.5 rounded-xl border border-[#EAE3DA] bg-white transition cursor-pointer"
+              className="text-xs font-semibold text-[#8A7E72] hover:text-rose-600 px-3 py-1.5 rounded-xl border border-[#EFE8E1] bg-white transition cursor-pointer"
               title="Ocultar y limpiar este módulo si la boda no tendrá ceremonia religiosa"
             >
               Desactivar Ceremonia
@@ -439,33 +439,33 @@ export const ReligiosaModule: React.FC = () => {
       </div>
 
       {/* Main Details Card — Fixed / Read-Only by Default */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
+      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-[#FAF8F5]">
           <div className="flex items-center space-x-2.5">
-            <Church className="w-5 h-5 text-[#9C665C]" />
+            <Church className="w-5 h-5 text-[#C48B81]" />
             <div>
               <h3 className="font-serif text-xl font-semibold text-[#2B2826]">
                 Datos del Templo y Celebración
               </h3>
               <p className="text-xs text-[#8A7E72] flex items-center space-x-1 mt-0.5">
-                <Lock className="w-3 h-3 text-[#9C665C]" />
+                <Lock className="w-3 h-3 text-[#C48B81]" />
                 <span>Información protegida contra cambios accidentales.</span>
               </p>
             </div>
           </div>
 
           {isNovios ? (
-            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF8F5] text-[#8A7E72] border border-[#EAE3DA] text-xs font-medium">
-              <Lock className="w-3.5 h-3.5 text-[#9C665C]" />
+            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1] text-xs font-medium">
+              <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Registro Oficial VLB</span>
             </span>
           ) : !isEditingDetails ? (
             <button
               type="button"
               onClick={handleStartEditDetails}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] text-xs font-semibold transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold transition cursor-pointer"
             >
-              <Edit3 className="w-3.5 h-3.5 text-[#9C665C]" />
+              <Edit3 className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Editar Datos</span>
             </button>
           ) : (
@@ -473,7 +473,7 @@ export const ReligiosaModule: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEditingDetails(false)}
-                className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] text-xs font-medium transition cursor-pointer"
+                className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cancelar</span>
@@ -481,7 +481,7 @@ export const ReligiosaModule: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSaveDetails}
-                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold transition shadow-xs cursor-pointer"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>Guardar Cambios</span>
@@ -494,9 +494,9 @@ export const ReligiosaModule: React.FC = () => {
           /* Fixed Read-Only View */
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
                 <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
-                  <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <Calendar className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span>Fecha</span>
                 </div>
                 <div className="text-sm font-semibold text-[#2B2826]">
@@ -504,9 +504,9 @@ export const ReligiosaModule: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
                 <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
-                  <Clock className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <Clock className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span>Hora de Inicio</span>
                 </div>
                 <div className="text-sm font-semibold text-[#2B2826]">
@@ -514,9 +514,9 @@ export const ReligiosaModule: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
                 <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
-                  <MapPin className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <MapPin className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span>Templo / Parroquia</span>
                 </div>
                 <div className="text-sm font-semibold text-[#2B2826]">
@@ -524,9 +524,9 @@ export const ReligiosaModule: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
                 <div className="flex items-center space-x-1.5 text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
-                  <User className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <User className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span>Sacerdote / Oficiante</span>
                 </div>
                 <div className="text-sm font-semibold text-[#2B2826]">
@@ -535,7 +535,7 @@ export const ReligiosaModule: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA]">
+            <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1]">
               <div className="text-xs font-semibold uppercase tracking-wider text-[#8A7E72] mb-1">
                 Notas Generales de la Iglesia
               </div>
@@ -554,7 +554,7 @@ export const ReligiosaModule: React.FC = () => {
                   type="date"
                   value={detailsDraft.date}
                   onChange={e => setDetailsDraft({ ...detailsDraft, date: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
               <div>
@@ -563,7 +563,7 @@ export const ReligiosaModule: React.FC = () => {
                   type="time"
                   value={detailsDraft.time}
                   onChange={e => setDetailsDraft({ ...detailsDraft, time: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
               <div>
@@ -573,7 +573,7 @@ export const ReligiosaModule: React.FC = () => {
                   placeholder="Parroquia Santa Teresita del Niño Jesús"
                   value={detailsDraft.temple_name}
                   onChange={e => setDetailsDraft({ ...detailsDraft, temple_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
               <div>
@@ -583,7 +583,7 @@ export const ReligiosaModule: React.FC = () => {
                   placeholder="Pbro. Francisco Javier Gómez"
                   value={detailsDraft.officiant}
                   onChange={e => setDetailsDraft({ ...detailsDraft, officiant: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
             </div>
@@ -595,7 +595,7 @@ export const ReligiosaModule: React.FC = () => {
                 placeholder="Reglamento del templo: lluvia de pétalos, fotógrafos autorizados, etc."
                 value={detailsDraft.notes}
                 onChange={e => setDetailsDraft({ ...detailsDraft, notes: e.target.value })}
-                className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
               />
             </div>
           </form>
@@ -605,40 +605,40 @@ export const ReligiosaModule: React.FC = () => {
       {/* Two Column Section: Structured Music List & Readings List with Confirmed Guests */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Card 1: Música de Ceremonia Religiosa (Structured List) */}
-        <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
+                <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
                   Programa Musical Litúrgico
                 </span>
                 <h3 className="font-serif text-lg font-semibold text-[#2B2826] flex items-center space-x-2">
-                  <Music className="w-4 h-4 text-[#9C665C]" />
+                  <Music className="w-4 h-4 text-[#C48B81]" />
                   <span>Música de Ceremonia Religiosa</span>
                 </h3>
               </div>
-              <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#A86B60] bg-[#FAF8F5] border border-[#EFE8E1] px-3 py-1 rounded-full">
                 {musicList.length} piezas
               </span>
             </div>
 
             <div className="space-y-2 mb-5 max-h-72 overflow-y-auto pr-1">
               {musicList.length === 0 ? (
-                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
+                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
                   No se han agregado piezas musicales aún. Regístralas en el listado abajo.
                 </p>
               ) : (
                 musicList.map((item, idx) => (
                   <div
                     key={item.id}
-                    className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-center justify-between gap-3"
+                    className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex items-center justify-between gap-3"
                   >
                     <div className="flex items-start space-x-3">
-                      <span className="w-5 h-5 rounded-full bg-[#FAF8F5] text-[#9C665C] border border-[#EAE3DA] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                      <span className="w-5 h-5 rounded-full bg-[#FAF8F5] text-[#C48B81] border border-[#EFE8E1] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                         {idx + 1}
                       </span>
                       <div>
-                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#9C665C]">
+                        <div className="text-[10px] font-bold uppercase tracking-wider text-[#C48B81]">
                           {item.moment}
                         </div>
                         <div className="text-sm font-medium text-[#2B2826] mt-0.5">
@@ -668,7 +668,7 @@ export const ReligiosaModule: React.FC = () => {
               <select
                 value={newMusicMoment}
                 onChange={e => setNewMusicMoment(e.target.value)}
-                className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                className="px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
               >
                 {liturgicalMoments.map(m => (
                   <option key={m} value={m}>{m}</option>
@@ -679,13 +679,13 @@ export const ReligiosaModule: React.FC = () => {
                 placeholder="Canción / Obra (ej. Canon en Re - Pachelbel)"
                 value={newMusicSong}
                 onChange={e => setNewMusicSong(e.target.value)}
-                className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                className="px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
               />
             </div>
             <button
               type="submit"
               disabled={!newMusicSong.trim()}
-              className="w-full py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer flex items-center justify-center space-x-1.5"
+              className="w-full py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer flex items-center justify-center space-x-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Agregar al Listado Musical</span>
@@ -694,37 +694,37 @@ export const ReligiosaModule: React.FC = () => {
         </div>
 
         {/* Card 2: Lecturas de Ceremonia Religiosa (Title + Reader from Confirmed Guests) */}
-        <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs flex flex-col justify-between">
+        <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">
+                <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
                   Liturgia de la Palabra · Desde Confirmados
                 </span>
                 <h3 className="font-serif text-lg font-semibold text-[#2B2826] flex items-center space-x-2">
-                  <BookOpen className="w-4 h-4 text-[#9C665C]" />
+                  <BookOpen className="w-4 h-4 text-[#C48B81]" />
                   <span>Lecturas y Lectores Asignados</span>
                 </h3>
               </div>
-              <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full">
+              <span className="text-xs font-semibold text-[#A86B60] bg-[#FAF8F5] border border-[#EFE8E1] px-3 py-1 rounded-full">
                 {readingsList.length} lecturas
               </span>
             </div>
 
             <div className="space-y-2 mb-5 max-h-72 overflow-y-auto pr-1">
               {readingsList.length === 0 ? (
-                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
+                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
                   No se han registrado lecturas aún. Agrega el título y selecciona al lector de la lista de confirmados.
                 </p>
               ) : (
                 readingsList.map(item => (
                   <div
                     key={item.id}
-                    className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex items-center justify-between gap-3"
+                    className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex items-center justify-between gap-3"
                   >
                     <div>
                       <div className="flex items-center space-x-2">
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9C665C] bg-[#FAF8F5] border border-[#EAE3DA] px-2 py-0.5 rounded-full">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-[#C48B81] bg-[#FAF8F5] border border-[#EFE8E1] px-2 py-0.5 rounded-full">
                           {item.type}
                         </span>
                         <span className="text-sm font-medium text-[#2B2826]">
@@ -732,7 +732,7 @@ export const ReligiosaModule: React.FC = () => {
                         </span>
                       </div>
                       <div className="flex items-center space-x-1.5 text-xs text-[#8A7E72] mt-1.5">
-                        <User className="w-3.5 h-3.5 text-[#9C665C]" />
+                        <User className="w-3.5 h-3.5 text-[#C48B81]" />
                         <span>Lector(a): <strong className="text-[#2B2826] font-medium">{item.reader}</strong></span>
                       </div>
                     </div>
@@ -758,7 +758,7 @@ export const ReligiosaModule: React.FC = () => {
               <select
                 value={newReadingType}
                 onChange={e => setNewReadingType(e.target.value)}
-                className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                className="px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
               >
                 {readingTypes.map(rt => (
                   <option key={rt} value={rt}>{rt}</option>
@@ -769,14 +769,14 @@ export const ReligiosaModule: React.FC = () => {
                 placeholder="Título o cita (ej. 1 Corintios 13, 4-8)"
                 value={newReadingTitle}
                 onChange={e => setNewReadingTitle(e.target.value)}
-                className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                className="px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
               />
             </div>
             <div className="flex gap-2">
               <select
                 value={newReadingReader}
                 onChange={e => setNewReadingReader(e.target.value)}
-                className="flex-1 px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+                className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
               >
                 <option value="">— Seleccionar lector(a) confirmado(a) —</option>
                 {confirmedGuestNames.map(name => (
@@ -786,7 +786,7 @@ export const ReligiosaModule: React.FC = () => {
               <button
                 type="submit"
                 disabled={!newReadingTitle.trim() || !newReadingReader}
-                className="px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer flex items-center space-x-1"
+                className="px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer flex items-center space-x-1"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar</span>
@@ -797,10 +797,10 @@ export const ReligiosaModule: React.FC = () => {
       </div>
 
       {/* Requisitos y Trámites Eclesiásticos (Conectados a Plantilla Maestra VLB) */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
+      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
           <div>
-            <span className="text-xs uppercase font-semibold tracking-wider text-[#9C665C]">Expediente Parroquial VLB</span>
+            <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">Expediente Parroquial VLB</span>
             <h3 className="font-serif text-lg font-semibold text-[#2B2826]">Requisitos y Trámites de Ceremonia Religiosa</h3>
           </div>
           <div className="flex items-center space-x-2">
@@ -808,14 +808,14 @@ export const ReligiosaModule: React.FC = () => {
               <button
                 type="button"
                 onClick={handleLoadMasterRequirements}
-                className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] transition cursor-pointer"
+                className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
                 title="Cargar requisitos religiosos de la Plantilla Maestra de VLB Studio"
               >
-                <Download className="w-3.5 h-3.5 text-[#9C665C]" />
+                <Download className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>Cargar Plantilla VLB</span>
               </button>
             )}
-            <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EAE3DA] px-2.5 py-1 rounded-full">
+            <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EFE8E1] px-2.5 py-1 rounded-full">
               {(religious.requirements_status || []).filter(r => r.completed).length} / {(religious.requirements_status || []).length}
             </span>
           </div>
@@ -823,7 +823,7 @@ export const ReligiosaModule: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-5">
           {(religious.requirements_status || []).length === 0 ? (
-            <p className="md:col-span-2 text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
+            <p className="md:col-span-2 text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
               No hay requisitos parroquiales cargados. Haz clic en "Cargar Plantilla VLB" o agrega uno abajo.
             </p>
           ) : (
@@ -834,7 +834,7 @@ export const ReligiosaModule: React.FC = () => {
                 className={`p-3 rounded-2xl border flex items-center justify-between cursor-pointer text-xs transition ${
                   r.completed
                     ? 'bg-[#E4ECE5] border-[#D0DED2] text-[#2B5235] font-medium'
-                    : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#2B2826] hover:bg-[#FAF8F5]'
+                    : 'bg-[#FCFAF7] border-[#EFE8E1] text-[#2B2826] hover:bg-[#FAF8F5]'
                 }`}
               >
                 <div className="flex items-center space-x-3">
@@ -867,11 +867,11 @@ export const ReligiosaModule: React.FC = () => {
               placeholder="Agregar requisito parroquial a esta boda..."
               value={newReq}
               onChange={e => setNewReq(e.target.value)}
-              className="flex-1 px-3 py-2.5 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#9C665C] focus:outline-none"
+              className="flex-1 px-3 py-2.5 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
             />
             <button
               type="submit"
-              className="px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+              className="px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
             >
               Agregar
             </button>
@@ -880,10 +880,10 @@ export const ReligiosaModule: React.FC = () => {
       </div>
 
       {/* AUTOMATIC REUSE: Reused Vendors Card for Iglesia */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs">
+      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="flex items-center space-x-1.5 text-[#9C665C] text-xs font-semibold uppercase tracking-wider">
+            <div className="flex items-center space-x-1.5 text-[#C48B81] text-xs font-semibold uppercase tracking-wider">
               <Sparkles className="w-3.5 h-3.5" />
               <span>Reutilización Automática de Proveedores</span>
             </div>
@@ -894,13 +894,13 @@ export const ReligiosaModule: React.FC = () => {
               Reflejados automáticamente desde el módulo Proveedores y Pagos con la etiqueta <strong>IGLESIA</strong>. Sin volver a capturar.
             </p>
           </div>
-          <span className="text-xs font-semibold text-[#8A574E] bg-[#FAF8F5] border border-[#EAE3DA] px-3 py-1 rounded-full">
+          <span className="text-xs font-semibold text-[#A86B60] bg-[#FAF8F5] border border-[#EFE8E1] px-3 py-1 rounded-full">
             {reusedVendors.length} proveedores
           </span>
         </div>
 
         {reusedVendors.length === 0 ? (
-          <div className="p-8 text-center text-xs text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EAE3DA]">
+          <div className="p-8 text-center text-xs text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
             No hay proveedores con etiqueta "IGLESIA". Ve a <strong>Proveedores y Pagos</strong> y marca la casilla IGLESIA en flores, música o foto.
           </div>
         ) : (
@@ -908,12 +908,12 @@ export const ReligiosaModule: React.FC = () => {
             {reusedVendors.map(v => (
               <div
                 key={v.id}
-                className="bg-[#FCFAF7] p-4 rounded-2xl border border-[#EAE3DA] shadow-xs flex flex-col justify-between"
+                className="bg-[#FCFAF7] p-4 rounded-2xl border border-[#EFE8E1] shadow-xs flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-[#8A7E72] uppercase tracking-wider">{v.type}</span>
-                    <span className="text-[10px] bg-[#FAF8F5] text-[#9C665C] font-semibold border border-[#EAE3DA] px-2 py-0.5 rounded-full">IGLESIA</span>
+                    <span className="text-[10px] bg-[#FAF8F5] text-[#C48B81] font-semibold border border-[#EFE8E1] px-2 py-0.5 rounded-full">IGLESIA</span>
                   </div>
                   <h4 className="font-semibold text-[#2B2826] text-sm">{v.name}</h4>
                   {v.contact_person && (
@@ -924,14 +924,14 @@ export const ReligiosaModule: React.FC = () => {
                   )}
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-[#EAE3DA] flex items-center justify-between">
+                <div className="mt-4 pt-3 border-t border-[#EFE8E1] flex items-center justify-between">
                   <a
                     href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center space-x-1.5 text-xs text-emerald-700 hover:text-emerald-900 font-mono"
+                    className="inline-flex items-center space-x-1.5 text-xs text-[#A86B60] hover:text-[#2B2826] font-mono transition"
                   >
-                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                    <MessageSquare className="w-3.5 h-3.5 text-[#C48B81]" />
                     <span>{v.phone}</span>
                   </a>
                 </div>

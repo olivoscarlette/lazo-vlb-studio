@@ -807,7 +807,7 @@ export const InvitadosModule: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowDownloadsMenu(!showDownloadsMenu)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#332C2A] text-xs font-semibold rounded-xl transition border border-[#DDD2C4] shadow-2xs cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#332C2A] text-xs font-semibold rounded-xl transition border border-[#EFE8E1] shadow-2xs cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-[#786C68]" />
               <span>Descargables</span>
@@ -816,7 +816,7 @@ export const InvitadosModule: React.FC = () => {
 
             {showDownloadsMenu && (
               <div
-                className="absolute right-0 mt-1.5 w-56 bg-white rounded-2xl shadow-xl border border-[#DDD2C4] py-1.5 z-30 animate-in fade-in zoom-in-95"
+                className="absolute right-0 mt-1.5 w-56 bg-white rounded-2xl shadow-xl border border-[#EFE8E1] py-1.5 z-30 animate-in fade-in zoom-in-95"
                 onMouseLeave={() => setShowDownloadsMenu(false)}
               >
                 <button
@@ -936,7 +936,7 @@ export const InvitadosModule: React.FC = () => {
           onClick={() => { setStatusFilter('Pendiente de confirmar'); setTableFilter(''); setPage(1); }}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
             statusFilter === 'Pendiente de confirmar' && tableFilter === ''
-              ? 'bg-[#8A574E] text-white shadow-xs'
+              ? 'bg-[#A86B60] text-white shadow-xs'
               : 'bg-[#FFFFFF] text-[#6D5A43] border border-[#EFE8E1] hover:bg-[#F7F3EE]'
           }`}
         >
@@ -1018,7 +1018,7 @@ export const InvitadosModule: React.FC = () => {
 
         <div
           onClick={() => { setStatusFilter('Pendiente de confirmar'); setPage(1); }}
-          className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#EFE8DE]/60 border-[#DDD2C4] ${
+          className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#EFE8DE]/60 border-[#EFE8E1] ${
             statusFilter === 'Pendiente de confirmar' ? 'ring-2 ring-[#C48B81] shadow-xs' : 'hover:border-[#C48B81]'
           }`}
           title="Filtrar solo Pendientes de confirmar"
@@ -1050,7 +1050,7 @@ export const InvitadosModule: React.FC = () => {
       </div>
 
       {/* Filters, Search & Sort Bar */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#DDD2C4] shadow-xs">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#EFE8E1] shadow-xs">
         <div className="relative flex-1 w-full lg:max-w-md">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#786C68]" />
           <input
@@ -1058,13 +1058,13 @@ export const InvitadosModule: React.FC = () => {
             placeholder="Buscar por nombre, apellido o teléfono (con o sin acentos)..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs border border-[#DDD2C4] rounded-xl focus:outline-none"
+            className="w-full pl-9 pr-3 py-2 text-xs border border-[#EFE8E1] rounded-xl focus:outline-none"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           {/* Sort By Selector: Alphabetical */}
-          <div className="inline-flex items-center space-x-1.5 bg-[#F9F6F2] px-2.5 py-1 rounded-xl border border-[#DDD2C4]">
+          <div className="inline-flex items-center space-x-1.5 bg-[#F9F6F2] px-2.5 py-1 rounded-xl border border-[#EFE8E1]">
             <span className="text-[11px] font-bold text-[#786C68] whitespace-nowrap">Ordenar:</span>
             <select
               value={sortBy}
@@ -1081,7 +1081,7 @@ export const InvitadosModule: React.FC = () => {
           <select
             value={statusFilter}
             onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-            className="px-3 py-2 text-xs border border-[#DDD2C4] rounded-xl bg-white text-[#332C2A] focus:outline-none"
+            className="px-3 py-2 text-xs border border-[#EFE8E1] rounded-xl bg-white text-[#332C2A] focus:outline-none"
           >
             <option value="">Todos los Estatus</option>
             <option value="Confirmado">Confirmados</option>
@@ -1092,7 +1092,7 @@ export const InvitadosModule: React.FC = () => {
           <select
             value={tableFilter}
             onChange={e => { setTableFilter(e.target.value); setPage(1); }}
-            className="px-3 py-2 text-xs border border-[#DDD2C4] rounded-xl bg-white text-[#332C2A] focus:outline-none"
+            className="px-3 py-2 text-xs border border-[#EFE8E1] rounded-xl bg-white text-[#332C2A] focus:outline-none"
           >
             <option value="">Todas las Mesas</option>
             <option value="assigned">Con Mesa Asignada</option>
@@ -1105,11 +1105,11 @@ export const InvitadosModule: React.FC = () => {
       </div>
 
       {/* Main Table: Operational, Single-Line & Properly Proportioned Columns */}
-      <div className="luxury-card rounded-2xl overflow-hidden border border-[#DDD2C4]">
+      <div className="luxury-card rounded-2xl overflow-hidden border border-[#EFE8E1]">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#EFE8DE] border-b border-[#DDD2C4] font-bold uppercase tracking-wider text-[#786C68]">
+              <tr className="bg-[#EFE8DE] border-b border-[#EFE8E1] font-bold uppercase tracking-wider text-[#786C68]">
                 <th
                   onClick={() => {
                     setSortBy(sortBy === 'alpha_asc' ? 'alpha_desc' : 'alpha_asc');
@@ -1196,7 +1196,7 @@ export const InvitadosModule: React.FC = () => {
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <div className="inline-flex flex-col items-center">
                         <div className="inline-flex items-center space-x-1.5 whitespace-nowrap">
-                          <span className="font-semibold text-xs text-[#2B2826] bg-[#EFE8DE] px-2.5 py-0.5 rounded-full border border-[#DDD2C4]">
+                          <span className="font-semibold text-xs text-[#2B2826] bg-[#EFE8DE] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
                             {guest.companion_count}
                           </span>
                           <span className="text-xs text-[#7D6F6B] whitespace-nowrap">
@@ -1256,7 +1256,7 @@ export const InvitadosModule: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleOpenGuestChat(guest)}
-                              className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-[#8A574E] bg-[#F7EDEB] rounded-lg border border-[#ECD9D5] hover:bg-[#EEDAD6] transition shadow-2xs cursor-pointer"
+                              className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-[#A86B60] bg-[#F7EDEB] rounded-lg border border-[#ECD9D5] hover:bg-[#EEDAD6] transition shadow-2xs cursor-pointer"
                               title="Abrir conversación para chatear y responderle al invitado"
                             >
                               <MessageSquare className="w-3 h-3 text-[#C48B81]" />
@@ -1304,8 +1304,8 @@ export const InvitadosModule: React.FC = () => {
                           style={{ fontSize: '0.82rem' }}
                           className={`w-full max-w-[190px] font-medium rounded-lg px-2.5 py-1 border transition focus:outline-none cursor-pointer ${
                             guest.table_id
-                              ? 'bg-[#EFE8DE] text-[#332C2A] border-[#DDD2C4] font-semibold'
-                              : 'bg-white text-[#786C68] border-[#DDD2C4] hover:border-[#C48B81]'
+                              ? 'bg-[#EFE8DE] text-[#332C2A] border-[#EFE8E1] font-semibold'
+                              : 'bg-white text-[#786C68] border-[#EFE8E1] hover:border-[#C48B81]'
                           }`}
                         >
                           <option value="">Sin mesa</option>
@@ -1938,7 +1938,7 @@ export const InvitadosModule: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-4 px-3 border-2 border-dashed border-[#DDD2C4] rounded-xl bg-white">
+                    <div className="text-center py-4 px-3 border-2 border-dashed border-[#EFE8E1] rounded-xl bg-white">
                       <FileText className="w-7 h-7 mx-auto text-[#C7B6A6] mb-1.5" />
                       <p className="text-xs text-[#2B2826] font-semibold">
                         Sube el archivo PDF de la invitación
@@ -1946,7 +1946,7 @@ export const InvitadosModule: React.FC = () => {
                       <p className="text-[10px] text-[#7D6F6B] mt-0.5 mb-2.5">
                         El bot de WhatsApp lo enviará como archivo nativo descargable.
                       </p>
-                      <label className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#C48B81] hover:bg-[#8A574E] text-white text-xs font-bold rounded-xl cursor-pointer transition shadow-2xs">
+                      <label className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold rounded-xl cursor-pointer transition shadow-2xs">
                         {uploadingPdfModal ? (
                           <>
                             <Loader2 className="w-3 h-3 animate-spin" />

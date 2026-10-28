@@ -582,7 +582,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             <button
               type="button"
               onClick={() => onNavigateTab('invitados')}
-              className="px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs flex items-center space-x-1.5 cursor-pointer"
+              className="px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs flex items-center space-x-1.5 cursor-pointer"
             >
               <span>Enviar a Invitados</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -674,14 +674,14 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     placeholder="https://www.canva.com/design/... o https://laboda.com"
                     value={weddingData.invitation_url || ''}
                     onChange={e => setWeddingData({ ...weddingData, invitation_url: e.target.value })}
-                    className="flex-1 px-3.5 py-2.5 text-xs bg-white border border-[#EAE3DA] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                    className="flex-1 px-3.5 py-2.5 text-xs bg-white border border-[#EFE8E1] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
                   />
                   {weddingData.invitation_url && (
                     <a
                       href={weddingData.invitation_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-2.5 rounded-xl bg-white border border-[#EAE3DA] text-[#7D6F6B] hover:text-[#C48B81] transition shadow-2xs shrink-0"
+                      className="p-2.5 rounded-xl bg-white border border-[#EFE8E1] text-[#7D6F6B] hover:text-[#C48B81] transition shadow-2xs shrink-0"
                       title="Probar enlace en nueva pestaña"
                     >
                       <ExternalLink className="w-4 h-4" />
@@ -715,7 +715,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                         href={weddingData.invitation_pdf_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-2.5 py-1.5 text-[11px] font-semibold bg-[#FAF7F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] rounded-lg transition"
+                        className="px-2.5 py-1.5 text-[11px] font-semibold bg-[#FAF7F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] rounded-lg transition"
                       >
                         Ver PDF
                       </a>
@@ -730,7 +730,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-4 px-3 border-2 border-dashed border-[#DDD2C4] rounded-xl bg-white">
+                  <div className="text-center py-4 px-3 border-2 border-dashed border-[#EFE8E1] rounded-xl bg-white">
                     <FileText className="w-8 h-8 mx-auto text-[#C7B6A6] mb-2" />
                     <p className="text-xs text-[#2B2826] font-semibold">
                       Aún no has subido el archivo PDF
@@ -738,7 +738,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     <p className="text-[11px] text-[#7D6F6B] mt-0.5 mb-3">
                       Sube el PDF diseñado de la boda (máximo 25 MB).
                     </p>
-                    <label className="inline-flex items-center space-x-2 px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold rounded-xl cursor-pointer transition shadow-2xs">
+                    <label className="inline-flex items-center space-x-2 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold rounded-xl cursor-pointer transition shadow-2xs">
                       {uploadingPdf ? (
                         <>
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -762,7 +762,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                 )}
                 {weddingData.invitation_pdf_url && (
                   <div className="pt-1">
-                    <label className="inline-flex items-center space-x-1.5 text-xs text-[#9C665C] hover:underline cursor-pointer font-semibold">
+                    <label className="inline-flex items-center space-x-1.5 text-xs text-[#C48B81] hover:underline cursor-pointer font-semibold">
                       <Upload className="w-3 h-3" />
                       <span>{uploadingPdf ? 'Reemplazando...' : 'Reemplazar por otro PDF'}</span>
                       <input
@@ -789,7 +789,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                   placeholder="Ej. Formal Riguroso, Playa Elegante"
                   value={weddingData.dress_code || ''}
                   onChange={e => setWeddingData({ ...weddingData, dress_code: e.target.value })}
-                  className="w-full px-3.5 py-2.5 text-xs bg-[#FAF7F5] border border-[#EAE3DA] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#FAF7F5] border border-[#EFE8E1] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
                 />
               </div>
 
@@ -802,7 +802,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                   className={`px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between cursor-pointer transition ${
                     weddingData.no_children
                       ? 'bg-[#F7EDEB] border-[#C48B81] text-[#A86B60]'
-                      : 'bg-[#FAF7F5] border-[#EAE3DA] text-[#7D6F6B]'
+                      : 'bg-[#FAF7F5] border-[#EFE8E1] text-[#7D6F6B]'
                   }`}
                 >
                   <span>Solo Adultos (No Niños)</span>
@@ -893,7 +893,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             <button
               type="button"
               onClick={() => setShowBroadcastModal(true)}
-              className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs cursor-pointer shrink-0"
+              className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs cursor-pointer shrink-0"
             >
               <Clock className="w-4 h-4" />
               <span>Configurar & Programar</span>
@@ -902,7 +902,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6">
             {/* Card 1: Recordatorio 7 Días */}
-            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex flex-col justify-between space-y-4">
+            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex flex-col justify-between space-y-4">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#EBDCC5]/50 text-[#8A6332]">
@@ -921,7 +921,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-[#EAE3DA]/60 flex items-center justify-between">
+              <div className="pt-3 border-t border-[#EFE8E1]/60 flex items-center justify-between">
                 <span className="text-[11px] text-[#7D6F6B]">
                   Estatus:{' '}
                   <strong className="text-[#332A28]">
@@ -931,7 +931,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                 <button
                   type="button"
                   onClick={() => setShowBroadcastModal(true)}
-                  className="text-xs font-bold text-[#9C665C] hover:underline cursor-pointer"
+                  className="text-xs font-bold text-[#C48B81] hover:underline cursor-pointer"
                 >
                   Editar texto u hora →
                 </button>
@@ -939,7 +939,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             </div>
 
             {/* Card 2: Mesa Día del Evento */}
-            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] flex flex-col justify-between space-y-4">
+            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex flex-col justify-between space-y-4">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#E4ECE5] text-[#2B5235]">
@@ -958,7 +958,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-[#EAE3DA]/60 flex items-center justify-between">
+              <div className="pt-3 border-t border-[#EFE8E1]/60 flex items-center justify-between">
                 <span className="text-[11px] text-[#7D6F6B]">
                   Estatus:{' '}
                   <strong className="text-[#332A28]">
@@ -968,7 +968,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                 <button
                   type="button"
                   onClick={() => setShowBroadcastModal(true)}
-                  className="text-xs font-bold text-[#9C665C] hover:underline cursor-pointer"
+                  className="text-xs font-bold text-[#C48B81] hover:underline cursor-pointer"
                 >
                   Editar texto u hora →
                 </button>
@@ -980,11 +980,11 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
 
       {/* Requirement 4: Equipo VLB Studio / Staff Asignado (OCULTO PARA NOVIOS, VISIBLE SOLO PARA ADMIN Y COORD) */}
       {canSeeStaffSection && (
-        <div className="luxury-card rounded-2xl p-6 sm:p-7 border border-[#EAE3DA] bg-[#FFFFFF] shadow-xs">
+        <div className="luxury-card rounded-2xl p-6 sm:p-7 border border-[#EFE8E1] bg-[#FFFFFF] shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-[#F7F3EE]">
             <div>
               <div className="flex items-center space-x-2 text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider">
-                <ShieldCheck className="w-4 h-4 text-[#9C665C]" />
+                <ShieldCheck className="w-4 h-4 text-[#C48B81]" />
                 <span>Gestión Operativa VLB Studio</span>
               </div>
               <h3 className="font-serif text-2xl font-bold text-[#332A28] mt-1">
@@ -996,7 +996,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             </div>
             <button
               onClick={() => onNavigateTab('directorio')}
-              className="text-xs font-semibold text-[#9C665C] hover:text-[#8A574E] hover:underline flex items-center space-x-1.5 self-start sm:self-auto"
+              className="text-xs font-semibold text-[#C48B81] hover:text-[#A86B60] hover:underline flex items-center space-x-1.5 self-start sm:self-auto"
             >
               <span>Ver en Directorio Completo</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -1008,7 +1008,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               {weddingData.team.map((member: any) => (
                 <div
                   key={member.id}
-                  className="p-4 rounded-xl border border-[#EAE3DA] bg-[#FCFAF7] hover:bg-[#F7F3EE] transition flex items-start space-x-3.5"
+                  className="p-4 rounded-xl border border-[#EFE8E1] bg-[#FCFAF7] hover:bg-[#F7F3EE] transition flex items-start space-x-3.5"
                 >
                   {member.avatar_url ? (
                     <img
@@ -1017,24 +1017,24 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                       className="w-10 h-10 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-base flex items-center justify-center shrink-0 border border-[#EAE3DA]">
+                    <div className="w-10 h-10 rounded-full bg-[#EFE2DF] text-[#A86B60] font-serif font-bold text-base flex items-center justify-center shrink-0 border border-[#EFE8E1]">
                       {member.name?.charAt(0)?.toUpperCase() || 'V'}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
                       <span className="font-semibold text-sm text-[#332A28] truncate">{member.name}</span>
-                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#EFE2DF] text-[#8A574E] font-medium shrink-0">
+                      <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#EFE2DF] text-[#A86B60] font-medium shrink-0">
                         {member.assigned_role || member.role}
                       </span>
                     </div>
                     <div className="text-xs text-[#7D6F6B] truncate mt-1.5 flex items-center space-x-1.5">
-                      <Mail className="w-3.5 h-3.5 shrink-0 text-[#9C665C]" />
+                      <Mail className="w-3.5 h-3.5 shrink-0 text-[#C48B81]" />
                       <span className="truncate">{member.email}</span>
                     </div>
                     {member.phone && (
                       <div className="text-xs text-[#7D6F6B] truncate mt-1 flex items-center space-x-1.5">
-                        <Phone className="w-3.5 h-3.5 shrink-0 text-[#9C665C]" />
+                        <Phone className="w-3.5 h-3.5 shrink-0 text-[#C48B81]" />
                         <span>{member.phone}</span>
                       </div>
                     )}
@@ -1043,7 +1043,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-7 text-xs text-[#7D6F6B] bg-[#FCFAF7] rounded-xl border border-dashed border-[#DDD2C4]">
+            <div className="text-center py-7 text-xs text-[#7D6F6B] bg-[#FCFAF7] rounded-xl border border-dashed border-[#EFE8E1]">
               No hay coordinadores o staff asignados registrados aún para esta boda.
             </div>
           )}
@@ -1053,7 +1053,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
       {/* Modal: Editar Boda */}
       {showEditWeddingModal && (
         <div className="fixed inset-0 bg-[#332A28]/50 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-[#FFFFFF] rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-[#EAE3DA] max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#FFFFFF] rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-[#EFE8E1] max-h-[90vh] overflow-y-auto">
             <h3 className="font-serif text-2xl font-bold text-[#332A28] mb-4">Editar Datos Operativos</h3>
             <form onSubmit={handleSaveWeddingEdit} className="space-y-4">
               <div>
@@ -1063,7 +1063,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                   required
                   value={editForm.name || ''}
                   onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -1074,7 +1074,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     required
                     value={editForm.partner_1_name || ''}
                     onChange={e => setEditForm({ ...editForm, partner_1_name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm"
                   />
                 </div>
                 <div>
@@ -1084,7 +1084,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     required
                     value={editForm.partner_2_name || ''}
                     onChange={e => setEditForm({ ...editForm, partner_2_name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm"
                   />
                 </div>
               </div>
@@ -1096,7 +1096,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     required
                     value={editForm.wedding_date || ''}
                     onChange={e => setEditForm({ ...editForm, wedding_date: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm"
                   />
                 </div>
                 <div>
@@ -1105,7 +1105,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     type="number"
                     value={editForm.estimated_guests || ''}
                     onChange={e => setEditForm({ ...editForm, estimated_guests: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm"
                   />
                 </div>
               </div>
@@ -1116,7 +1116,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     type="text"
                     value={editForm.ceremony_venue || ''}
                     onChange={e => setEditForm({ ...editForm, ceremony_venue: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm"
                   />
                 </div>
                 <div>
@@ -1125,7 +1125,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     type="text"
                     value={editForm.reception_venue || ''}
                     onChange={e => setEditForm({ ...editForm, reception_venue: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm"
                   />
                 </div>
               </div>
@@ -1135,7 +1135,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                   <select
                     value={editForm.package_type || 'Integral'}
                     onChange={e => setEditForm({ ...editForm, package_type: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm"
                   >
                     {packagesList.length > 0 ? (
                       packagesList.map(pkg => (
@@ -1157,7 +1157,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                   <select
                     value={editForm.status || 'PLANNING'}
                     onChange={e => setEditForm({ ...editForm, status: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm"
                   >
                     <option value="PLANNING">PLANNING (En planeación)</option>
                     <option value="UPCOMING">UPCOMING (Próxima)</option>
@@ -1176,7 +1176,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#9C665C] text-[#FFFFFF] rounded-xl hover:bg-[#8A574E]"
+                  className="px-5 py-2.5 text-xs font-bold uppercase tracking-wider bg-[#C48B81] text-[#FFFFFF] rounded-xl hover:bg-[#A86B60]"
                 >
                   Guardar Cambios
                 </button>

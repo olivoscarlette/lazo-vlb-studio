@@ -33,9 +33,9 @@ export const BitacoraModule: React.FC = () => {
 
   const getActionBadgeColor = (action: string) => {
     if (action.includes('CREAR') || action.includes('AGREGAR')) return 'bg-[#E4ECE5] text-[#2B5235] border border-[#BDD4C1]';
-    if (action.includes('ELIMINAR')) return 'bg-[#FDF6F5] text-[#9C665C] border border-[#F0D5D1]';
+    if (action.includes('ELIMINAR')) return 'bg-[#F7EDEB] text-[#C48B81] border border-[#F0D5D1]';
     if (action.includes('PAGO')) return 'bg-[#FAF3E8] text-[#7C5824] border border-[#EFE3CF]';
-    return 'bg-[#FAF8F5] text-[#5A524C] border border-[#EAE3DA]';
+    return 'bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]';
   };
 
   const filteredLogs = logs.filter(log => {
@@ -71,8 +71,8 @@ export const BitacoraModule: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-2 text-xs text-[#8A7E72] bg-[#FAF8F5] px-3.5 py-1.5 rounded-full border border-[#EAE3DA]">
-          <Shield className="w-3.5 h-3.5 text-[#9C665C]" />
+        <div className="flex items-center space-x-2 text-xs text-[#8A7E72] bg-[#FAF8F5] px-3.5 py-1.5 rounded-full border border-[#EFE8E1]">
+          <Shield className="w-3.5 h-3.5 text-[#C48B81]" />
           <span>Auditoría Certificada VLB</span>
         </div>
       </div>
@@ -84,8 +84,8 @@ export const BitacoraModule: React.FC = () => {
             onClick={() => setActionFilter('ALL')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
               actionFilter === 'ALL'
-                ? 'bg-[#9C665C] text-white shadow-xs'
-                : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+                ? 'bg-[#C48B81] text-white shadow-xs'
+                : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
             }`}
           >
             Todos ({logs.length})
@@ -94,8 +94,8 @@ export const BitacoraModule: React.FC = () => {
             onClick={() => setActionFilter('CREAR')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
               actionFilter === 'CREAR'
-                ? 'bg-[#9C665C] text-white shadow-xs'
-                : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+                ? 'bg-[#C48B81] text-white shadow-xs'
+                : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
             }`}
           >
             Creaciones
@@ -104,8 +104,8 @@ export const BitacoraModule: React.FC = () => {
             onClick={() => setActionFilter('PAGO')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
               actionFilter === 'PAGO'
-                ? 'bg-[#9C665C] text-white shadow-xs'
-                : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+                ? 'bg-[#C48B81] text-white shadow-xs'
+                : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
             }`}
           >
             Pagos
@@ -114,8 +114,8 @@ export const BitacoraModule: React.FC = () => {
             onClick={() => setActionFilter('ELIMINAR')}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
               actionFilter === 'ELIMINAR'
-                ? 'bg-[#9C665C] text-white shadow-xs'
-                : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+                ? 'bg-[#C48B81] text-white shadow-xs'
+                : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
             }`}
           >
             Eliminaciones
@@ -129,17 +129,17 @@ export const BitacoraModule: React.FC = () => {
             placeholder="Buscar en bitácora..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3.5 py-2 text-xs bg-white border border-[#EAE3DA] rounded-xl text-[#2B2826] placeholder-[#8A7E72]/60 focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+            className="w-full pl-9 pr-3.5 py-2 text-xs bg-white border border-[#EFE8E1] rounded-xl text-[#2B2826] placeholder-[#8A7E72]/60 focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
           />
         </div>
       </div>
 
       {/* Table Card */}
-      <div className="bg-white rounded-3xl overflow-hidden border border-[#EAE3DA] shadow-xs">
+      <div className="bg-white rounded-3xl overflow-hidden border border-[#EFE8E1] shadow-xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm border-collapse">
             <thead>
-              <tr className="bg-[#FAF8F5] border-b border-[#EAE3DA] text-[11px] font-bold uppercase tracking-wider text-[#8A7E72]">
+              <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-[11px] font-bold uppercase tracking-wider text-[#8A7E72]">
                 <th className="py-3.5 px-5">FECHA Y HORA</th>
                 <th className="py-3.5 px-4">USUARIO RESPONSABLE</th>
                 <th className="py-3.5 px-4">ACCIÓN</th>
@@ -147,7 +147,7 @@ export const BitacoraModule: React.FC = () => {
                 <th className="py-3.5 px-5">DETALLES DEL CAMBIO</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#EAE3DA]">
+            <tbody className="divide-y divide-[#EFE8E1]">
               {loading ? (
                 <tr><td colSpan={5} className="py-12 text-center text-[#8A7E72]">Cargando bitácora...</td></tr>
               ) : filteredLogs.length === 0 ? (
@@ -165,7 +165,7 @@ export const BitacoraModule: React.FC = () => {
                     </td>
                     <td className="py-3.5 px-4 font-semibold text-[#2B2826]">
                       <div className="flex items-center space-x-2">
-                        <User className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
+                        <User className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
                         <span>{log.user_name}</span>
                       </div>
                     </td>

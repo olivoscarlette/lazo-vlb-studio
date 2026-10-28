@@ -448,7 +448,7 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
                       key={tag}
                       type="button"
                       onClick={() => insertTag(tag, 'REMINDER')}
-                      className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#8A574E] border border-[#EFE8E1] cursor-pointer transition shadow-2xs"
+                      className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#A86B60] border border-[#EFE8E1] cursor-pointer transition shadow-2xs"
                     >
                       {tag}
                     </button>
@@ -613,7 +613,7 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
                       key={tag}
                       type="button"
                       onClick={() => insertTag(tag, 'SEATING')}
-                      className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#8A574E] border border-[#EFE8E1] cursor-pointer transition shadow-2xs"
+                      className="px-2 py-0.5 rounded-md text-[10px] font-mono bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#A86B60] border border-[#EFE8E1] cursor-pointer transition shadow-2xs"
                     >
                       {tag}
                     </button>

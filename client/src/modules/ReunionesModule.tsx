@@ -285,7 +285,7 @@ export const ReunionesModule: React.FC = () => {
 
         <button
           onClick={() => setShowScheduleModal(true)}
-          className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition"
+          className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition"
         >
           <Plus className="w-4 h-4" />
           <span>{isNovios ? 'Solicitar Reunión' : 'Agendar Reunión'}</span>
@@ -294,19 +294,19 @@ export const ReunionesModule: React.FC = () => {
 
       {/* Expandable Package Allowance Banner */}
       {packageInfo && (
-        <div className="bg-white rounded-2xl border border-[#EAE3DA] shadow-xs overflow-hidden transition-all duration-200">
+        <div className="bg-white rounded-2xl border border-[#EFE8E1] shadow-xs overflow-hidden transition-all duration-200">
           <div
             onClick={() => setIsPackageExpanded(!isPackageExpanded)}
             className="p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-[#FAF8F5]/50 transition select-none"
             title="Haz clic para desplegar u ocultar la información del paquete"
           >
             <div className="flex items-start space-x-3 min-w-0 flex-1">
-              <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EAE3DA] flex items-center justify-center text-[#9C665C] shrink-0 mt-0.5">
+              <div className="w-8 h-8 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center text-[#C48B81] shrink-0 mt-0.5">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-bold text-[#9C665C] uppercase tracking-wider bg-[#FDF6F5] px-2 py-0.5 rounded border border-[#F3DCD7]">
+                  <span className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider bg-[#F7EDEB] px-2 py-0.5 rounded border border-[#ECD9D5]">
                     {packageInfo.packageName}
                   </span>
                   <span className="text-xs font-semibold text-[#2B2826] leading-snug">
@@ -320,10 +320,10 @@ export const ReunionesModule: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2 self-start md:self-center shrink-0 text-xs">
-              <span className="px-3 py-1 rounded-xl bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] font-semibold">
+              <span className="px-3 py-1 rounded-xl bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] font-semibold">
                 Agendadas: <strong>{packageInfo.usedMeetings}</strong>
               </span>
-              <span className="px-3 py-1 rounded-xl bg-[#F7ECE8] text-[#8A574E] border border-[#E8D1CB] font-semibold">
+              <span className="px-3 py-1 rounded-xl bg-[#F7ECE8] text-[#A86B60] border border-[#E8D1CB] font-semibold">
                 Disponibles: <strong>{packageInfo.remainingMeetings}</strong>
               </span>
               <div className="p-1 rounded-lg text-[#8A7E72] hover:text-[#2B2826]">
@@ -346,7 +346,7 @@ export const ReunionesModule: React.FC = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {packageInfo.includes.map((inc, i) => (
-                      <div key={i} className="flex items-start space-x-2 text-xs text-[#2B2826] bg-white p-2 rounded-xl border border-[#EAE3DA]">
+                      <div key={i} className="flex items-start space-x-2 text-xs text-[#2B2826] bg-white p-2 rounded-xl border border-[#EFE8E1]">
                         <Check className="w-3.5 h-3.5 text-[#6B8E6E] shrink-0 mt-0.5" />
                         <span>{inc}</span>
                       </div>
@@ -366,7 +366,7 @@ export const ReunionesModule: React.FC = () => {
         {loading ? (
           <div className="py-12 text-center text-[#8A7E72] text-sm">Cargando reuniones...</div>
         ) : meetings.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center text-[#8A7E72] text-sm border border-dashed border-[#EAE3DA]">
+          <div className="bg-white rounded-3xl p-12 text-center text-[#8A7E72] text-sm border border-dashed border-[#EFE8E1]">
             No hay reuniones agendadas aún. Solicita tu primera reunión con el equipo.
           </div>
         ) : (
@@ -379,7 +379,7 @@ export const ReunionesModule: React.FC = () => {
             return (
               <div
                 key={m.id}
-                className="bg-white rounded-3xl p-6 border border-[#EAE3DA] shadow-xs hover:border-[#DDD2C4] transition space-y-4"
+                className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs hover:border-[#EFE8E1] transition space-y-4"
               >
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                   <div>
@@ -390,8 +390,8 @@ export const ReunionesModule: React.FC = () => {
                           : m.status === 'SOLICITADA'
                           ? 'bg-[#FAF3E8] text-[#7C5824] border border-[#E8D7B8] animate-pulse'
                           : m.status === 'PROPUESTA'
-                          ? 'bg-[#FDF6F5] text-[#9C665C] border border-[#F3DCD7] font-semibold'
-                          : 'bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA]'
+                          ? 'bg-[#F7EDEB] text-[#C48B81] border border-[#ECD9D5] font-semibold'
+                          : 'bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1]'
                       }`}>
                         {m.status}
                       </span>
@@ -415,7 +415,7 @@ export const ReunionesModule: React.FC = () => {
                           href="https://meet.google.com/new"
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center space-x-1 px-2 py-0.5 text-[11px] text-[#8A7E72] hover:text-[#1967D2] bg-[#FAF8F5] hover:bg-[#4285F4]/10 rounded-full border border-[#EAE3DA] transition"
+                          className="inline-flex items-center space-x-1 px-2 py-0.5 text-[11px] text-[#8A7E72] hover:text-[#1967D2] bg-[#FAF8F5] hover:bg-[#4285F4]/10 rounded-full border border-[#EFE8E1] transition"
                           title="Crear sala de Google Meet para esta sesión"
                         >
                           <Video className="w-3 h-3 text-[#8A7E72]" />
@@ -438,7 +438,7 @@ export const ReunionesModule: React.FC = () => {
                     </div>
 
                     {m.notes && (
-                      <p className="text-sm text-[#5A524C] mt-3 italic bg-[#FAF8F5] p-3 rounded-2xl border border-[#EAE3DA] leading-relaxed">
+                      <p className="text-sm text-[#5A524C] mt-3 italic bg-[#FAF8F5] p-3 rounded-2xl border border-[#EFE8E1] leading-relaxed">
                         {m.notes}
                       </p>
                     )}
@@ -469,7 +469,7 @@ export const ReunionesModule: React.FC = () => {
                             setSlot1({ date: m.date, time: '16:00', note: 'Opción A (Tarde)' });
                             setSlot2({ date: m.date, time: '11:00', note: 'Opción B (Mañana)' });
                           }}
-                          className="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
+                          className="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition cursor-pointer"
                         >
                           Proponer 2 Alternativas
                         </button>
@@ -489,7 +489,7 @@ export const ReunionesModule: React.FC = () => {
                         });
                         setRawTranscript('');
                       }}
-                      className="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
+                      className="px-4 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition cursor-pointer"
                     >
                       Ver Acuerdos y Minuta
                     </button>
@@ -498,10 +498,10 @@ export const ReunionesModule: React.FC = () => {
 
                 {/* Condition: Planning team approvals strip (Foto 1) */}
                 {(m.status === 'SOLICITADA' || m.status === 'PROPUESTA') && (
-                  <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#EAE3DA] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                     <div className="space-y-1">
                       <div className="flex items-center space-x-2">
-                        <Users className="w-4 h-4 text-[#9C665C]" />
+                        <Users className="w-4 h-4 text-[#C48B81]" />
                         <span className="font-bold text-[#2B2826]">Aprobación del Equipo de Planeación:</span>
                         <span className={`px-2 py-0.5 rounded-full font-bold text-[11px] ${
                           acceptedList.length >= 2
@@ -519,7 +519,7 @@ export const ReunionesModule: React.FC = () => {
                       {acceptedList.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 pt-1">
                           {acceptedList.map((acc, idx) => (
-                            <span key={idx} className="bg-white px-2 py-0.5 rounded-md border border-[#EAE3DA] text-[11px] text-[#2B2826] font-medium">
+                            <span key={idx} className="bg-white px-2 py-0.5 rounded-md border border-[#EFE8E1] text-[11px] text-[#2B2826] font-medium">
                               ✓ {acc.userName} ({acc.role})
                             </span>
                           ))}
@@ -531,9 +531,9 @@ export const ReunionesModule: React.FC = () => {
 
                 {/* If PROPUESTA: show the 2 alternative options for Novios to pick! */}
                 {hasProposed && (
-                  <div className="mt-4 pt-4 border-t border-[#FAF8F5] bg-[#FDF6F5]/60 p-4 rounded-2xl border border-[#F3DCD7]">
-                    <div className="text-xs font-bold text-[#9C665C] mb-2.5 flex items-center space-x-2">
-                      <Sparkles className="w-4 h-4 text-[#9C665C]" />
+                  <div className="mt-4 pt-4 border-t border-[#FAF8F5] bg-[#F7EDEB]/60 p-4 rounded-2xl border border-[#ECD9D5]">
+                    <div className="text-xs font-bold text-[#C48B81] mb-2.5 flex items-center space-x-2">
+                      <Sparkles className="w-4 h-4 text-[#C48B81]" />
                       <span>El equipo VLB ha propuesto 2 horarios alternativos para esta reunión:</span>
                     </div>
 
@@ -541,7 +541,7 @@ export const ReunionesModule: React.FC = () => {
                       {m.proposed_slots!.map((slot, i) => (
                         <div
                           key={i}
-                          className="bg-white p-3.5 rounded-xl border border-[#F3DCD7] flex items-center justify-between shadow-xs"
+                          className="bg-white p-3.5 rounded-xl border border-[#ECD9D5] flex items-center justify-between shadow-xs"
                         >
                           <div>
                             <div className="text-sm font-bold text-[#2B2826]">{slot.note || `Opción ${i + 1}`}</div>
@@ -551,7 +551,7 @@ export const ReunionesModule: React.FC = () => {
                           {isNovios && (
                             <button
                               onClick={() => handleSelectSlot(m.id, slot)}
-                              className="px-3.5 py-1.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold rounded-lg transition"
+                              className="px-3.5 py-1.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold rounded-lg transition"
                             >
                               Seleccionar
                             </button>
@@ -578,7 +578,7 @@ export const ReunionesModule: React.FC = () => {
       {/* Modal: Solicitar / Agendar Reunión */}
       {showScheduleModal && (
         <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA]">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
                 {isNovios ? 'Solicitar Reunión con VLB Studio' : 'Agendar Nueva Reunión'}
@@ -619,7 +619,7 @@ export const ReunionesModule: React.FC = () => {
                   placeholder="Ej. Revisión de Timeline y Minuta Final"
                   value={formData.title}
                   onChange={e => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
@@ -631,7 +631,7 @@ export const ReunionesModule: React.FC = () => {
                     required
                     value={formData.date}
                     onChange={e => setFormData({ ...formData, date: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
                 <div>
@@ -641,7 +641,7 @@ export const ReunionesModule: React.FC = () => {
                     required
                     value={formData.time}
                     onChange={e => setFormData({ ...formData, time: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
               </div>
@@ -664,7 +664,7 @@ export const ReunionesModule: React.FC = () => {
                   placeholder="https://meet.google.com/..."
                   value={formData.meet_url}
                   onChange={e => setFormData({ ...formData, meet_url: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
@@ -675,11 +675,11 @@ export const ReunionesModule: React.FC = () => {
                   placeholder="Puntos clave que te gustaría revisar en esta sesión..."
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EFE8E1]">
                 <button
                   type="button"
                   onClick={() => setShowScheduleModal(false)}
@@ -689,7 +689,7 @@ export const ReunionesModule: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs transition"
+                  className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition"
                 >
                   {isNovios ? 'Enviar Solicitud' : 'Agendar'}
                 </button>
@@ -702,7 +702,7 @@ export const ReunionesModule: React.FC = () => {
       {/* Modal: Proponer 2 Alternativas (Team Only) */}
       {proposingMeeting && (
         <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA]">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
                 Proponer 2 Alternativas
@@ -717,7 +717,7 @@ export const ReunionesModule: React.FC = () => {
 
             <form onSubmit={handleSendAlternativeSlots} className="space-y-4">
               {/* Slot 1 */}
-              <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EAE3DA] space-y-2">
+              <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-2">
                 <div className="text-xs font-bold text-[#2B2826] uppercase tracking-wider">Opción 1:</div>
                 <div className="grid grid-cols-2 gap-2.5">
                   <input
@@ -725,20 +725,20 @@ export const ReunionesModule: React.FC = () => {
                     required
                     value={slot1.date}
                     onChange={e => setSlot1({ ...slot1, date: e.target.value })}
-                    className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826]"
+                    className="px-3 py-2 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826]"
                   />
                   <input
                     type="time"
                     required
                     value={slot1.time}
                     onChange={e => setSlot1({ ...slot1, time: e.target.value })}
-                    className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826]"
+                    className="px-3 py-2 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826]"
                   />
                 </div>
               </div>
 
               {/* Slot 2 */}
-              <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EAE3DA] space-y-2">
+              <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-2">
                 <div className="text-xs font-bold text-[#2B2826] uppercase tracking-wider">Opción 2:</div>
                 <div className="grid grid-cols-2 gap-2.5">
                   <input
@@ -746,19 +746,19 @@ export const ReunionesModule: React.FC = () => {
                     required
                     value={slot2.date}
                     onChange={e => setSlot2({ ...slot2, date: e.target.value })}
-                    className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826]"
+                    className="px-3 py-2 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826]"
                   />
                   <input
                     type="time"
                     required
                     value={slot2.time}
                     onChange={e => setSlot2({ ...slot2, time: e.target.value })}
-                    className="px-3 py-2 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826]"
+                    className="px-3 py-2 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826]"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EFE8E1]">
                 <button
                   type="button"
                   onClick={() => setProposingMeeting(null)}
@@ -768,7 +768,7 @@ export const ReunionesModule: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs transition"
+                  className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition"
                 >
                   Enviar 2 Opciones a Novios
                 </button>
@@ -781,7 +781,7 @@ export const ReunionesModule: React.FC = () => {
       {/* Modal: Ver / Editar Acuerdos y Notas */}
       {viewingMeeting && (
         <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EAE3DA]">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
                 Minuta: {viewingMeeting.title}
@@ -801,7 +801,7 @@ export const ReunionesModule: React.FC = () => {
                   disabled={isNovios}
                   value={meetingNotes.status}
                   onChange={e => setMeetingNotes({ ...meetingNotes, status: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C] disabled:bg-[#FAF8F5]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81] disabled:bg-[#FAF8F5]"
                 >
                   <option value="PROGRAMADA">PROGRAMADA</option>
                   <option value="SOLICITADA">SOLICITADA</option>
@@ -846,19 +846,19 @@ export const ReunionesModule: React.FC = () => {
                   placeholder="https://meet.google.com/abc-defg-hij"
                   value={meetingNotes.meet_url}
                   onChange={e => setMeetingNotes({ ...meetingNotes, meet_url: e.target.value })}
-                  className="w-full px-3.5 py-2 border border-[#EAE3DA] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C] disabled:bg-[#FAF8F5]"
+                  className="w-full px-3.5 py-2 border border-[#EFE8E1] rounded-xl text-sm bg-white text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81] disabled:bg-[#FAF8F5]"
                 />
               </div>
 
               {/* AI Minuta & Recording Summarizer (Foto 2) */}
               {!isNovios && (
-                <div className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2.5">
+                <div className="p-3.5 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-1.5 text-xs font-bold text-[#9C665C]">
+                    <div className="flex items-center space-x-1.5 text-xs font-bold text-[#C48B81]">
                       <Bot className="w-4 h-4" />
                       <span>Minuta Inteligente con IA (Google Meet / Notas)</span>
                     </div>
-                    <span className="text-[10px] text-[#8A7E72] bg-white px-2 py-0.5 rounded border border-[#EAE3DA]">
+                    <span className="text-[10px] text-[#8A7E72] bg-white px-2 py-0.5 rounded border border-[#EFE8E1]">
                       Asistente VLB
                     </span>
                   </div>
@@ -870,14 +870,14 @@ export const ReunionesModule: React.FC = () => {
                     placeholder="Ejemplo: 'La novia aprobó el proveedor de audio por $25,000. Queda pendiente que el coordinador envíe el contrato antes del viernes...'"
                     value={rawTranscript}
                     onChange={e => setRawTranscript(e.target.value)}
-                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C]"
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
                   />
                   <div className="flex justify-end">
                     <button
                       type="button"
                       disabled={isAiProcessing || !rawTranscript.trim()}
                       onClick={handleGenerateAiMinuta}
-                      className="px-3.5 py-1.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold rounded-xl shadow-2xs transition inline-flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
+                      className="px-3.5 py-1.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold rounded-xl shadow-2xs transition inline-flex items-center space-x-1.5 disabled:opacity-50 cursor-pointer"
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>{isAiProcessing ? 'Analizando grabación...' : 'Generar Acuerdos y Minuta con IA'}</span>
@@ -887,7 +887,7 @@ export const ReunionesModule: React.FC = () => {
               )}
 
               {meetingNotes.summary && (
-                <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EAE3DA] text-xs">
+                <div className="p-3 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs">
                   <div className="font-bold text-[#2B2826] mb-1">Resumen Ejecutivo de la Sesión:</div>
                   <div className="text-[#5A524C] whitespace-pre-line">{meetingNotes.summary}</div>
                 </div>
@@ -901,7 +901,7 @@ export const ReunionesModule: React.FC = () => {
                   placeholder="Compromisos y decisiones tomadas en la sesión..."
                   value={meetingNotes.agreements}
                   onChange={e => setMeetingNotes({ ...meetingNotes, agreements: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C] disabled:bg-[#FAF8F5]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81] disabled:bg-[#FAF8F5]"
                 />
               </div>
 
@@ -913,11 +913,11 @@ export const ReunionesModule: React.FC = () => {
                   placeholder="Acciones a realizar antes de la siguiente sesión..."
                   value={meetingNotes.pending_tasks}
                   onChange={e => setMeetingNotes({ ...meetingNotes, pending_tasks: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C] disabled:bg-[#FAF8F5]"
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81] disabled:bg-[#FAF8F5]"
                 />
               </div>
 
-              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EAE3DA]">
+              <div className="flex justify-end space-x-2 pt-4 border-t border-[#EFE8E1]">
                 <button
                   type="button"
                   onClick={() => setViewingMeeting(null)}
@@ -929,7 +929,7 @@ export const ReunionesModule: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleSaveNotes}
-                    className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs transition"
+                    className="px-5 py-2.5 text-sm font-bold uppercase tracking-wider bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition"
                   >
                     Guardar Minuta
                   </button>

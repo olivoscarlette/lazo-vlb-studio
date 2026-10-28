@@ -110,7 +110,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                 </button>
 
                 {showWeddingMenu && (
-                  <div className="absolute left-0 mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-lg border border-[#EAE3DA] py-2 z-50">
+                  <div className="absolute left-0 mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-lg border border-[#EFE8E1] py-2 z-50">
                     <div className="px-4 py-2 text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider">
                       Bodas Asignadas
                     </div>
@@ -121,7 +121,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                           setShowWeddingMenu(false);
                         }}
                         className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#FCFAF7] flex items-center justify-between ${
-                          !currentWedding ? 'bg-[#EFE2DF]/70 text-[#8A574E] font-semibold' : 'text-[#332A28]'
+                          !currentWedding ? 'bg-[#EFE2DF]/70 text-[#A86B60] font-semibold' : 'text-[#332A28]'
                         }`}
                       >
                         <span>Dashboard General (Todas)</span>
@@ -135,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                           setShowWeddingMenu(false);
                         }}
                         className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#FCFAF7] flex items-center justify-between ${
-                          currentWedding?.id === w.id ? 'bg-[#EFE2DF]/80 text-[#8A574E] font-semibold' : 'text-[#332A28]'
+                          currentWedding?.id === w.id ? 'bg-[#EFE2DF]/80 text-[#A86B60] font-semibold' : 'text-[#332A28]'
                         }`}
                       >
                         <div>
@@ -168,10 +168,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                     setGeneralDashboardTab('calendario');
                   }
                 }}
-                className="inline-flex items-center space-x-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EAE3DA] transition shadow-2xs cursor-pointer shrink-0"
+                className="inline-flex items-center space-x-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition shadow-2xs cursor-pointer shrink-0"
                 title="Abrir Calendario General VLB"
               >
-                <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
+                <Calendar className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span className="hidden sm:inline">Calendario General</span>
               </button>
             )}
@@ -194,16 +194,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               >
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-[#9C665C] rounded-full" />
+                  <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-[#C48B81] rounded-full" />
                 )}
               </button>
 
               {showNotifMenu && (
-                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] py-2 z-50">
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] py-2 z-50">
                   <div className="px-4 py-2.5 border-b border-[#F7F3EE] flex items-center justify-between">
                     <span className="font-serif text-lg font-semibold text-[#332A28]">Notificaciones</span>
                     {unreadCount > 0 && (
-                      <span className="text-xs bg-[#EFE2DF] text-[#8A574E] px-2.5 py-0.5 rounded-full font-medium">
+                      <span className="text-xs bg-[#EFE2DF] text-[#A86B60] px-2.5 py-0.5 rounded-full font-medium">
                         {unreadCount} nuevas
                       </span>
                     )}
@@ -224,17 +224,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                           className={`p-3.5 text-sm cursor-pointer hover:bg-[#FCFAF7] transition group ${!n.read ? 'bg-[#EFE2DF]/40' : ''}`}
                         >
                           <div className="flex items-center justify-between gap-1">
-                            <div className="font-semibold text-[#332A28] mb-0.5 group-hover:text-[#9C665C] transition">
+                            <div className="font-semibold text-[#332A28] mb-0.5 group-hover:text-[#C48B81] transition">
                               {n.title}
                             </div>
-                            <span className="text-[10px] text-[#9C665C] font-semibold opacity-0 group-hover:opacity-100 transition shrink-0">
+                            <span className="text-[10px] text-[#C48B81] font-semibold opacity-0 group-hover:opacity-100 transition shrink-0">
                               Ver en LAZO →
                             </span>
                           </div>
                           <div className="text-xs text-[#7D6F6B] leading-snug">{n.message}</div>
                           <div className="flex items-center justify-between text-[11px] text-[#7D6F6B] mt-1.5 pt-1 border-t border-[#F7F3EE]">
                             <span>{new Date(n.created_at).toLocaleDateString('es-MX')}</span>
-                            <span className="text-[#9C665C] font-semibold text-[11px] underline underline-offset-2">
+                            <span className="text-[#C48B81] font-semibold text-[11px] underline underline-offset-2">
                               Ir a la sección →
                             </span>
                           </div>
@@ -247,7 +247,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             </div>
 
             {/* User Profile Pill & Logout */}
-            <div className="flex items-center pl-1.5 sm:pl-3 border-l border-[#EAE3DA] space-x-1 sm:space-x-2.5 shrink-0">
+            <div className="flex items-center pl-1.5 sm:pl-3 border-l border-[#EFE8E1] space-x-1 sm:space-x-2.5 shrink-0">
               {/* Clickable Avatar */}
               <div
                 onClick={() => setShowProfileModal(true)}
@@ -258,10 +258,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                   <img
                     src={user.avatar_url}
                     alt={user.name}
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition"
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition"
                   />
                 ) : (
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-xs sm:text-sm flex items-center justify-center border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#9C665C] transition">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EFE2DF] text-[#A86B60] font-serif font-bold text-xs sm:text-sm flex items-center justify-center border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -273,7 +273,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                 className="hidden lg:block text-right cursor-pointer group"
                 title="Editar mi perfil y contraseña"
               >
-                <div className="text-sm font-semibold text-[#332A28] leading-tight group-hover:text-[#9C665C] transition">{user.name}</div>
+                <div className="text-sm font-semibold text-[#332A28] leading-tight group-hover:text-[#C48B81] transition">{user.name}</div>
                 <div className="text-xs text-[#7D6F6B] leading-tight">{user.email}</div>
               </div>
 

@@ -62,7 +62,7 @@ const LoginView: React.FC = () => {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-[#FFFFFF] py-9 px-6 sm:px-10 rounded-3xl border border-[#EAE3DA] shadow-xs">
+        <div className="bg-[#FFFFFF] py-9 px-6 sm:px-10 rounded-3xl border border-[#EFE8E1] shadow-xs">
           {error && (
             <div className="mb-4 p-3.5 rounded-xl bg-[#FBF4F3] border border-[#EAD2D0] text-[#70443D] text-xs flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -83,7 +83,7 @@ const LoginView: React.FC = () => {
                   placeholder="ejemplo@vlb.studio"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] placeholder-[#7D6F6B]/60 focus:outline-none"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl text-[#332A28] placeholder-[#7D6F6B]/60 focus:outline-none"
                 />
               </div>
             </div>
@@ -100,7 +100,7 @@ const LoginView: React.FC = () => {
                   placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] placeholder-[#7D6F6B]/60 focus:outline-none"
+                  className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl text-[#332A28] placeholder-[#7D6F6B]/60 focus:outline-none"
                 />
               </div>
             </div>
@@ -108,7 +108,7 @@ const LoginView: React.FC = () => {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full mt-2 py-3.5 px-4 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold uppercase tracking-widest rounded-xl shadow-xs transition flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
+              className="w-full mt-2 py-3.5 px-4 bg-[#C48B81] hover:bg-[#A86B60] text-[#FFFFFF] text-xs font-bold uppercase tracking-widest rounded-xl shadow-xs transition flex items-center justify-center space-x-2 disabled:opacity-50 cursor-pointer"
             >
               <span>{submitting ? 'Ingresando...' : 'Entrar a LAZO'}</span>
               <ArrowRight className="w-4 h-4" />
@@ -250,7 +250,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
         >
           {/* Banner exclusivo de Modo Día de la Boda */}
           {weddingDayMode && (
-            <div className="mb-6 bg-gradient-to-r from-[#9C665C] via-[#85534A] to-[#6E433D] text-white p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="mb-6 bg-gradient-to-r from-[#C48B81] via-[#85534A] to-[#6E433D] text-white p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center space-x-3.5">
                 <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shrink-0">
                   💍
@@ -325,7 +325,7 @@ const AppContent: React.FC = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center text-[#332A28]">
-        <div className="w-11 h-11 rounded-full border-2 border-[#EAE3DA] border-t-[#9C665C] animate-spin mb-4" />
+        <div className="w-11 h-11 rounded-full border-2 border-[#EFE8E1] border-t-[#C48B81] animate-spin mb-4" />
         <span className="font-serif text-3xl font-semibold tracking-[0.22em] text-[#332A28]">LAZO</span>
         <span className="text-xs text-[#7D6F6B] uppercase tracking-[0.24em] mt-1">VLB STUDIO · PLANNING</span>
       </div>

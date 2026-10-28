@@ -58,11 +58,11 @@ function formatWhatsAppTime(dateStr?: string) {
 
 // Luxury brand color palettes for guest avatars
 const AVATAR_PALETTES = [
-  { bg: 'bg-[#FDF0ED]', text: 'text-[#C48B81]', border: 'border-[#F3DCD7]' }, // Terracotta Rose
+  { bg: 'bg-[#F7EDEB]', text: 'text-[#C48B81]', border: 'border-[#ECD9D5]' }, // Terracotta Rose
   { bg: 'bg-[#FAF3E8]', text: 'text-[#8A6332]', border: 'border-[#EBDCC5]' }, // Warm Champagne / Gold
   { bg: 'bg-[#EBF2ED]', text: 'text-[#3E6548]', border: 'border-[#D2E2D6]' }, // Sage Olive
   { bg: 'bg-[#F2EEF5]', text: 'text-[#6A5378]', border: 'border-[#DFD6E5]' }, // Soft Mauve
-  { bg: 'bg-[#F5ECE9]', text: 'text-[#8A574E]', border: 'border-[#E8D2CC]' }, // Warm Blush
+  { bg: 'bg-[#F5ECE9]', text: 'text-[#A86B60]', border: 'border-[#E8D2CC]' }, // Warm Blush
   { bg: 'bg-[#F7F3EE]', text: 'text-[#5C504A]', border: 'border-[#E5DDD4]' }  // Alabaster Taupe
 ];
 
@@ -580,7 +580,7 @@ export const WhatsAppHubModule: React.FC = () => {
                     onClick={() => handleSelectConversation(conv)}
                     className={`p-3 cursor-pointer transition flex items-center space-x-3 select-none ${
                       isSelected
-                        ? 'bg-[#FDF6F5] border-l-4 border-l-[#C48B81]'
+                        ? 'bg-[#F7EDEB] border-l-4 border-l-[#C48B81]'
                         : 'hover:bg-[#FCFAF7]'
                     }`}
                   >
@@ -623,7 +623,7 @@ export const WhatsAppHubModule: React.FC = () => {
                             conv.guest_status === 'Confirmado'
                               ? 'bg-[#E4ECE5] text-[#2B5235]'
                               : conv.guest_status === 'No asistirá'
-                              ? 'bg-[#FDF6F5] text-[#C48B81]'
+                              ? 'bg-[#F7EDEB] text-[#C48B81]'
                               : 'bg-[#FAF3E8] text-[#7C5824]'
                           }`}>
                             {conv.guest_status === 'Pendiente de confirmar' ? 'Pendiente' : conv.guest_status}

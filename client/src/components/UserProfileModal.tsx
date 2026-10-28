@@ -169,13 +169,13 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
       }}
     >
       <div
-        className="relative bg-[#FFFFFF] rounded-3xl max-w-lg w-full border border-[#EAE3DA] shadow-2xl flex flex-col my-auto max-h-[90vh] overflow-hidden"
+        className="relative bg-[#FFFFFF] rounded-3xl max-w-lg w-full border border-[#EFE8E1] shadow-2xl flex flex-col my-auto max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Always visible */}
-        <div className="px-6 py-4 border-b border-[#EAE3DA] bg-[#FCFAF7] flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 border-b border-[#EFE8E1] bg-[#FCFAF7] flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-full bg-[#EFE2DF] text-[#8A574E] flex items-center justify-center shadow-2xs">
+            <div className="w-9 h-9 rounded-full bg-[#EFE2DF] text-[#A86B60] flex items-center justify-center shadow-2xs">
               <UserIcon className="w-4 h-4" />
             </div>
             <div>
@@ -212,16 +212,16 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
             )}
 
             {/* AVATAR SELECTOR / UPLOAD */}
-            <div className="flex flex-col items-center justify-center pb-4 border-b border-[#EAE3DA]">
+            <div className="flex flex-col items-center justify-center pb-4 border-b border-[#EFE8E1]">
               <div className="relative group">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt={user.name}
-                    className="w-24 h-24 rounded-full object-cover border-2 border-[#9C665C] shadow-md"
+                    className="w-24 h-24 rounded-full object-cover border-2 border-[#C48B81] shadow-md"
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-3xl flex items-center justify-center border-2 border-[#EAE3DA] shadow-xs">
+                  <div className="w-24 h-24 rounded-full bg-[#EFE2DF] text-[#A86B60] font-serif font-bold text-3xl flex items-center justify-center border-2 border-[#EFE8E1] shadow-xs">
                     {initialLetter}
                   </div>
                 )}
@@ -253,9 +253,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3.5 py-1.5 rounded-xl border border-[#EAE3DA] bg-[#FAF8F5] hover:bg-[#F3ECE2] text-xs font-semibold text-[#8A574E] flex items-center space-x-1.5 transition cursor-pointer shadow-2xs"
+                  className="px-3.5 py-1.5 rounded-xl border border-[#EFE8E1] bg-[#FAF8F5] hover:bg-[#F3ECE2] text-xs font-semibold text-[#A86B60] flex items-center space-x-1.5 transition cursor-pointer shadow-2xs"
                 >
-                  <Camera className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <Camera className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span>Subir foto</span>
                 </button>
 
@@ -287,7 +287,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                     required
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    className="w-full text-xs pl-9 pr-3 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                    className="w-full text-xs pl-9 pr-3 py-2 bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl focus:outline-none focus:border-[#C48B81]"
                   />
                 </div>
               </div>
@@ -301,7 +301,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                       type="email"
                       disabled
                       value={user.email}
-                      className="w-full text-xs pl-9 pr-3 py-2 bg-[#FAF8F5] border border-[#EAE3DA] rounded-xl text-[#7D6F6B] cursor-not-allowed select-none"
+                      className="w-full text-xs pl-9 pr-3 py-2 bg-[#FAF8F5] border border-[#EFE8E1] rounded-xl text-[#7D6F6B] cursor-not-allowed select-none"
                       title="El correo no se puede cambiar directamente"
                     />
                   </div>
@@ -316,22 +316,22 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                       placeholder="+52 81 1234 5678"
                       value={phone}
                       onChange={e => setPhone(e.target.value)}
-                      className="w-full text-xs pl-9 pr-3 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                      className="w-full text-xs pl-9 pr-3 py-2 bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl focus:outline-none focus:border-[#C48B81]"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 text-xs text-[#7D6F6B] bg-[#FCFAF7] p-2.5 rounded-xl border border-[#EAE3DA]">
-                <ShieldCheck className="w-4 h-4 text-[#9C665C] shrink-0" />
+              <div className="flex items-center space-x-2 text-xs text-[#7D6F6B] bg-[#FCFAF7] p-2.5 rounded-xl border border-[#EFE8E1]">
+                <ShieldCheck className="w-4 h-4 text-[#C48B81] shrink-0" />
                 <span>Rol en la plataforma: <strong className="text-[#332A28] uppercase">{user.role}</strong></span>
               </div>
             </div>
 
             {/* PASSWORD CHANGE */}
-            <div className="space-y-3 pt-3 border-t border-[#EAE3DA]">
+            <div className="space-y-3 pt-3 border-t border-[#EFE8E1]">
               <div className="flex items-center space-x-1.5 text-[#332A28]">
-                <Lock className="w-4 h-4 text-[#9C665C]" />
+                <Lock className="w-4 h-4 text-[#C48B81]" />
                 <span className="font-bold text-xs uppercase tracking-wider">
                   Cambiar Contraseña
                 </span>
@@ -349,7 +349,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                       placeholder="••••••••"
                       value={currentPassword}
                       onChange={e => setCurrentPassword(e.target.value)}
-                      className="w-full text-xs px-3 pr-9 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                      className="w-full text-xs px-3 pr-9 py-2 bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl focus:outline-none focus:border-[#C48B81]"
                     />
                     <button
                       type="button"
@@ -371,7 +371,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                       placeholder="Mínimo 6 caracteres"
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
-                      className="w-full text-xs px-3 pr-9 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                      className="w-full text-xs px-3 pr-9 py-2 bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl focus:outline-none focus:border-[#C48B81]"
                     />
                     <button
                       type="button"
@@ -391,7 +391,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
                       placeholder="Repite la contraseña"
                       value={confirmPassword}
                       onChange={e => setConfirmPassword(e.target.value)}
-                      className="w-full text-xs px-3 pr-9 py-2 bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl focus:outline-none focus:border-[#9C665C]"
+                      className="w-full text-xs px-3 pr-9 py-2 bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl focus:outline-none focus:border-[#C48B81]"
                     />
                     <button
                       type="button"
@@ -407,18 +407,18 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
           </div>
 
           {/* Footer - Always visible */}
-          <div className="px-6 py-4 bg-[#FCFAF7] border-t border-[#EAE3DA] flex items-center justify-end space-x-2.5 shrink-0">
+          <div className="px-6 py-4 bg-[#FCFAF7] border-t border-[#EFE8E1] flex items-center justify-end space-x-2.5 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl border border-[#EAE3DA] text-xs font-semibold text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF8F5] transition cursor-pointer"
+              className="px-4 py-2 rounded-xl border border-[#EFE8E1] text-xs font-semibold text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF8F5] transition cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-5 py-2 rounded-xl bg-[#9C665C] hover:bg-[#85534A] text-white text-xs font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
+              className="px-5 py-2 rounded-xl bg-[#C48B81] hover:bg-[#85534A] text-white text-xs font-semibold shadow-xs transition cursor-pointer disabled:opacity-50"
             >
               {submitting ? 'Guardando...' : 'Guardar Cambios'}
             </button>

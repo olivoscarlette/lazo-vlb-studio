@@ -378,7 +378,7 @@ export const TimelineModule: React.FC = () => {
               <MapPin className="w-3.5 h-3.5 text-[#8E807A]" />
               <span>{venueLabel}</span>
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FAF8F5] text-[#5A524C] border border-[#DDD2C4]">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]">
               {activeTimeline.length} {activeTimeline.length === 1 ? 'actividad' : 'actividades'}
             </span>
           </div>
@@ -396,7 +396,7 @@ export const TimelineModule: React.FC = () => {
           )}
           <button
             onClick={handlePrint}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-[#EFE8DE] text-[#332C2A] text-xs font-medium rounded-xl border border-[#DDD2C4] transition"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-[#EFE8DE] text-[#332C2A] text-xs font-medium rounded-xl border border-[#EFE8E1] transition"
           >
             <Printer className="w-3.5 h-3.5 text-[#786C68]" />
             <span>Imprimir</span>
@@ -404,7 +404,7 @@ export const TimelineModule: React.FC = () => {
           {!isNovios && (
             <button
               onClick={handleOpenAdd}
-              className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8a574e] text-white text-xs font-semibold rounded-xl shadow-xs transition"
+              className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Agregar Actividad</span>
@@ -419,7 +419,7 @@ export const TimelineModule: React.FC = () => {
           <div className="flex items-center space-x-2">
             <span
               className={`w-2 h-2 rounded-full ${
-                viewMode === 'operation' ? 'bg-[#6B8E6E] animate-pulse' : 'bg-[#9C665C]'
+                viewMode === 'operation' ? 'bg-[#6B8E6E] animate-pulse' : 'bg-[#C48B81]'
               }`}
             />
             <span className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#6E655F]">
@@ -433,7 +433,7 @@ export const TimelineModule: React.FC = () => {
             <span className="text-xs font-medium text-[#5A524C]">{currentTimeStr}</span>
             <button
               onClick={() => setViewMode(viewMode === 'operation' ? 'planning' : 'operation')}
-              className="px-4 py-2 rounded-xl text-xs font-medium bg-[#EFECE6] hover:bg-[#E5DFD5] text-[#332C2A] border border-[#DDD2C4] transition"
+              className="px-4 py-2 rounded-xl text-xs font-medium bg-[#EFECE6] hover:bg-[#E5DFD5] text-[#332C2A] border border-[#EFE8E1] transition"
             >
               {viewMode === 'operation' ? 'Ver cronograma de planeación' : '⚡ Ir a Modo Operación'}
             </button>
@@ -502,7 +502,7 @@ export const TimelineModule: React.FC = () => {
                           onClick={() => handleCompleteAndAdvance(activeOrReadyEvent, afterEvent)}
                           className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-white/80 hover:bg-white text-[#332C2A] text-xs font-semibold rounded-xl border border-[#DFC9D0] transition"
                         >
-                          <Check className="w-3.5 h-3.5 text-emerald-700" />
+                          <Check className="w-3.5 h-3.5 text-[#384C3A]" />
                           <span>Marcar completada</span>
                         </button>
                       </>
@@ -512,7 +512,7 @@ export const TimelineModule: React.FC = () => {
                           onClick={() => handleCompleteAndAdvance(activeOrReadyEvent, afterEvent)}
                           className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#363432] hover:bg-[#242220] text-white text-xs font-semibold rounded-xl transition shadow-xs"
                         >
-                          <Check className="w-4 h-4 text-emerald-400" />
+                          <Check className="w-4 h-4 text-[#C48B81]" />
                           <span>Completar y pasar a la siguiente</span>
                         </button>
                         <button
@@ -557,7 +557,7 @@ export const TimelineModule: React.FC = () => {
             </div>
 
             {/* Right Card: Warm Sand (#EFE8DE) — "DESPUÉS" */}
-            <div className="lg:col-span-5 rounded-3xl p-7 sm:p-8 bg-[#EFE8DE] border border-[#DDD2C4] flex flex-col justify-between min-h-[250px] shadow-2xs">
+            <div className="lg:col-span-5 rounded-3xl p-7 sm:p-8 bg-[#EFE8DE] border border-[#EFE8E1] flex flex-col justify-between min-h-[250px] shadow-2xs">
               <div>
                 <span className="text-[11px] uppercase tracking-[0.18em] font-semibold text-[#8E807A]">
                   DESPUÉS
@@ -565,7 +565,7 @@ export const TimelineModule: React.FC = () => {
 
                 {afterEvent ? (
                   <div className="mt-4">
-                    <span className="inline-block px-2.5 py-0.5 rounded-lg bg-white/80 text-[#332C2A] font-mono text-xs font-bold border border-[#DDD2C4] mb-2">
+                    <span className="inline-block px-2.5 py-0.5 rounded-lg bg-white/80 text-[#332C2A] font-mono text-xs font-bold border border-[#EFE8E1] mb-2">
                       {afterEvent.time} hrs
                     </span>
                     <h3 className="font-serif text-2xl sm:text-3xl text-[#332C2A] leading-snug">
@@ -611,10 +611,10 @@ export const TimelineModule: React.FC = () => {
 
           {/* Collapsible Full Program inside Operation Mode */}
           {showFullProgramInOp && (
-            <div className="luxury-card rounded-3xl p-6 border border-[#DDD2C4] space-y-3 animate-in fade-in duration-150">
+            <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] space-y-3 animate-in fade-in duration-150">
               <div className="flex items-center justify-between pb-3 border-b border-[#EFE8DE]">
                 <div>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-[#A86B60]">
                     Programa Minuto a Minuto ({completedCount}/{activeTimeline.length} completadas)
                   </span>
                   <h3 className="font-serif text-2xl font-bold text-[#332C2A]">
@@ -638,8 +638,8 @@ export const TimelineModule: React.FC = () => {
                     onClick={() => setRoleFilter(tab.id)}
                     className={`px-3 py-1 rounded-xl text-xs font-semibold transition ${
                       roleFilter === tab.id
-                        ? 'bg-[#9C665C] text-white shadow-xs'
-                        : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#EFE8DE] border border-[#DDD2C4]'
+                        ? 'bg-[#C48B81] text-white shadow-xs'
+                        : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#EFE8DE] border border-[#EFE8E1]'
                     }`}
                   >
                     {tab.label}
@@ -660,7 +660,7 @@ export const TimelineModule: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-start sm:items-center gap-3">
-                      <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-[#EFE8DE] text-[#332C2A] border border-[#DDD2C4] shrink-0">
+                      <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-[#EFE8DE] text-[#332C2A] border border-[#EFE8E1] shrink-0">
                         {item.time}
                       </span>
                       <div>
@@ -673,10 +673,10 @@ export const TimelineModule: React.FC = () => {
                           {item.notes && <span className="italic">“{item.notes}”</span>}
                         </div>
                         {item.status === 'COMPLETADO' && (
-                          <div className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-lg inline-flex items-center space-x-1.5 mt-1.5 shadow-2xs">
-                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                          <div className="text-[11px] font-semibold text-[#384C3A] bg-[#E5EDE6] border border-[#D5E2D7] px-2.5 py-1 rounded-lg inline-flex items-center space-x-1.5 mt-1.5 shadow-2xs">
+                            <Check className="w-3.5 h-3.5 text-[#384C3A]" />
                             <span>
-                              Marcada como completada por: <strong className="text-emerald-950 font-bold">{item.completed_by || 'Coordinación VLB'}</strong>
+                              Marcada como completada por: <strong className="text-[#203122] font-bold">{item.completed_by || 'Coordinación VLB'}</strong>
                               {item.completed_at && ` a las ${new Date(item.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}`}
                             </span>
                           </div>
@@ -696,7 +696,7 @@ export const TimelineModule: React.FC = () => {
                       {item.status !== 'COMPLETADO' ? (
                         <button
                           onClick={() => handleSetStatus(item, 'COMPLETADO')}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-700 text-white text-[11px] font-semibold hover:bg-emerald-800 transition inline-flex items-center space-x-1"
+                          className="px-3 py-1.5 rounded-xl bg-[#C48B81] text-white text-[11px] font-semibold hover:bg-[#A86B60] transition inline-flex items-center space-x-1"
                         >
                           <Check className="w-3.5 h-3.5" />
                           <span>Completar</span>
@@ -724,10 +724,10 @@ export const TimelineModule: React.FC = () => {
           )}
 
           {/* 2. Check-in de Llegada de Proveedores (Día Boda) */}
-          <div className="luxury-card rounded-3xl p-6 sm:p-7 border border-[#DDD2C4] space-y-5">
+          <div className="luxury-card rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EFE8DE]">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#A86B60]">
                   Recepción de Proveedores en Campo
                 </span>
                 <h3 className="font-serif text-2xl font-bold text-[#332C2A] mt-0.5">
@@ -754,7 +754,7 @@ export const TimelineModule: React.FC = () => {
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
                     vendorLocFilter === loc
                       ? 'bg-[#363432] text-white'
-                      : 'bg-[#F9F6F2] text-[#786C68] border border-[#DDD2C4] hover:border-[#9C665C]'
+                      : 'bg-[#F9F6F2] text-[#786C68] border border-[#EFE8E1] hover:border-[#C48B81]'
                   }`}
                 >
                   {loc === 'ALL' ? 'Todos los Proveedores' : loc}
@@ -763,7 +763,7 @@ export const TimelineModule: React.FC = () => {
             </div>
 
             {filteredVendors.length === 0 ? (
-              <div className="py-8 text-center text-xs text-[#786C68] bg-[#F9F6F2] rounded-2xl border border-dashed border-[#DDD2C4]">
+              <div className="py-8 text-center text-xs text-[#786C68] bg-[#F9F6F2] rounded-2xl border border-dashed border-[#EFE8E1]">
                 No hay proveedores registrados en esta ubicación.
               </div>
             ) : (
@@ -776,7 +776,7 @@ export const TimelineModule: React.FC = () => {
                       className={`p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${
                         isArrived
                           ? 'bg-[#EFF5F0] border-[#BBD4BF]'
-                          : 'bg-[#FFFFFF] border-[#DDD2C4] hover:border-[#9C665C]'
+                          : 'bg-[#FFFFFF] border-[#EFE8E1] hover:border-[#C48B81]'
                       }`}
                     >
                       <div className="min-w-0 flex-1">
@@ -788,7 +788,7 @@ export const TimelineModule: React.FC = () => {
                             v.locations.map(loc => (
                               <span
                                 key={loc}
-                                className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-md bg-[#F9F6F2] text-[#786C68] border border-[#DDD2C4]"
+                                className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-md bg-[#F9F6F2] text-[#786C68] border border-[#EFE8E1]"
                               >
                                 {loc}
                               </span>
@@ -806,7 +806,7 @@ export const TimelineModule: React.FC = () => {
                               href={`https://wa.me/${v.phone.replace(/[^0-9]/g, '')}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center space-x-1 text-[#8a574e] hover:underline font-mono"
+                              className="inline-flex items-center space-x-1 text-[#A86B60] hover:underline font-mono"
                             >
                               <MessageSquare className="w-3 h-3" />
                               <span>{v.phone}</span>
@@ -828,7 +828,7 @@ export const TimelineModule: React.FC = () => {
                           className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs ${
                             isArrived
                               ? 'bg-[#3B6E45] text-white hover:bg-[#2F5937]'
-                              : 'bg-[#EFE8DE] text-[#332C2A] hover:bg-[#363432] hover:text-white border border-[#DDD2C4]'
+                              : 'bg-[#EFE8DE] text-[#332C2A] hover:bg-[#363432] hover:text-white border border-[#EFE8E1]'
                           }`}
                         >
                           <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -849,8 +849,8 @@ export const TimelineModule: React.FC = () => {
           {/* 3. Ficha Operativa Rápida (Información relevante de la operación del Día Boda) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {/* Ceremonias y Sedes */}
-            <div className="luxury-card rounded-3xl p-6 border border-[#DDD2C4] space-y-3">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
+            <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] space-y-3">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#A86B60]">
                 Sedes y Horarios Clave
               </span>
               <h4 className="font-serif text-xl font-bold text-[#332C2A]">
@@ -889,8 +889,8 @@ export const TimelineModule: React.FC = () => {
             </div>
 
             {/* Aforo Confirmado y Mesas */}
-            <div className="luxury-card rounded-3xl p-6 border border-[#DDD2C4] space-y-3">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
+            <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] space-y-3">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#A86B60]">
                 Aforo en Sitio
               </span>
               <h4 className="font-serif text-xl font-bold text-[#332C2A]">
@@ -904,7 +904,7 @@ export const TimelineModule: React.FC = () => {
                   </div>
                   <div className="text-[11px] text-[#786C68]">Lugares seguros</div>
                 </div>
-                <div className="p-4 rounded-2xl bg-[#EFE8DE]/70 border border-[#DDD2C4]">
+                <div className="p-4 rounded-2xl bg-[#EFE8DE]/70 border border-[#EFE8E1]">
                   <div className="text-[10px] uppercase font-bold text-[#6D5A43]">Mesas Activas</div>
                   <div className="text-3xl font-serif font-bold text-[#332C2A] mt-1">
                     {tablesCount}
@@ -921,8 +921,8 @@ export const TimelineModule: React.FC = () => {
             </div>
 
             {/* Equipo VLB Asignado en Campo */}
-            <div className="luxury-card rounded-3xl p-6 border border-[#DDD2C4] space-y-3">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#8a574e]">
+            <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] space-y-3">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#A86B60]">
                 Coordinación en Campo
               </span>
               <h4 className="font-serif text-xl font-bold text-[#332C2A]">
@@ -967,7 +967,7 @@ export const TimelineModule: React.FC = () => {
           {loading ? (
             <div className="py-12 text-center text-[#8A7E72] text-sm">Cargando timeline...</div>
           ) : roleFilteredTimeline.length === 0 ? (
-            <div className="bg-white rounded-3xl p-8 text-center text-[#8A7E72] text-sm border border-dashed border-[#EAE3DA]">
+            <div className="bg-white rounded-3xl p-8 text-center text-[#8A7E72] text-sm border border-dashed border-[#EFE8E1]">
               No hay actividades programadas con el filtro seleccionado en el cronograma.
             </div>
           ) : (
@@ -981,8 +981,8 @@ export const TimelineModule: React.FC = () => {
                     onClick={() => setRoleFilter(tab.id)}
                     className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                       roleFilter === tab.id
-                        ? 'bg-[#9C665C] text-white shadow-xs'
-                        : 'bg-white text-[#2B2826] hover:bg-[#FAF8F5] border border-[#EAE3DA]'
+                        ? 'bg-[#C48B81] text-white shadow-xs'
+                        : 'bg-white text-[#2B2826] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
                     }`}
                   >
                     {tab.label}
@@ -990,11 +990,11 @@ export const TimelineModule: React.FC = () => {
                 ))}
               </div>
 
-              <div className="relative pl-6 sm:pl-8 space-y-4 before:content-[''] before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-[#EAE3DA]">
+              <div className="relative pl-6 sm:pl-8 space-y-4 before:content-[''] before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-[#EFE8E1]">
                 {roleFilteredTimeline.map(item => (
                   <div
                     key={item.id}
-                    className="relative bg-white rounded-3xl p-5 border border-[#EAE3DA] hover:border-[#9C665C]/40 shadow-xs transition"
+                    className="relative bg-white rounded-3xl p-5 border border-[#EFE8E1] hover:border-[#C48B81]/40 shadow-xs transition"
                   >
                     {/* Status Dot on the vertical line */}
                     <div
@@ -1002,16 +1002,16 @@ export const TimelineModule: React.FC = () => {
                       title="Haz clic para avanzar estatus"
                       className={`absolute -left-7 sm:-left-8 top-6 w-3 h-3 rounded-full cursor-pointer ring-4 ring-white transition ${
                         item.status === 'COMPLETADO'
-                          ? 'bg-[#4B7355]'
+                          ? 'bg-[#384C3A]'
                           : item.status === 'EN_CURSO'
-                          ? 'bg-amber-500 animate-pulse'
-                          : 'bg-[#DDD2C4]'
+                          ? 'bg-[#C48B81] ring-4 ring-[#F7EDEB]'
+                          : 'bg-[#EFE8E1]'
                       }`}
                     />
 
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex flex-wrap items-center gap-3">
-                        <span className="font-mono text-sm font-semibold text-[#2B2826] bg-[#FAF8F5] px-3 py-1 rounded-xl border border-[#EAE3DA]">
+                        <span className="font-mono text-sm font-semibold text-[#2B2826] bg-[#FAF8F5] px-3 py-1 rounded-xl border border-[#EFE8E1]">
                           {item.time} hrs
                         </span>
                         <h3 className="font-serif text-lg font-semibold text-[#2B2826]">
@@ -1025,14 +1025,14 @@ export const TimelineModule: React.FC = () => {
                           onClick={() => handleToggleStatus(item)}
                           className={`inline-flex items-center space-x-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border transition cursor-pointer ${
                             item.status === 'COMPLETADO'
-                              ? 'bg-[#E4ECE5] text-[#2B5235] border-[#BDD4C1]'
+                              ? 'bg-[#E5EDE6] text-[#384C3A] border-[#D5E2D7]'
                               : item.status === 'EN_CURSO'
-                              ? 'bg-amber-50 text-amber-800 border-amber-300'
-                              : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border-[#EAE3DA]'
+                              ? 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5]'
+                              : 'bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border-[#EFE8E1]'
                           }`}
                           title="Haz clic para alternar estatus en tiempo real"
                         >
-                          <Check className="w-3.5 h-3.5 text-[#4B7355]" />
+                          <Check className="w-3.5 h-3.5 text-[#384C3A]" />
                           <span>{item.status === 'COMPLETADO' ? 'Completado' : item.status === 'EN_CURSO' ? 'En Curso' : 'Marcar Hecho'}</span>
                         </button>
 
@@ -1069,16 +1069,16 @@ export const TimelineModule: React.FC = () => {
                     </div>
 
                     {item.notes && (
-                      <p className="text-xs text-[#2B2826] mt-2 bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EAE3DA] italic">
+                      <p className="text-xs text-[#2B2826] mt-2 bg-[#FAF8F5] p-2.5 rounded-xl border border-[#EFE8E1] italic">
                         {item.notes}
                       </p>
                     )}
 
                     {item.status === 'COMPLETADO' && (
-                      <div className="mt-2.5 pt-2 border-t border-[#EAE3DA]/60 flex items-center space-x-1.5 text-xs text-emerald-800 font-semibold bg-emerald-50/70 border border-emerald-200/60 px-3 py-1.5 rounded-xl">
-                        <Check className="w-3.5 h-3.5 text-emerald-700" />
+                      <div className="mt-2.5 pt-2 border-t border-[#EFE8E1]/60 flex items-center space-x-1.5 text-xs text-[#384C3A] font-semibold bg-[#E5EDE6] border border-[#D5E2D7] px-3 py-1.5 rounded-xl">
+                        <Check className="w-3.5 h-3.5 text-[#384C3A]" />
                         <span>
-                          Completada por: <strong className="font-bold text-emerald-950">{item.completed_by || 'Coordinación VLB'}</strong>
+                          Completada por: <strong className="font-bold text-[#203122]">{item.completed_by || 'Coordinación VLB'}</strong>
                           {item.completed_at && ` a las ${new Date(item.completed_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })} hrs`}
                         </span>
                       </div>
@@ -1094,7 +1094,7 @@ export const TimelineModule: React.FC = () => {
       {/* Modal: Agregar / Editar Evento */}
       {showEventModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EAE3DA] animate-in fade-in zoom-in-95">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1] animate-in fade-in zoom-in-95">
             <h3 className="font-serif text-xl font-semibold text-[#2B2826] mb-4">
               {editingEvent ? 'Editar Actividad' : 'Nueva Actividad en Timeline'}
             </h3>
@@ -1109,7 +1109,7 @@ export const TimelineModule: React.FC = () => {
                     required
                     value={formData.time}
                     onChange={e => setFormData({ ...formData, time: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs font-mono bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs font-mono bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
                 <div className="col-span-2">
@@ -1120,7 +1120,7 @@ export const TimelineModule: React.FC = () => {
                     placeholder="Ej. Entrada de Novios al Salón"
                     value={formData.activity}
                     onChange={e => setFormData({ ...formData, activity: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
               </div>
@@ -1133,7 +1133,7 @@ export const TimelineModule: React.FC = () => {
                     placeholder="Salón Principal"
                     value={formData.location}
                     onChange={e => setFormData({ ...formData, location: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
                 <div>
@@ -1143,7 +1143,7 @@ export const TimelineModule: React.FC = () => {
                     placeholder="Mariana / DJ"
                     value={formData.responsible}
                     onChange={e => setFormData({ ...formData, responsible: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
               </div>
@@ -1153,7 +1153,7 @@ export const TimelineModule: React.FC = () => {
                 <select
                   value={formData.status}
                   onChange={e => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 >
                   <option value="PENDIENTE">PENDIENTE</option>
                   <option value="EN_CURSO">EN CURSO</option>
@@ -1168,7 +1168,7 @@ export const TimelineModule: React.FC = () => {
                   placeholder="Instrucciones para el staff, música especial, etc."
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                  className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>
 
@@ -1182,7 +1182,7 @@ export const TimelineModule: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-semibold bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs transition cursor-pointer"
+                  className="px-5 py-2 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition cursor-pointer"
                 >
                   Guardar
                 </button>

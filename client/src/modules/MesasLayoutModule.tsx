@@ -364,11 +364,11 @@ export const MesasLayoutModule: React.FC = () => {
     <div className="space-y-6">
       {/* 5-Day Lock Alert Banner for Novios */}
       {isLocked && (
-        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 flex items-start space-x-3 shadow-xs">
-          <Lock className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+        <div className="p-4 rounded-2xl bg-[#FAF4F0] border border-[#EFE8E1] text-[#8A6D5E] flex items-start space-x-3 shadow-xs">
+          <Lock className="w-5 h-5 text-[#C48B81] shrink-0 mt-0.5" />
           <div className="text-xs">
-            <h4 className="font-bold text-sm">Bloqueo Operativo Activo (5 días antes del evento)</h4>
-            <p className="mt-0.5 text-amber-800">
+            <h4 className="font-bold text-sm text-[#2B2826]">Bloqueo Operativo Activo (5 días antes del evento)</h4>
+            <p className="mt-0.5 text-[#7D6F6B]">
               De acuerdo con las políticas de VLB Studio, las mesas y el layout están congelados para cambios directos de los novios. Si requieres reacomodos o ajustes de último momento, por favor comunícate directamente con tu Coordinador(a) asignada.
             </p>
           </div>
@@ -385,7 +385,7 @@ export const MesasLayoutModule: React.FC = () => {
             {/* Indicador de Candado de 5 Días */}
             {isLocked ? (
               <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FBF4F3] text-[#70443D] border border-[#EAD2D0]">
-                <Lock className="w-3 h-3 text-[#9C665C]" />
+                <Lock className="w-3 h-3 text-[#C48B81]" />
                 <span>Bloqueado (&lt; 5 días del evento)</span>
               </span>
             ) : (
@@ -406,12 +406,12 @@ export const MesasLayoutModule: React.FC = () => {
             onClick={() => setFullCanvasMode(!fullCanvasMode)}
             className={`inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl border transition shadow-2xs cursor-pointer ${
               fullCanvasMode
-                ? 'bg-[#EFE8DE] text-[#2B2826] border-[#DDD2C4]'
-                : 'bg-white hover:bg-[#F7F3EE] text-[#5E524E] border-[#EAE3DA]'
+                ? 'bg-[#EFE8DE] text-[#2B2826] border-[#EFE8E1]'
+                : 'bg-white hover:bg-[#F7F3EE] text-[#5E524E] border-[#EFE8E1]'
             }`}
             title={fullCanvasMode ? 'Volver a vista normal con panel lateral' : 'Expandir plano a todo el ancho'}
           >
-            {fullCanvasMode ? <Minimize2 className="w-3.5 h-3.5 text-[#9C665C]" /> : <Maximize2 className="w-3.5 h-3.5 text-[#9C665C]" />}
+            {fullCanvasMode ? <Minimize2 className="w-3.5 h-3.5 text-[#C48B81]" /> : <Maximize2 className="w-3.5 h-3.5 text-[#C48B81]" />}
             <span>{fullCanvasMode ? 'Vista Estándar' : 'Modo Lienzo Amplio'}</span>
           </button>
 
@@ -422,11 +422,11 @@ export const MesasLayoutModule: React.FC = () => {
             className={`inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-xl border transition shadow-2xs cursor-pointer ${
               lockTouchScroll
                 ? 'bg-[#E4ECE5] text-[#2B5235] border-[#BDD4C1]'
-                : 'bg-white hover:bg-[#F7F3EE] text-[#5E524E] border-[#EAE3DA]'
+                : 'bg-white hover:bg-[#F7F3EE] text-[#5E524E] border-[#EFE8E1]'
             }`}
             title="Bloquea el scroll de la página al arrastrar sobre el plano en tablets o pantallas táctiles"
           >
-            <Lock className="w-3.5 h-3.5 text-[#9C665C]" />
+            <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
             <span>{lockTouchScroll ? 'Lienzo Fijado' : 'Fijar Lienzo Táctil'}</span>
           </button>
 
@@ -434,30 +434,30 @@ export const MesasLayoutModule: React.FC = () => {
             <>
               <button
                 onClick={() => setShowNewTableModal(true)}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar Mesa</span>
               </button>
               <button
                 onClick={() => setShowNewElementModal(true)}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition cursor-pointer"
               >
-                <Layers className="w-3.5 h-3.5 text-[#9C665C]" />
+                <Layers className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>Pista / Escenario</span>
               </button>
               <button
                 onClick={() => setShowFloorPlanModal(true)}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition cursor-pointer"
               >
-                <ImageIcon className="w-3.5 h-3.5 text-[#9C665C]" />
+                <ImageIcon className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>Plano Base</span>
               </button>
               <button
                 onClick={() => setShowSaveVersionModal(true)}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EAE3DA] transition cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition cursor-pointer"
               >
-                <Save className="w-3.5 h-3.5 text-[#9C665C]" />
+                <Save className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>Guardar Versión</span>
               </button>
             </>
@@ -472,7 +472,7 @@ export const MesasLayoutModule: React.FC = () => {
           <div
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
-            className={`w-full h-[620px] bg-[#F9F6F2] rounded-3xl border-2 border-[#DDD2C4] relative overflow-hidden select-none shadow-inner ${
+            className={`w-full h-[620px] bg-[#F9F6F2] rounded-3xl border-2 border-[#EFE8E1] relative overflow-hidden select-none shadow-inner ${
               lockTouchScroll ? 'touch-none overscroll-contain' : ''
             }`}
             style={{
@@ -491,9 +491,9 @@ export const MesasLayoutModule: React.FC = () => {
             )}
 
             {/* Legend / Status Overlay */}
-            <div className="absolute top-4 left-4 z-10 bg-[#FFFFFF]/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-[#DDD2C4] text-[11px] space-y-1 shadow-xs">
+            <div className="absolute top-4 left-4 z-10 bg-[#FFFFFF]/95 backdrop-blur-md px-3.5 py-2.5 rounded-xl border border-[#EFE8E1] text-[11px] space-y-1 shadow-xs">
               <div className="font-semibold text-[#332C2A] flex items-center space-x-1.5 pointer-events-none">
-                <Move className="w-3.5 h-3.5 text-[#9C665C]" />
+                <Move className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>{isLocked ? 'Modo Solo Lectura' : 'Arrastra mesas para acomodar'}</span>
               </div>
               <div className="text-[#786C68] text-[10px] pointer-events-none">
@@ -509,7 +509,7 @@ export const MesasLayoutModule: React.FC = () => {
                     step="0.05"
                     value={floorPlanOpacity}
                     onChange={e => setFloorPlanOpacity(parseFloat(e.target.value))}
-                    className="w-20 accent-[#9C665C]"
+                    className="w-20 accent-[#C48B81]"
                   />
                 </div>
               )}
@@ -530,7 +530,7 @@ export const MesasLayoutModule: React.FC = () => {
                 className={`absolute rounded-2xl flex flex-col items-center justify-center border-2 border-dashed font-serif font-bold text-xs uppercase tracking-wider shadow-xs transition-shadow group ${
                   el.type === 'pista_baile'
                     ? 'bg-[#EFE8DE]/85 border-[#B59F84] text-[#332C2A]'
-                    : 'bg-[#EFE2DF]/85 border-[#9C665C] text-[#332C2A]'
+                    : 'bg-[#EFE2DF]/85 border-[#C48B81] text-[#332C2A]'
                 } ${isLocked ? 'cursor-default' : 'cursor-move hover:shadow-md'}`}
               >
                 <span>{el.name}</span>
@@ -540,14 +540,14 @@ export const MesasLayoutModule: React.FC = () => {
                     <button
                       onClick={e => handleRotateElement(e, el)}
                       title="Girar elemento 45°"
-                      className="bg-[#9C665C] text-white p-1 rounded-full hover:bg-[#8a574e] shadow"
+                      className="bg-[#C48B81] text-white p-1 rounded-full hover:bg-[#A86B60] shadow"
                     >
                       <RotateCw className="w-2.5 h-2.5" />
                     </button>
                     <button
                       onClick={e => handleDeleteElement(e, el.id)}
                       title="Eliminar elemento"
-                      className="bg-[#8a574e] text-white p-1 rounded-full hover:bg-[#6E4541] shadow"
+                      className="bg-[#A86B60] text-white p-1 rounded-full hover:bg-[#6E4541] shadow"
                     >
                       <Trash2 className="w-2.5 h-2.5" />
                     </button>
@@ -581,14 +581,14 @@ export const MesasLayoutModule: React.FC = () => {
                       : 'w-40 h-28 rounded-2xl'
                   } ${
                     isSelected
-                      ? 'ring-4 ring-[#9C665C] shadow-xl'
+                      ? 'ring-4 ring-[#C48B81] shadow-xl'
                       : 'shadow-md hover:shadow-lg'
                   } ${
                     isOver
-                      ? 'bg-[#F5ECEB] border-2 border-[#8a574e] text-[#6E4541]'
+                      ? 'bg-[#F5ECEB] border-2 border-[#A86B60] text-[#6E4541]'
                       : table.type === 'imperial'
-                      ? 'bg-[#EFE2DF] border-2 border-[#9C665C] text-[#332C2A]'
-                      : 'bg-[#FFFFFF] border-2 border-[#DDD2C4] text-[#332C2A]'
+                      ? 'bg-[#EFE2DF] border-2 border-[#C48B81] text-[#332C2A]'
+                      : 'bg-[#FFFFFF] border-2 border-[#EFE8E1] text-[#332C2A]'
                   }`}
                 >
                   <div className="font-serif font-bold text-xs text-center leading-tight truncate px-1">
@@ -599,7 +599,7 @@ export const MesasLayoutModule: React.FC = () => {
                   </div>
 
                   {isOver && (
-                    <div className="text-[9px] text-[#8a574e] font-bold uppercase mt-0.5 flex items-center space-x-0.5">
+                    <div className="text-[9px] text-[#A86B60] font-bold uppercase mt-0.5 flex items-center space-x-0.5">
                       <AlertTriangle className="w-2.5 h-2.5" />
                       <span>Sobrecupo</span>
                     </div>
@@ -610,7 +610,7 @@ export const MesasLayoutModule: React.FC = () => {
                     <button
                       onClick={e => handleRotate(e, table)}
                       title="Girar mesa 45°"
-                      className="absolute -top-2 -right-2 bg-[#9C665C] text-white p-1 rounded-full hover:bg-[#8a574e] shadow transition"
+                      className="absolute -top-2 -right-2 bg-[#C48B81] text-white p-1 rounded-full hover:bg-[#A86B60] shadow transition"
                     >
                       <RotateCw className="w-3 h-3" />
                     </button>
@@ -660,8 +660,8 @@ export const MesasLayoutModule: React.FC = () => {
                   <div
                     className={`h-full transition-all ${
                       (selectedTable.used_seats || 0) > selectedTable.capacity
-                        ? 'bg-rose-500'
-                        : 'bg-emerald-600'
+                        ? 'bg-[#C48B81]'
+                        : 'bg-[#384C3A]'
                     }`}
                     style={{
                       width: `${Math.min(100, Math.round(((selectedTable.used_seats || 0) / selectedTable.capacity) * 100))}%`
@@ -734,8 +734,8 @@ export const MesasLayoutModule: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#EAE3DA] shadow-xs text-center text-[#7D6F6B] text-xs">
-              <Eye className="w-6 h-6 text-[#9C665C] mx-auto mb-1.5" />
+            <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#EFE8E1] shadow-xs text-center text-[#7D6F6B] text-xs">
+              <Eye className="w-6 h-6 text-[#C48B81] mx-auto mb-1.5" />
               <p className="font-semibold text-[#2B2826]">Selecciona una mesa en el plano</p>
               <p className="text-[11px] text-[#7D6F6B] mt-0.5">
                 Haz clic sobre cualquier mesa para ver sus invitados y gestionar los lugares.
@@ -744,10 +744,10 @@ export const MesasLayoutModule: React.FC = () => {
           )}
 
           {/* Panel Lateral: Invitados por Sentar */}
-          <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#EAE3DA] shadow-xs space-y-3">
+          <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#EFE8E1] shadow-xs space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-[#F7F3EE]">
               <div className="flex items-center space-x-2">
-                <Users className="w-4 h-4 text-[#9C665C]" />
+                <Users className="w-4 h-4 text-[#C48B81]" />
                 <span className="text-xs font-bold text-[#2B2826] uppercase tracking-wider">
                   Invitados por Sentar ({unassignedGuests.length})
                 </span>
@@ -771,13 +771,13 @@ export const MesasLayoutModule: React.FC = () => {
                     {unassignedGuests.map(g => (
                       <div
                         key={g.id}
-                        className="p-2.5 rounded-xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2 hover:border-[#9C665C] transition group"
+                        className="p-2.5 rounded-xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-2 hover:border-[#C48B81] transition group"
                       >
                         <div className="flex items-start justify-between gap-1.5">
                           <div className="font-semibold text-xs text-[#2B2826] leading-snug break-words">
                             {g.first_name} {g.last_name}
                           </div>
-                          <span className="shrink-0 text-[10px] font-medium bg-[#EFE8DE] text-[#786C68] px-2 py-0.5 rounded-full border border-[#DDD2C4]">
+                          <span className="shrink-0 text-[10px] font-medium bg-[#EFE8DE] text-[#786C68] px-2 py-0.5 rounded-full border border-[#EFE8E1]">
                             {1 + g.companion_count} {1 + g.companion_count === 1 ? 'lugar' : 'lugares'}
                           </span>
                         </div>
@@ -787,7 +787,7 @@ export const MesasLayoutModule: React.FC = () => {
                             {selectedTable ? (
                               <button
                                 onClick={() => handleAssignGuest(g.id, selectedTable.id)}
-                                className="w-full py-1.5 px-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-[11px] font-semibold rounded-lg shadow-2xs transition cursor-pointer flex items-center justify-center space-x-1"
+                                className="w-full py-1.5 px-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-[11px] font-semibold rounded-lg shadow-2xs transition cursor-pointer flex items-center justify-center space-x-1"
                                 title={`Sentar en ${selectedTable.name}`}
                               >
                                 <span>Sentar en {selectedTable.name}</span>
@@ -801,7 +801,7 @@ export const MesasLayoutModule: React.FC = () => {
                                     e.target.value = '';
                                   }
                                 }}
-                                className="w-full text-[11px] font-medium bg-[#FFFFFF] border border-[#EAE3DA] rounded-lg px-2.5 py-1 text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#9C665C] cursor-pointer"
+                                className="w-full text-[11px] font-medium bg-[#FFFFFF] border border-[#EFE8E1] rounded-lg px-2.5 py-1 text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81] cursor-pointer"
                               >
                                 <option value="">Asignar a una mesa...</option>
                                 {tables.map(t => (

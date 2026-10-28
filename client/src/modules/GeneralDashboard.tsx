@@ -1252,16 +1252,16 @@ export const GeneralDashboard: React.FC = () => {
         {/* PESTAÑA: CALENDARIO GENERAL */}
         {activeTab === 'calendario' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
               <div className="flex items-center space-x-3.5">
                 {!sidebarOpen && (
                   <button
                     onClick={handleToggleSidebar}
                     aria-label="Mostrar menú lateral"
-                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                     title="Mostrar menú lateral (⌘B)"
                   >
-                    <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                    <PanelLeft className="w-5 h-5 text-[#C48B81]" />
                     <span className="text-sm font-semibold hidden sm:inline">Menú</span>
                   </button>
                 )}
@@ -1288,15 +1288,15 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   onClick={handleToggleSidebar}
                   aria-label="Mostrar menú lateral"
-                  className="inline-flex md:hidden items-center space-x-2 px-3 py-1.5 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0 text-xs font-semibold"
+                  className="inline-flex md:hidden items-center space-x-2 px-3 py-1.5 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0 text-xs font-semibold"
                   title="Mostrar menú lateral (⌘B)"
                 >
-                  <PanelLeft className="w-4 h-4 text-[#9C665C]" />
+                  <PanelLeft className="w-4 h-4 text-[#C48B81]" />
                   <span>Menú</span>
                 </button>
                 <button
                   onClick={() => setActiveTab('weddings')}
-                  className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+                  className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
                 >
                   ← Volver a Bodas
                 </button>
@@ -1309,16 +1309,16 @@ export const GeneralDashboard: React.FC = () => {
         {/* PESTAÑA: USUARIOS Y EQUIPO */}
         {activeTab === 'equipo' && user?.role === 'ADMINISTRADOR' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
               <div className="flex items-center space-x-3.5">
                 {!sidebarOpen && (
                   <button
                     onClick={handleToggleSidebar}
                     aria-label="Mostrar menú lateral"
-                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                     title="Mostrar menú lateral (⌘B)"
                   >
-                    <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                    <PanelLeft className="w-5 h-5 text-[#C48B81]" />
                     <span className="text-sm font-semibold hidden sm:inline">Menú</span>
                   </button>
                 )}
@@ -1329,7 +1329,7 @@ export const GeneralDashboard: React.FC = () => {
               </div>
               <button
                 onClick={() => setActiveTab('weddings')}
-                className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+                className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
               >
                 ← Volver a Bodas
               </button>
@@ -1345,7 +1345,7 @@ export const GeneralDashboard: React.FC = () => {
             </div>
             <button
               onClick={handleOpenNewUser}
-              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Nuevo Usuario / Equipo</span>
@@ -1381,7 +1381,7 @@ export const GeneralDashboard: React.FC = () => {
                               className="w-9 h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
                             />
                           ) : (
-                            <div className="w-9 h-9 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-sm flex items-center justify-center shrink-0 border border-[#EAE3DA]">
+                            <div className="w-9 h-9 rounded-full bg-[#EFE2DF] text-[#A86B60] font-serif font-bold text-sm flex items-center justify-center shrink-0 border border-[#EFE8E1]">
                               {u.name?.charAt(0)?.toUpperCase() || 'U'}
                             </div>
                           )}
@@ -1392,14 +1392,14 @@ export const GeneralDashboard: React.FC = () => {
                       </td>
                       <td className="py-3 px-4 text-stone-600 font-mono">{u.email}</td>
                       <td className="py-3.5 px-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                           u.role === 'ADMINISTRADOR'
                             ? 'bg-stone-900 text-white'
                             : u.role === 'COORDINADOR'
-                            ? 'bg-amber-100 text-amber-900'
+                            ? 'bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]'
                             : u.role === 'STAFF'
-                            ? 'bg-blue-50 text-blue-800'
-                            : 'bg-emerald-50 text-emerald-800'
+                            ? 'bg-[#F5EFEB] text-[#7D6F6B] border border-[#EFE8E1]'
+                            : 'bg-[#E5EDE6] text-[#384C3A] border border-[#D5E2D7]'
                         }`}>
                           {u.role}
                         </span>
@@ -1449,16 +1449,16 @@ export const GeneralDashboard: React.FC = () => {
       {/* PESTAÑA: PLANTILLAS VLB */}
       {activeTab === 'plantillas' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+          <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
             <div className="flex items-center space-x-3.5">
               {!sidebarOpen && (
                 <button
                   onClick={handleToggleSidebar}
                   aria-label="Mostrar menú lateral"
-                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                   title="Mostrar menú lateral (⌘B)"
                 >
-                  <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                  <PanelLeft className="w-5 h-5 text-[#C48B81]" />
                   <span className="text-sm font-semibold hidden sm:inline">Menú</span>
                 </button>
               )}
@@ -1469,7 +1469,7 @@ export const GeneralDashboard: React.FC = () => {
             </div>
             <button
               onClick={() => setActiveTab('weddings')}
-              className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
             >
               ← Volver a Bodas
             </button>
@@ -1482,10 +1482,10 @@ export const GeneralDashboard: React.FC = () => {
           )}
 
           {/* Barra Superior: Carga por Excel y Sincronización Automática VLB */}
-          <div className="luxury-card rounded-3xl p-6 border border-[#DDD2C4] bg-[#F9F6F2]">
+          <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] bg-[#F9F6F2]">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#9C665C] flex items-center space-x-1.5">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81] flex items-center space-x-1.5">
                   <FileSpreadsheet className="w-3.5 h-3.5" />
                   <span>Administración y Carga por Excel · VLB Studio</span>
                 </span>
@@ -1501,14 +1501,14 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleDownloadTemplatesExcel}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-white hover:bg-[#EFE8DE] text-[#332C2A] border border-[#DDD2C4] text-xs font-semibold transition shadow-2xs"
+                  className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-white hover:bg-[#EFE8DE] text-[#332C2A] border border-[#EFE8E1] text-xs font-semibold transition shadow-2xs"
                   title="Descargar todas las plantillas actuales en formato Excel para editarlas o agregar filas"
                 >
-                  <Download className="w-4 h-4 text-[#9C665C]" />
+                  <Download className="w-4 h-4 text-[#C48B81]" />
                   <span>Descargar Plantilla Excel</span>
                 </button>
 
-                <label className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold cursor-pointer transition shadow-xs">
+                <label className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold cursor-pointer transition shadow-xs">
                   <Upload className="w-4 h-4" />
                   <span>{importingExcel ? 'Cargando Excel...' : 'Subir Excel de Plantillas'}</span>
                   <input
@@ -1524,7 +1524,7 @@ export const GeneralDashboard: React.FC = () => {
                   type="button"
                   onClick={handleSyncTemplatesToWeddings}
                   disabled={syncingTemplates}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-[#EFE2DF] hover:bg-[#DFC9C4] text-[#8a574e] border border-[#DFC9C4] text-xs font-semibold transition"
+                  className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-[#EFE2DF] hover:bg-[#DFC9C4] text-[#A86B60] border border-[#DFC9C4] text-xs font-semibold transition"
                   title="Aplicar cambios de estas plantillas a todas las bodas activas"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${syncingTemplates ? 'animate-spin' : ''}`} />
@@ -1538,7 +1538,7 @@ export const GeneralDashboard: React.FC = () => {
           <div className="luxury-card rounded-3xl p-6 border border-stone-200">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#9C665C]">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
                   Plantilla Global Editable · Se carga en módulo Checklist
                 </span>
                 <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">
@@ -1548,12 +1548,12 @@ export const GeneralDashboard: React.FC = () => {
                   Haz clic en el ícono de lápiz para modificar cualquier actividad o su mes/etapa, o agrega nuevas actividades abajo.
                 </p>
               </div>
-              <span className="text-xs font-semibold text-[#8a574e] bg-[#EFE2DF] px-3 py-1 rounded-full shrink-0">
+              <span className="text-xs font-semibold text-[#A86B60] bg-[#EFE2DF] px-3 py-1 rounded-full shrink-0">
                 {masterChecklist.length} actividades maestras
               </span>
             </div>
 
-            <form onSubmit={handleAddMasterTask} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#DDD2C4]">
+            <form onSubmit={handleAddMasterTask} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#EFE8E1]">
               <div className="sm:col-span-3">
                 <select
                   value={newMasterTask.category}
@@ -1663,7 +1663,7 @@ export const GeneralDashboard: React.FC = () => {
                   ) : (
                     <>
                       <div className="flex flex-wrap items-center gap-2.5">
-                        <span className="px-2.5 py-0.5 rounded-md bg-[#EFE2DF] text-[#8a574e] font-semibold text-[11px]">
+                        <span className="px-2.5 py-0.5 rounded-md bg-[#EFE2DF] text-[#A86B60] font-semibold text-[11px]">
                           {item.category}
                         </span>
                         <span className="font-semibold text-stone-900">{item.title}</span>
@@ -1698,7 +1698,7 @@ export const GeneralDashboard: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Requisitos Ceremonia Civil VLB */}
             <div className="luxury-card rounded-3xl p-6 border border-stone-200">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#9C665C]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
                 Plantilla Editable · Se carga en módulo Ceremonia Civil
               </span>
               <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">
@@ -1784,7 +1784,7 @@ export const GeneralDashboard: React.FC = () => {
 
             {/* Requisitos Ceremonia Religiosa VLB */}
             <div className="luxury-card rounded-3xl p-6 border border-stone-200">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#9C665C]">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
                 Plantilla Editable · Se carga en módulo Ceremonia Religiosa
               </span>
               <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">
@@ -1874,16 +1874,16 @@ export const GeneralDashboard: React.FC = () => {
       {/* PESTAÑA: CATÁLOGOS VLB */}
       {activeTab === 'catalogos' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+          <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
             <div className="flex items-center space-x-3.5">
               {!sidebarOpen && (
                 <button
                   onClick={handleToggleSidebar}
                   aria-label="Mostrar menú lateral"
-                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                   title="Mostrar menú lateral (⌘B)"
                 >
-                  <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                  <PanelLeft className="w-5 h-5 text-[#C48B81]" />
                   <span className="text-sm font-semibold hidden sm:inline">Menú</span>
                 </button>
               )}
@@ -1894,7 +1894,7 @@ export const GeneralDashboard: React.FC = () => {
             </div>
             <button
               onClick={() => setActiveTab('weddings')}
-              className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
             >
               ← Volver a Bodas
             </button>
@@ -1914,7 +1914,7 @@ export const GeneralDashboard: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#9C665C] text-white text-xs font-semibold rounded-xl hover:bg-[#8A574E] shadow-xs transition cursor-pointer"
+                  className="px-4 py-2 bg-[#C48B81] text-white text-xs font-semibold rounded-xl hover:bg-[#A86B60] shadow-xs transition cursor-pointer"
                 >
                   Agregar
                 </button>
@@ -1945,8 +1945,8 @@ export const GeneralDashboard: React.FC = () => {
                 Configura o modifica tus paquetes, la cantidad de reuniones y todo lo que incluye cada uno.
               </p>
 
-              <form onSubmit={handleAddPackage} className="space-y-2.5 mt-4 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#DDD2C4]">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[#8a574e]">Crear Nuevo Paquete</div>
+              <form onSubmit={handleAddPackage} className="space-y-2.5 mt-4 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#EFE8E1]">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[#A86B60]">Crear Nuevo Paquete</div>
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
                   <div className="sm:col-span-5">
                     <input
@@ -1981,7 +1981,7 @@ export const GeneralDashboard: React.FC = () => {
                   <div className="sm:col-span-3">
                     <button
                       type="submit"
-                      className="w-full px-3 py-2 bg-[#9C665C] text-white text-xs font-semibold rounded-xl hover:bg-[#8A574E] shadow-xs transition cursor-pointer"
+                      className="w-full px-3 py-2 bg-[#C48B81] text-white text-xs font-semibold rounded-xl hover:bg-[#A86B60] shadow-xs transition cursor-pointer"
                     >
                       + Añadir Paquete
                     </button>
@@ -2009,7 +2009,7 @@ export const GeneralDashboard: React.FC = () => {
                     {editingPkgIdx === idx ? (
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#8a574e]">Editando Paquete</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#A86B60]">Editando Paquete</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
                           <div className="sm:col-span-6">
@@ -2078,7 +2078,7 @@ export const GeneralDashboard: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleSaveEditPackage(idx)}
-                            className="px-4 py-1.5 rounded-xl bg-[#9C665C] text-white hover:bg-[#8A574E] text-xs font-semibold shadow-xs transition cursor-pointer"
+                            className="px-4 py-1.5 rounded-xl bg-[#C48B81] text-white hover:bg-[#A86B60] text-xs font-semibold shadow-xs transition cursor-pointer"
                           >
                             Guardar Cambios
                           </button>
@@ -2090,7 +2090,7 @@ export const GeneralDashboard: React.FC = () => {
                           <div>
                             <div className="font-bold text-stone-900 text-sm">
                               {pkg.name}{' '}
-                              <span className="text-xs font-semibold text-[#8a574e] bg-[#EFE2DF] px-2 py-0.5 rounded-full ml-1">
+                              <span className="text-xs font-semibold text-[#A86B60] bg-[#EFE2DF] px-2 py-0.5 rounded-full ml-1">
                                 {pkg.maxMeetings >= 999 ? 'Ilimitadas' : `${pkg.maxMeetings} reuniones`}
                               </span>
                             </div>
@@ -2119,7 +2119,7 @@ export const GeneralDashboard: React.FC = () => {
                           <ul className="mt-2.5 pt-2.5 border-t border-stone-200/80 space-y-1 text-[11px] text-stone-700">
                             {pkg.includes.map((inc, i) => (
                               <li key={i} className="flex items-start space-x-1.5">
-                                <span className="text-[#8a574e] font-bold">✓</span>
+                                <span className="text-[#A86B60] font-bold">✓</span>
                                 <span>{inc}</span>
                               </li>
                             ))}
@@ -2138,16 +2138,16 @@ export const GeneralDashboard: React.FC = () => {
       {/* PESTAÑA: AJUSTES Y COPIAS DE SEGURIDAD */}
       {activeTab === 'ajustes' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#EAE3DA]">
+          <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
             <div className="flex items-center space-x-3.5">
               {!sidebarOpen && (
                 <button
                   onClick={handleToggleSidebar}
                   aria-label="Mostrar menú lateral"
-                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EAE3DA] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
+                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
                   title="Mostrar menú lateral (⌘B)"
                 >
-                  <PanelLeft className="w-5 h-5 text-[#9C665C]" />
+                  <PanelLeft className="w-5 h-5 text-[#C48B81]" />
                   <span className="text-sm font-semibold hidden sm:inline">Menú</span>
                 </button>
               )}
@@ -2158,7 +2158,7 @@ export const GeneralDashboard: React.FC = () => {
             </div>
             <button
               onClick={() => setActiveTab('weddings')}
-              className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
             >
               ← Volver a Bodas
             </button>
@@ -2176,7 +2176,7 @@ export const GeneralDashboard: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleDownloadBackup}
-                  className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                   <span>Descargar Copia de Seguridad</span>
@@ -2257,7 +2257,7 @@ export const GeneralDashboard: React.FC = () => {
                     className="w-12 h-12 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-[#EFE2DF] text-[#8A574E] font-serif font-bold text-lg flex items-center justify-center border border-[#EAE3DA] shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#EFE2DF] text-[#A86B60] font-serif font-bold text-lg flex items-center justify-center border border-[#EFE8E1] shrink-0">
                     {userForm.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                 )}
@@ -2382,7 +2382,7 @@ export const GeneralDashboard: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-semibold bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs transition cursor-pointer"
+                  className="px-5 py-2 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition cursor-pointer"
                 >
                   Guardar Usuario
                 </button>
@@ -2526,13 +2526,13 @@ export const GeneralDashboard: React.FC = () => {
                 <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">
                   Asignación Inicial de Checklist
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-[#FAF8F5] border border-[#EAE3DA] rounded-2xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-[#FAF8F5] border border-[#EFE8E1] rounded-2xl">
                   <label
                     onClick={() => setFormData({ ...formData, checklist_option: 'full' })}
                     className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${
                       formData.checklist_option === 'full'
-                        ? 'bg-white border-[#9C665C] shadow-xs'
-                        : 'bg-white/60 border-[#EAE3DA] hover:border-[#9C665C]/50'
+                        ? 'bg-white border-[#C48B81] shadow-xs'
+                        : 'bg-white/60 border-[#EFE8E1] hover:border-[#C48B81]/50'
                     }`}
                   >
                     <input
@@ -2540,7 +2540,7 @@ export const GeneralDashboard: React.FC = () => {
                       name="checklist_option"
                       checked={formData.checklist_option === 'full'}
                       onChange={() => setFormData({ ...formData, checklist_option: 'full' })}
-                      className="mt-0.5 accent-[#9C665C]"
+                      className="mt-0.5 accent-[#C48B81]"
                     />
                     <div>
                       <div className="text-xs font-semibold text-[#2B2826]">
@@ -2556,8 +2556,8 @@ export const GeneralDashboard: React.FC = () => {
                     onClick={() => setFormData({ ...formData, checklist_option: 'empty' })}
                     className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${
                       formData.checklist_option === 'empty'
-                        ? 'bg-white border-[#9C665C] shadow-xs'
-                        : 'bg-white/60 border-[#EAE3DA] hover:border-[#9C665C]/50'
+                        ? 'bg-white border-[#C48B81] shadow-xs'
+                        : 'bg-white/60 border-[#EFE8E1] hover:border-[#C48B81]/50'
                     }`}
                   >
                     <input
@@ -2565,7 +2565,7 @@ export const GeneralDashboard: React.FC = () => {
                       name="checklist_option"
                       checked={formData.checklist_option === 'empty'}
                       onChange={() => setFormData({ ...formData, checklist_option: 'empty' })}
-                      className="mt-0.5 accent-[#9C665C]"
+                      className="mt-0.5 accent-[#C48B81]"
                     />
                     <div>
                       <div className="text-xs font-semibold text-[#2B2826]">
@@ -2601,7 +2601,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="px-6 py-2.5 text-xs font-semibold bg-[#9C665C] hover:bg-[#8A574E] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
+                  className="px-6 py-2.5 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
                 >
                   {creating ? 'Guardando...' : 'Crear Proyecto Boda'}
                 </button>

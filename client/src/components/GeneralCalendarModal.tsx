@@ -272,7 +272,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
       case 'EVENTO':
         return 'bg-[#E4ECE5] text-[#2B5235] border-[#BDD4C1]';
       case 'PLANNING':
-        return 'bg-[#FDF6F5] text-[#9C665C] border-[#F3DCD7]';
+        return 'bg-[#F7EDEB] text-[#C48B81] border-[#ECD9D5]';
       case 'CITA_EXTERNA':
         return 'bg-[#EEF4FF] text-[#1E40AF] border-[#C7D7FE]';
       case 'OPEN_HOUSE':
@@ -280,7 +280,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
       case 'SERVICIO':
         return 'bg-[#FEF3C7] text-[#92400E] border-[#FDE68A]';
       default:
-        return 'bg-[#FAF8F5] text-[#5A524C] border-[#EAE3DA]';
+        return 'bg-[#FAF8F5] text-[#5A524C] border-[#EFE8E1]';
     }
   };
 
@@ -311,12 +311,12 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
 
   return createPortal(
     <div className="fixed inset-0 z-50 bg-[#2B2826]/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in">
-      <div className="bg-[#FFFFFF] w-full max-w-6xl h-[92vh] max-h-[880px] rounded-3xl border border-[#EAE3DA] shadow-2xl flex flex-col overflow-hidden">
+      <div className="bg-[#FFFFFF] w-full max-w-6xl h-[92vh] max-h-[880px] rounded-3xl border border-[#EFE8E1] shadow-2xl flex flex-col overflow-hidden">
         
         {/* Top Header */}
-        <div className="px-6 py-4 border-b border-[#EAE3DA] bg-[#FAF8F5] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="px-6 py-4 border-b border-[#EFE8E1] bg-[#FAF8F5] flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center space-x-3.5">
-            <div className="w-11 h-11 rounded-2xl bg-[#9C665C] text-white flex items-center justify-center shadow-xs">
+            <div className="w-11 h-11 rounded-2xl bg-[#C48B81] text-white flex items-center justify-center shadow-xs">
               <CalendarIcon className="w-6 h-6" />
             </div>
             <div>
@@ -337,7 +337,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
           <div className="flex items-center space-x-2 self-end md:self-auto">
             <button
               onClick={() => setShowGoogleSyncModal(true)}
-              className="px-2.5 py-1.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] hover:border-[#4285F4]/40 text-xs font-semibold rounded-lg transition shadow-2xs cursor-pointer inline-flex items-center space-x-1.5"
+              className="px-2.5 py-1.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] hover:border-[#4285F4]/40 text-xs font-semibold rounded-lg transition shadow-2xs cursor-pointer inline-flex items-center space-x-1.5"
               title="Vincular y sincronizar con Google Calendar"
             >
               <CalendarIcon className="w-3.5 h-3.5 text-[#4285F4]" />
@@ -346,7 +346,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
 
             <button
               onClick={() => handleOpenAdd()}
-              className="px-3 py-1.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-lg transition shadow-2xs cursor-pointer inline-flex items-center space-x-1.5"
+              className="px-3 py-1.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-lg transition shadow-2xs cursor-pointer inline-flex items-center space-x-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Agendar Cita</span>
@@ -361,7 +361,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
         </div>
 
         {/* Filters and Month Switcher */}
-        <div className="px-6 py-2.5 border-b border-[#EAE3DA] bg-[#FFFFFF] flex flex-wrap items-center justify-between gap-2.5">
+        <div className="px-6 py-2.5 border-b border-[#EFE8E1] bg-[#FFFFFF] flex flex-wrap items-center justify-between gap-2.5">
           {/* Categories */}
           <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
             {[
@@ -378,7 +378,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
                   filterType === tab.id
                     ? 'bg-[#2B2826] text-white shadow-2xs'
-                    : 'bg-[#FAF8F5] text-[#5A524C] hover:bg-[#F3ECE2] border border-[#EAE3DA]'
+                    : 'bg-[#FAF8F5] text-[#5A524C] hover:bg-[#F3ECE2] border border-[#EFE8E1]'
                 }`}
               >
                 {tab.label}
@@ -390,7 +390,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
           <div className="flex items-center space-x-1.5">
             <button
               onClick={prevMonth}
-              className="p-1 rounded-lg border border-[#EAE3DA] hover:bg-[#FAF8F5] text-[#2B2826] transition"
+              className="p-1 rounded-lg border border-[#EFE8E1] hover:bg-[#FAF8F5] text-[#2B2826] transition"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
@@ -399,7 +399,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
             </span>
             <button
               onClick={nextMonth}
-              className="p-1 rounded-lg border border-[#EAE3DA] hover:bg-[#FAF8F5] text-[#2B2826] transition"
+              className="p-1 rounded-lg border border-[#EFE8E1] hover:bg-[#FAF8F5] text-[#2B2826] transition"
             >
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
@@ -409,7 +409,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
         {/* Calendar Grid & Side Details View */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 bg-[#FCFAF7]">
           {/* Main Month Grid (2 cols) */}
-          <div className="lg:col-span-2 bg-white rounded-3xl p-5 border border-[#EAE3DA] shadow-xs flex flex-col">
+          <div className="lg:col-span-2 bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-xs flex flex-col">
             {/* Days of week */}
             <div className="grid grid-cols-7 gap-1 text-center font-bold text-[11px] text-[#8A7E72] uppercase tracking-wider mb-2">
               <span>Dom</span>
@@ -445,20 +445,20 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                     }}
                     className={`min-h-[78px] p-1.5 rounded-2xl border transition flex flex-col justify-between cursor-pointer ${
                       isSelected
-                        ? 'border-[#9C665C] bg-[#FDF6F5] ring-2 ring-[#9C665C]/30'
+                        ? 'border-[#C48B81] bg-[#F7EDEB] ring-2 ring-[#C48B81]/30'
                         : isToday
-                        ? 'border-[#9C665C] bg-[#FFFBFB]'
-                        : 'border-[#EAE3DA] bg-white hover:border-[#9C665C]/50 hover:bg-[#FCFAF7]'
+                        ? 'border-[#C48B81] bg-[#FFFBFB]'
+                        : 'border-[#EFE8E1] bg-white hover:border-[#C48B81]/50 hover:bg-[#FCFAF7]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className={`text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center ${
-                        isToday ? 'bg-[#9C665C] text-white shadow-xs' : 'text-[#2B2826]'
+                        isToday ? 'bg-[#C48B81] text-white shadow-xs' : 'text-[#2B2826]'
                       }`}>
                         {dayNum}
                       </span>
                       {dayEvents.length > 0 && (
-                        <span className="text-[10px] font-bold text-[#9C665C] bg-[#FDF6F5] px-1.5 rounded-full border border-[#F3DCD7]">
+                        <span className="text-[10px] font-bold text-[#C48B81] bg-[#F7EDEB] px-1.5 rounded-full border border-[#ECD9D5]">
                           {dayEvents.length}
                         </span>
                       )}
@@ -488,8 +488,8 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
           </div>
 
           {/* Side Panel: Selected Day Agenda / Global Agenda */}
-          <div className="bg-white rounded-3xl p-5 border border-[#EAE3DA] shadow-xs flex flex-col h-full overflow-hidden">
-            <div className="flex items-center justify-between pb-3 border-b border-[#EAE3DA] mb-3">
+          <div className="bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-xs flex flex-col h-full overflow-hidden">
+            <div className="flex items-center justify-between pb-3 border-b border-[#EFE8E1] mb-3">
               <div>
                 <h3 className="font-serif text-lg font-bold text-[#2B2826]">
                   {selectedDateStr ? `Agenda del ${selectedDateStr}` : 'Próximos Eventos'}
@@ -503,7 +503,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
               {selectedDateStr && (
                 <button
                   onClick={() => handleOpenAdd(selectedDateStr)}
-                  className="px-2.5 py-1 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#9C665C] text-xs font-bold rounded-lg border border-[#EAE3DA] transition inline-flex items-center space-x-1"
+                  className="px-2.5 py-1 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#C48B81] text-xs font-bold rounded-lg border border-[#EFE8E1] transition inline-flex items-center space-x-1"
                 >
                   <Plus className="w-3.5 h-3.5" />
                   <span>Añadir</span>
@@ -514,7 +514,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
               {((selectedDayEvents || filteredEvents).length === 0) ? (
                 <div className="py-12 text-center text-[#8A7E72] space-y-2">
-                  <CalendarIcon className="w-8 h-8 text-[#EAE3DA] mx-auto" />
+                  <CalendarIcon className="w-8 h-8 text-[#EFE8E1] mx-auto" />
                   <p className="text-sm font-semibold text-[#2B2826]">Sin eventos programados</p>
                   <p className="text-xs text-[#8A7E72]">
                     Selecciona un día en el calendario o haz clic en "Agendar Cita / Evento".
@@ -524,13 +524,13 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                 (selectedDayEvents || filteredEvents).map(evt => (
                   <div
                     key={evt.id}
-                    className="p-3.5 rounded-2xl border border-[#EAE3DA] bg-[#FAF8F5] hover:bg-white hover:border-[#9C665C]/40 transition space-y-2 shadow-2xs"
+                    className="p-3.5 rounded-2xl border border-[#EFE8E1] bg-[#FAF8F5] hover:bg-white hover:border-[#C48B81]/40 transition space-y-2 shadow-2xs"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${getBadgeStyle(evt.event_type)}`}>
                         {getTypeLabel(evt.event_type)}
                       </span>
-                      <span className="font-mono text-xs font-bold text-[#2B2826] bg-white px-2 py-0.5 rounded-md border border-[#EAE3DA]">
+                      <span className="font-mono text-xs font-bold text-[#2B2826] bg-white px-2 py-0.5 rounded-md border border-[#EFE8E1]">
                         {evt.time} {evt.end_time ? `- ${evt.end_time}` : ''}
                       </span>
                     </div>
@@ -540,7 +540,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                     </div>
 
                     {evt.wedding_name && (
-                      <div className="text-xs text-[#9C665C] font-semibold flex items-center space-x-1">
+                      <div className="text-xs text-[#C48B81] font-semibold flex items-center space-x-1">
                         <Building2 className="w-3.5 h-3.5" />
                         <span>Boda: {evt.wedding_name}</span>
                       </div>
@@ -562,13 +562,13 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                     </div>
 
                     {evt.notes && (
-                      <p className="text-xs text-[#7D6F6B] italic bg-white p-2 rounded-xl border border-[#EAE3DA]">
+                      <p className="text-xs text-[#7D6F6B] italic bg-white p-2 rounded-xl border border-[#EFE8E1]">
                         "{evt.notes}"
                       </p>
                     )}
 
                     {/* Quick action buttons */}
-                    <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1 border-t border-[#EAE3DA]/60">
+                    <div className="flex flex-wrap items-center justify-end gap-1.5 pt-1 border-t border-[#EFE8E1]/60">
                       {/* 1-Click Google Calendar */}
                       <a
                         href={createGoogleCalendarUrl(evt)}
@@ -586,7 +586,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                           href={evt.meet_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="px-2.5 py-1 text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg hover:bg-emerald-100 transition inline-flex items-center space-x-1"
+                          className="px-2.5 py-1 text-xs font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] rounded-lg hover:bg-[#F3DCD7] transition inline-flex items-center space-x-1"
                         >
                           <ExternalLink className="w-3 h-3" />
                           <span>Google Meet</span>
@@ -621,8 +621,8 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
         {/* Modal: Agendar / Editar Evento */}
         {showAddModal && (
           <div className="fixed inset-0 z-60 bg-[#2B2826]/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-            <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EAE3DA] space-y-4">
-              <div className="flex items-center justify-between pb-2 border-b border-[#EAE3DA]">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EFE8E1] space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-[#EFE8E1]">
                 <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
                   {editingEventId ? 'Editar Evento General' : 'Agendar Cita o Evento en Calendario'}
                 </h3>
@@ -633,11 +633,11 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
 
               {/* Conflict Warning Alert Box */}
               {conflictWarning && (
-                <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs flex items-start space-x-2.5">
-                  <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div className="p-3.5 rounded-2xl bg-[#FAF4F0] border border-[#EFE8E1] text-[#8A6D5E] text-xs flex items-start space-x-2.5">
+                  <AlertTriangle className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <div className="font-bold">{conflictWarning}</div>
-                    <p className="text-amber-800">
+                    <div className="font-bold text-[#2B2826]">{conflictWarning}</div>
+                    <p className="text-[#7D6F6B]">
                       Revisa si deseas ajustar el horario para evitar sobreponer citas del equipo.
                     </p>
                   </div>
@@ -661,7 +661,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                     placeholder="Ej. Visita Técnica Hacienda / Open House Novias"
                     value={formData.title}
                     onChange={e => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
 
@@ -673,7 +673,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                     <select
                       value={formData.event_type}
                       onChange={e => setFormData({ ...formData, event_type: e.target.value as any })}
-                      className="w-full px-3 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                      className="w-full px-3 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                     >
                       <option value="CITA_EXTERNA">📍 Cita Externa (Proveedor / Locación)</option>
                       <option value="OPEN_HOUSE">✨ Open House / Showroom</option>
@@ -691,7 +691,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                     <select
                       value={formData.wedding_id}
                       onChange={e => setFormData({ ...formData, wedding_id: e.target.value })}
-                      className="w-full px-3 py-2.5 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5] focus:outline-none focus:ring-2 focus:ring-[#9C665C]"
+                      className="w-full px-3 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                     >
                       <option value="">General (Todo el Estudio)</option>
                       {assignedWeddings.map(w => (
@@ -715,7 +715,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                         setFormData({ ...formData, date: val });
                         checkClientConflict(val, formData.time, editingEventId);
                       }}
-                      className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs text-[#2B2826] bg-[#FAF8F5]"
+                      className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] bg-[#FAF8F5]"
                     />
                   </div>
 
@@ -732,7 +732,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                         setFormData({ ...formData, time: val });
                         checkClientConflict(formData.date, val, editingEventId);
                       }}
-                      className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs text-[#2B2826] bg-[#FAF8F5]"
+                      className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] bg-[#FAF8F5]"
                     />
                   </div>
 
@@ -744,7 +744,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                       type="time"
                       value={formData.end_time}
                       onChange={e => setFormData({ ...formData, end_time: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs text-[#2B2826] bg-[#FAF8F5]"
+                      className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] bg-[#FAF8F5]"
                     />
                   </div>
                 </div>
@@ -759,7 +759,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                       placeholder="Ej. Showroom San Pedro / Zoom"
                       value={formData.location}
                       onChange={e => setFormData({ ...formData, location: e.target.value })}
-                      className="w-full px-3.5 py-2 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5]"
+                      className="w-full px-3.5 py-2 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5]"
                     />
                   </div>
 
@@ -772,7 +772,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                       placeholder="Coordinador o Staff"
                       value={formData.responsible}
                       onChange={e => setFormData({ ...formData, responsible: e.target.value })}
-                      className="w-full px-3.5 py-2 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5]"
+                      className="w-full px-3.5 py-2 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5]"
                     />
                   </div>
                 </div>
@@ -786,25 +786,25 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                     placeholder="Detalles, proveedores involucrados o recordatorios..."
                     value={formData.notes}
                     onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                    className="w-full px-3.5 py-2 border border-[#EAE3DA] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5] resize-none"
+                    className="w-full px-3.5 py-2 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5] resize-none"
                   />
                 </div>
 
                 {conflictWarning && (
-                  <label className="flex items-center space-x-2 p-2.5 rounded-xl bg-amber-50/80 border border-amber-200 cursor-pointer">
+                  <label className="flex items-center space-x-2 p-2.5 rounded-xl bg-[#FAF4F0] border border-[#EFE8E1] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={formData.force_conflict}
                       onChange={e => setFormData({ ...formData, force_conflict: e.target.checked })}
-                      className="rounded text-[#9C665C] focus:ring-[#9C665C]"
+                      className="rounded text-[#C48B81] focus:ring-[#C48B81]"
                     />
-                    <span className="text-xs font-bold text-amber-900">
+                    <span className="text-xs font-bold text-[#8A6D5E]">
                       Entiendo el empalme: Deseo agendar en este horario de todas formas.
                     </span>
                   </label>
                 )}
 
-                <div className="flex items-center justify-end space-x-2.5 pt-3 border-t border-[#EAE3DA]">
+                <div className="flex items-center justify-end space-x-2.5 pt-3 border-t border-[#EFE8E1]">
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
@@ -814,7 +814,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs"
+                    className="px-5 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs"
                   >
                     {editingEventId ? 'Actualizar Evento' : 'Agendar en Calendario'}
                   </button>
@@ -827,8 +827,8 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
         {/* Modal: Vincular con Google Calendar */}
         {showGoogleSyncModal && (
           <div className="fixed inset-0 z-60 bg-[#2B2826]/55 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-            <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EAE3DA] space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-[#EAE3DA]">
+            <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EFE8E1] space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-[#EFE8E1]">
                 <div className="flex items-center space-x-2.5">
                   <div className="w-9 h-9 rounded-xl bg-[#4285F4]/10 text-[#1967D2] flex items-center justify-center">
                     <CalendarIcon className="w-5 h-5 text-[#1967D2]" />
@@ -851,10 +851,10 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
               </div>
 
               {/* Opción A: Suscripción en Vivo Automática */}
-              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-3">
+              <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="w-2 h-2 rounded-full bg-[#C48B81]" />
                     <span className="text-xs font-bold uppercase tracking-wider text-[#2B2826]">
                       Suscripción Automática en Vivo (Recomendada)
                     </span>
@@ -877,7 +877,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                       type="text"
                       readOnly
                       value={typeof window !== 'undefined' ? `${window.location.origin}/api/calendar/feed.ics` : '/api/calendar/feed.ics'}
-                      className="w-full px-3 py-2 border border-[#EAE3DA] rounded-xl text-xs font-mono bg-white text-[#2B2826] select-all focus:outline-none"
+                      className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs font-mono bg-white text-[#2B2826] select-all focus:outline-none"
                     />
                     <button
                       onClick={() => {
@@ -886,12 +886,12 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                         setCopiedIcsLink(true);
                         setTimeout(() => setCopiedIcsLink(false), 2500);
                       }}
-                      className="px-3 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EAE3DA] rounded-xl text-xs font-semibold shrink-0 transition flex items-center space-x-1 cursor-pointer"
+                      className="px-3 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] rounded-xl text-xs font-semibold shrink-0 transition flex items-center space-x-1 cursor-pointer"
                     >
                       {copiedIcsLink ? (
                         <>
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-emerald-700 font-bold">¡Copiado!</span>
+                          <Check className="w-3.5 h-3.5 text-[#384C3A]" />
+                          <span className="text-[#384C3A] font-bold">¡Copiado!</span>
                         </>
                       ) : (
                         <>
@@ -920,9 +920,9 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
               </div>
 
               {/* Guía Rápida de Configuración */}
-              <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#EAE3DA] space-y-2">
+              <div className="p-3.5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-2">
                 <div className="text-xs font-bold text-[#2B2826] uppercase tracking-wider flex items-center space-x-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[#9C665C]" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span>¿Cómo activarlo en Google Calendar?</span>
                 </div>
                 <ol className="text-xs text-[#5A524C] space-y-1.5 list-decimal list-inside leading-relaxed pl-1">
@@ -945,7 +945,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowGoogleSyncModal(false)}
-                  className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs cursor-pointer"
+                  className="px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs cursor-pointer"
                 >
                   Entendido
                 </button>
