@@ -23,6 +23,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   const [savingSettings, setSavingSettings] = useState(false);
   const [invitationFeedback, setInvitationFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [realTasks, setRealTasks] = useState<any[]>([]);
 
   const handleUploadInvitationPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,11 +110,14 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   const fetchWeddingDetails = async () => {
     if (!currentWedding) return;
     try {
-      const [res, catRes] = await Promise.all([
+      const [res, catRes, checkRes] = await Promise.all([
         fetch(`/api/weddings/${currentWedding.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         }),
         fetch('/api/catalogs', {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        fetch(`/api/weddings/${currentWedding.id}/checklist`, {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -126,6 +130,12 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         const catData = await catRes.json();
         if (Array.isArray(catData.catalogs?.meeting_packages)) {
           setPackagesList(catData.catalogs.meeting_packages);
+        }
+      }
+      if (checkRes.ok) {
+        const checkData = await checkRes.json();
+        if (Array.isArray(checkData.tasks)) {
+          setRealTasks(checkData.tasks);
         }
       }
     } catch (err) {
@@ -502,27 +512,41 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <CheckCircle2 className="w-4 h-4 text-[#C48B81] group-hover:scale-110 transition-transform" />
             </div>
 
-            <div className="space-y-3 py-1">
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] transition hover:bg-white">
-                <span className="text-xs font-medium text-[#2B2826] truncate">Degustación de Menú</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60] text-[10px] font-semibold">
-                  Pendiente
-                </span>
-              </div>
+            <div className="space-y-2.5 py-1">
+              {(() => {
+                const pendingTasks = realTasks.filter(t => t.status !== 'Completada');
+                const displayTasks = pendingTasks.length > 0 ? pendingTasks.slice(0, 3) : realTasks.slice(0, 3);
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] transition hover:bg-white">
-                <span className="text-xs font-medium text-[#2B2826] truncate">Prueba de Vestido</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60] text-[10px] font-semibold">
-                  En curso
-                </span>
-              </div>
+                if (displayTasks.length === 0) {
+                  return (
+                    <div className="text-center py-6 px-3 text-xs text-[#7D6F6B] bg-[#FAF7F5] rounded-xl border border-dashed border-[#EFE8E1]">
+                      <span>No hay tareas pendientes en el checklist.</span>
+                    </div>
+                  );
+                }
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] transition hover:bg-white">
-                <span className="text-xs font-medium text-[#2B2826] truncate">Confirmar Layout de Mesas</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-[#E5EDE6] text-[#4B634D] text-[10px] font-semibold">
-                  Listo
-                </span>
-              </div>
+                return displayTasks.map(task => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] transition hover:bg-white gap-2"
+                  >
+                    <span className="text-xs font-medium text-[#2B2826] truncate" title={task.title}>
+                      {task.title}
+                    </span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
+                        task.status === 'Completada'
+                          ? 'bg-[#E5EDE6] text-[#4B634D]'
+                          : task.status === 'En proceso'
+                          ? 'bg-[#FAF3E8] text-[#8A6332]'
+                          : 'bg-[#F7EDEB] text-[#A86B60]'
+                      }`}
+                    >
+                      {task.status || 'Pendiente'}
+                    </span>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
 
