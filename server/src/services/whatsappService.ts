@@ -683,8 +683,8 @@ export class WhatsAppService {
 
     const rawTemplateEnv = process.env.WHATSAPP_RSVP_TEMPLATE;
     const preferredTemplates = rawTemplateEnv && rawTemplateEnv !== 'hello_world'
-      ? [rawTemplateEnv, 'rsvp_viva_la_bride', 'rsvp_confirmacion_boda']
-      : ['rsvp_viva_la_bride', 'rsvp_confirmacion_boda'];
+      ? [rawTemplateEnv, 'invitacion_editorial_v2', 'invitacion_editorial_vlb', 'rsvp_viva_la_bride', 'rsvp_confirmacion_boda']
+      : ['invitacion_editorial_v2', 'invitacion_editorial_vlb', 'rsvp_viva_la_bride', 'rsvp_confirmacion_boda'];
 
     // Deduplicate template list
     const candidateTemplates = Array.from(new Set(preferredTemplates));

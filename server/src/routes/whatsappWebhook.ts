@@ -41,7 +41,12 @@ async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, ph
   if (wedding.no_children) {
     summary += `• Nota: Recepción sólo para adultos\n`;
   }
-  summary += `• Pases confirmados: ${places} persona(s)\n\n`;
+  summary += `• Pases confirmados: ${places} persona(s)\n`;
+
+  if (guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna') {
+    summary += `• Restricciones: ${guest.dietary_requirements}\n`;
+  }
+  summary += `\n`;
 
   if (wedding.invitation_type === 'LINK' && wedding.invitation_url) {
     summary += `💌 Tu invitación digital:\n${wedding.invitation_url}\n\n`;
@@ -70,6 +75,28 @@ async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, ph
       { weddingId, guestId: guest.id }
     );
   }
+}
+
+/**
+ * Prompts the guest about dietary restrictions or allergies
+ */
+async function askDietaryRequirements(normalizedPhone: string, weddingId: string, guestId: string) {
+  const now = new Date().toISOString();
+  db.prepare(`
+    UPDATE guests
+    SET rsvp_step = 'AWAITING_DIETARY', updated_at = ?
+    WHERE id = ? AND wedding_id = ?
+  `).run(now, guestId, weddingId);
+
+  await WhatsAppService.sendInteractiveButtons(
+    normalizedPhone,
+    `¿Tú o alguno de tus acompañantes tiene alguna restricción alimenticia o alergia?\n\n(Ej. Vegetariano, celíaco, mariscos, o selecciona 'Sin restricciones')`,
+    [
+      { id: 'diet_none', title: 'Sin restricciones' },
+      { id: 'diet_has', title: 'Tengo restricción' }
+    ],
+    { weddingId, guestId }
+  );
 }
 
 /**
@@ -166,15 +193,14 @@ async function handleAutomatedRsvpStep(params: {
           { weddingId, guestId: matchedGuest.id }
         );
       } else {
-        // Individual guest (1 seat)
+        // Individual guest (1 seat) -> Proceed to dietary restrictions
         db.prepare(`
           UPDATE guests
-          SET confirmed_places = 1, rsvp_step = 'COMPLETED', updated_at = ?
+          SET confirmed_places = 1, updated_at = ?
           WHERE id = ? AND wedding_id = ?
         `).run(now, matchedGuest.id, weddingId);
 
-        const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
-        await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
+        await askDietaryRequirements(normalizedPhone, weddingId, matchedGuest.id);
       }
       return;
     }
@@ -204,12 +230,11 @@ async function handleAutomatedRsvpStep(params: {
     if (isYes) {
       db.prepare(`
         UPDATE guests
-        SET confirmed_places = ?, rsvp_step = 'COMPLETED', updated_at = ?
+        SET confirmed_places = ?, updated_at = ?
         WHERE id = ? AND wedding_id = ?
       `).run(totalSeats, now, matchedGuest.id, weddingId);
 
-      const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
-      await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
+      await askDietaryRequirements(normalizedPhone, weddingId, matchedGuest.id);
       return;
     } else if (isNo) {
       db.prepare(`
@@ -230,12 +255,11 @@ async function handleAutomatedRsvpStep(params: {
       if (!isNaN(parsedNum) && parsedNum > 0) {
         db.prepare(`
           UPDATE guests
-          SET confirmed_places = ?, rsvp_step = 'COMPLETED', updated_at = ?
+          SET confirmed_places = ?, updated_at = ?
           WHERE id = ? AND wedding_id = ?
         `).run(parsedNum, now, matchedGuest.id, weddingId);
 
-        const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
-        await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
+        await askDietaryRequirements(normalizedPhone, weddingId, matchedGuest.id);
         return;
       }
     }
@@ -247,12 +271,11 @@ async function handleAutomatedRsvpStep(params: {
     if (!isNaN(parsedNum) && parsedNum > 0) {
       db.prepare(`
         UPDATE guests
-        SET confirmed_places = ?, rsvp_step = 'COMPLETED', updated_at = ?
+        SET confirmed_places = ?, updated_at = ?
         WHERE id = ? AND wedding_id = ?
       `).run(parsedNum, now, matchedGuest.id, weddingId);
 
-      const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
-      await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
+      await askDietaryRequirements(normalizedPhone, weddingId, matchedGuest.id);
       return;
     } else {
       await WhatsAppService.sendTextMessage(
@@ -262,6 +285,73 @@ async function handleAutomatedRsvpStep(params: {
       );
       return;
     }
+  }
+
+  // 5. Step: AWAITING_DIETARY
+  if (currentStep === 'AWAITING_DIETARY') {
+    const isNone =
+      lowerButtonId === 'diet_none' ||
+      lowerContent.includes('sin restricci') ||
+      lowerContent.includes('ninguna') ||
+      lowerContent.includes('ninguno') ||
+      lowerContent.includes('ningún') ||
+      lowerContent === 'no' ||
+      lowerContent === 'todo bien';
+
+    const isHas =
+      lowerButtonId === 'diet_has' ||
+      lowerContent.includes('tengo restricci') ||
+      lowerContent.includes('si tengo') ||
+      lowerContent.includes('sí tengo');
+
+    if (isNone) {
+      db.prepare(`
+        UPDATE guests
+        SET dietary_requirements = 'Ninguna', rsvp_step = 'COMPLETED', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(now, matchedGuest.id, weddingId);
+
+      const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+      await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
+      return;
+    } else if (isHas) {
+      db.prepare(`
+        UPDATE guests
+        SET rsvp_step = 'AWAITING_DIETARY_DETAIL', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(now, matchedGuest.id, weddingId);
+
+      await WhatsAppService.sendTextMessage(
+        normalizedPhone,
+        `Por favor cuéntanos cuáles son tus restricciones o requerimientos alimenticios para avisar al catering:`,
+        { weddingId, guestId: matchedGuest.id }
+      );
+      return;
+    } else {
+      // The user typed their restriction directly as text! (e.g. "Soy vegetariano")
+      db.prepare(`
+        UPDATE guests
+        SET dietary_requirements = ?, rsvp_step = 'COMPLETED', updated_at = ?
+        WHERE id = ? AND wedding_id = ?
+      `).run(content.trim(), now, matchedGuest.id, weddingId);
+
+      const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+      await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
+      return;
+    }
+  }
+
+  // 6. Step: AWAITING_DIETARY_DETAIL
+  if (currentStep === 'AWAITING_DIETARY_DETAIL') {
+    db.prepare(`
+      UPDATE guests
+      SET dietary_requirements = ?, rsvp_step = 'COMPLETED', updated_at = ?
+      WHERE id = ? AND wedding_id = ?
+    `).run(content.trim(), now, matchedGuest.id, weddingId);
+
+    const refreshed = db.prepare('SELECT * FROM guests WHERE id = ?').get(matchedGuest.id) as any;
+    await sendFinalEventCardAndInvitation(refreshed || matchedGuest, weddingId, normalizedPhone);
+    return;
   }
 }
 
