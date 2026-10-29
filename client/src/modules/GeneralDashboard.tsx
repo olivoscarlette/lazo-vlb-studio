@@ -165,6 +165,26 @@ export const GeneralDashboard: React.FC = () => {
   const [editError, setEditError] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
+  // Helper to compute default event name from type and celebrants
+  const getAutoEventName = (type: string, p1: string, p2: string) => {
+    const cleanP1 = p1.trim();
+    const cleanP2 = p2.trim();
+    if (type === 'Despedida de Soltera') {
+      return cleanP1 ? `Despedida ${cleanP1}` : 'Despedida';
+    } else if (type === 'Baby Shower') {
+      return cleanP1 ? `Baby Shower ${cleanP1}` : 'Baby Shower';
+    } else if (type === 'Bautizo / Primera Comunión') {
+      return cleanP1 ? `Bautizo ${cleanP1}` : 'Bautizo';
+    } else if (type === 'XV Años / Aniversario') {
+      return cleanP1 ? `XV Años ${cleanP1}` : 'XV Años';
+    } else if (type === 'Boda Civil') {
+      return cleanP1 && cleanP2 ? `Boda Civil ${cleanP1} & ${cleanP2}` : (cleanP1 ? `Boda Civil ${cleanP1}` : 'Boda Civil');
+    } else if (type.includes('Boda')) {
+      return cleanP1 && cleanP2 ? `${cleanP1} & ${cleanP2}` : (cleanP1 || cleanP2 || '');
+    }
+    return cleanP1 ? `${type} ${cleanP1}` : type;
+  };
+
   const handleOpenEditModal = (e: React.MouseEvent, w: Wedding) => {
     e.stopPropagation();
     setEditingWedding(w);
@@ -840,54 +860,100 @@ export const GeneralDashboard: React.FC = () => {
   };
 
   const renderCoupleNames = (w: Wedding) => {
-    // 1. Si el nombre del evento tiene '&' o ' y ', separar con la tipografía editorial en 2 líneas
-    if (w.name) {
-      if (w.name.includes('&')) {
-        const parts = w.name.split('&');
-        const p1 = toTitleCase(parts[0].trim());
-        const p2 = toTitleCase(parts.slice(1).join('&').trim());
-        return (
-          <>
-            <div className="truncate text-[#2B2826]">{p1}</div>
-            <div className="truncate text-[#A86B60]">
-              <span className="text-[#C48B81] mr-1.5">&</span>
-              {p2}
-            </div>
-          </>
-        );
-      } else if (w.name.includes(' y ')) {
-        const parts = w.name.split(' y ');
-        const p1 = toTitleCase(parts[0].trim());
-        const p2 = toTitleCase(parts.slice(1).join(' y ').trim());
-        return (
-          <>
-            <div className="truncate text-[#2B2826]">{p1}</div>
-            <div className="truncate text-[#A86B60]">
-              <span className="text-[#C48B81] mr-1.5">&</span>
-              {p2}
-            </div>
-          </>
-        );
-      }
+    const rawName = (w.name || '').trim();
+    const eventType = (w.event_type || '').toLowerCase();
+    const p1Raw = (w.partner_1_name || '').trim();
+    const p2Raw = (w.partner_2_name || '').trim();
+
+    let line1 = '';
+    let line2 = '';
+    let hasAmpersand = false;
+
+    const clean = (s: string) => toTitleCase(s.trim());
+
+    // 1. Si contiene '&' o ' y ' (ej. "Sofía & Alejandro", "Boda Civil Dani & Carlos")
+    if (rawName.includes('&') || rawName.includes(' y ')) {
+      const isAmp = rawName.includes('&');
+      const delimiter = isAmp ? '&' : ' y ';
+      const parts = rawName.split(delimiter);
+      line1 = clean(parts[0]);
+      line2 = clean(parts.slice(1).join(delimiter));
+      hasAmpersand = true;
+    }
+    // 2. Si ambos contrayentes están registrados y el nombre no los separa
+    else if (p1Raw && p2Raw) {
+      line1 = clean(p1Raw);
+      line2 = clean(p2Raw);
+      hasAmpersand = true;
+    }
+    // 3. Despedida de Soltera
+    else if (eventType.includes('despedida') || rawName.toLowerCase().startsWith('despedida')) {
+      line1 = 'Despedida';
+      let rest = rawName.replace(/^despedida(\s+de\s+soltera|\s+de|\s+)?/i, '').trim();
+      if (!rest) rest = p1Raw || 'Soltera';
+      line2 = clean(rest);
+    }
+    // 4. Baby Shower
+    else if (eventType.includes('baby') || rawName.toLowerCase().startsWith('baby')) {
+      line1 = 'Baby Shower';
+      let rest = rawName.replace(/^baby\s*shower(\s+de|\s+)?/i, '').trim();
+      if (!rest) rest = p1Raw || 'Bebé';
+      line2 = clean(rest);
+    }
+    // 5. Bautizo / Primera Comunión
+    else if (eventType.includes('bautizo') || rawName.toLowerCase().startsWith('bautizo')) {
+      line1 = 'Bautizo';
+      let rest = rawName.replace(/^bautizo(\s+de|\s+)?/i, '').trim();
+      if (!rest) rest = p1Raw || 'Celebración';
+      line2 = clean(rest);
+    }
+    else if (eventType.includes('comuni') || rawName.toLowerCase().startsWith('comuni') || rawName.toLowerCase().startsWith('primera com')) {
+      line1 = 'Primera Comunión';
+      let rest = rawName.replace(/^(primera\s+comuni[oó]n|comuni[oó]n)(\s+de|\s+)?/i, '').trim();
+      if (!rest) rest = p1Raw || 'Celebración';
+      line2 = clean(rest);
+    }
+    // 6. XV Años / Aniversario
+    else if (eventType.includes('xv') || rawName.toLowerCase().startsWith('xv') || rawName.toLowerCase().startsWith('mis xv')) {
+      line1 = 'XV Años';
+      let rest = rawName.replace(/^(xv\s+a[nñ]os|mis\s+xv)(\s+de|\s+)?/i, '').trim();
+      if (!rest) rest = p1Raw || 'Quinceañera';
+      line2 = clean(rest);
+    }
+    else if (eventType.includes('aniversario') || rawName.toLowerCase().startsWith('aniversario')) {
+      line1 = 'Aniversario';
+      let rest = rawName.replace(/^aniversario(\s+de|\s+)?/i, '').trim();
+      if (!rest) rest = p1Raw || 'Celebración';
+      line2 = clean(rest);
+    }
+    // 7. Boda Civil sin ampersand
+    else if (eventType.includes('civil') || rawName.toLowerCase().startsWith('boda civil')) {
+      line1 = 'Boda Civil';
+      let rest = rawName.replace(/^boda\s+civil(\s+de|\s+)?/i, '').trim();
+      if (!rest) rest = p1Raw || 'Civil';
+      line2 = clean(rest);
+    }
+    // 8. Cualquier nombre con múltiples palabras
+    else if (rawName.includes(' ')) {
+      const words = rawName.split(' ');
+      line1 = clean(words[0]);
+      line2 = clean(words.slice(1).join(' '));
+    }
+    // 9. Nombre único
+    else {
+      line1 = clean(rawName || p1Raw || 'Evento');
+      line2 = clean(p1Raw && p1Raw !== rawName ? p1Raw : (w.event_type || 'Exclusivo'));
     }
 
-    // 2. Si no tiene separador en el nombre, revisar nombres de los novios/celebrantes
-    let p1 = w.partner_1_name ? toTitleCase(w.partner_1_name) : '';
-    let p2 = w.partner_2_name ? toTitleCase(w.partner_2_name) : '';
-
-    if (p1 && p2) {
-      return (
-        <>
-          <div className="truncate text-[#2B2826]">{p1}</div>
-          <div className="truncate text-[#A86B60]">
-            <span className="text-[#C48B81] mr-1.5">&</span>
-            {p2}
-          </div>
-        </>
-      );
-    }
-
-    return <div className="truncate text-[#2B2826]">{toTitleCase(w.name || p1 || 'Evento')}</div>;
+    return (
+      <>
+        <div className="truncate text-[#2B2826]">{line1}</div>
+        <div className="truncate text-[#A86B60]">
+          {hasAmpersand && <span className="text-[#C48B81] mr-1.5">&</span>}
+          {line2}
+        </div>
+      </>
+    );
   };
 
   const userName = user?.name ? user.name.split(' ')[0] : 'Equipo';
@@ -2530,7 +2596,11 @@ export const GeneralDashboard: React.FC = () => {
                 <label className="block text-xs font-bold text-stone-700 mb-1">Tipo de Evento *</label>
                 <select
                   value={formData.event_type}
-                  onChange={e => setFormData({ ...formData, event_type: e.target.value })}
+                  onChange={e => {
+                    const newType = e.target.value;
+                    const autoName = getAutoEventName(newType, formData.partner_1_name, formData.partner_2_name);
+                    setFormData({ ...formData, event_type: newType, name: autoName });
+                  }}
                   className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs font-medium text-[#2B2826] bg-[#FAF8F5] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 >
                   <option value="Boda Completa">Boda Completa</option>
@@ -2552,9 +2622,9 @@ export const GeneralDashboard: React.FC = () => {
                   required
                   placeholder={
                     formData.event_type.includes('Boda')
-                      ? 'Ej. Boda Sofía & Alejandro'
+                      ? 'Ej. Sofía & Alejandro'
                       : formData.event_type === 'Despedida de Soltera'
-                      ? 'Ej. Despedida Sofía Villaseñor'
+                      ? 'Ej. Despedida Mariana'
                       : formData.event_type === 'Baby Shower'
                       ? 'Ej. Baby Shower Mateo'
                       : 'Ej. Nombre del evento'
@@ -2578,11 +2648,15 @@ export const GeneralDashboard: React.FC = () => {
                     required
                     placeholder={
                       formData.event_type.toLowerCase().includes('boda')
-                        ? 'Sofía Villaseñor'
-                        : 'Mariana Garza'
+                        ? 'Sofía'
+                        : 'Mariana'
                     }
                     value={formData.partner_1_name}
-                    onChange={e => setFormData({ ...formData, partner_1_name: e.target.value })}
+                    onChange={e => {
+                      const newP1 = e.target.value;
+                      const autoName = getAutoEventName(formData.event_type, newP1, formData.partner_2_name);
+                      setFormData({ ...formData, partner_1_name: newP1, name: autoName });
+                    }}
                     className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
@@ -2596,11 +2670,15 @@ export const GeneralDashboard: React.FC = () => {
                     type="text"
                     placeholder={
                       formData.event_type.toLowerCase().includes('boda')
-                        ? 'Alejandro De la Mora'
+                        ? 'Alejandro'
                         : 'Opcional'
                     }
                     value={formData.partner_2_name}
-                    onChange={e => setFormData({ ...formData, partner_2_name: e.target.value })}
+                    onChange={e => {
+                      const newP2 = e.target.value;
+                      const autoName = getAutoEventName(formData.event_type, formData.partner_1_name, newP2);
+                      setFormData({ ...formData, partner_2_name: newP2, name: autoName });
+                    }}
                     className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
@@ -2811,7 +2889,11 @@ export const GeneralDashboard: React.FC = () => {
                 <label className="block text-xs font-bold text-stone-700 mb-1">Tipo de Evento *</label>
                 <select
                   value={editFormData.event_type}
-                  onChange={e => setEditFormData({ ...editFormData, event_type: e.target.value })}
+                  onChange={e => {
+                    const newType = e.target.value;
+                    const autoName = getAutoEventName(newType, editFormData.partner_1_name, editFormData.partner_2_name);
+                    setEditFormData({ ...editFormData, event_type: newType, name: autoName });
+                  }}
                   className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs font-medium text-[#2B2826] bg-[#FAF8F5] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 >
                   <option value="Boda Completa">Boda Completa</option>
@@ -2849,7 +2931,11 @@ export const GeneralDashboard: React.FC = () => {
                     type="text"
                     required
                     value={editFormData.partner_1_name}
-                    onChange={e => setEditFormData({ ...editFormData, partner_1_name: e.target.value })}
+                    onChange={e => {
+                      const newP1 = e.target.value;
+                      const autoName = getAutoEventName(editFormData.event_type, newP1, editFormData.partner_2_name);
+                      setEditFormData({ ...editFormData, partner_1_name: newP1, name: autoName });
+                    }}
                     className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
@@ -2862,7 +2948,11 @@ export const GeneralDashboard: React.FC = () => {
                   <input
                     type="text"
                     value={editFormData.partner_2_name}
-                    onChange={e => setEditFormData({ ...editFormData, partner_2_name: e.target.value })}
+                    onChange={e => {
+                      const newP2 = e.target.value;
+                      const autoName = getAutoEventName(editFormData.event_type, editFormData.partner_1_name, newP2);
+                      setEditFormData({ ...editFormData, partner_2_name: newP2, name: autoName });
+                    }}
                     className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
