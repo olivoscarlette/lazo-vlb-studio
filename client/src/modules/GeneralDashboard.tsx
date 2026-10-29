@@ -1145,135 +1145,219 @@ export const GeneralDashboard: React.FC = () => {
       <main className={`flex-1 min-w-0 max-w-full overflow-x-hidden p-3.5 sm:p-8 lg:p-10 overflow-y-auto transition-all duration-300 ${
         sidebarOpen ? 'md:ml-64 lg:ml-72' : 'md:ml-16 lg:ml-[4.25rem]'
       }`}>
+        {/* Barra Superior Móvil: Siempre visible en móvil con Logo, Menú, Notificaciones y Perfil */}
+        <div className="flex md:hidden items-center justify-between gap-3 pb-3 mb-5 border-b border-[#EFE8E1]">
+          <div className="flex items-center space-x-2.5">
+            <button
+              onClick={handleToggleSidebar}
+              aria-label="Abrir menú"
+              className="p-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F2ECE7] text-[#2B2826] transition shadow-2xs cursor-pointer shrink-0"
+              title="Menú"
+            >
+              <PanelLeft className="w-5 h-5 text-[#C48B81]" />
+            </button>
+            <div
+              onClick={() => setActiveTab('weddings')}
+              className="flex items-center cursor-pointer"
+              title="LAZO Studio"
+            >
+              <img
+                src="/lazo-logo.png"
+                alt="LAZO"
+                className="h-7 w-auto object-contain select-none"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            {/* Campana de Notificaciones Móvil */}
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifMenu(!showNotifMenu)}
+                className="p-2 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer relative"
+                title="Notificaciones"
+              >
+                <Bell className="w-4 h-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#C48B81]" />
+                )}
+              </button>
+
+              {showNotifMenu && (
+                <div className="absolute right-0 mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] py-2 z-50">
+                  <div className="px-4 py-2.5 border-b border-[#F2ECE7] flex items-center justify-between">
+                    <span className="font-serif text-base font-semibold text-[#2B2826]">Notificaciones</span>
+                    {unreadCount > 0 && (
+                      <span className="text-xs bg-[#F7EDEB] text-[#A86B60] px-2.5 py-0.5 rounded-full font-medium">
+                        {unreadCount} nuevas
+                      </span>
+                    )}
+                  </div>
+                  <div className="max-h-72 overflow-y-auto divide-y divide-[#F2ECE7]">
+                    {notifications.length === 0 ? (
+                      <div className="p-4 text-center text-xs text-[#7D6F6B]">
+                        No hay notificaciones pendientes.
+                      </div>
+                    ) : (
+                      notifications.map(n => (
+                        <div
+                          key={n.id}
+                          onClick={() => handleMarkAsRead(n.id)}
+                          className={`p-3 text-xs cursor-pointer hover:bg-[#FAF7F5] transition ${!n.read ? 'bg-[#F7EDEB]/50' : ''}`}
+                        >
+                          <div className="font-semibold text-[#2B2826] mb-0.5">{n.title}</div>
+                          <div className="text-[11px] text-[#7D6F6B] leading-snug">{n.message}</div>
+                          <div className="text-[10px] text-[#7D6F6B] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Avatar circular con punto de estado */}
+            <div
+              onClick={() => setShowProfileModal(true)}
+              className="relative cursor-pointer group"
+              title={`Mi Perfil · ${user?.name || ''}`}
+            >
+              {user?.avatar_url ? (
+                <img
+                  src={user.avatar_url}
+                  alt={user?.name}
+                  className="w-8 h-8 rounded-full object-cover border border-[#CCDACC] shadow-2xs"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#F7EDEB] text-[#A86B60] font-serif font-bold text-xs flex items-center justify-center border border-[#ECD9D5]">
+                  {userName.charAt(0)}
+                </div>
+              )}
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#6E8C70] border-2 border-[#FAF7F5]" />
+            </div>
+
+            {/* Salir */}
+            <button
+              onClick={logout}
+              title="Cerrar sesión"
+              className="p-2 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
         {/* PESTAÑA PRINCIPAL: BODAS */}
         {activeTab === 'weddings' && (
           <div>
-            {/* Cabecera Minimalista y Cálida */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <div className="flex items-center space-x-3.5">
-                {!sidebarOpen && (
-                  <div className="flex items-center space-x-2.5 md:hidden">
-                    <button
-                      onClick={handleToggleSidebar}
-                      aria-label="Mostrar menú lateral"
-                      className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F2ECE7] text-[#2B2826] transition shadow-xs cursor-pointer shrink-0"
-                      title="Mostrar menú lateral (⌘B)"
-                    >
-                      <PanelLeft className="w-5 h-5 text-[#C48B81]" />
-                      <span className="text-sm font-semibold hidden sm:inline">Menú</span>
-                    </button>
-                    <img
-                      src="/lazo-logo.png"
-                      alt="LAZO"
-                      className="h-8 w-auto object-contain select-none cursor-pointer"
-                      onClick={() => setActiveTab('weddings')}
-                    />
-                  </div>
-                )}
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#2B2826]">
-                      Hola, {userName} 👋
-                    </h1>
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]">
-                      <span className="w-2 h-2 rounded-full bg-[#C48B81]"></span>
-                      {weddings.length} {weddings.length === 1 ? 'evento activo' : 'eventos activos'}
-                    </span>
-                  </div>
-                  <p className="text-xs text-[#7D6F6B] mt-1">
-                    Estudio de planeación y diseño integral · Temporada 2026-2027
-                  </p>
+            {/* Cabecera Editorial */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 sm:mb-8">
+              <div>
+                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                  <h1 className="font-serif text-2xl sm:text-4xl font-bold text-[#2B2826] tracking-tight">
+                    Hola, {userName} 👋
+                  </h1>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5] shrink-0">
+                    <span className="w-2 h-2 rounded-full bg-[#C48B81]"></span>
+                    {weddings.length} {weddings.length === 1 ? 'evento activo' : 'eventos activos'}
+                  </span>
                 </div>
+                <p className="text-xs text-[#7D6F6B] mt-1 sm:mt-1.5 leading-relaxed">
+                  Estudio de planeación y diseño integral · Temporada 2026-2027
+                </p>
               </div>
 
-              <div className="flex items-center space-x-3.5 self-start sm:self-auto">
+              {/* Botón de Agregar Evento y Controles de Escritorio */}
+              <div className="flex items-center gap-3 w-full md:w-auto">
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center bg-[#C48B81] hover:bg-[#A86B60] text-[#FFFFFF] px-5 py-2.5 rounded-full text-sm font-semibold shadow-xs hover:shadow-md hover:shadow-[#C48B81]/20 transition cursor-pointer"
+                  className="w-full md:w-auto inline-flex items-center justify-center bg-[#C48B81] hover:bg-[#A86B60] text-[#FFFFFF] px-6 py-2.5 rounded-full text-sm font-semibold shadow-xs hover:shadow-md hover:shadow-[#C48B81]/20 transition cursor-pointer"
                 >
                   <span>Agregar evento</span>
                 </button>
 
-                {/* Avatar circular con punto de estado */}
-                <div
-                  onClick={() => setShowProfileModal(true)}
-                  className="relative cursor-pointer group"
-                  title={`Mi Perfil · ${user?.name || ''}`}
-                >
-                  {user?.avatar_url ? (
-                    <img
-                      src={user.avatar_url}
-                      alt={user?.name}
-                      className="w-10 h-10 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-[#F7EDEB] text-[#A86B60] font-serif font-bold text-base flex items-center justify-center border border-[#ECD9D5] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition">
-                      {userName.charAt(0)}
-                    </div>
-                  )}
-                  <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#6E8C70] border-2 border-[#FAF7F5]" title="En línea" />
-                </div>
-
-                {/* Campana de Notificaciones */}
-                <div className="relative">
-                  <button
-                    onClick={() => setShowNotifMenu(!showNotifMenu)}
-                    className="p-2.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer relative"
-                    title="Notificaciones"
+                {/* Controles de perfil y notificaciones visibles SOLO en escritorio */}
+                <div className="hidden md:flex items-center space-x-3.5">
+                  <div
+                    onClick={() => setShowProfileModal(true)}
+                    className="relative cursor-pointer group"
+                    title={`Mi Perfil · ${user?.name || ''}`}
                   >
-                    <Bell className="w-5 h-5" />
-                    {unreadCount > 0 && (
-                      <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#C48B81]" />
+                    {user?.avatar_url ? (
+                      <img
+                        src={user.avatar_url}
+                        alt={user?.name}
+                        className="w-10 h-10 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-[#F7EDEB] text-[#A86B60] font-serif font-bold text-base flex items-center justify-center border border-[#ECD9D5] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition">
+                        {userName.charAt(0)}
+                      </div>
                     )}
-                  </button>
+                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#6E8C70] border-2 border-[#FAF7F5]" title="En línea" />
+                  </div>
 
-                  {showNotifMenu && (
-                    <div className="absolute right-0 mt-2 w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] py-2 z-50">
-                      <div className="px-4 py-2.5 border-b border-[#F2ECE7] flex items-center justify-between">
-                        <span className="font-serif text-lg font-semibold text-[#2B2826]">Notificaciones</span>
-                        {unreadCount > 0 && (
-                          <span className="text-xs bg-[#F7EDEB] text-[#A86B60] px-2.5 py-0.5 rounded-full font-medium">
-                            {unreadCount} nuevas
-                          </span>
-                        )}
-                      </div>
-                      <div className="max-h-72 overflow-y-auto divide-y divide-[#F2ECE7]">
-                        {notifications.length === 0 ? (
-                          <div className="p-5 text-center text-sm text-[#7D6F6B]">
-                            No hay notificaciones pendientes.
-                          </div>
-                        ) : (
-                          notifications.map(n => (
-                            <div
-                              key={n.id}
-                              onClick={() => handleMarkAsRead(n.id)}
-                              className={`p-3.5 text-sm cursor-pointer hover:bg-[#FAF7F5] transition ${!n.read ? 'bg-[#F7EDEB]/50' : ''}`}
-                            >
-                              <div className="font-semibold text-[#2B2826] mb-0.5">{n.title}</div>
-                              <div className="text-xs text-[#7D6F6B] leading-snug">{n.message}</div>
-                              <div className="text-xs text-[#7D6F6B] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
+                  {/* Campana de Notificaciones Escritorio */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowNotifMenu(!showNotifMenu)}
+                      className="p-2.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer relative"
+                      title="Notificaciones"
+                    >
+                      <Bell className="w-5 h-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#C48B81]" />
+                      )}
+                    </button>
+
+                    {showNotifMenu && (
+                      <div className="absolute right-0 mt-2 w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] py-2 z-50">
+                        <div className="px-4 py-2.5 border-b border-[#F2ECE7] flex items-center justify-between">
+                          <span className="font-serif text-lg font-semibold text-[#2B2826]">Notificaciones</span>
+                          {unreadCount > 0 && (
+                            <span className="text-xs bg-[#F7EDEB] text-[#A86B60] px-2.5 py-0.5 rounded-full font-medium">
+                              {unreadCount} nuevas
+                            </span>
+                          )}
+                        </div>
+                        <div className="max-h-72 overflow-y-auto divide-y divide-[#F2ECE7]">
+                          {notifications.length === 0 ? (
+                            <div className="p-5 text-center text-sm text-[#7D6F6B]">
+                              No hay notificaciones pendientes.
                             </div>
-                          ))
-                        )}
+                          ) : (
+                            notifications.map(n => (
+                              <div
+                                key={n.id}
+                                onClick={() => handleMarkAsRead(n.id)}
+                                className={`p-3.5 text-sm cursor-pointer hover:bg-[#FAF7F5] transition ${!n.read ? 'bg-[#F7EDEB]/50' : ''}`}
+                              >
+                                <div className="font-semibold text-[#2B2826] mb-0.5">{n.title}</div>
+                                <div className="text-xs text-[#7D6F6B] leading-snug">{n.message}</div>
+                                <div className="text-xs text-[#7D6F6B] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
+                              </div>
+                            ))
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                {/* Salir */}
-                <button
-                  onClick={logout}
-                  title="Cerrar sesión"
-                  className="p-2.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
+                  {/* Salir */}
+                  <button
+                    onClick={logout}
+                    title="Cerrar sesión"
+                    className="p-2.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Barra de Búsqueda Rápida y Filtros Directos */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-              <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6 sm:mb-8">
+              <div className="relative flex-1 max-w-full md:max-w-md">
                 <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
                 <input
                   type="text"
@@ -1284,10 +1368,10 @@ export const GeneralDashboard: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 p-1 bg-[#F2ECE7] rounded-full border border-[#EFE8E1] overflow-x-auto text-xs font-medium self-start sm:self-auto max-w-full">
+              <div className="flex items-center gap-1.5 p-1 bg-[#F2ECE7] rounded-full border border-[#EFE8E1] overflow-x-auto text-xs font-medium self-start md:self-auto max-w-full [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <button
                   onClick={() => setCategoryFilter('ALL')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
                     categoryFilter === 'ALL'
                       ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
@@ -1297,7 +1381,7 @@ export const GeneralDashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setCategoryFilter('BODAS')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
                     categoryFilter === 'BODAS'
                       ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
@@ -1307,7 +1391,7 @@ export const GeneralDashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setCategoryFilter('DESPEDIDAS')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
                     categoryFilter === 'DESPEDIDAS'
                       ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
@@ -1317,7 +1401,7 @@ export const GeneralDashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setCategoryFilter('BABY_SHOWER')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
                     categoryFilter === 'BABY_SHOWER'
                       ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
@@ -1327,7 +1411,7 @@ export const GeneralDashboard: React.FC = () => {
                 </button>
                 <button
                   onClick={() => setCategoryFilter('OTROS')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
                     categoryFilter === 'OTROS'
                       ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
@@ -1495,17 +1579,6 @@ export const GeneralDashboard: React.FC = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
               <div className="flex items-center space-x-3.5">
-                {!sidebarOpen && (
-                  <button
-                    onClick={handleToggleSidebar}
-                    aria-label="Mostrar menú lateral"
-                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
-                    title="Mostrar menú lateral (⌘B)"
-                  >
-                    <PanelLeft className="w-5 h-5 text-[#C48B81]" />
-                    <span className="text-sm font-semibold hidden sm:inline">Menú</span>
-                  </button>
-                )}
                 <div>
                   <h1 className="text-2xl font-serif font-bold text-[#332A28] tracking-tight">
                     Calendario General
@@ -1524,25 +1597,14 @@ export const GeneralDashboard: React.FC = () => {
         {/* PESTAÑA: WHATSAPP HUB */}
         {activeTab === 'whatsapp' && (
           <div className="space-y-2">
-            {!sidebarOpen && (
-              <div className="flex items-center justify-between pb-1">
-                <button
-                  onClick={handleToggleSidebar}
-                  aria-label="Mostrar menú lateral"
-                  className="inline-flex md:hidden items-center space-x-2 px-3 py-1.5 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0 text-xs font-semibold"
-                  title="Mostrar menú lateral (⌘B)"
-                >
-                  <PanelLeft className="w-4 h-4 text-[#C48B81]" />
-                  <span>Menú</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('weddings')}
-                  className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
-                >
-                  ← Volver a Bodas
-                </button>
-              </div>
-            )}
+            <div className="flex items-center justify-end pb-1 md:hidden">
+              <button
+                onClick={() => setActiveTab('weddings')}
+                className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
+              >
+                ← Volver a Eventos
+              </button>
+            </div>
             <WhatsAppHubModule />
           </div>
         )}
@@ -1552,17 +1614,6 @@ export const GeneralDashboard: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
               <div className="flex items-center space-x-3.5">
-                {!sidebarOpen && (
-                  <button
-                    onClick={handleToggleSidebar}
-                    aria-label="Mostrar menú lateral"
-                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
-                    title="Mostrar menú lateral (⌘B)"
-                  >
-                    <PanelLeft className="w-5 h-5 text-[#C48B81]" />
-                    <span className="text-sm font-semibold hidden sm:inline">Menú</span>
-                  </button>
-                )}
                 <div>
                   <h2 className="font-serif text-2xl font-bold text-[#332A28]">Bitácora & Equipo VLB</h2>
                   <p className="text-xs text-[#7D6F6B] mt-0.5">Gestión de coordinadores, staff y accesos operativos de bodas.</p>
@@ -1692,17 +1743,6 @@ export const GeneralDashboard: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
             <div className="flex items-center space-x-3.5">
-              {!sidebarOpen && (
-                <button
-                  onClick={handleToggleSidebar}
-                  aria-label="Mostrar menú lateral"
-                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
-                  title="Mostrar menú lateral (⌘B)"
-                >
-                  <PanelLeft className="w-5 h-5 text-[#C48B81]" />
-                  <span className="text-sm font-semibold hidden sm:inline">Menú</span>
-                </button>
-              )}
               <div>
                 <h2 className="font-serif text-2xl font-bold text-[#332A28]">Plantillas Maestras VLB</h2>
                 <p className="text-xs text-[#7D6F6B] mt-0.5">Checklist maestro y requisitos de ceremonias civil y religiosa.</p>
@@ -2117,17 +2157,6 @@ export const GeneralDashboard: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
             <div className="flex items-center space-x-3.5">
-              {!sidebarOpen && (
-                <button
-                  onClick={handleToggleSidebar}
-                  aria-label="Mostrar menú lateral"
-                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
-                  title="Mostrar menú lateral (⌘B)"
-                >
-                  <PanelLeft className="w-5 h-5 text-[#C48B81]" />
-                  <span className="text-sm font-semibold hidden sm:inline">Menú</span>
-                </button>
-              )}
               <div>
                 <h2 className="font-serif text-2xl font-bold text-[#332A28]">Catálogos VLB</h2>
                 <p className="text-xs text-[#7D6F6B] mt-0.5">Especialidades de proveedores y paquetes de reuniones de novios.</p>
@@ -2381,17 +2410,6 @@ export const GeneralDashboard: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
             <div className="flex items-center space-x-3.5">
-              {!sidebarOpen && (
-                <button
-                  onClick={handleToggleSidebar}
-                  aria-label="Mostrar menú lateral"
-                  className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F7F3EE] text-[#332A28] transition shadow-xs cursor-pointer shrink-0"
-                  title="Mostrar menú lateral (⌘B)"
-                >
-                  <PanelLeft className="w-5 h-5 text-[#C48B81]" />
-                  <span className="text-sm font-semibold hidden sm:inline">Menú</span>
-                </button>
-              )}
               <div>
                 <h2 className="font-serif text-2xl font-bold text-[#332A28]">Ajustes y Copias de Seguridad</h2>
                 <p className="text-xs text-[#7D6F6B] mt-0.5">Respaldo general del sistema, restauración de base de datos y auditoría global.</p>
