@@ -215,8 +215,9 @@ router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) =
           if (eventTypeTarget.includes('despedida')) return et.includes('despedida');
           if (eventTypeTarget.includes('baby')) return et.includes('baby');
           if (eventTypeTarget.includes('civil')) return et.includes('civil');
+          if (eventTypeTarget.includes('xv') || eventTypeTarget.includes('quince')) return et.includes('xv') || et.includes('quince');
           if (eventTypeTarget.includes('otro')) return et.includes('otro');
-          return !et.includes('despedida') && !et.includes('baby') && !et.includes('civil') && !et.includes('otro');
+          return !et.includes('despedida') && !et.includes('baby') && !et.includes('civil') && !et.includes('xv') && !et.includes('quince') && !et.includes('otro');
         });
         const tasksToInsert = relevantTasks.length > 0 ? relevantTasks : masterTasks.filter((mt: any) => !mt.event_type || mt.event_type === 'Boda Completa');
 

@@ -973,11 +973,31 @@ export function initDatabase() {
     { title: 'Coordinación de montaje, minuto a minuto y accesos', category: 'Semana del evento', priority: 'Alta', event_type: 'Otros' }
   ];
 
+  const defaultXVChecklist = [
+    { title: 'Apartado de iglesia y salón de recepción', category: '10 - 12 meses', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Definición de temática, paleta de color y concepto de fiesta', category: '10 - 12 meses', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Selección y diseño del vestido de XV años', category: '10 - 12 meses', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Contratación de foto, video y producción audiovisual', category: '10 - 12 meses', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Selección de chambelanes y damas de honor', category: '6 - 8 meses', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Contratación de coreógrafo para vals y baile sorpresa', category: '6 - 8 meses', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Pruebas de menú para jóvenes y adultos', category: '6 - 8 meses', priority: 'Media', event_type: 'XV Años' },
+    { title: 'Diseño y entrega de invitaciones formales', category: '3 - 4 meses', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Prueba de peinado, maquillaje y coronas/tocados', category: '3 - 4 meses', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Definición de show, cabina de fotos o efectos especiales', category: '3 - 4 meses', priority: 'Media', event_type: 'XV Años' },
+    { title: 'Ensayos intensivos de coreografía en salón', category: '1 - 2 meses', priority: 'Media', event_type: 'XV Años' },
+    { title: 'Cierre de confirmaciones y asignación de mesas', category: '1 - 2 meses', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Diseño de recuerdos y detalles para invitados', category: '1 - 2 meses', priority: 'Media', event_type: 'XV Años' },
+    { title: 'Llamada de confirmación técnica a todos los proveedores', category: 'Semana del evento', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Minuto a minuto de entrada, brindis, vals y sorpresas', category: 'Semana del evento', priority: 'Alta', event_type: 'XV Años' },
+    { title: 'Revisión final de vestidos, zapatillas y accesorios', category: 'Semana del evento', priority: 'Alta', event_type: 'XV Años' }
+  ];
+
   const allDefaultMasterChecklist = [
     ...defaultMasterChecklist,
     ...defaultCivilChecklist,
     ...defaultDespedidaChecklist,
     ...defaultBabyShowerChecklist,
+    ...defaultXVChecklist,
     ...defaultOtrosChecklist
   ];
 
@@ -992,9 +1012,9 @@ export function initDatabase() {
       db.prepare('DELETE FROM users WHERE id IN (?, ?)').run('usr_novios_valeria', 'usr_coord_b');
       db.prepare('DELETE FROM weddings WHERE id = ?').run('wed_valeria_mateo');
 
-      // Upgrade master_checklist catalog to include all event templates (Boda, Civil, Despedida, Baby Shower)
+      // Upgrade master_checklist catalog to include all event templates (Boda, Civil, Despedida, Baby Shower, XV Años)
       const mc = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('master_checklist') as any;
-      if (!mc || !mc.values_json.includes('Despedida de Soltera')) {
+      if (!mc || !mc.values_json.includes('XV Años')) {
         db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(allDefaultMasterChecklist));
       }
 

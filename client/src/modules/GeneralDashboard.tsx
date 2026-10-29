@@ -94,8 +94,12 @@ export const GeneralDashboard: React.FC = () => {
     includesText: ''
   });
   const [masterChecklist, setMasterChecklist] = useState<{ title: string; category: string; priority: string; responsible?: string; event_type?: string }[]>([]);
-  const [selectedTemplateType, setSelectedTemplateType] = useState<'Boda Completa' | 'Boda Civil' | 'Despedida de Soltera' | 'Baby Shower' | 'Otros'>('Boda Completa');
+  const [selectedTemplateType, setSelectedTemplateType] = useState<'Boda Completa' | 'Boda Civil' | 'Despedida de Soltera' | 'Baby Shower' | 'XV Años' | 'Otros' | 'Requisitos Ceremoniales'>('Boda Completa');
   const [expandedPhases, setExpandedPhases] = useState<Record<string, boolean>>({});
+  const [templateSearchQuery, setTemplateSearchQuery] = useState('');
+  const [showQuickAddActivity, setShowQuickAddActivity] = useState(false);
+  const [allPhasesExpanded, setAllPhasesExpanded] = useState(false);
+  const [showTemplateToolsDropdown, setShowTemplateToolsDropdown] = useState(false);
   const [newMasterTask, setNewMasterTask] = useState({
     title: '',
     category: 'Checklist General',
@@ -571,8 +575,12 @@ export const GeneralDashboard: React.FC = () => {
         return ['Concepto y Temática', '2 - 3 meses', '1 mes', 'Semana del evento'];
       case 'Baby Shower':
         return ['Organización y Temática', '1 - 2 meses', 'Semana del evento'];
+      case 'XV Años':
+        return ['10 - 12 meses', '6 - 8 meses', '3 - 4 meses', '1 - 2 meses', 'Semana del evento'];
       case 'Otros':
         return ['Planeación General', 'Semana del evento'];
+      case 'Requisitos Ceremoniales':
+        return ['Requisitos de Ceremonia Civil', 'Requisitos de Ceremonia Religiosa'];
       default: // Boda Completa
         return [
           'Checklist General',
@@ -594,6 +602,48 @@ export const GeneralDashboard: React.FC = () => {
       ...prev,
       [phase]: prev[phase] === undefined ? false : !prev[phase]
     }));
+  };
+
+  const handleToggleAllPhases = () => {
+    const nextState = !allPhasesExpanded;
+    setAllPhasesExpanded(nextState);
+    const phases = getCategoriesForType(selectedTemplateType);
+    const newMap: Record<string, boolean> = {};
+    phases.forEach(p => {
+      newMap[p] = nextState;
+    });
+    setExpandedPhases(newMap);
+  };
+
+  const templateOptions: {
+    key: 'Boda Completa' | 'Boda Civil' | 'Despedida de Soltera' | 'Baby Shower' | 'XV Años' | 'Otros' | 'Requisitos Ceremoniales';
+    name: string;
+    typeLabel: 'Plantilla' | 'Requisitos';
+    desc: string;
+  }[] = [
+    { key: 'Boda Completa', name: 'Boda Completa', typeLabel: 'Plantilla', desc: 'Cronograma integral estándar para bodas de principio a fin.' },
+    { key: 'Boda Civil', name: 'Boda Civil', typeLabel: 'Plantilla', desc: 'Trámites legales, juzgado y celebración íntima.' },
+    { key: 'Despedida de Soltera', name: 'Despedida de Soltera', typeLabel: 'Plantilla', desc: 'Organización de despedida formal, brunch o viaje con amigas.' },
+    { key: 'Baby Shower', name: 'Baby Shower', typeLabel: 'Plantilla', desc: 'Celebración y bienvenida del bebé con familiares y amigos.' },
+    { key: 'XV Años', name: 'XV Años', typeLabel: 'Plantilla', desc: 'Planeación completa de quinceañera: ceremonia, vals y fiesta.' },
+    { key: 'Otros', name: 'Otros Eventos', typeLabel: 'Plantilla', desc: 'Bautizos, aniversarios, cumpleaños y eventos corporativos.' },
+    { key: 'Requisitos Ceremoniales', name: 'Requisitos Ceremoniales', typeLabel: 'Requisitos', desc: 'Trámites específicos exclusivamente para ceremonias civiles y religiosas.' },
+  ];
+
+  const getTemplateCount = (key: string) => {
+    if (key === 'Requisitos Ceremoniales') {
+      return masterCivilReqs.length + masterReligiousReqs.length;
+    }
+    return masterChecklist.filter(item => {
+      const et = (item.event_type || 'Boda Completa').toLowerCase();
+      const target = key.toLowerCase();
+      if (target.includes('civil')) return et.includes('civil');
+      if (target.includes('despedida')) return et.includes('despedida');
+      if (target.includes('baby')) return et.includes('baby');
+      if (target.includes('xv') || target.includes('quince')) return et.includes('xv') || et.includes('quince');
+      if (target.includes('otro')) return et.includes('otro');
+      return !et.includes('civil') && !et.includes('despedida') && !et.includes('baby') && !et.includes('xv') && !et.includes('quince') && !et.includes('otro');
+    }).length;
   };
 
   const handleAddMasterTask = (e: React.FormEvent) => {
@@ -699,9 +749,9 @@ export const GeneralDashboard: React.FC = () => {
     masterChecklist.forEach(item => {
       rows.push({
         MODULO: 'CHECKLIST',
-        ETAPA_O_MES: item.category || '12 Meses Antes',
+        ETAPA_O_MES: item.category || 'Checklist General',
         ACTIVIDAD_O_REQUISITO: item.title,
-        RESPONSABLE: item.responsible || 'VLB Studio',
+        RESPONSABLE: item.responsible || 'Lazo Studio',
         PRIORIDAD: item.priority || 'Alta'
       });
     });
@@ -710,7 +760,7 @@ export const GeneralDashboard: React.FC = () => {
         MODULO: 'CIVIL',
         ETAPA_O_MES: 'Requisitos Civil',
         ACTIVIDAD_O_REQUISITO: req,
-        RESPONSABLE: 'Novios & VLB',
+        RESPONSABLE: 'Lazo Studio',
         PRIORIDAD: 'Alta'
       });
     });
@@ -719,7 +769,7 @@ export const GeneralDashboard: React.FC = () => {
         MODULO: 'RELIGIOSA',
         ETAPA_O_MES: 'Requisitos Iglesia',
         ACTIVIDAD_O_REQUISITO: req,
-        RESPONSABLE: 'Novios & VLB',
+        RESPONSABLE: 'Lazo Studio',
         PRIORIDAD: 'Alta'
       });
     });
@@ -733,8 +783,8 @@ export const GeneralDashboard: React.FC = () => {
       { wch: 14 }
     ];
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Plantillas VLB');
-    XLSX.writeFile(wb, 'Plantillas_Maestras_VLB_Studio.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'Plantillas Lazo Studio');
+    XLSX.writeFile(wb, 'Plantillas_Maestras_Lazo_Studio.xlsx');
   };
 
   // Upload Excel file and automatically classify rows to Checklist, Civil, or Religiosa
@@ -1185,7 +1235,7 @@ export const GeneralDashboard: React.FC = () => {
         <div className={`pt-4 border-t border-[#EFE8E1] flex items-center text-xs text-[#7D6F6B] transition-all ${
           sidebarOpen ? 'px-3 justify-between' : 'justify-center p-2'
         }`}>
-          {sidebarOpen && <span>VLB Studio · Planning</span>}
+          {sidebarOpen && <span>Lazo Studio · Planning</span>}
           <span className="w-2 h-2 rounded-full bg-[#6E8C70]" title="Sistema Activo" />
         </div>
       </aside>
@@ -1680,7 +1730,7 @@ export const GeneralDashboard: React.FC = () => {
                             </>
                           ) : (
                             <div
-                              title="VLB Studio"
+                              title="Lazo Studio"
                               className="w-7 h-7 rounded-full bg-[#F7EDEB] text-[#A86B60] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
                             >
                               <span className="text-[11px] font-bold uppercase leading-none">
@@ -1752,7 +1802,7 @@ export const GeneralDashboard: React.FC = () => {
             <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
               <div className="flex items-center space-x-3.5">
                 <div>
-                  <h2 className="font-serif text-2xl font-bold text-[#332A28]">Bitácora & Equipo VLB</h2>
+                  <h2 className="font-serif text-2xl font-bold text-[#332A28]">Bitácora & Equipo Lazo</h2>
                   <p className="text-xs text-[#7D6F6B] mt-0.5">Gestión de coordinadores, staff y accesos operativos de bodas.</p>
                 </div>
               </div>
@@ -1767,9 +1817,9 @@ export const GeneralDashboard: React.FC = () => {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-100">
             <div>
               <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Seguridad y Accesos RBAC</span>
-              <h2 className="font-serif text-2xl font-bold text-stone-900">Usuarios, Equipo VLB y Cuentas de Novios</h2>
+              <h2 className="font-serif text-2xl font-bold text-stone-900">Usuarios, Equipo Lazo y Cuentas de Clientes</h2>
               <p className="text-xs text-stone-500 mt-1">
-                Crea, edita o elimina miembros del equipo VLB y cuentas de novios, y asigna a qué bodas tiene acceso cada coordinador o staff.
+                Crea, edita o elimina miembros del equipo Lazo y cuentas de clientes, y asigna a qué bodas tiene acceso cada coordinador o staff.
               </p>
             </div>
             <button
@@ -1876,439 +1926,612 @@ export const GeneralDashboard: React.FC = () => {
       )}
 
       {/* PESTAÑA: PLANTILLAS LAZO STUDIO */}
-      {activeTab === 'plantillas' && user?.role === 'ADMINISTRADOR' && (
-        <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EFE8E1]">
-            <div>
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#2B2826]">
-                Plantillas de Actividades por Mes
-              </h2>
-              <p className="text-xs text-[#7D6F6B] mt-1">
-                Estructura de actividades automatizadas para tus eventos · Lazo Studio
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={handleDownloadTemplatesExcel}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold transition shadow-2xs"
-                title="Descargar Excel"
-              >
-                <Download className="w-3.5 h-3.5 text-[#C48B81]" />
-                <span>Descargar Excel</span>
-              </button>
+      {activeTab === 'plantillas' && user?.role === 'ADMINISTRADOR' && (() => {
+        const activeOption = templateOptions.find(o => o.key === selectedTemplateType) || templateOptions[0];
+        const isCeremonial = selectedTemplateType === 'Requisitos Ceremoniales';
+        const phasesForActive = getCategoriesForType(selectedTemplateType);
 
-              <label className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold cursor-pointer transition shadow-2xs">
-                <Upload className="w-3.5 h-3.5 text-[#C48B81]" />
-                <span>{importingExcel ? 'Cargando...' : 'Subir Excel'}</span>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={handleUploadTemplatesExcel}
-                  disabled={importingExcel}
-                  className="hidden"
-                />
-              </label>
+        const currentTasksWithIdx = masterChecklist
+          .map((item, originalIdx) => ({ item, originalIdx }))
+          .filter(({ item }) => {
+            const et = (item.event_type || 'Boda Completa').toLowerCase();
+            const target = selectedTemplateType.toLowerCase();
+            if (target.includes('civil')) return et.includes('civil');
+            if (target.includes('despedida')) return et.includes('despedida');
+            if (target.includes('baby')) return et.includes('baby');
+            if (target.includes('xv') || target.includes('quince')) return et.includes('xv') || et.includes('quince');
+            if (target.includes('otro')) return et.includes('otro');
+            return !et.includes('civil') && !et.includes('despedida') && !et.includes('baby') && !et.includes('xv') && !et.includes('quince') && !et.includes('otro');
+          });
 
-              <button
-                type="button"
-                onClick={handleSyncTemplatesToWeddings}
-                disabled={syncingTemplates}
-                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold shadow-xs transition"
-                title="Sincronizar cambios a eventos activos"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${syncingTemplates ? 'animate-spin' : ''}`} />
-                <span>{syncingTemplates ? 'Sincronizando...' : 'Aplicar a Eventos'}</span>
-              </button>
-            </div>
-          </div>
-
-          {catalogMsg && (
-            <div className="p-4 rounded-2xl bg-[#E5EDE6] border border-[#D5E2D7] text-[#384C3A] text-xs font-semibold flex items-center space-x-2">
-              <CheckCircle2 className="w-4 h-4 text-[#384C3A] shrink-0" />
-              <span>{catalogMsg}</span>
-            </div>
-          )}
-
-          {/* Selector de Plantilla por Tipo de Evento (Sin Emojis) */}
-          <div className="flex items-center gap-2 p-1.5 bg-[#F2ECE7] rounded-2xl border border-[#EFE8E1] overflow-x-auto text-xs font-semibold">
-            {(['Boda Completa', 'Boda Civil', 'Despedida de Soltera', 'Baby Shower', 'Otros'] as const).map(type => {
-              const count = masterChecklist.filter(item => {
-                const et = (item.event_type || 'Boda Completa').toLowerCase();
-                const target = type.toLowerCase();
-                if (target.includes('civil')) return et.includes('civil');
-                if (target.includes('despedida')) return et.includes('despedida');
-                if (target.includes('baby')) return et.includes('baby');
-                if (target.includes('otro')) return et.includes('otro');
-                return !et.includes('civil') && !et.includes('despedida') && !et.includes('baby') && !et.includes('otro');
-              }).length;
-
-              const active = selectedTemplateType === type;
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => {
-                    setSelectedTemplateType(type);
-                    const cats = getCategoriesForType(type);
-                    if (cats.length > 0) {
-                      setNewMasterTask(prev => ({ ...prev, category: cats[0] }));
-                    }
-                  }}
-                  className={`px-4 py-2 rounded-xl transition cursor-pointer shrink-0 flex items-center gap-2 ${
-                    active
-                      ? 'bg-white text-[#2B2826] shadow-xs font-bold'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                  }`}
-                >
-                  <span>{type === 'Otros' ? 'Otros Eventos' : type}</span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                    active ? 'bg-[#F7EDEB] text-[#A86B60]' : 'text-[#7D6F6B] bg-white/60'
-                  }`}>
-                    {count}
+        return (
+          <div className="space-y-6">
+            {/* Header Principal de Plantillas */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EFE8E1]">
+              <div>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#2B2826]">
+                    Plantillas de Actividades
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]">
+                    Lazo Studio
                   </span>
-                </button>
-              );
-            })}
-          </div>
+                </div>
+                <p className="text-xs text-[#7D6F6B] mt-1">
+                  Consulta y personaliza rápidamente el checklist de cada tipo de evento antes de asignarlo.
+                </p>
+              </div>
 
-          {/* Formulario Minimalista para Agregar Actividad (Sin campo de responsable) */}
-          <form onSubmit={handleAddMasterTask} className="p-4 rounded-2xl bg-white border border-[#EFE8E1] shadow-2xs flex flex-col sm:flex-row items-center gap-2.5">
-            <div className="w-full sm:w-1/3">
-              <select
-                value={newMasterTask.category}
-                onChange={e => setNewMasterTask({ ...newMasterTask, category: e.target.value })}
-                className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
-              >
-                {getCategoriesForType(selectedTemplateType).map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-            <div className="w-full sm:flex-1">
-              <input
-                type="text"
-                placeholder="Nueva actividad (ej. Definir presupuesto base)..."
-                value={newMasterTask.title}
-                onChange={e => setNewMasterTask({ ...newMasterTask, title: e.target.value })}
-                className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] placeholder-[#7D6F6B]/70 focus:outline-none focus:border-[#C48B81]"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-5 py-2 bg-[#2B2826] hover:bg-[#1A1817] text-white text-xs font-semibold rounded-xl transition cursor-pointer shrink-0"
-            >
-              + Agregar
-            </button>
-          </form>
-
-          {/* Fases en Acordeones Colapsables */}
-          <div className="space-y-3">
-            {getCategoriesForType(selectedTemplateType).map((phase, phaseIdx) => {
-              const phaseTasksWithIndex = masterChecklist
-                .map((item, originalIdx) => ({ item, originalIdx }))
-                .filter(({ item }) => {
-                  const et = (item.event_type || 'Boda Completa').toLowerCase();
-                  const target = selectedTemplateType.toLowerCase();
-                  const matchesType =
-                    target.includes('civil') ? et.includes('civil') :
-                    target.includes('despedida') ? et.includes('despedida') :
-                    target.includes('baby') ? et.includes('baby') :
-                    target.includes('otro') ? et.includes('otro') :
-                    (!et.includes('civil') && !et.includes('despedida') && !et.includes('baby') && !et.includes('otro'));
-
-                  return matchesType && (item.category || '').toLowerCase() === phase.toLowerCase();
-                });
-
-              const isOpen = expandedPhases[phase] !== undefined ? expandedPhases[phase] : phaseIdx === 0;
-
-              return (
-                <div key={phase} className="bg-white rounded-2xl border border-[#EFE8E1] overflow-hidden shadow-2xs transition-all">
-                  <div
-                    onClick={() => togglePhase(phase)}
-                    className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-[#FAF7F5] transition select-none"
+              {/* Herramientas Secundarias Agrupadas */}
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setShowTemplateToolsDropdown(!showTemplateToolsDropdown)}
+                    className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#FAF7F5] border border-[#EFE8E1] rounded-full text-xs font-semibold text-[#2B2826] transition shadow-2xs cursor-pointer select-none"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center font-serif font-bold text-xs ${
-                        isOpen ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#F2ECE7] text-[#7D6F6B]'
-                      }`}>
-                        {phaseIdx + 1}
-                      </div>
-                      <div>
-                        <h3 className="font-serif text-base sm:text-lg font-bold text-[#2B2826]">
-                          {phase}
-                        </h3>
-                      </div>
-                    </div>
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-[#C48B81]" />
+                    <span>Herramientas Excel</span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-[#C48B81] transition-transform duration-200 ${showTemplateToolsDropdown ? 'rotate-180' : ''}`} />
+                  </button>
 
-                    <div className="flex items-center gap-3">
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
-                        phaseTasksWithIndex.length > 0 ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#F2ECE7] text-[#7D6F6B]'
-                      }`}>
-                        {phaseTasksWithIndex.length} {phaseTasksWithIndex.length === 1 ? 'actividad' : 'actividades'}
-                      </span>
-                      <ChevronDown className={`w-4 h-4 text-[#7D6F6B] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-                    </div>
-                  </div>
+                  {showTemplateToolsDropdown && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-20"
+                        onClick={() => setShowTemplateToolsDropdown(false)}
+                      />
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#EFE8E1] py-1.5 z-30 transition">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowTemplateToolsDropdown(false);
+                            handleDownloadTemplatesExcel();
+                          }}
+                          className="w-full text-left px-4 py-2.5 text-xs hover:bg-[#FAF7F5] text-[#2B2826] flex items-center gap-2 transition cursor-pointer"
+                        >
+                          <Download className="w-3.5 h-3.5 text-[#C48B81]" />
+                          <span>Descargar Excel</span>
+                        </button>
 
-                  {isOpen && (
-                    <div className="px-4 sm:px-5 pb-4 pt-1 border-t border-[#F2ECE7]">
-                      {phaseTasksWithIndex.length === 0 ? (
-                        <div className="py-4 text-center text-xs text-[#7D6F6B] italic">
-                          No hay actividades en esta fase. Agrega una arriba.
-                        </div>
-                      ) : (
-                        <div className="divide-y divide-[#F2ECE7]">
-                          {phaseTasksWithIndex.map(({ item, originalIdx }) => (
-                            <div key={originalIdx} className="py-2.5 flex items-center justify-between gap-3 text-xs">
-                              {editingTaskIdx === originalIdx ? (
-                                <div className="flex-1 flex flex-col sm:flex-row items-center gap-2">
-                                  <select
-                                    value={editingTaskDraft.category}
-                                    onChange={e => setEditingTaskDraft({ ...editingTaskDraft, category: e.target.value })}
-                                    className="w-full sm:w-1/3 px-2.5 py-1.5 border border-[#EFE8E1] rounded-lg text-xs bg-[#FAF7F5]"
-                                  >
-                                    {getCategoriesForType(selectedTemplateType).map(cat => (
-                                      <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                  </select>
-                                  <input
-                                    type="text"
-                                    value={editingTaskDraft.title}
-                                    onChange={e => setEditingTaskDraft({ ...editingTaskDraft, title: e.target.value })}
-                                    className="w-full sm:flex-1 px-2.5 py-1.5 border border-[#EFE8E1] rounded-lg text-xs bg-[#FAF7F5]"
-                                  />
-                                  <div className="flex items-center gap-1 self-end sm:self-auto">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleSaveEditMasterTask(originalIdx)}
-                                      className="px-3 py-1.5 bg-[#2B2826] text-white rounded-lg text-xs font-semibold flex items-center space-x-1"
-                                    >
-                                      <Save className="w-3 h-3" />
-                                      <span>Guardar</span>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setEditingTaskIdx(null)}
-                                      className="p-1.5 text-[#7D6F6B] hover:bg-[#F2ECE7] rounded-lg"
-                                    >
-                                      <X className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <>
-                                  <div className="flex items-center gap-2.5">
-                                    <span className="w-2 h-2 rounded-full bg-[#C48B81] shrink-0" />
-                                    <span className="font-medium text-[#2B2826] leading-relaxed">{item.title}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-1 shrink-0">
-                                    <button
-                                      type="button"
-                                      onClick={() => handleStartEditMasterTask(originalIdx)}
-                                      className="text-[#7D6F6B] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-[#F2ECE7] transition"
-                                      title="Editar actividad"
-                                    >
-                                      <Edit3 className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveMasterTask(originalIdx)}
-                                      className="text-[#7D6F6B] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition"
-                                      title="Eliminar actividad"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                        <label className="w-full text-left px-4 py-2.5 text-xs hover:bg-[#FAF7F5] text-[#2B2826] flex items-center gap-2 transition cursor-pointer">
+                          <Upload className="w-3.5 h-3.5 text-[#C48B81]" />
+                          <span>{importingExcel ? 'Cargando...' : 'Subir Excel'}</span>
+                          <input
+                            type="file"
+                            accept=".xlsx,.xls,.csv"
+                            onChange={e => {
+                              setShowTemplateToolsDropdown(false);
+                              handleUploadTemplatesExcel(e);
+                            }}
+                            disabled={importingExcel}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </>
                   )}
                 </div>
-              );
-            })}
-          </div>
 
-          {/* 2. Plantillas Maestras de Requisitos (Civil y Religiosa) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
-            {/* Requisitos Ceremonia Civil */}
-            <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] bg-white">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
-                Plantilla Base · Módulo Civil
-              </span>
-              <h3 className="font-serif text-xl font-bold text-[#2B2826] mt-0.5">
-                Requisitos de Ceremonia Civil
-              </h3>
-              <p className="text-xs text-[#7D6F6B] mt-1">
-                Lista base de documentos y trámites que se carga en el módulo Civil de eventos.
-              </p>
-              <form onSubmit={handleAddMasterCivilReq} className="flex gap-2 mt-4 mb-4">
-                <input
-                  type="text"
-                  placeholder="Agregar requisito civil (ej. Exámenes prenupciales)..."
-                  value={newMasterCivilReq}
-                  onChange={e => setNewMasterCivilReq(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5]"
-                />
                 <button
-                  type="submit"
-                  className="px-4 py-2 bg-[#2B2826] text-white text-xs font-semibold rounded-xl hover:bg-[#1A1817]"
+                  type="button"
+                  onClick={handleSyncTemplatesToWeddings}
+                  disabled={syncingTemplates}
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+                  title="Sincronizar cambios a eventos activos"
                 >
-                  Agregar
+                  <RefreshCw className={`w-3.5 h-3.5 ${syncingTemplates ? 'animate-spin' : ''}`} />
+                  <span>{syncingTemplates ? 'Sincronizando...' : 'Aplicar a Eventos'}</span>
                 </button>
-              </form>
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {masterCivilReqs.map((req, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] flex items-center justify-between gap-2 text-xs"
-                  >
-                    {editingCivilIdx === idx ? (
-                      <div className="flex-1 flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={editingCivilText}
-                          onChange={e => setEditingCivilText(e.target.value)}
-                          className="flex-1 px-2.5 py-1 border border-[#EFE8E1] rounded-lg text-xs bg-white"
-                        />
+              </div>
+            </div>
+
+            {catalogMsg && (
+              <div className="p-4 rounded-2xl bg-[#E5EDE6] border border-[#D5E2D7] text-[#384C3A] text-xs font-semibold flex items-center space-x-2">
+                <CheckCircle2 className="w-4 h-4 text-[#384C3A] shrink-0" />
+                <span>{catalogMsg}</span>
+              </div>
+            )}
+
+            {/* Selector Visual Rápido por Tipo de Evento (Cuadrícula de Tarjetas Limpias) */}
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#7D6F6B] mb-2.5">
+                Selecciona el tipo de evento a consultar:
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
+                {templateOptions.map(opt => {
+                  const count = getTemplateCount(opt.key);
+                  const active = selectedTemplateType === opt.key;
+                  const phaseCount = getCategoriesForType(opt.key).length;
+
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTemplateType(opt.key);
+                        setShowQuickAddActivity(false);
+                        const cats = getCategoriesForType(opt.key);
+                        if (cats.length > 0) {
+                          setNewMasterTask(prev => ({ ...prev, category: cats[0] }));
+                        }
+                      }}
+                      className={`p-3 rounded-2xl text-left border transition cursor-pointer flex flex-col justify-between select-none ${
+                        active
+                          ? 'bg-white border-[#C48B81] shadow-md ring-2 ring-[#C48B81]/15'
+                          : 'bg-[#FAF7F5] border-[#EFE8E1] hover:bg-white hover:border-[#CCDACC]'
+                      }`}
+                    >
+                      <div>
+                        <div className={`text-[10px] font-bold uppercase tracking-wider ${
+                          active ? 'text-[#C48B81]' : 'text-[#7D6F6B]'
+                        }`}>
+                          {opt.typeLabel}
+                        </div>
+                        <div className="font-serif text-sm font-bold text-[#2B2826] mt-0.5 leading-snug">
+                          {opt.name}
+                        </div>
+                      </div>
+                      <div className="mt-2.5 flex items-center justify-between text-[11px]">
+                        <span className={`px-2 py-0.5 rounded-full font-bold ${
+                          active ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#EFE8E1] text-[#7D6F6B]'
+                        }`}>
+                          {count} {opt.key === 'Requisitos Ceremoniales' ? 'req.' : 'act.'}
+                        </span>
+                        {opt.key !== 'Requisitos Ceremoniales' && (
+                          <span className="text-[10px] text-[#A39690]">{phaseCount} fases</span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* PANEL ENFOCADO: 1. SI ES REQUISITOS CEREMONIALES */}
+            {isCeremonial ? (
+              <div className="bg-white rounded-3xl border border-[#EFE8E1] p-5 sm:p-7 shadow-2xs space-y-6">
+                <div className="pb-4 border-b border-[#F2ECE7]">
+                  <div className="flex items-center gap-3">
+                    <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826]">
+                      Requisitos Ceremoniales
+                    </h3>
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#F7EDEB] text-[#A86B60]">
+                      {masterCivilReqs.length + masterReligiousReqs.length} requisitos
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#7D6F6B] mt-1">
+                    Documentación oficial de Registro Civil y requisitos eclesiásticos exclusivos para bodas y ceremonias.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Requisitos Ceremonia Civil */}
+                  <div className="p-5 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1]">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-serif text-base font-bold text-[#2B2826]">
+                        Requisitos de Ceremonia Civil
+                      </h4>
+                      <span className="text-[11px] font-semibold text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-full">
+                        {masterCivilReqs.length}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#7D6F6B] mb-3">
+                      Documentación requerida para el acta de matrimonio ante el Juez.
+                    </p>
+
+                    <form onSubmit={handleAddMasterCivilReq} className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        placeholder="Nuevo requisito civil (ej. Exámenes prenupciales)..."
+                        value={newMasterCivilReq}
+                        onChange={e => setNewMasterCivilReq(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-[#2B2826] hover:bg-[#1A1817] text-white text-xs font-semibold rounded-xl transition cursor-pointer shrink-0"
+                      >
+                        Agregar
+                      </button>
+                    </form>
+
+                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 divide-y divide-[#EFE8E1]">
+                      {masterCivilReqs.map((req, idx) => (
+                        <div key={idx} className="pt-2 first:pt-0 flex items-center justify-between gap-2 text-xs">
+                          {editingCivilIdx === idx ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={editingCivilText}
+                                onChange={e => setEditingCivilText(e.target.value)}
+                                className="flex-1 px-2.5 py-1 border border-[#EFE8E1] rounded-lg text-xs bg-white text-[#2B2826]"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleSaveEditCivilReq(idx)}
+                                className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-[11px] font-semibold cursor-pointer"
+                              >
+                                Guardar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingCivilIdx(null)}
+                                className="p-1 text-[#7D6F6B]"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] shrink-0" />
+                                <span className="text-[#2B2826] font-medium leading-relaxed">{req}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingCivilIdx(idx);
+                                    setEditingCivilText(req);
+                                  }}
+                                  className="text-[#7D6F6B] hover:text-[#2B2826] p-1 rounded transition cursor-pointer"
+                                  title="Editar"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMasterCivilReq(idx)}
+                                  className="text-[#7D6F6B] hover:text-rose-600 p-1 rounded transition cursor-pointer"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Requisitos Ceremonia Religiosa */}
+                  <div className="p-5 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1]">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-serif text-base font-bold text-[#2B2826]">
+                        Requisitos de Ceremonia Religiosa
+                      </h4>
+                      <span className="text-[11px] font-semibold text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-full">
+                        {masterReligiousReqs.length}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#7D6F6B] mb-3">
+                      Requisitos eclesiásticos y trámites para matrimonio por la iglesia.
+                    </p>
+
+                    <form onSubmit={handleAddMasterReligiousReq} className="flex gap-2 mb-3">
+                      <input
+                        type="text"
+                        placeholder="Nuevo requisito religioso (ej. Fe de bautismo actualizada)..."
+                        value={newMasterReligiousReq}
+                        onChange={e => setNewMasterReligiousReq(e.target.value)}
+                        className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-[#2B2826] hover:bg-[#1A1817] text-white text-xs font-semibold rounded-xl transition cursor-pointer shrink-0"
+                      >
+                        Agregar
+                      </button>
+                    </form>
+
+                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 divide-y divide-[#EFE8E1]">
+                      {masterReligiousReqs.map((req, idx) => (
+                        <div key={idx} className="pt-2 first:pt-0 flex items-center justify-between gap-2 text-xs">
+                          {editingReligiousIdx === idx ? (
+                            <div className="flex-1 flex items-center gap-2">
+                              <input
+                                type="text"
+                                value={editingReligiousText}
+                                onChange={e => setEditingReligiousText(e.target.value)}
+                                className="flex-1 px-2.5 py-1 border border-[#EFE8E1] rounded-lg text-xs bg-white text-[#2B2826]"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => handleSaveEditReligiousReq(idx)}
+                                className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-[11px] font-semibold cursor-pointer"
+                              >
+                                Guardar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingReligiousIdx(null)}
+                                className="p-1 text-[#7D6F6B]"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex items-center gap-2 flex-1 min-w-0">
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] shrink-0" />
+                                <span className="text-[#2B2826] font-medium leading-relaxed">{req}</span>
+                              </div>
+                              <div className="flex items-center space-x-1 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingReligiousIdx(idx);
+                                    setEditingReligiousText(req);
+                                  }}
+                                  className="text-[#7D6F6B] hover:text-[#2B2826] p-1 rounded transition cursor-pointer"
+                                  title="Editar"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveMasterReligiousReq(idx)}
+                                  className="text-[#7D6F6B] hover:text-rose-600 p-1 rounded transition cursor-pointer"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* PANEL ENFOCADO: 2. PLANTILLA DEL EVENTO SELECCIONADO */
+              <div className="bg-white rounded-3xl border border-[#EFE8E1] p-5 sm:p-7 shadow-2xs space-y-4">
+                {/* Barra Superior de la Plantilla Activa */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F2ECE7]">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826]">
+                        {activeOption.name}
+                      </h3>
+                      <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#F7EDEB] text-[#A86B60]">
+                        {currentTasksWithIdx.length} actividades
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#7D6F6B] mt-1">
+                      {activeOption.desc}
+                    </p>
+                  </div>
+
+                  {/* Buscador interno y botón de agregar */}
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:w-60">
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
+                      <input
+                        type="text"
+                        placeholder="Buscar actividad..."
+                        value={templateSearchQuery}
+                        onChange={e => setTemplateSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 bg-[#FAF7F5] border border-[#EFE8E1] rounded-full text-xs text-[#2B2826] placeholder-[#7D6F6B]/70 focus:outline-none focus:border-[#C48B81]"
+                      />
+                      {templateSearchQuery && (
                         <button
                           type="button"
-                          onClick={() => handleSaveEditCivilReq(idx)}
-                          className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-[11px] font-semibold"
+                          onClick={() => setTemplateSearchQuery('')}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7D6F6B] hover:text-[#2B2826]"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickAddActivity(!showQuickAddActivity)}
+                      className="px-4 py-2 bg-[#2B2826] hover:bg-[#1A1817] text-white rounded-full text-xs font-semibold transition cursor-pointer shrink-0 flex items-center gap-1.5 shadow-2xs"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Nueva actividad</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Formulario Desplegable Rápido (Solo se abre con '+ Nueva actividad') */}
+                {showQuickAddActivity && (
+                  <form
+                    onSubmit={e => {
+                      handleAddMasterTask(e);
+                      setShowQuickAddActivity(false);
+                    }}
+                    className="p-4 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] transition"
+                  >
+                    <div className="text-xs font-semibold text-[#2B2826] mb-2.5">
+                      Agregar actividad a la plantilla de {activeOption.name}:
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2.5">
+                      <select
+                        value={newMasterTask.category}
+                        onChange={e => setNewMasterTask({ ...newMasterTask, category: e.target.value })}
+                        className="sm:w-1/3 px-3 py-2 bg-white border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                      >
+                        {phasesForActive.map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Nombre de la actividad (ej. Degustación de banquete)..."
+                        value={newMasterTask.title}
+                        onChange={e => setNewMasterTask({ ...newMasterTask, title: e.target.value })}
+                        className="flex-1 px-3 py-2 bg-white border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                        autoFocus
+                      />
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="submit"
+                          className="px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl transition cursor-pointer"
                         >
                           Guardar
                         </button>
                         <button
                           type="button"
-                          onClick={() => setEditingCivilIdx(null)}
-                          className="p-1 text-[#7D6F6B]"
+                          onClick={() => setShowQuickAddActivity(false)}
+                          className="px-3 py-2 bg-white border border-[#EFE8E1] text-[#7D6F6B] text-xs font-semibold rounded-xl hover:bg-[#F2ECE7] transition cursor-pointer"
                         >
-                          <X className="w-3.5 h-3.5" />
+                          Cancelar
                         </button>
                       </div>
-                    ) : (
-                      <>
-                        <span className="text-[#2B2826] font-medium">{req}</span>
-                        <div className="flex items-center space-x-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingCivilIdx(idx);
-                              setEditingCivilText(req);
-                            }}
-                            className="text-[#7D6F6B] hover:text-[#2B2826] p-1 rounded"
-                            title="Editar requisito"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMasterCivilReq(idx)}
-                            className="text-[#7D6F6B] hover:text-rose-600 p-1 rounded"
-                            title="Eliminar requisito"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+                    </div>
+                  </form>
+                )}
 
-            {/* Requisitos Ceremonia Religiosa */}
-            <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] bg-white">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
-                Plantilla Base · Módulo Religioso
-              </span>
-              <h3 className="font-serif text-xl font-bold text-[#2B2826] mt-0.5">
-                Requisitos de Ceremonia Religiosa
-              </h3>
-              <p className="text-xs text-[#7D6F6B] mt-1">
-                Lista base de requisitos eclesiásticos para ceremonias religiosas.
-              </p>
-              <form onSubmit={handleAddMasterReligiousReq} className="flex gap-2 mt-4 mb-4">
-                <input
-                  type="text"
-                  placeholder="Agregar requisito religioso (ej. Fe de bautismo actualizada)..."
-                  value={newMasterReligiousReq}
-                  onChange={e => setNewMasterReligiousReq(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5]"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-[#2B2826] text-white text-xs font-semibold rounded-xl hover:bg-[#1A1817]"
-                >
-                  Agregar
-                </button>
-              </form>
-              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {masterReligiousReqs.map((req, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2.5 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] flex items-center justify-between gap-2 text-xs"
+                {/* Fila de Resumen de Fases y Toggle de Expandir Todo */}
+                <div className="flex items-center justify-between py-2 text-xs text-[#7D6F6B]">
+                  <span>Fases mensuales organizadas cronológicamente:</span>
+                  <button
+                    type="button"
+                    onClick={handleToggleAllPhases}
+                    className="hover:text-[#2B2826] font-semibold underline decoration-[#C48B81]/40 transition cursor-pointer"
                   >
-                    {editingReligiousIdx === idx ? (
-                      <div className="flex-1 flex items-center gap-2">
-                        <input
-                          type="text"
-                          value={editingReligiousText}
-                          onChange={e => setEditingReligiousText(e.target.value)}
-                          className="flex-1 px-2.5 py-1 border border-[#EFE8E1] rounded-lg text-xs bg-white"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleSaveEditReligiousReq(idx)}
-                          className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-[11px] font-semibold"
+                    {allPhasesExpanded ? 'Colapsar todas' : 'Expandir todas'}
+                  </button>
+                </div>
+
+                {/* Acordeones Mensuales por Fase */}
+                <div className="space-y-3">
+                  {phasesForActive.map((phase, phaseIdx) => {
+                    const phaseTasks = currentTasksWithIdx.filter(({ item }) => {
+                      const matchesCategory = (item.category || '').toLowerCase() === phase.toLowerCase();
+                      if (!matchesCategory) return false;
+                      if (!templateSearchQuery.trim()) return true;
+                      return item.title.toLowerCase().includes(templateSearchQuery.toLowerCase());
+                    });
+
+                    // Si hay búsqueda activa y no hay coincidencias en esta fase, la ocultamos para despejar
+                    if (templateSearchQuery.trim() && phaseTasks.length === 0) {
+                      return null;
+                    }
+
+                    const isOpen = expandedPhases[phase] !== undefined ? expandedPhases[phase] : (allPhasesExpanded || phaseIdx === 0);
+
+                    return (
+                      <div
+                        key={phase}
+                        className="bg-white rounded-2xl border border-[#EFE8E1] overflow-hidden transition-all shadow-2xs"
+                      >
+                        <div
+                          onClick={() => togglePhase(phase)}
+                          className="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-[#FAF7F5] transition select-none bg-[#FAF7F5]/50"
                         >
-                          Guardar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingReligiousIdx(null)}
-                          className="p-1 text-[#7D6F6B]"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <>
-                        <span className="text-[#2B2826] font-medium">{req}</span>
-                        <div className="flex items-center space-x-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingReligiousIdx(idx);
-                              setEditingReligiousText(req);
-                            }}
-                            className="text-[#7D6F6B] hover:text-[#2B2826] p-1 rounded"
-                            title="Editar requisito"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveMasterReligiousReq(idx)}
-                            className="text-[#7D6F6B] hover:text-rose-600 p-1 rounded"
-                            title="Eliminar requisito"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          <div className="flex items-center gap-3">
+                            <div className={`w-6 h-6 rounded-full flex items-center justify-center font-serif font-bold text-xs ${
+                              isOpen ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#F2ECE7] text-[#7D6F6B]'
+                            }`}>
+                              {phaseIdx + 1}
+                            </div>
+                            <h4 className="font-serif text-sm sm:text-base font-bold text-[#2B2826]">
+                              {phase}
+                            </h4>
+                          </div>
+
+                          <div className="flex items-center gap-3">
+                            <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
+                              phaseTasks.length > 0 ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#F2ECE7] text-[#7D6F6B]'
+                            }`}>
+                              {phaseTasks.length} {phaseTasks.length === 1 ? 'actividad' : 'actividades'}
+                            </span>
+                            <ChevronDown className={`w-4 h-4 text-[#7D6F6B] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                          </div>
                         </div>
-                      </>
-                    )}
-                  </div>
-                ))}
+
+                        {isOpen && (
+                          <div className="px-4 py-2 border-t border-[#F2ECE7] divide-y divide-[#F2ECE7]">
+                            {phaseTasks.length === 0 ? (
+                              <div className="py-3 text-center text-xs text-[#7D6F6B] italic">
+                                No hay actividades en esta fase.
+                              </div>
+                            ) : (
+                              phaseTasks.map(({ item, originalIdx }) => (
+                                <div key={originalIdx} className="py-2.5 flex items-center justify-between gap-3 text-xs group">
+                                  {editingTaskIdx === originalIdx ? (
+                                    <div className="flex-1 flex flex-col sm:flex-row items-center gap-2">
+                                      <select
+                                        value={editingTaskDraft.category}
+                                        onChange={e => setEditingTaskDraft({ ...editingTaskDraft, category: e.target.value })}
+                                        className="w-full sm:w-1/3 px-2.5 py-1.5 border border-[#EFE8E1] rounded-lg text-xs bg-[#FAF7F5] text-[#2B2826]"
+                                      >
+                                        {phasesForActive.map(cat => (
+                                          <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                      </select>
+                                      <input
+                                        type="text"
+                                        value={editingTaskDraft.title}
+                                        onChange={e => setEditingTaskDraft({ ...editingTaskDraft, title: e.target.value })}
+                                        className="w-full sm:flex-1 px-2.5 py-1.5 border border-[#EFE8E1] rounded-lg text-xs bg-[#FAF7F5] text-[#2B2826]"
+                                      />
+                                      <div className="flex items-center gap-1.5">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSaveEditMasterTask(originalIdx)}
+                                          className="px-3 py-1 bg-[#2B2826] text-white rounded-lg text-xs font-semibold cursor-pointer"
+                                        >
+                                          Guardar
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => setEditingTaskIdx(null)}
+                                          className="p-1 text-[#7D6F6B] hover:text-[#2B2826]"
+                                        >
+                                          <X className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] shrink-0" />
+                                        <span className="text-[#2B2826] font-medium leading-relaxed">
+                                          {item.title}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center space-x-1 opacity-70 group-hover:opacity-100 transition shrink-0">
+                                        <button
+                                          type="button"
+                                          onClick={() => handleStartEditMasterTask(originalIdx)}
+                                          className="text-[#7D6F6B] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-[#F2ECE7] transition cursor-pointer"
+                                          title="Editar actividad"
+                                        >
+                                          <Edit3 className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleRemoveMasterTask(originalIdx)}
+                                          className="text-[#7D6F6B] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                                          title="Eliminar actividad"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* PESTAÑA: CATÁLOGOS */}
       {activeTab === 'catalogos' && user?.role === 'ADMINISTRADOR' && (
@@ -2316,7 +2539,7 @@ export const GeneralDashboard: React.FC = () => {
           <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
             <div className="flex items-center space-x-3.5">
               <div>
-                <h2 className="font-serif text-2xl font-bold text-[#332A28]">Catálogos VLB</h2>
+                <h2 className="font-serif text-2xl font-bold text-[#332A28]">Catálogos Lazo Studio</h2>
                 <p className="text-xs text-[#7D6F6B] mt-0.5">Especialidades de proveedores y paquetes de reuniones de novios.</p>
               </div>
             </div>
@@ -2417,7 +2640,7 @@ export const GeneralDashboard: React.FC = () => {
                 </div>
                 <input
                   type="text"
-                  placeholder="Descripción breve (ej. 6 reuniones detalladas con equipo VLB)"
+                  placeholder="Descripción breve (ej. 6 reuniones detalladas con equipo Lazo Studio)"
                   value={newPackage.description}
                   onChange={e => setNewPackage({ ...newPackage, description: e.target.value })}
                   className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
@@ -2617,7 +2840,7 @@ export const GeneralDashboard: React.FC = () => {
           <div className="luxury-card rounded-3xl p-6 border border-stone-200">
             <div className="flex items-center space-x-2 mb-4">
               <History className="w-5 h-5 text-stone-700" />
-              <h3 className="font-serif text-xl font-bold text-stone-900">Bitácora Global de Actividad VLB Studio</h3>
+              <h3 className="font-serif text-xl font-bold text-stone-900">Bitácora Global de Actividad Lazo Studio</h3>
             </div>
             <div className="overflow-x-auto max-h-[460px] overflow-y-auto">
               <table className="w-full text-left border-collapse">
@@ -2637,7 +2860,7 @@ export const GeneralDashboard: React.FC = () => {
                         {new Date(log.created_at).toLocaleString()}
                       </td>
                       <td className="py-2.5 px-3 font-semibold text-stone-800">{log.user_name}</td>
-                      <td className="py-2.5 px-3 text-stone-600">{log.wedding_name || 'Global VLB'}</td>
+                      <td className="py-2.5 px-3 text-stone-600">{log.wedding_name || 'Global Lazo'}</td>
                       <td className="py-2.5 px-3">
                         <span className="px-2 py-0.5 rounded-md bg-stone-100 text-stone-800 font-mono text-[10px] font-bold">
                           {log.action}
@@ -2762,7 +2985,7 @@ export const GeneralDashboard: React.FC = () => {
               {(userForm.role === 'COORDINADOR' || userForm.role === 'STAFF') && (
                 <>
                   <div>
-                    <label className="block text-xs font-bold text-stone-700 mb-1">Cargo / Función en el Equipo VLB</label>
+                    <label className="block text-xs font-bold text-stone-700 mb-1">Cargo / Función en el Equipo Lazo</label>
                     <input
                       type="text"
                       placeholder="Ej. Coordinadora Senior, Staff Día Boda..."
