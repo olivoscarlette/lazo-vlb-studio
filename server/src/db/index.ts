@@ -904,12 +904,84 @@ export function initDatabase() {
     { title: 'Confirmar hora un día antes de: Maquillaje', category: '1 semana', priority: 'Alta', responsible: 'Novia' },
     { title: 'Confirmar hora un día antes de: Peinado', category: '1 semana', priority: 'Alta', responsible: 'Novia' },
     { title: 'Tener listo kit de emergencia de novia', category: '1 semana', priority: 'Alta', responsible: 'Novia' },
-    { title: 'Preparar sobres con el resto de las contrataciones a liquidar ese día', category: '1 semana', priority: 'Alta', responsible: 'Novios & VLB' },
-    { title: 'Hacer sobres para las propinas de meseros, alimento staff y valet parking (si aplica)', category: '1 semana', priority: 'Alta', responsible: 'Novios & VLB' },
-    { title: 'Sesión cierre VLB - 14 (Integral cierre)', category: '1 semana', priority: 'Alta', responsible: 'VLB Studio' },
-    { title: 'Entrega artículos a VLB', category: '1 semana', priority: 'Alta', responsible: 'Novios & VLB' }
+    { title: 'Preparar sobres con el resto de las contrataciones a liquidar ese día', category: '1 semana', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Hacer sobres para las propinas de meseros, alimento staff y valet parking (si aplica)', category: '1 semana', priority: 'Alta', responsible: 'Novios' },
+    { title: 'Sesión final de planeación y revisión de minuto a minuto', category: '1 semana', priority: 'Alta', responsible: 'Lazo Studio' },
+    { title: 'Entrega de artículos y detalles para el evento a Lazo Studio', category: '1 semana', priority: 'Alta', responsible: 'Lazo Studio' }
+  ].map(t => ({ ...t, event_type: 'Boda Completa' }));
+
+  const defaultCivilChecklist = [
+    { title: 'Lugar para ceremonia civil', category: 'Trámites y Documentación Civil', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Apartado de Juez del Registro Civil', category: 'Trámites y Documentación Civil', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Recolección de actas de nacimiento actualizadas', category: 'Trámites y Documentación Civil', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Comprobante de domicilio de ambos', category: 'Trámites y Documentación Civil', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Exámenes prenupciales y certificados médicos', category: 'Trámites y Documentación Civil', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Definición de testigos con identificaciones', category: 'Trámites y Documentación Civil', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Pago de derechos de Registro Civil', category: 'Trámites y Documentación Civil', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Elección de régimen patrimonial', category: 'Trámites y Documentación Civil', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Vestimenta nupcial civil y estilismo', category: '3 - 4 meses', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Selección de restaurante / salón para brindis o comida', category: '3 - 4 meses', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Fotógrafo para ceremonia civil y sesión íntima', category: '3 - 4 meses', priority: 'Media', event_type: 'Boda Civil' },
+    { title: 'Diseño y envío de invitaciones', category: '1 - 2 meses', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Flores, ramo de novia civil y botonier', category: '1 - 2 meses', priority: 'Media', event_type: 'Boda Civil' },
+    { title: 'Pastel o postres y brindis', category: '1 - 2 meses', priority: 'Media', event_type: 'Boda Civil' },
+    { title: 'Confirmar asistencia de testigos e invitados', category: 'Semana del evento', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Preparar carpeta con documentos originales y pluma', category: 'Semana del evento', priority: 'Alta', event_type: 'Boda Civil' },
+    { title: 'Entrega de pagos pendientes a juez y proveedores', category: 'Semana del evento', priority: 'Alta', event_type: 'Boda Civil' }
   ];
-  db.prepare('INSERT OR IGNORE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(defaultMasterChecklist));
+
+  const defaultDespedidaChecklist = [
+    { title: 'Definir lista de invitadas y fecha tentativa', category: 'Concepto y Temática', priority: 'Alta', event_type: 'Despedida de Soltera' },
+    { title: 'Selección de sede (Restaurante, Terraza, Quinta o Destino)', category: 'Concepto y Temática', priority: 'Alta', event_type: 'Despedida de Soltera' },
+    { title: 'Definir temática, dress code y paleta de color', category: 'Concepto y Temática', priority: 'Alta', event_type: 'Despedida de Soltera' },
+    { title: 'Diseño y envío de invitación digital con confirmación', category: '2 - 3 meses', priority: 'Alta', event_type: 'Despedida de Soltera' },
+    { title: 'Definición de presupuesto y cooperación', category: '2 - 3 meses', priority: 'Alta', event_type: 'Despedida de Soltera' },
+    { title: 'Menú, bocadillos y barra de coctelería', category: '2 - 3 meses', priority: 'Media', event_type: 'Despedida de Soltera' },
+    { title: 'Contratación de fotógrafo para sesión con amigas', category: '2 - 3 meses', priority: 'Media', event_type: 'Despedida de Soltera' },
+    { title: 'Decoración, arco de globos / flores y photo opportunity', category: '1 mes', priority: 'Alta', event_type: 'Despedida de Soltera' },
+    { title: 'Pastel o mesa de postres temática', category: '1 mes', priority: 'Media', event_type: 'Despedida de Soltera' },
+    { title: 'Juegos y dinámicas de integración', category: '1 mes', priority: 'Media', event_type: 'Despedida de Soltera' },
+    { title: 'Detalles de agradecimiento para invitadas', category: '1 mes', priority: 'Media', event_type: 'Despedida de Soltera' },
+    { title: 'Confirmación final de invitadas y compras de insumos', category: 'Semana del evento', priority: 'Alta', event_type: 'Despedida de Soltera' },
+    { title: 'Preparación de playlist y ambientación musical', category: 'Semana del evento', priority: 'Media', event_type: 'Despedida de Soltera' },
+    { title: 'Montaje de decoración y prueba de audio', category: 'Semana del evento', priority: 'Alta', event_type: 'Despedida de Soltera' }
+  ];
+
+  const defaultBabyShowerChecklist = [
+    { title: 'Definir lista de invitadas y fecha estimada', category: 'Organización y Temática', priority: 'Alta', event_type: 'Baby Shower' },
+    { title: 'Selección de locación (Salón, Casa o Restaurante)', category: 'Organización y Temática', priority: 'Alta', event_type: 'Baby Shower' },
+    { title: 'Definir temática y paleta de colores', category: 'Organización y Temática', priority: 'Alta', event_type: 'Baby Shower' },
+    { title: 'Apertura de mesa de regalos o número de cuenta', category: 'Organización y Temática', priority: 'Media', event_type: 'Baby Shower' },
+    { title: 'Diseño y envío de invitaciones digitales', category: '1 - 2 meses', priority: 'Alta', event_type: 'Baby Shower' },
+    { title: 'Selección de banquete, brunch o coffee station', category: '1 - 2 meses', priority: 'Alta', event_type: 'Baby Shower' },
+    { title: 'Mesa de ambientación, pastel y postres', category: '1 - 2 meses', priority: 'Media', event_type: 'Baby Shower' },
+    { title: 'Decoración y arreglos centrales', category: '1 - 2 meses', priority: 'Media', event_type: 'Baby Shower' },
+    { title: 'Dinámicas, juegos y premios para ganadores', category: '1 - 2 meses', priority: 'Media', event_type: 'Baby Shower' },
+    { title: 'Libro de firmas o mensajes para el bebé', category: 'Semana del evento', priority: 'Media', event_type: 'Baby Shower' },
+    { title: 'Confirmación final de asistentes y montaje', category: 'Semana del evento', priority: 'Alta', event_type: 'Baby Shower' },
+    { title: 'Detalles o souvenirs de agradecimiento', category: 'Semana del evento', priority: 'Media', event_type: 'Baby Shower' }
+  ];
+
+  const defaultOtrosChecklist = [
+    { title: 'Definición de concepto, fecha y número de invitados', category: 'Planeación General', priority: 'Alta', event_type: 'Otros' },
+    { title: 'Apartado de sede o salón de eventos', category: 'Planeación General', priority: 'Alta', event_type: 'Otros' },
+    { title: 'Cotización y contratación de catering y bebidas', category: 'Planeación General', priority: 'Alta', event_type: 'Otros' },
+    { title: 'Música, DJ o audio e iluminación', category: 'Planeación General', priority: 'Media', event_type: 'Otros' },
+    { title: 'Diseño y envío de invitaciones con confirmación', category: 'Planeación General', priority: 'Alta', event_type: 'Otros' },
+    { title: 'Decoración y mobiliario', category: 'Planeación General', priority: 'Media', event_type: 'Otros' },
+    { title: 'Confirmación final de asistentes con el proveedor de alimentos', category: 'Semana del evento', priority: 'Alta', event_type: 'Otros' },
+    { title: 'Coordinación de montaje, minuto a minuto y accesos', category: 'Semana del evento', priority: 'Alta', event_type: 'Otros' }
+  ];
+
+  const allDefaultMasterChecklist = [
+    ...defaultMasterChecklist,
+    ...defaultCivilChecklist,
+    ...defaultDespedidaChecklist,
+    ...defaultBabyShowerChecklist,
+    ...defaultOtrosChecklist
+  ];
+
+  db.prepare('INSERT OR IGNORE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(allDefaultMasterChecklist));
 
   seedInitialData();
 
@@ -920,10 +992,10 @@ export function initDatabase() {
       db.prepare('DELETE FROM users WHERE id IN (?, ?)').run('usr_novios_valeria', 'usr_coord_b');
       db.prepare('DELETE FROM weddings WHERE id = ?').run('wed_valeria_mateo');
 
-      // Upgrade master_checklist catalog if it doesn't have 'Checklist General' yet
+      // Upgrade master_checklist catalog to include all event templates (Boda, Civil, Despedida, Baby Shower)
       const mc = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('master_checklist') as any;
-      if (!mc || !mc.values_json.includes('Checklist General')) {
-        db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(defaultMasterChecklist));
+      if (!mc || !mc.values_json.includes('Despedida de Soltera')) {
+        db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(allDefaultMasterChecklist));
       }
 
       // Upgrade meeting_packages if items don't have the includes array yet

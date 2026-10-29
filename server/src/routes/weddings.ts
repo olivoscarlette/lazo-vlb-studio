@@ -209,17 +209,28 @@ router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) =
       const checklistCatalog = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('master_checklist') as any;
       if (checklistCatalog) {
         const masterTasks: any[] = JSON.parse(checklistCatalog.values_json);
+        const eventTypeTarget = (event_type || 'Boda Completa').toLowerCase();
+        const relevantTasks = masterTasks.filter((mt: any) => {
+          const et = (mt.event_type || 'Boda Completa').toLowerCase();
+          if (eventTypeTarget.includes('despedida')) return et.includes('despedida');
+          if (eventTypeTarget.includes('baby')) return et.includes('baby');
+          if (eventTypeTarget.includes('civil')) return et.includes('civil');
+          if (eventTypeTarget.includes('otro')) return et.includes('otro');
+          return !et.includes('despedida') && !et.includes('baby') && !et.includes('civil') && !et.includes('otro');
+        });
+        const tasksToInsert = relevantTasks.length > 0 ? relevantTasks : masterTasks.filter((mt: any) => !mt.event_type || mt.event_type === 'Boda Completa');
+
         const insertTask = db.prepare(`
           INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, 'Pendiente', ?, ?, ?)
         `);
-        masterTasks.forEach((mt, idx) => {
+        tasksToInsert.forEach((mt: any, idx: number) => {
           insertTask.run(
             `tsk_${id}_${idx}_${Date.now()}`,
             id,
             mt.title,
             mt.category || 'Checklist General',
-            mt.responsible || 'VLB Studio',
+            mt.responsible || 'Lazo Studio',
             null,
             mt.priority || 'Media',
             mt.notes || '',

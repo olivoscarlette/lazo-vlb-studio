@@ -93,19 +93,19 @@ export const GeneralDashboard: React.FC = () => {
     description: '',
     includesText: ''
   });
-  const [masterChecklist, setMasterChecklist] = useState<{ title: string; category: string; priority: string; responsible: string }[]>([]);
+  const [masterChecklist, setMasterChecklist] = useState<{ title: string; category: string; priority: string; responsible?: string; event_type?: string }[]>([]);
+  const [selectedTemplateType, setSelectedTemplateType] = useState<'Boda Completa' | 'Boda Civil' | 'Despedida de Soltera' | 'Baby Shower' | 'Otros'>('Boda Completa');
+  const [expandedPhases, setExpandedPhases] = useState<Record<string, boolean>>({});
   const [newMasterTask, setNewMasterTask] = useState({
     title: '',
     category: 'Checklist General',
-    priority: 'Alta',
-    responsible: 'VLB Studio'
+    priority: 'Alta'
   });
   const [editingTaskIdx, setEditingTaskIdx] = useState<number | null>(null);
   const [editingTaskDraft, setEditingTaskDraft] = useState({
     title: '',
     category: 'Checklist General',
-    priority: 'Alta',
-    responsible: 'VLB Studio'
+    priority: 'Alta'
   });
 
   const [masterCivilReqs, setMasterCivilReqs] = useState<string[]>([]);
@@ -563,6 +563,39 @@ export const GeneralDashboard: React.FC = () => {
     saveCatalogKey('meeting_packages', updated);
   };
 
+  const getCategoriesForType = (type: string) => {
+    switch (type) {
+      case 'Boda Civil':
+        return ['Trámites y Documentación Civil', '3 - 4 meses', '1 - 2 meses', 'Semana del evento'];
+      case 'Despedida de Soltera':
+        return ['Concepto y Temática', '2 - 3 meses', '1 mes', 'Semana del evento'];
+      case 'Baby Shower':
+        return ['Organización y Temática', '1 - 2 meses', 'Semana del evento'];
+      case 'Otros':
+        return ['Planeación General', 'Semana del evento'];
+      default: // Boda Completa
+        return [
+          'Checklist General',
+          '12 - 16 meses',
+          '10 - 11 meses',
+          '8 - 9 meses',
+          '6 - 7 meses',
+          '4 - 5 meses',
+          '2 - 3 meses',
+          '1 mes',
+          '15 días',
+          '1 semana'
+        ];
+    }
+  };
+
+  const togglePhase = (phase: string) => {
+    setExpandedPhases(prev => ({
+      ...prev,
+      [phase]: prev[phase] === undefined ? false : !prev[phase]
+    }));
+  };
+
   const handleAddMasterTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMasterTask.title.trim()) return;
@@ -572,7 +605,8 @@ export const GeneralDashboard: React.FC = () => {
         title: newMasterTask.title.trim(),
         category: newMasterTask.category,
         priority: newMasterTask.priority,
-        responsible: newMasterTask.responsible.trim() || 'VLB Studio'
+        responsible: 'Lazo Studio',
+        event_type: selectedTemplateType
       }
     ];
     setMasterChecklist(updated);
@@ -585,9 +619,8 @@ export const GeneralDashboard: React.FC = () => {
     setEditingTaskIdx(idx);
     setEditingTaskDraft({
       title: item.title,
-      category: item.category || '12 Meses Antes',
-      priority: item.priority || 'Alta',
-      responsible: item.responsible || 'VLB Studio'
+      category: item.category || 'Checklist General',
+      priority: item.priority || 'Alta'
     });
   };
 
@@ -596,10 +629,10 @@ export const GeneralDashboard: React.FC = () => {
     const updated = masterChecklist.map((item, i) =>
       i === idx
         ? {
+            ...item,
             title: editingTaskDraft.title.trim(),
             category: editingTaskDraft.category,
-            priority: editingTaskDraft.priority,
-            responsible: editingTaskDraft.responsible.trim() || 'VLB Studio'
+            priority: editingTaskDraft.priority
           }
         : item
     );
@@ -1842,23 +1875,54 @@ export const GeneralDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* PESTAÑA: PLANTILLAS VLB */}
+      {/* PESTAÑA: PLANTILLAS LAZO STUDIO */}
       {activeTab === 'plantillas' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
-            <div className="flex items-center space-x-3.5">
-              <div>
-                <h2 className="font-serif text-2xl font-bold text-[#332A28]">Plantillas Maestras VLB</h2>
-                <p className="text-xs text-[#7D6F6B] mt-0.5">Checklist maestro y requisitos de ceremonias civil y religiosa.</p>
-              </div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EFE8E1]">
+            <div>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#2B2826]">
+                Plantillas de Actividades por Mes
+              </h2>
+              <p className="text-xs text-[#7D6F6B] mt-1">
+                Estructura de actividades automatizadas para tus eventos · Lazo Studio
+              </p>
             </div>
-            <button
-              onClick={() => setActiveTab('weddings')}
-              className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
-            >
-              ← Volver a Bodas
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleDownloadTemplatesExcel}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold transition shadow-2xs"
+                title="Descargar Excel"
+              >
+                <Download className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span>Descargar Excel</span>
+              </button>
+
+              <label className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold cursor-pointer transition shadow-2xs">
+                <Upload className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span>{importingExcel ? 'Cargando...' : 'Subir Excel'}</span>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  onChange={handleUploadTemplatesExcel}
+                  disabled={importingExcel}
+                  className="hidden"
+                />
+              </label>
+
+              <button
+                type="button"
+                onClick={handleSyncTemplatesToWeddings}
+                disabled={syncingTemplates}
+                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold shadow-xs transition"
+                title="Sincronizar cambios a eventos activos"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${syncingTemplates ? 'animate-spin' : ''}`} />
+                <span>{syncingTemplates ? 'Sincronizando...' : 'Aplicar a Eventos'}</span>
+              </button>
+            </div>
           </div>
+
           {catalogMsg && (
             <div className="p-4 rounded-2xl bg-[#E5EDE6] border border-[#D5E2D7] text-[#384C3A] text-xs font-semibold flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-[#384C3A] shrink-0" />
@@ -1866,231 +1930,221 @@ export const GeneralDashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Barra Superior: Carga por Excel y Sincronización Automática VLB */}
-          <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] bg-[#F9F6F2]">
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-              <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81] flex items-center space-x-1.5">
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>Administración y Carga por Excel · VLB Studio</span>
-                </span>
-                <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">
-                  Importar, Editar y Sincronizar Plantillas Maestras
-                </h3>
-                <p className="text-xs text-stone-600 mt-1 max-w-2xl">
-                  Puedes editar cualquier actividad aquí mismo, agregar nuevas manualmente o <strong>subir un archivo Excel</strong>. El sistema detecta automáticamente la columna o pestaña (<em>Checklist / Mes 12, Civil o Religiosa</em>) y las carga en el módulo correspondiente de todas tus bodas.
-                </p>
-              </div>
+          {/* Selector de Plantilla por Tipo de Evento (Sin Emojis) */}
+          <div className="flex items-center gap-2 p-1.5 bg-[#F2ECE7] rounded-2xl border border-[#EFE8E1] overflow-x-auto text-xs font-semibold">
+            {(['Boda Completa', 'Boda Civil', 'Despedida de Soltera', 'Baby Shower', 'Otros'] as const).map(type => {
+              const count = masterChecklist.filter(item => {
+                const et = (item.event_type || 'Boda Completa').toLowerCase();
+                const target = type.toLowerCase();
+                if (target.includes('civil')) return et.includes('civil');
+                if (target.includes('despedida')) return et.includes('despedida');
+                if (target.includes('baby')) return et.includes('baby');
+                if (target.includes('otro')) return et.includes('otro');
+                return !et.includes('civil') && !et.includes('despedida') && !et.includes('baby') && !et.includes('otro');
+              }).length;
 
-              <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+              const active = selectedTemplateType === type;
+              return (
                 <button
+                  key={type}
                   type="button"
-                  onClick={handleDownloadTemplatesExcel}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-white hover:bg-[#EFE8DE] text-[#332C2A] border border-[#EFE8E1] text-xs font-semibold transition shadow-2xs"
-                  title="Descargar todas las plantillas actuales en formato Excel para editarlas o agregar filas"
+                  onClick={() => {
+                    setSelectedTemplateType(type);
+                    const cats = getCategoriesForType(type);
+                    if (cats.length > 0) {
+                      setNewMasterTask(prev => ({ ...prev, category: cats[0] }));
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-xl transition cursor-pointer shrink-0 flex items-center gap-2 ${
+                    active
+                      ? 'bg-white text-[#2B2826] shadow-xs font-bold'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                  }`}
                 >
-                  <Download className="w-4 h-4 text-[#C48B81]" />
-                  <span>Descargar Plantilla Excel</span>
+                  <span>{type === 'Otros' ? 'Otros Eventos' : type}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    active ? 'bg-[#F7EDEB] text-[#A86B60]' : 'text-[#7D6F6B] bg-white/60'
+                  }`}>
+                    {count}
+                  </span>
                 </button>
-
-                <label className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold cursor-pointer transition shadow-xs">
-                  <Upload className="w-4 h-4" />
-                  <span>{importingExcel ? 'Cargando Excel...' : 'Subir Excel de Plantillas'}</span>
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls,.csv"
-                    onChange={handleUploadTemplatesExcel}
-                    disabled={importingExcel}
-                    className="hidden"
-                  />
-                </label>
-
-                <button
-                  type="button"
-                  onClick={handleSyncTemplatesToWeddings}
-                  disabled={syncingTemplates}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-[#EFE2DF] hover:bg-[#DFC9C4] text-[#A86B60] border border-[#DFC9C4] text-xs font-semibold transition"
-                  title="Aplicar cambios de estas plantillas a todas las bodas activas"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${syncingTemplates ? 'animate-spin' : ''}`} />
-                  <span>{syncingTemplates ? 'Sincronizando...' : 'Aplicar a Todas las Bodas'}</span>
-                </button>
-              </div>
-            </div>
+              );
+            })}
           </div>
 
-          {/* 1. Plantilla Maestra de Checklist y Actividades por Mes VLB */}
-          <div className="luxury-card rounded-3xl p-6 border border-stone-200">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
-              <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
-                  Plantilla Global Editable · Se carga en módulo Checklist
-                </span>
-                <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">
-                  Checklist Maestro VLB y Actividades por Mes
-                </h3>
-                <p className="text-xs text-stone-500 mt-1">
-                  Haz clic en el ícono de lápiz para modificar cualquier actividad o su mes/etapa, o agrega nuevas actividades abajo.
-                </p>
-              </div>
-              <span className="text-xs font-semibold text-[#A86B60] bg-[#EFE2DF] px-3 py-1 rounded-full shrink-0">
-                {masterChecklist.length} actividades maestras
-              </span>
+          {/* Formulario Minimalista para Agregar Actividad (Sin campo de responsable) */}
+          <form onSubmit={handleAddMasterTask} className="p-4 rounded-2xl bg-white border border-[#EFE8E1] shadow-2xs flex flex-col sm:flex-row items-center gap-2.5">
+            <div className="w-full sm:w-1/3">
+              <select
+                value={newMasterTask.category}
+                onChange={e => setNewMasterTask({ ...newMasterTask, category: e.target.value })}
+                className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+              >
+                {getCategoriesForType(selectedTemplateType).map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
+            <div className="w-full sm:flex-1">
+              <input
+                type="text"
+                placeholder="Nueva actividad (ej. Definir presupuesto base)..."
+                value={newMasterTask.title}
+                onChange={e => setNewMasterTask({ ...newMasterTask, title: e.target.value })}
+                className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] placeholder-[#7D6F6B]/70 focus:outline-none focus:border-[#C48B81]"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full sm:w-auto px-5 py-2 bg-[#2B2826] hover:bg-[#1A1817] text-white text-xs font-semibold rounded-xl transition cursor-pointer shrink-0"
+            >
+              + Agregar
+            </button>
+          </form>
 
-            <form onSubmit={handleAddMasterTask} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#EFE8E1]">
-              <div className="sm:col-span-3">
-                <select
-                  value={newMasterTask.category}
-                  onChange={e => setNewMasterTask({ ...newMasterTask, category: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
-                >
-                  <option value="Checklist General">Checklist General</option>
-                  <option value="12 - 16 meses">12 - 16 meses</option>
-                  <option value="10 - 11 meses">10 - 11 meses</option>
-                  <option value="8 - 9 meses">8 - 9 meses</option>
-                  <option value="6 - 7 meses">6 - 7 meses</option>
-                  <option value="4 - 5 meses">4 - 5 meses</option>
-                  <option value="2 - 3 meses">2 - 3 meses</option>
-                  <option value="1 mes">1 mes</option>
-                  <option value="15 días">15 días</option>
-                  <option value="1 semana">1 semana</option>
-                </select>
-              </div>
-              <div className="sm:col-span-5">
-                <input
-                  type="text"
-                  placeholder="Nueva actividad (ej. Definir presupuesto base e invitados)..."
-                  value={newMasterTask.title}
-                  onChange={e => setNewMasterTask({ ...newMasterTask, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <input
-                  type="text"
-                  placeholder="Responsable (VLB / Novios)"
-                  value={newMasterTask.responsible}
-                  onChange={e => setNewMasterTask({ ...newMasterTask, responsible: e.target.value })}
-                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white"
-                />
-              </div>
-              <div className="sm:col-span-2">
-                <button
-                  type="submit"
-                  className="w-full py-2 bg-stone-900 text-white text-xs font-bold uppercase rounded-xl hover:bg-stone-800 transition"
-                >
-                  + Agregar
-                </button>
-              </div>
-            </form>
+          {/* Fases en Acordeones Colapsables */}
+          <div className="space-y-3">
+            {getCategoriesForType(selectedTemplateType).map((phase, phaseIdx) => {
+              const phaseTasksWithIndex = masterChecklist
+                .map((item, originalIdx) => ({ item, originalIdx }))
+                .filter(({ item }) => {
+                  const et = (item.event_type || 'Boda Completa').toLowerCase();
+                  const target = selectedTemplateType.toLowerCase();
+                  const matchesType =
+                    target.includes('civil') ? et.includes('civil') :
+                    target.includes('despedida') ? et.includes('despedida') :
+                    target.includes('baby') ? et.includes('baby') :
+                    target.includes('otro') ? et.includes('otro') :
+                    (!et.includes('civil') && !et.includes('despedida') && !et.includes('baby') && !et.includes('otro'));
 
-            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-              {masterChecklist.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-3 rounded-xl bg-stone-50 border border-stone-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs"
-                >
-                  {editingTaskIdx === idx ? (
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
-                      <div className="sm:col-span-3">
-                        <select
-                          value={editingTaskDraft.category}
-                          onChange={e => setEditingTaskDraft({ ...editingTaskDraft, category: e.target.value })}
-                          className="w-full px-2.5 py-1.5 border border-stone-300 rounded-lg text-xs bg-white"
-                        >
-                          <option value="Checklist General">Checklist General</option>
-                          <option value="12 - 16 meses">12 - 16 meses</option>
-                          <option value="10 - 11 meses">10 - 11 meses</option>
-                          <option value="8 - 9 meses">8 - 9 meses</option>
-                          <option value="6 - 7 meses">6 - 7 meses</option>
-                          <option value="4 - 5 meses">4 - 5 meses</option>
-                          <option value="2 - 3 meses">2 - 3 meses</option>
-                          <option value="1 mes">1 mes</option>
-                          <option value="15 días">15 días</option>
-                          <option value="1 semana">1 semana</option>
-                        </select>
+                  return matchesType && (item.category || '').toLowerCase() === phase.toLowerCase();
+                });
+
+              const isOpen = expandedPhases[phase] !== undefined ? expandedPhases[phase] : phaseIdx === 0;
+
+              return (
+                <div key={phase} className="bg-white rounded-2xl border border-[#EFE8E1] overflow-hidden shadow-2xs transition-all">
+                  <div
+                    onClick={() => togglePhase(phase)}
+                    className="p-4 sm:p-5 flex items-center justify-between cursor-pointer hover:bg-[#FAF7F5] transition select-none"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center font-serif font-bold text-xs ${
+                        isOpen ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#F2ECE7] text-[#7D6F6B]'
+                      }`}>
+                        {phaseIdx + 1}
                       </div>
-                      <div className="sm:col-span-5">
-                        <input
-                          type="text"
-                          value={editingTaskDraft.title}
-                          onChange={e => setEditingTaskDraft({ ...editingTaskDraft, title: e.target.value })}
-                          className="w-full px-2.5 py-1.5 border border-stone-300 rounded-lg text-xs bg-white"
-                        />
-                      </div>
-                      <div className="sm:col-span-2">
-                        <input
-                          type="text"
-                          value={editingTaskDraft.responsible}
-                          onChange={e => setEditingTaskDraft({ ...editingTaskDraft, responsible: e.target.value })}
-                          className="w-full px-2.5 py-1.5 border border-stone-300 rounded-lg text-xs bg-white"
-                        />
-                      </div>
-                      <div className="sm:col-span-2 flex items-center justify-end space-x-1">
-                        <button
-                          type="button"
-                          onClick={() => handleSaveEditMasterTask(idx)}
-                          className="px-2.5 py-1.5 bg-stone-900 text-white rounded-lg text-[11px] font-semibold flex items-center space-x-1"
-                        >
-                          <Save className="w-3 h-3" />
-                          <span>Guardar</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingTaskIdx(null)}
-                          className="p-1.5 text-stone-500 hover:bg-stone-200 rounded-lg"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
+                      <div>
+                        <h3 className="font-serif text-base sm:text-lg font-bold text-[#2B2826]">
+                          {phase}
+                        </h3>
                       </div>
                     </div>
-                  ) : (
-                    <>
-                      <div className="flex flex-wrap items-center gap-2.5">
-                        <span className="px-2.5 py-0.5 rounded-md bg-[#EFE2DF] text-[#A86B60] font-semibold text-[11px]">
-                          {item.category}
-                        </span>
-                        <span className="font-semibold text-stone-900">{item.title}</span>
-                        <span className="text-[11px] text-stone-500">({item.responsible})</span>
-                      </div>
-                      <div className="flex items-center space-x-1 shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleStartEditMasterTask(idx)}
-                          className="text-stone-400 hover:text-stone-900 p-1.5 rounded-lg hover:bg-stone-200/60 transition"
-                          title="Editar actividad"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveMasterTask(idx)}
-                          className="text-stone-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition"
-                          title="Eliminar de plantilla maestra"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </>
+
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
+                        phaseTasksWithIndex.length > 0 ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#F2ECE7] text-[#7D6F6B]'
+                      }`}>
+                        {phaseTasksWithIndex.length} {phaseTasksWithIndex.length === 1 ? 'actividad' : 'actividades'}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-[#7D6F6B] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                  </div>
+
+                  {isOpen && (
+                    <div className="px-4 sm:px-5 pb-4 pt-1 border-t border-[#F2ECE7]">
+                      {phaseTasksWithIndex.length === 0 ? (
+                        <div className="py-4 text-center text-xs text-[#7D6F6B] italic">
+                          No hay actividades en esta fase. Agrega una arriba.
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-[#F2ECE7]">
+                          {phaseTasksWithIndex.map(({ item, originalIdx }) => (
+                            <div key={originalIdx} className="py-2.5 flex items-center justify-between gap-3 text-xs">
+                              {editingTaskIdx === originalIdx ? (
+                                <div className="flex-1 flex flex-col sm:flex-row items-center gap-2">
+                                  <select
+                                    value={editingTaskDraft.category}
+                                    onChange={e => setEditingTaskDraft({ ...editingTaskDraft, category: e.target.value })}
+                                    className="w-full sm:w-1/3 px-2.5 py-1.5 border border-[#EFE8E1] rounded-lg text-xs bg-[#FAF7F5]"
+                                  >
+                                    {getCategoriesForType(selectedTemplateType).map(cat => (
+                                      <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                  </select>
+                                  <input
+                                    type="text"
+                                    value={editingTaskDraft.title}
+                                    onChange={e => setEditingTaskDraft({ ...editingTaskDraft, title: e.target.value })}
+                                    className="w-full sm:flex-1 px-2.5 py-1.5 border border-[#EFE8E1] rounded-lg text-xs bg-[#FAF7F5]"
+                                  />
+                                  <div className="flex items-center gap-1 self-end sm:self-auto">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSaveEditMasterTask(originalIdx)}
+                                      className="px-3 py-1.5 bg-[#2B2826] text-white rounded-lg text-xs font-semibold flex items-center space-x-1"
+                                    >
+                                      <Save className="w-3 h-3" />
+                                      <span>Guardar</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setEditingTaskIdx(null)}
+                                      className="p-1.5 text-[#7D6F6B] hover:bg-[#F2ECE7] rounded-lg"
+                                    >
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="w-2 h-2 rounded-full bg-[#C48B81] shrink-0" />
+                                    <span className="font-medium text-[#2B2826] leading-relaxed">{item.title}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1 shrink-0">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleStartEditMasterTask(originalIdx)}
+                                      className="text-[#7D6F6B] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-[#F2ECE7] transition"
+                                      title="Editar actividad"
+                                    >
+                                      <Edit3 className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleRemoveMasterTask(originalIdx)}
+                                      className="text-[#7D6F6B] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition"
+                                      title="Eliminar actividad"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
           {/* 2. Plantillas Maestras de Requisitos (Civil y Religiosa) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Requisitos Ceremonia Civil VLB */}
-            <div className="luxury-card rounded-3xl p-6 border border-stone-200">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+            {/* Requisitos Ceremonia Civil */}
+            <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] bg-white">
               <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
-                Plantilla Editable · Se carga en módulo Ceremonia Civil
+                Plantilla Base · Módulo Civil
               </span>
-              <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">
+              <h3 className="font-serif text-xl font-bold text-[#2B2826] mt-0.5">
                 Requisitos de Ceremonia Civil
               </h3>
-              <p className="text-xs text-stone-500 mt-1">
-                Lista base de documentos y trámites que se carga en el módulo Civil de todas las bodas.
+              <p className="text-xs text-[#7D6F6B] mt-1">
+                Lista base de documentos y trámites que se carga en el módulo Civil de eventos.
               </p>
               <form onSubmit={handleAddMasterCivilReq} className="flex gap-2 mt-4 mb-4">
                 <input
@@ -2098,11 +2152,11 @@ export const GeneralDashboard: React.FC = () => {
                   placeholder="Agregar requisito civil (ej. Exámenes prenupciales)..."
                   value={newMasterCivilReq}
                   onChange={e => setNewMasterCivilReq(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                  className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5]"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-stone-900 text-white text-xs font-bold uppercase rounded-xl hover:bg-stone-800"
+                  className="px-4 py-2 bg-[#2B2826] text-white text-xs font-semibold rounded-xl hover:bg-[#1A1817]"
                 >
                   Agregar
                 </button>
@@ -2111,7 +2165,7 @@ export const GeneralDashboard: React.FC = () => {
                 {masterCivilReqs.map((req, idx) => (
                   <div
                     key={idx}
-                    className="p-2.5 rounded-xl bg-stone-50 border border-stone-200 flex items-center justify-between gap-2 text-xs"
+                    className="p-2.5 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] flex items-center justify-between gap-2 text-xs"
                   >
                     {editingCivilIdx === idx ? (
                       <div className="flex-1 flex items-center gap-2">
@@ -2119,26 +2173,26 @@ export const GeneralDashboard: React.FC = () => {
                           type="text"
                           value={editingCivilText}
                           onChange={e => setEditingCivilText(e.target.value)}
-                          className="flex-1 px-2.5 py-1 border border-stone-300 rounded-lg text-xs bg-white"
+                          className="flex-1 px-2.5 py-1 border border-[#EFE8E1] rounded-lg text-xs bg-white"
                         />
                         <button
                           type="button"
                           onClick={() => handleSaveEditCivilReq(idx)}
-                          className="px-2.5 py-1 bg-stone-900 text-white rounded-lg text-[11px] font-semibold"
+                          className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-[11px] font-semibold"
                         >
                           Guardar
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingCivilIdx(null)}
-                          className="p-1 text-stone-500"
+                          className="p-1 text-[#7D6F6B]"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ) : (
                       <>
-                        <span className="text-stone-800 font-medium">{req}</span>
+                        <span className="text-[#2B2826] font-medium">{req}</span>
                         <div className="flex items-center space-x-1 shrink-0">
                           <button
                             type="button"
@@ -2146,7 +2200,7 @@ export const GeneralDashboard: React.FC = () => {
                               setEditingCivilIdx(idx);
                               setEditingCivilText(req);
                             }}
-                            className="text-stone-400 hover:text-stone-900 p-1 rounded"
+                            className="text-[#7D6F6B] hover:text-[#2B2826] p-1 rounded"
                             title="Editar requisito"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -2154,7 +2208,7 @@ export const GeneralDashboard: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleRemoveMasterCivilReq(idx)}
-                            className="text-stone-400 hover:text-rose-600 p-1 rounded"
+                            className="text-[#7D6F6B] hover:text-rose-600 p-1 rounded"
                             title="Eliminar requisito"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -2167,16 +2221,16 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Requisitos Ceremonia Religiosa VLB */}
-            <div className="luxury-card rounded-3xl p-6 border border-stone-200">
+            {/* Requisitos Ceremonia Religiosa */}
+            <div className="luxury-card rounded-3xl p-6 border border-[#EFE8E1] bg-white">
               <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
-                Plantilla Editable · Se carga en módulo Ceremonia Religiosa
+                Plantilla Base · Módulo Religioso
               </span>
-              <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">
+              <h3 className="font-serif text-xl font-bold text-[#2B2826] mt-0.5">
                 Requisitos de Ceremonia Religiosa
               </h3>
-              <p className="text-xs text-stone-500 mt-1">
-                Lista base de requisitos eclesiásticos que se carga en el módulo Ceremonia Religiosa.
+              <p className="text-xs text-[#7D6F6B] mt-1">
+                Lista base de requisitos eclesiásticos para ceremonias religiosas.
               </p>
               <form onSubmit={handleAddMasterReligiousReq} className="flex gap-2 mt-4 mb-4">
                 <input
@@ -2184,11 +2238,11 @@ export const GeneralDashboard: React.FC = () => {
                   placeholder="Agregar requisito religioso (ej. Fe de bautismo actualizada)..."
                   value={newMasterReligiousReq}
                   onChange={e => setNewMasterReligiousReq(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-stone-300 rounded-xl text-xs"
+                  className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5]"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-stone-900 text-white text-xs font-bold uppercase rounded-xl hover:bg-stone-800"
+                  className="px-4 py-2 bg-[#2B2826] text-white text-xs font-semibold rounded-xl hover:bg-[#1A1817]"
                 >
                   Agregar
                 </button>
@@ -2197,7 +2251,7 @@ export const GeneralDashboard: React.FC = () => {
                 {masterReligiousReqs.map((req, idx) => (
                   <div
                     key={idx}
-                    className="p-2.5 rounded-xl bg-stone-50 border border-stone-200 flex items-center justify-between gap-2 text-xs"
+                    className="p-2.5 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] flex items-center justify-between gap-2 text-xs"
                   >
                     {editingReligiousIdx === idx ? (
                       <div className="flex-1 flex items-center gap-2">
@@ -2205,26 +2259,26 @@ export const GeneralDashboard: React.FC = () => {
                           type="text"
                           value={editingReligiousText}
                           onChange={e => setEditingReligiousText(e.target.value)}
-                          className="flex-1 px-2.5 py-1 border border-stone-300 rounded-lg text-xs bg-white"
+                          className="flex-1 px-2.5 py-1 border border-[#EFE8E1] rounded-lg text-xs bg-white"
                         />
                         <button
                           type="button"
                           onClick={() => handleSaveEditReligiousReq(idx)}
-                          className="px-2.5 py-1 bg-stone-900 text-white rounded-lg text-[11px] font-semibold"
+                          className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-[11px] font-semibold"
                         >
                           Guardar
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingReligiousIdx(null)}
-                          className="p-1 text-stone-500"
+                          className="p-1 text-[#7D6F6B]"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     ) : (
                       <>
-                        <span className="text-stone-800 font-medium">{req}</span>
+                        <span className="text-[#2B2826] font-medium">{req}</span>
                         <div className="flex items-center space-x-1 shrink-0">
                           <button
                             type="button"
@@ -2232,7 +2286,7 @@ export const GeneralDashboard: React.FC = () => {
                               setEditingReligiousIdx(idx);
                               setEditingReligiousText(req);
                             }}
-                            className="text-stone-400 hover:text-stone-900 p-1 rounded"
+                            className="text-[#7D6F6B] hover:text-[#2B2826] p-1 rounded"
                             title="Editar requisito"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -2240,7 +2294,7 @@ export const GeneralDashboard: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleRemoveMasterReligiousReq(idx)}
-                            className="text-stone-400 hover:text-rose-600 p-1 rounded"
+                            className="text-[#7D6F6B] hover:text-rose-600 p-1 rounded"
                             title="Eliminar requisito"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -2256,7 +2310,7 @@ export const GeneralDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* PESTAÑA: CATÁLOGOS VLB */}
+      {/* PESTAÑA: CATÁLOGOS */}
       {activeTab === 'catalogos' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
