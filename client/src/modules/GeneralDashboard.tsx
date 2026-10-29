@@ -2588,16 +2588,51 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Catálogo de Paquetes de Reuniones */}
+            {/* Catálogo de Paquetes y Modalidades de Servicio */}
             <div className="luxury-card rounded-3xl p-6 border border-stone-200">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Configuración Comercial</span>
-              <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">Paquetes para Novios</h3>
+              <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Estructura Comercial SaaS</span>
+              <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">Modalidades y Paquetes de Servicio</h3>
               <p className="text-xs text-stone-500 mt-1">
-                Configura o modifica tus paquetes, la cantidad de reuniones y todo lo que incluye cada uno.
+                Lazo Studio soporta tanto novios externos (Planner Virtual) como clientes de coordinación presencial con reuniones asignadas.
               </p>
 
-              <form onSubmit={handleAddPackage} className="space-y-2.5 mt-4 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#EFE8E1]">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[#A86B60]">Crear Nuevo Paquete</div>
+              {/* Modalidad Digital Base fija */}
+              <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-[#FAF7F5] to-[#F7EDEB]/60 border border-[#ECD9D5]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#6E8C70]" />
+                    <span className="font-serif font-bold text-sm text-[#2B2826]">Planner Virtual Autónomo</span>
+                  </div>
+                  <span className="text-[10px] uppercase font-bold text-[#A86B60] bg-white px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
+                    Modalidad Base SaaS
+                  </span>
+                </div>
+                <p className="text-xs text-[#7D6F6B] mt-1.5 leading-relaxed">
+                  Para novios que solo compran el acceso a la plataforma digital. Incluye la suite completa de Checklist, Presupuesto, Invitados, Mesas, Proveedores y Cronograma (0 reuniones con equipo Lazo Studio).
+                </p>
+                <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-[#A86B60]">
+                  <span className="bg-white/80 px-2 py-0.5 rounded-lg border border-[#ECD9D5]">✓ Suite digital completa</span>
+                  <span className="bg-white/80 px-2 py-0.5 rounded-lg border border-[#ECD9D5]">✓ Sin reuniones incluidas</span>
+                  <span className="bg-white/80 px-2 py-0.5 rounded-lg border border-[#ECD9D5]">✓ Upsell a Envío RSVP e Invitaciones</span>
+                </div>
+              </div>
+
+              <div className="mt-5 pt-4 border-t border-[#EFE8E1]">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#2B2826]">
+                    Paquetes de Coordinación Lazo Studio
+                  </div>
+                  <span className="text-[11px] text-[#7D6F6B]">
+                    Con reuniones 1 a 1 incluidas
+                  </span>
+                </div>
+                <p className="text-xs text-[#7D6F6B] mb-3">
+                  Crea o personaliza los paquetes comerciales para clientes que contratan asesoría o coordinación con tu equipo.
+                </p>
+              </div>
+
+              <form onSubmit={handleAddPackage} className="space-y-2.5 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#EFE8E1]">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[#A86B60]">Crear Nuevo Paquete de Coordinación</div>
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
                   <div className="sm:col-span-5">
                     <input
@@ -3214,26 +3249,89 @@ export const GeneralDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Paquete Contratado</label>
-                <select
-                  value={formData.package_type}
-                  onChange={e => setFormData({ ...formData, package_type: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
-                >
-                  {meetingPackages.length > 0 ? (
-                    meetingPackages.map(p => (
-                      <option key={p.name} value={p.name}>
-                        {p.name} ({p.maxMeetings >= 999 ? 'Reuniones ilimitadas' : `${p.maxMeetings} reuniones`})
-                      </option>
-                    ))
-                  ) : (
-                    <>
-                      <option value="Esencial">Esencial (3 reuniones)</option>
-                      <option value="Integral">Integral (6 reuniones)</option>
-                      <option value="Luxury Exclusivo">Luxury Exclusivo (Reuniones ilimitadas)</option>
-                    </>
-                  )}
-                </select>
+                <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">
+                  Modalidad de Servicio / Paquete
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                  <label
+                    onClick={() => setFormData({ ...formData, package_type: 'Planner Virtual' })}
+                    className={`p-3 rounded-2xl border cursor-pointer transition flex flex-col justify-between ${
+                      formData.package_type === 'Planner Virtual'
+                        ? 'bg-white border-[#C48B81] ring-2 ring-[#C48B81]/15 shadow-xs'
+                        : 'bg-[#FAF7F5] border-[#EFE8E1] hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="create_service_tier"
+                        checked={formData.package_type === 'Planner Virtual'}
+                        onChange={() => setFormData({ ...formData, package_type: 'Planner Virtual' })}
+                        className="accent-[#C48B81]"
+                      />
+                      <span className="font-semibold text-xs text-[#2B2826]">Planner Virtual Autónomo</span>
+                    </div>
+                    <p className="text-[11px] text-[#7D6F6B] mt-1 pl-5 leading-snug">
+                      Novios externos · Suite digital completa (0 reuniones con equipo)
+                    </p>
+                  </label>
+
+                  <label
+                    onClick={() => {
+                      const firstCoordPkg = meetingPackages.find(p => p.name !== 'Planner Virtual')?.name || 'Integral';
+                      setFormData({ ...formData, package_type: firstCoordPkg });
+                    }}
+                    className={`p-3 rounded-2xl border cursor-pointer transition flex flex-col justify-between ${
+                      formData.package_type !== 'Planner Virtual'
+                        ? 'bg-white border-[#C48B81] ring-2 ring-[#C48B81]/15 shadow-xs'
+                        : 'bg-[#FAF7F5] border-[#EFE8E1] hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="create_service_tier"
+                        checked={formData.package_type !== 'Planner Virtual'}
+                        onChange={() => {
+                          const firstCoordPkg = meetingPackages.find(p => p.name !== 'Planner Virtual')?.name || 'Integral';
+                          setFormData({ ...formData, package_type: firstCoordPkg });
+                        }}
+                        className="accent-[#C48B81]"
+                      />
+                      <span className="font-semibold text-xs text-[#2B2826]">Coordinación Lazo Studio</span>
+                    </div>
+                    <p className="text-[11px] text-[#7D6F6B] mt-1 pl-5 leading-snug">
+                      Clientes presenciales · Con sesiones 1 a 1 incluidas
+                    </p>
+                  </label>
+                </div>
+
+                {formData.package_type !== 'Planner Virtual' && (
+                  <div className="mt-2.5 p-3 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] animate-in fade-in duration-150">
+                    <label className="block text-[11px] font-bold uppercase text-[#7D6F6B] tracking-wider mb-1.5">
+                      Paquete de Coordinación Presencial:
+                    </label>
+                    <select
+                      value={formData.package_type}
+                      onChange={e => setFormData({ ...formData, package_type: e.target.value })}
+                      className="w-full px-3.5 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:border-[#C48B81] focus:outline-none"
+                    >
+                      {meetingPackages.filter(p => p.name !== 'Planner Virtual').length > 0 ? (
+                        meetingPackages.filter(p => p.name !== 'Planner Virtual').map(p => (
+                          <option key={p.name} value={p.name}>
+                            {p.name} ({p.maxMeetings >= 999 ? 'Reuniones ilimitadas' : `${p.maxMeetings} reuniones`})
+                          </option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="Esencial">Esencial (3 reuniones)</option>
+                          <option value="Integral">Integral (6 reuniones)</option>
+                          <option value="Luxury Exclusivo">Luxury Exclusivo (Reuniones ilimitadas)</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -3500,29 +3598,70 @@ export const GeneralDashboard: React.FC = () => {
               </div>
 
               {/* Paquete y Estado */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Paquete Contratado</label>
-                  <select
-                    value={editFormData.package_type}
-                    onChange={e => setEditFormData({ ...editFormData, package_type: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
-                  >
-                    {meetingPackages.length > 0 ? (
-                      meetingPackages.map(p => (
-                        <option key={p.name} value={p.name}>
-                          {p.name}
-                        </option>
-                      ))
-                    ) : (
-                      <>
-                        <option value="Esencial">Esencial</option>
-                        <option value="Integral">Integral</option>
-                        <option value="Luxury Exclusivo">Luxury Exclusivo</option>
-                      </>
-                    )}
-                  </select>
+                  <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">Modalidad de Servicio / Paquete</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                    <label
+                      onClick={() => setEditFormData({ ...editFormData, package_type: 'Planner Virtual' })}
+                      className={`p-2.5 rounded-xl border cursor-pointer transition flex items-center gap-2 ${
+                        editFormData.package_type === 'Planner Virtual'
+                          ? 'bg-white border-[#C48B81] ring-1 ring-[#C48B81] shadow-2xs font-semibold text-[#2B2826]'
+                          : 'bg-[#FAF7F5] border-[#EFE8E1] text-[#7D6F6B]'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="edit_service_tier"
+                        checked={editFormData.package_type === 'Planner Virtual'}
+                        onChange={() => setEditFormData({ ...editFormData, package_type: 'Planner Virtual' })}
+                        className="accent-[#C48B81]"
+                      />
+                      <span className="text-xs">Planner Virtual Autónomo</span>
+                    </label>
+
+                    <label
+                      onClick={() => {
+                        const firstCoord = meetingPackages.find(p => p.name !== 'Planner Virtual')?.name || 'Integral';
+                        setEditFormData({ ...editFormData, package_type: firstCoord });
+                      }}
+                      className={`p-2.5 rounded-xl border cursor-pointer transition flex items-center gap-2 ${
+                        editFormData.package_type !== 'Planner Virtual'
+                          ? 'bg-white border-[#C48B81] ring-1 ring-[#C48B81] shadow-2xs font-semibold text-[#2B2826]'
+                          : 'bg-[#FAF7F5] border-[#EFE8E1] text-[#7D6F6B]'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="edit_service_tier"
+                        checked={editFormData.package_type !== 'Planner Virtual'}
+                        onChange={() => {
+                          const firstCoord = meetingPackages.find(p => p.name !== 'Planner Virtual')?.name || 'Integral';
+                          setEditFormData({ ...editFormData, package_type: firstCoord });
+                        }}
+                        className="accent-[#C48B81]"
+                      />
+                      <span className="text-xs">Coordinación Lazo Studio</span>
+                    </label>
+                  </div>
+
+                  {editFormData.package_type !== 'Planner Virtual' && (
+                    <div className="mb-2">
+                      <select
+                        value={editFormData.package_type}
+                        onChange={e => setEditFormData({ ...editFormData, package_type: e.target.value })}
+                        className="w-full px-3.5 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:border-[#C48B81] focus:outline-none"
+                      >
+                        {meetingPackages.filter(p => p.name !== 'Planner Virtual').map(p => (
+                          <option key={p.name} value={p.name}>
+                            {p.name} ({p.maxMeetings >= 999 ? 'Reuniones ilimitadas' : `${p.maxMeetings} reuniones`})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
+
                 <div>
                   <label className="block text-xs font-bold text-stone-700 mb-1">Estado del Evento</label>
                   <select

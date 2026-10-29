@@ -266,6 +266,10 @@ export const ReunionesModule: React.FC = () => {
   };
 
   const isNovios = user?.role === 'NOVIOS';
+  const isPlannerVirtual = Boolean(
+    packageInfo?.packageName?.toLowerCase().includes('virtual') ||
+    currentWedding?.package_type?.toLowerCase().includes('virtual')
+  );
 
   return (
     <div className="space-y-8">
@@ -283,17 +287,77 @@ export const ReunionesModule: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowScheduleModal(true)}
-          className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition"
-        >
-          <Plus className="w-4 h-4" />
-          <span>{isNovios ? 'Solicitar Reunión' : 'Agendar Reunión'}</span>
-        </button>
+        {isPlannerVirtual && isNovios ? (
+          <a
+            href="https://wa.me/5218118000000?text=Hola%20Lazo%20Studio!%20Tengo%20acceso%20al%20Planner%20Virtual%20y%20me%20gustar%C3%ADa%20cotizar%20un%20paquete%20de%20coordinaci%C3%B3n%20o%20asesor%C3%ADa%201%20a%201."
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-xs transition"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Solicitar Coordinación</span>
+          </a>
+        ) : (
+          <button
+            onClick={() => setShowScheduleModal(true)}
+            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isNovios ? 'Solicitar Reunión' : 'Agendar Reunión'}</span>
+          </button>
+        )}
       </div>
 
+      {/* Opción B: Banner de Upgrade para Planner Virtual Autónomo */}
+      {isPlannerVirtual && (
+        <div className="bg-gradient-to-br from-[#FAF7F5] to-[#F7EDEB]/60 rounded-3xl p-6 sm:p-7 border border-[#ECD9D5] shadow-2xs">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#FFFFFF] text-[#A86B60] border border-[#ECD9D5] mb-2.5">
+              <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Modalidad Activa: Planner Virtual Autónomo</span>
+            </div>
+            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826] tracking-tight">
+              ¿Deseas apoyo personalizado para el día de tu evento?
+            </h3>
+            <p className="text-xs text-[#7D6F6B] mt-1.5 leading-relaxed">
+              Tu cuenta incluye acceso total a la suite digital de planeación. Las sesiones de asesoría 1 a 1 y reuniones de coordinación técnica forman parte de nuestros <strong>Paquetes de Coordinación Lazo Studio</strong>.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 my-4">
+              <div className="bg-white p-3 rounded-2xl border border-[#EFE8E1]">
+                <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider">Pilar 1</div>
+                <div className="font-semibold text-xs text-[#2B2826] mt-0.5">Asesoría 1 a 1</div>
+                <p className="text-[11px] text-[#7D6F6B] mt-1 leading-snug">Sesiones con una Wedding Planner para afinar presupuesto y proveedores.</p>
+              </div>
+              <div className="bg-white p-3 rounded-2xl border border-[#EFE8E1]">
+                <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider">Pilar 2</div>
+                <div className="font-semibold text-xs text-[#2B2826] mt-0.5">Minuto a Minuto</div>
+                <p className="text-[11px] text-[#7D6F6B] mt-1 leading-snug">Revisión técnica de contratos y cronograma con tu equipo y locación.</p>
+              </div>
+              <div className="bg-white p-3 rounded-2xl border border-[#EFE8E1]">
+                <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider">Pilar 3</div>
+                <div className="font-semibold text-xs text-[#2B2826] mt-0.5">Coordinación Día B</div>
+                <p className="text-[11px] text-[#7D6F6B] mt-1 leading-snug">Presencia de coordinadoras el día de tu evento en templo y recepción.</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              <a
+                href="https://wa.me/5218118000000?text=Hola%20Lazo%20Studio!%20Tengo%20acceso%20al%20Planner%20Virtual%20y%20me%20gustar%C3%ADa%20cotizar%20un%20paquete%20de%20coordinaci%C3%B3n%20o%20asesor%C3%ADa%201%20a%201."
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-md shadow-[#C48B81]/20 transition cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Cotizar Coordinación con Lazo Studio</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Expandable Package Allowance Banner */}
-      {packageInfo && (
+      {packageInfo && !isPlannerVirtual && (
         <div className="bg-white rounded-2xl border border-[#EFE8E1] shadow-xs overflow-hidden transition-all duration-200">
           <div
             onClick={() => setIsPackageExpanded(!isPackageExpanded)}
@@ -581,7 +645,7 @@ export const ReunionesModule: React.FC = () => {
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
-                {isNovios ? 'Solicitar Reunión con VLB Studio' : 'Agendar Nueva Reunión'}
+                {isNovios ? 'Solicitar Reunión con Lazo Studio' : 'Agendar Nueva Reunión'}
               </h3>
               <button onClick={() => setShowScheduleModal(false)} className="text-[#8A7E72] hover:text-[#2B2826] p-1 rounded-lg">
                 <X className="w-5 h-5" />

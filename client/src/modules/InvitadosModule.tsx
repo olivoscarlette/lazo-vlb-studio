@@ -19,6 +19,7 @@ export const InvitadosModule: React.FC = () => {
   // Invitation Modal states
   const [showInvitationModal, setShowInvitationModal] = useState(false);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [showLazoInvitationUpgradeModal, setShowLazoInvitationUpgradeModal] = useState(false);
   const [invitationForm, setInvitationForm] = useState({
     invitation_type: 'LINK' as 'LINK' | 'PDF',
     invitation_url: '',
@@ -902,6 +903,20 @@ export const InvitadosModule: React.FC = () => {
             </button>
           )}
 
+          {/* Botón enviar invitación para Planner Virtual / Novios Externos (Modo Deshabilitado/Upgrade a Lazo Studio) */}
+          {!canSendWhatsApp && (
+            <button
+              type="button"
+              onClick={() => setShowLazoInvitationUpgradeModal(true)}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F2ECE7] hover:bg-[#EAE2DC] text-[#7D6F6B] hover:text-[#2B2826] text-xs font-semibold rounded-xl transition border border-[#E5DDD5] shadow-2xs cursor-pointer group"
+              title="Servicio de envío de invitaciones y confirmación RSVP con Lazo Studio"
+            >
+              <Send className="w-3.5 h-3.5 text-[#A39690] group-hover:text-[#C48B81] transition" />
+              <span>Enviar invitación</span>
+              <Sparkles className="w-3 h-3 text-[#C48B81]" />
+            </button>
+          )}
+
           <button
             onClick={handleOpenAdd}
             className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#2B2826] hover:bg-[#1E1B19] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer shrink-0"
@@ -1176,7 +1191,7 @@ export const InvitadosModule: React.FC = () => {
                               const text = `Hola ${guest.first_name}! 💍 Nos emociona mucho celebrar nuestra boda contigo (${
                                 currentWedding?.partner_1_name && currentWedding?.partner_2_name
                                   ? `${currentWedding.partner_1_name} & ${currentWedding.partner_2_name}`
-                                  : (currentWedding?.name || 'VLB Studio')
+                                  : (currentWedding?.name || 'Lazo Studio')
                               }). ¿Nos confirmas tu asistencia? (Tienes ${1 + guest.companion_count} ${1 + guest.companion_count === 1 ? 'pase reservado' : 'pases reservados'}).`;
                               return `https://wa.me/${cleaned}?text=${encodeURIComponent(text)}`;
                             })()}
@@ -2068,6 +2083,73 @@ export const InvitadosModule: React.FC = () => {
           weddingName={currentWedding.name}
           weddingDate={currentWedding.wedding_date || currentWedding.date}
         />
+      )}
+
+      {/* Modal Exclusivo: Contratar Servicio de Envío de Invitaciones y RSVP con Lazo Studio */}
+      {showLazoInvitationUpgradeModal && (
+        <div className="fixed inset-0 z-50 bg-[#2B2826]/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FFFFFF] border border-[#EFE8E1] rounded-[28px] max-w-md w-full shadow-2xl overflow-hidden p-6 sm:p-7 relative animate-in fade-in zoom-in-95 duration-150 text-center">
+            <button
+              onClick={() => setShowLazoInvitationUpgradeModal(false)}
+              className="absolute top-4 right-4 p-2 text-[#7D6F6B] hover:text-[#2B2826] rounded-full hover:bg-[#FAF7F5] transition cursor-pointer"
+            >
+              <XCircle className="w-5 h-5 text-[#A39690] hover:text-[#2B2826]" />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-[#F7EDEB] text-[#C48B81] flex items-center justify-center mx-auto mb-3 border border-[#ECD9D5]">
+              <Sparkles className="w-6 h-6 text-[#C48B81]" />
+            </div>
+
+            <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81] bg-[#F7EDEB] px-2.5 py-1 rounded-full">
+              Servicio Adicional · Lazo Studio
+            </span>
+
+            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826] mt-3">
+              Envío de Invitaciones y RSVP Inteligente
+            </h3>
+
+            <p className="text-xs text-[#7D6F6B] mt-2.5 leading-relaxed">
+              ¿Quieres que nuestro equipo se encargue de enviar las invitaciones oficiales y dar seguimiento a las confirmaciones por WhatsApp?
+            </p>
+
+            <div className="my-4 p-3.5 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] text-left space-y-2 text-xs text-[#2B2826]">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-[#6E8C70] shrink-0" />
+                <span>Envío directo de invitaciones en PDF o enlace por WhatsApp</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-[#6E8C70] shrink-0" />
+                <span>Confirmación automatizada de asistencia, alergias y pases</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-[#6E8C70] shrink-0" />
+                <span>Actualización en tiempo real de tu lista de invitados</span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-[#7D6F6B] mb-4">
+              Puedes contratar este servicio adicional con <strong>Lazo Studio</strong> para que tú solo disfrutes de tu evento.
+            </p>
+
+            <div className="space-y-2">
+              <a
+                href="https://wa.me/5218118000000?text=Hola%20Lazo%20Studio!%20Me%20gustar%C3%ADa%20cotizar%20el%20servicio%20de%20env%C3%ADo%20de%20invitaciones%20y%20confirmaci%C3%B3n%20RSVP%20para%20mi%20evento."
+                target="_blank"
+                rel="noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-md shadow-[#C48B81]/20 transition cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Cotizar este servicio con Lazo Studio</span>
+              </a>
+              <button
+                onClick={() => setShowLazoInvitationUpgradeModal(false)}
+                className="w-full py-2 text-xs font-semibold text-[#7D6F6B] hover:text-[#2B2826] transition cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

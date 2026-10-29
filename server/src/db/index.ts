@@ -24,6 +24,51 @@ export const db = {
   exec: (sql: string) => rawDb.exec(sql)
 };
 
+export const defaultMeetingPackages = [
+  {
+    name: 'Planner Virtual',
+    maxMeetings: 0,
+    description: 'Acceso autónomo a la suite digital de planeación para novios externos',
+    includes: [
+      'Suite digital completa (Checklist, Presupuesto, Invitados, Mesas, Proveedores y Minuto a Minuto)',
+      'Sin reuniones de coordinación 1 a 1 incluidas',
+      'Opción de contratar servicio de envío de invitaciones RSVP o coordinación presencial con Lazo Studio'
+    ]
+  },
+  {
+    name: 'Esencial',
+    maxMeetings: 3,
+    description: '3 reuniones de coordinación y avance',
+    includes: [
+      '3 sesiones de planeación y revisión',
+      'Revisión de layout y minuto a minuto',
+      'Coordinación operativa Día Boda'
+    ]
+  },
+  {
+    name: 'Integral',
+    maxMeetings: 6,
+    description: '6 reuniones detalladas con equipo Lazo Studio',
+    includes: [
+      '6 sesiones de planeación con equipo Lazo Studio',
+      'Seguimiento de proveedores y pagos',
+      'Confirmación de invitados (RSVP) y layout',
+      'Coordinación integral Día Boda'
+    ]
+  },
+  {
+    name: 'Luxury Exclusivo',
+    maxMeetings: 999,
+    description: 'Reuniones ilimitadas de planeación',
+    includes: [
+      'Reuniones ilimitadas de planeación y diseño',
+      'Búsqueda, negociación y gestión total de proveedores',
+      'Confirmación de invitados (RSVP), layout y logística',
+      'Coordinación y dirección total Día Boda'
+    ]
+  }
+];
+
 export function initDatabase() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -1018,23 +1063,10 @@ export function initDatabase() {
         db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(allDefaultMasterChecklist));
       }
 
-      // Upgrade meeting_packages if items don't have the includes array yet
+      // Upgrade meeting_packages if Planner Virtual is missing or items don't have the includes array yet
       const mp = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('meeting_packages') as any;
-      if (mp && !mp.values_json.includes('"includes"')) {
-        try {
-          const parsedPkgs = JSON.parse(mp.values_json);
-          const upgradedPkgs = parsedPkgs.map((p: any) => ({
-            ...p,
-            includes: Array.isArray(p.includes) ? p.includes : (
-              p.name === 'Esencial'
-                ? ['3 sesiones de planeación y revisión', 'Revisión de layout y minuto a minuto', 'Coordinación operativa Día Boda']
-                : p.name === 'Integral'
-                ? ['6 sesiones de planeación con equipo VLB', 'Seguimiento de proveedores y pagos', 'Confirmación de invitados (RSVP) y layout', 'Coordinación integral Día Boda']
-                : ['Reuniones ilimitadas de planeación y diseño', 'Búsqueda, negociación y gestión total de proveedores', 'Confirmación de invitados (RSVP), layout y logística', 'Coordinación y dirección total Día Boda']
-            )
-          }));
-          db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('meeting_packages', JSON.stringify(upgradedPkgs));
-        } catch {}
+      if (!mp || !mp.values_json.includes('Planner Virtual')) {
+        db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('meeting_packages', JSON.stringify(defaultMeetingPackages));
       }
 
       // Remove legacy/invented categories from existing weddings and populate official VLB checklist
@@ -1091,40 +1123,7 @@ export function seedInitialData() {
     'Papelería / Invitaciones', 'Repostería', 'Bar y Coctelería', 'Coordinación Externa', 'Otro'
   ];
 
-  const meetingPackages = [
-    {
-      name: 'Esencial',
-      maxMeetings: 3,
-      description: '3 reuniones de coordinación y avance',
-      includes: [
-        '3 sesiones de planeación y revisión',
-        'Revisión de layout y minuto a minuto',
-        'Coordinación operativa Día Boda'
-      ]
-    },
-    {
-      name: 'Integral',
-      maxMeetings: 6,
-      description: '6 reuniones detalladas con equipo VLB',
-      includes: [
-        '6 sesiones de planeación con equipo VLB',
-        'Seguimiento de proveedores y pagos',
-        'Confirmación de invitados (RSVP) y layout',
-        'Coordinación integral Día Boda'
-      ]
-    },
-    {
-      name: 'Luxury Exclusivo',
-      maxMeetings: 999,
-      description: 'Reuniones ilimitadas de planeación',
-      includes: [
-        'Reuniones ilimitadas de planeación y diseño',
-        'Búsqueda, negociación y gestión total de proveedores',
-        'Confirmación de invitados (RSVP), layout y logística',
-        'Coordinación y dirección total Día Boda'
-      ]
-    }
-  ];
+  const meetingPackages = defaultMeetingPackages;
 
   db.prepare('INSERT INTO catalogs (key, values_json) VALUES (?, ?)').run('vendor_types', JSON.stringify(vendorTypes));
   db.prepare('INSERT INTO catalogs (key, values_json) VALUES (?, ?)').run('meeting_packages', JSON.stringify(meetingPackages));
