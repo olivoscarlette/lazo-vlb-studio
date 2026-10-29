@@ -54,7 +54,7 @@ export const GeneralDashboard: React.FC = () => {
   const [weddings, setWeddings] = useState<Wedding[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'UPCOMING' | 'PLANNING'>('ALL');
+  const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'BODAS' | 'DESPEDIDAS' | 'BABY_SHOWER' | 'OTROS'>('ALL');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Admin: Users management state
@@ -991,15 +991,28 @@ export const GeneralDashboard: React.FC = () => {
       (w.reception_venue && w.reception_venue.toLowerCase().includes(q)) ||
       (w.wedding_date && w.wedding_date.includes(q));
 
-    let matchesStatus = true;
-    if (statusFilter === 'UPCOMING') {
-      matchesStatus = w.status === 'UPCOMING' || (w.wedding_date && new Date(w.wedding_date) >= new Date());
-    } else if (statusFilter === 'PLANNING') {
-      matchesStatus = w.status === 'PLANNING';
+    let matchesCategory = true;
+    const type = (w.event_type || 'Boda Completa').toLowerCase();
+    if (categoryFilter === 'BODAS') {
+      matchesCategory = type.includes('boda');
+    } else if (categoryFilter === 'DESPEDIDAS') {
+      matchesCategory = type.includes('despedida');
+    } else if (categoryFilter === 'BABY_SHOWER') {
+      matchesCategory = type.includes('baby');
+    } else if (categoryFilter === 'OTROS') {
+      matchesCategory = !type.includes('boda') && !type.includes('despedida') && !type.includes('baby');
     }
 
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesCategory;
   });
+
+  const countBodas = weddings.filter(w => !w.event_type || w.event_type.toLowerCase().includes('boda')).length;
+  const countDespedidas = weddings.filter(w => w.event_type?.toLowerCase().includes('despedida')).length;
+  const countBabyShowers = weddings.filter(w => w.event_type?.toLowerCase().includes('baby')).length;
+  const countOtros = weddings.filter(w => {
+    const t = (w.event_type || '').toLowerCase();
+    return t && !t.includes('boda') && !t.includes('despedida') && !t.includes('baby');
+  }).length;
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -1133,9 +1146,18 @@ export const GeneralDashboard: React.FC = () => {
                   </button>
                 )}
                 <div>
-                  <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#2B2826]">
-                    Hola, {userName} 👋
-                  </h1>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#2B2826]">
+                      Hola, {userName} 👋
+                    </h1>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]">
+                      <span className="w-2 h-2 rounded-full bg-[#C48B81]"></span>
+                      {weddings.length} {weddings.length === 1 ? 'evento activo' : 'eventos activos'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#7D6F6B] mt-1">
+                    Estudio de planeación y diseño integral · Temporada 2026-2027
+                  </p>
                 </div>
               </div>
 
@@ -1237,11 +1259,11 @@ export const GeneralDashboard: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center space-x-1.5 bg-[#F2ECE7] p-1 rounded-full border border-[#EFE8E1] self-start sm:self-auto">
+              <div className="flex items-center gap-1.5 p-1 bg-[#F2ECE7] rounded-full border border-[#EFE8E1] overflow-x-auto text-xs font-medium self-start sm:self-auto max-w-full">
                 <button
-                  onClick={() => setStatusFilter('ALL')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                    statusFilter === 'ALL'
+                  onClick={() => setCategoryFilter('ALL')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                    categoryFilter === 'ALL'
                       ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
@@ -1249,24 +1271,44 @@ export const GeneralDashboard: React.FC = () => {
                   Todos ({weddings.length})
                 </button>
                 <button
-                  onClick={() => setStatusFilter('UPCOMING')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                    statusFilter === 'UPCOMING'
+                  onClick={() => setCategoryFilter('BODAS')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                    categoryFilter === 'BODAS'
                       ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  Próximos
+                  Bodas ({countBodas})
                 </button>
                 <button
-                  onClick={() => setStatusFilter('PLANNING')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                    statusFilter === 'PLANNING'
+                  onClick={() => setCategoryFilter('DESPEDIDAS')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                    categoryFilter === 'DESPEDIDAS'
                       ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  En planeación
+                  Despedidas ({countDespedidas})
+                </button>
+                <button
+                  onClick={() => setCategoryFilter('BABY_SHOWER')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                    categoryFilter === 'BABY_SHOWER'
+                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                  }`}
+                >
+                  Baby Showers ({countBabyShowers})
+                </button>
+                <button
+                  onClick={() => setCategoryFilter('OTROS')}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+                    categoryFilter === 'OTROS'
+                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                  }`}
+                >
+                  Otros ({countOtros})
                 </button>
               </div>
             </div>
