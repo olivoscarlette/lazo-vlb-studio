@@ -33,13 +33,13 @@ export interface BroadcastScheduleInfo {
 export class BroadcastScheduler {
   public static readonly DEFAULT_REMINDER_TEMPLATE = `RECORDATORIO & DETALLES ✨
 
-Boda {{Novios}}
+Boda *{{Novios}}*
 ¡Estamos a solo 7 días de celebrar juntos!
 
 Te compartimos la información esencial para que disfrutes al máximo este gran día:
 
-• Ceremonia: {{Ceremonia}} · {{HoraCeremonia}}
-• Recepción: {{Recepcion}} · {{HoraRecepcion}}
+• Ceremonia: *{{Ceremonia}}* · *{{HoraCeremonia}}*
+• Recepción: *{{Recepcion}}* · *{{HoraRecepcion}}*
 • Código de vestimenta: {{DressCode}}
 • Pases confirmados: {{Lugares}} persona(s)
 
@@ -50,11 +50,11 @@ Te compartimos la información esencial para que disfrutes al máximo este gran 
   public static readonly DEFAULT_SEATING_TEMPLATE = `¡HOY CELEBRAMOS! 🥂✨
 
 Hola {{Nombre}},
-¡El gran día de {{Novios}} ha llegado!
+¡El gran día de *{{Novios}}* ha llegado!
 
 Hemos preparado tu lugar con mucho cariño:
-🍽️ Tu mesa asignada: {{Mesa}}
-🎟️ Pases reservados: {{Lugares}} persona(s)
+🍽️ Tu mesa asignada: *{{Mesa}}*
+🎟️ Pases reservados: *{{Lugares}} persona(s)*
 
 Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio estará listo para darte la bienvenida y acompañarte a tu lugar.
 
@@ -148,6 +148,14 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio es
     }
   ): string {
     let result = template;
+
+    // Upgrade templates if they don't have bold formatting for Novios, Ceremonia and Recepción
+    result = result.replace(/Boda\s+(?!\*)\{\{Novios\}\}(?!\*)/gi, 'Boda *{{Novios}}*');
+    result = result.replace(/Ceremonia:\s*(?!\*)\{\{Ceremonia\}\}(?!\*)/gi, 'Ceremonia: *{{Ceremonia}}*');
+    result = result.replace(/·\s*(?!\*)\{\{HoraCeremonia\}\}(?!\*)/gi, '· *{{HoraCeremonia}}*');
+    result = result.replace(/Recepción:\s*(?!\*)\{\{Recepcion\}\}(?!\*)/gi, 'Recepción: *{{Recepcion}}*');
+    result = result.replace(/·\s*(?!\*)\{\{HoraRecepcion\}\}(?!\*)/gi, '· *{{HoraRecepcion}}*');
+
     result = result.replace(/\{\{Nombre\}\}/gi, data.guestName || 'Apreciable invitado(a)');
     result = result.replace(/\{\{Novios\}\}/gi, data.coupleNames || 'los novios');
     result = result.replace(/\{\{Ceremonia\}\}/gi, data.ceremonyVenue || 'Templo / Parroquia');
@@ -159,9 +167,12 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio es
     result = result.replace(/\{\{Mesa\}\}/gi, data.tableName || 'Mesa asignada');
 
     if (data.invitationUrl && data.invitationUrl.trim()) {
+      const rawUrl = data.invitationUrl.trim();
+      const appUrl = process.env.APP_URL || 'https://lazo-vlb.up.railway.app';
+      const fullUrl = rawUrl.startsWith('http') ? rawUrl : `${appUrl}${rawUrl}`;
       result = result.replace(
         /\{\{Ubicacion\}\}/gi,
-        `📍 Ubicación / Invitación digital: ${data.invitationUrl.trim()}`
+        `📍 Ubicación / Invitación digital: ${fullUrl}`
       );
     } else {
       result = result.replace(/\{\{Ubicacion\}\}/gi, '');
@@ -214,6 +225,22 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio es
         AND seating_sent_at IS NOT NULL
     `).get(weddingId) as any;
 
+    let reminderTemplate = wedding.reminder_template_text || this.DEFAULT_REMINDER_TEMPLATE;
+    if (reminderTemplate && !reminderTemplate.includes('*{{Novios}}*')) {
+      reminderTemplate = reminderTemplate.replace(/Boda\s+(?!\*)\{\{Novios\}\}(?!\*)/gi, 'Boda *{{Novios}}*');
+      reminderTemplate = reminderTemplate.replace(/Ceremonia:\s*(?!\*)\{\{Ceremonia\}\}(?!\*)/gi, 'Ceremonia: *{{Ceremonia}}*');
+      reminderTemplate = reminderTemplate.replace(/·\s*(?!\*)\{\{HoraCeremonia\}\}(?!\*)/gi, '· *{{HoraCeremonia}}*');
+      reminderTemplate = reminderTemplate.replace(/Recepción:\s*(?!\*)\{\{Recepcion\}\}(?!\*)/gi, 'Recepción: *{{Recepcion}}*');
+      reminderTemplate = reminderTemplate.replace(/·\s*(?!\*)\{\{HoraRecepcion\}\}(?!\*)/gi, '· *{{HoraRecepcion}}*');
+    }
+
+    let seatingTemplate = wedding.seating_template_text || this.DEFAULT_SEATING_TEMPLATE;
+    if (seatingTemplate && !seatingTemplate.includes('*{{Novios}}*')) {
+      seatingTemplate = seatingTemplate.replace(/de\s+(?!\*)\{\{Novios\}\}(?!\*)/gi, 'de *{{Novios}}*');
+      seatingTemplate = seatingTemplate.replace(/asignada:\s*(?!\*)\{\{Mesa\}\}(?!\*)/gi, 'asignada: *{{Mesa}}*');
+      seatingTemplate = seatingTemplate.replace(/reservados:\s*(?!\*)\{\{Lugares\}\}\s*persona\(s\)(?!\*)/gi, 'reservados: *{{Lugares}} persona(s)*');
+    }
+
     return {
       weddingId,
       weddingDate,
@@ -222,7 +249,7 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio es
         time: wedding.reminder_7days_time || '11:00',
         status: (wedding.reminder_7days_status || 'PENDING') as any,
         sentAt: wedding.reminder_7days_sent_at || null,
-        templateText: wedding.reminder_template_text || this.DEFAULT_REMINDER_TEMPLATE,
+        templateText: reminderTemplate,
         defaultTemplate: this.DEFAULT_REMINDER_TEMPLATE,
         targetDate: target7Days,
         targetFormattedDate: this.formatDateHuman(target7Days),
@@ -234,7 +261,7 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio es
         time: wedding.dayof_seating_time || '12:00',
         status: (wedding.dayof_seating_status || 'PENDING') as any,
         sentAt: wedding.dayof_seating_sent_at || null,
-        templateText: wedding.seating_template_text || this.DEFAULT_SEATING_TEMPLATE,
+        templateText: seatingTemplate,
         defaultTemplate: this.DEFAULT_SEATING_TEMPLATE,
         targetDate: weddingDate,
         targetFormattedDate: this.formatDateHuman(weddingDate),
@@ -317,9 +344,13 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio es
 
     const coupleNames = this.getCoupleNames(wedding);
     const template = wedding.reminder_template_text || this.DEFAULT_REMINDER_TEMPLATE;
-    const invUrl = wedding.invitation_type === 'PDF' && wedding.invitation_pdf_url
+    const rawInvUrl = wedding.invitation_type === 'PDF' && wedding.invitation_pdf_url
       ? wedding.invitation_pdf_url
       : wedding.invitation_url;
+    const appUrl = process.env.APP_URL || 'https://lazo-vlb.up.railway.app';
+    const invUrl = rawInvUrl
+      ? (rawInvUrl.startsWith('http') ? rawInvUrl : `${appUrl}${rawInvUrl}`)
+      : '';
 
     // Test send to a single phone
     if (options?.isTest && options.testPhone) {

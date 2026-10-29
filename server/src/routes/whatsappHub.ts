@@ -447,7 +447,7 @@ router.post('/send', async (req, res) => {
           phone,
           fullPdfUrl,
           wedding.invitation_pdf_filename || `Invitacion_${coupleNames.replace(/\s+/g, '_')}.pdf`,
-          `💌 Aquí tienes tu invitación formal para la boda de ${coupleNames}.`,
+          `💌 Aquí tienes tu invitación formal para la boda de *${coupleNames}*.`,
           { weddingId, guestId, sender: 'AGENT' }
         );
       } else {

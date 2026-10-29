@@ -439,21 +439,24 @@ export const WhatsAppHubModule: React.FC = () => {
 
     let text = '';
     if (templateType === 1) {
-      text = `Hola ${name},\n\nEs un honor para nosotros invitarte a celebrar la boda de\n${coupleClean}\n\n🗓 ${dateFormatted}\n🎟 Pases reservados: ${seats} persona(s)\n\nNos encantaría compartir este día tan especial contigo.\nPor favor, ayúdanos confirmando tu asistencia seleccionando una opción abajo:\n\n[ Confirmar Asistencia ] [ No podré asistir ]`;
+      text = `Hola ${name},\n\nEs un honor para nosotros invitarte a celebrar la boda de\n*${coupleClean}*\n\n🗓 ${dateFormatted}\n🎟 Pases reservados: *${seats} persona(s)*\n\nNos encantaría compartir este día tan especial contigo.\nPor favor, ayúdanos confirmando tu asistencia seleccionando una opción abajo:\n\n[ Confirmar Asistencia ] [ No podré asistir ]`;
     } else if (templateType === 2) {
       const ceremony = activeWedding?.ceremony_venue || 'Templo / Parroquia';
       const cTime = activeWedding?.ceremony_time || 'Por confirmar';
       const reception = activeWedding?.reception_venue || 'Sede de recepción';
       const rTime = activeWedding?.reception_time || 'Por confirmar';
       const dressCode = activeWedding?.dress_code || 'Rigurosa Etiqueta / Formal';
-      const locationLink = activeWedding?.invitation_type === 'PDF' && activeWedding?.invitation_pdf_url
+      const rawLocation = activeWedding?.invitation_type === 'PDF' && activeWedding?.invitation_pdf_url
         ? activeWedding.invitation_pdf_url
         : (activeWedding?.invitation_url || '');
-      const locationLine = locationLink ? `\n📍 Ubicación / Invitación digital: ${locationLink}` : '';
+      const fullLocation = rawLocation
+        ? (rawLocation.startsWith('http') ? rawLocation : `${window.location.origin}${rawLocation}`)
+        : '';
+      const locationLine = fullLocation ? `\n📍 Ubicación / Invitación digital: ${fullLocation}` : '';
 
-      text = `RECORDATORIO & DETALLES ✨\n\nBoda ${coupleClean}\n¡Estamos a solo 7 días de celebrar juntos!\n\nTe compartimos la información esencial para que disfrutes al máximo este gran día:\n\n• Ceremonia: ${ceremony} · ${cTime}\n• Recepción: ${reception} · ${rTime}\n• Código de vestimenta: ${dressCode}\n• Pases confirmados: ${seats} persona(s)${locationLine}\n\n¡Nos dará muchísimo gusto recibirte!`;
+      text = `RECORDATORIO & DETALLES ✨\n\nBoda *${coupleClean}*\n¡Estamos a solo 7 días de celebrar juntos!\n\nTe compartimos la información esencial para que disfrutes al máximo este gran día:\n\n• Ceremonia: *${ceremony}* · *${cTime}*\n• Recepción: *${reception}* · *${rTime}*\n• Código de vestimenta: ${dressCode}\n• Pases confirmados: ${seats} persona(s)${locationLine}\n\n¡Nos dará muchísimo gusto recibirte!`;
     } else if (templateType === 3) {
-      text = `¡HOY CELEBRAMOS! 🥂✨\n\nHola ${name},\n¡El gran día de ${coupleClean} ha llegado!\n\nHemos preparado tu lugar con mucho cariño:\n🍽️ Tu mesa asignada: ${table}\n🎟️ Pases reservados: ${seats} persona(s)\n\nAl llegar a la recepción, el equipo de coordinación de Viva la Bride Studio estará listo para darte la bienvenida y acompañarte a tu lugar.\n\n¡A disfrutar y celebrar juntos!`;
+      text = `¡HOY CELEBRAMOS! 🥂✨\n\nHola ${name},\n¡El gran día de *${coupleClean}* ha llegado!\n\nHemos preparado tu lugar con mucho cariño:\n🍽️ Tu mesa asignada: *${table}*\n🎟️ Pases reservados: *${seats} persona(s)*\n\nAl llegar a la recepción, el equipo de coordinación de Viva la Bride Studio estará listo para darte la bienvenida y acompañarte a tu lugar.\n\n¡A disfrutar y celebrar juntos!`;
     }
     setNewMessage(text);
   };

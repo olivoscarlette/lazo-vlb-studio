@@ -26,14 +26,22 @@ async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, ph
   const places = guest.confirmed_places || (1 + (guest.companion_count || 0));
 
   let summary = `ASISTENCIA CONFIRMADA ✨\n\n` +
-    `Boda ${coupleNames}\n` +
+    `Boda *${coupleNames}*\n` +
     `${formattedDate}\n\n`;
 
+  const formatVenueTime = (venue?: string, time?: string) => {
+    const venueText = venue ? `*${venue.trim()}*` : '*Por definir*';
+    if (!time || !time.trim()) return venueText;
+    const cleanTime = time.trim();
+    const hasHrs = /hrs?$/i.test(cleanTime);
+    return `${venueText} · *${cleanTime}${hasHrs ? '' : ' hrs'}*`;
+  };
+
   if (wedding.ceremony_venue || wedding.ceremony_time) {
-    summary += `• Ceremonia: ${wedding.ceremony_venue || 'Por definir'}${wedding.ceremony_time ? ` · ${wedding.ceremony_time} hrs` : ''}\n`;
+    summary += `• Ceremonia: ${formatVenueTime(wedding.ceremony_venue, wedding.ceremony_time)}\n`;
   }
   if (wedding.reception_venue || wedding.reception_time) {
-    summary += `• Recepción: ${wedding.reception_venue || 'Por definir'}${wedding.reception_time ? ` · ${wedding.reception_time} hrs` : ''}\n`;
+    summary += `• Recepción: ${formatVenueTime(wedding.reception_venue, wedding.reception_time)}\n`;
   }
   if (wedding.dress_code) {
     summary += `• Código de vestimenta: ${wedding.dress_code}\n`;
@@ -71,7 +79,7 @@ async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, ph
       phone,
       fullPdfUrl,
       wedding.invitation_pdf_filename || `Invitacion_${coupleNames.replace(/\s+/g, '_')}.pdf`,
-      `💌 Aquí tienes tu invitación formal para la boda de ${coupleNames}.`,
+      `💌 Aquí tienes tu invitación formal para la boda de *${coupleNames}*.`,
       { weddingId, guestId: guest.id }
     );
   }
@@ -185,7 +193,7 @@ async function handleAutomatedRsvpStep(params: {
 
         await WhatsAppService.sendInteractiveButtons(
           normalizedPhone,
-          `¡Qué gran noticia saber que nos acompañarás!\n\nTienes reservados ${totalSeats} lugares en total a tu nombre.\n¿Confirmas la asistencia de todas las personas?`,
+          `¡Qué gran noticia saber que nos acompañarás!\n\nTienes reservados *${totalSeats} ${totalSeats === 1 ? 'lugar' : 'lugares'}* en total a tu nombre.\n¿Confirmas la asistencia de todas las personas?`,
           [
             { id: 'places_yes', title: 'Asistiremos todos' },
             { id: 'places_no', title: 'Modificar número' }
@@ -247,7 +255,7 @@ async function handleAutomatedRsvpStep(params: {
       if (totalSeats === 2) {
         await WhatsAppService.sendInteractiveButtons(
           normalizedPhone,
-          `Tienes reservados 2 lugares en total a tu nombre.\n\nPor favor selecciona cuántas personas asistirán:`,
+          `Tienes reservados *2 lugares* en total a tu nombre.\n\nPor favor selecciona cuántas personas asistirán:`,
           [
             { id: 'places_1', title: '1 persona' },
             { id: 'places_2', title: '2 personas' }
@@ -257,7 +265,7 @@ async function handleAutomatedRsvpStep(params: {
       } else if (totalSeats === 3) {
         await WhatsAppService.sendInteractiveButtons(
           normalizedPhone,
-          `Tienes reservados 3 lugares en total a tu nombre.\n\nPor favor selecciona cuántas personas asistirán:`,
+          `Tienes reservados *3 lugares* en total a tu nombre.\n\nPor favor selecciona cuántas personas asistirán:`,
           [
             { id: 'places_1', title: '1 persona' },
             { id: 'places_2', title: '2 personas' },
@@ -268,7 +276,7 @@ async function handleAutomatedRsvpStep(params: {
       } else {
         await WhatsAppService.sendTextMessage(
           normalizedPhone,
-          `Tienes reservados ${totalSeats} lugares en total a tu nombre.\n\nPor favor indícanos cuántas personas asistirán en total (puedes confirmar de 1 a ${totalSeats} personas):`,
+          `Tienes reservados *${totalSeats} lugares* en total a tu nombre.\n\nPor favor indícanos cuántas personas asistirán en total (puedes confirmar de 1 a ${totalSeats} personas):`,
           { weddingId, guestId: matchedGuest.id }
         );
       }
@@ -286,7 +294,7 @@ async function handleAutomatedRsvpStep(params: {
 
           await WhatsAppService.sendTextMessage(
             normalizedPhone,
-            `Lo sentimos, solo tienes reservado un máximo de ${totalSeats} ${totalSeats === 1 ? 'lugar' : 'lugares'} a tu nombre.\n\nPor favor indícanos un número entre 1 y ${totalSeats}:`,
+            `Lo sentimos, solo tienes reservado un máximo de *${totalSeats} ${totalSeats === 1 ? 'lugar' : 'lugares'}* a tu nombre.\n\nPor favor indícanos un número entre 1 y ${totalSeats}:`,
             { weddingId, guestId: matchedGuest.id }
           );
           return;
@@ -322,7 +330,7 @@ async function handleAutomatedRsvpStep(params: {
       if (parsedNum > totalSeats) {
         await WhatsAppService.sendTextMessage(
           normalizedPhone,
-          `Lo sentimos, solo tienes reservado un máximo de ${totalSeats} ${totalSeats === 1 ? 'lugar' : 'lugares'} a tu nombre en esta ocasión.\n\nPor favor indícanos cuántas personas asistirán (entre 1 y ${totalSeats}):`,
+          `Lo sentimos, solo tienes reservado un máximo de *${totalSeats} ${totalSeats === 1 ? 'lugar' : 'lugares'}* a tu nombre en esta ocasión.\n\nPor favor indícanos cuántas personas asistirán (entre 1 y ${totalSeats}):`,
           { weddingId, guestId: matchedGuest.id }
         );
         return;
