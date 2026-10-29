@@ -456,7 +456,7 @@ export const WhatsAppHubModule: React.FC = () => {
 
       text = `RECORDATORIO & DETALLES ✨\n\nBoda *${coupleClean}*\n¡Estamos a solo 7 días de celebrar juntos!\n\nTe compartimos la información esencial para que disfrutes al máximo este gran día:\n\n• Ceremonia: *${ceremony}* · *${cTime}*\n• Recepción: *${reception}* · *${rTime}*\n• Código de vestimenta: ${dressCode}\n• Pases confirmados: ${seats} persona(s)${locationLine}\n\n¡Nos dará muchísimo gusto recibirte!`;
     } else if (templateType === 3) {
-      text = `¡HOY CELEBRAMOS! 🥂✨\n\nHola ${name},\n¡El gran día de *${coupleClean}* ha llegado!\n\nHemos preparado tu lugar con mucho cariño:\n🍽️ Tu mesa asignada: *${table}*\n🎟️ Pases reservados: *${seats} persona(s)*\n\nAl llegar a la recepción, el equipo de coordinación de Viva la Bride Studio estará listo para darte la bienvenida y acompañarte a tu lugar.\n\n¡A disfrutar y celebrar juntos!`;
+      text = `¡HOY CELEBRAMOS! 🥂✨\n\nHola ${name},\n¡El gran día de *${coupleClean}* ha llegado!\n\nHemos preparado tu lugar con mucho cariño:\n🍽️ Tu mesa asignada: *${table}*\n🎟️ Pases reservados: *${seats} persona(s)*\n\nAl llegar a la recepción, el equipo de coordinación de Viva la Bride estará listo para darte la bienvenida y acompañarte a tu lugar.\n\n¡A disfrutar y celebrar juntos!`;
     }
     setNewMessage(text);
   };
@@ -899,7 +899,7 @@ export const WhatsAppHubModule: React.FC = () => {
                 Selecciona una conversación
               </h3>
               <p className="text-xs text-[#7D6F6B] max-w-xs leading-relaxed">
-                Mensajería oficial en tiempo real de Viva la Bride Studio conectada directamente con WhatsApp Business.
+                Mensajería oficial en tiempo real de Viva la Bride conectada directamente con WhatsApp Business.
               </p>
             </div>
           )}

@@ -56,7 +56,7 @@ Hemos preparado tu lugar con mucho cariño:
 🍽️ Tu mesa asignada: *{{Mesa}}*
 🎟️ Pases reservados: *{{Lugares}} persona(s)*
 
-Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio estará listo para darte la bienvenida y acompañarte a tu lugar.
+Al llegar a la recepción, el equipo de coordinación de Viva la Bride estará listo para darte la bienvenida y acompañarte a tu lugar.
 
 ¡A disfrutar y celebrar juntos!`;
 
@@ -178,6 +178,9 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio es
       result = result.replace(/\{\{Ubicacion\}\}/gi, '');
     }
 
+    // Ensure "Viva la Bride Studio" is replaced with "Viva la Bride"
+    result = result.replace(/Viva la Bride Studio/gi, 'Viva la Bride');
+
     // Clean multiple consecutive line breaks
     return result.replace(/\n{3,}/g, '\n\n').trim();
   }
@@ -225,7 +228,8 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio es
         AND seating_sent_at IS NOT NULL
     `).get(weddingId) as any;
 
-    let reminderTemplate = wedding.reminder_template_text || this.DEFAULT_REMINDER_TEMPLATE;
+    let reminderTemplate = (wedding.reminder_template_text || this.DEFAULT_REMINDER_TEMPLATE)
+      .replace(/Viva la Bride Studio/gi, 'Viva la Bride');
     if (reminderTemplate && !reminderTemplate.includes('*{{Novios}}*')) {
       reminderTemplate = reminderTemplate.replace(/Boda\s+(?!\*)\{\{Novios\}\}(?!\*)/gi, 'Boda *{{Novios}}*');
       reminderTemplate = reminderTemplate.replace(/Ceremonia:\s*(?!\*)\{\{Ceremonia\}\}(?!\*)/gi, 'Ceremonia: *{{Ceremonia}}*');
@@ -234,7 +238,8 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride Studio es
       reminderTemplate = reminderTemplate.replace(/·\s*(?!\*)\{\{HoraRecepcion\}\}(?!\*)/gi, '· *{{HoraRecepcion}}*');
     }
 
-    let seatingTemplate = wedding.seating_template_text || this.DEFAULT_SEATING_TEMPLATE;
+    let seatingTemplate = (wedding.seating_template_text || this.DEFAULT_SEATING_TEMPLATE)
+      .replace(/Viva la Bride Studio/gi, 'Viva la Bride');
     if (seatingTemplate && !seatingTemplate.includes('*{{Novios}}*')) {
       seatingTemplate = seatingTemplate.replace(/de\s+(?!\*)\{\{Novios\}\}(?!\*)/gi, 'de *{{Novios}}*');
       seatingTemplate = seatingTemplate.replace(/asignada:\s*(?!\*)\{\{Mesa\}\}(?!\*)/gi, 'asignada: *{{Mesa}}*');

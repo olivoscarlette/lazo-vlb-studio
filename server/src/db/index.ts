@@ -458,6 +458,22 @@ export function initDatabase() {
     db.exec("ALTER TABLE weddings ADD COLUMN seating_template_text TEXT;");
   } catch {}
 
+  // Update legacy templates to strictly use "Viva la Bride"
+  try {
+    db.exec(`
+      UPDATE weddings
+      SET seating_template_text = REPLACE(seating_template_text, 'Viva la Bride Studio', 'Viva la Bride')
+      WHERE seating_template_text LIKE '%Viva la Bride Studio%';
+    `);
+  } catch {}
+  try {
+    db.exec(`
+      UPDATE weddings
+      SET reminder_template_text = REPLACE(reminder_template_text, 'Viva la Bride Studio', 'Viva la Bride')
+      WHERE reminder_template_text LIKE '%Viva la Bride Studio%';
+    `);
+  } catch {}
+
   // Guests - Automated RSVP Bot Migrations
   try {
     db.exec('ALTER TABLE guests ADD COLUMN dietary_requirements TEXT;');
