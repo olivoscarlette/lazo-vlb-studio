@@ -143,12 +143,16 @@ router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) =
     estimated_guests,
     notes,
     package_type,
+    event_type = 'Boda Completa',
     populate_checklist = true
   } = req.body;
 
-  if (!name || !partner_1_name || !partner_2_name || !wedding_date) {
-    return res.status(400).json({ error: 'Nombre de la boda, novios y fecha son obligatorios.' });
+  if (!name || !wedding_date) {
+    return res.status(400).json({ error: 'El nombre del evento y la fecha son obligatorios.' });
   }
+
+  const p1 = (partner_1_name || '').trim();
+  const p2 = (partner_2_name || '').trim();
 
   const id = 'wed_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString().slice(-4);
@@ -158,12 +162,12 @@ router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) =
     INSERT INTO weddings (
       id, name, slug, partner_1_name, partner_2_name, wedding_date,
       ceremony_time, reception_time, ceremony_venue, reception_venue,
-      estimated_guests, status, notes, package_type, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PLANNING', ?, ?, ?, ?)
+      estimated_guests, status, notes, package_type, event_type, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PLANNING', ?, ?, ?, ?, ?)
   `).run(
-    id, name, slug, partner_1_name, partner_2_name, wedding_date,
+    id, name, slug, p1, p2, wedding_date,
     ceremony_time || null, reception_time || null, ceremony_venue || null, reception_venue || null,
-    estimated_guests ? parseInt(estimated_guests, 10) : 0, notes || null, package_type || 'Integral', now, now
+    estimated_guests ? parseInt(estimated_guests, 10) : 0, notes || null, package_type || 'Integral', event_type || 'Boda Completa', now, now
   );
 
   // Automatically assign the admin who created it
@@ -323,7 +327,7 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     ceremony_time, reception_time, ceremony_venue, reception_venue,
     estimated_guests, status, notes, package_type, floor_plan_url,
     invitation_type, invitation_url, invitation_pdf_url, invitation_pdf_filename,
-    dress_code, no_children,
+    dress_code, no_children, event_type,
     expected_updated_at
   } = req.body;
 
@@ -347,12 +351,12 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
       ceremony_time = ?, reception_time = ?, ceremony_venue = ?, reception_venue = ?,
       estimated_guests = ?, status = ?, notes = ?, package_type = ?, floor_plan_url = ?,
       invitation_type = ?, invitation_url = ?, invitation_pdf_url = ?, invitation_pdf_filename = ?,
-      dress_code = ?, no_children = ?, updated_at = ?
+      dress_code = ?, no_children = ?, event_type = ?, updated_at = ?
     WHERE id = ?
   `).run(
     name || wedding.name,
-    partner_1_name || wedding.partner_1_name,
-    partner_2_name || wedding.partner_2_name,
+    partner_1_name !== undefined ? partner_1_name : wedding.partner_1_name,
+    partner_2_name !== undefined ? partner_2_name : wedding.partner_2_name,
     wedding_date || wedding.wedding_date,
     ceremony_time ?? wedding.ceremony_time,
     reception_time ?? wedding.reception_time,
@@ -369,6 +373,7 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     invitation_pdf_filename !== undefined ? invitation_pdf_filename : wedding.invitation_pdf_filename,
     dress_code !== undefined ? dress_code : wedding.dress_code,
     no_children !== undefined ? (no_children ? 1 : 0) : (wedding.no_children || 0),
+    event_type !== undefined ? event_type : (wedding.event_type || 'Boda Completa'),
     now,
     weddingId
   );

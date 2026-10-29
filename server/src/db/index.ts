@@ -54,6 +54,7 @@ export function initDatabase() {
       status TEXT DEFAULT 'PLANNING',
       notes TEXT,
       package_type TEXT DEFAULT 'Integral',
+      event_type TEXT DEFAULT 'Boda Completa',
       floor_plan_url TEXT,
       invitation_type TEXT DEFAULT 'LINK',
       invitation_url TEXT,
@@ -466,6 +467,9 @@ export function initDatabase() {
   } catch {}
   try {
     db.exec("ALTER TABLE weddings ADD COLUMN seating_template_text TEXT;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN event_type TEXT DEFAULT 'Boda Completa';");
   } catch {}
 
   // Update legacy templates to strictly use "Viva la Bride"

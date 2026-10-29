@@ -126,8 +126,9 @@ export const GeneralDashboard: React.FC = () => {
   const [backupsList, setBackupsList] = useState<{ filename: string; size: number; created_at: string }[]>([]);
   const [restoreMsg, setRestoreMsg] = useState('');
 
-  // New wedding form
+  // New wedding / event form
   const [formData, setFormData] = useState({
+    event_type: 'Boda Completa',
     name: '',
     partner_1_name: '',
     partner_2_name: '',
@@ -242,6 +243,7 @@ export const GeneralDashboard: React.FC = () => {
       }
       setShowCreateModal(false);
       setFormData({
+        event_type: 'Boda Completa',
         name: '',
         partner_1_name: '',
         partner_2_name: '',
@@ -812,7 +814,7 @@ export const GeneralDashboard: React.FC = () => {
   };
 
   const sidebarNavItems = [
-    { id: 'weddings', label: 'Bodas', icon: Users2 },
+    { id: 'weddings', label: 'Eventos', icon: Users2 },
     { id: 'calendario', label: 'Calendario General', icon: Calendar },
     { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare },
     { id: 'plantillas', label: 'Plantillas', icon: FileText },
@@ -826,6 +828,7 @@ export const GeneralDashboard: React.FC = () => {
     const matchesSearch =
       !q ||
       (w.name && w.name.toLowerCase().includes(q)) ||
+      (w.event_type && w.event_type.toLowerCase().includes(q)) ||
       (w.partner_1_name && w.partner_1_name.toLowerCase().includes(q)) ||
       (w.partner_2_name && w.partner_2_name.toLowerCase().includes(q)) ||
       (w.ceremony_venue && w.ceremony_venue.toLowerCase().includes(q)) ||
@@ -977,19 +980,15 @@ export const GeneralDashboard: React.FC = () => {
                   <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#2B2826]">
                     Hola, {userName} 👋
                   </h1>
-                  <p className="text-sm text-[#7D6F6B] mt-1">
-                    ¿En qué boda trabajaremos hoy? · {weddings.length} {weddings.length === 1 ? 'boda activa' : 'bodas activas'}
-                  </p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-3.5 self-start sm:self-auto">
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="inline-flex items-center space-x-2 bg-[#C48B81] hover:bg-[#A86B60] text-[#FFFFFF] px-5 py-2.5 rounded-full text-sm font-semibold shadow-xs hover:shadow-md hover:shadow-[#C48B81]/20 transition cursor-pointer"
+                  className="inline-flex items-center bg-[#C48B81] hover:bg-[#A86B60] text-[#FFFFFF] px-5 py-2.5 rounded-full text-sm font-semibold shadow-xs hover:shadow-md hover:shadow-[#C48B81]/20 transition cursor-pointer"
                 >
-                  <Plus className="w-4 h-4" />
-                  <span>Nueva Boda</span>
+                  <span>Agregar evento</span>
                 </button>
 
                 {/* Avatar circular con punto de estado */}
@@ -1075,7 +1074,7 @@ export const GeneralDashboard: React.FC = () => {
                 <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
                 <input
                   type="text"
-                  placeholder="Buscar boda por nombre o fecha..."
+                  placeholder="Buscar evento por nombre, tipo o fecha..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   className="w-full pl-11 pr-4 py-2.5 bg-[#FFFFFF] border border-[#EFE8E1] rounded-full text-sm text-[#2B2826] placeholder-[#7D6F6B]/70 focus:outline-none focus:border-[#C48B81] shadow-2xs transition"
@@ -1091,7 +1090,7 @@ export const GeneralDashboard: React.FC = () => {
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  Todas ({weddings.length})
+                  Todos ({weddings.length})
                 </button>
                 <button
                   onClick={() => setStatusFilter('UPCOMING')}
@@ -1101,7 +1100,7 @@ export const GeneralDashboard: React.FC = () => {
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  Próximas
+                  Próximos
                 </button>
                 <button
                   onClick={() => setStatusFilter('PLANNING')}
@@ -1116,13 +1115,13 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Grid de Tarjetas de Boda Limpias y Claras con Sombra Flotante */}
+            {/* Grid de Tarjetas de Eventos Limpias y Claras */}
             {loading ? (
-              <div className="py-20 text-center text-[#7D6F6B] text-sm">Cargando bodas...</div>
+              <div className="py-20 text-center text-[#7D6F6B] text-sm">Cargando eventos...</div>
             ) : filteredWeddings.length === 0 ? (
               <div className="bg-[#FFFFFF] rounded-3xl p-12 text-center border border-dashed border-[#EFE8E1]">
-                <h3 className="font-serif text-xl font-semibold text-[#2B2826]">No se encontraron bodas</h3>
-                <p className="text-[#7D6F6B] text-sm mt-1">Crea una nueva boda o ajusta tus filtros de búsqueda.</p>
+                <h3 className="font-serif text-xl font-semibold text-[#2B2826]">No se encontraron eventos</h3>
+                <p className="text-[#7D6F6B] text-sm mt-1">Crea un nuevo evento o ajusta tus filtros de búsqueda.</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1140,10 +1139,29 @@ export const GeneralDashboard: React.FC = () => {
                       className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#ECD9D5]"
                     >
                       <div>
-                        {/* Fila superior con Nombres y botón eliminar discreto */}
-                        <div className="flex items-start justify-between gap-2 mb-4">
-                          <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2]">
-                            {renderCoupleNames(w)}
+                        {/* Fila superior: Tipo de evento, Nombre del Evento y botón eliminar */}
+                        <div className="flex items-start justify-between gap-2 mb-3.5">
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-2">
+                              <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#FAF3F0] px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
+                                {w.event_type || 'Boda Completa'}
+                              </span>
+                            </div>
+                            <h3 className="font-serif text-2xl sm:text-[25px] font-bold text-[#2B2826] leading-tight line-clamp-2" title={w.name}>
+                              {w.name}
+                            </h3>
+                            {(w.partner_1_name || w.partner_2_name) && (
+                              <p className="text-xs text-[#7D6F6B] mt-1.5 truncate">
+                                <span className="text-[#A86B60] font-semibold mr-1.5">
+                                  {w.event_type && !w.event_type.toLowerCase().includes('boda') ? 'Celebrante(s):' : 'Novios:'}
+                                </span>
+                                <span className="font-medium text-[#4A3E3D]">
+                                  {w.partner_1_name && w.partner_2_name
+                                    ? `${w.partner_1_name} & ${w.partner_2_name}`
+                                    : (w.partner_1_name || w.partner_2_name)}
+                                </span>
+                              </p>
+                            )}
                           </div>
 
                           {user?.role === 'ADMINISTRADOR' && (
@@ -1151,7 +1169,7 @@ export const GeneralDashboard: React.FC = () => {
                               type="button"
                               onClick={(e) => handleDeleteWedding(e, w)}
                               className="p-1.5 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition opacity-0 group-hover:opacity-100 shrink-0"
-                              title="Eliminar esta boda"
+                              title="Eliminar este evento"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -2392,14 +2410,14 @@ export const GeneralDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Nueva Boda */}
+      {/* Modal: Agregar Evento */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-stone-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">VLB Studio</span>
-                <h3 className="font-serif text-2xl font-bold text-stone-900">Crear Nueva Boda</h3>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#A86B60]">Lazo Studio</span>
+                <h3 className="font-serif text-2xl font-bold text-stone-900">Agregar Evento</h3>
               </div>
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -2417,52 +2435,97 @@ export const GeneralDashboard: React.FC = () => {
             )}
 
             <form onSubmit={handleCreateWedding} className="mt-6 space-y-4">
+              {/* Selector de Tipo de Evento */}
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1">Nombre de la Boda *</label>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Tipo de Evento *</label>
+                <select
+                  value={formData.event_type}
+                  onChange={e => setFormData({ ...formData, event_type: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs font-medium text-[#2B2826] bg-[#FAF8F5] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                >
+                  <option value="Boda Completa">Boda Completa</option>
+                  <option value="Boda Civil">Boda Civil</option>
+                  <option value="Despedida de Soltera">Despedida de Soltera</option>
+                  <option value="Baby Shower">Baby Shower</option>
+                  <option value="Reunión / Fiesta Privada">Reunión / Fiesta Privada</option>
+                  <option value="Bautizo / Primera Comunión">Bautizo / Primera Comunión</option>
+                  <option value="XV Años / Aniversario">XV Años / Aniversario</option>
+                  <option value="Otro Evento">Otro Evento</option>
+                </select>
+              </div>
+
+              {/* Nombre del Evento */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Nombre del Evento *</label>
                 <input
                   type="text"
                   required
-                  placeholder="Ej. Sofía & Alejandro"
+                  placeholder={
+                    formData.event_type.includes('Boda')
+                      ? 'Ej. Boda Sofía & Alejandro'
+                      : formData.event_type === 'Despedida de Soltera'
+                      ? 'Ej. Despedida Sofía Villaseñor'
+                      : formData.event_type === 'Baby Shower'
+                      ? 'Ej. Baby Shower Mateo'
+                      : 'Ej. Nombre del evento'
+                  }
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 />
               </div>
 
+              {/* Celebrantes / Novios */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Novia / Contrayente 1 *</label>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    {formData.event_type.toLowerCase().includes('boda')
+                      ? 'Novia / Contrayente 1 *'
+                      : 'Festejada(o) / Anfitrión(a) *'}
+                  </label>
                   <input
                     type="text"
                     required
-                    placeholder="Sofía Villaseñor"
+                    placeholder={
+                      formData.event_type.toLowerCase().includes('boda')
+                        ? 'Sofía Villaseñor'
+                        : 'Mariana Garza'
+                    }
                     value={formData.partner_1_name}
                     onChange={e => setFormData({ ...formData, partner_1_name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Novio / Contrayente 2 *</label>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    {formData.event_type.toLowerCase().includes('boda')
+                      ? 'Novio / Contrayente 2'
+                      : 'Acompañante / Co-anfitrión (opcional)'}
+                  </label>
                   <input
                     type="text"
-                    required
-                    placeholder="Alejandro De la Mora"
+                    placeholder={
+                      formData.event_type.toLowerCase().includes('boda')
+                        ? 'Alejandro De la Mora'
+                        : 'Opcional'
+                    }
                     value={formData.partner_2_name}
                     onChange={e => setFormData({ ...formData, partner_2_name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
               </div>
 
+              {/* Fecha e Invitados Estimados */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Fecha de la Boda *</label>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">Fecha del Evento *</label>
                   <input
                     type="date"
                     required
                     value={formData.wedding_date}
                     onChange={e => setFormData({ ...formData, wedding_date: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -2471,30 +2534,47 @@ export const GeneralDashboard: React.FC = () => {
                     type="number"
                     value={formData.estimated_guests}
                     onChange={e => setFormData({ ...formData, estimated_guests: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
               </div>
 
+              {/* Sedes / Ubicaciones */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Lugar Ceremonia</label>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    {formData.event_type.toLowerCase().includes('boda')
+                      ? 'Lugar Ceremonia'
+                      : 'Sede Principal'}
+                  </label>
                   <input
                     type="text"
-                    placeholder="Parroquia o Templo"
+                    placeholder={
+                      formData.event_type.toLowerCase().includes('boda')
+                        ? 'Parroquia o Templo'
+                        : 'Salón o Terraza'
+                    }
                     value={formData.ceremony_venue}
                     onChange={e => setFormData({ ...formData, ceremony_venue: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Lugar Recepción</label>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    {formData.event_type.toLowerCase().includes('boda')
+                      ? 'Lugar Recepción'
+                      : 'Sede Secundaria (opcional)'}
+                  </label>
                   <input
                     type="text"
-                    placeholder="Hacienda o Salón"
+                    placeholder={
+                      formData.event_type.toLowerCase().includes('boda')
+                        ? 'Hacienda o Salón'
+                        : 'Opcional'
+                    }
                     value={formData.reception_venue}
                     onChange={e => setFormData({ ...formData, reception_venue: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                   />
                 </div>
               </div>
@@ -2504,7 +2584,7 @@ export const GeneralDashboard: React.FC = () => {
                 <select
                   value={formData.package_type}
                   onChange={e => setFormData({ ...formData, package_type: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 >
                   {meetingPackages.length > 0 ? (
                     meetingPackages.map(p => (
@@ -2544,10 +2624,10 @@ export const GeneralDashboard: React.FC = () => {
                     />
                     <div>
                       <div className="text-xs font-semibold text-[#2B2826]">
-                        Plantilla Completa VLB
+                        Plantilla Completa Maestro
                       </div>
                       <div className="text-[11px] text-[#8A7E72] mt-0.5 leading-snug">
-                        Carga Checklist General y etapas por meses.
+                        Carga Checklist General y etapas operativas.
                       </div>
                     </div>
                   </label>
@@ -2583,10 +2663,10 @@ export const GeneralDashboard: React.FC = () => {
                 <label className="block text-xs font-bold text-stone-700 mb-1">Notas Iniciales</label>
                 <textarea
                   rows={2}
-                  placeholder="Detalles de estilo, paleta o preferencias de los novios..."
+                  placeholder="Detalles de estilo, requerimientos o preferencias del evento..."
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 />
               </div>
 
@@ -2603,7 +2683,7 @@ export const GeneralDashboard: React.FC = () => {
                   disabled={creating}
                   className="px-6 py-2.5 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
                 >
-                  {creating ? 'Guardando...' : 'Crear Proyecto Boda'}
+                  {creating ? 'Guardando...' : 'Crear Evento'}
                 </button>
               </div>
             </form>

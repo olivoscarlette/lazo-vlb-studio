@@ -51,6 +51,7 @@ export interface Wedding {
   status: 'PLANNING' | 'UPCOMING' | 'COMPLETED' | 'ARCHIVED';
   notes?: string;
   package_type: string;
+  event_type?: string;
   floor_plan_url?: string | null;
   invitation_type?: 'LINK' | 'PDF';
   invitation_url?: string | null;
