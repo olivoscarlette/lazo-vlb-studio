@@ -121,7 +121,7 @@ export const createGoogleCalendarUrl = (event: CalendarEventItem): string => {
     event.responsible ? `Responsable: ${event.responsible}` : '',
     event.notes ? `Notas: ${event.notes}` : '',
     event.meet_url ? `Enlace Google Meet: ${event.meet_url}` : '',
-    'Organizado en LAZO — VLB Studio'
+    'Organizado en LAZO Studio'
   ].filter(Boolean).join('\n\n');
 
   const params = new URLSearchParams({
@@ -129,7 +129,7 @@ export const createGoogleCalendarUrl = (event: CalendarEventItem): string => {
     text: event.title,
     dates: `${start}/${end}`,
     details,
-    location: event.location || (event.meet_url || 'VLB Studio')
+    location: event.location || (event.meet_url || 'Lazo Studio')
   });
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
@@ -751,7 +751,7 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                 <span>{monthNames[month]} {year}</span>
               </h2>
               <span className="text-[11px] text-[#7D6F6B] font-medium">
-                Calendario General · VLB Studio
+                Calendario General · Lazo Studio
               </span>
             </div>
           </div>

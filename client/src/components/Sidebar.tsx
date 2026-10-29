@@ -264,7 +264,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className={`border-t border-[#EFE8E1] bg-[#FAF7F5] flex items-center shrink-0 ${
           isOpen ? 'px-4 py-2.5 justify-between' : 'p-2.5 justify-center'
         }`}>
-          {isOpen && <span className="text-[11px] font-medium text-[#8A7E72]">LAZO · VLB Studio</span>}
+          {isOpen && <span className="text-[11px] font-medium text-[#8A7E72]">LAZO STUDIO</span>}
           <span className="w-2 h-2 rounded-full bg-[#C48B81]" title="Espacio activo" />
         </div>
       </aside>

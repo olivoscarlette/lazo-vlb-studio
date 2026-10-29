@@ -129,7 +129,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const setCurrentWedding = useCallback((wedding: Wedding | null) => {
     setCurrentWeddingState(wedding);
     if (wedding) {
-      const tab = activeTabRef.current || 'resumen';
+      setActiveTabState('resumen');
+      const tab = 'resumen';
       const newUrl = `/boda/${wedding.id}/${tab}`;
       if (window.location.pathname !== newUrl) {
         window.history.pushState({ type: 'wedding', weddingId: wedding.id, tab }, '', newUrl);
@@ -187,6 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Auto select current wedding if Novios or only 1 wedding
         if (data.user.role === 'NOVIOS' && weddings.length > 0) {
           setCurrentWeddingState(weddings[0]);
+          setActiveTabState('resumen');
           const targetUrl = `/boda/${weddings[0].id}/resumen`;
           if (window.location.pathname !== targetUrl) {
             window.history.replaceState({ type: 'wedding', weddingId: weddings[0].id, tab: 'resumen' }, '', targetUrl);
@@ -195,6 +197,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const savedId = localStorage.getItem('lazo_active_wedding');
           const found = weddings.find(w => w.id === savedId) || weddings[0];
           setCurrentWeddingState(found);
+          setActiveTabState('resumen');
           const targetUrl = `/boda/${found.id}/resumen`;
           if (window.location.pathname !== targetUrl && window.location.pathname === '/') {
             window.history.replaceState({ type: 'wedding', weddingId: found.id, tab: 'resumen' }, '', targetUrl);

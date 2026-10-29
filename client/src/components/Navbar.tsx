@@ -90,7 +90,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             >
               <img
                 src="/lazo-logo.png"
-                alt="LAZO — VLB Studio · Planning"
+                alt="LAZO STUDIO"
                 className="h-8 sm:h-12 w-auto max-w-[105px] sm:max-w-none object-contain select-none transition-transform duration-200 group-hover:scale-[1.02]"
               />
             </div>
@@ -169,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                   }
                 }}
                 className="inline-flex items-center space-x-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition shadow-2xs cursor-pointer shrink-0"
-                title="Abrir Calendario General VLB"
+                title="Abrir Calendario General"
               >
                 <Calendar className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span className="hidden sm:inline">Calendario General</span>

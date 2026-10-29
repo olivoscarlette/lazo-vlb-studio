@@ -68,7 +68,7 @@ export const ReportesModule: React.FC = () => {
 
       {/* Printable Header */}
       <div className="hidden print:block border-b-2 border-[#2B2826] pb-4 mb-6">
-        <h1 className="font-serif text-3xl font-bold text-[#2B2826]">LAZO — VLB Studio · Planning</h1>
+        <h1 className="font-serif text-3xl font-bold text-[#2B2826]">LAZO STUDIO · PLANNING</h1>
         <h2 className="text-xl font-bold mt-1 text-[#2B2826]">Reporte Ejecutivo: {wedding.name}</h2>
         <div className="text-xs text-[#5A524C] mt-1">
           Fecha de Boda: {wedding.wedding_date} · Generado el: {new Date().toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}

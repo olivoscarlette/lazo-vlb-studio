@@ -502,7 +502,7 @@ export const MesasLayoutModule: React.FC = () => {
           <div className="text-xs">
             <h4 className="font-bold text-sm text-[#2B2826]">Bloqueo Operativo Activo (5 días antes del evento)</h4>
             <p className="mt-0.5 text-[#7D6F6B]">
-              De acuerdo con las políticas de VLB Studio, las mesas y el layout están congelados para cambios directos de los novios. Si requieres reacomodos o ajustes de último momento, por favor comunícate directamente con tu Coordinador(a) asignada.
+              De acuerdo con las políticas de coordinación, las mesas y el layout están congelados para cambios directos de los novios. Si requieres reacomodos o ajustes de último momento, por favor comunícate directamente con tu equipo de coordinación.
             </p>
           </div>
         </div>

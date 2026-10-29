@@ -515,7 +515,7 @@ export const WhatsAppHubModule: React.FC = () => {
               onChange={e => setSelectedWeddingId(e.target.value)}
               className="w-full px-3 py-1.5 text-xs font-semibold bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl text-[#332A28] focus:outline-none focus:border-[#C48B81] cursor-pointer truncate"
             >
-              <option value="all">💍 Todas las Bodas VLB</option>
+              <option value="all">💍 Todos los Eventos</option>
               {weddings.map(w => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}

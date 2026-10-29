@@ -181,6 +181,12 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   // Requirement 4: Strictly only ADMINISTRADOR and COORDINADOR can see internal team
   const canSeeStaffSection = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR';
 
+  const isPlannerVirtual =
+    !weddingData.package_type ||
+    weddingData.package_type.toLowerCase().includes('virtual') ||
+    weddingData.package_type.toLowerCase().includes('autónomo');
+  const coordinationBrand = isPlannerVirtual ? 'Lazo Studio' : 'Viva la Bride';
+
   // Helper para convertir nombres a Title Case y evitar empalmes de letras mayúsculas en Atteron
   const toTitleCase = (str: string) => {
     if (!str) return '';
@@ -273,24 +279,8 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             )}
           </div>
 
-          {/* Quick Actions & Botón Gestionar Boda (Pill Rose Satin Glow) */}
+          {/* Botón Gestionar Boda (Pill Rose Satin Glow) */}
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            <button
-              onClick={() => onNavigateTab('invitados')}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#FAF7F5] hover:bg-[#F5EFEB] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold transition shadow-2xs cursor-pointer"
-            >
-              <Users className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>+ Invitado</span>
-            </button>
-
-            <button
-              onClick={() => onNavigateTab('proveedores')}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#FAF7F5] hover:bg-[#F5EFEB] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold transition shadow-2xs cursor-pointer"
-            >
-              <DollarSign className="w-3.5 h-3.5 text-[#78967A]" />
-              <span>+ Registrar Pago</span>
-            </button>
-
             {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
               <button
                 onClick={() => setShowEditWeddingModal(true)}
@@ -954,7 +944,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                   Asignación de Mesa y Bienvenida
                 </h4>
                 <p className="text-xs text-[#7D6F6B] mt-1 leading-relaxed">
-                  El día de la boda entrega el número y nombre de mesa asignada a los confirmados para que lleguen directamente a su lugar con el equipo VLB.
+                  El día de la boda entrega el número y nombre de mesa asignada a los confirmados para que lleguen directamente a su lugar con el equipo {isPlannerVirtual ? 'de recepción' : 'Viva la Bride'}.
                 </p>
               </div>
 
@@ -978,17 +968,17 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         </div>
       )}
 
-      {/* Requirement 4: Equipo VLB Studio / Staff Asignado (OCULTO PARA NOVIOS, VISIBLE SOLO PARA ADMIN Y COORD) */}
+      {/* Requirement 4: Equipo Staff Asignado (OCULTO PARA NOVIOS, VISIBLE SOLO PARA ADMIN Y COORD) */}
       {canSeeStaffSection && (
         <div className="luxury-card rounded-2xl p-6 sm:p-7 border border-[#EFE8E1] bg-[#FFFFFF] shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-5 border-b border-[#F7F3EE]">
             <div>
               <div className="flex items-center space-x-2 text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider">
                 <ShieldCheck className="w-4 h-4 text-[#C48B81]" />
-                <span>Gestión Operativa VLB Studio</span>
+                <span>Gestión Operativa {coordinationBrand}</span>
               </div>
               <h3 className="font-serif text-2xl font-bold text-[#332A28] mt-1">
-                Equipo VLB Studio / Staff Asignado
+                Equipo {coordinationBrand} / Staff Asignado
               </h3>
               <p className="text-xs text-[#7D6F6B] mt-0.5 leading-relaxed">
                 Coordinadores y staff con acceso operativo a esta boda (visible únicamente para administradores y coordinadores).
@@ -1140,14 +1130,17 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     {packagesList.length > 0 ? (
                       packagesList.map(pkg => (
                         <option key={pkg.name} value={pkg.name}>
-                          {pkg.name} ({pkg.maxMeetings >= 999 ? 'Ilimitadas' : `${pkg.maxMeetings} reuniones`})
+                          {pkg.name === 'Planner Virtual'
+                            ? 'Planner Virtual Autónomo (Solo Suite Digital)'
+                            : `Coordinación Viva la Bride — ${pkg.name} (${pkg.maxMeetings >= 999 ? 'Ilimitadas' : `${pkg.maxMeetings} reuniones`})`}
                         </option>
                       ))
                     ) : (
                       <>
-                        <option value="Esencial">Esencial</option>
-                        <option value="Integral">Integral</option>
-                        <option value="Luxury Exclusivo">Luxury Exclusivo</option>
+                        <option value="Planner Virtual">Planner Virtual Autónomo (Solo Suite Digital)</option>
+                        <option value="Esencial">Coordinación Viva la Bride — Esencial</option>
+                        <option value="Integral">Coordinación Viva la Bride — Integral</option>
+                        <option value="Luxury Exclusivo">Coordinación Viva la Bride — Luxury Exclusivo</option>
                       </>
                     )}
                   </select>

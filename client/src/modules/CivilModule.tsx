@@ -291,7 +291,7 @@ export const CivilModule: React.FC = () => {
           {isNovios ? (
             <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1] text-xs font-medium">
               <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Registro Oficial VLB</span>
+              <span>Registro Oficial</span>
             </span>
           ) : !isEditingDetails ? (
             <button
@@ -592,12 +592,12 @@ export const CivilModule: React.FC = () => {
           </form>
         </div>
 
-        {/* Trámites y Requisitos Prenupciales (with VLB Master Template Loader) */}
+        {/* Trámites y Requisitos Prenupciales (with Master Template Loader) */}
         <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
           <div>
             <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
               <div>
-                <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">Expediente VLB</span>
+                <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">Expediente Legal</span>
                 <h3 className="font-serif text-lg font-semibold text-[#2B2826]">Requisitos y Trámites Legales</h3>
               </div>
               <div className="flex items-center space-x-2">
@@ -606,10 +606,10 @@ export const CivilModule: React.FC = () => {
                     type="button"
                     onClick={handleLoadMasterRequirements}
                     className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
-                    title="Cargar requisitos estándar de VLB Studio"
+                    title="Cargar requisitos estándar de la Plantilla Maestra"
                   >
                     <Download className="w-3.5 h-3.5 text-[#C48B81]" />
-                    <span>Cargar Plantilla VLB</span>
+                    <span>Cargar Plantilla Maestra</span>
                   </button>
                 )}
                 <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EFE8E1] px-2.5 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
@@ -621,7 +621,7 @@ export const CivilModule: React.FC = () => {
             <div className="space-y-2 mb-5 max-h-64 overflow-y-auto pr-1">
               {civil.requirements_status.length === 0 ? (
                 <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
-                  No hay requisitos cargados. Haz clic en "Cargar Plantilla VLB" o agrega uno abajo.
+                  No hay requisitos cargados. Haz clic en "Cargar Plantilla Maestra" o agrega uno abajo.
                 </p>
               ) : (
                 civil.requirements_status.map(r => (

@@ -160,6 +160,12 @@ export const ChecklistModule: React.FC = () => {
     } catch {}
   };
 
+  const isPlannerVirtual =
+    !currentWedding?.package_type ||
+    currentWedding.package_type.toLowerCase().includes('virtual') ||
+    currentWedding.package_type.toLowerCase().includes('autónomo');
+  const teamBrand = isPlannerVirtual ? 'Lazo Studio' : 'Viva la Bride';
+
   const handleOpenNewModal = () => {
     setEditingTaskId(null);
     const defaultCat = mainView === 'GENERAL'
@@ -169,7 +175,7 @@ export const ChecklistModule: React.FC = () => {
     setTaskForm({
       title: '',
       category: defaultCat,
-      responsible: defaultCat === 'Checklist General' ? 'Recepción' : (isNovios ? 'Novios' : 'VLB Studio'),
+      responsible: defaultCat === 'Checklist General' ? 'Recepción' : (isNovios ? 'Novios' : teamBrand),
       due_date: '',
       priority: 'Alta',
       status: 'Pendiente',
@@ -183,7 +189,7 @@ export const ChecklistModule: React.FC = () => {
     setTaskForm({
       title: task.title,
       category: task.category || 'Checklist General',
-      responsible: task.responsible || 'VLB Studio',
+      responsible: task.responsible || teamBrand,
       due_date: task.due_date || '',
       priority: task.priority || 'Alta',
       status: task.status,
@@ -489,7 +495,7 @@ export const ChecklistModule: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
-            Base de Datos VLB Studio · Planeación Integral
+            Base de Datos Maestra · Planeación Integral
           </span>
           <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
             Checklist de la Boda
@@ -903,7 +909,7 @@ export const ChecklistModule: React.FC = () => {
             <div className="flex items-start justify-between pb-4 border-b border-[#FAF8F5]">
               <div>
                 <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
-                  Base de Datos Maestra · VLB Studio
+                  Base de Datos Maestra · {teamBrand}
                 </span>
                 <h3 className="font-serif text-2xl font-semibold text-[#2B2826]">
                   Asignar Actividades a esta Boda
@@ -1178,7 +1184,7 @@ export const ChecklistModule: React.FC = () => {
                   ) : (
                     <input
                       type="text"
-                      placeholder="Novios o VLB Studio"
+                      placeholder={`Novios o ${teamBrand}`}
                       value={taskForm.responsible}
                       onChange={e => setTaskForm({ ...taskForm, responsible: e.target.value })}
                       className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"

@@ -140,7 +140,7 @@ export const DocumentosModule: React.FC = () => {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-[11px] uppercase font-bold tracking-widest text-[#8A7E72]">
-            Resguardo Seguro VLB
+            Resguardo Seguro Lazo Studio
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#2B2826] mt-0.5">
             Documentos y Archivos Privados

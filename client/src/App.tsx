@@ -614,7 +614,7 @@ const AppContent: React.FC = () => {
       <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center text-[#332A28]">
         <div className="w-11 h-11 rounded-full border-2 border-[#EFE8E1] border-t-[#C48B81] animate-spin mb-4" />
         <span className="font-serif text-3xl font-semibold tracking-[0.22em] text-[#332A28]">LAZO</span>
-        <span className="text-xs text-[#7D6F6B] uppercase tracking-[0.24em] mt-1">VLB STUDIO · PLANNING</span>
+        <span className="text-xs text-[#7D6F6B] uppercase tracking-[0.24em] mt-1">LAZO STUDIO · PLANNING</span>
       </div>
     );
   }

@@ -267,9 +267,15 @@ export const ReunionesModule: React.FC = () => {
 
   const isNovios = user?.role === 'NOVIOS';
   const isPlannerVirtual = Boolean(
-    packageInfo?.packageName?.toLowerCase().includes('virtual') ||
-    currentWedding?.package_type?.toLowerCase().includes('virtual')
+    !currentWedding?.package_type ||
+    currentWedding?.package_type?.toLowerCase().includes('virtual') ||
+    currentWedding?.package_type?.toLowerCase().includes('autónomo') ||
+    packageInfo?.packageName?.toLowerCase().includes('virtual')
   );
+
+  const vivaLaBrideWhatsAppUrl =
+    'https://wa.me/525661406247?text=' +
+    encodeURIComponent('Hola Viva la Bride! Soy cliente de Lazo Studio y me gustaría contratar coordinación y acompañamiento para mi evento.');
 
   return (
     <div className="space-y-8">
@@ -287,15 +293,15 @@ export const ReunionesModule: React.FC = () => {
           </p>
         </div>
 
-        {isPlannerVirtual && isNovios ? (
+        {isPlannerVirtual ? (
           <a
-            href="https://wa.me/5218118000000?text=Hola%20Lazo%20Studio!%20Tengo%20acceso%20al%20Planner%20Virtual%20y%20me%20gustar%C3%ADa%20cotizar%20un%20paquete%20de%20coordinaci%C3%B3n%20o%20asesor%C3%ADa%201%20a%201."
+            href={vivaLaBrideWhatsAppUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-xs transition"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer"
           >
-            <Sparkles className="w-4 h-4" />
-            <span>Solicitar Coordinación</span>
+            <MessageSquare className="w-4 h-4" />
+            <span>Cotizar Coordinación</span>
           </a>
         ) : (
           <button
@@ -303,7 +309,7 @@ export const ReunionesModule: React.FC = () => {
             className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>{isNovios ? 'Solicitar Reunión' : 'Agendar Reunión'}</span>
+            <span>{isNovios ? 'Solicitar Reunión con Viva la Bride' : 'Agendar Reunión'}</span>
           </button>
         )}
       </div>
@@ -320,36 +326,48 @@ export const ReunionesModule: React.FC = () => {
               ¿Deseas apoyo personalizado para el día de tu evento?
             </h3>
             <p className="text-xs text-[#7D6F6B] mt-1.5 leading-relaxed">
-              Tu cuenta incluye acceso total a la suite digital de planeación. Las sesiones de asesoría 1 a 1 y reuniones de coordinación técnica forman parte de nuestros <strong>Paquetes de Coordinación Lazo Studio</strong>.
+              Tu cuenta incluye acceso total a la suite digital de planeación. Las sesiones de asesoría 1 a 1 y reuniones de coordinación técnica forman parte de nuestros <strong>Paquetes de Coordinación con Viva la Bride</strong>.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 my-4">
-              <div className="bg-white p-3 rounded-2xl border border-[#EFE8E1]">
-                <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider">Pilar 1</div>
-                <div className="font-semibold text-xs text-[#2B2826] mt-0.5">Asesoría 1 a 1</div>
-                <p className="text-[11px] text-[#7D6F6B] mt-1 leading-snug">Sesiones con una Wedding Planner para afinar presupuesto y proveedores.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
+              <div className="bg-white p-4 rounded-2xl border border-[#ECD9D5] shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider mb-1">Pilar 1</div>
+                  <div className="font-semibold text-xs text-[#2B2826] mb-1.5">Asesoría Personalizada</div>
+                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                    Asesoria personalizada con Wedding Planner para organización integral de eventos.
+                  </p>
+                </div>
               </div>
-              <div className="bg-white p-3 rounded-2xl border border-[#EFE8E1]">
-                <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider">Pilar 2</div>
-                <div className="font-semibold text-xs text-[#2B2826] mt-0.5">Minuto a Minuto</div>
-                <p className="text-[11px] text-[#7D6F6B] mt-1 leading-snug">Revisión técnica de contratos y cronograma con tu equipo y locación.</p>
+              <div className="bg-white p-4 rounded-2xl border border-[#ECD9D5] shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider mb-1">Pilar 2</div>
+                  <div className="font-semibold text-xs text-[#2B2826] mb-1.5">Revisión Técnica y Cronograma</div>
+                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                    Revisión técnica de contratos y cronograma con equipo operativo y locacion.
+                  </p>
+                </div>
               </div>
-              <div className="bg-white p-3 rounded-2xl border border-[#EFE8E1]">
-                <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider">Pilar 3</div>
-                <div className="font-semibold text-xs text-[#2B2826] mt-0.5">Coordinación Día B</div>
-                <p className="text-[11px] text-[#7D6F6B] mt-1 leading-snug">Presencia de coordinadoras el día de tu evento en templo y recepción.</p>
+              <div className="bg-white p-4 rounded-2xl border border-[#ECD9D5] shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider mb-1">Pilar 3</div>
+                  <div className="font-semibold text-xs text-[#2B2826] mb-1.5">Coordinación Día de la Boda</div>
+                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                    Coordinación Día de la Boda: Presencia de coordinador y staff el día de tu evento.
+                  </p>
+                </div>
               </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <a
-                href="https://wa.me/5218118000000?text=Hola%20Lazo%20Studio!%20Tengo%20acceso%20al%20Planner%20Virtual%20y%20me%20gustar%C3%ADa%20cotizar%20un%20paquete%20de%20coordinaci%C3%B3n%20o%20asesor%C3%ADa%201%20a%201."
+                href={vivaLaBrideWhatsAppUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-md shadow-[#C48B81]/20 transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-md shadow-[#C48B81]/20 transition cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Cotizar Coordinación con Lazo Studio</span>
+                <span>Cotizar Coordinación con Viva la Bride</span>
               </a>
             </div>
           </div>
@@ -423,8 +441,9 @@ export const ReunionesModule: React.FC = () => {
         </div>
       )}
 
-      {/* Meetings List */}
-      <div className="space-y-4">
+      {/* Meetings List (Oculto para Planner Virtual Autónomo) */}
+      {!isPlannerVirtual && (
+        <div className="space-y-4">
         <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Historial y Próximas Reuniones</h3>
 
         {loading ? (
@@ -598,7 +617,7 @@ export const ReunionesModule: React.FC = () => {
                   <div className="mt-4 pt-4 border-t border-[#FAF8F5] bg-[#F7EDEB]/60 p-4 rounded-2xl border border-[#ECD9D5]">
                     <div className="text-xs font-bold text-[#C48B81] mb-2.5 flex items-center space-x-2">
                       <Sparkles className="w-4 h-4 text-[#C48B81]" />
-                      <span>El equipo VLB ha propuesto 2 horarios alternativos para esta reunión:</span>
+                      <span>El equipo Viva la Bride ha propuesto 2 horarios alternativos para esta reunión:</span>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -637,7 +656,8 @@ export const ReunionesModule: React.FC = () => {
             );
           })
         )}
-      </div>
+        </div>
+      )}
 
       {/* Modal: Solicitar / Agendar Reunión */}
       {showScheduleModal && (
@@ -645,7 +665,7 @@ export const ReunionesModule: React.FC = () => {
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between mb-2">
               <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
-                {isNovios ? 'Solicitar Reunión con Lazo Studio' : 'Agendar Nueva Reunión'}
+                {isNovios ? 'Solicitar Reunión con Viva la Bride' : 'Agendar Nueva Reunión'}
               </h3>
               <button onClick={() => setShowScheduleModal(false)} className="text-[#8A7E72] hover:text-[#2B2826] p-1 rounded-lg">
                 <X className="w-5 h-5" />
@@ -923,7 +943,7 @@ export const ReunionesModule: React.FC = () => {
                       <span>Minuta Inteligente con IA (Google Meet / Notas)</span>
                     </div>
                     <span className="text-[10px] text-[#8A7E72] bg-white px-2 py-0.5 rounded border border-[#EFE8E1]">
-                      Asistente VLB
+                      Asistente Lazo IA
                     </span>
                   </div>
                   <p className="text-[11px] text-[#8A7E72] leading-relaxed">

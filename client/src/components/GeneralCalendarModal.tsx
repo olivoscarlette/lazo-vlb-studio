@@ -50,7 +50,7 @@ export const createGoogleCalendarUrl = (event: CalendarEventItem): string => {
     event.responsible ? `Responsable: ${event.responsible}` : '',
     event.notes ? `Notas: ${event.notes}` : '',
     event.meet_url ? `Enlace Google Meet: ${event.meet_url}` : '',
-    'Organizado en LAZO — VLB Studio'
+    'Organizado en LAZO Studio'
   ].filter(Boolean).join('\n\n');
 
   const params = new URLSearchParams({
@@ -58,7 +58,7 @@ export const createGoogleCalendarUrl = (event: CalendarEventItem): string => {
     text: event.title,
     dates: `${start}/${end}`,
     details,
-    location: event.location || (event.meet_url || 'VLB Studio')
+    location: event.location || (event.meet_url || 'Lazo Studio')
   });
 
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
@@ -286,7 +286,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'EVENTO': return '💍 Boda VLB';
+      case 'EVENTO': return '💍 Evento';
       case 'PLANNING': return '📋 Cita Planning';
       case 'CITA_EXTERNA': return '📍 Cita Externa';
       case 'OPEN_HOUSE': return '✨ Open House';
@@ -322,7 +322,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
             <div>
               <div className="flex items-center space-x-2.5">
                 <h2 className="font-serif text-2xl font-bold text-[#2B2826]">
-                  Calendario General VLB Studio
+                  Calendario General Lazo Studio
                 </h2>
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E4ECE5] text-[#2B5235] font-semibold border border-[#BDD4C1]">
                   Equipo Completo
@@ -367,7 +367,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
             {[
               { id: 'TODOS', label: 'Todos' },
               { id: 'PLANNING', label: 'Citas Planning' },
-              { id: 'EVENTO', label: 'Bodas VLB' },
+              { id: 'EVENTO', label: 'Bodas y Eventos' },
               { id: 'CITA_EXTERNA', label: 'Citas Externas' },
               { id: 'SERVICIO', label: 'Servicios' },
               { id: 'OPEN_HOUSE', label: 'Open House' }
@@ -864,7 +864,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                   </span>
                 </div>
                 <p className="text-xs text-[#5A524C] leading-relaxed">
-                  Todas las citas de planeación, bodas y eventos de VLB Studio se sincronizarán y actualizarán automáticamente en la app de Google Calendar de tu teléfono (iPhone / Android) y computadora.
+                  Todas las citas de planeación, bodas y eventos de Lazo Studio se sincronizarán y actualizarán automáticamente en la app de Google Calendar de tu teléfono (iPhone / Android) y computadora.
                 </p>
 
                 {/* Subscription Feed URL */}
@@ -936,7 +936,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                     Pega el enlace y pulsa <strong>Añadir calendario</strong>.
                   </li>
                   <li>
-                    ¡Listo! En tu celular, entra a la app de <strong>Google Calendar &gt; Ajustes</strong>, selecciona <strong>LAZO VLB Studio</strong> y activa la casilla de <strong>Sincronización</strong>.
+                    ¡Listo! En tu celular, entra a la app de <strong>Google Calendar &gt; Ajustes</strong>, selecciona <strong>LAZO Studio</strong> y activa la casilla de <strong>Sincronización</strong>.
                   </li>
                 </ol>
               </div>

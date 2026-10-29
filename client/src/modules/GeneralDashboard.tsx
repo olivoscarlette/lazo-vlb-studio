@@ -2620,14 +2620,14 @@ export const GeneralDashboard: React.FC = () => {
               <div className="mt-5 pt-4 border-t border-[#EFE8E1]">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-[11px] font-bold uppercase tracking-wider text-[#2B2826]">
-                    Paquetes de Coordinación Lazo Studio
+                    Paquetes de Coordinación Viva la Bride
                   </div>
                   <span className="text-[11px] text-[#7D6F6B]">
                     Con reuniones 1 a 1 incluidas
                   </span>
                 </div>
                 <p className="text-xs text-[#7D6F6B] mb-3">
-                  Crea o personaliza los paquetes comerciales para clientes que contratan asesoría o coordinación con tu equipo.
+                  Crea o personaliza los paquetes comerciales para clientes que contratan asesoría o coordinación presencial con Viva la Bride.
                 </p>
               </div>
 
@@ -3298,7 +3298,7 @@ export const GeneralDashboard: React.FC = () => {
                         }}
                         className="accent-[#C48B81]"
                       />
-                      <span className="font-semibold text-xs text-[#2B2826]">Coordinación Lazo Studio</span>
+                      <span className="font-semibold text-xs text-[#2B2826]">Coordinación Viva la Bride</span>
                     </div>
                     <p className="text-[11px] text-[#7D6F6B] mt-1 pl-5 leading-snug">
                       Clientes presenciales · Con sesiones 1 a 1 incluidas
@@ -3641,7 +3641,7 @@ export const GeneralDashboard: React.FC = () => {
                         }}
                         className="accent-[#C48B81]"
                       />
-                      <span className="text-xs">Coordinación Lazo Studio</span>
+                      <span className="text-xs">Coordinación Viva la Bride</span>
                     </label>
                   </div>
 

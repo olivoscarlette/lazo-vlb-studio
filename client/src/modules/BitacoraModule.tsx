@@ -73,7 +73,7 @@ export const BitacoraModule: React.FC = () => {
 
         <div className="flex items-center space-x-2 text-xs text-[#8A7E72] bg-[#FAF8F5] px-3.5 py-1.5 rounded-full border border-[#EFE8E1]">
           <Shield className="w-3.5 h-3.5 text-[#C48B81]" />
-          <span>Auditoría Certificada VLB</span>
+          <span>Auditoría Certificada Lazo</span>
         </div>
       </div>
 

@@ -224,6 +224,11 @@ export const DirectorioModule: React.FC = () => {
   });
 
   const unassignedUsers = allUsers.filter(u => !directory.team.some(t => t.id === u.id));
+  const isPlannerVirtual =
+    !currentWedding?.package_type ||
+    currentWedding.package_type.toLowerCase().includes('virtual') ||
+    currentWedding.package_type.toLowerCase().includes('autónomo');
+  const teamBrand = isPlannerVirtual ? 'Lazo Studio' : 'Viva la Bride';
 
   return (
     <div className="space-y-6">
@@ -234,10 +239,10 @@ export const DirectorioModule: React.FC = () => {
             Contactos Rápidos y Asignación
           </span>
           <h2 className="font-serif text-3xl font-bold text-[#2B2826] mt-1">
-            Directorio y Equipo VLB
+            Directorio y Equipo {teamBrand}
           </h2>
           <p className="text-sm text-[#8A7E72] mt-1 leading-relaxed">
-            Equipo VLB Studio asignado a esta boda y proveedores con enlaces directos para llamada y WhatsApp.
+            Equipo de coordinación asignado a esta boda y proveedores con enlaces directos para llamada y WhatsApp.
           </p>
         </div>
 
@@ -252,7 +257,7 @@ export const DirectorioModule: React.FC = () => {
                   : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
               }`}
             >
-              {t === 'ALL' ? 'Todos los Contactos' : t === 'TEAM' ? `Equipo VLB (${directory.team.length})` : `Proveedores (${directory.vendors.length})`}
+              {t === 'ALL' ? 'Todos los Contactos' : t === 'TEAM' ? `Equipo ${teamBrand} (${directory.team.length})` : `Proveedores (${directory.vendors.length})`}
             </button>
           ))}
 
@@ -262,7 +267,7 @@ export const DirectorioModule: React.FC = () => {
               className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider bg-[#C48B81] hover:bg-[#A86B60] text-white transition shadow-xs"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              <span>+ Asignar Miembro VLB</span>
+              <span>+ Asignar Miembro</span>
             </button>
           )}
         </div>
@@ -301,7 +306,7 @@ export const DirectorioModule: React.FC = () => {
                       ? 'bg-[#F7EDEB] text-[#C48B81] border border-[#ECD9D5]'
                       : 'bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]'
                   }`}>
-                    {contact.kind === 'TEAM' ? 'Equipo VLB' : contact.type || 'Proveedor'}
+                    {contact.kind === 'TEAM' ? `Equipo ${teamBrand}` : contact.type || 'Proveedor'}
                   </span>
 
                   {isAdmin && contact.kind === 'TEAM' ? (
@@ -388,12 +393,12 @@ export const DirectorioModule: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Asignar o Crear Miembro de Equipo VLB */}
+      {/* Modal: Asignar o Crear Miembro de Equipo */}
       {showAddModal && (
         <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Equipo VLB en esta Boda</h3>
+              <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Equipo {teamBrand} en esta Boda</h3>
               <button onClick={() => setShowAddModal(false)} className="text-[#8A7E72] hover:text-[#2B2826] p-1 rounded-lg">
                 <X className="w-5 h-5" />
               </button>
@@ -430,12 +435,12 @@ export const DirectorioModule: React.FC = () => {
               {addMode === 'EXISTING' ? (
                 unassignedUsers.length === 0 ? (
                   <div className="p-4 text-center text-sm text-[#8A7E72] bg-[#FAF8F5] rounded-2xl border border-[#EFE8E1]">
-                    Todos los miembros actuales del equipo VLB ya están asignados a esta boda. Usa la pestaña <strong>"+ Crear Nuevo Miembro"</strong> arriba.
+                    Todos los miembros actuales del equipo {teamBrand} ya están asignados a esta boda. Usa la pestaña <strong>"+ Crear Nuevo Miembro"</strong> arriba.
                   </div>
                 ) : (
                   <>
                     <div>
-                      <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Seleccionar Miembro VLB *</label>
+                      <label className="block text-xs font-bold text-[#2B2826] mb-1.5 uppercase tracking-wider">Seleccionar Miembro {teamBrand} *</label>
                       <select
                         required
                         value={assignForm.user_id}

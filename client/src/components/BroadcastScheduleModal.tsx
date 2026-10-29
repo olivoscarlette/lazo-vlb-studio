@@ -251,7 +251,7 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
                   Programación de Envíos WhatsApp
                 </h2>
                 <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#EFE8E1] text-[#695D59]">
-                  VLB Studio
+                  Lazo Studio
                 </span>
               </div>
               <p className="text-xs text-[#7D6F6B]">
