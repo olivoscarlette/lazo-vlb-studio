@@ -164,12 +164,6 @@ const LoginView: React.FC = () => {
           alt="Lazo — Studio Planning"
           className="h-20 sm:h-24 w-auto mx-auto object-contain select-none"
         />
-        <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[#2B2826] mt-3 tracking-wide">
-          Lazo
-        </h1>
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-[#A86B60] mt-1">
-          Studio Planning
-        </p>
         <p className="text-xs sm:text-sm text-[#7D6F6B] mt-3 max-w-sm mx-auto leading-relaxed">
           Plataforma exclusiva para la planeación, diseño y operación integral de bodas.
         </p>
