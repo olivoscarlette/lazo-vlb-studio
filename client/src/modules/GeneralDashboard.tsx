@@ -145,6 +145,78 @@ export const GeneralDashboard: React.FC = () => {
   const [createError, setCreateError] = useState('');
   const [creating, setCreating] = useState(false);
 
+  // Edit wedding / event form
+  const [editingWedding, setEditingWedding] = useState<Wedding | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    event_type: 'Boda Completa',
+    name: '',
+    partner_1_name: '',
+    partner_2_name: '',
+    wedding_date: '',
+    ceremony_venue: '',
+    reception_venue: '',
+    ceremony_time: '15:00',
+    reception_time: '18:00',
+    estimated_guests: '150',
+    package_type: 'Integral',
+    status: 'PLANNING',
+    notes: ''
+  });
+  const [editError, setEditError] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const handleOpenEditModal = (e: React.MouseEvent, w: Wedding) => {
+    e.stopPropagation();
+    setEditingWedding(w);
+    setEditError('');
+    setEditFormData({
+      event_type: w.event_type || 'Boda Completa',
+      name: w.name || '',
+      partner_1_name: w.partner_1_name || '',
+      partner_2_name: w.partner_2_name || '',
+      wedding_date: w.wedding_date ? w.wedding_date.split('T')[0] : '',
+      ceremony_venue: w.ceremony_venue || '',
+      reception_venue: w.reception_venue || '',
+      ceremony_time: w.ceremony_time || '15:00',
+      reception_time: w.reception_time || '18:00',
+      estimated_guests: String(w.estimated_guests || 0),
+      package_type: w.package_type || 'Integral',
+      status: w.status || 'PLANNING',
+      notes: w.notes || ''
+    });
+  };
+
+  const handleSaveEditWedding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingWedding) return;
+    setEditError('');
+    setSavingEdit(true);
+
+    try {
+      const res = await fetch(`/api/weddings/${editingWedding.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...editFormData,
+          estimated_guests: parseInt(editFormData.estimated_guests, 10) || 0
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al actualizar el evento.');
+      }
+      setEditingWedding(null);
+      await fetchWeddings();
+    } catch (err: any) {
+      setEditError(err.message || 'Error al guardar los cambios.');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const fetchWeddings = async () => {
     try {
       const res = await fetch('/api/weddings', {
@@ -1157,8 +1229,8 @@ export const GeneralDashboard: React.FC = () => {
                       className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#ECD9D5]"
                     >
                       <div>
-                        {/* Fila superior: Tipo de evento, Nombre del Evento y botón eliminar */}
-                        <div className="flex items-start justify-between gap-2 mb-3.5">
+                        {/* Fila superior: Tipo de evento, Nombre del Evento y botones de acción */}
+                        <div className="flex items-start justify-between gap-2 mb-4">
                           <div className="min-w-0 flex-1">
                             <div className="mb-2">
                               <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#FAF3F0] px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
@@ -1168,30 +1240,30 @@ export const GeneralDashboard: React.FC = () => {
                             <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2]">
                               {renderCoupleNames(w)}
                             </div>
-                            {(w.partner_1_name || w.partner_2_name) && (
-                              <p className="text-xs text-[#7D6F6B] mt-2 truncate font-medium">
-                                <span className="text-[#A86B60] font-semibold mr-1.5">
-                                  {w.event_type && !w.event_type.toLowerCase().includes('boda') ? 'Celebrante(s):' : 'Novios:'}
-                                </span>
-                                <span className="text-[#4A3E3D]">
-                                  {w.partner_1_name && w.partner_2_name
-                                    ? `${w.partner_1_name} & ${w.partner_2_name}`
-                                    : (w.partner_1_name || w.partner_2_name)}
-                                </span>
-                              </p>
-                            )}
                           </div>
 
-                          {user?.role === 'ADMINISTRADOR' && (
-                            <button
-                              type="button"
-                              onClick={(e) => handleDeleteWedding(e, w)}
-                              className="p-1.5 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition opacity-0 group-hover:opacity-100 shrink-0"
-                              title="Eliminar este evento"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
+                          <div className="flex items-center space-x-1 shrink-0">
+                            {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+                              <button
+                                type="button"
+                                onClick={(e) => handleOpenEditModal(e, w)}
+                                className="p-1.5 text-stone-400 hover:text-[#A86B60] hover:bg-[#F7EDEB] rounded-lg transition opacity-80 group-hover:opacity-100"
+                                title="Editar evento"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                            )}
+                            {user?.role === 'ADMINISTRADOR' && (
+                              <button
+                                type="button"
+                                onClick={(e) => handleDeleteWedding(e, w)}
+                                className="p-1.5 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition opacity-0 group-hover:opacity-100"
+                                title="Eliminar este evento"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
                         </div>
 
                         {/* Badge de cuenta regresiva */}
@@ -2702,6 +2774,238 @@ export const GeneralDashboard: React.FC = () => {
                   className="px-6 py-2.5 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
                 >
                   {creating ? 'Guardando...' : 'Crear Evento'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Editar Evento */}
+      {editingWedding && (
+        <div className="fixed inset-0 bg-stone-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+              <div>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#A86B60]">Lazo Studio</span>
+                <h3 className="font-serif text-2xl font-bold text-stone-900">Editar Datos del Evento</h3>
+              </div>
+              <button
+                onClick={() => setEditingWedding(null)}
+                className="text-stone-400 hover:text-stone-700 p-1 rounded-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {editError && (
+              <div className="mt-4 p-3 rounded-xl bg-rose-50 text-rose-800 text-xs border border-rose-200 flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSaveEditWedding} className="mt-6 space-y-4">
+              {/* Tipo de Evento */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Tipo de Evento *</label>
+                <select
+                  value={editFormData.event_type}
+                  onChange={e => setEditFormData({ ...editFormData, event_type: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs font-medium text-[#2B2826] bg-[#FAF8F5] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                >
+                  <option value="Boda Completa">Boda Completa</option>
+                  <option value="Boda Civil">Boda Civil</option>
+                  <option value="Despedida de Soltera">Despedida de Soltera</option>
+                  <option value="Baby Shower">Baby Shower</option>
+                  <option value="Reunión / Fiesta Privada">Reunión / Fiesta Privada</option>
+                  <option value="Bautizo / Primera Comunión">Bautizo / Primera Comunión</option>
+                  <option value="XV Años / Aniversario">XV Años / Aniversario</option>
+                  <option value="Otro Evento">Otro Evento</option>
+                </select>
+              </div>
+
+              {/* Nombre del Evento */}
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Nombre del Evento *</label>
+                <input
+                  type="text"
+                  required
+                  value={editFormData.name}
+                  onChange={e => setEditFormData({ ...editFormData, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                />
+              </div>
+
+              {/* Celebrantes / Novios */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    {editFormData.event_type.toLowerCase().includes('boda')
+                      ? 'Novia / Contrayente 1 *'
+                      : 'Festejada(o) / Anfitrión(a) *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={editFormData.partner_1_name}
+                    onChange={e => setEditFormData({ ...editFormData, partner_1_name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    {editFormData.event_type.toLowerCase().includes('boda')
+                      ? 'Novio / Contrayente 2'
+                      : 'Acompañante / Co-anfitrión (opcional)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.partner_2_name}
+                    onChange={e => setEditFormData({ ...editFormData, partner_2_name: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Fecha e Invitados Estimados */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">Fecha del Evento *</label>
+                  <input
+                    type="date"
+                    required
+                    value={editFormData.wedding_date}
+                    onChange={e => setEditFormData({ ...editFormData, wedding_date: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">Invitados Estimados</label>
+                  <input
+                    type="number"
+                    value={editFormData.estimated_guests}
+                    onChange={e => setEditFormData({ ...editFormData, estimated_guests: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Sedes / Ubicaciones */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    {editFormData.event_type.toLowerCase().includes('boda')
+                      ? 'Lugar Ceremonia'
+                      : 'Sede Principal'}
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.ceremony_venue}
+                    onChange={e => setEditFormData({ ...editFormData, ceremony_venue: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">
+                    {editFormData.event_type.toLowerCase().includes('boda')
+                      ? 'Lugar Recepción'
+                      : 'Sede Secundaria (opcional)'}
+                  </label>
+                  <input
+                    type="text"
+                    value={editFormData.reception_venue}
+                    onChange={e => setEditFormData({ ...editFormData, reception_venue: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Horas */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">Hora Inicio / Ceremonia</label>
+                  <input
+                    type="time"
+                    value={editFormData.ceremony_time}
+                    onChange={e => setEditFormData({ ...editFormData, ceremony_time: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">Hora Recepción</label>
+                  <input
+                    type="time"
+                    value={editFormData.reception_time}
+                    onChange={e => setEditFormData({ ...editFormData, reception_time: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Paquete y Estado */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">Paquete Contratado</label>
+                  <select
+                    value={editFormData.package_type}
+                    onChange={e => setEditFormData({ ...editFormData, package_type: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  >
+                    {meetingPackages.length > 0 ? (
+                      meetingPackages.map(p => (
+                        <option key={p.name} value={p.name}>
+                          {p.name}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="Esencial">Esencial</option>
+                        <option value="Integral">Integral</option>
+                        <option value="Luxury Exclusivo">Luxury Exclusivo</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">Estado del Evento</label>
+                  <select
+                    value={editFormData.status}
+                    onChange={e => setEditFormData({ ...editFormData, status: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  >
+                    <option value="PLANNING">En Planeación</option>
+                    <option value="UPCOMING">Próximo</option>
+                    <option value="COMPLETED">Completado</option>
+                    <option value="ARCHIVED">Archivado</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Notas del Evento</label>
+                <textarea
+                  rows={2}
+                  value={editFormData.notes}
+                  onChange={e => setEditFormData({ ...editFormData, notes: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                />
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4 border-t border-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingWedding(null)}
+                  className="px-4 py-2.5 text-xs font-medium text-stone-600 hover:bg-stone-100 rounded-xl transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-6 py-2.5 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
+                >
+                  {savingEdit ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
               </div>
             </form>
