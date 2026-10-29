@@ -768,22 +768,40 @@ export const GeneralDashboard: React.FC = () => {
   };
 
   const renderCoupleNames = (w: Wedding) => {
-    let p1 = w.partner_1_name ? toTitleCase(w.partner_1_name) : '';
-    let p2 = w.partner_2_name ? toTitleCase(w.partner_2_name) : '';
-
-    if (!p1 && !p2 && w.name) {
+    // 1. Si el nombre del evento tiene '&' o ' y ', separar con la tipografía editorial en 2 líneas
+    if (w.name) {
       if (w.name.includes('&')) {
         const parts = w.name.split('&');
-        p1 = toTitleCase(parts[0].trim());
-        p2 = toTitleCase(parts.slice(1).join('&').trim());
+        const p1 = toTitleCase(parts[0].trim());
+        const p2 = toTitleCase(parts.slice(1).join('&').trim());
+        return (
+          <>
+            <div className="truncate text-[#2B2826]">{p1}</div>
+            <div className="truncate text-[#A86B60]">
+              <span className="text-[#C48B81] mr-1.5">&</span>
+              {p2}
+            </div>
+          </>
+        );
       } else if (w.name.includes(' y ')) {
         const parts = w.name.split(' y ');
-        p1 = toTitleCase(parts[0].trim());
-        p2 = toTitleCase(parts.slice(1).join(' y ').trim());
-      } else {
-        p1 = toTitleCase(w.name);
+        const p1 = toTitleCase(parts[0].trim());
+        const p2 = toTitleCase(parts.slice(1).join(' y ').trim());
+        return (
+          <>
+            <div className="truncate text-[#2B2826]">{p1}</div>
+            <div className="truncate text-[#A86B60]">
+              <span className="text-[#C48B81] mr-1.5">&</span>
+              {p2}
+            </div>
+          </>
+        );
       }
     }
+
+    // 2. Si no tiene separador en el nombre, revisar nombres de los novios/celebrantes
+    let p1 = w.partner_1_name ? toTitleCase(w.partner_1_name) : '';
+    let p2 = w.partner_2_name ? toTitleCase(w.partner_2_name) : '';
 
     if (p1 && p2) {
       return (
@@ -797,7 +815,7 @@ export const GeneralDashboard: React.FC = () => {
       );
     }
 
-    return <div className="truncate text-[#2B2826]">{p1 || toTitleCase(w.name)}</div>;
+    return <div className="truncate text-[#2B2826]">{toTitleCase(w.name || p1 || 'Evento')}</div>;
   };
 
   const userName = user?.name ? user.name.split(' ')[0] : 'Equipo';
@@ -1147,15 +1165,15 @@ export const GeneralDashboard: React.FC = () => {
                                 {w.event_type || 'Boda Completa'}
                               </span>
                             </div>
-                            <h3 className="font-serif text-2xl sm:text-[25px] font-bold text-[#2B2826] leading-tight line-clamp-2" title={w.name}>
-                              {w.name}
-                            </h3>
+                            <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2]">
+                              {renderCoupleNames(w)}
+                            </div>
                             {(w.partner_1_name || w.partner_2_name) && (
-                              <p className="text-xs text-[#7D6F6B] mt-1.5 truncate">
+                              <p className="text-xs text-[#7D6F6B] mt-2 truncate font-medium">
                                 <span className="text-[#A86B60] font-semibold mr-1.5">
                                   {w.event_type && !w.event_type.toLowerCase().includes('boda') ? 'Celebrante(s):' : 'Novios:'}
                                 </span>
-                                <span className="font-medium text-[#4A3E3D]">
+                                <span className="text-[#4A3E3D]">
                                   {w.partner_1_name && w.partner_2_name
                                     ? `${w.partner_1_name} & ${w.partner_2_name}`
                                     : (w.partner_1_name || w.partner_2_name)}
