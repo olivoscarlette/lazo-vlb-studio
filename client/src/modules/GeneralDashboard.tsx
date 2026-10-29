@@ -7,7 +7,7 @@ import {
   Building2, Search, AlertCircle, Shield, Settings,
   Database, History, Download, Upload, Trash2, CheckCircle2, Edit3,
   FileSpreadsheet, RefreshCw, Save, X, MessageSquare, Bell, LogOut,
-  FileText, LayoutGrid, PanelLeftClose, PanelLeft
+  FileText, LayoutGrid, PanelLeftClose, PanelLeft, ChevronDown
 } from 'lucide-react';
 import { WhatsAppHubModule } from './WhatsAppHubModule';
 import { CalendarioModule } from './CalendarioModule';
@@ -55,6 +55,7 @@ export const GeneralDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'BODAS' | 'DESPEDIDAS' | 'BABY_SHOWER' | 'OTROS'>('ALL');
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Admin: Users management state
@@ -1014,6 +1015,21 @@ export const GeneralDashboard: React.FC = () => {
     return t && !t.includes('boda') && !t.includes('despedida') && !t.includes('baby');
   }).length;
 
+  const getCategoryLabel = () => {
+    switch (categoryFilter) {
+      case 'BODAS':
+        return { label: 'Bodas', count: countBodas };
+      case 'DESPEDIDAS':
+        return { label: 'Despedidas de Soltera', count: countDespedidas };
+      case 'BABY_SHOWER':
+        return { label: 'Baby Showers', count: countBabyShowers };
+      case 'OTROS':
+        return { label: 'Otros Eventos', count: countOtros };
+      default:
+        return { label: 'Todos los eventos', count: weddings.length };
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) {
       if (sidebarOpen) {
@@ -1368,57 +1384,145 @@ export const GeneralDashboard: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center gap-1.5 p-1 bg-[#F2ECE7] rounded-full border border-[#EFE8E1] overflow-x-auto text-xs font-medium self-start md:self-auto max-w-full [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              {/* Selector Desplegable de Tipo de Evento (Dropdown Editorial) */}
+              <div className="relative self-start sm:self-auto">
                 <button
-                  onClick={() => setCategoryFilter('ALL')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
-                    categoryFilter === 'ALL'
-                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                  }`}
+                  type="button"
+                  onClick={() => setShowCategoryMenu(!showCategoryMenu)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#FFFFFF] hover:bg-[#FAF7F5] border border-[#EFE8E1] rounded-full text-xs font-semibold text-[#2B2826] shadow-2xs hover:border-[#C48B81] transition cursor-pointer select-none"
                 >
-                  Todos ({weddings.length})
+                  <span className="text-[#7D6F6B] font-normal">Ver:</span>
+                  <span className="text-[#2B2826] font-semibold">{getCategoryLabel().label}</span>
+                  <span className="bg-[#F7EDEB] text-[#A86B60] text-[11px] px-2 py-0.5 rounded-full font-bold">
+                    {getCategoryLabel().count}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-[#C48B81] transition-transform duration-200 ${showCategoryMenu ? 'rotate-180' : ''}`} />
                 </button>
-                <button
-                  onClick={() => setCategoryFilter('BODAS')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
-                    categoryFilter === 'BODAS'
-                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                  }`}
-                >
-                  Bodas ({countBodas})
-                </button>
-                <button
-                  onClick={() => setCategoryFilter('DESPEDIDAS')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
-                    categoryFilter === 'DESPEDIDAS'
-                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                  }`}
-                >
-                  Despedidas ({countDespedidas})
-                </button>
-                <button
-                  onClick={() => setCategoryFilter('BABY_SHOWER')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
-                    categoryFilter === 'BABY_SHOWER'
-                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                  }`}
-                >
-                  Baby Showers ({countBabyShowers})
-                </button>
-                <button
-                  onClick={() => setCategoryFilter('OTROS')}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer whitespace-nowrap shrink-0 ${
-                    categoryFilter === 'OTROS'
-                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                  }`}
-                >
-                  Otros ({countOtros})
-                </button>
+
+                {showCategoryMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-20"
+                      onClick={() => setShowCategoryMenu(false)}
+                    />
+                    <div className="absolute right-0 mt-2 w-64 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] p-1.5 z-30 transition-all duration-150">
+                      <div className="px-3 py-2 text-[10px] font-bold tracking-wider uppercase text-[#7D6F6B] border-b border-[#FAF7F5]">
+                        Filtrar por tipo de evento
+                      </div>
+
+                      <div className="space-y-0.5 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCategoryFilter('ALL');
+                            setShowCategoryMenu(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
+                            categoryFilter === 'ALL'
+                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
+                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'ALL' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
+                            <span>Todos los eventos</span>
+                          </div>
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${categoryFilter === 'ALL' ? 'bg-[#FFFFFF] text-[#A86B60] shadow-2xs' : 'bg-[#F7EDEB] text-[#A86B60]'}`}>
+                            {weddings.length}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCategoryFilter('BODAS');
+                            setShowCategoryMenu(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
+                            categoryFilter === 'BODAS'
+                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
+                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'BODAS' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
+                            <span>Bodas</span>
+                          </div>
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full text-[#7D6F6B]">
+                            {countBodas}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCategoryFilter('DESPEDIDAS');
+                            setShowCategoryMenu(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
+                            categoryFilter === 'DESPEDIDAS'
+                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
+                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'DESPEDIDAS' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
+                            <span>Despedidas de Soltera</span>
+                          </div>
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full text-[#7D6F6B]">
+                            {countDespedidas}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCategoryFilter('BABY_SHOWER');
+                            setShowCategoryMenu(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
+                            categoryFilter === 'BABY_SHOWER'
+                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
+                              : countBabyShowers === 0
+                              ? 'text-[#7D6F6B] opacity-60 hover:opacity-100 hover:bg-[#FAF7F5]'
+                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'BABY_SHOWER' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
+                            <span>Baby Showers</span>
+                          </div>
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full text-[#7D6F6B]">
+                            {countBabyShowers}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setCategoryFilter('OTROS');
+                            setShowCategoryMenu(false);
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
+                            categoryFilter === 'OTROS'
+                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
+                              : countOtros === 0
+                              ? 'text-[#7D6F6B] opacity-60 hover:opacity-100 hover:bg-[#FAF7F5]'
+                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'OTROS' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
+                            <span>Otros Eventos</span>
+                          </div>
+                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full text-[#7D6F6B]">
+                            {countOtros}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
