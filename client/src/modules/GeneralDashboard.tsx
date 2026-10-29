@@ -1050,13 +1050,17 @@ export const GeneralDashboard: React.FC = () => {
           (sidebarOpen ? 'md:w-64 lg:w-72 p-6' : 'md:w-16 lg:w-[4.25rem] p-2.5')
         }`}
       >
-        <div className={`mb-8 flex items-center transition-all ${sidebarOpen ? 'px-2 justify-between' : 'justify-center'}`}>
+        <div className={`mb-6 flex flex-col transition-all ${sidebarOpen ? 'px-2' : 'items-center gap-2.5'}`}>
           {sidebarOpen ? (
-            <>
-              <div className="flex items-center space-x-2">
+            <div className="w-full flex items-center justify-between">
+              <div
+                onClick={() => setActiveTab('weddings')}
+                className="flex items-center space-x-2 cursor-pointer"
+                title="Ir a Eventos · LAZO Studio"
+              >
                 <img
                   src="/lazo-logo.png"
-                  alt="LAZO — VLB Studio · Planning"
+                  alt="LAZO — Studio Planning"
                   className="h-9 sm:h-11 w-auto object-contain select-none"
                 />
               </div>
@@ -1069,16 +1073,29 @@ export const GeneralDashboard: React.FC = () => {
                 <PanelLeftClose className="w-5 h-5 text-[#C48B81] hidden md:block" />
                 <X className="w-5 h-5 text-[#C48B81] md:hidden" />
               </button>
-            </>
+            </div>
           ) : (
-            <button
-              onClick={handleToggleSidebar}
-              aria-label="Expandir menú lateral"
-              className="p-2 text-[#7D6F6B] hover:text-[#C48B81] hover:bg-[#F2ECE7] rounded-xl transition cursor-pointer"
-              title="Expandir menú lateral (⌘B)"
-            >
-              <PanelLeft className="w-5 h-5 text-[#C48B81]" />
-            </button>
+            <div className="flex flex-col items-center gap-2.5 w-full">
+              <div
+                onClick={() => setActiveTab('weddings')}
+                className="cursor-pointer flex items-center justify-center p-1 rounded-xl hover:bg-[#F2ECE7] transition"
+                title="Ir a Eventos · LAZO Studio"
+              >
+                <img
+                  src="/lazo-logo.png"
+                  alt="LAZO — Studio Planning"
+                  className="h-6 sm:h-7 w-auto max-w-[46px] object-contain select-none"
+                />
+              </div>
+              <button
+                onClick={handleToggleSidebar}
+                aria-label="Expandir menú lateral"
+                className="p-2 text-[#7D6F6B] hover:text-[#C48B81] hover:bg-[#F2ECE7] rounded-xl transition cursor-pointer"
+                title="Expandir menú lateral (⌘B)"
+              >
+                <PanelLeft className="w-5 h-5 text-[#C48B81]" />
+              </button>
+            </div>
           )}
         </div>
 
@@ -1135,15 +1152,23 @@ export const GeneralDashboard: React.FC = () => {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
               <div className="flex items-center space-x-3.5">
                 {!sidebarOpen && (
-                  <button
-                    onClick={handleToggleSidebar}
-                    aria-label="Mostrar menú lateral"
-                    className="inline-flex md:hidden items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F2ECE7] text-[#2B2826] transition shadow-xs cursor-pointer shrink-0"
-                    title="Mostrar menú lateral (⌘B)"
-                  >
-                    <PanelLeft className="w-5 h-5 text-[#C48B81]" />
-                    <span className="text-sm font-semibold hidden sm:inline">Menú</span>
-                  </button>
+                  <div className="flex items-center space-x-2.5 md:hidden">
+                    <button
+                      onClick={handleToggleSidebar}
+                      aria-label="Mostrar menú lateral"
+                      className="inline-flex items-center space-x-2 px-3 py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F2ECE7] text-[#2B2826] transition shadow-xs cursor-pointer shrink-0"
+                      title="Mostrar menú lateral (⌘B)"
+                    >
+                      <PanelLeft className="w-5 h-5 text-[#C48B81]" />
+                      <span className="text-sm font-semibold hidden sm:inline">Menú</span>
+                    </button>
+                    <img
+                      src="/lazo-logo.png"
+                      alt="LAZO"
+                      className="h-8 w-auto object-contain select-none cursor-pointer"
+                      onClick={() => setActiveTab('weddings')}
+                    />
+                  </div>
                 )}
                 <div>
                   <div className="flex flex-wrap items-center gap-3">
