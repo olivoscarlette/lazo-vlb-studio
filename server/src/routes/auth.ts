@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { db } from '../db/index.js';
 import { authenticateToken, requireRole, JWT_SECRET, logAudit } from '../middleware/auth.js';
+import { WhatsAppService } from '../services/whatsappService.js';
 
 const router = Router();
 
@@ -84,6 +85,99 @@ router.post('/login', (req, res) => {
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
   return res.json({ message: 'Sesión cerrada correctamente.' });
+});
+
+// Forgot Password Request
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Por favor ingresa un correo electrónico válido.' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = db.prepare('SELECT * FROM users WHERE email = ?').get(normalizedEmail) as any;
+
+    if (!user) {
+      // Don't leak user existence, always return success message
+      return res.json({
+        success: true,
+        message: 'Si el correo electrónico está registrado en Lazo, se enviarán las instrucciones para restablecer la contraseña.'
+      });
+    }
+
+    // Generate secure token valid for 1 hour
+    const token = 'rst_' + Date.now() + '_' + Math.random().toString(36).substring(2, 10);
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO password_reset_tokens (id, user_id, token, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?)
+    `).run('prt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6), user.id, token, expiresAt, now);
+
+    // If user has a mobile phone, send instructions via WhatsApp Cloud API
+    if (user.phone) {
+      try {
+        const appUrl = process.env.APP_URL || 'https://www.lazostudio.mx';
+        const resetLink = `${appUrl}?reset_token=${token}`;
+        await WhatsAppService.sendTextMessage(
+          user.phone,
+          `Hola ${user.name},\n\nHemos recibido una solicitud para restablecer tu contraseña en Lazo Studio.\n\nPuedes generar una nueva contraseña ingresando en este enlace seguro:\n${resetLink}\n\n(Válido por 1 hora. Si no realizaste esta solicitud, puedes ignorar este mensaje).`
+        );
+      } catch (waErr) {
+        console.warn('[Forgot Password] Error sending WhatsApp notification:', waErr);
+      }
+    }
+
+    return res.json({
+      success: true,
+      message: 'Si el correo electrónico está registrado en Lazo, se han generado las instrucciones de recuperación.',
+      resetToken: process.env.NODE_ENV !== 'production' ? token : undefined,
+      hasPhone: Boolean(user.phone)
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Error al procesar solicitud: ' + err.message });
+  }
+});
+
+// Reset Password with Token
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token) {
+      return res.status(400).json({ error: 'El token de recuperación es obligatorio.' });
+    }
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+    }
+
+    const resetRecord = db.prepare(`
+      SELECT * FROM password_reset_tokens
+      WHERE token = ? AND used = 0
+    `).get(token) as any;
+
+    if (!resetRecord) {
+      return res.status(400).json({ error: 'El enlace de recuperación es inválido o ya ha sido utilizado.' });
+    }
+
+    if (new Date(resetRecord.expires_at).getTime() < Date.now()) {
+      return res.status(400).json({ error: 'El enlace de recuperación ha expirado. Por favor solicita uno nuevo.' });
+    }
+
+    const newHash = bcrypt.hashSync(newPassword, 10);
+    const now = new Date().toISOString();
+
+    db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?').run(newHash, now, resetRecord.user_id);
+    db.prepare('UPDATE password_reset_tokens SET used = 1 WHERE id = ?').run(resetRecord.id);
+
+    return res.json({
+      success: true,
+      message: 'Tu contraseña ha sido actualizada exitosamente. Ya puedes iniciar sesión.'
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Error al restablecer contraseña: ' + err.message });
+  }
 });
 
 // Current User Profile & Context
