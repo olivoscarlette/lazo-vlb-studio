@@ -215,8 +215,37 @@ ${resetLink}
 © ${new Date().getFullYear()} Lazo Studio · Viva la Bride.
     `.trim();
 
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const fromAddress = process.env.EMAIL_FROM || 'Lazo Studio <onboarding@resend.dev>';
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: fromAddress,
+            to: [to],
+            subject: 'Restablecer tu contraseña — Lazo Studio',
+            html,
+            text
+          })
+        });
+        const resData: any = await response.json();
+        if (!response.ok) {
+          throw new Error(resData.message || JSON.stringify(resData));
+        }
+        console.log(`[EmailService - Resend] Correo enviado a ${to} (ID: ${resData.id})`);
+        return { success: true, messageId: resData.id };
+      } catch (err: any) {
+        console.error('[EmailService - Resend] Error enviando correo:', err);
+        throw err;
+      }
+    }
+
     if (!transporter) {
-      console.warn('[EmailService] GMAIL_USER / GMAIL_APP_PASSWORD no configurados en variables de entorno.');
+      console.warn('[EmailService] Ni RESEND_API_KEY ni credenciales de Gmail/SMTP configuradas.');
       console.log(`[EmailService - Modo Simulado] Enlace generado para ${to}: ${resetLink}`);
       return { success: true, simulated: true };
     }
