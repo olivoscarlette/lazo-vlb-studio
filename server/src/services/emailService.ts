@@ -228,7 +228,8 @@ ${resetLink}
 
     if (process.env.RESEND_API_KEY) {
       try {
-        const fromAddress = process.env.EMAIL_FROM || 'Lazo Studio <onboarding@resend.dev>';
+        const fromAddress = process.env.EMAIL_FROM || 'Lazo — Viva la Bride <hola@lazostudio.mx>';
+        const replyTo = process.env.REPLY_TO_EMAIL || 'vivalabride.mex@gmail.com';
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -238,6 +239,7 @@ ${resetLink}
           body: JSON.stringify({
             from: fromAddress,
             to: [to],
+            reply_to: replyTo,
             subject: 'Restablecer tu contraseña — Lazo Studio',
             html,
             text
