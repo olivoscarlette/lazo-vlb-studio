@@ -344,6 +344,73 @@ export const InvitadosModule: React.FC = () => {
     window.open(`/api/weddings/${currentWedding!.id}/guests/template?token=${token}`, '_blank');
   };
 
+  // Descargar Excel en orden alfabético de los invitados que asistirán y sus números de mesa
+  const handleDownloadAttendanceTablesExcel = async () => {
+    if (!currentWedding || !token) return;
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/guests?page=1&limit=5000&sortBy=alpha_asc`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        alert('Error al obtener la lista de invitados para descargar.');
+        return;
+      }
+      const data = await res.json();
+      const allGuests: Guest[] = data.guests || [];
+
+      // Filtrar solo los confirmados / que asistirán
+      const attendingGuests = allGuests
+        .filter(g => g.status === 'Confirmado')
+        .sort((a, b) => {
+          const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim().toLowerCase();
+          const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim().toLowerCase();
+          return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
+        });
+
+      if (attendingGuests.length === 0) {
+        alert('Aún no hay invitados confirmados para descargar.');
+        return;
+      }
+
+      const rows = attendingGuests.map((g, index) => {
+        const assignedTable = g.table_name || tables.find(t => t.id === g.table_id)?.name || 'Sin mesa asignada';
+        return {
+          'NO.': index + 1,
+          'INVITADO (A-Z)': `${g.first_name || ''} ${g.last_name || ''}`.trim(),
+          'MESA': assignedTable,
+          'LUGARES CONFIRMADOS': g.confirmed_places || (1 + (g.companion_count || 0)),
+          'ACOMPAÑANTES': g.companion_count || 0,
+          'TELÉFONO / WHATSAPP': g.phone || '—',
+          'RESTRICCIONES ALIMENTARIAS': (g.dietary_requirements && g.dietary_requirements !== 'Ninguna') ? g.dietary_requirements : 'Ninguna',
+          'OBSERVACIONES': g.observations || ''
+        };
+      });
+
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(rows);
+
+      // Anchos de columna
+      ws['!cols'] = [
+        { wch: 6 },  // NO.
+        { wch: 32 }, // INVITADO (A-Z)
+        { wch: 22 }, // MESA
+        { wch: 22 }, // LUGARES CONFIRMADOS
+        { wch: 16 }, // ACOMPAÑANTES
+        { wch: 20 }, // TELÉFONO / WHATSAPP
+        { wch: 30 }, // RESTRICCIONES ALIMENTARIAS
+        { wch: 32 }  // OBSERVACIONES
+      ];
+
+      XLSX.utils.book_append_sheet(wb, ws, 'Asistencia y Mesas');
+
+      const safeWeddingName = currentWedding.name.replace(/[^a-zA-Z0-9_-]/g, '_');
+      XLSX.writeFile(wb, `Asistencia_y_Mesas_${safeWeddingName}.xlsx`);
+    } catch (err) {
+      console.error('Error al generar Excel de asistencia y mesas:', err);
+      alert('Ocurrió un error al descargar el archivo Excel.');
+    }
+  };
+
   // Export Guest Lists to Excel (.xlsx)
   const handleExportGuestList = async () => {
     if (!currentWedding || !token) return;
@@ -819,18 +886,46 @@ export const InvitadosModule: React.FC = () => {
 
             {showDownloadsMenu && (
               <div
-                className="absolute right-0 mt-1.5 w-56 bg-white rounded-2xl shadow-xl border border-[#EFE8E1] py-1.5 z-30 animate-in fade-in zoom-in-95"
+                className="absolute right-0 mt-1.5 w-64 bg-white rounded-2xl shadow-xl border border-[#EFE8E1] py-1.5 z-30 animate-in fade-in zoom-in-95"
                 onMouseLeave={() => setShowDownloadsMenu(false)}
               >
                 <button
                   type="button"
                   onClick={() => {
                     setShowDownloadsMenu(false);
-                    handleDownloadTemplate();
+                    handleDownloadAttendanceTablesExcel();
                   }}
                   className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                  <FileSpreadsheet className="w-4 h-4 text-[#C48B81] shrink-0" />
+                  <div>
+                    <div className="font-semibold text-[#2B2826]">Asistencia y Mesas (Excel)</div>
+                    <div className="text-[10px] text-[#786C68]">Confirmados en orden A-Z con mesa</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDownloadsMenu(false);
+                    handleExportGuestList();
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
+                >
+                  <Download className="w-4 h-4 text-[#786C68] shrink-0" />
+                  <div>
+                    <div className="font-semibold text-[#2B2826]">Lista Completa (.xlsx)</div>
+                    <div className="text-[10px] text-[#786C68]">Todos los invitados y estatus</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDownloadsMenu(false);
+                    handleDownloadTemplate();
+                  }}
+                  className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
+                >
+                  <Download className="w-4 h-4 text-[#C48B81] shrink-0" />
                   <div>
                     <div className="font-semibold text-[#2B2826]">Descargar plantilla vacía</div>
                     <div className="text-[10px] text-[#786C68]">Formato oficial para importar</div>
@@ -846,7 +941,7 @@ export const InvitadosModule: React.FC = () => {
                   }}
                   className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
                 >
-                  <Upload className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                  <Upload className="w-4 h-4 text-[#C48B81] shrink-0" />
                   <div>
                     <div className="font-semibold text-[#2B2826]">Importar archivo Excel</div>
                     <div className="text-[10px] text-[#786C68]">Cargar lista desde archivo</div>
@@ -1310,29 +1405,19 @@ export const InvitadosModule: React.FC = () => {
                       </td>
                     )}
 
-                    {/* Mesa — Inline Editable Dropdown */}
-                    <td className="py-3 px-4 whitespace-nowrap min-w-[170px]">
+                    {/* Mesa — Solo Informativa */}
+                    <td className="py-3 px-4 whitespace-nowrap min-w-[150px]">
                       {guest.status === 'No asistirá' ? (
-                        <span className="text-[#786C68] italic text-[11px] whitespace-nowrap">Liberada</span>
+                        <span className="text-[#786C68] italic text-xs whitespace-nowrap">Liberada</span>
+                      ) : guest.table_id ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#FAF4F0] text-[#8C5E58] border border-[#ECD9D5]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]" />
+                          <span>{guest.table_name || tables.find(t => t.id === guest.table_id)?.name || 'Mesa asignada'}</span>
+                        </span>
                       ) : (
-                        <select
-                          value={guest.table_id || ''}
-                          onChange={e => handleInlineTableChange(guest, e.target.value)}
-                          style={{ fontSize: '0.82rem' }}
-                          className={`w-full max-w-[190px] font-medium rounded-lg px-2.5 py-1 border transition focus:outline-none cursor-pointer ${
-                            guest.table_id
-                              ? 'bg-[#EFE8DE] text-[#332C2A] border-[#EFE8E1] font-semibold'
-                              : 'bg-white text-[#786C68] border-[#EFE8E1] hover:border-[#C48B81]'
-                          }`}
-                        >
-                          <option value="">Sin mesa</option>
-                          {tables.map(t => (
-                            <option key={t.id} value={t.id}>
-                              {t.name} ({t.used_seats || 0}/{t.capacity})
-                            </option>
-                          ))}
-                          <option value="__new__">+ Crear nueva mesa...</option>
-                        </select>
+                        <span className="text-xs text-[#8A7E72] italic">
+                          Sin mesa
+                        </span>
                       )}
                     </td>
 
@@ -1520,18 +1605,16 @@ export const InvitadosModule: React.FC = () => {
               {formData.status !== 'No asistirá' && (
                 <div>
                   <label className="block text-[11px] font-bold text-stone-700 mb-1">Mesa Asignada</label>
-                  <select
-                    value={formData.table_id}
-                    onChange={e => setFormData({ ...formData, table_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
-                  >
-                    <option value="">Sin mesa asignada</option>
-                    {tables.map(t => (
-                      <option key={t.id} value={t.id}>
-                        {t.name} (Capacidad: {t.capacity} pax)
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] flex items-center justify-between">
+                    <span className="font-semibold text-[#8C5E58]">
+                      {formData.table_id
+                        ? (tables.find(t => t.id === formData.table_id)?.name || editingGuest?.table_name || 'Mesa asignada')
+                        : 'Sin mesa asignada'}
+                    </span>
+                    <span className="text-[10px] text-[#8A7E72] italic">
+                      (Asignar en pestaña Mesas y Layout)
+                    </span>
+                  </div>
                 </div>
               )}
 
