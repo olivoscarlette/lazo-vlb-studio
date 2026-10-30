@@ -5,7 +5,7 @@ import { TimelineEvent, Vendor, CivilCeremony, ReligiousCeremony } from '../type
 import {
   Clock, Plus, MapPin, User, CheckCircle2,
   Printer, Trash2, Edit3, Play, Calendar,
-  Check, ArrowUpRight, MessageSquare, Users, RotateCcw, FileDown
+  Check, ArrowUpRight, MessageSquare, Users, RotateCcw, FileDown, X, Sparkles
 } from 'lucide-react';
 
 export const TimelineModule: React.FC = () => {
@@ -27,6 +27,7 @@ export const TimelineModule: React.FC = () => {
 
   // Modal for Add/Edit Timeline Event
   const [showEventModal, setShowEventModal] = useState(false);
+  const [showAsesoriaModal, setShowAsesoriaModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<TimelineEvent | null>(null);
   const [formData, setFormData] = useState({
     day_type: 'BODA' as 'BODA' | 'CIVIL',
@@ -559,6 +560,26 @@ export const TimelineModule: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Barra Sutil Quiet-Luxury: Asesoría de Minuto a Minuto */}
+      {isPlannerVirtual && (
+        <div className="bg-[#FFFFFF] border border-[#EFE8E1] rounded-2xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[0_2px_10px_rgba(43,40,38,0.02)] transition hover:border-[#D9C8BF]">
+          <div className="flex items-center space-x-3">
+            <span className="w-2 h-2 rounded-full bg-[#C48B81] shrink-0" />
+            <p className="text-xs text-[#5C5550]">
+              <span className="font-semibold text-[#2B2826]">¿Deseas que una Coordinadora Senior audite tus tiempos?</span>{' '}
+              <span className="text-[#8E807A] hidden md:inline">Sesión 1 a 1 para blindar la logística del Día B.</span>
+            </p>
+          </div>
+          <button
+            onClick={() => setShowAsesoriaModal(true)}
+            className="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-full text-xs font-semibold text-[#C48B81] hover:text-white bg-[#FAF7F5] hover:bg-[#C48B81] border border-[#C48B81]/40 hover:border-[#C48B81] transition shadow-2xs shrink-0 cursor-pointer"
+          >
+            <span>Agendar Asesoría 1 a 1 ($1,800 MXN)</span>
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Mode Switcher Bar (Hidden for Novios, no day tabs) */}
       {!isNovios && (
@@ -1304,6 +1325,70 @@ export const TimelineModule: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Asesoría 1 a 1 de Minuto a Minuto */}
+      {showAsesoriaModal && (
+        <div className="fixed inset-0 bg-[#2B2826]/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 border border-[#EFE8E1] shadow-2xl relative animate-in fade-in zoom-in-95 duration-150">
+            <button
+              onClick={() => setShowAsesoriaModal(false)}
+              className="absolute top-5 right-5 p-2 text-[#8E807A] hover:text-[#2B2826] rounded-xl hover:bg-[#FAF8F5] transition cursor-pointer"
+              title="Cerrar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="space-y-6">
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#C48B81] block mb-1">
+                  Servicio Exclusivo Viva la Bride
+                </span>
+                <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
+                  Auditoría y Sesión 1 a 1 de tu Minuto a Minuto
+                </h3>
+                <p className="text-xs text-[#7D6F6B] mt-2 leading-relaxed">
+                  Revisa tu logística con una Coordinadora Senior de Viva la Bride. En 90 minutos pulimos cada bloque de tiempo en Lazo para que el Día B fluya a la perfección.
+                </p>
+              </div>
+
+              <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFE8E1] space-y-2.5">
+                <div className="flex items-start space-x-2.5 text-xs text-[#5C5550]">
+                  <CheckCircle2 className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
+                  <span><strong>Auditoría de tiempos muertos:</strong> Prevenimos retrasos y cuidamos la hora dorada de fotografía.</span>
+                </div>
+                <div className="flex items-start space-x-2.5 text-xs text-[#5C5550]">
+                  <CheckCircle2 className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
+                  <span><strong>Coordinación de montajes:</strong> Ajuste de llegadas y pruebas con DJ, banquete y fotógrafo.</span>
+                </div>
+                <div className="flex items-start space-x-2.5 text-xs text-[#5C5550]">
+                  <CheckCircle2 className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
+                  <span><strong>Itinerario Oficial en PDF:</strong> Te entregamos tu documento final listo para compartir con proveedores.</span>
+                </div>
+                <div className="flex items-start space-x-2.5 text-xs text-[#5C5550]">
+                  <CheckCircle2 className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
+                  <span><strong>100% Bonificable:</strong> Si contratas coordinación presencial, tus $1,800 se descuentan de tu contrato.</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-[#F5EFEB]">
+                <div>
+                  <span className="text-[10px] font-semibold text-[#8E807A] uppercase tracking-wider block">Inversión</span>
+                  <span className="font-serif text-2xl font-bold text-[#2B2826]">$1,800 <span className="text-xs font-normal text-[#7D6F6B]">MXN</span></span>
+                </div>
+                <a
+                  href={`https://wa.me/528128663440?text=${encodeURIComponent(`¡Hola Scarlette! Estoy planeando mi boda en Lazo Studio (${currentWedding?.name || 'mi boda'}) y me gustaría agendar mi Asesoría 1 a 1 de Minuto a Minuto ($1,800 MXN).`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-5 py-3 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs flex items-center space-x-2 cursor-pointer"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Agendar por WhatsApp</span>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       )}
