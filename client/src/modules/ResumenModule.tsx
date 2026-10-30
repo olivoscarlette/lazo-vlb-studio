@@ -497,7 +497,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-4">
               <div>
                 <h3 className="font-sans text-base sm:text-lg font-bold text-[#2B2826] tracking-tight">Próximas Tareas</h3>
-                <p className="text-[11px] text-[#7D6F6B] font-normal normal-case mt-0.5">Timeline & Checklist</p>
+                <p className="text-[11px] text-[#7D6F6B] font-normal normal-case mt-0.5">Itinerario & Checklist</p>
               </div>
               <CheckCircle2 className="w-4 h-4 text-[#C48B81] group-hover:scale-110 transition-transform" />
             </div>

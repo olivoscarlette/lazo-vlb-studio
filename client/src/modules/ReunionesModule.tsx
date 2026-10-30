@@ -747,7 +747,7 @@ export const ReunionesModule: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="Ej. Revisión de Timeline y Minuta Final"
+                  placeholder="Ej. Revisión de Itinerario y Minuta Final"
                   value={formData.title}
                   onChange={e => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"

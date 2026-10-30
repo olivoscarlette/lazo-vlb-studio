@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import { useAuth } from '../context/AuthContext';
 import { TimelineEvent, Vendor, CivilCeremony, ReligiousCeremony } from '../types';
 import {
@@ -282,12 +283,170 @@ export const TimelineModule: React.FC = () => {
   };
 
   const handleDownloadPDF = () => {
-    const prevTitle = document.title;
-    document.title = `Itinerario_${currentWedding?.name || 'Boda'}`.replace(/\s+/g, '_');
-    window.print();
-    setTimeout(() => {
-      document.title = prevTitle;
-    }, 1000);
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const weddingName = currentWedding?.name || 'Boda';
+      const cleanFileName = `Itinerario_${weddingName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_')}.pdf`;
+
+      // Palette
+      const primaryColor: [number, number, number] = [43, 40, 38]; // #2B2826
+      const accentColor: [number, number, number] = [196, 139, 129]; // #C48B81
+      const secondaryColor: [number, number, number] = [125, 111, 107]; // #7D6F6B
+      const borderColor: [number, number, number] = [239, 232, 225]; // #EFE8E1
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 16;
+      const contentWidth = pageWidth - (margin * 2);
+
+      let currentY = 16;
+
+      const renderHeader = () => {
+        // Top luxury container banner
+        doc.setFillColor(250, 247, 245);
+        doc.roundedRect(margin, 12, contentWidth, 34, 3, 3, 'F');
+
+        // Top subtle brand label
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...accentColor);
+        doc.text('LAZO STUDIO  ·  VIVA LA BRIDE', margin + 6, 20);
+
+        // Document Title
+        doc.setFont('times', 'bold');
+        doc.setFontSize(18);
+        doc.setTextColor(...primaryColor);
+        doc.text('ITINERARIO OFICIAL DEL EVENTO', margin + 6, 28);
+
+        // Meta: Wedding Name, Date, Venue
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...secondaryColor);
+        const metaLine = `${weddingName}   |   Fecha: ${formattedWeddingDate}   |   ${venueLabel}`;
+        const truncatedMeta = doc.splitTextToSize(metaLine, contentWidth - 12);
+        doc.text(truncatedMeta[0] || metaLine, margin + 6, 36);
+
+        // Bottom accent rule inside header
+        doc.setDrawColor(...accentColor);
+        doc.setLineWidth(0.5);
+        doc.line(margin + 6, 40, margin + contentWidth - 6, 40);
+
+        currentY = 52;
+      };
+
+      const renderFooter = (pageNumber: number) => {
+        doc.setDrawColor(...borderColor);
+        doc.setLineWidth(0.3);
+        doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...secondaryColor);
+        doc.text('Documento confidencial de coordinación  ·  Lazo Studio', margin, pageHeight - 7);
+        doc.text(`Página ${pageNumber}`, pageWidth - margin, pageHeight - 7, { align: 'right' });
+      };
+
+      let pageCount = 1;
+      renderHeader();
+
+      // Table Column Header
+      const renderTableHeader = () => {
+        doc.setFillColor(242, 237, 233);
+        doc.roundedRect(margin, currentY, contentWidth, 8, 1.5, 1.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...primaryColor);
+
+        doc.text('HORA', margin + 4, currentY + 5.5);
+        doc.text('ACTIVIDAD / DETALLES', margin + 26, currentY + 5.5);
+        doc.text('UBICACIÓN', margin + 116, currentY + 5.5);
+        doc.text('RESPONSABLE', margin + 148, currentY + 5.5);
+        currentY += 10;
+      };
+
+      renderTableHeader();
+
+      const items = activeTimeline.length > 0 ? activeTimeline : [];
+      if (items.length === 0) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(9);
+        doc.setTextColor(...secondaryColor);
+        doc.text('No hay actividades registradas en el itinerario.', margin + 4, currentY + 8);
+      } else {
+        items.forEach((item, index) => {
+          // Check page overflow
+          if (currentY > pageHeight - 28) {
+            renderFooter(pageCount);
+            doc.addPage();
+            pageCount++;
+            renderHeader();
+            renderTableHeader();
+          }
+
+          const hasNotes = Boolean(item.notes && item.notes.trim());
+          const rowHeight = hasNotes ? 14 : 10;
+
+          // Alternate row highlight
+          if (index % 2 === 0) {
+            doc.setFillColor(254, 252, 250);
+            doc.rect(margin, currentY - 1, contentWidth, rowHeight, 'F');
+          }
+
+          // Subtle bottom line
+          doc.setDrawColor(...borderColor);
+          doc.setLineWidth(0.2);
+          doc.line(margin, currentY + rowHeight - 1, margin + contentWidth, currentY + rowHeight - 1);
+
+          // Time Badge
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8.5);
+          doc.setTextColor(...accentColor);
+          doc.text(item.time || '--:--', margin + 4, currentY + 4.5);
+
+          // Activity Title
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(8.5);
+          doc.setTextColor(...primaryColor);
+          const actTitle = doc.splitTextToSize(item.activity || 'Actividad', 85);
+          doc.text(actTitle[0] || '', margin + 26, currentY + 4.5);
+
+          // Notes if present
+          if (hasNotes) {
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(...secondaryColor);
+            const notesLine = doc.splitTextToSize(item.notes || '', 85);
+            doc.text(notesLine[0] || '', margin + 26, currentY + 9.5);
+          }
+
+          // Location
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.setTextColor(...secondaryColor);
+          const locText = doc.splitTextToSize(item.location || '-', 28);
+          doc.text(locText[0] || '-', margin + 116, currentY + 4.5);
+
+          // Responsible
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(8);
+          doc.setTextColor(...secondaryColor);
+          const respText = doc.splitTextToSize(item.responsible || 'General', 25);
+          doc.text(respText[0] || 'General', margin + 148, currentY + 4.5);
+
+          currentY += rowHeight;
+        });
+      }
+
+      renderFooter(pageCount);
+      doc.save(cleanFileName);
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+    }
   };
 
   const mainWeddingDateRaw = weddingDetails?.wedding_date || currentWedding?.wedding_date || '';
@@ -348,7 +507,7 @@ export const TimelineModule: React.FC = () => {
             {currentWedding?.name || `Evento ${teamBrand}`}
           </span>
           <h2 className="font-serif text-4xl sm:text-5xl font-normal text-[#332C2A] tracking-tight">
-            Itinerario / Timeline<span className="text-[#D4A5A5]">.</span>
+            Itinerario<span className="text-[#D4A5A5]">.</span>
           </h2>
           <div className="flex flex-wrap items-center gap-3 text-xs text-[#786C68] mt-3">
             <span className="inline-flex items-center space-x-1.5">
@@ -378,7 +537,7 @@ export const TimelineModule: React.FC = () => {
           <button
             onClick={handleDownloadPDF}
             className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-[#EFE8DE] text-[#332C2A] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
-            title="Descargar cronograma e itinerario en PDF"
+            title="Descargar Itinerario en PDF"
           >
             <FileDown className="w-3.5 h-3.5 text-[#C48B81]" />
             <span>Descargar PDF</span>
@@ -1047,7 +1206,7 @@ export const TimelineModule: React.FC = () => {
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1] animate-in fade-in zoom-in-95">
             <h3 className="font-serif text-xl font-semibold text-[#2B2826] mb-4">
-              {editingEvent ? 'Editar Actividad' : 'Nueva Actividad en Timeline'}
+              {editingEvent ? 'Editar Actividad' : 'Nueva Actividad en Itinerario'}
             </h3>
 
             <form onSubmit={handleSaveEvent} className="space-y-3">

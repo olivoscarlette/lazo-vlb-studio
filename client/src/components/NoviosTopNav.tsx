@@ -13,17 +13,18 @@ interface NoviosTabDef {
 
 export const NoviosTopNav: React.FC<NoviosTopNavProps> = ({ currentTab, onSelectTab }) => {
   // Orden exacto autorizado para Novios:
-  // dashboard, reuniones, proveedores y pagos, checklist, invitados, civil, religiosa, documentos y timeline
+  // dashboard, reuniones, proveedores y pagos, checklist, invitados, mesas y layout, civil, religiosa, documentos e itinerario
   const tabs: NoviosTabDef[] = [
     { id: 'resumen', label: 'Dashboard' },
     { id: 'reuniones', label: 'Reuniones' },
     { id: 'proveedores', label: 'Proveedores y Pagos' },
     { id: 'checklist', label: 'Checklist' },
     { id: 'invitados', label: 'Invitados' },
+    { id: 'mesas', label: 'Mesas y Layout' },
     { id: 'civil', label: 'Civil' },
     { id: 'religiosa', label: 'Religiosa' },
     { id: 'documentos', label: 'Documentos' },
-    { id: 'timeline', label: 'Timeline' },
+    { id: 'timeline', label: 'Itinerario' },
   ];
 
   return (

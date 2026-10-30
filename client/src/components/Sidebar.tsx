@@ -81,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {
           title: 'LOGÍSTICA & INVITADOS',
           items: [
-            { id: 'timeline', label: 'Timeline', icon: Clock3 },
+            { id: 'timeline', label: 'Itinerario', icon: Clock3 },
             { id: 'invitados', label: 'Invitados y Confirmaciones', icon: Users2 },
             { id: 'mesas', label: 'Mesas y Layout', icon: Grid2x2Check },
             { id: 'civil', label: 'Civil', icon: Landmark },

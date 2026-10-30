@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { jsPDF } from 'jspdf';
 import { useAuth } from '../context/AuthContext';
 import { Table, LayoutElement, LayoutVersion, Guest } from '../types';
 import {
@@ -69,12 +70,149 @@ export const MesasLayoutModule: React.FC = () => {
   const isLocked = false;
 
   const handleDownloadPDF = () => {
-    const prevTitle = document.title;
-    document.title = `Layout_Mesas_${currentWedding?.name || 'Boda'}`.replace(/\s+/g, '_');
-    window.print();
-    setTimeout(() => {
-      document.title = prevTitle;
-    }, 1000);
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const weddingName = currentWedding?.name || 'Boda';
+      const cleanFileName = `Layout_Mesas_${weddingName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_')}.pdf`;
+
+      const primaryColor: [number, number, number] = [43, 40, 38];
+      const accentColor: [number, number, number] = [196, 139, 129];
+      const secondaryColor: [number, number, number] = [125, 111, 107];
+      const borderColor: [number, number, number] = [239, 232, 225];
+
+      const totalCapacity = tables.reduce((acc, t) => acc + (t.capacity || 0), 0);
+      const totalAssigned = tables.reduce((acc, t) => acc + (t.used_seats || (t.guests?.length || 0)), 0);
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 16;
+      const contentWidth = pageWidth - (margin * 2);
+
+      let currentY = 16;
+
+      const renderHeader = () => {
+        doc.setFillColor(250, 247, 245);
+        doc.roundedRect(margin, 12, contentWidth, 34, 3, 3, 'F');
+
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(...accentColor);
+        doc.text('LAZO STUDIO  ·  VIVA LA BRIDE', margin + 6, 20);
+
+        doc.setFont('times', 'bold');
+        doc.setFontSize(18);
+        doc.setTextColor(...primaryColor);
+        doc.text('DISTRIBUCIÓN DE MESAS Y LAYOUT', margin + 6, 28);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...secondaryColor);
+        const metaLine = `${weddingName}   |   ${tables.length} Mesas   |   ${totalCapacity} Lugares   |   ${totalAssigned} Asignados`;
+        doc.text(metaLine, margin + 6, 36);
+
+        doc.setDrawColor(...accentColor);
+        doc.setLineWidth(0.5);
+        doc.line(margin + 6, 40, margin + contentWidth - 6, 40);
+
+        currentY = 52;
+      };
+
+      const renderFooter = (pageNumber: number) => {
+        doc.setDrawColor(...borderColor);
+        doc.setLineWidth(0.3);
+        doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(...secondaryColor);
+        doc.text('Documento confidencial de acomodo · Lazo Studio', margin, pageHeight - 7);
+        doc.text(`Página ${pageNumber}`, pageWidth - margin, pageHeight - 7, { align: 'right' });
+      };
+
+      let pageCount = 1;
+      renderHeader();
+
+      // Summary Cards
+      doc.setFillColor(254, 252, 250);
+      doc.roundedRect(margin, currentY, contentWidth, 14, 2, 2, 'F');
+      doc.setDrawColor(...borderColor);
+      doc.setLineWidth(0.2);
+      doc.roundedRect(margin, currentY, contentWidth, 14, 2, 2, 'D');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(...primaryColor);
+      doc.text(`Total Mesas: ${tables.length}`, margin + 6, currentY + 9);
+      doc.text(`Capacidad Total: ${totalCapacity} pax`, margin + 48, currentY + 9);
+      doc.text(`Invitados Sentados: ${totalAssigned}`, margin + 100, currentY + 9);
+      doc.text(`Sin Asignar: ${unassignedGuests.length}`, margin + 145, currentY + 9);
+      currentY += 20;
+
+      // Render Tables
+      tables.forEach(table => {
+        const assignedGuests = table.guests || [];
+        const neededHeight = 16 + Math.ceil(assignedGuests.length / 2) * 6;
+
+        if (currentY + neededHeight > pageHeight - 24) {
+          renderFooter(pageCount);
+          doc.addPage();
+          pageCount++;
+          renderHeader();
+        }
+
+        // Table Header
+        doc.setFillColor(242, 237, 233);
+        doc.roundedRect(margin, currentY, contentWidth, 8, 1.5, 1.5, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...primaryColor);
+        doc.text(`${table.name.toUpperCase()}  (${table.type})`, margin + 4, currentY + 5.5);
+
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(...secondaryColor);
+        doc.text(`Capacidad: ${table.capacity}  |  Ocupados: ${table.used_seats || assignedGuests.length}`, margin + contentWidth - 4, currentY + 5.5, { align: 'right' });
+        currentY += 10;
+
+        if (assignedGuests.length === 0) {
+          doc.setFont('helvetica', 'italic');
+          doc.setFontSize(7.5);
+          doc.setTextColor(...secondaryColor);
+          doc.text('Sin invitados asignados en esta mesa.', margin + 4, currentY + 4);
+          currentY += 8;
+        } else {
+          // Render guests in 2 columns
+          for (let i = 0; i < assignedGuests.length; i += 2) {
+            const g1 = assignedGuests[i];
+            const g2 = assignedGuests[i + 1];
+
+            doc.setFont('helvetica', 'normal');
+            doc.setFontSize(7.5);
+            doc.setTextColor(...primaryColor);
+
+            const g1Text = `• ${g1.first_name} ${g1.last_name || ''}${g1.companion_count ? ` (+${g1.companion_count})` : ''}`;
+            doc.text(doc.splitTextToSize(g1Text, (contentWidth / 2) - 8)[0] || '', margin + 4, currentY + 4);
+
+            if (g2) {
+              const g2Text = `• ${g2.first_name} ${g2.last_name || ''}${g2.companion_count ? ` (+${g2.companion_count})` : ''}`;
+              doc.text(doc.splitTextToSize(g2Text, (contentWidth / 2) - 8)[0] || '', margin + (contentWidth / 2) + 4, currentY + 4);
+            }
+            currentY += 5;
+          }
+          currentY += 4;
+        }
+      });
+
+      renderFooter(pageCount);
+      doc.save(cleanFileName);
+    } catch (err) {
+      console.error('Error generating layout PDF:', err);
+    }
   };
 
   const fetchLayoutData = async () => {
