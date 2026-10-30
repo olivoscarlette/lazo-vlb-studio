@@ -4,6 +4,71 @@ import { authenticateToken, requireWeddingAccess, logAudit } from '../middleware
 
 const router = Router();
 
+const SACRAMENT_ORDER = [
+  'Entrada de novio y cortejo',
+  'Entrada de la novia',
+  'Rito del matrimonio',
+  'Imposición de anillos, arras y lazo',
+  'Ofertorio',
+  'Comunión',
+  'Entrega de ramo a la Virgen',
+  'Firmas',
+  'Salida de novios'
+];
+
+function sanitizeMusicNotes(raw: any): any {
+  if (!raw || typeof raw !== 'string') return raw;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return raw;
+
+    const normalize = (m: string) => {
+      const c = (m || '').trim().toLowerCase();
+      for (const s of SACRAMENT_ORDER) {
+        if (c === s.toLowerCase()) return s;
+      }
+      if (c.includes('cortejo') || (c.includes('entrada') && c.includes('novio'))) return 'Entrada de novio y cortejo';
+      if (c.includes('entrada') && c.includes('novia')) return 'Entrada de la novia';
+      if (c.includes('rito') || c.includes('consentimiento')) return 'Rito del matrimonio';
+      if (c.includes('anillo') || c.includes('arras') || c.includes('lazo')) return 'Imposición de anillos, arras y lazo';
+      if (c.includes('ofertorio') || c.includes('dones')) return 'Ofertorio';
+      if (c.includes('comunión') || c.includes('comunion')) return 'Comunión';
+      if (c.includes('ramo') || c.includes('virgen')) return 'Entrega de ramo a la Virgen';
+      if (c.includes('firma')) return 'Firmas';
+      if (c.includes('salida')) return 'Salida de novios';
+      return (m || '').trim();
+    };
+
+    const map = new Map<string, any>();
+    for (const item of parsed) {
+      const norm = normalize(item.moment);
+      const key = norm.toLowerCase();
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, { ...item, moment: norm });
+      } else {
+        const hasReal = item.song && item.song.trim() && item.song.trim().toLowerCase() !== 'por definir';
+        if (hasReal) {
+          map.set(key, { ...existing, song: item.song });
+        }
+      }
+    }
+
+    const deduplicated = Array.from(map.values()).sort((a, b) => {
+      const idxA = SACRAMENT_ORDER.findIndex(m => m.toLowerCase() === a.moment.toLowerCase());
+      const idxB = SACRAMENT_ORDER.findIndex(m => m.toLowerCase() === b.moment.toLowerCase());
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return a.moment.localeCompare(b.moment);
+    });
+
+    return JSON.stringify(deduplicated);
+  } catch {
+    return raw;
+  }
+}
+
 // GET /api/weddings/:weddingId/civil - Get civil ceremony details and automatically reused vendors
 router.get('/:weddingId/civil', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
@@ -155,6 +220,10 @@ router.get('/:weddingId/religious', authenticateToken, requireWeddingAccess, (re
     }
   });
 
+  if (religious && religious.music_notes) {
+    religious.music_notes = sanitizeMusicNotes(religious.music_notes);
+  }
+
   return res.json({
     religious,
     reusedVendors: religiousVendors
@@ -167,6 +236,7 @@ router.put('/:weddingId/religious', authenticateToken, requireWeddingAccess, (re
   const { date, time, temple_name, officiant, music_notes, readings_notes, requirements_status, notes } = req.body;
   const now = new Date().toISOString();
   const reqJson = JSON.stringify(Array.isArray(requirements_status) ? requirements_status : []);
+  const cleanMusicNotes = sanitizeMusicNotes(music_notes);
 
   db.prepare(`
     INSERT INTO religious_ceremony (id, wedding_id, date, time, temple_name, officiant, music_notes, readings_notes, requirements_status, notes, updated_at)
@@ -183,7 +253,7 @@ router.put('/:weddingId/religious', authenticateToken, requireWeddingAccess, (re
       updated_at = excluded.updated_at
   `).run(
     'rel_' + weddingId, weddingId, date || null, time || null, temple_name || null,
-    officiant || null, music_notes || null, readings_notes || null, reqJson, notes || null, now
+    officiant || null, cleanMusicNotes || null, readings_notes || null, reqJson, notes || null, now
   );
 
   logAudit(weddingId, req.user!.id, req.user!.name, 'ACTUALIZAR_IGLESIA', 'CEREMONY_RELIGIOUS', weddingId, 'Actualización de datos de Ceremonia Religiosa');

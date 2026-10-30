@@ -19,14 +19,79 @@ interface ReadingItem {
   reader: string;
 }
 
+export const SACRAMENT_MOMENTS_ORDER = [
+  'Entrada de novio y cortejo',
+  'Entrada de la novia',
+  'Rito del matrimonio',
+  'Imposición de anillos, arras y lazo',
+  'Ofertorio',
+  'Comunión',
+  'Entrega de ramo a la Virgen',
+  'Firmas',
+  'Salida de novios'
+];
+
+export const normalizeMomentName = (m: string): string => {
+  const clean = (m || '').trim().toLowerCase();
+  for (const canonical of SACRAMENT_MOMENTS_ORDER) {
+    if (clean === canonical.toLowerCase()) return canonical;
+  }
+  if (clean.includes('cortejo') || (clean.includes('entrada') && clean.includes('novio'))) return 'Entrada de novio y cortejo';
+  if (clean.includes('entrada') && clean.includes('novia')) return 'Entrada de la novia';
+  if (clean.includes('rito') || clean.includes('consentimiento')) return 'Rito del matrimonio';
+  if (clean.includes('anillo') || clean.includes('arras') || clean.includes('lazo')) return 'Imposición de anillos, arras y lazo';
+  if (clean.includes('ofertorio') || clean.includes('dones')) return 'Ofertorio';
+  if (clean.includes('comunión') || clean.includes('comunion')) return 'Comunión';
+  if (clean.includes('ramo') || clean.includes('virgen')) return 'Entrega de ramo a la Virgen';
+  if (clean.includes('firma')) return 'Firmas';
+  if (clean.includes('salida')) return 'Salida de novios';
+  return (m || '').trim();
+};
+
+export const deduplicateAndSortMusic = (items: MusicItem[]): MusicItem[] => {
+  const map = new Map<string, MusicItem>();
+
+  for (const item of items) {
+    const canonical = normalizeMomentName(item.moment);
+    const key = canonical.toLowerCase();
+    const existing = map.get(key);
+
+    if (!existing) {
+      map.set(key, { ...item, moment: canonical });
+    } else {
+      const currentSong = (existing.song || '').trim();
+      const newSong = (item.song || '').trim();
+      const hasRealNew = newSong && newSong.toLowerCase() !== 'por definir';
+      const hasRealCurrent = currentSong && currentSong.toLowerCase() !== 'por definir';
+
+      // Keep the item with an actual entered song
+      if (hasRealNew && !hasRealCurrent) {
+        map.set(key, { ...existing, song: item.song });
+      } else if (hasRealNew && hasRealCurrent && newSong !== currentSong) {
+        map.set(key, { ...existing, song: item.song });
+      }
+    }
+  }
+
+  return Array.from(map.values()).sort((a, b) => {
+    const idxA = SACRAMENT_MOMENTS_ORDER.findIndex(m => m.toLowerCase() === a.moment.toLowerCase());
+    const idxB = SACRAMENT_MOMENTS_ORDER.findIndex(m => m.toLowerCase() === b.moment.toLowerCase());
+    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+    if (idxA !== -1) return -1;
+    if (idxB !== -1) return 1;
+    return a.moment.localeCompare(b.moment);
+  });
+};
+
 const parseMusicList = (raw?: string): MusicItem[] => {
   if (!raw || !raw.trim()) return [];
+  let items: MusicItem[] = [];
   try {
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
+    if (Array.isArray(parsed)) items = parsed;
   } catch {
     // Legacy plain text fallback: split by lines or semicolons into list items
-    return raw
+    items = raw
       .split(/\n|;/)
       .map(s => s.trim())
       .filter(Boolean)
@@ -46,7 +111,7 @@ const parseMusicList = (raw?: string): MusicItem[] => {
         };
       });
   }
-  return [];
+  return deduplicateAndSortMusic(items);
 };
 
 const parseReadingsList = (raw?: string): ReadingItem[] => {
@@ -273,14 +338,29 @@ export const ReligiosaModule: React.FC = () => {
   const handleAddMusicItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMusicSong.trim()) return;
-    const updated: MusicItem[] = [
-      ...musicList,
-      {
-        id: `music_${Date.now()}`,
-        moment: newMusicMoment,
-        song: newMusicSong.trim()
-      }
-    ];
+    const canonical = normalizeMomentName(newMusicMoment);
+    const key = canonical.toLowerCase();
+
+    // Check if moment already exists in musicList
+    const existingIdx = musicList.findIndex(m => normalizeMomentName(m.moment).toLowerCase() === key);
+    let updated: MusicItem[];
+
+    if (existingIdx !== -1) {
+      // Update existing moment - NEVER DUPLICATE!
+      updated = musicList.map((item, idx) =>
+        idx === existingIdx ? { ...item, song: newMusicSong.trim() } : item
+      );
+    } else {
+      updated = deduplicateAndSortMusic([
+        ...musicList,
+        {
+          id: `music_${Date.now()}`,
+          moment: canonical,
+          song: newMusicSong.trim()
+        }
+      ]);
+    }
+
     setMusicList(updated);
     setNewMusicSong('');
     await handleSave({ music_notes: JSON.stringify(updated) });
@@ -301,27 +381,28 @@ export const ReligiosaModule: React.FC = () => {
   };
 
   const handleLoadSacramentMoments = async () => {
-    const currentMoments = new Set(musicList.map(m => m.moment.toLowerCase().trim()));
-    const missing = SACRAMENT_MOMENTS_ORDER.filter(m => !currentMoments.has(m.toLowerCase()));
-    if (missing.length === 0) return;
+    // Preserve any existing songs that were entered (e.g. "ok")
+    const existingMap = new Map<string, string>();
+    for (const item of musicList) {
+      const norm = normalizeMomentName(item.moment).toLowerCase();
+      const current = existingMap.get(norm);
+      const isReal = item.song && item.song.trim().toLowerCase() !== 'por definir';
+      if (!current || isReal) {
+        existingMap.set(norm, item.song.trim());
+      }
+    }
 
-    const newItems: MusicItem[] = missing.map((moment, idx) => ({
-      id: `music_sacr_${Date.now()}_${idx}`,
-      moment,
-      song: 'Por definir'
-    }));
-
-    const combined = [...musicList, ...newItems].sort((a, b) => {
-      const idxA = SACRAMENT_MOMENTS_ORDER.findIndex(m => m.toLowerCase() === a.moment.toLowerCase());
-      const idxB = SACRAMENT_MOMENTS_ORDER.findIndex(m => m.toLowerCase() === b.moment.toLowerCase());
-      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-      if (idxA !== -1) return -1;
-      if (idxB !== -1) return 1;
-      return 0;
+    const fullSacramentList: MusicItem[] = SACRAMENT_MOMENTS_ORDER.map((moment, idx) => {
+      const existingSong = existingMap.get(moment.toLowerCase());
+      return {
+        id: `music_sacr_${idx + 1}`,
+        moment,
+        song: existingSong && existingSong.trim() ? existingSong : 'Por definir'
+      };
     });
 
-    setMusicList(combined);
-    await handleSave({ music_notes: JSON.stringify(combined) });
+    setMusicList(fullSacramentList);
+    await handleSave({ music_notes: JSON.stringify(fullSacramentList) });
   };
 
   const handleRemoveMusicItem = async (id: string) => {
@@ -360,18 +441,6 @@ export const ReligiosaModule: React.FC = () => {
   }
 
   const confirmedGuestNames = confirmedGuests.map(g => `${g.first_name} ${g.last_name}`.trim());
-
-  const SACRAMENT_MOMENTS_ORDER = [
-    'Entrada de novio y cortejo',
-    'Entrada de la novia',
-    'Rito del matrimonio',
-    'Imposición de anillos, arras y lazo',
-    'Ofertorio',
-    'Comunión',
-    'Entrega de ramo a la Virgen',
-    'Firmas',
-    'Salida de novios'
-  ];
 
   const liturgicalMoments = SACRAMENT_MOMENTS_ORDER;
 
@@ -757,12 +826,21 @@ export const ReligiosaModule: React.FC = () => {
 
           <form onSubmit={handleAddMusicItem} className="pt-3 border-t border-[#FAF8F5] space-y-2.5">
             <div className="text-xs font-semibold text-[#2B2826]">
-              Agregar pieza al programa musical:
+              Asignar o actualizar canción por momento litúrgico:
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <select
                 value={newMusicMoment}
-                onChange={e => setNewMusicMoment(e.target.value)}
+                onChange={e => {
+                  const m = e.target.value;
+                  setNewMusicMoment(m);
+                  const found = musicList.find(item => normalizeMomentName(item.moment).toLowerCase() === normalizeMomentName(m).toLowerCase());
+                  if (found && found.song && found.song !== 'Por definir') {
+                    setNewMusicSong(found.song);
+                  } else {
+                    setNewMusicSong('');
+                  }
+                }}
                 className="px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
               >
                 {liturgicalMoments.map(m => (
@@ -783,7 +861,11 @@ export const ReligiosaModule: React.FC = () => {
               className="w-full py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs disabled:opacity-40 transition cursor-pointer flex items-center justify-center space-x-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Agregar al Listado Musical</span>
+              <span>
+                {musicList.some(m => normalizeMomentName(m.moment).toLowerCase() === normalizeMomentName(newMusicMoment).toLowerCase())
+                  ? 'Guardar / Actualizar Canción de este Momento'
+                  : 'Asignar Canción al Momento'}
+              </span>
             </button>
           </form>
         </div>
