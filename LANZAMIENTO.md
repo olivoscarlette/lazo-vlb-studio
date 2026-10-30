@@ -4,12 +4,13 @@ La aplicación **LAZO — VLB STUDIO · PLANNING** se encuentra compilada y list
 
 ---
 
-## 1. Credenciales Iniciales de Acceso
+## 1. Credenciales de la Cuenta Administradora
 
-Como ya se retiraron los botones de prueba del Login para que ningún cliente los vea, puedes ingresar directamente con tu cuenta de **Administradora**:
+Puedes ingresar directamente con tu cuenta oficial de **Administradora**:
 
-- **Correo**: `admin@vlb.studio`
-- **Contraseña inicial**: `admin123`
+- **Correo**: `olivoscarlette@gmail.com`
+- **Contraseña**: `yukiAS2711`
+- **Nombre**: `Scarlette Olivo`
 
 > **Primer paso al lanzar**: Entra a **Dashboard General VLB → Usuarios y Roles**, haz clic en **Editar** sobre tu usuario (`Valeria Lozano`) y actualiza tu correo real y tu contraseña definitiva. Desde esa misma pestaña puedes crear las cuentas reales de tu equipo (`COORDINADOR`, `STAFF`) y de los `NOVIOS` de cada boda.
 

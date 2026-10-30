@@ -1102,11 +1102,11 @@ export function seedInitialData() {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     adminId,
-    'Valeria Lozano (VLB Director)',
-    'admin@vlb.studio',
-    bcrypt.hashSync('admin123', salt),
+    'Scarlette Olivo',
+    'olivoscarlette@gmail.com',
+    bcrypt.hashSync('yukiAS2711', salt),
     'ADMINISTRADOR',
-    '+52 55 1234 5678',
+    '+52 81 2866 3440',
     null,
     now,
     now
