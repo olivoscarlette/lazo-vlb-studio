@@ -28,7 +28,7 @@ export const ProveedoresPagosModule: React.FC = () => {
     phone: '+52 ',
     type: 'Fotografía',
     locations: ['RECEPCIÓN'],
-    costo_real: 0,
+    costo_real: '' as any,
     payment_due_date: '',
     contact_person: '',
     notes: ''
@@ -90,7 +90,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       phone: '+52 ',
       type: catalogTypes[0] || 'Fotografía',
       locations: ['RECEPCIÓN'],
-      costo_real: 0,
+      costo_real: '' as any,
       payment_due_date: '',
       contact_person: '',
       notes: ''
@@ -106,13 +106,26 @@ export const ProveedoresPagosModule: React.FC = () => {
       phone: v.phone || '+52 ',
       type: v.type || 'Otro',
       locations: Array.isArray(v.locations) && v.locations.length > 0 ? v.locations : ['RECEPCIÓN'],
-      costo_real: v.costo_real || 0,
+      costo_real: v.costo_real && v.costo_real > 0 ? String(v.costo_real) as any : '',
       payment_due_date: v.payment_due_date || '',
       contact_person: v.contact_person || '',
       notes: v.notes || ''
     });
     setVendorError('');
     setShowVendorModal(true);
+  };
+
+  const handleOpenAddPayment = () => {
+    setPaymentForm({
+      vendor_id: '',
+      concept: '',
+      amount: '',
+      payment_date: new Date().toISOString().split('T')[0],
+      payment_method: 'Transferencia SPEI',
+      notes: ''
+    });
+    setPaymentError('');
+    setShowPaymentModal(true);
   };
 
   // Helper for Payment Due Date status & alerts
@@ -201,13 +214,18 @@ export const ProveedoresPagosModule: React.FC = () => {
         : `/api/weddings/${currentWedding!.id}/vendors`;
       const method = editingVendor ? 'PUT' : 'POST';
 
+      const payload = {
+        ...vendorForm,
+        costo_real: parseFloat(String(vendorForm.costo_real)) || 0
+      };
+
       const res = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(vendorForm)
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -219,7 +237,7 @@ export const ProveedoresPagosModule: React.FC = () => {
         phone: '+52 ',
         type: 'Fotografía',
         locations: ['RECEPCIÓN'],
-        costo_real: 0,
+        costo_real: '' as any,
         contact_person: '',
         notes: '',
         payment_due_date: ''
@@ -323,7 +341,7 @@ export const ProveedoresPagosModule: React.FC = () => {
 
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setShowPaymentModal(true)}
+            onClick={handleOpenAddPayment}
             className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-lg border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
           >
             <DollarSign className="w-3.5 h-3.5 text-[#6E8C70]" />
@@ -419,11 +437,12 @@ export const ProveedoresPagosModule: React.FC = () => {
                           setPaymentForm({
                             vendor_id: v.id,
                             concept: `Liquidación saldo ${v.name}`,
-                            amount: String(v.saldo_restante || ''),
+                            amount: v.saldo_restante && v.saldo_restante > 0 ? String(v.saldo_restante) : '',
                             payment_date: new Date().toISOString().split('T')[0],
                             payment_method: 'Transferencia SPEI',
                             notes: ''
                           });
+                          setPaymentError('');
                           setShowPaymentModal(true);
                         }}
                         className="text-xs text-[#C48B81] hover:underline font-bold ml-1 cursor-pointer"
@@ -718,11 +737,16 @@ export const ProveedoresPagosModule: React.FC = () => {
                 <div>
                   <label className="block text-xs font-bold text-[#2B2826] uppercase tracking-wider mb-1">Costo ($)</label>
                   <input
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={vendorForm.costo_real}
-                    onChange={e => setVendorForm({ ...vendorForm, costo_real: parseFloat(e.target.value) || 0 })}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
+                    value={vendorForm.costo_real === 0 || vendorForm.costo_real === '0' ? '' : vendorForm.costo_real}
+                    onFocus={e => e.target.select()}
+                    onChange={e => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '');
+                      const sanitized = val.length > 1 && val.startsWith('0') && !val.startsWith('0.') ? val.replace(/^0+/, '') : val;
+                      setVendorForm({ ...vendorForm, costo_real: sanitized });
+                    }}
                     className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
@@ -857,12 +881,17 @@ export const ProveedoresPagosModule: React.FC = () => {
                 <div>
                   <label className="block text-xs font-bold text-[#2B2826] uppercase tracking-wider mb-1">Monto Pagado ($) *</label>
                   <input
-                    type="number"
-                    min="1"
+                    type="text"
+                    inputMode="decimal"
                     required
-                    placeholder="15000"
-                    value={paymentForm.amount}
-                    onChange={e => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                    placeholder="0.00"
+                    value={paymentForm.amount === '0' || paymentForm.amount === 0 ? '' : paymentForm.amount}
+                    onFocus={e => e.target.select()}
+                    onChange={e => {
+                      const val = e.target.value.replace(/[^0-9.]/g, '');
+                      const sanitized = val.length > 1 && val.startsWith('0') && !val.startsWith('0.') ? val.replace(/^0+/, '') : val;
+                      setPaymentForm({ ...paymentForm, amount: sanitized });
+                    }}
                     className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                   />
                 </div>
