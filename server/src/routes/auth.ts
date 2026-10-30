@@ -237,7 +237,7 @@ router.get('/me', authenticateToken, (req, res) => {
       ORDER BY w.wedding_date ASC
     `).all(req.user.id);
   } else if (req.user.role === 'NOVIOS' && req.user.wedding_id) {
-    const wedding = db.prepare('SELECT id, name, slug, wedding_date, status FROM weddings WHERE id = ?').get(req.user.wedding_id);
+    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(req.user.wedding_id);
     if (wedding) assignedWeddings = [wedding];
   }
 

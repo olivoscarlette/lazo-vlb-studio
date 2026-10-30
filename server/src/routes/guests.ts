@@ -455,17 +455,21 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
 
 // POST /api/weddings/:weddingId/guests/:guestId/send-whatsapp
 // Enviar invitación / confirmación de RSVP por WhatsApp a un invitado individual
-// SOLO ADMINISTRADOR y COORDINADOR
-router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requireWeddingAccess, requireRole(['ADMINISTRADOR', 'COORDINADOR']), async (req, res) => {
+// ADMINISTRADOR, COORDINADOR o NOVIOS con Add-on activo
+router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requireWeddingAccess, requireRole(['ADMINISTRADOR', 'COORDINADOR', 'NOVIOS']), async (req, res) => {
   const { weddingId, guestId } = req.params;
 
   try {
+    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+    if (req.user?.role === 'NOVIOS' && !wedding?.has_whatsapp_rsvp) {
+      return res.status(403).json({ error: 'El servicio de WhatsApp RSVP no está activo para esta boda. Contacta a tu coordinadora para activarlo.' });
+    }
+
     const guest = db.prepare('SELECT * FROM guests WHERE id = ? AND wedding_id = ?').get(guestId, weddingId) as any;
     if (!guest) {
       return res.status(404).json({ error: 'Invitado no encontrado.' });
     }
 
-    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
     const coupleNames = wedding
       ? (wedding.partner_1_name && wedding.partner_2_name
           ? `${wedding.partner_1_name} & ${wedding.partner_2_name}`
@@ -526,12 +530,16 @@ router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requ
 
 // POST /api/weddings/:weddingId/guests/send-whatsapp-bulk
 // Enviar invitación / confirmación en lote a todos los invitados pendientes o seleccionados
-// SOLO ADMINISTRADOR y COORDINADOR
-router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireWeddingAccess, requireRole(['ADMINISTRADOR', 'COORDINADOR']), async (req, res) => {
+// ADMINISTRADOR, COORDINADOR o NOVIOS con Add-on activo
+router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireWeddingAccess, requireRole(['ADMINISTRADOR', 'COORDINADOR', 'NOVIOS']), async (req, res) => {
   const { weddingId } = req.params;
   const { guestIds, onlyPending = true } = req.body || {};
 
   try {
+    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+    if (req.user?.role === 'NOVIOS' && !wedding?.has_whatsapp_rsvp) {
+      return res.status(403).json({ error: 'El servicio de WhatsApp RSVP no está activo para esta boda. Contacta a tu coordinadora para activarlo.' });
+    }
     let guestsToProcess: any[] = [];
     if (Array.isArray(guestIds) && guestIds.length > 0) {
       const placeholders = guestIds.map(() => '?').join(',');
@@ -548,7 +556,6 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
       return res.status(400).json({ error: 'No hay invitados para procesar con los filtros seleccionados.' });
     }
 
-    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
     const coupleNames = wedding
       ? (wedding.partner_1_name && wedding.partner_2_name
           ? `${wedding.partner_1_name} & ${wedding.partner_2_name}`

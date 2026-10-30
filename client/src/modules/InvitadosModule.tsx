@@ -74,8 +74,8 @@ export const InvitadosModule: React.FC = () => {
   const [chatError, setChatError] = useState<string | null>(null);
   const [loadingChat, setLoadingChat] = useState(false);
 
-  // Permiso exclusivo: solo Administradores y Coordinadores pueden enviar WhatsApps
-  const canSendWhatsApp = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR';
+  // Permiso para WhatsApp: Administradores, Coordinadores o Bodas con Add-on RSVP WhatsApp activo
+  const canSendWhatsApp = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR' || Boolean(currentWedding?.has_whatsapp_rsvp);
 
   // Form for Add/Edit
   const [formData, setFormData] = useState({
@@ -2216,13 +2216,13 @@ export const InvitadosModule: React.FC = () => {
 
             <div className="space-y-2">
               <a
-                href="https://wa.me/5218118000000?text=Hola%20Lazo%20Studio!%20Me%20gustar%C3%ADa%20cotizar%20el%20servicio%20de%20env%C3%ADo%20de%20invitaciones%20y%20confirmaci%C3%B3n%20RSVP%20para%20mi%20evento."
+                href="https://wa.me/528128663440?text=Hola%20Viva%20la%20Bride!%20Soy%20cliente%20de%20Lazo%20Studio%20y%20me%20gustar%C3%ADa%20activar%20el%20Add-on%20de%20env%C3%ADo%20de%20invitaciones%20y%20confirmaci%C3%B3n%20RSVP%20por%20WhatsApp%20para%20mi%20boda."
                 target="_blank"
                 rel="noreferrer"
                 className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-md shadow-[#C48B81]/20 transition cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Cotizar este servicio con Lazo Studio</span>
+                <span>Solicitar activación por WhatsApp</span>
               </a>
               <button
                 onClick={() => setShowLazoInvitationUpgradeModal(false)}

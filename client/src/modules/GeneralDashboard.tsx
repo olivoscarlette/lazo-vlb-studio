@@ -144,6 +144,8 @@ export const GeneralDashboard: React.FC = () => {
     reception_time: '18:00',
     estimated_guests: '150',
     package_type: 'Integral',
+    has_whatsapp_rsvp: false,
+    has_layout_2d: false,
     notes: '',
     checklist_option: 'full' as 'full' | 'empty'
   });
@@ -164,6 +166,8 @@ export const GeneralDashboard: React.FC = () => {
     reception_time: '18:00',
     estimated_guests: '150',
     package_type: 'Integral',
+    has_whatsapp_rsvp: false,
+    has_layout_2d: false,
     status: 'PLANNING',
     notes: ''
   });
@@ -206,6 +210,8 @@ export const GeneralDashboard: React.FC = () => {
       reception_time: w.reception_time || '18:00',
       estimated_guests: String(w.estimated_guests || 0),
       package_type: w.package_type || 'Integral',
+      has_whatsapp_rsvp: Boolean(w.has_whatsapp_rsvp),
+      has_layout_2d: Boolean(w.has_layout_2d),
       status: w.status || 'PLANNING',
       notes: w.notes || ''
     });
@@ -351,6 +357,8 @@ export const GeneralDashboard: React.FC = () => {
         reception_time: '18:00',
         estimated_guests: '150',
         package_type: 'Integral',
+        has_whatsapp_rsvp: false,
+        has_layout_2d: false,
         notes: '',
         checklist_option: 'full'
       });
@@ -1695,11 +1703,26 @@ export const GeneralDashboard: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Badge de cuenta regresiva */}
-                        <div className="mb-3.5">
+                        {/* Badge de cuenta regresiva y Add-ons */}
+                        <div className="flex flex-wrap items-center gap-1.5 mb-3.5">
                           <span className="inline-flex items-center text-xs font-medium text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-3.5 py-1 rounded-full select-none">
                             {countdownText}
                           </span>
+                          {w.package_type === 'Planner Virtual' && (
+                            <span className="text-[10px] font-semibold text-[#7D6F6B] bg-[#FAF7F5] border border-[#EFE8E1] px-2 py-0.5 rounded-full select-none">
+                              Virtual
+                            </span>
+                          )}
+                          {Boolean(w.has_whatsapp_rsvp) && (
+                            <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo WhatsApp RSVP Activo">
+                              <span>📲</span> WhatsApp
+                            </span>
+                          )}
+                          {Boolean(w.has_layout_2d) && (
+                            <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo Plano 2D Activo">
+                              <span>🪑</span> Plano 2D
+                            </span>
+                          )}
                         </div>
 
                         {/* Lugar / Sede */}
@@ -3357,6 +3380,66 @@ export const GeneralDashboard: React.FC = () => {
                     </select>
                   </div>
                 )}
+
+                {/* Módulos y Servicios Adicionales (Add-ons Activables) */}
+                <div className="mt-3 p-3.5 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase text-[#7D6F6B] tracking-wider">
+                      Módulos Adicionales (Add-ons)
+                    </span>
+                    <span className="text-[10px] text-[#A86B60] font-semibold bg-[#F7EDEB] px-2 py-0.5 rounded-full border border-[#ECD9D5]">
+                      Activación Flexible
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    {/* Add-on 1: Confirmaciones RSVP WhatsApp */}
+                    <label className={`flex items-start justify-between p-2.5 rounded-xl border transition cursor-pointer ${
+                      formData.has_whatsapp_rsvp
+                        ? 'bg-white border-[#16A34A] ring-1 ring-[#16A34A]/20 shadow-2xs'
+                        : 'bg-white border-[#EFE8E1] hover:border-[#D1C7BD]'
+                    }`}>
+                      <div className="min-w-0 pr-2">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-xs">📲</span>
+                          <span className="text-xs font-semibold text-[#2B2826]">RSVP WhatsApp</span>
+                        </div>
+                        <p className="text-[10px] text-[#7D6F6B] leading-tight">
+                          Invitaciones y confirmaciones automáticas
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={formData.has_whatsapp_rsvp}
+                        onChange={e => setFormData({ ...formData, has_whatsapp_rsvp: e.target.checked })}
+                        className="mt-1 h-4 w-4 rounded text-[#16A34A] focus:ring-[#16A34A] accent-[#16A34A] cursor-pointer"
+                      />
+                    </label>
+
+                    {/* Add-on 2: Plano 2D Interactivo */}
+                    <label className={`flex items-start justify-between p-2.5 rounded-xl border transition cursor-pointer ${
+                      formData.has_layout_2d
+                        ? 'bg-white border-[#C48B81] ring-1 ring-[#C48B81]/20 shadow-2xs'
+                        : 'bg-white border-[#EFE8E1] hover:border-[#D1C7BD]'
+                    }`}>
+                      <div className="min-w-0 pr-2">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-xs">🪑</span>
+                          <span className="text-xs font-semibold text-[#2B2826]">Plano 2D Layout</span>
+                        </div>
+                        <p className="text-[10px] text-[#7D6F6B] leading-tight">
+                          Distribución a escala y planimetría técnica
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={formData.has_layout_2d}
+                        onChange={e => setFormData({ ...formData, has_layout_2d: e.target.checked })}
+                        className="mt-1 h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
+                      />
+                    </label>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -3685,6 +3768,66 @@ export const GeneralDashboard: React.FC = () => {
                       </select>
                     </div>
                   )}
+
+                  {/* Módulos y Servicios Adicionales (Add-ons Activables) en Edición */}
+                  <div className="mt-3 p-3 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase text-[#7D6F6B] tracking-wider">
+                        Módulos Adicionales (Add-ons)
+                      </span>
+                      <span className="text-[10px] text-[#A86B60] font-semibold bg-[#F7EDEB] px-2 py-0.5 rounded-full border border-[#ECD9D5]">
+                        Activar con 1 Clic
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      {/* Add-on 1: Confirmaciones RSVP WhatsApp */}
+                      <label className={`flex items-start justify-between p-2.5 rounded-xl border transition cursor-pointer ${
+                        editFormData.has_whatsapp_rsvp
+                          ? 'bg-white border-[#16A34A] ring-1 ring-[#16A34A]/20 shadow-2xs'
+                          : 'bg-white border-[#EFE8E1] hover:border-[#D1C7BD]'
+                      }`}>
+                        <div className="min-w-0 pr-2">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-xs">📲</span>
+                            <span className="text-xs font-semibold text-[#2B2826]">RSVP WhatsApp</span>
+                          </div>
+                          <p className="text-[10px] text-[#7D6F6B] leading-tight">
+                            Invitaciones y confirmaciones automáticas
+                          </p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={editFormData.has_whatsapp_rsvp}
+                          onChange={e => setEditFormData({ ...editFormData, has_whatsapp_rsvp: e.target.checked })}
+                          className="mt-1 h-4 w-4 rounded text-[#16A34A] focus:ring-[#16A34A] accent-[#16A34A] cursor-pointer"
+                        />
+                      </label>
+
+                      {/* Add-on 2: Plano 2D Interactivo */}
+                      <label className={`flex items-start justify-between p-2.5 rounded-xl border transition cursor-pointer ${
+                        editFormData.has_layout_2d
+                          ? 'bg-white border-[#C48B81] ring-1 ring-[#C48B81]/20 shadow-2xs'
+                          : 'bg-white border-[#EFE8E1] hover:border-[#D1C7BD]'
+                      }`}>
+                        <div className="min-w-0 pr-2">
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <span className="text-xs">🪑</span>
+                            <span className="text-xs font-semibold text-[#2B2826]">Plano 2D Layout</span>
+                          </div>
+                          <p className="text-[10px] text-[#7D6F6B] leading-tight">
+                            Distribución a escala y planimetría técnica
+                          </p>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={editFormData.has_layout_2d}
+                          onChange={e => setEditFormData({ ...editFormData, has_layout_2d: e.target.checked })}
+                          className="mt-1 h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 <div>

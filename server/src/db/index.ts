@@ -107,6 +107,8 @@ export function initDatabase() {
       invitation_pdf_filename TEXT,
       dress_code TEXT,
       no_children INTEGER DEFAULT 0,
+      has_whatsapp_rsvp INTEGER DEFAULT 0,
+      has_layout_2d INTEGER DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -515,6 +517,12 @@ export function initDatabase() {
   } catch {}
   try {
     db.exec("ALTER TABLE weddings ADD COLUMN event_type TEXT DEFAULT 'Boda Completa';");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN has_whatsapp_rsvp INTEGER DEFAULT 0;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN has_layout_2d INTEGER DEFAULT 0;");
   } catch {}
 
   // Update legacy templates to strictly use "Viva la Bride"

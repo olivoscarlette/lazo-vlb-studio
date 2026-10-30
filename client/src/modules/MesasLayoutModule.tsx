@@ -75,7 +75,8 @@ export const MesasLayoutModule: React.FC = () => {
     currentWedding.package_type.toLowerCase().includes('virtual') ||
     currentWedding.package_type.toLowerCase().includes('autónomo')
   );
-  const isLockedForVirtualNovios = isNovios && isPlannerVirtual;
+  const hasLayout2dAddon = Boolean(currentWedding?.has_layout_2d);
+  const isLockedForVirtualNovios = isNovios && isPlannerVirtual && !hasLayout2dAddon;
 
   const layoutUpgradeWhatsAppUrl =
     'https://wa.me/528128663440?text=' +

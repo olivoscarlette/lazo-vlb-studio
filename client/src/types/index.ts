@@ -59,6 +59,8 @@ export interface Wedding {
   invitation_pdf_filename?: string | null;
   dress_code?: string | null;
   no_children?: number | boolean | null;
+  has_whatsapp_rsvp?: number | boolean;
+  has_layout_2d?: number | boolean;
   updated_at?: string;
   team?: WeddingTeamMember[];
   stats?: WeddingStats;

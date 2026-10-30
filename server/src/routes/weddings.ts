@@ -144,6 +144,8 @@ router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) =
     notes,
     package_type,
     event_type = 'Boda Completa',
+    has_whatsapp_rsvp = 0,
+    has_layout_2d = 0,
     populate_checklist = true
   } = req.body;
 
@@ -162,12 +164,14 @@ router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) =
     INSERT INTO weddings (
       id, name, slug, partner_1_name, partner_2_name, wedding_date,
       ceremony_time, reception_time, ceremony_venue, reception_venue,
-      estimated_guests, status, notes, package_type, event_type, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PLANNING', ?, ?, ?, ?, ?)
+      estimated_guests, status, notes, package_type, event_type,
+      has_whatsapp_rsvp, has_layout_2d, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PLANNING', ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id, name, slug, p1, p2, wedding_date,
     ceremony_time || null, reception_time || null, ceremony_venue || null, reception_venue || null,
-    estimated_guests ? parseInt(estimated_guests, 10) : 0, notes || null, package_type || 'Integral', event_type || 'Boda Completa', now, now
+    estimated_guests ? parseInt(estimated_guests, 10) : 0, notes || null, package_type || 'Integral', event_type || 'Boda Completa',
+    has_whatsapp_rsvp ? 1 : 0, has_layout_2d ? 1 : 0, now, now
   );
 
   // Automatically assign the admin who created it
@@ -340,6 +344,7 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     estimated_guests, status, notes, package_type, floor_plan_url,
     invitation_type, invitation_url, invitation_pdf_url, invitation_pdf_filename,
     dress_code, no_children, event_type,
+    has_whatsapp_rsvp, has_layout_2d,
     expected_updated_at
   } = req.body;
 
@@ -363,7 +368,8 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
       ceremony_time = ?, reception_time = ?, ceremony_venue = ?, reception_venue = ?,
       estimated_guests = ?, status = ?, notes = ?, package_type = ?, floor_plan_url = ?,
       invitation_type = ?, invitation_url = ?, invitation_pdf_url = ?, invitation_pdf_filename = ?,
-      dress_code = ?, no_children = ?, event_type = ?, updated_at = ?
+      dress_code = ?, no_children = ?, event_type = ?,
+      has_whatsapp_rsvp = ?, has_layout_2d = ?, updated_at = ?
     WHERE id = ?
   `).run(
     name || wedding.name,
@@ -386,6 +392,8 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     dress_code !== undefined ? dress_code : wedding.dress_code,
     no_children !== undefined ? (no_children ? 1 : 0) : (wedding.no_children || 0),
     event_type !== undefined ? event_type : (wedding.event_type || 'Boda Completa'),
+    has_whatsapp_rsvp !== undefined ? (has_whatsapp_rsvp ? 1 : 0) : (wedding.has_whatsapp_rsvp || 0),
+    has_layout_2d !== undefined ? (has_layout_2d ? 1 : 0) : (wedding.has_layout_2d || 0),
     now,
     weddingId
   );
