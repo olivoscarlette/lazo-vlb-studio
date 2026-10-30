@@ -51,7 +51,7 @@ export class EmailService {
     const senderName = process.env.EMAIL_FROM_NAME || 'Lazo Studio';
     const from = `"${senderName}" <${senderEmail}>`;
     const appUrl = process.env.APP_URL || 'https://www.lazostudio.mx';
-    const logoUrl = `${appUrl}/lazo-logo.png`;
+    const logoUrl = `${appUrl}/lazo-logo.png?v=3`;
 
     const html = `
 <!DOCTYPE html>
@@ -75,26 +75,110 @@ export class EmailService {
       padding: 40px 16px;
     }
     .card {
-      max-width: 540px;
+      max-width: 520px;
       margin: 0 auto;
       background-color: #FFFFFF;
       border: 1px solid #EFE8E1;
-      border-radius: 18px;
+      border-radius: 20px;
       overflow: hidden;
-      box-shadow: 0 4px 20px rgba(43, 40, 38, 0.03);
+      box-shadow: 0 4px 24px rgba(43, 40, 38, 0.04);
     }
     .header {
       padding: 36px 32px 28px 32px;
       text-align: center;
-      border-bottom: 1px solid #F5EFEB;
+      background-color: #FFFFFF;
+      border-bottom: 1px solid #F7F3EF;
     }
     .brand-logo {
-      max-width: 180px;
+      width: 200px;
+      max-width: 200px;
       height: auto;
       display: block;
       margin: 0 auto;
       border: 0;
+      outline: none;
     }
+    .content {
+      padding: 36px 32px;
+    }
+    .title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 22px;
+      font-weight: 600;
+      color: #2B2826;
+      margin: 0 0 16px 0;
+    }
+    .text {
+      font-size: 14px;
+      line-height: 1.65;
+      color: #5C5550;
+      margin: 0 0 20px 0;
+    }
+    .cta-container {
+      text-align: center;
+      margin: 32px 0 36px 0;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: #C48B81;
+      color: #FFFFFF !important;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      padding: 14px 36px;
+      border-radius: 9999px;
+    }
+    .notice {
+      background-color: #FAF7F4;
+      border-left: 3px solid #C48B81;
+      padding: 14px 16px;
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: #7D736A;
+      margin-bottom: 24px;
+    }
+    .fallback {
+      font-size: 12px;
+      color: #9E9389;
+      line-height: 1.6;
+      word-break: normal;
+      overflow-wrap: break-word;
+    }
+    .fallback-link {
+      color: #C48B81;
+      text-decoration: underline;
+      word-break: break-all;
+    }
+    .no-reply-box {
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px dashed #EFE8E1;
+      font-size: 11px;
+      color: #A39B93;
+      line-height: 1.5;
+      text-align: center;
+    }
+    .footer {
+      padding: 24px 32px 32px 32px;
+      text-align: center;
+      border-top: 1px solid #F7F3EF;
+      background-color: #FCFBFA;
+    }
+    .footer-text {
+      font-size: 11px;
+      color: #A39B93;
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <img src="${logoUrl}" alt="Lazo Studio" class="brand-logo" width="200">
+      </div>
     .content {
       padding: 36px 32px;
     }
