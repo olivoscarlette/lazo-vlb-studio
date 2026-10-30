@@ -30,41 +30,41 @@ export const defaultMeetingPackages = [
     maxMeetings: 0,
     description: 'Acceso autónomo a la suite digital de planeación para novios externos',
     includes: [
-      'Suite digital completa (Checklist, Presupuesto, Invitados, Mesas, Proveedores y Minuto a Minuto)',
+      'Suite digital completa (Checklist, Finanzas, Invitados, Mesas y Layout, Proveedores e Itinerario)',
       'Sin reuniones de coordinación 1 a 1 incluidas',
-      'Opción de contratar servicio de envío de invitaciones RSVP o coordinación presencial con Lazo Studio'
+      'Opción de sumar Coordinación con Viva la Bride'
     ]
   },
   {
     name: 'Esencial',
-    maxMeetings: 3,
-    description: '3 reuniones de coordinación y avance',
+    maxMeetings: 2,
+    description: '2 reuniones de coordinación técnica y avance',
     includes: [
-      '3 sesiones de planeación y revisión',
+      '2 sesiones de planeación y revisión',
       'Revisión de layout y minuto a minuto',
-      'Coordinación operativa Día Boda'
+      'Coordinación operativa Día de la Boda'
     ]
   },
   {
     name: 'Integral',
-    maxMeetings: 6,
-    description: '6 reuniones detalladas con equipo Lazo Studio',
+    maxMeetings: 4,
+    description: '4 reuniones detalladas con equipo Viva la Bride',
     includes: [
-      '6 sesiones de planeación con equipo Lazo Studio',
-      'Seguimiento de proveedores y pagos',
-      'Confirmación de invitados (RSVP) y layout',
-      'Coordinación integral Día Boda'
+      '4 sesiones de planeación con equipo Viva la Bride',
+      'Seguimiento de contratos, proveedores y pagos',
+      'Revisión técnica de cronograma y logística',
+      'Coordinación integral Día de la Boda'
     ]
   },
   {
-    name: 'Luxury Exclusivo',
+    name: 'Exclusivo',
     maxMeetings: 999,
-    description: 'Reuniones ilimitadas de planeación',
+    description: 'Reuniones ilimitadas de planeación y coordinación',
     includes: [
       'Reuniones ilimitadas de planeación y diseño',
       'Búsqueda, negociación y gestión total de proveedores',
       'Confirmación de invitados (RSVP), layout y logística',
-      'Coordinación y dirección total Día Boda'
+      'Coordinación y dirección total Día de la Boda'
     ]
   }
 ];

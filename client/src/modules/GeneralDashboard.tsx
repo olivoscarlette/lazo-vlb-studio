@@ -3349,9 +3349,9 @@ export const GeneralDashboard: React.FC = () => {
                         ))
                       ) : (
                         <>
-                          <option value="Esencial">Esencial (3 reuniones)</option>
-                          <option value="Integral">Integral (6 reuniones)</option>
-                          <option value="Luxury Exclusivo">Luxury Exclusivo (Reuniones ilimitadas)</option>
+                          <option value="Esencial">Esencial (2 reuniones)</option>
+                          <option value="Integral">Integral (4 reuniones)</option>
+                          <option value="Exclusivo">Exclusivo (Reuniones ilimitadas)</option>
                         </>
                       )}
                     </select>

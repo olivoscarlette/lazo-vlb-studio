@@ -1138,9 +1138,9 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     ) : (
                       <>
                         <option value="Planner Virtual">Planner Virtual Autónomo (Solo Suite Digital)</option>
-                        <option value="Esencial">Coordinación Viva la Bride — Esencial</option>
-                        <option value="Integral">Coordinación Viva la Bride — Integral</option>
-                        <option value="Luxury Exclusivo">Coordinación Viva la Bride — Luxury Exclusivo</option>
+                        <option value="Esencial">Coordinación Viva la Bride — Esencial (2 reuniones)</option>
+                        <option value="Integral">Coordinación Viva la Bride — Integral (4 reuniones)</option>
+                        <option value="Exclusivo">Coordinación Viva la Bride — Exclusivo (Ilimitado)</option>
                       </>
                     )}
                   </select>
