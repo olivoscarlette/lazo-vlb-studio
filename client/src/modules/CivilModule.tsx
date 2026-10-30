@@ -282,18 +282,12 @@ export const CivilModule: React.FC = () => {
                 )}
               </div>
               <p className="text-xs text-[#8A7E72] flex items-center space-x-1 mt-0.5">
-                <Lock className="w-3 h-3 text-[#C48B81]" />
-                <span>Información protegida contra cambios accidentales.</span>
+                <span>Fecha, hora, juzgado, juez y lugar oficial de la ceremonia civil.</span>
               </p>
             </div>
           </div>
 
-          {isNovios ? (
-            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1] text-xs font-medium">
-              <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Registro Oficial</span>
-            </span>
-          ) : !isEditingDetails ? (
+          {!isEditingDetails ? (
             <button
               type="button"
               onClick={handleStartEditDetails}
@@ -601,17 +595,15 @@ export const CivilModule: React.FC = () => {
                 <h3 className="font-serif text-lg font-semibold text-[#2B2826]">Requisitos y Trámites Legales</h3>
               </div>
               <div className="flex items-center space-x-2">
-                {!isNovios && (
-                  <button
-                    type="button"
-                    onClick={handleLoadMasterRequirements}
-                    className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
-                    title="Cargar requisitos estándar de la Plantilla Maestra"
-                  >
-                    <Download className="w-3.5 h-3.5 text-[#C48B81]" />
-                    <span>Cargar Plantilla Maestra</span>
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={handleLoadMasterRequirements}
+                  className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
+                  title="Cargar requisitos estándar de la Plantilla Maestra"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>Cargar Plantilla Maestra</span>
+                </button>
                 <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EFE8E1] px-2.5 py-1 rounded-full whitespace-nowrap shrink-0 inline-flex items-center">
                   {civil.requirements_status.filter(r => r.completed).length} / {civil.requirements_status.length}
                 </span>
@@ -642,23 +634,20 @@ export const CivilModule: React.FC = () => {
                       )}
                       <span className={r.completed ? 'line-through opacity-80' : ''}>{r.title}</span>
                     </div>
-                    {!isNovios && (
-                      <button
-                        type="button"
-                        onClick={(e) => handleRemoveRequirement(r.id, e)}
-                        className="text-[#8A7E72]/50 hover:text-rose-600 p-1 ml-2 transition cursor-pointer"
-                        title="Eliminar requisito"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => handleRemoveRequirement(r.id, e)}
+                      className="text-[#8A7E72]/50 hover:text-rose-600 p-1 ml-2 transition cursor-pointer"
+                      title="Eliminar requisito"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 ))
               )}
             </div>
           </div>
 
-          {!isNovios && (
             <form onSubmit={handleAddRequirement} className="flex gap-2 pt-3 border-t border-[#FAF8F5]">
               <input
                 type="text"
@@ -674,7 +663,6 @@ export const CivilModule: React.FC = () => {
                 Agregar
               </button>
             </form>
-          )}
         </div>
       </div>
 

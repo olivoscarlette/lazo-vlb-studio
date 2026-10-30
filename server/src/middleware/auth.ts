@@ -139,29 +139,7 @@ export function requireWeddingAccess(req: Request, res: Response, next: NextFunc
  * if the wedding date is within 5 days or past.
  */
 export function check5DayTableLock(req: Request, res: Response, next: NextFunction) {
-  const weddingId = (req.params.weddingId || req.body.weddingId || req.query.weddingId) as string;
-  const user = req.user;
-
-  if (user && user.role === 'NOVIOS') {
-    const wedding = db.prepare('SELECT wedding_date FROM weddings WHERE id = ?').get(weddingId) as { wedding_date: string } | undefined;
-    if (wedding && wedding.wedding_date) {
-      const weddingDate = new Date(wedding.wedding_date);
-      const today = new Date();
-      // Set to midnight for clean comparison
-      weddingDate.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
-
-      const diffTime = weddingDate.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (diffDays <= 5) {
-        return res.status(403).json({
-          error: 'Bloqueo operativo activo: A 5 días o menos del evento, la modificación de mesas y layout está bloqueada para los Novios. Por favor solicita ajustes con tu Coordinador de VLB Studio.'
-        });
-      }
-    }
-  }
-
+  // Novios tienen acceso total para editar mesas y layout en cualquier modalidad (Virtual o Coordinación)
   next();
 }
 

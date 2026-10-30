@@ -5,7 +5,7 @@ import {
   Plus, RotateCw, Trash2, Save, History,
   Lock, AlertTriangle, Move, Eye, EyeOff, Layers, Image as ImageIcon,
   Maximize2, Minimize2, Unlock, Users, ChevronDown, ChevronUp,
-  FileUp, Loader2, ChevronLeft, ChevronRight, CheckCircle2, X
+  FileUp, Loader2, ChevronLeft, ChevronRight, CheckCircle2, X, FileDown
 } from 'lucide-react';
 
 export const MesasLayoutModule: React.FC = () => {
@@ -65,19 +65,17 @@ export const MesasLayoutModule: React.FC = () => {
   const [showSaveVersionModal, setShowSaveVersionModal] = useState(false);
   const [versionName, setVersionName] = useState('');
 
-  // 5-Day Lock Check
-  const isLockedForNovios = () => {
-    if (user?.role !== 'NOVIOS') return false;
-    if (!currentWedding?.wedding_date) return false;
-    const weddingDate = new Date(currentWedding.wedding_date);
-    const today = new Date();
-    weddingDate.setHours(0, 0, 0, 0);
-    today.setHours(0, 0, 0, 0);
-    const diffDays = Math.ceil((weddingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    return diffDays <= 5;
-  };
+  // Novios y equipo tienen acceso total para editar mesas y layout
+  const isLocked = false;
 
-  const isLocked = isLockedForNovios();
+  const handleDownloadPDF = () => {
+    const prevTitle = document.title;
+    document.title = `Layout_Mesas_${currentWedding?.name || 'Boda'}`.replace(/\s+/g, '_');
+    window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 1000);
+  };
 
   const fetchLayoutData = async () => {
     if (!currentWedding || !token) return;
@@ -516,17 +514,10 @@ export const MesasLayoutModule: React.FC = () => {
               Distribución del Salón
             </span>
             {/* Indicador de Candado de 5 Días */}
-            {isLocked ? (
-              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FBF4F3] text-[#70443D] border border-[#EAD2D0]">
-                <Lock className="w-3 h-3 text-[#C48B81]" />
-                <span>Bloqueado (&lt; 5 días del evento)</span>
-              </span>
-            ) : (
-              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#E4ECE5] text-[#354B38] border border-[#CCDACC]">
-                <Unlock className="w-3 h-3 text-[#577355]" />
-                <span>Edición Abierta (Cierre automático 5 días antes)</span>
-              </span>
-            )}
+            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#E4ECE5] text-[#354B38] border border-[#CCDACC]">
+              <Unlock className="w-3 h-3 text-[#577355]" />
+              <span>Edición Activa</span>
+            </span>
           </div>
           <h2 className="font-serif text-3xl font-bold text-[#2B2826]">
             Mesas y Layout Visual
@@ -534,6 +525,17 @@ export const MesasLayoutModule: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {/* Descargar PDF */}
+          <button
+            type="button"
+            onClick={handleDownloadPDF}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
+            title="Descargar plano y distribución de mesas en PDF"
+          >
+            <FileDown className="w-3.5 h-3.5 text-[#C48B81]" />
+            <span>Descargar PDF</span>
+          </button>
+
           {/* Modo Lienzo Amplio Toggle */}
           <button
             onClick={() => setFullCanvasMode(!fullCanvasMode)}

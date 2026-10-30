@@ -4,7 +4,7 @@ import { TimelineEvent, Vendor, CivilCeremony, ReligiousCeremony } from '../type
 import {
   Clock, Plus, MapPin, User, CheckCircle2,
   Printer, Trash2, Edit3, Play, Calendar,
-  Check, ArrowUpRight, MessageSquare, Users, RotateCcw
+  Check, ArrowUpRight, MessageSquare, Users, RotateCcw, FileDown
 } from 'lucide-react';
 
 export const TimelineModule: React.FC = () => {
@@ -20,7 +20,6 @@ export const TimelineModule: React.FC = () => {
 
   // View Mode: 'operation' (Modo Operación) vs 'planning' (Cronograma de planeación)
   const [viewMode, setViewMode] = useState<'operation' | 'planning'>('planning');
-  const [roleFilter, setRoleFilter] = useState<string>('TODOS');
   const [showFullProgramInOp, setShowFullProgramInOp] = useState(false);
   const [vendorLocFilter, setVendorLocFilter] = useState<string>('ALL');
   const [currentTimeStr, setCurrentTimeStr] = useState<string>('');
@@ -44,6 +43,7 @@ export const TimelineModule: React.FC = () => {
     currentWedding.package_type.toLowerCase().includes('virtual') ||
     currentWedding.package_type.toLowerCase().includes('autónomo');
   const teamBrand = isPlannerVirtual ? 'Lazo Studio' : 'Viva la Bride';
+  const canEditTimeline = !isNovios || isPlannerVirtual;
 
   // Live clock for Modo Operación
   useEffect(() => {
@@ -281,8 +281,13 @@ export const TimelineModule: React.FC = () => {
     } catch {}
   };
 
-  const handlePrint = () => {
+  const handleDownloadPDF = () => {
+    const prevTitle = document.title;
+    document.title = `Itinerario_${currentWedding?.name || 'Boda'}`.replace(/\s+/g, '_');
     window.print();
+    setTimeout(() => {
+      document.title = prevTitle;
+    }, 1000);
   };
 
   const mainWeddingDateRaw = weddingDetails?.wedding_date || currentWedding?.wedding_date || '';
@@ -316,36 +321,6 @@ export const TimelineModule: React.FC = () => {
 
   // Consolidated timeline sorted chronologically
   const activeTimeline = [...timeline].sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-
-  const ROLE_TABS = [
-    { id: 'TODOS', label: 'Todos' },
-    { id: 'COORDINACION', label: 'Coordinación' },
-    { id: 'FOTO_VIDEO', label: 'Fotografía & Video' },
-    { id: 'BANQUETE', label: 'Banquete' },
-    { id: 'MUSICA_DJ', label: 'Música & DJ' }
-  ];
-
-  const roleFilteredTimeline = activeTimeline.filter(item => {
-    if (roleFilter === 'TODOS') return true;
-    const resp = (item.responsible || '').toLowerCase();
-    const act = (item.activity || '').toLowerCase();
-    const notes = (item.notes || '').toLowerCase();
-    const combo = `${resp} ${act} ${notes}`;
-
-    if (roleFilter === 'COORDINACION') {
-      return combo.includes('coord') || combo.includes('vlb') || combo.includes('staff') || combo.includes('montaje') || combo.includes('revisión') || combo.includes('llegada');
-    }
-    if (roleFilter === 'FOTO_VIDEO') {
-      return combo.includes('foto') || combo.includes('video') || combo.includes('sesión') || combo.includes('first look') || combo.includes('retrato');
-    }
-    if (roleFilter === 'BANQUETE') {
-      return combo.includes('banquet') || combo.includes('cena') || combo.includes('catering') || combo.includes('cocktail') || combo.includes('coctel') || combo.includes('brindis') || combo.includes('pastel') || combo.includes('comida');
-    }
-    if (roleFilter === 'MUSICA_DJ') {
-      return combo.includes('dj') || combo.includes('músic') || combo.includes('banda') || combo.includes('vals') || combo.includes('baile') || combo.includes('fiesta') || combo.includes('audio');
-    }
-    return true;
-  });
 
   // Operational Timeline progression logic
   const inProgressEvent = activeTimeline.find(t => t.status === 'EN_CURSO') || null;
@@ -401,16 +376,17 @@ export const TimelineModule: React.FC = () => {
             </button>
           )}
           <button
-            onClick={handlePrint}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-[#EFE8DE] text-[#332C2A] text-xs font-medium rounded-xl border border-[#EFE8E1] transition"
+            onClick={handleDownloadPDF}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-[#EFE8DE] text-[#332C2A] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
+            title="Descargar cronograma e itinerario en PDF"
           >
-            <Printer className="w-3.5 h-3.5 text-[#786C68]" />
-            <span>Imprimir</span>
+            <FileDown className="w-3.5 h-3.5 text-[#C48B81]" />
+            <span>Descargar PDF</span>
           </button>
-          {!isNovios && (
+          {canEditTimeline && (
             <button
               onClick={handleOpenAdd}
-              className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition"
+              className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Agregar Actividad</span>
@@ -636,25 +612,8 @@ export const TimelineModule: React.FC = () => {
                 </button>
               </div>
 
-              {/* Role Filter Tabs */}
-              <div className="flex flex-wrap items-center gap-1.5 py-1">
-                {ROLE_TABS.map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setRoleFilter(tab.id)}
-                    className={`px-3 py-1 rounded-xl text-xs font-semibold transition ${
-                      roleFilter === tab.id
-                        ? 'bg-[#C48B81] text-white shadow-xs'
-                        : 'bg-[#FCFAF7] text-[#5A524C] hover:bg-[#EFE8DE] border border-[#EFE8E1]'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
               <div className="divide-y divide-[#EFE8DE]">
-                {roleFilteredTimeline.map(item => (
+                {activeTimeline.map(item => (
                   <div
                     key={item.id}
                     className={`py-3.5 px-3 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition ${
@@ -972,32 +931,14 @@ export const TimelineModule: React.FC = () => {
         <div>
           {loading ? (
             <div className="py-12 text-center text-[#8A7E72] text-sm">Cargando timeline...</div>
-          ) : roleFilteredTimeline.length === 0 ? (
+          ) : activeTimeline.length === 0 ? (
             <div className="bg-white rounded-3xl p-8 text-center text-[#8A7E72] text-sm border border-dashed border-[#EFE8E1]">
-              No hay actividades programadas con el filtro seleccionado en el cronograma.
+              No hay actividades programadas en el cronograma aún.
             </div>
           ) : (
             <div>
-              {/* Role Filter Tabs */}
-              <div className="flex flex-wrap items-center gap-2 mb-6">
-                <span className="text-xs font-semibold text-[#8A7E72] mr-1">Filtrar por rol:</span>
-                {ROLE_TABS.map(tab => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setRoleFilter(tab.id)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                      roleFilter === tab.id
-                        ? 'bg-[#C48B81] text-white shadow-xs'
-                        : 'bg-white text-[#2B2826] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
               <div className="relative pl-6 sm:pl-8 space-y-4 before:content-[''] before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-[#EFE8E1]">
-                {roleFilteredTimeline.map(item => (
+                {activeTimeline.map(item => (
                   <div
                     key={item.id}
                     className="relative bg-white rounded-3xl p-5 border border-[#EFE8E1] hover:border-[#C48B81]/40 shadow-xs transition"
@@ -1042,20 +983,24 @@ export const TimelineModule: React.FC = () => {
                           <span>{item.status === 'COMPLETADO' ? 'Completado' : item.status === 'EN_CURSO' ? 'En Curso' : 'Marcar Hecho'}</span>
                         </button>
 
-                        <button
-                          onClick={() => handleOpenEdit(item)}
-                          className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-xl hover:bg-[#FAF8F5] transition cursor-pointer"
-                          title="Editar"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteEvent(item.id)}
-                          className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-xl hover:bg-rose-50 transition cursor-pointer"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {canEditTimeline && (
+                          <>
+                            <button
+                              onClick={() => handleOpenEdit(item)}
+                              className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-xl hover:bg-[#FAF8F5] transition cursor-pointer"
+                              title="Editar"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteEvent(item.id)}
+                              className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-xl hover:bg-rose-50 transition cursor-pointer"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
 

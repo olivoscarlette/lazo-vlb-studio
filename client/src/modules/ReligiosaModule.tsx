@@ -103,8 +103,10 @@ export const ReligiosaModule: React.FC = () => {
 
   // Structured Music List state
   const [musicList, setMusicList] = useState<MusicItem[]>([]);
-  const [newMusicMoment, setNewMusicMoment] = useState('Entrada de la Novia');
+  const [newMusicMoment, setNewMusicMoment] = useState('Entrada de novio y cortejo');
   const [newMusicSong, setNewMusicSong] = useState('');
+  const [editingMusicId, setEditingMusicId] = useState<string | null>(null);
+  const [editingMusicSong, setEditingMusicSong] = useState('');
 
   // Structured Readings List state
   const [readingsList, setReadingsList] = useState<ReadingItem[]>([]);
@@ -284,6 +286,44 @@ export const ReligiosaModule: React.FC = () => {
     await handleSave({ music_notes: JSON.stringify(updated) });
   };
 
+  const handleStartEditMusic = (item: MusicItem) => {
+    setEditingMusicId(item.id);
+    setEditingMusicSong(item.song === 'Por definir' ? '' : item.song);
+  };
+
+  const handleSaveEditMusic = async (id: string) => {
+    const updated = musicList.map(item =>
+      item.id === id ? { ...item, song: editingMusicSong.trim() || 'Por definir' } : item
+    );
+    setMusicList(updated);
+    setEditingMusicId(null);
+    await handleSave({ music_notes: JSON.stringify(updated) });
+  };
+
+  const handleLoadSacramentMoments = async () => {
+    const currentMoments = new Set(musicList.map(m => m.moment.toLowerCase().trim()));
+    const missing = SACRAMENT_MOMENTS_ORDER.filter(m => !currentMoments.has(m.toLowerCase()));
+    if (missing.length === 0) return;
+
+    const newItems: MusicItem[] = missing.map((moment, idx) => ({
+      id: `music_sacr_${Date.now()}_${idx}`,
+      moment,
+      song: 'Por definir'
+    }));
+
+    const combined = [...musicList, ...newItems].sort((a, b) => {
+      const idxA = SACRAMENT_MOMENTS_ORDER.findIndex(m => m.toLowerCase() === a.moment.toLowerCase());
+      const idxB = SACRAMENT_MOMENTS_ORDER.findIndex(m => m.toLowerCase() === b.moment.toLowerCase());
+      if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+      if (idxA !== -1) return -1;
+      if (idxB !== -1) return 1;
+      return 0;
+    });
+
+    setMusicList(combined);
+    await handleSave({ music_notes: JSON.stringify(combined) });
+  };
+
   const handleRemoveMusicItem = async (id: string) => {
     const updated = musicList.filter(item => item.id !== id);
     setMusicList(updated);
@@ -321,21 +361,19 @@ export const ReligiosaModule: React.FC = () => {
 
   const confirmedGuestNames = confirmedGuests.map(g => `${g.first_name} ${g.last_name}`.trim());
 
-  const liturgicalMoments = [
-    'Entrada del Novio y Cortejo',
-    'Entrada de la Novia',
-    'Señor Ten Piedad',
-    'Gloria',
-    'Aleluya',
-    'Rito del Matrimonio / Votos',
+  const SACRAMENT_MOMENTS_ORDER = [
+    'Entrada de novio y cortejo',
+    'Entrada de la novia',
+    'Rito del matrimonio',
+    'Imposición de anillos, arras y lazo',
     'Ofertorio',
-    'Santo',
-    'Cordero de Dios',
     'Comunión',
-    'Entrega del Ramo / Ave María',
-    'Firma de Actas',
-    'Salida Nupcial'
+    'Entrega de ramo a la Virgen',
+    'Firmas',
+    'Salida de novios'
   ];
+
+  const liturgicalMoments = SACRAMENT_MOMENTS_ORDER;
 
   const readingTypes = [
     'Primera Lectura',
@@ -448,18 +486,12 @@ export const ReligiosaModule: React.FC = () => {
                 Datos del Templo y Celebración
               </h3>
               <p className="text-xs text-[#8A7E72] flex items-center space-x-1 mt-0.5">
-                <Lock className="w-3 h-3 text-[#C48B81]" />
-                <span>Información protegida contra cambios accidentales.</span>
+                <span>Parroquia, templo, fecha, hora oficial y sacerdote celebrante.</span>
               </p>
             </div>
           </div>
 
-          {isNovios ? (
-            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1] text-xs font-medium">
-              <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Registro Oficial</span>
-            </span>
-          ) : !isEditingDetails ? (
+          {!isEditingDetails ? (
             <button
               type="button"
               onClick={handleStartEditDetails}
@@ -617,43 +649,106 @@ export const ReligiosaModule: React.FC = () => {
                   <span>Música de Ceremonia Religiosa</span>
                 </h3>
               </div>
-              <span className="text-xs font-semibold text-[#A86B60] bg-[#FAF8F5] border border-[#EFE8E1] px-3 py-1 rounded-full">
-                {musicList.length} piezas
-              </span>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleLoadSacramentMoments}
+                  className="inline-flex items-center space-x-1 text-xs font-semibold px-2.5 py-1 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
+                  title="Cargar momentos oficiales del Sacramento del Matrimonio en orden litúrgico"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>Guía Litúrgica</span>
+                </button>
+                <span className="text-xs font-semibold text-[#A86B60] bg-[#FAF8F5] border border-[#EFE8E1] px-3 py-1 rounded-full">
+                  {musicList.length} piezas
+                </span>
+              </div>
             </div>
 
             <div className="space-y-2 mb-5 max-h-72 overflow-y-auto pr-1">
               {musicList.length === 0 ? (
-                <p className="text-xs text-[#8A7E72] italic py-4 text-center bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
-                  No se han agregado piezas musicales aún. Regístralas en el listado abajo.
-                </p>
+                <div className="text-center py-6 px-4 bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1] space-y-3">
+                  <p className="text-xs text-[#8A7E72] italic">
+                    No se han registrado piezas musicales aún.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleLoadSacramentMoments}
+                    className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold transition shadow-2xs cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Cargar Momentos del Sacramento del Matrimonio</span>
+                  </button>
+                </div>
               ) : (
                 musicList.map((item, idx) => (
                   <div
                     key={item.id}
                     className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-start space-x-3">
+                    <div className="flex items-start space-x-3 flex-1 min-w-0">
                       <span className="w-5 h-5 rounded-full bg-[#FAF8F5] text-[#C48B81] border border-[#EFE8E1] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                         {idx + 1}
                       </span>
-                      <div>
+                      <div className="flex-1 min-w-0">
                         <div className="text-[10px] font-bold uppercase tracking-wider text-[#C48B81]">
                           {item.moment}
                         </div>
-                        <div className="text-sm font-medium text-[#2B2826] mt-0.5">
-                          {item.song}
-                        </div>
+                        {editingMusicId === item.id ? (
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <input
+                              type="text"
+                              value={editingMusicSong}
+                              onChange={e => setEditingMusicSong(e.target.value)}
+                              placeholder="Nombre de la canción o pieza..."
+                              className="px-2.5 py-1 text-xs border border-[#EFE8E1] rounded-lg bg-white text-[#2B2826] flex-1 focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
+                              autoFocus
+                            />
+                            <button
+                              type="button"
+                              onClick={() => handleSaveEditMusic(item.id)}
+                              className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-xs font-semibold cursor-pointer"
+                            >
+                              Guardar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingMusicId(null)}
+                              className="p-1 text-[#8A7E72] hover:text-[#2B2826]"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div
+                            onClick={() => handleStartEditMusic(item)}
+                            className="text-sm font-medium text-[#2B2826] mt-0.5 cursor-pointer hover:text-[#C48B81] transition flex items-center gap-1.5"
+                            title="Haz clic para editar la pieza"
+                          >
+                            <span>{item.song}</span>
+                            <Edit3 className="w-3 h-3 text-[#8A7E72]/50" />
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMusicItem(item.id)}
-                      className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-xl hover:bg-rose-50 transition shrink-0 cursor-pointer"
-                      title="Eliminar pieza"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center space-x-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleStartEditMusic(item)}
+                        className="text-[#8A7E72]/60 hover:text-[#2B2826] p-1.5 rounded-xl hover:bg-[#FAF8F5] transition cursor-pointer"
+                        title="Editar pieza"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMusicItem(item.id)}
+                        className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-xl hover:bg-rose-50 transition cursor-pointer"
+                        title="Eliminar pieza"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -804,17 +899,15 @@ export const ReligiosaModule: React.FC = () => {
             <h3 className="font-serif text-lg font-semibold text-[#2B2826]">Requisitos y Trámites de Ceremonia Religiosa</h3>
           </div>
           <div className="flex items-center space-x-2">
-            {!isNovios && (
-              <button
-                type="button"
-                onClick={handleLoadMasterRequirements}
-                className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
-                title="Cargar requisitos religiosos de la Plantilla Maestra"
-              >
-                <Download className="w-3.5 h-3.5 text-[#C48B81]" />
-                <span>Cargar Plantilla Maestra</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleLoadMasterRequirements}
+              className="inline-flex items-center space-x-1 text-xs font-semibold px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
+              title="Cargar requisitos religiosos de la Plantilla Maestra"
+            >
+              <Download className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Cargar Plantilla Maestra</span>
+            </button>
             <span className="text-xs font-semibold text-[#2B2826] bg-[#FAF8F5] border border-[#EFE8E1] px-2.5 py-1 rounded-full">
               {(religious.requirements_status || []).filter(r => r.completed).length} / {(religious.requirements_status || []).length}
             </span>
@@ -845,38 +938,34 @@ export const ReligiosaModule: React.FC = () => {
                   )}
                   <span className={r.completed ? 'line-through opacity-80' : ''}>{r.title}</span>
                 </div>
-                {!isNovios && (
-                  <button
-                    type="button"
-                    onClick={e => handleRemoveRequirement(r.id, e)}
-                    className="text-[#8A7E72]/50 hover:text-rose-600 p-1 ml-2 transition cursor-pointer"
-                    title="Eliminar requisito"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={e => handleRemoveRequirement(r.id, e)}
+                  className="text-[#8A7E72]/50 hover:text-rose-600 p-1 ml-2 transition cursor-pointer"
+                  title="Eliminar requisito"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               </div>
             ))
           )}
         </div>
 
-        {!isNovios && (
-          <form onSubmit={handleAddRequirement} className="flex gap-2 pt-3 border-t border-[#FAF8F5]">
-            <input
-              type="text"
-              placeholder="Agregar requisito parroquial a esta boda..."
-              value={newReq}
-              onChange={e => setNewReq(e.target.value)}
-              className="flex-1 px-3 py-2.5 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
-            >
-              Agregar
-            </button>
-          </form>
-        )}
+        <form onSubmit={handleAddRequirement} className="flex gap-2 pt-3 border-t border-[#FAF8F5]">
+          <input
+            type="text"
+            placeholder="Agregar requisito parroquial a esta boda..."
+            value={newReq}
+            onChange={e => setNewReq(e.target.value)}
+            className="flex-1 px-3 py-2.5 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+          >
+            Agregar
+          </button>
+        </form>
       </div>
 
       {/* AUTOMATIC REUSE: Reused Vendors Card for Iglesia */}
