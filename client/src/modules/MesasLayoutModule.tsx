@@ -68,6 +68,11 @@ export const MesasLayoutModule: React.FC = () => {
 
   // Novios y equipo tienen acceso total para editar mesas y layout
   const isLocked = false;
+  const isPlannerVirtual = Boolean(
+    !currentWedding?.package_type ||
+    currentWedding.package_type.toLowerCase().includes('virtual') ||
+    currentWedding.package_type.toLowerCase().includes('autónomo')
+  );
 
   const handleDownloadPDF = () => {
     try {
@@ -102,7 +107,7 @@ export const MesasLayoutModule: React.FC = () => {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
         doc.setTextColor(...accentColor);
-        doc.text('LAZO STUDIO  ·  VIVA LA BRIDE', margin + 6, 20);
+        doc.text(isPlannerVirtual ? 'LAZO STUDIO' : 'LAZO STUDIO  ·  VIVA LA BRIDE', margin + 6, 20);
 
         doc.setFont('times', 'bold');
         doc.setFontSize(18);
@@ -130,7 +135,13 @@ export const MesasLayoutModule: React.FC = () => {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7.5);
         doc.setTextColor(...secondaryColor);
-        doc.text('Documento confidencial de acomodo · Lazo Studio', margin, pageHeight - 7);
+        doc.text(
+          isPlannerVirtual
+            ? 'Documento oficial de distribución de mesas  ·  Lazo Studio'
+            : 'Documento oficial de coordinación  ·  Viva la Bride',
+          margin,
+          pageHeight - 7
+        );
         doc.text(`Página ${pageNumber}`, pageWidth - margin, pageHeight - 7, { align: 'right' });
       };
 

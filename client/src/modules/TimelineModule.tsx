@@ -315,7 +315,7 @@ export const TimelineModule: React.FC = () => {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
         doc.setTextColor(...accentColor);
-        doc.text('LAZO STUDIO  ·  VIVA LA BRIDE', margin + 6, 20);
+        doc.text(isPlannerVirtual ? 'LAZO STUDIO' : 'LAZO STUDIO  ·  VIVA LA BRIDE', margin + 6, 20);
 
         // Document Title
         doc.setFont('times', 'bold');
@@ -347,7 +347,13 @@ export const TimelineModule: React.FC = () => {
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7.5);
         doc.setTextColor(...secondaryColor);
-        doc.text('Documento confidencial de coordinación  ·  Lazo Studio', margin, pageHeight - 7);
+        doc.text(
+          isPlannerVirtual
+            ? 'Documento oficial de planeación e itinerario  ·  Lazo Studio'
+            : 'Documento oficial de coordinación  ·  Viva la Bride',
+          margin,
+          pageHeight - 7
+        );
         doc.text(`Página ${pageNumber}`, pageWidth - margin, pageHeight - 7, { align: 'right' });
       };
 
