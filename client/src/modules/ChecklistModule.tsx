@@ -587,7 +587,7 @@ export const ChecklistModule: React.FC = () => {
                 : 'text-[#8A7E72] hover:text-[#2B2826]'
             }`}
           >
-            <span>📋 Checklist General</span>
+            <span>Checklist General</span>
             <span className={`text-[11px] px-2 py-0.5 rounded-full ${
               mainView === 'GENERAL' ? 'bg-[#C48B81] text-white' : 'bg-[#EFE8E1] text-[#5A524C]'
             }`}>
@@ -604,7 +604,7 @@ export const ChecklistModule: React.FC = () => {
                 : 'text-[#8A7E72] hover:text-[#2B2826]'
             }`}
           >
-            <span>📅 Actividades por Meses</span>
+            <span>Actividades por Meses</span>
             <span className={`text-[11px] px-2 py-0.5 rounded-full ${
               mainView === 'MESES' ? 'bg-[#C48B81] text-white' : 'bg-[#EFE8E1] text-[#5A524C]'
             }`}>
@@ -745,7 +745,7 @@ export const ChecklistModule: React.FC = () => {
                             </span>
                             {isTaskOverdue(task) && (
                               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F7EDEB] text-[#C48B81] border border-[#F0D5D1] whitespace-nowrap">
-                                ⚠️ Vencida
+                                Vencida
                               </span>
                             )}
                           </div>
@@ -832,7 +832,7 @@ export const ChecklistModule: React.FC = () => {
                       </h4>
                       {isTaskOverdue(task) && (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F7EDEB] text-[#C48B81] border border-[#F0D5D1] whitespace-nowrap">
-                          ⚠️ Vencida
+                          Vencida
                         </span>
                       )}
                     </div>
@@ -841,11 +841,6 @@ export const ChecklistModule: React.FC = () => {
                       {task.category && (
                         <span className="bg-[#FAF8F5] text-[#2B2826] px-2 py-0.5 rounded-md text-[11px] border border-[#EFE8E1]">
                           {task.category}
-                        </span>
-                      )}
-                      {task.responsible && (
-                        <span className="bg-[#FAF8F5] text-[#A86B60] px-2 py-0.5 rounded-md text-[11px] border border-[#EFE8E1]">
-                          {task.responsible}
                         </span>
                       )}
                       {task.due_date && (
@@ -858,7 +853,7 @@ export const ChecklistModule: React.FC = () => {
 
                     {task.notes && (
                       <p className="text-xs text-[#A86B60] bg-[#FAF8F5] px-2.5 py-1 rounded-lg mt-1.5 inline-block border border-[#EFE8E1]">
-                        💬 {task.notes}
+                        {task.notes}
                       </p>
                     )}
                   </div>
@@ -1079,9 +1074,6 @@ export const ChecklistModule: React.FC = () => {
                             <span className="bg-[#FAF8F5] px-2 py-0.5 rounded border border-[#EFE8E1]">
                               {item.category}
                             </span>
-                            {item.responsible && (
-                              <span>Resp: {item.responsible}</span>
-                            )}
                           </div>
                         </div>
                       </div>
