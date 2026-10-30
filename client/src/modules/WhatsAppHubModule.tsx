@@ -16,6 +16,8 @@ interface WhatsAppConversation {
   guest_status: string;
   companion_count: number;
   table_name: string;
+  contact_type?: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO';
+  contact_role_label?: string;
   last_message_at: string;
   last_message_content: string;
   last_message_direction: 'OUTBOUND' | 'INBOUND';
@@ -140,7 +142,7 @@ export const WhatsAppHubModule: React.FC = () => {
 
   // Filters
   const [selectedWeddingId, setSelectedWeddingId] = useState<string>('all');
-  const [filterType, setFilterType] = useState<'todas' | 'pendientes' | 'confirmados'>('todas');
+  const [filterType, setFilterType] = useState<'todas' | 'invitados' | 'novios' | 'proveedores' | 'prospectos' | 'pendientes' | 'confirmados'>('todas');
   const [search, setSearch] = useState('');
 
   // Selected Chat
@@ -521,41 +523,28 @@ export const WhatsAppHubModule: React.FC = () => {
               ))}
             </select>
 
-            {/* Filter Pills */}
-            <div className="flex items-center space-x-1 pt-0.5">
-              <button
-                type="button"
-                onClick={() => setFilterType('todas')}
-                className={`flex-1 py-1 text-[11px] font-semibold rounded-lg transition ${
-                  filterType === 'todas'
-                    ? 'bg-[#C48B81] text-white shadow-2xs'
-                    : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EFE8E1]'
-                }`}
-              >
-                Todas
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterType('pendientes')}
-                className={`flex-1 py-1 text-[11px] font-semibold rounded-lg transition ${
-                  filterType === 'pendientes'
-                    ? 'bg-[#C48B81] text-white shadow-2xs'
-                    : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EFE8E1]'
-                }`}
-              >
-                Pendientes
-              </button>
-              <button
-                type="button"
-                onClick={() => setFilterType('confirmados')}
-                className={`flex-1 py-1 text-[11px] font-semibold rounded-lg transition ${
-                  filterType === 'confirmados'
-                    ? 'bg-[#C48B81] text-white shadow-2xs'
-                    : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EFE8E1]'
-                }`}
-              >
-                Confirmados
-              </button>
+            {/* Filter Pills with Horizontal Clean Tabs */}
+            <div className="flex items-center space-x-1 pt-0.5 overflow-x-auto no-scrollbar">
+              {[
+                { id: 'todas', label: 'Todas' },
+                { id: 'invitados', label: 'Invitados' },
+                { id: 'novios', label: 'Novios' },
+                { id: 'proveedores', label: 'Proveedores' },
+                { id: 'prospectos', label: 'Nuevos' }
+              ].map(f => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFilterType(f.id as any)}
+                  className={`px-2.5 py-1 text-[11px] font-semibold rounded-lg transition whitespace-nowrap cursor-pointer ${
+                    filterType === f.id
+                      ? 'bg-[#C48B81] text-white shadow-2xs'
+                      : 'bg-[#FFFFFF] text-[#7D6F6B] hover:bg-[#F3ECE2] border border-[#EFE8E1]'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -618,19 +607,39 @@ export const WhatsAppHubModule: React.FC = () => {
                       </div>
 
                       <div className="flex items-center justify-between gap-1 mt-1">
-                        <span className="text-[10px] text-[#C48B81] font-medium truncate max-w-[150px]">
-                          💍 {conv.wedding_name}
-                        </span>
-                        <div className="flex items-center space-x-1 shrink-0">
-                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
-                            conv.guest_status === 'Confirmado'
-                              ? 'bg-[#E4ECE5] text-[#2B5235]'
-                              : conv.guest_status === 'No asistirá'
-                              ? 'bg-[#F7EDEB] text-[#C48B81]'
-                              : 'bg-[#FAF3E8] text-[#7C5824]'
-                          }`}>
-                            {conv.guest_status === 'Pendiente de confirmar' ? 'Pendiente' : conv.guest_status}
+                        <div className="flex items-center space-x-1.5 min-w-0">
+                          {conv.contact_type === 'NOVIOS' && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider bg-[#FAF3F1] text-[#A86B60] border border-[#ECD9D5] shrink-0">
+                              Novios
+                            </span>
+                          )}
+                          {conv.contact_type === 'PROVEEDOR' && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider bg-[#F2F4F7] text-[#475467] border border-[#E4E7EC] shrink-0">
+                              {conv.contact_role_label || 'Proveedor'}
+                            </span>
+                          )}
+                          {conv.contact_type === 'PROSPECTO' && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider bg-[#F9F7F4] text-[#7A6D63] border border-[#EBE4DD] shrink-0">
+                              Nuevo
+                            </span>
+                          )}
+                          <span className="text-[10px] text-[#8E807A] font-medium truncate max-w-[130px]">
+                            {conv.wedding_name}
                           </span>
+                        </div>
+
+                        <div className="flex items-center space-x-1 shrink-0">
+                          {conv.contact_type === 'INVITADO' && (
+                            <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                              conv.guest_status === 'Confirmado'
+                                ? 'bg-[#E4ECE5] text-[#2B5235]'
+                                : conv.guest_status === 'No asistirá'
+                                ? 'bg-[#F7EDEB] text-[#C48B81]'
+                                : 'bg-[#FAF3E8] text-[#7C5824]'
+                            }`}>
+                              {conv.guest_status === 'Pendiente de confirmar' ? 'Pendiente' : conv.guest_status}
+                            </span>
+                          )}
                           {(conv.unread_count || 0) > 0 && (
                             <span className="w-4 h-4 rounded-full bg-[#25D366] text-white text-[10px] font-bold flex items-center justify-center">
                               {conv.unread_count}
@@ -666,10 +675,27 @@ export const WhatsAppHubModule: React.FC = () => {
                     <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#25D366] border-2 border-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-sm text-[#332A28]">
-                      {activeConversation.guest_name}
-                    </h3>
-                    <div className="flex items-center space-x-2 text-[11px] text-[#7D6F6B]">
+                    <div className="flex items-center space-x-2">
+                      <h3 className="font-semibold text-sm text-[#332A28]">
+                        {activeConversation.guest_name}
+                      </h3>
+                      {activeConversation.contact_type === 'NOVIOS' && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-[#FAF3F1] text-[#A86B60] border border-[#ECD9D5]">
+                          Novios
+                        </span>
+                      )}
+                      {activeConversation.contact_type === 'PROVEEDOR' && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-[#F2F4F7] text-[#475467] border border-[#E4E7EC]">
+                          {activeConversation.contact_role_label || 'Proveedor'}
+                        </span>
+                      )}
+                      {activeConversation.contact_type === 'PROSPECTO' && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-[#F9F7F4] text-[#7A6D63] border border-[#EBE4DD]">
+                          Nuevo Prospecto
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2 text-[11px] text-[#7D6F6B] mt-0.5">
                       <span className="text-[#25D366] font-medium flex items-center gap-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]" /> En línea
                       </span>
@@ -683,14 +709,33 @@ export const WhatsAppHubModule: React.FC = () => {
 
                 {/* Guest Context Details in Top Bar */}
                 <div className="flex items-center space-x-2 text-xs">
-                  <span className="bg-[#FAF8F5] text-[#332A28] px-2.5 py-1 rounded-lg border border-[#EFE8E1] font-medium text-[11px] flex items-center gap-1">
-                    <Utensils className="w-3 h-3 text-[#C48B81]" />
-                    <span>Mesa: {activeConversation.table_name || 'Sin mesa'}</span>
-                  </span>
-                  <span className="bg-[#FAF8F5] text-[#332A28] px-2.5 py-1 rounded-lg border border-[#EFE8E1] font-medium text-[11px] flex items-center gap-1">
-                    <Users className="w-3 h-3 text-[#C48B81]" />
-                    <span>Pases: {1 + (activeConversation.companion_count || 0)}</span>
-                  </span>
+                  {(!activeConversation.contact_type || activeConversation.contact_type === 'INVITADO') ? (
+                    <>
+                      <span className="bg-[#FAF8F5] text-[#332A28] px-2.5 py-1 rounded-lg border border-[#EFE8E1] font-medium text-[11px] flex items-center gap-1">
+                        <Utensils className="w-3 h-3 text-[#C48B81]" />
+                        <span>Mesa: {activeConversation.table_name || 'Sin mesa'}</span>
+                      </span>
+                      <span className="bg-[#FAF8F5] text-[#332A28] px-2.5 py-1 rounded-lg border border-[#EFE8E1] font-medium text-[11px] flex items-center gap-1">
+                        <Users className="w-3 h-3 text-[#C48B81]" />
+                        <span>Pases: {1 + (activeConversation.companion_count || 0)}</span>
+                      </span>
+                    </>
+                  ) : activeConversation.contact_type === 'NOVIOS' ? (
+                    <span className="bg-[#FAF3F1] text-[#A86B60] px-3 py-1 rounded-lg border border-[#ECD9D5] font-semibold text-[11px] flex items-center gap-1.5">
+                      <HeartHandshake className="w-3.5 h-3.5 text-[#C48B81]" />
+                      <span>Pareja de la Boda</span>
+                    </span>
+                  ) : activeConversation.contact_type === 'PROVEEDOR' ? (
+                    <span className="bg-[#F2F4F7] text-[#475467] px-3 py-1 rounded-lg border border-[#E4E7EC] font-semibold text-[11px] flex items-center gap-1.5">
+                      <Tag className="w-3.5 h-3.5 text-[#667085]" />
+                      <span>{activeConversation.contact_role_label || 'Proveedor Registrado'}</span>
+                    </span>
+                  ) : (
+                    <span className="bg-[#F9F7F4] text-[#7A6D63] px-3 py-1 rounded-lg border border-[#EBE4DD] font-semibold text-[11px] flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
+                      <span>Contacto no registrado</span>
+                    </span>
+                  )}
                 </div>
               </div>
 

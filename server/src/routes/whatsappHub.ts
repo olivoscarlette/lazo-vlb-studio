@@ -246,6 +246,18 @@ router.get('/conversations', (req, res) => {
       LEFT JOIN tables t ON t.id = g.table_id
     `).all() as any[];
 
+    const allUsers = db.prepare(`
+      SELECT id, name, email, phone, role, wedding_id
+      FROM users
+      WHERE phone IS NOT NULL AND phone != ''
+    `).all() as any[];
+
+    const allVendors = db.prepare(`
+      SELECT id, name, type, phone, wedding_id
+      FROM vendors
+      WHERE phone IS NOT NULL AND phone != ''
+    `).all() as any[];
+
     const allContacts = db.prepare('SELECT * FROM whatsapp_contacts').all() as any[];
 
     const groupMap = new Map<string, {
@@ -257,6 +269,8 @@ router.get('/conversations', (req, res) => {
       guest_status: string;
       companion_count: number;
       table_name: string;
+      contact_type: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO';
+      contact_role_label: string;
       last_message_at: string;
       last_message_content: string;
       last_message_direction: 'OUTBOUND' | 'INBOUND';
@@ -270,25 +284,54 @@ router.get('/conversations', (req, res) => {
       const key = `${msg.wedding_id}_${last10}`;
 
       if (!groupMap.has(key)) {
+        // 1. Check if matches couple / user
+        const matchedUser = allUsers.find(u => 
+          (u.wedding_id === msg.wedding_id || !u.wedding_id) && getPhoneLast10(u.phone) === last10
+        ) || allUsers.find(u => getPhoneLast10(u.phone) === last10);
+
+        // 2. Check if matches guest
         const matchedGuest = allGuests.find(g => 
           g.wedding_id === msg.wedding_id && getPhoneLast10(g.phone) === last10
         ) || allGuests.find(g => getPhoneLast10(g.phone) === last10);
 
+        // 3. Check if matches vendor
+        const matchedVendor = allVendors.find(v => 
+          (v.wedding_id === msg.wedding_id || !v.wedding_id) && getPhoneLast10(v.phone) === last10
+        ) || allVendors.find(v => getPhoneLast10(v.phone) === last10);
+
         const matchedContact = allContacts.find(c => getPhoneLast10(c.phone_number) === last10);
 
-        const guestName = matchedGuest
-          ? `${matchedGuest.first_name} ${matchedGuest.last_name}`.trim()
-          : (matchedContact?.name || msg.phone);
+        let contactType: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO' = 'PROSPECTO';
+        let contactRoleLabel = 'Nuevo Contacto';
+        let displayName = msg.phone;
+
+        if (matchedUser) {
+          contactType = 'NOVIOS';
+          contactRoleLabel = matchedUser.role === 'NOVIOS' ? 'Novios' : 'Equipo VLB';
+          displayName = matchedUser.name;
+        } else if (matchedGuest) {
+          contactType = 'INVITADO';
+          contactRoleLabel = matchedGuest.status === 'Confirmado' ? 'Invitado Confirmado' : 'Invitado';
+          displayName = `${matchedGuest.first_name} ${matchedGuest.last_name}`.trim();
+        } else if (matchedVendor) {
+          contactType = 'PROVEEDOR';
+          contactRoleLabel = matchedVendor.type || 'Proveedor';
+          displayName = matchedVendor.name;
+        } else if (matchedContact?.name) {
+          displayName = matchedContact.name;
+        }
 
         groupMap.set(key, {
           phone: WhatsAppService.normalizePhoneNumber(msg.phone) || msg.phone,
           wedding_id: msg.wedding_id,
           wedding_name: msg.wedding_name,
           guest_id: matchedGuest?.id || msg.guest_id || null,
-          guest_name: guestName,
-          guest_status: matchedGuest?.status || 'Pendiente de confirmar',
+          guest_name: displayName,
+          guest_status: matchedGuest?.status || (matchedUser ? 'Pareja' : (matchedVendor ? 'Proveedor' : 'No registrado')),
           companion_count: matchedGuest?.companion_count || 0,
           table_name: matchedGuest?.table_name || 'Sin mesa',
+          contact_type: contactType,
+          contact_role_label: contactRoleLabel,
           last_message_at: msg.created_at,
           last_message_content: msg.content,
           last_message_direction: msg.direction,
@@ -315,11 +358,20 @@ router.get('/conversations', (req, res) => {
         (c.guest_name && c.guest_name.toLowerCase().includes(cleanSearch)) ||
         (c.wedding_name && c.wedding_name.toLowerCase().includes(cleanSearch)) ||
         (c.phone && c.phone.includes(cleanSearch)) ||
+        (c.contact_role_label && c.contact_role_label.toLowerCase().includes(cleanSearch)) ||
         (c.last_message_content && c.last_message_content.toLowerCase().includes(cleanSearch))
       );
     }
 
-    if (filter === 'pendientes') {
+    if (filter === 'invitados') {
+      filtered = filtered.filter(c => c.contact_type === 'INVITADO');
+    } else if (filter === 'novios') {
+      filtered = filtered.filter(c => c.contact_type === 'NOVIOS');
+    } else if (filter === 'proveedores') {
+      filtered = filtered.filter(c => c.contact_type === 'PROVEEDOR');
+    } else if (filter === 'prospectos') {
+      filtered = filtered.filter(c => c.contact_type === 'PROSPECTO');
+    } else if (filter === 'pendientes') {
       filtered = filtered.filter(c => c.guest_status === 'Pendiente de confirmar');
     } else if (filter === 'confirmados') {
       filtered = filtered.filter(c => c.guest_status === 'Confirmado');

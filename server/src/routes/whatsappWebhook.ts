@@ -555,7 +555,19 @@ async function processWebhookEvent(body: any) {
               }
             }
 
-            let weddingId = matchedGuest?.wedding_id || latestMsg?.wedding_id;
+            // Also check if phone belongs to a couple (NOVIOS) or vendor
+            let matchedUser: any = null;
+            let matchedVendor: any = null;
+            if (!matchedGuest) {
+              const allUsers = db.prepare('SELECT id, name, phone, wedding_id, role FROM users WHERE phone IS NOT NULL AND phone != ""').all() as any[];
+              matchedUser = allUsers.find(u => getPhoneLast10(u.phone) === last10);
+              if (!matchedUser) {
+                const allVendors = db.prepare('SELECT id, name, phone, wedding_id, type FROM vendors WHERE phone IS NOT NULL AND phone != ""').all() as any[];
+                matchedVendor = allVendors.find(v => getPhoneLast10(v.phone) === last10);
+              }
+            }
+
+            let weddingId = matchedGuest?.wedding_id || matchedUser?.wedding_id || matchedVendor?.wedding_id || latestMsg?.wedding_id;
             const guestId = matchedGuest?.id || latestMsg?.guest_id || null;
 
             if (!weddingId) {
