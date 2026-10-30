@@ -170,8 +170,6 @@ export const ReligiosaModule: React.FC = () => {
   const [musicList, setMusicList] = useState<MusicItem[]>([]);
   const [newMusicMoment, setNewMusicMoment] = useState('Entrada de novio y cortejo');
   const [newMusicSong, setNewMusicSong] = useState('');
-  const [editingMusicId, setEditingMusicId] = useState<string | null>(null);
-  const [editingMusicSong, setEditingMusicSong] = useState('');
 
   // Structured Readings List state
   const [readingsList, setReadingsList] = useState<ReadingItem[]>([]);
@@ -363,20 +361,6 @@ export const ReligiosaModule: React.FC = () => {
 
     setMusicList(updated);
     setNewMusicSong('');
-    await handleSave({ music_notes: JSON.stringify(updated) });
-  };
-
-  const handleStartEditMusic = (item: MusicItem) => {
-    setEditingMusicId(item.id);
-    setEditingMusicSong(item.song === 'Por definir' ? '' : item.song);
-  };
-
-  const handleSaveEditMusic = async (id: string) => {
-    const updated = musicList.map(item =>
-      item.id === id ? { ...item, song: editingMusicSong.trim() || 'Por definir' } : item
-    );
-    setMusicList(updated);
-    setEditingMusicId(null);
     await handleSave({ music_notes: JSON.stringify(updated) });
   };
 
@@ -755,7 +739,14 @@ export const ReligiosaModule: React.FC = () => {
                     key={item.id}
                     className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex items-center justify-between gap-3"
                   >
-                    <div className="flex items-start space-x-3 flex-1 min-w-0">
+                    <div
+                      onClick={() => {
+                        setNewMusicMoment(item.moment);
+                        setNewMusicSong(item.song && item.song !== 'Por definir' ? item.song : '');
+                      }}
+                      className="flex items-start space-x-3 flex-1 min-w-0 cursor-pointer group"
+                      title="Haz clic para seleccionar este momento y escribir su canción abajo"
+                    >
                       <span className="w-5 h-5 rounded-full bg-[#FAF8F5] text-[#C48B81] border border-[#EFE8E1] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                         {idx + 1}
                       </span>
@@ -763,52 +754,12 @@ export const ReligiosaModule: React.FC = () => {
                         <div className="text-[10px] font-bold uppercase tracking-wider text-[#C48B81]">
                           {item.moment}
                         </div>
-                        {editingMusicId === item.id ? (
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <input
-                              type="text"
-                              value={editingMusicSong}
-                              onChange={e => setEditingMusicSong(e.target.value)}
-                              placeholder="Nombre de la canción o pieza..."
-                              className="px-2.5 py-1 text-xs border border-[#EFE8E1] rounded-lg bg-white text-[#2B2826] flex-1 focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
-                              autoFocus
-                            />
-                            <button
-                              type="button"
-                              onClick={() => handleSaveEditMusic(item.id)}
-                              className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-xs font-semibold cursor-pointer"
-                            >
-                              Guardar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEditingMusicId(null)}
-                              className="p-1 text-[#8A7E72] hover:text-[#2B2826]"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <div
-                            onClick={() => handleStartEditMusic(item)}
-                            className="text-sm font-medium text-[#2B2826] mt-0.5 cursor-pointer hover:text-[#C48B81] transition flex items-center gap-1.5"
-                            title="Haz clic para editar la pieza"
-                          >
-                            <span>{item.song}</span>
-                            <Edit3 className="w-3 h-3 text-[#8A7E72]/50" />
-                          </div>
-                        )}
+                        <div className="text-sm font-medium text-[#2B2826] mt-0.5 group-hover:text-[#A86B60] transition-colors">
+                          {item.song}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleStartEditMusic(item)}
-                        className="text-[#8A7E72]/60 hover:text-[#2B2826] p-1.5 rounded-xl hover:bg-[#FAF8F5] transition cursor-pointer"
-                        title="Editar pieza"
-                      >
-                        <Edit3 className="w-3.5 h-3.5" />
-                      </button>
                       <button
                         type="button"
                         onClick={() => handleRemoveMusicItem(item.id)}
