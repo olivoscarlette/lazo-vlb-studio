@@ -433,22 +433,14 @@ router.get('/conversations/:weddingId/:phone', (req, res) => {
     const normalized = WhatsAppService.normalizePhoneNumber(phone);
     const last10 = getPhoneLast10(phone);
 
-    let messages: any[] = [];
-    if (weddingId && weddingId !== 'all' && weddingId !== 'general' && weddingId !== 'prospect') {
-      messages = db.prepare(`
-        SELECT * FROM whatsapp_messages
-        WHERE wedding_id = ? AND (phone = ? OR phone = ? OR phone LIKE ?)
-        ORDER BY created_at ASC
-      `).all(weddingId, phone, normalized, `%${last10}`) as any[];
-    } else {
-      messages = db.prepare(`
-        SELECT * FROM whatsapp_messages
-        WHERE phone = ? OR phone = ? OR phone LIKE ?
-        ORDER BY created_at ASC
-      `).all(phone, normalized, `%${last10}`) as any[];
-    }
+    // Fetch all message history for this phone contact regardless of wedding tag
+    const messages = db.prepare(`
+      SELECT * FROM whatsapp_messages
+      WHERE phone = ? OR phone = ? OR phone LIKE ?
+      ORDER BY created_at ASC
+    `).all(phone, normalized, `%${last10}`) as any[];
 
-    const guest = (weddingId && weddingId !== 'prospect' && weddingId !== 'all')
+    const guest = (weddingId && !['prospect', 'prospecto', 'equipo', 'all', 'general'].includes(weddingId))
       ? db.prepare(`
           SELECT g.*, w.name as wedding_name, t.name as table_name
           FROM guests g
@@ -466,7 +458,7 @@ router.get('/conversations/:weddingId/:phone', (req, res) => {
           LIMIT 1
         `).get(phone, normalized, `%${last10}`) as any;
 
-    const wedding = (weddingId && weddingId !== 'prospect' && weddingId !== 'all')
+    const wedding = (weddingId && !['prospect', 'prospecto', 'equipo', 'all', 'general'].includes(weddingId))
       ? db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any
       : (guest?.wedding_id ? db.prepare('SELECT * FROM weddings WHERE id = ?').get(guest.wedding_id) as any : null);
 
@@ -504,11 +496,12 @@ router.post('/send', async (req, res) => {
   try {
     const { weddingId, guestId, phone, content, messageType = 'text' } = req.body;
 
-    if (!weddingId || !phone || !content) {
-      return res.status(400).json({ error: 'weddingId, phone y content son obligatorios.' });
+    if (!phone || !content) {
+      return res.status(400).json({ error: 'phone y content son obligatorios.' });
     }
 
-    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+    const isSpecialId = !weddingId || ['equipo', 'prospect', 'prospecto', 'all', 'general'].includes(weddingId);
+    const wedding = !isSpecialId ? (db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any) : null;
     const coupleNames = wedding
       ? (wedding.partner_1_name && wedding.partner_2_name
           ? `${wedding.partner_1_name} & ${wedding.partner_2_name}`
@@ -530,7 +523,7 @@ router.post('/send', async (req, res) => {
         companionCount: guest?.companion_count || 0,
         coupleNames,
         weddingDate: wedding?.wedding_date || wedding?.date,
-        weddingId,
+        weddingId: !isSpecialId ? weddingId : undefined,
         guestId
       });
     } else if (messageType === 'invitation') {
@@ -545,12 +538,12 @@ router.post('/send', async (req, res) => {
           fullPdfUrl,
           wedding.invitation_pdf_filename || `Invitacion_${coupleNames.replace(/\s+/g, '_')}.pdf`,
           `💌 Aquí tienes tu invitación formal para la boda de *${coupleNames}*.`,
-          { weddingId, guestId, sender: 'AGENT' }
+          { weddingId: !isSpecialId ? weddingId : undefined, guestId, sender: 'AGENT' }
         );
       } else {
         const linkMsg = `💌 *Invitación de Boda - ${coupleNames}*\n\nPuedes ver la invitación digital aquí:\n${wedding?.invitation_url || 'https://labodadeferyvic.com'}`;
         result = await WhatsAppService.sendTextMessage(phone, linkMsg, {
-          weddingId,
+          weddingId: !isSpecialId ? weddingId : undefined,
           guestId,
           previewUrl: true,
           sender: 'AGENT'
@@ -558,7 +551,7 @@ router.post('/send', async (req, res) => {
       }
     } else {
       result = await WhatsAppService.sendTextMessage(phone, content, {
-        weddingId,
+        weddingId: !isSpecialId ? weddingId : undefined,
         guestId,
         sender: 'AGENT'
       });

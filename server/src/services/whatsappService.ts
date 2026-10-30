@@ -172,7 +172,8 @@ export class WhatsAppService {
   }) {
     const now = new Date().toISOString();
     let weddingId = params.options?.weddingId;
-    if (!weddingId || weddingId === 'default_wedding') {
+    const isSpecialId = !weddingId || ['default_wedding', 'equipo', 'prospect', 'prospecto', 'all', 'general'].includes(weddingId);
+    if (isSpecialId) {
       const defaultWed = db.prepare('SELECT id FROM weddings ORDER BY wedding_date DESC LIMIT 1').get() as any;
       weddingId = defaultWed?.id || 'wed_default';
     }
