@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../db/index.js';
 import { authenticateToken, requireRole, JWT_SECRET, logAudit } from '../middleware/auth.js';
 import { WhatsAppService } from '../services/whatsappService.js';
+import { EmailService } from '../services/emailService.js';
 
 const router = Router();
 
@@ -152,11 +153,23 @@ router.post('/forgot-password', async (req, res) => {
       VALUES (?, ?, ?, ?, ?)
     `).run('prt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6), user.id, token, expiresAt, now);
 
-    // If user has a mobile phone, send instructions via WhatsApp Cloud API
+    const appUrl = process.env.APP_URL || 'https://www.lazostudio.mx';
+    const resetLink = `${appUrl}?reset_token=${token}`;
+
+    // Send reset instructions via Email (Gmail / SMTP)
+    try {
+      await EmailService.sendPasswordResetEmail({
+        to: user.email,
+        name: user.name,
+        resetLink
+      });
+    } catch (emailErr) {
+      console.error('[Forgot Password] Error sending reset email:', emailErr);
+    }
+
+    // If user has a mobile phone, also send instructions via WhatsApp Cloud API
     if (user.phone) {
       try {
-        const appUrl = process.env.APP_URL || 'https://www.lazostudio.mx';
-        const resetLink = `${appUrl}?reset_token=${token}`;
         await WhatsAppService.sendTextMessage(
           user.phone,
           `Hola ${user.name},\n\nHemos recibido una solicitud para restablecer tu contraseña en Lazo Studio.\n\nPuedes generar una nueva contraseña ingresando en este enlace seguro:\n${resetLink}\n\n(Válido por 1 hora. Si no realizaste esta solicitud, puedes ignorar este mensaje).`
