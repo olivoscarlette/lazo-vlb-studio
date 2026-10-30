@@ -47,9 +47,11 @@ export class EmailService {
    */
   static async sendPasswordResetEmail({ to, name, resetLink }: SendPasswordResetOptions): Promise<{ success: boolean; simulated?: boolean; messageId?: string }> {
     const transporter = this.getTransporter();
-    const senderEmail = process.env.GMAIL_USER || process.env.SMTP_USER || 'hola@lazostudio.mx';
-    const senderName = process.env.EMAIL_FROM_NAME || 'Lazo — Viva la Bride';
+    const senderEmail = process.env.EMAIL_FROM_ADDRESS || 'hola@lazostudio.mx';
+    const senderName = process.env.EMAIL_FROM_NAME || 'Lazo Studio';
     const from = `"${senderName}" <${senderEmail}>`;
+    const appUrl = process.env.APP_URL || 'https://www.lazostudio.mx';
+    const logoUrl = `${appUrl}/lazo-logo.png`;
 
     const html = `
 <!DOCTYPE html>
@@ -82,27 +84,16 @@ export class EmailService {
       box-shadow: 0 4px 20px rgba(43, 40, 38, 0.03);
     }
     .header {
-      padding: 36px 32px 24px 32px;
+      padding: 36px 32px 28px 32px;
       text-align: center;
       border-bottom: 1px solid #F5EFEB;
     }
-    .brand-title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 26px;
-      letter-spacing: 0.18em;
-      color: #2B2826;
-      font-weight: 500;
-      margin: 0;
-      text-transform: uppercase;
-    }
-    .brand-subtitle {
-      font-size: 10px;
-      letter-spacing: 0.25em;
-      color: #9E9389;
-      text-transform: uppercase;
-      margin-top: 6px;
-      margin-bottom: 0;
-      font-weight: 600;
+    .brand-logo {
+      max-width: 180px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+      border: 0;
     }
     .content {
       padding: 36px 32px;
@@ -148,12 +139,23 @@ export class EmailService {
     .fallback {
       font-size: 12px;
       color: #9E9389;
-      line-height: 1.5;
-      word-break: break-all;
+      line-height: 1.6;
+      word-break: normal;
+      overflow-wrap: break-word;
     }
-    .fallback a {
+    .fallback-link {
       color: #C48B81;
       text-decoration: underline;
+      word-break: break-all;
+    }
+    .no-reply-box {
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px dashed #EFE8E1;
+      font-size: 11px;
+      color: #A39B93;
+      line-height: 1.5;
+      text-align: center;
     }
     .footer {
       padding: 24px 32px 32px 32px;
@@ -172,8 +174,7 @@ export class EmailService {
   <div class="wrapper">
     <div class="card">
       <div class="header">
-        <h1 class="brand-title">Lazo</h1>
-        <p class="brand-subtitle">Viva la Bride &middot; Studio</p>
+        <img src="${logoUrl}" alt="Lazo Studio" class="brand-logo" width="180">
       </div>
 
       <div class="content">
@@ -196,13 +197,17 @@ export class EmailService {
 
         <div class="fallback">
           Si el bot&oacute;n no responde en tu dispositivo, copia y pega este enlace directo en tu navegador web:<br>
-          <a href="${resetLink}" target="_blank" rel="noopener noreferrer">${resetLink}</a>
+          <a href="${resetLink}" class="fallback-link" target="_blank" rel="noopener noreferrer">${resetLink}</a>
+        </div>
+
+        <div class="no-reply-box">
+          Por favor no respondas a este correo electr&oacute;nico. Este mensaje fue generado autom&aacute;ticamente y esta casilla no es monitoreada.
         </div>
       </div>
 
       <div class="footer">
-        <p class="footer-text">&copy; ${new Date().getFullYear()} Lazo Studio &middot; Viva la Bride.</p>
-        <p class="footer-text">Plataforma Integral de Planificaci&oacute;n Nupcial &middot; Todos los derechos reservados.</p>
+        <p class="footer-text">&copy; ${new Date().getFullYear()} Lazo Studio. Todos los derechos reservados.</p>
+        <p class="footer-text">Plataforma de Planificaci&oacute;n Nupcial.</p>
       </div>
     </div>
   </div>
@@ -211,7 +216,7 @@ export class EmailService {
     `;
 
     const text = `
-Lazo — Viva la Bride · Studio
+Lazo Studio
 Restablecer tu contraseña
 
 Hola ${name || 'bienvenido'},
@@ -223,13 +228,14 @@ ${resetLink}
 
 (Este enlace es confidencial, de uso único y expira en 60 minutos. Si tú no realizaste esta solicitud, puedes ignorar este mensaje de forma segura).
 
-© ${new Date().getFullYear()} Lazo Studio · Viva la Bride.
+Por favor no respondas a este correo. Este mensaje fue generado automáticamente.
+
+© ${new Date().getFullYear()} Lazo Studio. Todos los derechos reservados.
     `.trim();
 
     if (process.env.RESEND_API_KEY) {
       try {
-        const fromAddress = process.env.EMAIL_FROM || 'Lazo — Viva la Bride <hola@lazostudio.mx>';
-        const replyTo = process.env.REPLY_TO_EMAIL || 'vivalabride.mex@gmail.com';
+        const fromAddress = process.env.EMAIL_FROM || 'Lazo Studio <hola@lazostudio.mx>';
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -239,7 +245,6 @@ ${resetLink}
           body: JSON.stringify({
             from: fromAddress,
             to: [to],
-            reply_to: replyTo,
             subject: 'Restablecer tu contraseña — Lazo Studio',
             html,
             text
