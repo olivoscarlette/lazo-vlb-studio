@@ -304,57 +304,114 @@ export const ReunionesModule: React.FC = () => {
         )}
       </div>
 
-      {/* Opción B: Banner de Upgrade para Planner Virtual Autónomo */}
+      {/* Opción B: Banner Bento Editorial de Upgrade para Planner Virtual Autónomo */}
       {isPlannerVirtual && (
-        <div className="bg-gradient-to-br from-[#FAF7F5] to-[#F7EDEB]/60 rounded-3xl p-6 sm:p-7 border border-[#ECD9D5] shadow-2xs">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#FFFFFF] text-[#A86B60] border border-[#ECD9D5] mb-2.5">
-              <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Modalidad Activa: Planner Virtual Autónomo</span>
-            </div>
-            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826] tracking-tight">
-              ¿Deseas apoyo personalizado para el día de tu evento?
-            </h3>
-            <p className="text-xs text-[#7D6F6B] mt-1.5 leading-relaxed">
-              Tu cuenta incluye acceso total a la suite digital de planeación. Las sesiones de asesoría 1 a 1 y reuniones de coordinación técnica forman parte de nuestros <strong>Paquetes de Coordinación con Viva la Bride</strong>.
-            </p>
+        <div className="bg-gradient-to-br from-[#FFFFFF] via-[#FAF7F5] to-[#F7EDEB]/70 rounded-[32px] p-6 sm:p-8 border border-[#ECD9D5] shadow-[0_12px_36px_-8px_rgba(196,139,129,0.12)] relative overflow-hidden">
+          {/* Glow decorativo de fondo */}
+          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#C48B81]/10 blur-3xl pointer-events-none" />
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
-              <div className="bg-white p-4 rounded-2xl border border-[#ECD9D5] shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider mb-1">Pilar 1</div>
-                  <div className="font-semibold text-xs text-[#2B2826] mb-1.5">Asesoría Personalizada</div>
-                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
-                    Asesoria personalizada con Wedding Planner para organización integral de eventos.
-                  </p>
-                </div>
+          <div className="relative z-10 space-y-6">
+            {/* Top Badge & Subtitle */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#FFFFFF] text-[#A86B60] border border-[#ECD9D5] shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] animate-pulse" />
+                <span className="font-semibold">Planner Virtual Activo</span>
+                <span className="text-[#ECD9D5]">·</span>
+                <span className="text-[#7D6F6B]">Acompañamiento Presencial Opcional</span>
               </div>
-              <div className="bg-white p-4 rounded-2xl border border-[#ECD9D5] shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider mb-1">Pilar 2</div>
-                  <div className="font-semibold text-xs text-[#2B2826] mb-1.5">Revisión Técnica y Cronograma</div>
-                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
-                    Revisión técnica de contratos y cronograma con equipo operativo y locacion.
-                  </p>
-                </div>
-              </div>
-              <div className="bg-white p-4 rounded-2xl border border-[#ECD9D5] shadow-xs flex flex-col justify-between">
-                <div>
-                  <div className="text-[10px] font-bold text-[#C48B81] uppercase tracking-wider mb-1">Pilar 3</div>
-                  <div className="font-semibold text-xs text-[#2B2826] mb-1.5">Coordinación Día de la Boda</div>
-                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
-                    Coordinación Día de la Boda: Presencia de coordinador y staff el día de tu evento.
-                  </p>
-                </div>
-              </div>
+              <span className="text-[11px] font-semibold text-[#A86B60] uppercase tracking-widest hidden sm:inline-block">
+                Exclusivo Viva la Bride
+              </span>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 pt-1">
+            {/* Headline & Context */}
+            <div className="max-w-2xl space-y-2">
+              <h3 className="font-serif text-2xl sm:text-[34px] font-normal leading-[1.2] text-[#2B2826] tracking-tight">
+                ¿Deseas el respaldo y coordinación presencial para tu evento?
+              </h3>
+              <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                Tu acceso digital te brinda control total. Si buscas que un equipo profesional supervise tiempos, proveedores y montaje el día del evento, puedes sumar los <strong className="text-[#2B2826] font-semibold">Paquetes de Coordinación con Viva la Bride</strong>.
+              </p>
+            </div>
+
+            {/* 3 Bento Luxury Tiles */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
+              {/* Pilar 1 */}
+              <div className="bg-[#FFFFFF]/90 hover:bg-[#FFFFFF] p-5 rounded-2xl border border-[#ECD9D5]/80 hover:border-[#C48B81] transition-all duration-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between group">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-serif text-2xl font-normal italic text-[#C48B81]">01</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#F7EDEB] px-2.5 py-0.5 rounded-full">
+                      Estrategia
+                    </span>
+                  </div>
+                  <h4 className="font-serif text-xl font-bold text-[#2B2826] group-hover:text-[#A86B60] transition-colors mb-1.5">
+                    Asesoría Personalizada
+                  </h4>
+                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                    Sesiones con una Wedding Planner para afinar cada rubro de presupuesto, selección y negociación con proveedores.
+                  </p>
+                </div>
+                <div className="pt-4 mt-3 border-t border-[#FAF5F2] flex items-center text-[11px] font-medium text-[#C48B81]">
+                  <span>1 a 1 previo al evento →</span>
+                </div>
+              </div>
+
+              {/* Pilar 2 */}
+              <div className="bg-[#FFFFFF]/90 hover:bg-[#FFFFFF] p-5 rounded-2xl border border-[#ECD9D5]/80 hover:border-[#C48B81] transition-all duration-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between group">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-serif text-2xl font-normal italic text-[#C48B81]">02</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#F7EDEB] px-2.5 py-0.5 rounded-full">
+                      Logística
+                    </span>
+                  </div>
+                  <h4 className="font-serif text-xl font-bold text-[#2B2826] group-hover:text-[#A86B60] transition-colors mb-1.5">
+                    Minuto a Minuto y Locación
+                  </h4>
+                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                    Revisión técnica de contratos, escaleta de tiempos y coordinación con locación y equipo operativo.
+                  </p>
+                </div>
+                <div className="pt-4 mt-3 border-t border-[#FAF5F2] flex items-center text-[11px] font-medium text-[#C48B81]">
+                  <span>Cronograma técnico oficial →</span>
+                </div>
+              </div>
+
+              {/* Pilar 3 */}
+              <div className="bg-[#FFFFFF]/90 hover:bg-[#FFFFFF] p-5 rounded-2xl border border-[#ECD9D5]/80 hover:border-[#C48B81] transition-all duration-300 shadow-2xs hover:shadow-md hover:-translate-y-0.5 flex flex-col justify-between group">
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-serif text-2xl font-normal italic text-[#C48B81]">03</span>
+                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#F7EDEB] px-2.5 py-0.5 rounded-full">
+                      Presencial
+                    </span>
+                  </div>
+                  <h4 className="font-serif text-xl font-bold text-[#2B2826] group-hover:text-[#A86B60] transition-colors mb-1.5">
+                    Coordinación: El Gran Día
+                  </h4>
+                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                    Presencia física de coordinador titular y equipo de staff en sitio para que tú y tu familia solo se dediquen a disfrutar.
+                  </p>
+                </div>
+                <div className="pt-4 mt-3 border-t border-[#FAF5F2] flex items-center text-[11px] font-medium text-[#C48B81]">
+                  <span>Staff y dirección en vivo →</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Action Bar */}
+            <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-[#7D6F6B]">
+                <span className="w-2 h-2 rounded-full bg-[#6E8C70]" />
+                <span>Atención directa vía WhatsApp con el equipo directivo</span>
+              </div>
+
               <a
                 href={vivaLaBrideWhatsAppUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-md shadow-[#C48B81]/20 transition cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-gradient-to-r from-[#C48B81] to-[#B3796F] hover:from-[#B3796F] hover:to-[#9F675E] text-white text-xs font-semibold rounded-full shadow-[0_8px_24px_-4px_rgba(196,139,129,0.38)] hover:shadow-[0_10px_28px_-4px_rgba(196,139,129,0.5)] transition-all cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
                 <span>Cotizar Coordinación con Viva la Bride</span>
