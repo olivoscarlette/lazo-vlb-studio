@@ -36,6 +36,7 @@ interface WhatsAppMessage {
   content: string;
   template_name?: string;
   status: string;
+  error_message?: string;
   created_at: string;
 }
 
@@ -801,7 +802,12 @@ export const WhatsAppHubModule: React.FC = () => {
                               msg.status === 'PENDING' ? (
                                 <Clock className="w-3 h-3 text-white/60 animate-spin" />
                               ) : msg.status === 'FAILED' ? (
-                                <span className="text-rose-200 font-bold">!</span>
+                                <span 
+                                  className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[9px] font-bold cursor-help shadow-xs"
+                                  title={msg.error_message ? `No entregado por Meta: ${msg.error_message}` : 'No entregado: La ventana de 24 horas de Meta está inactiva (el usuario no te ha escrito recientemente) o requiere plantilla pre-aprobada.'}
+                                >
+                                  !
+                                </span>
                               ) : (
                                 <CheckCheck className="w-3.5 h-3.5 text-white" />
                               )
