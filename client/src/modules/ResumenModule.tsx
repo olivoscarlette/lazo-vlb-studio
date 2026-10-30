@@ -470,16 +470,6 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               </div>
             </div>
           </div>
-
-          {/* Breakdown Pills armónicas con Card 1 */}
-          <div className="pt-4 border-t border-[#F5EFEB] flex items-center justify-center gap-2">
-            <span className="px-3.5 py-1.5 rounded-full bg-[#F7EDEB] text-[#A86B60] text-xs font-semibold">
-              ${totalPagado.toLocaleString()} Pagado
-            </span>
-            <span className="px-3.5 py-1.5 rounded-full bg-[#FAF7F5] text-[#7D6F6B] border border-[#EFE8E1] text-xs font-medium">
-              ${totalRestante.toLocaleString()} Restante
-            </span>
-          </div>
         </div>
 
         {/* Card 3: Próximas Tareas & Checklist */}
