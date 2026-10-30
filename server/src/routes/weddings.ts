@@ -301,6 +301,24 @@ router.get('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
   const totalPagado = paidStats?.total_pagado || 0;
   const totalRestante = Math.max(0, totalCostoReal - totalPagado);
 
+  const vendorCategories = db.prepare(`
+    SELECT 
+      COALESCE(NULLIF(TRIM(v.type), ''), 'Otros') as category,
+      COALESCE(SUM(v.costo_real), 0) as total_costo,
+      COALESCE((
+        SELECT SUM(p.amount) 
+        FROM payments p 
+        WHERE p.wedding_id = ? AND p.vendor_id IN (
+          SELECT v2.id FROM vendors v2 WHERE v2.wedding_id = ? AND COALESCE(NULLIF(TRIM(v2.type), ''), 'Otros') = COALESCE(NULLIF(TRIM(v.type), ''), 'Otros')
+        )
+      ), 0) as total_pagado,
+      COUNT(v.id) as vendor_count
+    FROM vendors v
+    WHERE v.wedding_id = ?
+    GROUP BY COALESCE(NULLIF(TRIM(v.type), ''), 'Otros')
+    ORDER BY total_costo DESC
+  `).all(weddingId, weddingId, weddingId) as any[];
+
   const civilCeremony = db.prepare(`
     SELECT date, time, location, juez_oficial
     FROM civil_ceremony WHERE wedding_id = ?
@@ -322,7 +340,8 @@ router.get('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
         finance: {
           costo_real: totalCostoReal,
           monto_pagado: totalPagado,
-          restante: totalRestante
+          restante: totalRestante,
+          categories: vendorCategories
         }
       }
     }

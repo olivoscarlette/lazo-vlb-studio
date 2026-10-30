@@ -8,6 +8,55 @@ import {
 } from 'lucide-react';
 import { BroadcastScheduleModal } from '../components/BroadcastScheduleModal';
 
+const CATEGORY_PALETTE: { [key: string]: string } = {
+  'banquete': '#C48B81',
+  'catering': '#C48B81',
+  'alimentos': '#C48B81',
+  'venue': '#A86B60',
+  'lugar': '#A86B60',
+  'salon': '#A86B60',
+  'salón': '#A86B60',
+  'recepcion': '#A86B60',
+  'recepción': '#A86B60',
+  'fotografia': '#78967A',
+  'fotografía': '#78967A',
+  'foto': '#78967A',
+  'video': '#78967A',
+  'musica': '#C98A4C',
+  'música': '#C98A4C',
+  'dj': '#C98A4C',
+  'audio': '#C98A4C',
+  'flores': '#D99B82',
+  'decoracion': '#D99B82',
+  'decoración': '#D99B82',
+  'mobiliario': '#8E7E75',
+  'styling': '#B37B8F',
+  'maquillaje': '#B37B8F',
+  'invitaciones': '#6B8E8E',
+  'papeleria': '#6B8E8E',
+};
+
+const FALLBACK_CATEGORY_COLORS = [
+  '#C48B81',
+  '#A86B60',
+  '#78967A',
+  '#C98A4C',
+  '#D99B82',
+  '#B89C82',
+  '#8A7987',
+  '#6B8E8E',
+  '#93827F',
+];
+
+const getCategoryColor = (categoryName: string, index: number) => {
+  if (!categoryName) return FALLBACK_CATEGORY_COLORS[index % FALLBACK_CATEGORY_COLORS.length];
+  const normalized = categoryName.toLowerCase().trim();
+  for (const [key, color] of Object.entries(CATEGORY_PALETTE)) {
+    if (normalized.includes(key)) return color;
+  }
+  return FALLBACK_CATEGORY_COLORS[index % FALLBACK_CATEGORY_COLORS.length];
+};
+
 interface ResumenProps {
   onNavigateTab: (tab: any) => void;
 }
@@ -203,10 +252,20 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
       : weddingData.name
   );
 
-  // Finanzas con cálculo seguro y porcentaje real
-  const budgetSpent = Number(finance.costo_real) || 0;
-  const budgetGoal = Number(weddingData.budget) || Number(finance.presupuesto_estimado) || (budgetSpent > 0 ? budgetSpent : 150000);
-  const budgetPercent = budgetGoal > 0 ? Math.min(100, Math.round((budgetSpent / budgetGoal) * 100)) : 0;
+  // Finanzas dinámicas: Monto pagado vs Costo real total contratado y categorías
+  const totalCostoReal = Number(finance.costo_real) || 0;
+  const totalPagado = Number(finance.monto_pagado) || 0;
+  const targetBudget = Number(weddingData.budget) > 0 ? Number(weddingData.budget) : totalCostoReal;
+  const totalRestante = Number(finance.restante) || Math.max(0, (totalCostoReal > 0 ? totalCostoReal : targetBudget) - totalPagado);
+  const budgetBase = totalCostoReal > 0 ? totalCostoReal : (targetBudget > 0 ? targetBudget : 1);
+  const budgetPaidPercent = Math.min(100, Math.round((totalPagado / budgetBase) * 100));
+
+  const vendorCategories: Array<{
+    category: string;
+    total_costo: number;
+    total_pagado: number;
+    vendor_count?: number;
+  }> = Array.isArray(finance.categories) ? finance.categories : [];
 
   const getCountdownText = (dateStr: string) => {
     if (!dateStr) return '';
@@ -431,60 +490,134 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         {/* Card 2: Presupuesto & Finanzas */}
         <div
           onClick={() => onNavigateTab('proveedores')}
-          className="luxury-card rounded-[28px] p-6 sm:p-7 border border-[#EFE8E1] cursor-pointer group flex flex-col justify-between"
+          className="luxury-card rounded-[28px] p-6 sm:p-7 border border-[#EFE8E1] cursor-pointer group flex flex-col justify-between hover:border-[#C48B81]/40 transition-all shadow-sm hover:shadow-md"
         >
           <div>
-            <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-4">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-3">
               <span className="font-sans text-base sm:text-lg font-bold text-[#2B2826] tracking-tight">Presupuesto</span>
-              <DollarSign className="w-4 h-4 text-[#C48B81] group-hover:scale-110 transition-transform" />
+              <div className="flex items-center space-x-1 text-[#C48B81]">
+                <span className="text-[11px] font-semibold lowercase tracking-normal">ver finanzas</span>
+                <DollarSign className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              </div>
             </div>
 
-            <div className="py-2">
-              <div className="flex items-baseline space-x-1.5">
+            <div className="py-1">
+              <div className="flex items-baseline space-x-2">
                 <span className="text-3xl sm:text-4xl font-sans font-bold text-[#2B2826] tracking-tight">
-                  ${budgetSpent.toLocaleString()}
+                  ${totalPagado.toLocaleString()}
                 </span>
-                <span className="text-sm text-[#7D6F6B] font-normal">
-                  / ${budgetGoal.toLocaleString()}
+                <span className="text-sm sm:text-base text-[#7D6F6B] font-normal">
+                  / ${(totalCostoReal > 0 ? totalCostoReal : targetBudget).toLocaleString()}
                 </span>
               </div>
 
-              {/* Progress Bar with Soft Dusty Rose Gradient */}
-              <div className="w-full h-2.5 bg-[#F7EDEB] rounded-full overflow-hidden mt-5 mb-2">
-                <div
-                  className="h-full bg-gradient-to-r from-[#D9A59B] to-[#C48B81] rounded-full transition-all duration-700"
-                  style={{ width: `${budgetPercent}%` }}
-                />
+              {/* Barra segmentada dividida por categorías reales */}
+              <div className="w-full mt-4 mb-2">
+                {vendorCategories.length > 0 && totalCostoReal > 0 ? (
+                  <div className="w-full h-3.5 bg-[#F7EDEB] rounded-full overflow-hidden flex p-0.5 gap-0.5 border border-[#EFE8E1]">
+                    {vendorCategories.map((cat, idx) => {
+                      const catColor = getCategoryColor(cat.category, idx);
+                      const widthPercent = Math.max(5, (cat.total_costo / totalCostoReal) * 100);
+                      const isFullyPaid = cat.total_pagado >= cat.total_costo && cat.total_costo > 0;
+                      const hasPartialPayment = cat.total_pagado > 0 && !isFullyPaid;
+                      const paidRatio = cat.total_costo > 0 ? Math.min(100, Math.round((cat.total_pagado / cat.total_costo) * 100)) : 0;
+
+                      return (
+                        <div
+                          key={cat.category || idx}
+                          title={`${cat.category}: $${cat.total_costo.toLocaleString()} (Abonado: $${cat.total_pagado.toLocaleString()} · ${paidRatio}%)`}
+                          style={{
+                            width: `${widthPercent}%`,
+                            background: isFullyPaid
+                              ? catColor
+                              : hasPartialPayment
+                              ? `linear-gradient(to right, ${catColor} ${paidRatio}%, ${catColor}35 0%)`
+                              : `${catColor}30`,
+                            border: !isFullyPaid ? `1px dashed ${catColor}70` : 'none'
+                          }}
+                          className="h-full rounded-full transition-all duration-500 relative group/seg"
+                        />
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="w-full h-3 bg-[#F7EDEB] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#D9A59B] to-[#C48B81] rounded-full transition-all duration-700"
+                      style={{ width: `${budgetPaidPercent}%` }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between text-xs text-[#7D6F6B] mt-2">
-                <span>Total Comprometido</span>
-                <span className="font-semibold text-[#2B2826]">
-                  {budgetPercent}%
+                <span className="flex items-center space-x-1.5">
+                  <span className="font-semibold text-[#2B2826]">{budgetPaidPercent}% pagado</span>
+                  {totalPagado > 0 && (
+                    <span className="text-[11px] text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-full font-medium">
+                      ✓ ${totalPagado.toLocaleString()} abonado
+                    </span>
+                  )}
+                </span>
+                <span className="text-[#A86B60] font-semibold">
+                  Restante: ${totalRestante.toLocaleString()}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Micro-categorías */}
-          <div className="pt-4 border-t border-[#F5EFEB]">
-            <div className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B] mb-2">
-              Micro-categorías activas
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center space-x-1 text-xs text-[#5E524E]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]" />
-                <span>Banquete</span>
+          {/* Micro-categorías activas con estado */}
+          <div className="pt-4 border-t border-[#F5EFEB] mt-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B]">
+                Categorías activas ({vendorCategories.length})
               </span>
-              <span className="inline-flex items-center space-x-1 text-xs text-[#5E524E]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#78967A]" />
-                <span>Música</span>
-              </span>
-              <span className="inline-flex items-center space-x-1 text-xs text-[#5E524E]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#D9A59B]" />
-                <span>Fotografía</span>
+              <span className="text-[10px] text-[#C48B81] font-semibold group-hover:underline">
+                Detalles →
               </span>
             </div>
+
+            {vendorCategories.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-1.5 max-h-24 overflow-y-auto pr-1">
+                {vendorCategories.map((cat, idx) => {
+                  const catColor = getCategoryColor(cat.category, idx);
+                  const isFullyPaid = cat.total_pagado >= cat.total_costo && cat.total_costo > 0;
+                  const hasPartialPayment = cat.total_pagado > 0 && !isFullyPaid;
+
+                  return (
+                    <div
+                      key={cat.category || idx}
+                      className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-[#FAF7F5] border border-[#EFE8E1] text-[11px] hover:bg-white transition"
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: catColor }}
+                      />
+                      <span className="font-semibold text-[#2B2826]">{cat.category}</span>
+                      <span className="text-[#7D6F6B]">${cat.total_costo.toLocaleString()}</span>
+                      {isFullyPaid ? (
+                        <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full border border-emerald-200">
+                          ✓ Pagado
+                        </span>
+                      ) : hasPartialPayment ? (
+                        <span className="text-[9px] font-bold text-[#A86B60] bg-[#F7EDEB] px-1.5 py-0.5 rounded-full border border-[#EEDAD6]">
+                          ${cat.total_pagado.toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-medium text-[#93827F] bg-[#F3EDE8] px-1.5 py-0.5 rounded-full">
+                          Pendiente
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-xs text-[#7D6F6B] py-1 flex items-center justify-between">
+                <span>Sin proveedores registrados aún</span>
+                <span className="text-[#C48B81] text-[11px] font-semibold underline">Registrar primero</span>
+              </div>
+            )}
           </div>
         </div>
 
