@@ -9,15 +9,12 @@ interface SendPasswordResetOptions {
 export class EmailService {
   private static getTransporter() {
     const user = (process.env.GMAIL_USER || process.env.SMTP_USER || '').trim();
-    // Google entrega contraseñas de app en bloques de 4 con espacios (ej: 'abcd efgh ijkl mnop')
-    // Eliminamos cualquier espacio accidental para que la autenticación no falle
     const pass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || '').replace(/\s+/g, '');
 
     if (!user || !pass) {
       return null;
     }
 
-    // Si se provee host SMTP personalizado
     if (process.env.SMTP_HOST) {
       return nodemailer.createTransport({
         host: process.env.SMTP_HOST,
@@ -30,7 +27,6 @@ export class EmailService {
       });
     }
 
-    // Configuración para Gmail usando puerto seguro 465 con timeouts estrictos para no colgar procesos
     return nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 465,
@@ -51,7 +47,7 @@ export class EmailService {
     const senderName = process.env.EMAIL_FROM_NAME || 'Lazo Studio';
     const from = `"${senderName}" <${senderEmail}>`;
     const appUrl = process.env.APP_URL || 'https://www.lazostudio.mx';
-    const logoUrl = `${appUrl}/lazo-logo.png?v=3`;
+    const logoUrl = `${appUrl}/lazo-logo.png?v=4`;
 
     const html = `
 <!DOCTYPE html>
@@ -178,87 +174,6 @@ export class EmailService {
     <div class="card">
       <div class="header">
         <img src="${logoUrl}" alt="Lazo Studio" class="brand-logo" width="200">
-      </div>
-    .content {
-      padding: 36px 32px;
-    }
-    .title {
-      font-size: 20px;
-      font-weight: 600;
-      color: #2B2826;
-      margin: 0 0 16px 0;
-    }
-    .text {
-      font-size: 14px;
-      line-height: 1.65;
-      color: #5C5550;
-      margin: 0 0 20px 0;
-    }
-    .cta-container {
-      text-align: center;
-      margin: 32px 0 36px 0;
-    }
-    .cta-button {
-      display: inline-block;
-      background-color: #C48B81;
-      color: #FFFFFF !important;
-      font-size: 14px;
-      font-weight: 600;
-      letter-spacing: 0.04em;
-      text-decoration: none;
-      padding: 14px 36px;
-      border-radius: 9999px;
-      transition: background-color 0.2s ease;
-    }
-    .notice {
-      background-color: #FAF7F4;
-      border-left: 3px solid #C48B81;
-      padding: 14px 16px;
-      border-radius: 6px;
-      font-size: 12px;
-      line-height: 1.5;
-      color: #7D736A;
-      margin-bottom: 24px;
-    }
-    .fallback {
-      font-size: 12px;
-      color: #9E9389;
-      line-height: 1.6;
-      word-break: normal;
-      overflow-wrap: break-word;
-    }
-    .fallback-link {
-      color: #C48B81;
-      text-decoration: underline;
-      word-break: break-all;
-    }
-    .no-reply-box {
-      margin-top: 24px;
-      padding-top: 18px;
-      border-top: 1px dashed #EFE8E1;
-      font-size: 11px;
-      color: #A39B93;
-      line-height: 1.5;
-      text-align: center;
-    }
-    .footer {
-      padding: 24px 32px 32px 32px;
-      text-align: center;
-      border-top: 1px solid #F5EFEB;
-      background-color: #FCFBFA;
-    }
-    .footer-text {
-      font-size: 11px;
-      color: #A39B93;
-      margin: 4px 0;
-    }
-  </style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="card">
-      <div class="header">
-        <img src="${logoUrl}" alt="Lazo Studio" class="brand-logo" width="180">
       </div>
 
       <div class="content">
