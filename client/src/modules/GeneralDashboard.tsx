@@ -55,6 +55,7 @@ export const GeneralDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'BODAS' | 'DESPEDIDAS' | 'BABY_SHOWER' | 'OTROS'>('ALL');
+  const [serviceTierFilter, setServiceTierFilter] = useState<'ALL' | 'COORDINACION' | 'VIRTUAL'>('ALL');
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -1096,6 +1097,12 @@ export const GeneralDashboard: React.FC = () => {
     { id: 'ajustes', label: 'Ajustes', icon: Settings },
   ];
 
+  const isVirtualWedding = (w: Wedding) =>
+    Boolean(
+      w.package_type &&
+      (w.package_type.toLowerCase().includes('virtual') || w.package_type.toLowerCase().includes('autónomo'))
+    );
+
   const filteredWeddings = weddings.filter(w => {
     const q = search.trim().toLowerCase();
     const matchesSearch =
@@ -1120,8 +1127,18 @@ export const GeneralDashboard: React.FC = () => {
       matchesCategory = !type.includes('boda') && !type.includes('despedida') && !type.includes('baby');
     }
 
-    return matchesSearch && matchesCategory;
+    let matchesServiceTier = true;
+    if (serviceTierFilter === 'COORDINACION') {
+      matchesServiceTier = !isVirtualWedding(w);
+    } else if (serviceTierFilter === 'VIRTUAL') {
+      matchesServiceTier = isVirtualWedding(w);
+    }
+
+    return matchesSearch && matchesCategory && matchesServiceTier;
   });
+
+  const countVirtual = weddings.filter(isVirtualWedding).length;
+  const countCoordination = weddings.filter(w => !isVirtualWedding(w)).length;
 
   const countBodas = weddings.filter(w => !w.event_type || w.event_type.toLowerCase().includes('boda')).length;
   const countDespedidas = weddings.filter(w => w.event_type?.toLowerCase().includes('despedida')).length;
@@ -1488,7 +1505,7 @@ export const GeneralDashboard: React.FC = () => {
             </div>
 
             {/* Barra de Búsqueda Rápida y Filtros Directos */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6 sm:mb-8">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
               <div className="relative flex-1 max-w-full md:max-w-md">
                 <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
                 <input
@@ -1642,7 +1659,61 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Grid de Tarjetas de Eventos Limpias y Claras */}
+            {/* Píldoras de Segmentación: Coordinación VLB vs Planner Virtual */}
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-8 pb-1">
+              <div className="inline-flex p-1 bg-[#FAF7F5] border border-[#EFE8E1] rounded-2xl shadow-2xs">
+                <button
+                  type="button"
+                  onClick={() => setServiceTierFilter('ALL')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
+                    serviceTierFilter === 'ALL'
+                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-2xs border border-[#EFE8E1]'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                  }`}
+                >
+                  <span>Todos ({weddings.length})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setServiceTierFilter('COORDINACION')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none flex items-center gap-1.5 ${
+                    serviceTierFilter === 'COORDINACION'
+                      ? 'bg-[#2B2826] text-white shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                  }`}
+                >
+                  <span>💍 Coordinación VLB</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    serviceTierFilter === 'COORDINACION' ? 'bg-white/20 text-white' : 'bg-[#F7EDEB] text-[#A86B60]'
+                  }`}>
+                    {countCoordination}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setServiceTierFilter('VIRTUAL')}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none flex items-center gap-1.5 ${
+                    serviceTierFilter === 'VIRTUAL'
+                      ? 'bg-[#C48B81] text-white shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                  }`}
+                >
+                  <span>📱 Planner Virtual</span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                    serviceTierFilter === 'VIRTUAL' ? 'bg-white/20 text-white' : 'bg-[#FAF7F5] text-[#7D6F6B]'
+                  }`}>
+                    {countVirtual}
+                  </span>
+                </button>
+              </div>
+
+              {/* Conteo Informativo Rápido */}
+              <span className="text-xs text-[#7D6F6B] hidden sm:inline-block">
+                Mostrando <strong className="text-[#2B2826]">{filteredWeddings.length}</strong> de {weddings.length} eventos
+              </span>
+            </div>
+
+            {/* Grid de Tarjetas de Eventos Limpias y Claras con Separación Editorial */}
             {loading ? (
               <div className="py-20 text-center text-[#7D6F6B] text-sm">Cargando eventos...</div>
             ) : filteredWeddings.length === 0 ? (
@@ -1651,158 +1722,329 @@ export const GeneralDashboard: React.FC = () => {
                 <p className="text-[#7D6F6B] text-sm mt-1">Crea un nuevo evento o ajusta tus filtros de búsqueda.</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredWeddings.map(w => {
-                  const totalGuests = w.total_guests || w.estimated_guests || 0;
-                  const confirmedGuests = w.confirmed_guests || w.total_confirmed_seats || 0;
-                  const confirmedPct = totalGuests > 0 ? Math.min(100, Math.round((confirmedGuests / totalGuests) * 100)) : 0;
-                  const countdownText = formatWeddingCountdown(w.wedding_date);
-                  const venueName = w.reception_venue || w.ceremony_venue || 'Sede por confirmar';
-
-                  return (
-                    <div
-                      key={w.id}
-                      onClick={() => setCurrentWedding(w)}
-                      className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#ECD9D5]"
-                    >
-                      <div>
-                        {/* Fila superior: Tipo de evento, Nombre del Evento y botones de acción */}
-                        <div className="flex items-start justify-between gap-2 mb-4">
-                          <div className="min-w-0 flex-1">
-                            <div className="mb-2">
-                              <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#FAF3F0] px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
-                                {w.event_type || 'Boda Completa'}
-                              </span>
-                            </div>
-                            <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2]">
-                              {renderCoupleNames(w)}
-                            </div>
+              <div className="space-y-10">
+                {/* 1. SECCIÓN: COORDINACIÓN VIVA LA BRIDE */}
+                {(serviceTierFilter === 'ALL' || serviceTierFilter === 'COORDINACION') && (
+                  <div>
+                    {/* Encabezado de Sección */}
+                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-3 mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-2xl bg-[#F7EDEB] text-[#C48B81] flex items-center justify-center font-bold text-base shadow-2xs border border-[#ECD9D5]">
+                          💍
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826] tracking-tight">
+                              Coordinación Viva la Bride
+                            </h3>
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#FAF3F0] px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
+                              Presencial
+                            </span>
                           </div>
-
-                          <div className="flex items-center space-x-1 shrink-0">
-                            {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
-                              <button
-                                type="button"
-                                onClick={(e) => handleOpenEditModal(e, w)}
-                                className="p-1.5 text-stone-400 hover:text-[#A86B60] hover:bg-[#F7EDEB] rounded-lg transition opacity-80 group-hover:opacity-100"
-                                title="Editar evento"
-                              >
-                                <Edit3 className="w-4 h-4" />
-                              </button>
-                            )}
-                            {user?.role === 'ADMINISTRADOR' && (
-                              <button
-                                type="button"
-                                onClick={(e) => handleDeleteWedding(e, w)}
-                                className="p-1.5 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition opacity-0 group-hover:opacity-100"
-                                title="Eliminar este evento"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Badge de cuenta regresiva y Add-ons */}
-                        <div className="flex flex-wrap items-center gap-1.5 mb-3.5">
-                          <span className="inline-flex items-center text-xs font-medium text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-3.5 py-1 rounded-full select-none">
-                            {countdownText}
-                          </span>
-                          {w.package_type === 'Planner Virtual' && (
-                            <span className="text-[10px] font-semibold text-[#7D6F6B] bg-[#FAF7F5] border border-[#EFE8E1] px-2 py-0.5 rounded-full select-none">
-                              Virtual
-                            </span>
-                          )}
-                          {Boolean(w.has_whatsapp_rsvp) && (
-                            <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo WhatsApp RSVP Activo">
-                              <span>📲</span> WhatsApp
-                            </span>
-                          )}
-                          {Boolean(w.has_layout_2d) && (
-                            <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo Plano 2D Activo">
-                              <span>🪑</span> Plano 2D
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Lugar / Sede */}
-                        <div className="flex items-center space-x-1.5 text-xs text-[#7D6F6B] mb-5 truncate">
-                          <MapPin className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
-                          <span className="truncate">{venueName}</span>
-                        </div>
-
-                        {/* Barra delgada y estética */}
-                        <div className="w-full h-1.5 bg-[#F7EDEB] rounded-full overflow-hidden mb-2">
-                          <div
-                            className="h-full bg-gradient-to-r from-[#C48B81] to-[#D8A69E] rounded-full transition-all duration-500"
-                            style={{ width: `${Math.max(confirmedPct > 0 ? confirmedPct : 10, 4)}%` }}
-                          />
-                        </div>
-
-                        {/* Métrica propia de la boda */}
-                        <div className="text-xs text-[#7D6F6B] mb-6 font-medium">
-                          {confirmedPct > 0 ? (
-                            <span>{totalGuests} invitados · {confirmedPct}% confirmados</span>
-                          ) : (
-                            <span>{totalGuests > 0 ? `${totalGuests} invitados · ` : ''}En envío de invitaciones</span>
-                          )}
+                          <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                            Bodas con equipo asignado, reuniones presenciales y coordinación operativa
+                          </p>
                         </div>
                       </div>
-
-                      {/* Fila Inferior: Equipo asignado + Abrir Boda */}
-                      <div className="flex items-center justify-between pt-2">
-                        <div className="flex items-center space-x-1.5">
-                          {Array.isArray(w.team) && w.team.length > 0 ? (
-                            <>
-                              {w.team.slice(0, 3).map((member: any, i: number) => (
-                                <div
-                                  key={member.id || i}
-                                  title={`${member.name} (${member.assigned_role || member.role})`}
-                                  className="w-7 h-7 rounded-full bg-[#F7EDEB] text-[#A86B60] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
-                                >
-                                  <span className="text-[11px] font-bold uppercase leading-none">
-                                    {member.name?.trim()?.charAt(0) || 'V'}
-                                  </span>
-                                </div>
-                              ))}
-                              {w.team.length > 3 && (
-                                <div
-                                  title={`+${w.team.length - 3} miembros adicionales`}
-                                  className="w-7 h-7 rounded-full bg-[#F2ECE7] text-[#7D6F6B] flex items-center justify-center border border-[#EFE8E1] shadow-2xs select-none shrink-0"
-                                >
-                                  <span className="text-[10px] font-bold leading-none">
-                                    +{w.team.length - 3}
-                                  </span>
-                                </div>
-                              )}
-                            </>
-                          ) : (
-                            <div
-                              title="Lazo Studio"
-                              className="w-7 h-7 rounded-full bg-[#F7EDEB] text-[#A86B60] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
-                            >
-                              <span className="text-[11px] font-bold uppercase leading-none">
-                                V
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setCurrentWedding(w);
-                          }}
-                          className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold text-[#2B2826] bg-[#FFFFFF] hover:bg-[#F7EDEB] border border-[#EFE8E1] transition shadow-2xs group-hover:border-[#C48B81] group-hover:text-[#C48B81] cursor-pointer"
-                        >
-                          <span>Abrir Boda</span>
-                          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-                        </button>
-                      </div>
+                      <span className="text-xs font-bold text-[#A86B60] bg-[#F7EDEB] px-3 py-1 rounded-full border border-[#ECD9D5]">
+                        {filteredWeddings.filter(w => !isVirtualWedding(w)).length} {filteredWeddings.filter(w => !isVirtualWedding(w)).length === 1 ? 'evento' : 'eventos'}
+                      </span>
                     </div>
-                  );
-                })}
+
+                    {filteredWeddings.filter(w => !isVirtualWedding(w)).length === 0 ? (
+                      <div className="p-8 text-center rounded-2xl bg-[#FAF7F5] border border-dashed border-[#EFE8E1] text-xs text-[#7D6F6B]">
+                        No hay eventos de Coordinación Viva la Bride con los filtros actuales.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredWeddings.filter(w => !isVirtualWedding(w)).map(w => {
+                          const totalGuests = w.total_guests || w.estimated_guests || 0;
+                          const confirmedGuests = w.confirmed_guests || w.total_confirmed_seats || 0;
+                          const confirmedPct = totalGuests > 0 ? Math.min(100, Math.round((confirmedGuests / totalGuests) * 100)) : 0;
+                          const countdownText = formatWeddingCountdown(w.wedding_date);
+                          const venueName = w.reception_venue || w.ceremony_venue || 'Sede por confirmar';
+
+                          return (
+                            <div
+                              key={w.id}
+                              onClick={() => setCurrentWedding(w)}
+                              className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#ECD9D5]"
+                            >
+                              <div>
+                                <div className="flex items-start justify-between gap-2 mb-4">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="mb-2">
+                                      <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#FAF3F0] px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
+                                        {w.package_type || w.event_type || 'Boda Completa'}
+                                      </span>
+                                    </div>
+                                    <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2]">
+                                      {renderCoupleNames(w)}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center space-x-1 shrink-0">
+                                    {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleOpenEditModal(e, w)}
+                                        className="p-1.5 text-stone-400 hover:text-[#A86B60] hover:bg-[#F7EDEB] rounded-lg transition opacity-80 group-hover:opacity-100"
+                                        title="Editar evento"
+                                      >
+                                        <Edit3 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                    {user?.role === 'ADMINISTRADOR' && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleDeleteWedding(e, w)}
+                                        className="p-1.5 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition opacity-0 group-hover:opacity-100"
+                                        title="Eliminar este evento"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-1.5 mb-3.5">
+                                  <span className="inline-flex items-center text-xs font-medium text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-3.5 py-1 rounded-full select-none">
+                                    {countdownText}
+                                  </span>
+                                  {Boolean(w.has_whatsapp_rsvp) && (
+                                    <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo WhatsApp RSVP Activo">
+                                      <span>📲</span> WhatsApp
+                                    </span>
+                                  )}
+                                  {Boolean(w.has_layout_2d) && (
+                                    <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo Plano 2D Activo">
+                                      <span>🪑</span> Plano 2D
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center space-x-1.5 text-xs text-[#7D6F6B] mb-5 truncate">
+                                  <MapPin className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                                  <span className="truncate">{venueName}</span>
+                                </div>
+
+                                <div className="w-full h-1.5 bg-[#F7EDEB] rounded-full overflow-hidden mb-2">
+                                  <div
+                                    className="h-full bg-gradient-to-r from-[#C48B81] to-[#D8A69E] rounded-full transition-all duration-500"
+                                    style={{ width: `${Math.max(confirmedPct > 0 ? confirmedPct : 10, 4)}%` }}
+                                  />
+                                </div>
+
+                                <div className="text-xs text-[#7D6F6B] mb-6 font-medium">
+                                  {confirmedPct > 0 ? (
+                                    <span>{totalGuests} invitados · {confirmedPct}% confirmados</span>
+                                  ) : (
+                                    <span>{totalGuests > 0 ? `${totalGuests} invitados · ` : ''}En envío de invitaciones</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between pt-2">
+                                <div className="flex items-center space-x-1.5">
+                                  {Array.isArray(w.team) && w.team.length > 0 ? (
+                                    <>
+                                      {w.team.slice(0, 3).map((member: any, i: number) => (
+                                        <div
+                                          key={member.id || i}
+                                          title={`${member.name} (${member.assigned_role || member.role})`}
+                                          className="w-7 h-7 rounded-full bg-[#F7EDEB] text-[#A86B60] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
+                                        >
+                                          <span className="text-[11px] font-bold uppercase leading-none">
+                                            {member.name?.trim()?.charAt(0) || 'V'}
+                                          </span>
+                                        </div>
+                                      ))}
+                                      {w.team.length > 3 && (
+                                        <div
+                                          title={`+${w.team.length - 3} miembros adicionales`}
+                                          className="w-7 h-7 rounded-full bg-[#F2ECE7] text-[#7D6F6B] flex items-center justify-center border border-[#EFE8E1] shadow-2xs select-none shrink-0"
+                                        >
+                                          <span className="text-[10px] font-bold leading-none">
+                                            +{w.team.length - 3}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </>
+                                  ) : (
+                                    <div
+                                      title="Viva la Bride"
+                                      className="w-7 h-7 rounded-full bg-[#F7EDEB] text-[#A86B60] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
+                                    >
+                                      <span className="text-[11px] font-bold uppercase leading-none">V</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentWedding(w);
+                                  }}
+                                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold text-[#2B2826] bg-[#FFFFFF] hover:bg-[#F7EDEB] border border-[#EFE8E1] transition shadow-2xs group-hover:border-[#C48B81] group-hover:text-[#C48B81] cursor-pointer"
+                                >
+                                  <span>Abrir Boda</span>
+                                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 2. SECCIÓN: PLANNER VIRTUAL AUTÓNOMO */}
+                {(serviceTierFilter === 'ALL' || serviceTierFilter === 'VIRTUAL') && (
+                  <div className="pt-2">
+                    {/* Encabezado de Sección */}
+                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-3 mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-2xl bg-[#FAF7F5] text-[#7D6F6B] flex items-center justify-center font-bold text-base shadow-2xs border border-[#EFE8E1]">
+                          📱
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826] tracking-tight">
+                              Planner Virtual Autónomo
+                            </h3>
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B] bg-[#FAF7F5] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
+                              Suite Digital
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                            Novios autónomos con acceso a herramientas digitales (Checklist, Proveedores, Invitados y Mesas)
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold text-[#7D6F6B] bg-[#FAF7F5] px-3 py-1 rounded-full border border-[#EFE8E1]">
+                        {filteredWeddings.filter(w => isVirtualWedding(w)).length} {filteredWeddings.filter(w => isVirtualWedding(w)).length === 1 ? 'evento' : 'eventos'}
+                      </span>
+                    </div>
+
+                    {filteredWeddings.filter(w => isVirtualWedding(w)).length === 0 ? (
+                      <div className="p-8 text-center rounded-2xl bg-[#FAF7F5] border border-dashed border-[#EFE8E1] text-xs text-[#7D6F6B]">
+                        No hay eventos de Planner Virtual con los filtros actuales.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredWeddings.filter(w => isVirtualWedding(w)).map(w => {
+                          const totalGuests = w.total_guests || w.estimated_guests || 0;
+                          const confirmedGuests = w.confirmed_guests || w.total_confirmed_seats || 0;
+                          const confirmedPct = totalGuests > 0 ? Math.min(100, Math.round((confirmedGuests / totalGuests) * 100)) : 0;
+                          const countdownText = formatWeddingCountdown(w.wedding_date);
+                          const venueName = w.reception_venue || w.ceremony_venue || 'Sede por confirmar';
+
+                          return (
+                            <div
+                              key={w.id}
+                              onClick={() => setCurrentWedding(w)}
+                              className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#C48B81]/40"
+                            >
+                              <div>
+                                <div className="flex items-start justify-between gap-2 mb-4">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="mb-2">
+                                      <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B] bg-[#FAF7F5] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
+                                        Planner Virtual
+                                      </span>
+                                    </div>
+                                    <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2]">
+                                      {renderCoupleNames(w)}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center space-x-1 shrink-0">
+                                    {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleOpenEditModal(e, w)}
+                                        className="p-1.5 text-stone-400 hover:text-[#A86B60] hover:bg-[#F7EDEB] rounded-lg transition opacity-80 group-hover:opacity-100"
+                                        title="Editar evento"
+                                      >
+                                        <Edit3 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                    {user?.role === 'ADMINISTRADOR' && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleDeleteWedding(e, w)}
+                                        className="p-1.5 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition opacity-0 group-hover:opacity-100"
+                                        title="Eliminar este evento"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-1.5 mb-3.5">
+                                  <span className="inline-flex items-center text-xs font-medium text-[#7D6F6B] bg-[#FAF7F5] border border-[#EFE8E1] px-3.5 py-1 rounded-full select-none">
+                                    {countdownText}
+                                  </span>
+                                  {Boolean(w.has_whatsapp_rsvp) && (
+                                    <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo WhatsApp RSVP Activo">
+                                      <span>📲</span> WhatsApp
+                                    </span>
+                                  )}
+                                  {Boolean(w.has_layout_2d) && (
+                                    <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo Plano 2D Activo">
+                                      <span>🪑</span> Plano 2D
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="flex items-center space-x-1.5 text-xs text-[#7D6F6B] mb-5 truncate">
+                                  <MapPin className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                                  <span className="truncate">{venueName}</span>
+                                </div>
+
+                                <div className="w-full h-1.5 bg-[#EFE8E1] rounded-full overflow-hidden mb-2">
+                                  <div
+                                    className="h-full bg-[#7D6F6B] rounded-full transition-all duration-500"
+                                    style={{ width: `${Math.max(confirmedPct > 0 ? confirmedPct : 10, 4)}%` }}
+                                  />
+                                </div>
+
+                                <div className="text-xs text-[#7D6F6B] mb-6 font-medium">
+                                  {confirmedPct > 0 ? (
+                                    <span>{totalGuests} invitados · {confirmedPct}% confirmados</span>
+                                  ) : (
+                                    <span>{totalGuests > 0 ? `${totalGuests} invitados · ` : ''}En envío de invitaciones</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between pt-2">
+                                <span className="text-[11px] font-semibold text-[#7D6F6B] bg-[#FAF7F5] px-2.5 py-1 rounded-lg border border-[#EFE8E1]">
+                                  Lazo Suite
+                                </span>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentWedding(w);
+                                  }}
+                                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold text-[#2B2826] bg-[#FFFFFF] hover:bg-[#FAF7F5] border border-[#EFE8E1] transition shadow-2xs group-hover:border-[#7D6F6B] group-hover:text-[#2B2826] cursor-pointer"
+                                >
+                                  <span>Abrir Boda</span>
+                                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
