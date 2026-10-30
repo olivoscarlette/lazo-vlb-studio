@@ -1809,7 +1809,7 @@ export const GeneralDashboard: React.FC = () => {
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  <span>💍 Coordinación VLB</span>
+                  <span>Coordinación VLB</span>
                   <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                     serviceTierFilter === 'COORDINACION' ? 'bg-white/20 text-white' : 'bg-[#F7EDEB] text-[#A86B60]'
                   }`}>
@@ -1825,7 +1825,7 @@ export const GeneralDashboard: React.FC = () => {
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  <span>📱 Planner Virtual</span>
+                  <span>Planner Virtual</span>
                   <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
                     serviceTierFilter === 'VIRTUAL' ? 'bg-white/20 text-white' : 'bg-[#FAF7F5] text-[#7D6F6B]'
                   }`}>
@@ -1857,7 +1857,7 @@ export const GeneralDashboard: React.FC = () => {
                     <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-3 mb-6">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-2xl bg-[#F7EDEB] text-[#C48B81] flex items-center justify-center font-bold text-base shadow-2xs border border-[#ECD9D5]">
-                          💍
+                          <Heart className="w-4 h-4 text-[#C48B81]" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -1939,13 +1939,13 @@ export const GeneralDashboard: React.FC = () => {
                                     {countdownText}
                                   </span>
                                   {Boolean(w.has_whatsapp_rsvp) && (
-                                    <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo WhatsApp RSVP Activo">
-                                      <span>📲</span> WhatsApp
+                                    <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2.5 py-0.5 rounded-full select-none" title="Módulo WhatsApp RSVP Activo">
+                                      WhatsApp
                                     </span>
                                   )}
                                   {Boolean(w.has_layout_2d) && (
-                                    <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo Plano 2D Activo">
-                                      <span>🪑</span> Plano 2D
+                                    <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2.5 py-0.5 rounded-full select-none" title="Módulo Plano 2D Activo">
+                                      Plano 2D
                                     </span>
                                   )}
                                 </div>
@@ -2034,7 +2034,7 @@ export const GeneralDashboard: React.FC = () => {
                     <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-3 mb-6">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-2xl bg-[#FAF7F5] text-[#7D6F6B] flex items-center justify-center font-bold text-base shadow-2xs border border-[#EFE8E1]">
-                          📱
+                          <Laptop className="w-4 h-4 text-[#7D6F6B]" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
@@ -2116,13 +2116,13 @@ export const GeneralDashboard: React.FC = () => {
                                     {countdownText}
                                   </span>
                                   {Boolean(w.has_whatsapp_rsvp) && (
-                                    <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo WhatsApp RSVP Activo">
-                                      <span>📲</span> WhatsApp
+                                    <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2.5 py-0.5 rounded-full select-none" title="Módulo WhatsApp RSVP Activo">
+                                      WhatsApp
                                     </span>
                                   )}
                                   {Boolean(w.has_layout_2d) && (
-                                    <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2 py-0.5 rounded-full flex items-center gap-1 select-none" title="Módulo Plano 2D Activo">
-                                      <span>🪑</span> Plano 2D
+                                    <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2.5 py-0.5 rounded-full select-none" title="Módulo Plano 2D Activo">
+                                      Plano 2D
                                     </span>
                                   )}
                                 </div>
@@ -2300,7 +2300,7 @@ export const GeneralDashboard: React.FC = () => {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[#A86B60]">
-                      🌸 Equipo Viva la Bride
+                      Equipo Viva la Bride
                     </span>
                     <span className="w-2 h-2 rounded-full bg-[#C48B81]" />
                   </div>
@@ -2322,7 +2322,7 @@ export const GeneralDashboard: React.FC = () => {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E6D38]">
-                      💍 Novios VLB (Presencial)
+                      Novios VLB (Presencial)
                     </span>
                     <span className="w-2 h-2 rounded-full bg-[#C29B38]" />
                   </div>
@@ -2344,7 +2344,7 @@ export const GeneralDashboard: React.FC = () => {
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-[#3A5A78]">
-                      💻 Novios Virtuales
+                      Novios Virtuales
                     </span>
                     <span className="w-2 h-2 rounded-full bg-[#3A5A78]" />
                   </div>
@@ -2389,7 +2389,7 @@ export const GeneralDashboard: React.FC = () => {
                           : 'text-[#7D6F6B] hover:text-[#2B2826]'
                       }`}
                     >
-                      <span>🌸 Equipo VLB</span>
+                      <span>Equipo VLB</span>
                       <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
                         userFilterSegment === 'EQUIPO' ? 'bg-white/20 text-white' : 'bg-[#F7EDEB] text-[#A86B60]'
                       }`}>
@@ -2406,7 +2406,7 @@ export const GeneralDashboard: React.FC = () => {
                           : 'text-[#7D6F6B] hover:text-[#2B2826]'
                       }`}
                     >
-                      <span>💍 Novios VLB</span>
+                      <span>Novios VLB</span>
                       <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
                         userFilterSegment === 'NOVIOS_VLB' ? 'bg-white/20 text-white' : 'bg-[#FBF6ED] text-[#8E6D38]'
                       }`}>
@@ -2423,7 +2423,7 @@ export const GeneralDashboard: React.FC = () => {
                           : 'text-[#7D6F6B] hover:text-[#2B2826]'
                       }`}
                     >
-                      <span>💻 Novios Virtuales</span>
+                      <span>Novios Virtuales</span>
                       <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
                         userFilterSegment === 'NOVIOS_VIRTUAL' ? 'bg-white/20 text-white' : 'bg-[#F0F4F8] text-[#3A5A78]'
                       }`}>
@@ -2523,12 +2523,12 @@ export const GeneralDashboard: React.FC = () => {
                                       ? 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5]'
                                       : 'bg-[#F5EFEB] text-[#7D6F6B] border-[#EFE8E1]'
                                   }`}>
-                                    <span>{u.role === 'ADMINISTRADOR' ? '👑 Admin' : u.role === 'COORDINADOR' ? '🌸 Coordinadora VLB' : '🤝 Staff'}</span>
+                                    <span>{u.role === 'ADMINISTRADOR' ? 'Admin' : u.role === 'COORDINADOR' ? 'Coordinadora VLB' : 'Staff'}</span>
                                   </span>
                                 ) : cat === 'NOVIOS_VLB' ? (
                                   <div className="space-y-1">
                                     <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#FBF6ED] text-[#8E6D38] border border-[#ECDDBF]">
-                                      <span>💍 Coordinación VLB</span>
+                                      <span>Coordinación VLB</span>
                                     </span>
                                     {linkedWedding?.package_type && (
                                       <div className="text-[10px] text-[#8E6D38]/80 font-medium pl-1">
@@ -2539,7 +2539,7 @@ export const GeneralDashboard: React.FC = () => {
                                 ) : (
                                   <div className="space-y-1">
                                     <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#F0F4F8] text-[#3A5A78] border border-[#D0E0EC]">
-                                      <span>💻 Planner Virtual</span>
+                                      <span>Planner Virtual</span>
                                     </span>
                                     <div className="text-[10px] text-[#3A5A78]/80 font-medium pl-1">
                                       Autónomo
@@ -2584,12 +2584,12 @@ export const GeneralDashboard: React.FC = () => {
                                         <span>{linkedWedding.wedding_date || 'Fecha por definir'}</span>
                                         {linkedWedding.has_whatsapp_rsvp && (
                                           <span className="text-[9px] px-1.5 py-0.2 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
-                                            📲 RSVP
+                                            RSVP
                                           </span>
                                         )}
                                         {linkedWedding.has_layout_2d && (
                                           <span className="text-[9px] px-1.5 py-0.2 bg-[#F7EDEB] text-[#A86B60] rounded-full border border-[#EEDAD6]">
-                                            🪑 2D
+                                            Plano 2D
                                           </span>
                                         )}
                                       </div>
@@ -3821,7 +3821,7 @@ export const GeneralDashboard: React.FC = () => {
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">
               <div className="space-y-1">
                 <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
-                  ✨ MIGRACIÓN DE SERVICIO
+                  MIGRACIÓN DE SERVICIO
                 </span>
                 <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
                   Cambiar a Coordinación VLB
@@ -3915,7 +3915,7 @@ export const GeneralDashboard: React.FC = () => {
                     className="rounded border-stone-300 text-[#C48B81]"
                   />
                   <div>
-                    <span className="font-semibold">📲 Confirmación por WhatsApp Automática</span>
+                    <span className="font-semibold">Confirmación por WhatsApp Automática</span>
                     <p className="text-[10px] text-stone-500">Permite enviar y recibir RSVPs por WhatsApp oficial</p>
                   </div>
                 </label>
@@ -3927,7 +3927,7 @@ export const GeneralDashboard: React.FC = () => {
                     className="rounded border-stone-300 text-[#C48B81]"
                   />
                   <div>
-                    <span className="font-semibold">🪑 Plano de Mesas 2D Interactivo</span>
+                    <span className="font-semibold">Plano de Mesas 2D Interactivo</span>
                     <p className="text-[10px] text-stone-500">Diseñador visual de distribución de mesas y asientos</p>
                   </div>
                 </label>
@@ -3948,7 +3948,7 @@ export const GeneralDashboard: React.FC = () => {
                   className="inline-flex items-center space-x-1.5 px-5 py-2.5 bg-gradient-to-r from-[#C48B81] to-[#A86B60] hover:from-[#B3796F] hover:to-[#935B50] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer disabled:opacity-60"
                 >
                   <Sparkles className="w-4 h-4" />
-                  <span>{upgradeLoading ? 'Actualizando...' : 'Confirmar Upgrade a Viva la Bride ✨'}</span>
+                  <span>{upgradeLoading ? 'Actualizando...' : 'Confirmar Upgrade a Viva la Bride'}</span>
                 </button>
               </div>
             </form>
@@ -4242,7 +4242,6 @@ export const GeneralDashboard: React.FC = () => {
                     }`}>
                       <div className="min-w-0 pr-2">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-xs">📲</span>
                           <span className="text-xs font-semibold text-[#2B2826]">RSVP WhatsApp</span>
                         </div>
                         <p className="text-[10px] text-[#7D6F6B] leading-tight">
@@ -4265,7 +4264,6 @@ export const GeneralDashboard: React.FC = () => {
                     }`}>
                       <div className="min-w-0 pr-2">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-xs">🪑</span>
                           <span className="text-xs font-semibold text-[#2B2826]">Plano 2D Layout</span>
                         </div>
                         <p className="text-[10px] text-[#7D6F6B] leading-tight">
@@ -4630,7 +4628,6 @@ export const GeneralDashboard: React.FC = () => {
                       }`}>
                         <div className="min-w-0 pr-2">
                           <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-xs">📲</span>
                             <span className="text-xs font-semibold text-[#2B2826]">RSVP WhatsApp</span>
                           </div>
                           <p className="text-[10px] text-[#7D6F6B] leading-tight">
@@ -4653,7 +4650,6 @@ export const GeneralDashboard: React.FC = () => {
                       }`}>
                         <div className="min-w-0 pr-2">
                           <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-xs">🪑</span>
                             <span className="text-xs font-semibold text-[#2B2826]">Plano 2D Layout</span>
                           </div>
                           <p className="text-[10px] text-[#7D6F6B] leading-tight">
