@@ -293,17 +293,7 @@ export const ReunionesModule: React.FC = () => {
           </p>
         </div>
 
-        {isPlannerVirtual ? (
-          <a
-            href={vivaLaBrideWhatsAppUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-xs transition cursor-pointer"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>Cotizar Coordinación</span>
-          </a>
-        ) : (
+        {!isPlannerVirtual && (
           <button
             onClick={() => setShowScheduleModal(true)}
             className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer"
