@@ -647,115 +647,303 @@ export const MesasLayoutModule: React.FC = () => {
   };
 
   if (isLockedForVirtualNovios) {
+    const totalCapacity = tables.reduce((acc, t) => acc + (t.capacity || 0), 0);
+    const totalAssigned = tables.reduce((acc, t) => acc + (t.used_seats || (t.guests?.length || 0)), 0);
+
     return (
       <div className="space-y-8 animate-in fade-in duration-200">
-        {/* Top Header */}
+        {/* Top Header & Actions */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <span className="text-xs uppercase font-bold tracking-widest text-[#8A7E72]">
-              Distribución del Salón & Logística
+              Asignación y Logística de Invitados
             </span>
             <h2 className="font-serif text-3xl font-bold text-[#2B2826] mt-1">
-              Mesas y Layout Visual
+              Mesas y Asignación de Invitados
             </h2>
             <p className="text-sm text-[#8A7E72] mt-1 leading-relaxed">
-              Plano arquitectónico, flujo de invitados, montaje de pista y distribución de mesas para la recepción.
+              Crea tus mesas, sienta a tus invitados confirmados y descarga la distribución oficial en PDF.
             </p>
           </div>
-        </div>
 
-        {/* Banner Bento Editorial de Upgrade para Planner Virtual Autónomo */}
-        <div className="bg-gradient-to-br from-[#FFFFFF] via-[#FAF7F5] to-[#F7EDEB]/70 rounded-[32px] p-6 sm:p-8 border border-[#ECD9D5] shadow-[0_12px_36px_-8px_rgba(196,139,129,0.12)] relative overflow-hidden">
-          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#C48B81]/10 blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 space-y-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-medium bg-[#FFFFFF] text-[#A86B60] border border-[#ECD9D5] shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] animate-pulse" />
-                <span className="font-semibold">Planner Virtual Activo</span>
-                <span className="text-[#ECD9D5]">·</span>
-                <span className="text-[#7D6F6B]">Layout Técnico & Planimetría</span>
-              </div>
-              <span className="text-[11px] font-semibold text-[#A86B60] uppercase tracking-widest hidden sm:inline-block">
-                Exclusivo Viva la Bride
-              </span>
-            </div>
-
-            <div className="max-w-2xl space-y-2">
-              <h3 className="font-serif text-2xl sm:text-[34px] font-normal leading-[1.2] text-[#2B2826] tracking-tight">
-                ¿Deseas la distribución técnica y layout arquitectónico de tu evento?
-              </h3>
-              <p className="text-xs text-[#7D6F6B] leading-relaxed">
-                El diseño de la planimetría a escala, cálculo de pasillos de servicio de banquete, orientación de la pista de baile y dirección de montaje el Día de la Boda forman parte de nuestros <strong className="text-[#2B2826] font-semibold">Paquetes de Coordinación con Viva la Bride</strong>.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-              <div className="bg-[#FFFFFF]/90 hover:bg-[#FFFFFF] p-5 rounded-2xl border border-[#ECD9D5]/80 hover:border-[#C48B81] transition-all duration-300 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-serif text-2xl font-normal italic text-[#C48B81]">01</span>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#F7EDEB] px-2.5 py-0.5 rounded-full">
-                      Planimetría
-                    </span>
-                  </div>
-                  <h4 className="font-serif text-xl font-bold text-[#2B2826] mb-1.5">
-                    Plano a Escala Real
-                  </h4>
-                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
-                    Carga digital y montaje visual del plano arquitectónico de la hacienda o salón para asegurar que cada mesa quepa con precisión milimétrica.
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-[#FFFFFF]/90 hover:bg-[#FFFFFF] p-5 rounded-2xl border border-[#ECD9D5]/80 hover:border-[#C48B81] transition-all duration-300 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-serif text-2xl font-normal italic text-[#C48B81]">02</span>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#F7EDEB] px-2.5 py-0.5 rounded-full">
-                      Logística
-                    </span>
-                  </div>
-                  <h4 className="font-serif text-xl font-bold text-[#2B2826] mb-1.5">
-                    Flujo y Visibilidad de Pista
-                  </h4>
-                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
-                    Optimización de pasillos de meseros, visibilidad total hacia la mesa de novios y acomodo acústico respecto al DJ o grupo en vivo.
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-[#FFFFFF]/90 hover:bg-[#FFFFFF] p-5 rounded-2xl border border-[#ECD9D5]/80 hover:border-[#C48B81] transition-all duration-300 shadow-2xs flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-serif text-2xl font-normal italic text-[#C48B81]">03</span>
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#F7EDEB] px-2.5 py-0.5 rounded-full">
-                      Montaje Día B
-                    </span>
-                  </div>
-                  <h4 className="font-serif text-xl font-bold text-[#2B2826] mb-1.5">
-                    Dirección Técnica en Sitio
-                  </h4>
-                  <p className="text-xs text-[#7D6F6B] leading-relaxed">
-                    Presencia física del equipo y staff de Viva la Bride durante el montaje de proveedores para supervisar la colocación exacta de cada elemento.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-              <a
-                href={layoutUpgradeWhatsAppUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-sm transition hover:shadow-md cursor-pointer"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Cotizar Coordinación y Layout con Viva la Bride</span>
-              </a>
-            </div>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={handleDownloadPDF}
+              className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
+              title="Descargar lista oficial de mesas y asientos en PDF"
+            >
+              <FileDown className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Descargar PDF</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowNewTableModal(true)}
+              className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Agregar Mesa</span>
+            </button>
           </div>
         </div>
+
+        {/* Resumen Métricas */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
+          <div className="bg-white p-4 rounded-2xl border border-[#EFE8E1] shadow-2xs">
+            <span className="text-[10px] uppercase font-bold text-[#8A7E72] tracking-wider block">Total Mesas</span>
+            <span className="font-serif text-2xl font-bold text-[#2B2826] mt-1 block">{tables.length}</span>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-[#EFE8E1] shadow-2xs">
+            <span className="text-[10px] uppercase font-bold text-[#8A7E72] tracking-wider block">Capacidad Total</span>
+            <span className="font-serif text-2xl font-bold text-[#2B2826] mt-1 block">{totalCapacity} <span className="text-xs font-normal text-[#8A7E72]">lugares</span></span>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-[#EFE8E1] shadow-2xs">
+            <span className="text-[10px] uppercase font-bold text-[#8A7E72] tracking-wider block">Lugares Asignados</span>
+            <span className="font-serif text-2xl font-bold text-[#4E7D59] mt-1 block">{totalAssigned}</span>
+          </div>
+          <div className="bg-white p-4 rounded-2xl border border-[#EFE8E1] shadow-2xs">
+            <span className="text-[10px] uppercase font-bold text-[#8A7E72] tracking-wider block">Por Asignar</span>
+            <span className="font-serif text-2xl font-bold text-[#C48B81] mt-1 block">{unassignedGuests.length} <span className="text-xs font-normal text-[#8A7E72]">invitados</span></span>
+          </div>
+        </div>
+
+        {/* Banner Bento Upgrade a Coordinación VLB: Lienzo 2D y Planimetría */}
+        <div className="bg-gradient-to-br from-[#FFFFFF] via-[#FAF7F5] to-[#F7EDEB]/70 rounded-[28px] p-5 sm:p-6 border border-[#ECD9D5] shadow-xs relative overflow-hidden">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1.5 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-medium bg-[#FFFFFF] text-[#A86B60] border border-[#ECD9D5]">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] animate-pulse" />
+                <span className="font-semibold">Planimetría 2D y Layout Técnico</span>
+                <span className="text-[#ECD9D5]">·</span>
+                <span className="text-[#7D6F6B]">Exclusivo Viva la Bride</span>
+              </div>
+              <h3 className="font-serif text-xl sm:text-2xl font-normal text-[#2B2826] tracking-tight">
+                ¿Deseas ver tu salón en plano 2D interactivo con pista de baile y escenario?
+              </h3>
+              <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                El montaje interactivo a escala, cálculo de distancias de paso para meseros y plano arquitectónico oficial para proveedores forman parte de nuestros <strong>Paquetes de Coordinación con Viva la Bride</strong>.
+              </p>
+            </div>
+            <a
+              href={layoutUpgradeWhatsAppUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition shrink-0 cursor-pointer"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Cotizar Coordinación</span>
+            </a>
+          </div>
+        </div>
+
+        {/* Cuadrícula de Mesas y Acomodo */}
+        {tables.length === 0 ? (
+          <div className="bg-white rounded-3xl p-10 border border-[#EFE8E1] text-center space-y-3">
+            <Users className="w-10 h-10 text-[#C48B81] mx-auto opacity-70" />
+            <h3 className="font-serif text-xl font-bold text-[#2B2826]">Aún no has agregado mesas</h3>
+            <p className="text-xs text-[#7D6F6B] max-w-md mx-auto leading-relaxed">
+              Comienza creando tus primeras mesas (ej. Mesa 1, Mesa de Novios, Familia Novia) y asigna a tus invitados confirmados a cada una.
+            </p>
+            <button
+              type="button"
+              onClick={() => setShowNewTableModal(true)}
+              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Crear mi primera mesa</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {tables.map(table => {
+              const assigned = table.guests || [];
+              const occupiedCount = table.used_seats || assigned.length;
+              const isOver = occupiedCount > table.capacity;
+              const isFull = occupiedCount === table.capacity;
+
+              return (
+                <div
+                  key={table.id}
+                  className="bg-white rounded-2xl border border-[#EFE8E1] p-5 shadow-2xs hover:shadow-xs transition space-y-4 flex flex-col justify-between"
+                >
+                  <div className="space-y-3">
+                    {/* Header de la Mesa */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="text-[10px] uppercase font-bold text-[#8A7E72] tracking-wider block">
+                          Mesa {table.type}
+                        </span>
+                        <h4 className="font-serif text-lg font-bold text-[#2B2826] mt-0.5">
+                          {table.name}
+                        </h4>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTable(table.id)}
+                        className="text-[#8A7E72]/50 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                        title="Eliminar mesa"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Barra de Capacidad */}
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between text-xs font-medium">
+                        <span className="text-[#7D6F6B]">Ocupación:</span>
+                        <span
+                          className={`font-semibold ${
+                            isOver ? 'text-rose-600' : isFull ? 'text-[#4E7D59]' : 'text-[#2B2826]'
+                          }`}
+                        >
+                          {occupiedCount} / {table.capacity} lugares
+                        </span>
+                      </div>
+                      <div className="w-full bg-[#FAF7F5] h-2 rounded-full overflow-hidden border border-[#EFE8E1]">
+                        <div
+                          className={`h-full transition-all duration-300 ${
+                            isOver ? 'bg-rose-500' : isFull ? 'bg-[#577355]' : 'bg-[#C48B81]'
+                          }`}
+                          style={{ width: `${Math.min(100, (occupiedCount / table.capacity) * 100)}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Lista de Invitados en la Mesa */}
+                    <div className="pt-2 border-t border-[#FAF7F5] space-y-1.5">
+                      <span className="text-[10px] uppercase font-bold text-[#8A7E72] tracking-wider block">
+                        Invitados ({assigned.length})
+                      </span>
+                      {assigned.length === 0 ? (
+                        <p className="text-xs text-[#8A7E72] italic py-2">
+                          Sin invitados sentados aún.
+                        </p>
+                      ) : (
+                        <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                          {assigned.map(g => (
+                            <div
+                              key={g.id}
+                              className="flex items-center justify-between p-2 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] text-xs"
+                            >
+                              <div className="min-w-0 pr-2">
+                                <span className="font-semibold text-[#2B2826] block truncate">
+                                  {g.first_name} {g.last_name || ''}
+                                </span>
+                                {g.companion_count > 0 && (
+                                  <span className="text-[10px] text-[#7D6F6B] block">
+                                    +{g.companion_count} acomp. ({1 + g.companion_count} lugares)
+                                  </span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleUnassignGuest(g.id)}
+                                className="text-[#8A7E72]/60 hover:text-rose-600 p-1 rounded-md hover:bg-white transition cursor-pointer shrink-0"
+                                title="Desasignar de esta mesa"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Selector para Sentar Invitado Confirmado */}
+                  {unassignedGuests.length > 0 && (
+                    <div className="pt-2 border-t border-[#FAF7F5]">
+                      <select
+                        onChange={e => {
+                          if (e.target.value) {
+                            handleAssignGuest(e.target.value, table.id);
+                            e.target.value = '';
+                          }
+                        }}
+                        defaultValue=""
+                        className="w-full px-2.5 py-1.5 text-xs border border-[#EFE8E1] rounded-xl bg-[#FAF7F5] text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81] cursor-pointer"
+                      >
+                        <option value="">+ Sentar invitado aquí...</option>
+                        {unassignedGuests.map(g => (
+                          <option key={g.id} value={g.id}>
+                            {g.first_name} {g.last_name || ''} (+{g.companion_count || 0} acomp.)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Modal: Agregar Mesa para Planner Virtual */}
+        {showNewTableModal && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+            <div className="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl border border-[#EFE8E1]">
+              <h3 className="font-serif text-xl font-bold text-[#2B2826] mb-4">Nueva Mesa</h3>
+              <form onSubmit={handleCreateTable} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-[#2B2826] mb-1">Nombre o Número de Mesa</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Mesa 1, Mesa Novios, Familia..."
+                    value={newTableData.name}
+                    onChange={e => setNewTableData({ ...newTableData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#2B2826] mb-1">Tipo de Mesa</label>
+                  <select
+                    value={newTableData.type}
+                    onChange={e => {
+                      const t = e.target.value as any;
+                      setNewTableData({
+                        ...newTableData,
+                        type: t,
+                        capacity: t === 'imperial' ? 14 : 10
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none cursor-pointer"
+                  >
+                    <option value="circular">Circular (8-12 personas)</option>
+                    <option value="rectangular">Rectangular (8-10 personas)</option>
+                    <option value="imperial">Imperial (12-20 personas)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-[#2B2826] mb-1">Capacidad Total de Lugares</label>
+                  <input
+                    type="number"
+                    min="1"
+                    required
+                    value={newTableData.capacity}
+                    onChange={e => setNewTableData({ ...newTableData, capacity: parseInt(e.target.value, 10) || 10 })}
+                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  />
+                </div>
+                <div className="flex justify-end space-x-2 pt-4 border-t border-[#FAF7F5]">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewTableModal(false)}
+                    className="px-4 py-2 text-xs text-[#7D6F6B] hover:bg-[#FAF7F5] rounded-xl cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 text-xs font-bold uppercase tracking-wider bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs cursor-pointer"
+                  >
+                    Crear Mesa
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
