@@ -274,8 +274,8 @@ export const ReunionesModule: React.FC = () => {
   );
 
   const vivaLaBrideWhatsAppUrl =
-    'https://wa.me/525661406247?text=' +
-    encodeURIComponent('Hola Viva la Bride! Soy cliente de Lazo Studio y me gustaría contratar coordinación y acompañamiento para mi evento.');
+    'https://wa.me/528128663440?text=' +
+    encodeURIComponent(`¡Hola Lazo Studio! Soy cliente de Lazo Studio (${currentWedding?.name || 'mi boda'}) y me gustaría cotizar el acompañamiento y coordinación presencial para mi evento.`);
 
   return (
     <div className="space-y-8">

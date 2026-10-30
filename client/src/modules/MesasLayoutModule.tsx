@@ -80,7 +80,7 @@ export const MesasLayoutModule: React.FC = () => {
 
   const layoutUpgradeWhatsAppUrl =
     'https://wa.me/528128663440?text=' +
-    encodeURIComponent('Hola Viva la Bride! Soy cliente de Lazo Studio y me gustaría cotizar la coordinación y diseño de layout para mi evento.');
+    encodeURIComponent(`¡Hola Lazo Studio! Soy cliente de Lazo Studio (${currentWedding?.name || 'mi evento'}) y me gustaría cotizar la activación del Croquis 2D y diseño de layout.`);
 
   const handleDownloadPDF = () => {
     try {
