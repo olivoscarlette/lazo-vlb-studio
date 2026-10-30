@@ -599,6 +599,7 @@ export function initDatabase() {
       wedding_id TEXT,
       assigned_agent TEXT,
       unread_count INTEGER DEFAULT 0,
+      is_archived INTEGER DEFAULT 0,
       last_message_at TEXT,
       last_message_preview TEXT,
       created_at TEXT NOT NULL,
@@ -647,6 +648,12 @@ export function initDatabase() {
 
   try {
     db.exec('ALTER TABLE whatsapp_messages ADD COLUMN raw_payload TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE whatsapp_contacts ADD COLUMN is_archived INTEGER DEFAULT 0;');
   } catch {
     // Column already exists
   }

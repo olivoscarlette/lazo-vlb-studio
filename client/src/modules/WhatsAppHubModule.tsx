@@ -4,7 +4,8 @@ import {
   MessageSquare, Search, Send, CheckCheck,
   Check, Clock, User, Phone, Users, Sparkles, Filter, ChevronRight,
   ShieldCheck, AlertCircle, HeartHandshake, Calendar, Copy, CheckCircle2,
-  XCircle, Utensils, MapPin, Tag, FileText
+  XCircle, Utensils, MapPin, Tag, FileText,
+  Archive, ArchiveRestore, Trash2
 } from 'lucide-react';
 
 interface WhatsAppConversation {
@@ -16,8 +17,9 @@ interface WhatsAppConversation {
   guest_status: string;
   companion_count: number;
   table_name: string;
-  contact_type?: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO';
+  contact_type?: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO' | 'EQUIPO';
   contact_role_label?: string;
+  is_archived?: boolean;
   last_message_at: string;
   last_message_content: string;
   last_message_direction: 'OUTBOUND' | 'INBOUND';
@@ -143,8 +145,9 @@ export const WhatsAppHubModule: React.FC = () => {
 
   // Filters
   const [selectedWeddingId, setSelectedWeddingId] = useState<string>('all');
-  const [filterType, setFilterType] = useState<'todas' | 'invitados' | 'novios' | 'proveedores' | 'prospectos' | 'pendientes' | 'confirmados'>('todas');
+  const [filterType, setFilterType] = useState<'todas' | 'invitados' | 'novios' | 'proveedores' | 'prospectos' | 'archivados'>('todas');
   const [search, setSearch] = useState('');
+  const [archivedCount, setArchivedCount] = useState(0);
 
   // Selected Chat
   const [activeConversation, setActiveConversation] = useState<WhatsAppConversation | null>(null);
@@ -160,6 +163,10 @@ export const WhatsAppHubModule: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<number | null>(null);
   const [sendError, setSendError] = useState<string | null>(null);
+
+  // Modal and Message Actions
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingChat, setDeletingChat] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -183,6 +190,7 @@ export const WhatsAppHubModule: React.FC = () => {
         const data = await res.json();
         setConversations(data.conversations || []);
         if (data.weddings) setWeddings(data.weddings);
+        if (typeof data.archivedCount === 'number') setArchivedCount(data.archivedCount);
 
         // Keep active conversation updated if it exists
         if (activeConvRef.current) {
@@ -198,6 +206,65 @@ export const WhatsAppHubModule: React.FC = () => {
       console.error('Error fetching WhatsApp conversations:', err);
     } finally {
       if (!silent) setLoading(false);
+    }
+  };
+
+  // Archive or Unarchive Conversation
+  const handleToggleArchive = async (conv: WhatsAppConversation) => {
+    const newArchived = !conv.is_archived;
+    try {
+      const res = await fetch(`/api/whatsapp/conversations/${encodeURIComponent(conv.phone)}/archive`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ isArchived: newArchived })
+      });
+      if (res.ok) {
+        setActiveConversation(prev => prev ? { ...prev, is_archived: newArchived } : null);
+        fetchConversations(true);
+      }
+    } catch (err) {
+      console.error('Error toggling archive:', err);
+    }
+  };
+
+  // Delete Entire Chat / Conversation
+  const handleDeleteChat = async () => {
+    if (!activeConversation) return;
+    setDeletingChat(true);
+    try {
+      const res = await fetch(`/api/whatsapp/conversations/${encodeURIComponent(activeConversation.phone)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setShowDeleteModal(false);
+        setActiveConversation(null);
+        setMessages([]);
+        fetchConversations();
+      }
+    } catch (err) {
+      console.error('Error deleting conversation:', err);
+    } finally {
+      setDeletingChat(false);
+    }
+  };
+
+  // Delete Individual Message
+  const handleDeleteMessage = async (messageId: string) => {
+    try {
+      const res = await fetch(`/api/whatsapp/messages/${messageId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setMessages(prev => prev.filter(m => m.id !== messageId));
+        fetchConversations(true);
+      }
+    } catch (err) {
+      console.error('Error deleting message:', err);
     }
   };
 
@@ -518,7 +585,7 @@ export const WhatsAppHubModule: React.FC = () => {
               onChange={e => setSelectedWeddingId(e.target.value)}
               className="w-full px-3 py-1.5 text-xs font-semibold bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl text-[#332A28] focus:outline-none focus:border-[#C48B81] cursor-pointer truncate"
             >
-              <option value="all">💍 Todos los Eventos</option>
+              <option value="all">Todos los Eventos</option>
               {weddings.map(w => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
@@ -531,7 +598,8 @@ export const WhatsAppHubModule: React.FC = () => {
                 { id: 'invitados', label: 'Invitados' },
                 { id: 'novios', label: 'Novios' },
                 { id: 'proveedores', label: 'Proveedores' },
-                { id: 'prospectos', label: 'Nuevos' }
+                { id: 'prospectos', label: 'Nuevos' },
+                { id: 'archivados', label: `Archivados${archivedCount > 0 ? ` (${archivedCount})` : ''}` }
               ].map(f => (
                 <button
                   key={f.id}
@@ -609,6 +677,11 @@ export const WhatsAppHubModule: React.FC = () => {
 
                       <div className="flex items-center justify-between gap-1 mt-1">
                         <div className="flex items-center space-x-1.5 min-w-0">
+                          {conv.contact_type === 'EQUIPO' && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider bg-[#F4EFEB] text-[#4A3E39] border border-[#DDD4CE] shrink-0">
+                              {conv.contact_role_label || 'Equipo'}
+                            </span>
+                          )}
                           {conv.contact_type === 'NOVIOS' && (
                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider bg-[#FAF3F1] text-[#A86B60] border border-[#ECD9D5] shrink-0">
                               Novios
@@ -624,7 +697,7 @@ export const WhatsAppHubModule: React.FC = () => {
                               Nuevo
                             </span>
                           )}
-                          {conv.contact_type !== 'PROSPECTO' && conv.wedding_name && (
+                          {conv.contact_type !== 'PROSPECTO' && conv.contact_type !== 'EQUIPO' && conv.wedding_name && (
                             <span className="text-[10px] text-[#8E807A] font-medium truncate max-w-[130px]">
                               {conv.wedding_name}
                             </span>
@@ -682,6 +755,11 @@ export const WhatsAppHubModule: React.FC = () => {
                       <h3 className="font-semibold text-sm text-[#332A28]">
                         {activeConversation.guest_name}
                       </h3>
+                      {activeConversation.contact_type === 'EQUIPO' && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-[#F4EFEB] text-[#4A3E39] border border-[#DDD4CE]">
+                          {activeConversation.contact_role_label || 'Equipo Lazo'}
+                        </span>
+                      )}
                       {activeConversation.contact_type === 'NOVIOS' && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider bg-[#FAF3F1] text-[#A86B60] border border-[#ECD9D5]">
                           Novios
@@ -704,7 +782,7 @@ export const WhatsAppHubModule: React.FC = () => {
                       </span>
                       <span>•</span>
                       <span className="font-mono">{activeConversation.phone}</span>
-                      {activeConversation.contact_type !== 'PROSPECTO' && activeConversation.wedding_name && (
+                      {activeConversation.contact_type !== 'PROSPECTO' && activeConversation.contact_type !== 'EQUIPO' && activeConversation.wedding_name && (
                         <>
                           <span>•</span>
                           <span className="font-semibold text-[#C48B81]">{activeConversation.wedding_name}</span>
@@ -727,6 +805,11 @@ export const WhatsAppHubModule: React.FC = () => {
                         <span>Pases: {1 + (activeConversation.companion_count || 0)}</span>
                       </span>
                     </>
+                  ) : activeConversation.contact_type === 'EQUIPO' ? (
+                    <span className="bg-[#F4EFEB] text-[#4A3E39] px-3 py-1 rounded-lg border border-[#DDD4CE] font-semibold text-[11px] flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#8A7A73]" />
+                      <span>{activeConversation.contact_role_label || 'Equipo Lazo Studio'}</span>
+                    </span>
                   ) : activeConversation.contact_type === 'NOVIOS' ? (
                     <span className="bg-[#FAF3F1] text-[#A86B60] px-3 py-1 rounded-lg border border-[#ECD9D5] font-semibold text-[11px] flex items-center gap-1.5">
                       <HeartHandshake className="w-3.5 h-3.5 text-[#C48B81]" />
@@ -743,6 +826,34 @@ export const WhatsAppHubModule: React.FC = () => {
                       <span>Nuevo Prospecto</span>
                     </span>
                   )}
+
+                  {/* Actions: Archive & Delete Chat */}
+                  <div className="flex items-center space-x-1 pl-2 border-l border-[#EFE8E1]">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleArchive(activeConversation)}
+                      title={activeConversation.is_archived ? "Desarchivar conversación" : "Archivar conversación"}
+                      className={`p-1.5 rounded-lg transition border cursor-pointer ${
+                        activeConversation.is_archived
+                          ? 'bg-[#F9F3F1] text-[#C48B81] border-[#ECD9D5] hover:bg-[#F3ECE2]'
+                          : 'bg-[#FFFFFF] text-[#7D6F6B] border-[#EFE8E1] hover:bg-[#F3ECE2] hover:text-[#332A28]'
+                      }`}
+                    >
+                      {activeConversation.is_archived ? (
+                        <ArchiveRestore className="w-4 h-4" />
+                      ) : (
+                        <Archive className="w-4 h-4" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteModal(true)}
+                      title="Eliminar conversación completa"
+                      className="p-1.5 rounded-lg bg-[#FFFFFF] text-[#7D6F6B] border border-[#EFE8E1] hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -765,20 +876,33 @@ export const WhatsAppHubModule: React.FC = () => {
                         className={`flex flex-col ${isOutbound ? 'items-end' : 'items-start'}`}
                       >
                         <div
-                          className={`max-w-md px-4 py-3 rounded-2xl shadow-xs text-xs leading-relaxed ${
+                          className={`relative group max-w-md px-4 py-3 rounded-2xl shadow-xs text-xs leading-relaxed ${
                             isOutbound
                               ? 'bg-[#C48B81] text-white rounded-br-xs'
                               : 'bg-[#FFFFFF] text-[#332A28] border border-[#EFE8E1] rounded-bl-xs'
                           }`}
                         >
+                          {/* Hover action: Delete single message */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMessage(msg.id)}
+                            title="Eliminar mensaje"
+                            className={`absolute top-1.5 ${isOutbound ? 'left-1.5' : 'right-1.5'} opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded-md cursor-pointer ${
+                              isOutbound
+                                ? 'text-white/70 hover:text-white hover:bg-white/20'
+                                : 'text-[#7D6F6B]/60 hover:text-rose-600 hover:bg-rose-50'
+                            }`}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+
                           {msg.message_type === 'template' ? (
                             <div className="space-y-2">
                               <div className="text-[10px] uppercase font-bold tracking-wider text-rose-200 flex items-center justify-between pb-1 border-b border-white/20">
                                 <span className="flex items-center gap-1">
-                                  <span>💍</span>
                                   <span>Invitación Oficial RSVP</span>
                                 </span>
-                                <span className="text-[9px] opacity-80">Viva La Bride</span>
+                                <span className="text-[9px] opacity-80">Lazo Studio</span>
                               </div>
                               <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                               <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-1.5 border-t border-white/20">
@@ -956,12 +1080,59 @@ export const WhatsAppHubModule: React.FC = () => {
                 Selecciona una conversación
               </h3>
               <p className="text-xs text-[#7D6F6B] max-w-xs leading-relaxed">
-                Mensajería oficial en tiempo real de Viva la Bride conectada directamente con WhatsApp Business.
+                Mensajería oficial en tiempo real de Lazo Studio conectada directamente con WhatsApp Cloud API.
               </p>
             </div>
           )}
         </div>
       </div>
+
+      {/* Delete Chat Confirmation Modal */}
+      {showDeleteModal && activeConversation && (
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-[#FFFFFF] rounded-2xl max-w-md w-full p-6 shadow-xl border border-[#EFE8E1] space-y-4 animate-in fade-in duration-200">
+            <div className="flex items-center space-x-3 text-rose-600">
+              <div className="p-2.5 bg-rose-50 rounded-xl">
+                <Trash2 className="w-5 h-5 text-rose-600" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-sm text-[#332A28]">¿Eliminar esta conversación?</h4>
+                <p className="text-xs text-[#7D6F6B]">Esta acción no se puede deshacer.</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#7D6F6B] leading-relaxed">
+              Se eliminará permanentemente todo el historial de mensajes con <strong className="text-[#332A28]">{activeConversation.guest_name}</strong> ({activeConversation.phone}) en Lazo Studio.
+            </p>
+
+            <div className="flex items-center justify-end space-x-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deletingChat}
+                className="px-4 py-2 text-xs font-semibold rounded-xl border border-[#EFE8E1] text-[#7D6F6B] hover:bg-[#F3ECE2] transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteChat}
+                disabled={deletingChat}
+                className="px-4 py-2 text-xs font-semibold rounded-xl bg-rose-600 text-white hover:bg-rose-700 transition shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                {deletingChat ? (
+                  <>
+                    <Clock className="w-3.5 h-3.5 animate-spin" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <span>Eliminar conversación</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

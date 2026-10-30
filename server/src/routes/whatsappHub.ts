@@ -269,8 +269,9 @@ router.get('/conversations', (req, res) => {
       guest_status: string;
       companion_count: number;
       table_name: string;
-      contact_type: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO';
+      contact_type: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO' | 'EQUIPO';
       contact_role_label: string;
+      is_archived: boolean;
       last_message_at: string;
       last_message_content: string;
       last_message_direction: 'OUTBOUND' | 'INBOUND';
@@ -299,14 +300,22 @@ router.get('/conversations', (req, res) => {
 
       const matchedContact = allContacts.find(c => getPhoneLast10(c.phone_number) === last10);
 
-      let contactType: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO' = 'PROSPECTO';
+      let contactType: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO' | 'EQUIPO' = 'PROSPECTO';
       let contactRoleLabel = 'Nuevo Prospecto';
       let displayName = msg.phone;
 
       if (matchedUser) {
-        contactType = 'NOVIOS';
-        contactRoleLabel = matchedUser.role === 'NOVIOS' ? 'Novios' : 'Equipo VLB';
-        displayName = matchedUser.name;
+        if (matchedUser.role === 'NOVIOS') {
+          contactType = 'NOVIOS';
+          contactRoleLabel = 'Novios';
+          displayName = matchedUser.name;
+        } else {
+          contactType = 'EQUIPO';
+          contactRoleLabel = matchedUser.role === 'ADMINISTRADOR'
+            ? 'Administrador'
+            : (matchedUser.role === 'COORDINADOR' ? 'Coordinación' : 'Equipo Lazo');
+          displayName = matchedUser.name;
+        }
       } else if (matchedGuest) {
         contactType = 'INVITADO';
         contactRoleLabel = matchedGuest.status === 'Confirmado' ? 'Invitado Confirmado' : 'Invitado';
@@ -319,10 +328,12 @@ router.get('/conversations', (req, res) => {
         displayName = matchedContact.name;
       }
 
-      // Grouping key: for prospects, group strictly by phone so they are never tied to an arbitrary wedding
-      const key = contactType === 'PROSPECTO' ? `prospect_${last10}` : `${msg.wedding_id}_${last10}`;
-      const effectiveWeddingId = contactType === 'PROSPECTO' ? 'prospect' : msg.wedding_id;
-      const effectiveWeddingName = contactType === 'PROSPECTO' ? '' : (msg.wedding_name || '');
+      // Grouping key: for prospects and internal team, group strictly by phone so they are never tied to an arbitrary wedding
+      const isDetached = contactType === 'PROSPECTO' || contactType === 'EQUIPO';
+      const key = isDetached ? `${contactType.toLowerCase()}_${last10}` : `${msg.wedding_id}_${last10}`;
+      const effectiveWeddingId = isDetached ? contactType.toLowerCase() : msg.wedding_id;
+      const effectiveWeddingName = isDetached ? '' : (msg.wedding_name || '');
+      const isArchived = Boolean(matchedContact?.is_archived);
 
       if (!groupMap.has(key)) {
         groupMap.set(key, {
@@ -331,11 +342,12 @@ router.get('/conversations', (req, res) => {
           wedding_name: effectiveWeddingName,
           guest_id: matchedGuest?.id || msg.guest_id || null,
           guest_name: displayName,
-          guest_status: matchedGuest?.status || (matchedUser ? 'Pareja' : (matchedVendor ? 'Proveedor' : 'Sin asignar')),
+          guest_status: matchedGuest?.status || (contactType === 'NOVIOS' ? 'Pareja' : (contactType === 'EQUIPO' ? 'Equipo Lazo' : (matchedVendor ? 'Proveedor' : 'Sin asignar'))),
           companion_count: matchedGuest?.companion_count || 0,
           table_name: matchedGuest?.table_name || 'Sin mesa',
           contact_type: contactType,
           contact_role_label: contactRoleLabel,
+          is_archived: isArchived,
           last_message_at: msg.created_at,
           last_message_content: msg.content,
           last_message_direction: msg.direction,
@@ -353,12 +365,22 @@ router.get('/conversations', (req, res) => {
     }
 
     const conversations = Array.from(groupMap.values());
+    const archivedCount = conversations.filter(c => c.is_archived).length;
 
-    // If filtering by a specific wedding, exclude unassigned prospects
+    // Filter by archive state:
+    // If user clicked 'archivados', show only archived chats; otherwise show only unarchived chats (like WhatsApp)
     let filtered = conversations;
-    if (weddingId && weddingId !== 'all') {
-      filtered = filtered.filter(c => c.wedding_id === weddingId && c.contact_type !== 'PROSPECTO');
+    if (filter === 'archivados') {
+      filtered = filtered.filter(c => c.is_archived);
+    } else {
+      filtered = filtered.filter(c => !c.is_archived);
     }
+
+    // If filtering by a specific wedding, exclude detached contacts (prospects/equipo)
+    if (weddingId && weddingId !== 'all') {
+      filtered = filtered.filter(c => c.wedding_id === weddingId && c.contact_type !== 'PROSPECTO' && c.contact_type !== 'EQUIPO');
+    }
+
     if (search.trim()) {
       const cleanSearch = search.trim().toLowerCase();
       filtered = filtered.filter(c =>
@@ -378,6 +400,8 @@ router.get('/conversations', (req, res) => {
       filtered = filtered.filter(c => c.contact_type === 'PROVEEDOR');
     } else if (filter === 'prospectos') {
       filtered = filtered.filter(c => c.contact_type === 'PROSPECTO');
+    } else if (filter === 'equipo') {
+      filtered = filtered.filter(c => c.contact_type === 'EQUIPO');
     } else if (filter === 'pendientes') {
       filtered = filtered.filter(c => c.guest_status === 'Pendiente de confirmar');
     } else if (filter === 'confirmados') {
@@ -390,6 +414,7 @@ router.get('/conversations', (req, res) => {
     res.json({
       conversations: filtered,
       weddings,
+      archivedCount,
       isConfigured: config.isConfigured,
       phoneNumberId: config.phoneNumberId
     });
@@ -729,6 +754,83 @@ router.post('/scheduled/:weddingId/reset', (req, res) => {
     res.json({ success: true, schedule: updated });
   } catch (err: any) {
     res.status(500).json({ error: 'Error al reiniciar estado: ' + err.message });
+  }
+});
+
+/**
+ * DELETE /api/whatsapp/messages/:messageId
+ * Deletes a single message from the conversation history
+ */
+router.delete('/messages/:messageId', (req, res) => {
+  try {
+    const { messageId } = req.params;
+    db.prepare('DELETE FROM whatsapp_messages WHERE id = ?').run(messageId);
+    res.json({ success: true, message: 'Mensaje eliminado' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al eliminar mensaje: ' + err.message });
+  }
+});
+
+/**
+ * DELETE /api/whatsapp/conversations/:phone
+ * Deletes all message history and removes contact from the hub
+ */
+router.delete('/conversations/:phone', (req, res) => {
+  try {
+    const { phone } = req.params;
+    const normalized = WhatsAppService.normalizePhoneNumber(phone) || phone;
+    const last10 = getPhoneLast10(phone);
+
+    // Delete all messages matching phone
+    db.prepare(`
+      DELETE FROM whatsapp_messages
+      WHERE phone = ? OR phone = ? OR phone LIKE ?
+    `).run(phone, normalized, `%${last10}`);
+
+    // Remove contact record
+    db.prepare(`
+      DELETE FROM whatsapp_contacts
+      WHERE phone_number = ? OR phone_number = ? OR phone_number LIKE ?
+    `).run(phone, normalized, `%${last10}`);
+
+    res.json({ success: true, message: 'Conversación eliminada exitosamente' });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al eliminar conversación: ' + err.message });
+  }
+});
+
+/**
+ * PUT /api/whatsapp/conversations/:phone/archive
+ * Toggles or sets archive state for a conversation
+ */
+router.put('/conversations/:phone/archive', (req, res) => {
+  try {
+    const { phone } = req.params;
+    const { isArchived } = req.body;
+    const normalized = WhatsAppService.normalizePhoneNumber(phone) || phone;
+    const last10 = getPhoneLast10(phone);
+    const archiveVal = isArchived ? 1 : 0;
+    const now = new Date().toISOString();
+
+    const existing = db.prepare(`
+      SELECT id FROM whatsapp_contacts
+      WHERE phone_number = ? OR phone_number LIKE ?
+    `).get(normalized, `%${last10}`) as any;
+
+    if (existing) {
+      db.prepare('UPDATE whatsapp_contacts SET is_archived = ?, updated_at = ? WHERE id = ?')
+        .run(archiveVal, now, existing.id);
+    } else {
+      const contactId = 'wct_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      db.prepare(`
+        INSERT INTO whatsapp_contacts (id, phone_number, is_archived, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?)
+      `).run(contactId, normalized, archiveVal, now, now);
+    }
+
+    res.json({ success: true, isArchived: Boolean(isArchived) });
+  } catch (err: any) {
+    res.status(500).json({ error: 'Error al actualizar estado de archivado: ' + err.message });
   }
 });
 
