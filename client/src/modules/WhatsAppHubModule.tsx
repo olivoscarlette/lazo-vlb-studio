@@ -624,9 +624,11 @@ export const WhatsAppHubModule: React.FC = () => {
                               Nuevo
                             </span>
                           )}
-                          <span className="text-[10px] text-[#8E807A] font-medium truncate max-w-[130px]">
-                            {conv.wedding_name}
-                          </span>
+                          {conv.contact_type !== 'PROSPECTO' && conv.wedding_name && (
+                            <span className="text-[10px] text-[#8E807A] font-medium truncate max-w-[130px]">
+                              {conv.wedding_name}
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex items-center space-x-1 shrink-0">
@@ -702,8 +704,12 @@ export const WhatsAppHubModule: React.FC = () => {
                       </span>
                       <span>•</span>
                       <span className="font-mono">{activeConversation.phone}</span>
-                      <span>•</span>
-                      <span className="font-semibold text-[#C48B81]">{activeConversation.wedding_name}</span>
+                      {activeConversation.contact_type !== 'PROSPECTO' && activeConversation.wedding_name && (
+                        <>
+                          <span>•</span>
+                          <span className="font-semibold text-[#C48B81]">{activeConversation.wedding_name}</span>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -734,7 +740,7 @@ export const WhatsAppHubModule: React.FC = () => {
                   ) : (
                     <span className="bg-[#F9F7F4] text-[#7A6D63] px-3 py-1 rounded-lg border border-[#EBE4DD] font-semibold text-[11px] flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
-                      <span>Contacto no registrado</span>
+                      <span>Nuevo Prospecto</span>
                     </span>
                   )}
                 </div>

@@ -281,53 +281,57 @@ router.get('/conversations', (req, res) => {
 
     for (const msg of rawMessages) {
       const last10 = getPhoneLast10(msg.phone);
-      const key = `${msg.wedding_id}_${last10}`;
+
+      // 1. Check if matches couple / user
+      const matchedUser = allUsers.find(u => 
+        (u.wedding_id === msg.wedding_id || !u.wedding_id) && getPhoneLast10(u.phone) === last10
+      ) || allUsers.find(u => getPhoneLast10(u.phone) === last10);
+
+      // 2. Check if matches guest
+      const matchedGuest = allGuests.find(g => 
+        g.wedding_id === msg.wedding_id && getPhoneLast10(g.phone) === last10
+      ) || allGuests.find(g => getPhoneLast10(g.phone) === last10);
+
+      // 3. Check if matches vendor
+      const matchedVendor = allVendors.find(v => 
+        (v.wedding_id === msg.wedding_id || !v.wedding_id) && getPhoneLast10(v.phone) === last10
+      ) || allVendors.find(v => getPhoneLast10(v.phone) === last10);
+
+      const matchedContact = allContacts.find(c => getPhoneLast10(c.phone_number) === last10);
+
+      let contactType: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO' = 'PROSPECTO';
+      let contactRoleLabel = 'Nuevo Prospecto';
+      let displayName = msg.phone;
+
+      if (matchedUser) {
+        contactType = 'NOVIOS';
+        contactRoleLabel = matchedUser.role === 'NOVIOS' ? 'Novios' : 'Equipo VLB';
+        displayName = matchedUser.name;
+      } else if (matchedGuest) {
+        contactType = 'INVITADO';
+        contactRoleLabel = matchedGuest.status === 'Confirmado' ? 'Invitado Confirmado' : 'Invitado';
+        displayName = `${matchedGuest.first_name} ${matchedGuest.last_name}`.trim();
+      } else if (matchedVendor) {
+        contactType = 'PROVEEDOR';
+        contactRoleLabel = matchedVendor.type || 'Proveedor';
+        displayName = matchedVendor.name;
+      } else if (matchedContact?.name) {
+        displayName = matchedContact.name;
+      }
+
+      // Grouping key: for prospects, group strictly by phone so they are never tied to an arbitrary wedding
+      const key = contactType === 'PROSPECTO' ? `prospect_${last10}` : `${msg.wedding_id}_${last10}`;
+      const effectiveWeddingId = contactType === 'PROSPECTO' ? 'prospect' : msg.wedding_id;
+      const effectiveWeddingName = contactType === 'PROSPECTO' ? '' : (msg.wedding_name || '');
 
       if (!groupMap.has(key)) {
-        // 1. Check if matches couple / user
-        const matchedUser = allUsers.find(u => 
-          (u.wedding_id === msg.wedding_id || !u.wedding_id) && getPhoneLast10(u.phone) === last10
-        ) || allUsers.find(u => getPhoneLast10(u.phone) === last10);
-
-        // 2. Check if matches guest
-        const matchedGuest = allGuests.find(g => 
-          g.wedding_id === msg.wedding_id && getPhoneLast10(g.phone) === last10
-        ) || allGuests.find(g => getPhoneLast10(g.phone) === last10);
-
-        // 3. Check if matches vendor
-        const matchedVendor = allVendors.find(v => 
-          (v.wedding_id === msg.wedding_id || !v.wedding_id) && getPhoneLast10(v.phone) === last10
-        ) || allVendors.find(v => getPhoneLast10(v.phone) === last10);
-
-        const matchedContact = allContacts.find(c => getPhoneLast10(c.phone_number) === last10);
-
-        let contactType: 'NOVIOS' | 'INVITADO' | 'PROVEEDOR' | 'PROSPECTO' = 'PROSPECTO';
-        let contactRoleLabel = 'Nuevo Contacto';
-        let displayName = msg.phone;
-
-        if (matchedUser) {
-          contactType = 'NOVIOS';
-          contactRoleLabel = matchedUser.role === 'NOVIOS' ? 'Novios' : 'Equipo VLB';
-          displayName = matchedUser.name;
-        } else if (matchedGuest) {
-          contactType = 'INVITADO';
-          contactRoleLabel = matchedGuest.status === 'Confirmado' ? 'Invitado Confirmado' : 'Invitado';
-          displayName = `${matchedGuest.first_name} ${matchedGuest.last_name}`.trim();
-        } else if (matchedVendor) {
-          contactType = 'PROVEEDOR';
-          contactRoleLabel = matchedVendor.type || 'Proveedor';
-          displayName = matchedVendor.name;
-        } else if (matchedContact?.name) {
-          displayName = matchedContact.name;
-        }
-
         groupMap.set(key, {
           phone: WhatsAppService.normalizePhoneNumber(msg.phone) || msg.phone,
-          wedding_id: msg.wedding_id,
-          wedding_name: msg.wedding_name,
+          wedding_id: effectiveWeddingId,
+          wedding_name: effectiveWeddingName,
           guest_id: matchedGuest?.id || msg.guest_id || null,
           guest_name: displayName,
-          guest_status: matchedGuest?.status || (matchedUser ? 'Pareja' : (matchedVendor ? 'Proveedor' : 'No registrado')),
+          guest_status: matchedGuest?.status || (matchedUser ? 'Pareja' : (matchedVendor ? 'Proveedor' : 'Sin asignar')),
           companion_count: matchedGuest?.companion_count || 0,
           table_name: matchedGuest?.table_name || 'Sin mesa',
           contact_type: contactType,
@@ -350,8 +354,11 @@ router.get('/conversations', (req, res) => {
 
     const conversations = Array.from(groupMap.values());
 
-    // In-memory search filter (accent-insensitive)
+    // If filtering by a specific wedding, exclude unassigned prospects
     let filtered = conversations;
+    if (weddingId && weddingId !== 'all') {
+      filtered = filtered.filter(c => c.wedding_id === weddingId && c.contact_type !== 'PROSPECTO');
+    }
     if (search.trim()) {
       const cleanSearch = search.trim().toLowerCase();
       filtered = filtered.filter(c =>
@@ -401,22 +408,42 @@ router.get('/conversations/:weddingId/:phone', (req, res) => {
     const normalized = WhatsAppService.normalizePhoneNumber(phone);
     const last10 = getPhoneLast10(phone);
 
-    const messages = db.prepare(`
-      SELECT * FROM whatsapp_messages
-      WHERE wedding_id = ? AND (phone = ? OR phone = ? OR phone LIKE ?)
-      ORDER BY created_at ASC
-    `).all(weddingId, phone, normalized, `%${last10}`) as any[];
+    let messages: any[] = [];
+    if (weddingId && weddingId !== 'all' && weddingId !== 'general' && weddingId !== 'prospect') {
+      messages = db.prepare(`
+        SELECT * FROM whatsapp_messages
+        WHERE wedding_id = ? AND (phone = ? OR phone = ? OR phone LIKE ?)
+        ORDER BY created_at ASC
+      `).all(weddingId, phone, normalized, `%${last10}`) as any[];
+    } else {
+      messages = db.prepare(`
+        SELECT * FROM whatsapp_messages
+        WHERE phone = ? OR phone = ? OR phone LIKE ?
+        ORDER BY created_at ASC
+      `).all(phone, normalized, `%${last10}`) as any[];
+    }
 
-    const guest = db.prepare(`
-      SELECT g.*, w.name as wedding_name, t.name as table_name
-      FROM guests g
-      JOIN weddings w ON w.id = g.wedding_id
-      LEFT JOIN tables t ON t.id = g.table_id
-      WHERE g.wedding_id = ? AND (g.phone = ? OR g.phone = ? OR g.phone LIKE ?)
-      LIMIT 1
-    `).get(weddingId, phone, normalized, `%${last10}`) as any;
+    const guest = (weddingId && weddingId !== 'prospect' && weddingId !== 'all')
+      ? db.prepare(`
+          SELECT g.*, w.name as wedding_name, t.name as table_name
+          FROM guests g
+          JOIN weddings w ON w.id = g.wedding_id
+          LEFT JOIN tables t ON t.id = g.table_id
+          WHERE g.wedding_id = ? AND (g.phone = ? OR g.phone = ? OR g.phone LIKE ?)
+          LIMIT 1
+        `).get(weddingId, phone, normalized, `%${last10}`) as any
+      : db.prepare(`
+          SELECT g.*, w.name as wedding_name, t.name as table_name
+          FROM guests g
+          JOIN weddings w ON w.id = g.wedding_id
+          LEFT JOIN tables t ON t.id = g.table_id
+          WHERE (g.phone = ? OR g.phone = ? OR g.phone LIKE ?)
+          LIMIT 1
+        `).get(phone, normalized, `%${last10}`) as any;
 
-    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+    const wedding = (weddingId && weddingId !== 'prospect' && weddingId !== 'all')
+      ? db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any
+      : (guest?.wedding_id ? db.prepare('SELECT * FROM weddings WHERE id = ?').get(guest.wedding_id) as any : null);
 
     // Reset contact unread count when opening chat
     WhatsAppService.upsertContact({
@@ -428,23 +455,16 @@ router.get('/conversations/:weddingId/:phone', (req, res) => {
       db.prepare(`
         UPDATE whatsapp_messages
         SET status = 'READ'
-        WHERE wedding_id = ? AND (phone = ? OR phone = ? OR phone LIKE ?) AND direction = 'INBOUND'
-      `).run(weddingId, phone, normalized, `%${last10}`);
+        WHERE (phone = ? OR phone = ? OR phone LIKE ?) AND direction = 'INBOUND'
+      `).run(phone, normalized, `%${last10}`);
     } catch {
       // Ignore if table is locked
     }
 
     res.json({
       messages,
-      guest: guest || {
-        first_name: 'Invitado',
-        last_name: '',
-        phone,
-        wedding_name: wedding?.name || 'Boda VLB',
-        status: 'Pendiente de confirmar',
-        companion_count: 0
-      },
-      wedding
+      guest: guest || null,
+      wedding: wedding || null
     });
   } catch (err: any) {
     res.status(500).json({ error: 'Error al obtener mensajes: ' + err.message });

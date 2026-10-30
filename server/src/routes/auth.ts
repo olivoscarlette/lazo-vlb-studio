@@ -156,7 +156,7 @@ router.post('/forgot-password', async (req, res) => {
     const appUrl = process.env.APP_URL || 'https://www.lazostudio.mx';
     const resetLink = `${appUrl}?reset_token=${token}`;
 
-    // Disparar envío de correo (Resend / Gmail) de forma asíncrona sin bloquear la respuesta al usuario
+    // Disparar envío de correo oficial (Resend) de forma asíncrona sin bloquear la respuesta al usuario
     EmailService.sendPasswordResetEmail({
       to: user.email,
       name: user.name,
@@ -165,21 +165,10 @@ router.post('/forgot-password', async (req, res) => {
       console.error('[Forgot Password] Error enviando correo:', emailErr);
     });
 
-    // Si tiene teléfono registrado, también notificar por WhatsApp en segundo plano
-    if (user.phone) {
-      WhatsAppService.sendTextMessage(
-        user.phone,
-        `Hola ${user.name},\n\nHemos recibido una solicitud para restablecer tu contraseña en Lazo Studio.\n\nPuedes generar una nueva contraseña ingresando en este enlace seguro:\n${resetLink}\n\n(Válido por 1 hora. Si no realizaste esta solicitud, puedes ignorar este mensaje).`
-      ).catch(waErr => {
-        console.warn('[Forgot Password] Error enviando WhatsApp:', waErr);
-      });
-    }
-
     return res.json({
       success: true,
       message: 'Si el correo electrónico está registrado en Lazo, se han enviado las instrucciones de recuperación a tu bandeja.',
-      resetToken: process.env.NODE_ENV !== 'production' ? token : undefined,
-      hasPhone: Boolean(user.phone)
+      resetToken: process.env.NODE_ENV !== 'production' ? token : undefined
     });
   } catch (err: any) {
     return res.status(500).json({ error: 'Error al procesar solicitud: ' + err.message });
