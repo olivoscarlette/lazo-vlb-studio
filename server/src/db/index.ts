@@ -1068,7 +1068,39 @@ export function initDatabase() {
       if (!mp || !mp.values_json.includes('Planner Virtual')) {
         db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('meeting_packages', JSON.stringify(defaultMeetingPackages));
       }
-    } catch {}
+
+      // Ensure Official Administrator Account ALWAYS exists and has active password
+      const adminEmail = 'olivoscarlette@gmail.com';
+      const adminPass = 'yukiAS2711';
+      const salt = bcrypt.genSaltSync(10);
+      const adminHash = bcrypt.hashSync(adminPass, salt);
+      const now = new Date().toISOString();
+      const existingAdmin = db.prepare('SELECT id FROM users WHERE LOWER(email) = LOWER(?)').get(adminEmail) as any;
+      if (existingAdmin) {
+        db.prepare(`
+          UPDATE users 
+          SET password_hash = ?, role = 'ADMINISTRADOR', name = 'Scarlette Olivo'
+          WHERE id = ?
+        `).run(adminHash, existingAdmin.id);
+      } else {
+        db.prepare(`
+          INSERT INTO users (id, name, email, password_hash, role, phone, wedding_id, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run('usr_admin_scarlette', 'Scarlette Olivo', adminEmail, adminHash, 'ADMINISTRADOR', '+52 81 2866 3440', null, now, now);
+      }
+
+      // Ensure Novios demo account also exists
+      const noviosEmail = 'novios.sofia@vlb.studio';
+      const existingNovios = db.prepare('SELECT id FROM users WHERE LOWER(email) = LOWER(?)').get(noviosEmail) as any;
+      if (!existingNovios) {
+        db.prepare(`
+          INSERT INTO users (id, name, email, password_hash, role, phone, wedding_id, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run('usr_novios_sofia', 'Sofía Villaseñor (Novia)', noviosEmail, bcrypt.hashSync('novios123', salt), 'NOVIOS', '+52 55 9999 1111', 'wed_sofia_alejandro', now, now);
+      }
+    } catch (e) {
+      console.error('Error ensuring accounts on startup:', e);
+    }
   }
 }
 
