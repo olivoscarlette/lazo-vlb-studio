@@ -186,6 +186,44 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
+// Email Diagnostics & Connectivity Check
+router.get('/email-diagnostics', async (req, res) => {
+  const hasGmailUser = Boolean(process.env.GMAIL_USER || process.env.SMTP_USER);
+  const hasGmailPass = Boolean(process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS);
+  const hasResend = Boolean(process.env.RESEND_API_KEY);
+
+  let sendTestResult = null;
+  let sendTestError = null;
+
+  if (req.query.test === 'true') {
+    try {
+      const target = (typeof req.query.to === 'string' && req.query.to.includes('@')) 
+        ? req.query.to 
+        : (process.env.GMAIL_USER || 'olivoscarlette@gmail.com');
+      const result = await EmailService.sendPasswordResetEmail({
+        to: target,
+        name: 'Prueba Lazo',
+        resetLink: 'https://www.lazostudio.mx?reset_token=test_diag'
+      });
+      sendTestResult = result;
+    } catch (err: any) {
+      sendTestError = err.message || String(err);
+    }
+  }
+
+  return res.json({
+    configured: {
+      hasGmailUser,
+      gmailUser: process.env.GMAIL_USER ? process.env.GMAIL_USER.replace(/(.{3}).*(@.*)/, '$1***$2') : null,
+      hasGmailPass,
+      hasResend
+    },
+    sendTestResult,
+    sendTestError,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Reset Password with Token
 router.post('/reset-password', async (req, res) => {
   try {
