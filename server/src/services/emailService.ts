@@ -8,25 +8,36 @@ interface SendPasswordResetOptions {
 
 export class EmailService {
   private static getTransporter() {
-    const user = process.env.GMAIL_USER || process.env.SMTP_USER;
-    const pass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS;
+    const user = (process.env.GMAIL_USER || process.env.SMTP_USER || '').trim();
+    // Google entrega contraseñas de app en bloques de 4 con espacios (ej: 'abcd efgh ijkl mnop')
+    // Eliminamos cualquier espacio accidental para que la autenticación no falle
+    const pass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || '').replace(/\s+/g, '');
 
     if (!user || !pass) {
       return null;
     }
 
-    // If custom SMTP host is provided, use it; otherwise default to Gmail service
+    // Si se provee host SMTP personalizado
     if (process.env.SMTP_HOST) {
       return nodemailer.createTransport({
         host: process.env.SMTP_HOST,
         port: Number(process.env.SMTP_PORT) || 587,
         secure: process.env.SMTP_SECURE === 'true' || Number(process.env.SMTP_PORT) === 465,
+        connectionTimeout: 6000,
+        greetingTimeout: 6000,
+        socketTimeout: 6000,
         auth: { user, pass }
       });
     }
 
+    // Configuración para Gmail usando puerto seguro 465 con timeouts estrictos para no colgar procesos
     return nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      connectionTimeout: 6000,
+      greetingTimeout: 6000,
+      socketTimeout: 6000,
       auth: { user, pass }
     });
   }

@@ -89,12 +89,17 @@ const LoginView: React.FC = () => {
     }
 
     setForgotSubmitting(true);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail })
+        body: JSON.stringify({ email: cleanEmail }),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (!res.ok) {
         throw new Error(data.error || 'Error al procesar la solicitud.');
@@ -104,8 +109,13 @@ const LoginView: React.FC = () => {
         text: data.message || 'Si el correo está registrado, se han generado las instrucciones de recuperación.'
       });
     } catch (err: any) {
-      setForgotFeedback({ type: 'error', text: err.message || 'Error de conexión.' });
+      if (err.name === 'AbortError') {
+        setForgotFeedback({ type: 'error', text: 'El servidor tardó en responder. Por favor revisa tu bandeja en unos minutos.' });
+      } else {
+        setForgotFeedback({ type: 'error', text: err.message || 'Error de conexión.' });
+      }
     } finally {
+      clearTimeout(timeoutId);
       setForgotSubmitting(false);
     }
   };

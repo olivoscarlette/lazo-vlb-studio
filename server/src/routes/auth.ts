@@ -156,32 +156,28 @@ router.post('/forgot-password', async (req, res) => {
     const appUrl = process.env.APP_URL || 'https://www.lazostudio.mx';
     const resetLink = `${appUrl}?reset_token=${token}`;
 
-    // Send reset instructions via Email (Gmail / SMTP)
-    try {
-      await EmailService.sendPasswordResetEmail({
-        to: user.email,
-        name: user.name,
-        resetLink
-      });
-    } catch (emailErr) {
-      console.error('[Forgot Password] Error sending reset email:', emailErr);
-    }
+    // Disparar envío de correo (Resend / Gmail) de forma asíncrona sin bloquear la respuesta al usuario
+    EmailService.sendPasswordResetEmail({
+      to: user.email,
+      name: user.name,
+      resetLink
+    }).catch(emailErr => {
+      console.error('[Forgot Password] Error enviando correo:', emailErr);
+    });
 
-    // If user has a mobile phone, also send instructions via WhatsApp Cloud API
+    // Si tiene teléfono registrado, también notificar por WhatsApp en segundo plano
     if (user.phone) {
-      try {
-        await WhatsAppService.sendTextMessage(
-          user.phone,
-          `Hola ${user.name},\n\nHemos recibido una solicitud para restablecer tu contraseña en Lazo Studio.\n\nPuedes generar una nueva contraseña ingresando en este enlace seguro:\n${resetLink}\n\n(Válido por 1 hora. Si no realizaste esta solicitud, puedes ignorar este mensaje).`
-        );
-      } catch (waErr) {
-        console.warn('[Forgot Password] Error sending WhatsApp notification:', waErr);
-      }
+      WhatsAppService.sendTextMessage(
+        user.phone,
+        `Hola ${user.name},\n\nHemos recibido una solicitud para restablecer tu contraseña en Lazo Studio.\n\nPuedes generar una nueva contraseña ingresando en este enlace seguro:\n${resetLink}\n\n(Válido por 1 hora. Si no realizaste esta solicitud, puedes ignorar este mensaje).`
+      ).catch(waErr => {
+        console.warn('[Forgot Password] Error enviando WhatsApp:', waErr);
+      });
     }
 
     return res.json({
       success: true,
-      message: 'Si el correo electrónico está registrado en Lazo, se han generado las instrucciones de recuperación.',
+      message: 'Si el correo electrónico está registrado en Lazo, se han enviado las instrucciones de recuperación a tu bandeja.',
       resetToken: process.env.NODE_ENV !== 'production' ? token : undefined,
       hasPhone: Boolean(user.phone)
     });
