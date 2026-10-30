@@ -100,6 +100,53 @@ router.put('/catalogs/:key', authenticateToken, requireRole(['ADMINISTRADOR']), 
   return res.json({ message: 'Catálogo actualizado correctamente.' });
 });
 
+router.delete('/catalogs/master_checklist/task', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
+  const { title, category, updatedList } = req.body;
+  if (!title) {
+    return res.status(400).json({ error: 'Título es requerido.' });
+  }
+
+  // 1. Update catalog
+  let list = updatedList;
+  if (!Array.isArray(list)) {
+    const row = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('master_checklist') as any;
+    const current = row ? JSON.parse(row.values_json) : [];
+    list = current.filter((item: any) => !(item.title.trim().toLowerCase() === title.trim().toLowerCase() && (!category || (item.category || '').toLowerCase() === category.toLowerCase())));
+  }
+
+  db.prepare(`
+    INSERT INTO catalogs (key, values_json)
+    VALUES (?, ?)
+    ON CONFLICT(key) DO UPDATE SET values_json = excluded.values_json
+  `).run('master_checklist', JSON.stringify(list));
+
+  // 2. Delete from tasks table where status = 'Pendiente' across all weddings
+  let deletedFromWeddings = 0;
+  if (category) {
+    const info = db.prepare(`
+      DELETE FROM tasks
+      WHERE LOWER(TRIM(title)) = LOWER(TRIM(?))
+        AND LOWER(TRIM(category)) = LOWER(TRIM(?))
+        AND status = 'Pendiente'
+    `).run(title, category);
+    deletedFromWeddings = info.changes;
+  } else {
+    const info = db.prepare(`
+      DELETE FROM tasks
+      WHERE LOWER(TRIM(title)) = LOWER(TRIM(?))
+        AND status = 'Pendiente'
+    `).run(title);
+    deletedFromWeddings = info.changes;
+  }
+
+  logAudit(null, req.user!.id, req.user!.name, 'ELIMINAR_ACTIVIDAD_PLANTILLA', 'CATALOG', 'master_checklist', `Eliminada actividad "${title}" de la plantilla y de ${deletedFromWeddings} tareas pendientes en eventos.`);
+
+  return res.json({
+    message: `Actividad eliminada de la plantilla y de ${deletedFromWeddings} tareas pendientes en eventos.`,
+    deletedFromWeddings
+  });
+});
+
 // Helper function to sync Master Templates (Checklist, Civil, Religious) to all weddings
 function syncMasterTemplatesToAllWeddings() {
   const getCatalog = (key: string) => {
@@ -111,20 +158,23 @@ function syncMasterTemplatesToAllWeddings() {
     }
   };
 
-  const masterChecklist: { title: string; category: string; priority: string; responsible: string }[] = getCatalog('master_checklist');
+  const masterChecklist: { title: string; category: string; priority: string; responsible?: string }[] = getCatalog('master_checklist');
   const masterCivil: string[] = getCatalog('master_civil_requirements');
   const masterReligious: string[] = getCatalog('master_religious_requirements');
+
+  const masterTaskKeys = new Set(masterChecklist.map(mt => `${(mt.category || 'Checklist General').toLowerCase()}::${(mt.title || '').trim().toLowerCase()}`));
 
   const weddings = db.prepare('SELECT id, wedding_date FROM weddings').all() as { id: string; wedding_date: string }[];
   const now = new Date().toISOString();
 
   let addedTasks = 0;
+  let deletedTasks = 0;
   let addedCivilReqs = 0;
   let addedReligiousReqs = 0;
 
   for (const w of weddings) {
-    // 1. Sync Checklist Tasks
-    const existingTasks = db.prepare('SELECT title, category FROM tasks WHERE wedding_id = ?').all(w.id) as { title: string; category: string }[];
+    // 1. Sync Checklist Tasks - Add missing
+    const existingTasks = db.prepare('SELECT id, title, category, status FROM tasks WHERE wedding_id = ?').all(w.id) as { id: string; title: string; category: string; status: string }[];
     const existingTaskKeys = new Set(existingTasks.map(t => `${(t.category || '').toLowerCase()}::${t.title.trim().toLowerCase()}`));
     const insertTask = db.prepare(`
       INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
@@ -140,7 +190,7 @@ function syncMasterTemplatesToAllWeddings() {
           w.id,
           mt.title.trim(),
           cat,
-          mt.responsible || 'VLB Studio',
+          mt.responsible || '',
           mt.priority || 'Alta',
           mt.notes || '',
           now,
@@ -150,6 +200,17 @@ function syncMasterTemplatesToAllWeddings() {
         addedTasks++;
       }
     });
+
+    // 1b. Prune pending tasks that were removed from master template
+    for (const t of existingTasks) {
+      if (t.status === 'Pendiente') {
+        const key = `${(t.category || '').toLowerCase()}::${(t.title || '').trim().toLowerCase()}`;
+        if (!masterTaskKeys.has(key)) {
+          db.prepare('DELETE FROM tasks WHERE id = ?').run(t.id);
+          deletedTasks++;
+        }
+      }
+    }
 
     // 2. Sync Civil Requirements
     let civilRow = db.prepare('SELECT * FROM civil_ceremony WHERE wedding_id = ?').get(w.id) as any;
@@ -212,7 +273,7 @@ function syncMasterTemplatesToAllWeddings() {
     }
   }
 
-  return { weddingsCount: weddings.length, addedTasks, addedCivilReqs, addedReligiousReqs };
+  return { weddingsCount: weddings.length, addedTasks, deletedTasks, addedCivilReqs, addedReligiousReqs };
 }
 
 // POST /api/catalogs/templates/sync - Push current VLB Master Templates to all weddings
@@ -225,10 +286,10 @@ router.post('/catalogs/templates/sync', authenticateToken, requireRole(['ADMINIS
     'SINCRONIZAR_PLANTILLAS_VLB',
     'CATALOG',
     'ALL_WEDDINGS',
-    `Sincronización de plantillas VLB en ${result.weddingsCount} bodas (+${result.addedTasks} actividades, +${result.addedCivilReqs} reqs civil, +${result.addedReligiousReqs} reqs religiosa)`
+    `Sincronización de plantillas en ${result.weddingsCount} eventos (+${result.addedTasks} agregadas, -${result.deletedTasks} eliminadas)`
   );
   return res.json({
-    message: `Plantillas sincronizadas en las ${result.weddingsCount} bodas (${result.addedTasks} actividades, ${result.addedCivilReqs} requisitos civiles y ${result.addedReligiousReqs} requisitos religiosos agregados donde faltaban).`,
+    message: `Plantillas sincronizadas en ${result.weddingsCount} eventos: +${result.addedTasks} actividades agregadas y ${result.deletedTasks} actividades obsoletas eliminadas.`,
     ...result
   });
 });

@@ -691,10 +691,35 @@ export const GeneralDashboard: React.FC = () => {
     saveCatalogKey('master_checklist', updated);
   };
 
-  const handleRemoveMasterTask = (index: number) => {
+  const handleRemoveMasterTask = async (index: number) => {
+    const itemToRemove = masterChecklist[index];
+    if (!itemToRemove) return;
     const updated = masterChecklist.filter((_, i) => i !== index);
     setMasterChecklist(updated);
-    saveCatalogKey('master_checklist', updated);
+
+    try {
+      const res = await fetch('/api/catalogs/master_checklist/task', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: itemToRemove.title,
+          category: itemToRemove.category,
+          updatedList: updated
+        })
+      });
+      if (res.ok) {
+        setCatalogMsg('Actividad eliminada de la plantilla y de los eventos activos.');
+        setTimeout(() => setCatalogMsg(''), 3000);
+        await fetchCatalogs();
+      } else {
+        await saveCatalogKey('master_checklist', updated);
+      }
+    } catch {
+      await saveCatalogKey('master_checklist', updated);
+    }
   };
 
   const handleAddMasterCivilReq = (e: React.FormEvent) => {

@@ -1144,7 +1144,7 @@ export const ChecklistModule: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className={`grid ${taskForm.category === 'Checklist General' ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
                 <div>
                   <label className="block text-xs font-semibold text-[#2B2826] mb-1">Lista / Etapa</label>
                   <select
@@ -1159,11 +1159,9 @@ export const ChecklistModule: React.FC = () => {
                     {!isNovios && <option value="Día Boda">Día Boda</option>}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#2B2826] mb-1">
-                    {taskForm.category === 'Checklist General' ? 'Sección General' : 'Responsable'}
-                  </label>
-                  {taskForm.category === 'Checklist General' ? (
+                {taskForm.category === 'Checklist General' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-[#2B2826] mb-1">Sección General</label>
                     <select
                       value={taskForm.responsible}
                       onChange={e => setTaskForm({ ...taskForm, responsible: e.target.value })}
@@ -1173,16 +1171,8 @@ export const ChecklistModule: React.FC = () => {
                         <option key={sec} value={sec}>{sec}</option>
                       ))}
                     </select>
-                  ) : (
-                    <input
-                      type="text"
-                      placeholder={`Novios o ${teamBrand}`}
-                      value={taskForm.responsible}
-                      onChange={e => setTaskForm({ ...taskForm, responsible: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
-                    />
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">

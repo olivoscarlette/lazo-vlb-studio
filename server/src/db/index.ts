@@ -1057,9 +1057,9 @@ export function initDatabase() {
       db.prepare('DELETE FROM users WHERE id IN (?, ?)').run('usr_novios_valeria', 'usr_coord_b');
       db.prepare('DELETE FROM weddings WHERE id = ?').run('wed_valeria_mateo');
 
-      // Upgrade master_checklist catalog to include all event templates (Boda, Civil, Despedida, Baby Shower, XV Años)
+      // Ensure master_checklist catalog exists without overwriting user deletions
       const mc = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('master_checklist') as any;
-      if (!mc || !mc.values_json.includes('XV Años')) {
+      if (!mc) {
         db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('master_checklist', JSON.stringify(allDefaultMasterChecklist));
       }
 
@@ -1067,40 +1067,6 @@ export function initDatabase() {
       const mp = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('meeting_packages') as any;
       if (!mp || !mp.values_json.includes('Planner Virtual')) {
         db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('meeting_packages', JSON.stringify(defaultMeetingPackages));
-      }
-
-      // Remove legacy/invented categories from existing weddings and populate official VLB checklist
-      const validCategories = [
-        'Checklist General',
-        '12 - 16 meses',
-        '10 - 11 meses',
-        '8 - 9 meses',
-        '6 - 7 meses',
-        '4 - 5 meses',
-        '2 - 3 meses',
-        '1 mes',
-        '15 días',
-        '1 semana'
-      ];
-      const placeholders = validCategories.map(() => '?').join(',');
-      db.prepare(`DELETE FROM tasks WHERE category NOT IN (${placeholders})`).run(...validCategories);
-
-      const weddingsList = db.prepare('SELECT id FROM weddings').all() as { id: string }[];
-      const nowIso = new Date().toISOString();
-      const insertTask = db.prepare(`
-        INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, NULL, ?, 'Pendiente', ?, ?, ?)
-      `);
-      for (const w of weddingsList) {
-        const existingTasks = db.prepare('SELECT title, category FROM tasks WHERE wedding_id = ?').all(w.id) as { title: string; category: string }[];
-        const existingKeys = new Set(existingTasks.map(t => `${t.category.toLowerCase()}::${t.title.trim().toLowerCase()}`));
-        defaultMasterChecklist.forEach((item: any, idx) => {
-          const key = `${item.category.toLowerCase()}::${item.title.trim().toLowerCase()}`;
-          if (!existingKeys.has(key)) {
-            insertTask.run(`tsk_vlb_${w.id}_${idx}`, w.id, item.title, item.category, item.responsible, item.priority, item.notes || '', nowIso, nowIso);
-            existingKeys.add(key);
-          }
-        });
       }
     } catch {}
   }
