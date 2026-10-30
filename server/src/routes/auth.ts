@@ -67,8 +67,7 @@ router.post('/login', (req, res) => {
     email: user.email,
     role: user.role,
     phone: user.phone,
-    wedding_id: user.wedding_id,
-    avatar_url: user.avatar_url || null
+    wedding_id: user.wedding_id
   };
 
   const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
@@ -84,7 +83,10 @@ router.post('/login', (req, res) => {
   return res.json({
     message: 'Inicio de sesión exitoso.',
     token,
-    user: tokenPayload
+    user: {
+      ...tokenPayload,
+      avatar_url: user.avatar_url || null
+    }
   });
 });
 
@@ -100,8 +102,7 @@ router.get('/quick-access', (req, res) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
-        wedding_id: user.wedding_id,
-        avatar_url: user.avatar_url || null
+        wedding_id: user.wedding_id
       };
       const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '30d' });
       res.cookie('token', token, {
