@@ -587,28 +587,42 @@ export const MesasLayoutModule: React.FC = () => {
 
   // Assign Guest to Table
   const handleAssignGuest = async (guestId: string, tableId: string) => {
-    if (isLocked) return;
+    if (!currentWedding || !token) return;
     try {
-      await fetch(`/api/weddings/${currentWedding!.id}/guests/${guestId}`, {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/guests/${guestId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ table_id: tableId })
       });
-      await fetchLayoutData();
-    } catch {}
+      if (res.ok) {
+        await fetchLayoutData();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Error assigning guest to table:', errData);
+      }
+    } catch (err) {
+      console.error('Network error assigning guest:', err);
+    }
   };
 
   // Unassign Guest from Table
   const handleUnassignGuest = async (guestId: string) => {
-    if (isLocked) return;
+    if (!currentWedding || !token) return;
     try {
-      await fetch(`/api/weddings/${currentWedding!.id}/guests/${guestId}`, {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/guests/${guestId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ table_id: null })
       });
-      await fetchLayoutData();
-    } catch {}
+      if (res.ok) {
+        await fetchLayoutData();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.error('Error unassigning guest:', errData);
+      }
+    } catch (err) {
+      console.error('Network error unassigning guest:', err);
+    }
   };
 
   // Save Version
@@ -854,13 +868,13 @@ export const MesasLayoutModule: React.FC = () => {
                   {unassignedGuests.length > 0 && (
                     <div className="pt-2 border-t border-[#FAF7F5]">
                       <select
+                        value=""
                         onChange={e => {
-                          if (e.target.value) {
-                            handleAssignGuest(e.target.value, table.id);
-                            e.target.value = '';
+                          const val = e.target.value;
+                          if (val) {
+                            handleAssignGuest(val, table.id);
                           }
                         }}
-                        defaultValue=""
                         className="w-full px-2.5 py-1.5 text-xs border border-[#EFE8E1] rounded-xl bg-[#FAF7F5] text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81] cursor-pointer"
                       >
                         <option value="">+ Sentar invitado aquí...</option>

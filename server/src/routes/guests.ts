@@ -214,23 +214,7 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
     });
   }
 
-  // Check 5-day table lock if table_id is explicitly changed by NOVIOS
-  if (user.role === 'NOVIOS' && table_id !== undefined && table_id !== guest.table_id) {
-    const wedding = db.prepare('SELECT wedding_date FROM weddings WHERE id = ?').get(weddingId) as any;
-    if (wedding && wedding.wedding_date) {
-      const weddingDate = new Date(wedding.wedding_date);
-      const today = new Date();
-      weddingDate.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
-      const diffDays = Math.ceil((weddingDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays <= 5) {
-        return res.status(403).json({
-          error: 'Bloqueo operativo: A 5 días o menos del evento, la asignación de mesas está bloqueada para los Novios.'
-        });
-      }
-    }
-  }
-
+  // Novios y equipo tienen acceso total para asignar y desasignar mesas a sus invitados
   const newStatus = status !== undefined ? status : guest.status;
   const newPriority = priority !== undefined && ['Alta', 'Media', 'Baja'].includes(priority) ? priority : (guest.priority || 'Media');
   let newTableId = table_id !== undefined ? table_id : guest.table_id;
