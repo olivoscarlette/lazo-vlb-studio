@@ -84,7 +84,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('lazo_token'));
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('auth_token') || params.get('token');
+      if (urlToken) {
+        localStorage.setItem('lazo_token', urlToken);
+        const cleanParams = new URLSearchParams(window.location.search);
+        cleanParams.delete('auth_token');
+        cleanParams.delete('token');
+        const searchStr = cleanParams.toString() ? `?${cleanParams.toString()}` : '';
+        window.history.replaceState({}, '', `${window.location.pathname}${searchStr}`);
+        return urlToken;
+      }
+      return localStorage.getItem('lazo_token');
+    }
+    return null;
+  });
   const [assignedWeddings, setAssignedWeddings] = useState<Wedding[]>([]);
   const [currentWedding, setCurrentWeddingState] = useState<Wedding | null>(null);
   const [activeTab, setActiveTabState] = useState<WorkspaceTab>('resumen');

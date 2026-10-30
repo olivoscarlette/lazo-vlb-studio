@@ -21,13 +21,14 @@ import { BitacoraModule } from './modules/BitacoraModule';
 import { WhatsAppHubModule } from './modules/WhatsAppHubModule';
 import { CalendarioModule } from './modules/CalendarioModule';
 import {
-  Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound
+  Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff
 } from 'lucide-react';
 
 const LoginView: React.FC = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -192,6 +193,9 @@ const LoginView: React.FC = () => {
                     <input
                       type="email"
                       required
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                       placeholder="nombre@ejemplo.com"
                       value={email}
                       onChange={e => setEmail(e.target.value)}
@@ -220,13 +224,24 @@ const LoginView: React.FC = () => {
                   <div className="relative">
                     <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       required
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                       placeholder="••••••••"
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-3.5 py-2.5 text-sm bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl text-[#332A28] placeholder-[#7D6F6B]/60 focus:outline-none focus:border-[#C48B81]"
+                      className="w-full pl-10 pr-10 py-2.5 text-sm bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl text-[#332A28] placeholder-[#7D6F6B]/60 focus:outline-none focus:border-[#C48B81]"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7D6F6B] hover:text-[#332A28] p-1 cursor-pointer"
+                      title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
 
