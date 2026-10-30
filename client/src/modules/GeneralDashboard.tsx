@@ -7,7 +7,8 @@ import {
   Building2, Search, AlertCircle, Shield, Settings,
   Database, History, Download, Upload, Trash2, CheckCircle2, Edit3,
   FileSpreadsheet, RefreshCw, Save, X, MessageSquare, Bell, LogOut,
-  FileText, LayoutGrid, PanelLeftClose, PanelLeft, ChevronDown
+  FileText, LayoutGrid, PanelLeftClose, PanelLeft, ChevronDown,
+  Users, Phone, Mail, ExternalLink, Laptop, Heart, ArrowUpRight, UserCheck
 } from 'lucide-react';
 import { WhatsAppHubModule } from './WhatsAppHubModule';
 import { CalendarioModule } from './CalendarioModule';
@@ -74,6 +75,21 @@ export const GeneralDashboard: React.FC = () => {
     assigned_role: ''
   });
   const [userError, setUserError] = useState('');
+
+  // Segmentación y filtros de Usuarios & Accesos
+  const [userFilterSegment, setUserFilterSegment] = useState<'ALL' | 'EQUIPO' | 'NOVIOS_VLB' | 'NOVIOS_VIRTUAL'>('ALL');
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+
+  // Modal de Upgrade: Novios Virtuales -> Coordinación VLB
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeUser, setUpgradeUser] = useState<any>(null);
+  const [upgradeWedding, setUpgradeWedding] = useState<any>(null);
+  const [upgradePackage, setUpgradePackage] = useState('Coordinación Viva la Bride');
+  const [upgradeCoordinatorId, setUpgradeCoordinatorId] = useState('');
+  const [upgradeWhatsapp, setUpgradeWhatsapp] = useState(true);
+  const [upgradeLayout, setUpgradeLayout] = useState(true);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [upgradeFeedback, setUpgradeFeedback] = useState<string | null>(null);
 
   // Admin: Catalogs & Master VLB Templates state
   const [vendorTypes, setVendorTypes] = useState<string[]>([]);
@@ -475,6 +491,117 @@ export const GeneralDashboard: React.FC = () => {
     } catch (err: any) {
       setUserError(err.message);
     }
+  };
+
+  // Helper para categorizar usuarios en los 3 segmentos principales:
+  // 1. 'EQUIPO': Administradores, Coordinadoras y Staff
+  // 2. 'NOVIOS_VLB': Novios con Coordinación Presencial Viva la Bride
+  // 3. 'NOVIOS_VIRTUAL': Novios con Suite Digital / Planner Virtual autónomo
+  const getUserCategory = (u: any): 'EQUIPO' | 'NOVIOS_VLB' | 'NOVIOS_VIRTUAL' => {
+    if (u.role === 'ADMINISTRADOR' || u.role === 'COORDINADOR' || u.role === 'STAFF') {
+      return 'EQUIPO';
+    }
+    if (u.role === 'NOVIOS') {
+      const linkedWedding = weddings.find(w => w.id === u.wedding_id);
+      if (linkedWedding && isVirtualWedding(linkedWedding)) {
+        return 'NOVIOS_VIRTUAL';
+      }
+      return 'NOVIOS_VLB';
+    }
+    return 'NOVIOS_VIRTUAL';
+  };
+
+  const handleOpenUpgrade = (u: any) => {
+    const w = weddings.find(w => w.id === u.wedding_id);
+    if (!w) {
+      alert('Este usuario no tiene una boda vinculada. Primero asígnale una boda para upgradear el servicio.');
+      return;
+    }
+    setUpgradeUser(u);
+    setUpgradeWedding(w);
+    setUpgradePackage(
+      w.package_type && !isVirtualWedding(w) ? w.package_type : 'Coordinación Viva la Bride'
+    );
+    setUpgradeWhatsapp(Boolean(w.has_whatsapp_rsvp));
+    setUpgradeLayout(Boolean(w.has_layout_2d));
+    setUpgradeCoordinatorId('');
+    setShowUpgradeModal(true);
+  };
+
+  const handleSaveUpgrade = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!upgradeWedding || !token) return;
+    setUpgradeLoading(true);
+    try {
+      // 1. Actualizar paquete de la boda a Coordinación VLB
+      const res = await fetch(`/api/weddings/${upgradeWedding.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          package_type: upgradePackage,
+          has_whatsapp_rsvp: upgradeWhatsapp,
+          has_layout_2d: upgradeLayout
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Error al actualizar boda.');
+      }
+
+      // 2. Asignar coordinadora del equipo si se seleccionó
+      if (upgradeCoordinatorId) {
+        try {
+          await fetch(`/api/weddings/${upgradeWedding.id}/team`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              user_id: upgradeCoordinatorId,
+              assigned_role: 'Coordinadora Principal'
+            })
+          });
+        } catch {}
+      }
+
+      await fetchWeddings();
+      await fetchUsers();
+      setShowUpgradeModal(false);
+      setUpgradeFeedback(`¡La boda "${upgradeWedding.name}" ha sido migrada con éxito a Coordinación Viva la Bride!`);
+      setTimeout(() => setUpgradeFeedback(null), 6000);
+    } catch (err: any) {
+      alert(err.message || 'Error al procesar el cambio a Coordinación VLB.');
+    } finally {
+      setUpgradeLoading(false);
+    }
+  };
+
+  const handleSwitchToVirtual = async (u: any) => {
+    const w = weddings.find(w => w.id === u.wedding_id);
+    if (!w) return;
+    if (!window.confirm(`¿Deseas cambiar la boda "${w.name}" al plan "Planner Virtual Autónomo"?`)) return;
+    try {
+      const res = await fetch(`/api/weddings/${w.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          package_type: 'Planner Virtual'
+        })
+      });
+      if (res.ok) {
+        await fetchWeddings();
+        await fetchUsers();
+        setUpgradeFeedback(`La boda "${w.name}" se cambió a Planner Virtual Autónomo.`);
+        setTimeout(() => setUpgradeFeedback(null), 5000);
+      }
+    } catch {}
   };
 
   const saveCatalogKey = async (key: string, values: any[]) => {
@@ -1093,7 +1220,7 @@ export const GeneralDashboard: React.FC = () => {
     { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare },
     { id: 'plantillas', label: 'Plantillas', icon: FileText },
     { id: 'catalogos', label: 'Catálogos', icon: LayoutGrid },
-    { id: 'equipo', label: 'Bitácora & Equipo', icon: History },
+    { id: 'usuarios', label: 'Usuarios & Accesos', icon: Users },
     { id: 'ajustes', label: 'Ajustes', icon: Settings },
   ];
 
@@ -1251,13 +1378,13 @@ export const GeneralDashboard: React.FC = () => {
         <nav className={`space-y-1.5 flex-1 ${!sidebarOpen ? 'flex flex-col items-center' : ''}`}>
           {sidebarNavItems.map(item => {
             const Icon = item.icon;
-            const active = activeTab === item.id;
+            const active = activeTab === item.id || (item.id === 'usuarios' && activeTab === 'equipo');
             return (
               <button
                 key={item.id}
                 onClick={() => {
                   setActiveTab(item.id as any);
-                  if (item.id === 'equipo' || item.id === 'ajustes') {
+                  if (item.id === 'usuarios' || item.id === 'equipo' || item.id === 'ajustes') {
                     fetchAuditAndBackups();
                   }
                   if (typeof window !== 'undefined' && window.innerWidth < 768) {
@@ -2086,134 +2213,464 @@ export const GeneralDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* PESTAÑA: USUARIOS Y EQUIPO */}
-        {activeTab === 'equipo' && user?.role === 'ADMINISTRADOR' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
-              <div className="flex items-center space-x-3.5">
+        {/* PESTAÑA: USUARIOS Y ACCESOS */}
+        {(activeTab === 'usuarios' || activeTab === 'equipo') && user?.role === 'ADMINISTRADOR' && (() => {
+          const teamUsers = usersList.filter(u => getUserCategory(u) === 'EQUIPO');
+          const noviosVlbUsers = usersList.filter(u => getUserCategory(u) === 'NOVIOS_VLB');
+          const noviosVirtualUsers = usersList.filter(u => getUserCategory(u) === 'NOVIOS_VIRTUAL');
+
+          const filteredUsersList = usersList.filter(u => {
+            const cat = getUserCategory(u);
+            if (userFilterSegment !== 'ALL' && cat !== userFilterSegment) {
+              return false;
+            }
+
+            const q = userSearchQuery.trim().toLowerCase();
+            if (!q) return true;
+
+            const linkedWedding = weddings.find(w => w.id === u.wedding_id);
+            const weddingName = linkedWedding?.name?.toLowerCase() || '';
+            const name = u.name?.toLowerCase() || '';
+            const email = u.email?.toLowerCase() || '';
+            const phone = u.phone?.toLowerCase() || '';
+
+            return name.includes(q) || email.includes(q) || phone.includes(q) || weddingName.includes(q);
+          });
+
+          return (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              {/* Feedback toast de upgrade exitoso */}
+              {upgradeFeedback && (
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs sm:text-sm font-medium flex items-center justify-between shadow-xs">
+                  <div className="flex items-center space-x-2.5">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>{upgradeFeedback}</span>
+                  </div>
+                  <button
+                    onClick={() => setUpgradeFeedback(null)}
+                    className="text-emerald-700 hover:text-emerald-900 text-xs font-bold px-2 py-1 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              {/* Cabecera Principal */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EFE8E1]">
                 <div>
-                  <h2 className="font-serif text-2xl font-bold text-[#332A28]">Bitácora & Equipo Lazo</h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">Gestión de coordinadores, staff y accesos operativos de bodas.</p>
+                  <div className="flex items-center space-x-2.5">
+                    <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#332A28]">
+                      Usuarios & Accesos
+                    </h2>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]">
+                      Control Total
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#7D6F6B] mt-1">
+                    Gestión centralizada de cuentas: Equipo Viva la Bride, Novios con Coordinación Presencial y Novios con Suite Digital Virtual.
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-2.5">
+                  <button
+                    onClick={() => setActiveTab('weddings')}
+                    className="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] transition cursor-pointer"
+                  >
+                    ← Volver a Eventos
+                  </button>
+                  <button
+                    onClick={handleOpenNewUser}
+                    className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Nuevo Usuario / Cuenta</span>
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={() => setActiveTab('weddings')}
-                className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
-              >
-                ← Volver a Bodas
-              </button>
-            </div>
-            <div className="luxury-card rounded-3xl p-6 sm:p-8 border border-stone-200 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-stone-100">
-            <div>
-              <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Seguridad y Accesos RBAC</span>
-              <h2 className="font-serif text-2xl font-bold text-stone-900">Usuarios, Equipo Lazo y Cuentas de Clientes</h2>
-              <p className="text-xs text-stone-500 mt-1">
-                Crea, edita o elimina miembros del equipo Lazo y cuentas de clientes, y asigna a qué bodas tiene acceso cada coordinador o staff.
-              </p>
-            </div>
-            <button
-              onClick={handleOpenNewUser}
-              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Nuevo Usuario / Equipo</span>
-            </button>
-          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-stone-200 text-[11px] font-bold uppercase tracking-wider text-stone-400">
-                  <th className="py-3 px-4">Nombre</th>
-                  <th className="py-3 px-4">Email de Acceso</th>
-                  <th className="py-3 px-4">Rol en Sistema</th>
-                  <th className="py-3 px-4">WhatsApp / Teléfono</th>
-                  <th className="py-3 px-4">Bodas Asignadas</th>
-                  <th className="py-3 px-4 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100 text-xs">
-                {usersList.map(u => {
-                  const linkedWedding = weddings.find(w => w.id === u.wedding_id);
-                  const assignedWeddingNames = Array.isArray(u.assigned_wedding_ids)
-                    ? weddings.filter(w => u.assigned_wedding_ids.includes(w.id)).map(w => w.name)
-                    : [];
-                  return (
-                    <tr key={u.id} className="hover:bg-stone-50/80 transition">
-                      <td className="py-3 px-4 font-semibold text-stone-900">
-                        <div className="flex items-center space-x-3">
-                          {u.avatar_url ? (
-                            <img
-                              src={u.avatar_url}
-                              alt={u.name}
-                              className="w-9 h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
-                            />
-                          ) : (
-                            <div className="w-9 h-9 rounded-full bg-[#EFE2DF] text-[#A86B60] font-serif font-bold text-sm flex items-center justify-center shrink-0 border border-[#EFE8E1]">
-                              {u.name?.charAt(0)?.toUpperCase() || 'U'}
-                            </div>
-                          )}
-                          <div className="min-w-0">
-                            <div className="font-semibold text-stone-900 truncate leading-snug">{u.name}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-3 px-4 text-stone-600 font-mono">{u.email}</td>
-                      <td className="py-3.5 px-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          u.role === 'ADMINISTRADOR'
-                            ? 'bg-stone-900 text-white'
-                            : u.role === 'COORDINADOR'
-                            ? 'bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]'
-                            : u.role === 'STAFF'
-                            ? 'bg-[#F5EFEB] text-[#7D6F6B] border border-[#EFE8E1]'
-                            : 'bg-[#E5EDE6] text-[#384C3A] border border-[#D5E2D7]'
-                        }`}>
-                          {u.role}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4 text-stone-600">{u.phone || '—'}</td>
-                      <td className="py-3.5 px-4 text-stone-700 font-medium">
-                        {u.role === 'NOVIOS'
-                          ? (linkedWedding ? linkedWedding.name : u.wedding_id || 'Sin asignar')
-                          : u.role === 'ADMINISTRADOR'
-                          ? 'Acceso total a todas las bodas'
-                          : assignedWeddingNames.length > 0
-                          ? assignedWeddingNames.join(', ')
-                          : 'Sin bodas asignadas'}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="inline-flex items-center space-x-1">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenEditUser(u)}
-                            className="inline-flex items-center space-x-1 text-stone-600 hover:text-stone-900 font-semibold px-2.5 py-1 rounded-lg hover:bg-stone-100 transition"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            <span>Editar</span>
-                          </button>
-                          {u.id !== user?.id && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteUser(u)}
-                              className="inline-flex items-center space-x-1 text-rose-600 hover:text-rose-800 font-semibold px-2.5 py-1 rounded-lg hover:bg-rose-50 transition"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                              <span>Eliminar</span>
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          </div>
-        </div>
-      )}
+              {/* 3 Métricas Rápidas en Tarjetas Segmentadas */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div
+                  onClick={() => setUserFilterSegment(userFilterSegment === 'EQUIPO' ? 'ALL' : 'EQUIPO')}
+                  className={`p-4 rounded-2xl border transition cursor-pointer ${
+                    userFilterSegment === 'EQUIPO'
+                      ? 'bg-[#F7EDEB] border-[#C48B81] shadow-xs'
+                      : 'bg-white border-[#EFE8E1] hover:border-[#C48B81]/40 hover:bg-[#FAF7F5]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#A86B60]">
+                      🌸 Equipo Viva la Bride
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-[#C48B81]" />
+                  </div>
+                  <div className="text-2xl font-bold text-[#2B2826] mt-2">
+                    {teamUsers.length}
+                  </div>
+                  <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                    Admin, Coordinadoras y Staff en sitio
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => setUserFilterSegment(userFilterSegment === 'NOVIOS_VLB' ? 'ALL' : 'NOVIOS_VLB')}
+                  className={`p-4 rounded-2xl border transition cursor-pointer ${
+                    userFilterSegment === 'NOVIOS_VLB'
+                      ? 'bg-[#FBF6ED] border-[#C29B38] shadow-xs'
+                      : 'bg-white border-[#EFE8E1] hover:border-[#C29B38]/40 hover:bg-[#FAF7F5]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#8E6D38]">
+                      💍 Novios VLB (Presencial)
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-[#C29B38]" />
+                  </div>
+                  <div className="text-2xl font-bold text-[#2B2826] mt-2">
+                    {noviosVlbUsers.length}
+                  </div>
+                  <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                    Coordinación activa en sitio + suite digital
+                  </p>
+                </div>
+
+                <div
+                  onClick={() => setUserFilterSegment(userFilterSegment === 'NOVIOS_VIRTUAL' ? 'ALL' : 'NOVIOS_VIRTUAL')}
+                  className={`p-4 rounded-2xl border transition cursor-pointer ${
+                    userFilterSegment === 'NOVIOS_VIRTUAL'
+                      ? 'bg-[#F0F4F8] border-[#3A5A78] shadow-xs'
+                      : 'bg-white border-[#EFE8E1] hover:border-[#3A5A78]/40 hover:bg-[#FAF7F5]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#3A5A78]">
+                      💻 Novios Virtuales
+                    </span>
+                    <span className="w-2 h-2 rounded-full bg-[#3A5A78]" />
+                  </div>
+                  <div className="text-2xl font-bold text-[#2B2826] mt-2">
+                    {noviosVirtualUsers.length}
+                  </div>
+                  <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                    Suite digital autónoma (Lazo Studio)
+                  </p>
+                </div>
+              </div>
+
+              {/* Contenedor Principal: Filtros y Tabla */}
+              <div className="luxury-card rounded-3xl p-5 sm:p-7 border border-[#EFE8E1] space-y-5">
+                {/* Barra de Filtro Segmentado y Buscador */}
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-[#F5EFEB]">
+                  {/* Segmented Control Pills */}
+                  <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#FAF7F5] rounded-2xl border border-[#EFE8E1]">
+                    <button
+                      type="button"
+                      onClick={() => setUserFilterSegment('ALL')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
+                        userFilterSegment === 'ALL'
+                          ? 'bg-[#2B2826] text-white shadow-2xs'
+                          : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                      }`}
+                    >
+                      <span>Todos</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                        userFilterSegment === 'ALL' ? 'bg-white/20 text-white' : 'bg-[#EFE8E1] text-[#7D6F6B]'
+                      }`}>
+                        {usersList.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setUserFilterSegment('EQUIPO')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
+                        userFilterSegment === 'EQUIPO'
+                          ? 'bg-[#C48B81] text-white shadow-2xs'
+                          : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                      }`}
+                    >
+                      <span>🌸 Equipo VLB</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                        userFilterSegment === 'EQUIPO' ? 'bg-white/20 text-white' : 'bg-[#F7EDEB] text-[#A86B60]'
+                      }`}>
+                        {teamUsers.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setUserFilterSegment('NOVIOS_VLB')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
+                        userFilterSegment === 'NOVIOS_VLB'
+                          ? 'bg-[#8E6D38] text-white shadow-2xs'
+                          : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                      }`}
+                    >
+                      <span>💍 Novios VLB</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                        userFilterSegment === 'NOVIOS_VLB' ? 'bg-white/20 text-white' : 'bg-[#FBF6ED] text-[#8E6D38]'
+                      }`}>
+                        {noviosVlbUsers.length}
+                      </span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setUserFilterSegment('NOVIOS_VIRTUAL')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
+                        userFilterSegment === 'NOVIOS_VIRTUAL'
+                          ? 'bg-[#3A5A78] text-white shadow-2xs'
+                          : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                      }`}
+                    >
+                      <span>💻 Novios Virtuales</span>
+                      <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
+                        userFilterSegment === 'NOVIOS_VIRTUAL' ? 'bg-white/20 text-white' : 'bg-[#F0F4F8] text-[#3A5A78]'
+                      }`}>
+                        {noviosVirtualUsers.length}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Buscador Rápido */}
+                  <div className="relative min-w-[260px] sm:w-72">
+                    <Search className="w-4 h-4 text-[#7D6F6B] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={userSearchQuery}
+                      onChange={e => setUserSearchQuery(e.target.value)}
+                      placeholder="Buscar por nombre, email, teléfono..."
+                      className="w-full pl-9 pr-3 py-2 bg-[#FAF7F5] border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] placeholder:text-[#7D6F6B]/70 focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                    />
+                    {userSearchQuery && (
+                      <button
+                        onClick={() => setUserSearchQuery('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tabla de Usuarios */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#EFE8E1] text-[11px] font-bold uppercase tracking-wider text-[#7D6F6B]">
+                        <th className="py-3 px-4">Usuario / Contacto</th>
+                        <th className="py-3 px-4">Tipo & Segmento</th>
+                        <th className="py-3 px-4">WhatsApp</th>
+                        <th className="py-3 px-4">Boda / Cobertura</th>
+                        <th className="py-3 px-4 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#F5EFEB] text-xs">
+                      {filteredUsersList.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-10 text-center text-sm text-[#7D6F6B]">
+                            No se encontraron usuarios en esta categoría o búsqueda.
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredUsersList.map(u => {
+                          const cat = getUserCategory(u);
+                          const linkedWedding = weddings.find(w => w.id === u.wedding_id);
+                          const assignedWeddingNames = Array.isArray(u.assigned_wedding_ids)
+                            ? weddings.filter(w => u.assigned_wedding_ids.includes(w.id)).map(w => w.name)
+                            : [];
+
+                          return (
+                            <tr key={u.id} className="hover:bg-[#FAF7F5]/80 transition">
+                              {/* 1. Nombre & Avatar */}
+                              <td className="py-3.5 px-4 font-semibold text-[#2B2826]">
+                                <div className="flex items-center space-x-3">
+                                  {u.avatar_url ? (
+                                    <img
+                                      src={u.avatar_url}
+                                      alt={u.name}
+                                      className="w-9 h-9 rounded-full object-cover border border-[#EFE8E1] shadow-2xs shrink-0"
+                                    />
+                                  ) : (
+                                    <div className={`w-9 h-9 rounded-full font-serif font-bold text-sm flex items-center justify-center shrink-0 border ${
+                                      cat === 'EQUIPO'
+                                        ? 'bg-[#F7EDEB] text-[#A86B60] border-[#EEDAD6]'
+                                        : cat === 'NOVIOS_VLB'
+                                        ? 'bg-[#FBF6ED] text-[#8E6D38] border-[#ECDDBF]'
+                                        : 'bg-[#F0F4F8] text-[#3A5A78] border-[#D0E0EC]'
+                                    }`}>
+                                      {u.name?.charAt(0)?.toUpperCase() || 'U'}
+                                    </div>
+                                  )}
+                                  <div className="min-w-0">
+                                    <div className="font-semibold text-[#2B2826] truncate leading-snug">
+                                      {u.name}
+                                    </div>
+                                    <div className="text-[11px] text-[#7D6F6B] font-mono truncate">
+                                      {u.email}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* 2. Tipo & Segmento */}
+                              <td className="py-3.5 px-4 whitespace-nowrap">
+                                {cat === 'EQUIPO' ? (
+                                  <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${
+                                    u.role === 'ADMINISTRADOR'
+                                      ? 'bg-stone-900 text-white border-stone-800'
+                                      : u.role === 'COORDINADOR'
+                                      ? 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5]'
+                                      : 'bg-[#F5EFEB] text-[#7D6F6B] border-[#EFE8E1]'
+                                  }`}>
+                                    <span>{u.role === 'ADMINISTRADOR' ? '👑 Admin' : u.role === 'COORDINADOR' ? '🌸 Coordinadora VLB' : '🤝 Staff'}</span>
+                                  </span>
+                                ) : cat === 'NOVIOS_VLB' ? (
+                                  <div className="space-y-1">
+                                    <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#FBF6ED] text-[#8E6D38] border border-[#ECDDBF]">
+                                      <span>💍 Coordinación VLB</span>
+                                    </span>
+                                    {linkedWedding?.package_type && (
+                                      <div className="text-[10px] text-[#8E6D38]/80 font-medium pl-1">
+                                        {linkedWedding.package_type}
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="space-y-1">
+                                    <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#F0F4F8] text-[#3A5A78] border border-[#D0E0EC]">
+                                      <span>💻 Planner Virtual</span>
+                                    </span>
+                                    <div className="text-[10px] text-[#3A5A78]/80 font-medium pl-1">
+                                      Autónomo
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* 3. WhatsApp / Teléfono */}
+                              <td className="py-3.5 px-4 whitespace-nowrap">
+                                {u.phone ? (
+                                  <a
+                                    href={`https://wa.me/${u.phone.replace(/[^0-9]/g, '')}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center space-x-1.5 text-xs text-[#2B2826] hover:text-emerald-700 transition"
+                                  >
+                                    <Phone className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span>{u.phone}</span>
+                                  </a>
+                                ) : (
+                                  <span className="text-[#7D6F6B] text-xs">—</span>
+                                )}
+                              </td>
+
+                              {/* 4. Boda / Cobertura */}
+                              <td className="py-3.5 px-4">
+                                {u.role === 'NOVIOS' ? (
+                                  linkedWedding ? (
+                                    <div className="space-y-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setCurrentWedding(linkedWedding);
+                                        }}
+                                        className="font-medium text-[#2B2826] hover:text-[#C48B81] hover:underline text-left transition flex items-center space-x-1 group cursor-pointer"
+                                      >
+                                        <span className="truncate max-w-[200px]">{linkedWedding.name}</span>
+                                        <ArrowRight className="w-3 h-3 text-[#C48B81] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                      </button>
+                                      <div className="text-[11px] text-[#7D6F6B] flex items-center space-x-2">
+                                        <span>{linkedWedding.wedding_date || 'Fecha por definir'}</span>
+                                        {linkedWedding.has_whatsapp_rsvp && (
+                                          <span className="text-[9px] px-1.5 py-0.2 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
+                                            📲 RSVP
+                                          </span>
+                                        )}
+                                        {linkedWedding.has_layout_2d && (
+                                          <span className="text-[9px] px-1.5 py-0.2 bg-[#F7EDEB] text-[#A86B60] rounded-full border border-[#EEDAD6]">
+                                            🪑 2D
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full text-[10px] font-medium border border-amber-200">
+                                      Sin boda asignada
+                                    </span>
+                                  )
+                                ) : u.role === 'ADMINISTRADOR' ? (
+                                  <span className="text-xs text-[#7D6F6B] italic">
+                                    Acceso total a todas las bodas
+                                  </span>
+                                ) : assignedWeddingNames.length > 0 ? (
+                                  <div className="text-xs text-[#2B2826] font-medium max-w-[220px] truncate" title={assignedWeddingNames.join(', ')}>
+                                    {assignedWeddingNames.length} {assignedWeddingNames.length === 1 ? 'boda' : 'bodas'}: {assignedWeddingNames.join(', ')}
+                                  </div>
+                                ) : (
+                                  <span className="text-[#7D6F6B] text-xs">Sin bodas asignadas</span>
+                                )}
+                              </td>
+
+                              {/* 5. Acciones */}
+                              <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                                <div className="inline-flex items-center space-x-1.5">
+                                  {/* Acción destacada: Upgradear a VLB si es Novio Virtual */}
+                                  {cat === 'NOVIOS_VIRTUAL' && linkedWedding && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleOpenUpgrade(u)}
+                                      title="Upgradear servicio a Coordinación Presencial Viva la Bride"
+                                      className="inline-flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-[#C48B81] to-[#A86B60] hover:from-[#B3796F] hover:to-[#935B50] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                                    >
+                                      <Sparkles className="w-3.5 h-3.5" />
+                                      <span>Cambiar a VLB</span>
+                                    </button>
+                                  )}
+
+                                  {/* Opción si ya es VLB pero quieren cambiar a virtual */}
+                                  {cat === 'NOVIOS_VLB' && linkedWedding && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleSwitchToVirtual(u)}
+                                      title="Cambiar a Planner Virtual Autónomo"
+                                      className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] text-[#7D6F6B] hover:text-[#2B2826] bg-[#FAF7F5] hover:bg-[#F2ECE7] border border-[#EFE8E1] rounded-lg transition cursor-pointer"
+                                    >
+                                      <span>A Virtual</span>
+                                    </button>
+                                  )}
+
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEditUser(u)}
+                                    className="inline-flex items-center space-x-1 text-[#7D6F6B] hover:text-[#2B2826] font-semibold px-2.5 py-1 rounded-lg hover:bg-stone-100 transition cursor-pointer"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                    <span>Editar</span>
+                                  </button>
+
+                                  {u.id !== user?.id && (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteUser(u)}
+                                      className="inline-flex items-center space-x-1 text-rose-600 hover:text-rose-800 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
       {/* PESTAÑA: PLANTILLAS LAZO STUDIO */}
       {activeTab === 'plantillas' && user?.role === 'ADMINISTRADOR' && (() => {
@@ -3350,6 +3807,148 @@ export const GeneralDashboard: React.FC = () => {
                   className="px-5 py-2 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition cursor-pointer"
                 >
                   Guardar Usuario
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Upgradear a Coordinación Viva la Bride */}
+      {showUpgradeModal && upgradeWedding && (
+        <div className="fixed inset-0 bg-stone-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-stone-200 animate-in fade-in zoom-in-95 max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-stone-100">
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
+                  ✨ MIGRACIÓN DE SERVICIO
+                </span>
+                <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
+                  Cambiar a Coordinación VLB
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="text-stone-400 hover:text-stone-700 p-1.5 rounded-xl hover:bg-stone-100 transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Banner explicativo de seguridad y conservación de datos */}
+            <div className="mt-4 p-3.5 bg-[#FBF6ED] rounded-2xl border border-[#ECDDBF] text-xs text-[#8E6D38] space-y-1">
+              <div className="font-bold flex items-center space-x-1.5">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>Conserva el 100% de los datos de los novios</span>
+              </div>
+              <p className="text-[11px] leading-relaxed text-[#786036]">
+                Los novios mantendrán su usuario ({upgradeUser?.email}), contraseña, lista de invitados, presupuestos y mesas intactos. La plataforma activará el sello oficial de Viva la Bride.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveUpgrade} className="mt-5 space-y-4">
+              {/* Resumen de Boda */}
+              <div className="p-3 bg-stone-50 rounded-xl border border-stone-200 text-xs text-stone-700 space-y-0.5">
+                <div><span className="font-bold">Boda:</span> {upgradeWedding.name}</div>
+                <div><span className="font-bold">Fecha:</span> {upgradeWedding.wedding_date || 'Por definir'}</div>
+                <div><span className="font-bold">Cuenta de Novios:</span> {upgradeUser?.name} ({upgradeUser?.email})</div>
+              </div>
+
+              {/* 1. Nuevo Paquete de Coordinación */}
+              <div>
+                <label className="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1">
+                  Paquete de Coordinación Presencial *
+                </label>
+                <select
+                  required
+                  value={upgradePackage}
+                  onChange={e => setUpgradePackage(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs bg-white text-stone-900 focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                >
+                  <option value="Coordinación Viva la Bride">Coordinación Viva la Bride (General)</option>
+                  <option value="Coordinación Integral">Coordinación Integral Viva la Bride</option>
+                  <option value="Coordinación Esencial">Coordinación Esencial Viva la Bride</option>
+                  <option value="Coordinación Intermedia">Coordinación Intermedia Viva la Bride</option>
+                  <option value="Coordinación Día D">Coordinación Día D Viva la Bride</option>
+                  {meetingPackages
+                    .filter(p => !p.name.toLowerCase().includes('virtual') && !p.name.toLowerCase().includes('autónomo'))
+                    .map(p => (
+                      <option key={p.name} value={p.name}>{p.name}</option>
+                    ))}
+                </select>
+              </div>
+
+              {/* 2. Asignar Coordinadora de Viva la Bride */}
+              <div>
+                <label className="block text-xs font-bold text-stone-800 uppercase tracking-wider mb-1">
+                  Asignar Coordinadora Principal (Opcional)
+                </label>
+                <select
+                  value={upgradeCoordinatorId}
+                  onChange={e => setUpgradeCoordinatorId(e.target.value)}
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs bg-white text-stone-900 focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                >
+                  <option value="">(Asignar coordinadora después)</option>
+                  {usersList
+                    .filter(u => u.role === 'COORDINADOR' || u.role === 'ADMINISTRADOR')
+                    .map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.role === 'ADMINISTRADOR' ? 'Admin' : 'Coordinadora'})
+                      </option>
+                    ))}
+                </select>
+                <p className="text-[11px] text-stone-500 mt-1">
+                  Puedes asignarle una coordinadora de Viva la Bride ahora o después desde la boda.
+                </p>
+              </div>
+
+              {/* 3. Add-ons de la Boda */}
+              <div className="space-y-2 pt-2 border-t border-stone-100">
+                <span className="block text-xs font-bold text-stone-700 uppercase tracking-wider">
+                  Módulos Adicionales para los Novios
+                </span>
+                <label className="flex items-center space-x-2.5 text-xs text-stone-800 cursor-pointer p-2 rounded-xl bg-stone-50 border border-stone-200">
+                  <input
+                    type="checkbox"
+                    checked={upgradeWhatsapp}
+                    onChange={e => setUpgradeWhatsapp(e.target.checked)}
+                    className="rounded border-stone-300 text-[#C48B81]"
+                  />
+                  <div>
+                    <span className="font-semibold">📲 Confirmación por WhatsApp Automática</span>
+                    <p className="text-[10px] text-stone-500">Permite enviar y recibir RSVPs por WhatsApp oficial</p>
+                  </div>
+                </label>
+                <label className="flex items-center space-x-2.5 text-xs text-stone-800 cursor-pointer p-2 rounded-xl bg-stone-50 border border-stone-200">
+                  <input
+                    type="checkbox"
+                    checked={upgradeLayout}
+                    onChange={e => setUpgradeLayout(e.target.checked)}
+                    className="rounded border-stone-300 text-[#C48B81]"
+                  />
+                  <div>
+                    <span className="font-semibold">🪑 Plano de Mesas 2D Interactivo</span>
+                    <p className="text-[10px] text-stone-500">Diseñador visual de distribución de mesas y asientos</p>
+                  </div>
+                </label>
+              </div>
+
+              {/* Acciones */}
+              <div className="flex items-center justify-end space-x-2 pt-4 border-t border-stone-100">
+                <button
+                  type="button"
+                  onClick={() => setShowUpgradeModal(false)}
+                  className="px-4 py-2 text-xs font-medium text-stone-600 hover:bg-stone-100 rounded-xl transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={upgradeLoading}
+                  className="inline-flex items-center space-x-1.5 px-5 py-2.5 bg-gradient-to-r from-[#C48B81] to-[#A86B60] hover:from-[#B3796F] hover:to-[#935B50] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer disabled:opacity-60"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{upgradeLoading ? 'Actualizando...' : 'Confirmar Upgrade a Viva la Bride ✨'}</span>
                 </button>
               </div>
             </form>

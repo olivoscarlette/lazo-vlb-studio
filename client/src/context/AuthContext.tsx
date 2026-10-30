@@ -28,12 +28,12 @@ export const parseLocation = (pathname: string, hash: string): AppRoute => {
     };
   }
 
-  // Known dashboard tabs: /calendario, /whatsapp, /plantillas, /catalogos, /equipo, /ajustes, /bodas
-  const knownDashboard = ['calendario', 'whatsapp', 'plantillas', 'catalogos', 'equipo', 'ajustes', 'bodas', 'weddings'];
+  // Known dashboard tabs: /calendario, /whatsapp, /plantillas, /catalogos, /usuarios, /equipo, /ajustes, /bodas
+  const knownDashboard = ['calendario', 'whatsapp', 'plantillas', 'catalogos', 'usuarios', 'equipo', 'ajustes', 'bodas', 'weddings'];
   if (parts[0] && knownDashboard.includes(parts[0])) {
     return {
       type: 'dashboard',
-      tab: parts[0] === 'bodas' ? 'weddings' : parts[0]
+      tab: parts[0] === 'bodas' ? 'weddings' : parts[0] === 'equipo' ? 'usuarios' : parts[0]
     };
   }
 
