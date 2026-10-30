@@ -186,7 +186,7 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
-// Email Diagnostics & Connectivity Check
+// System Readiness & Diagnostics Check
 router.get('/email-diagnostics', async (req, res) => {
   const hasGmailUser = Boolean(process.env.GMAIL_USER || process.env.SMTP_USER);
   const hasGmailPass = Boolean(process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS);
@@ -211,13 +211,49 @@ router.get('/email-diagnostics', async (req, res) => {
     }
   }
 
+  // Check Volume Mount on Railway / Production
+  let storage = {
+    isVolumeMounted: false,
+    dataDir: 'data',
+    devDiff: false
+  };
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const dataDir = path.resolve(process.cwd(), 'data');
+    const rootDir = process.cwd();
+    if (fs.existsSync(dataDir)) {
+      const dataStat = fs.statSync(dataDir);
+      const rootStat = fs.statSync(rootDir);
+      // On Linux/Docker, a mounted volume has a different device ID than container root
+      const isMounted = dataStat.dev !== rootStat.dev;
+      storage = {
+        isVolumeMounted: isMounted,
+        dataDir,
+        devDiff: isMounted
+      };
+    }
+  } catch (stErr: any) {
+    storage = { isVolumeMounted: false, dataDir: 'error: ' + stErr.message, devDiff: false };
+  }
+
+  // Check WhatsApp Status
+  const waConfig = WhatsAppService.getConfig();
+  const whatsapp = {
+    isConfigured: waConfig.isConfigured,
+    mode: waConfig.isConfigured ? 'LIVE_META_API' : 'SANDBOX_SIMULATED',
+    hasToken: Boolean(waConfig.token),
+    phoneNumberId: waConfig.phoneNumberId ? `${waConfig.phoneNumberId.slice(0, 4)}***` : null
+  };
+
   return res.json({
-    configured: {
+    email: {
+      hasResend,
       hasGmailUser,
-      gmailUser: process.env.GMAIL_USER ? process.env.GMAIL_USER.replace(/(.{3}).*(@.*)/, '$1***$2') : null,
-      hasGmailPass,
-      hasResend
+      hasGmailPass
     },
+    storage,
+    whatsapp,
     sendTestResult,
     sendTestError,
     timestamp: new Date().toISOString()
