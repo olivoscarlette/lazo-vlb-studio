@@ -57,7 +57,7 @@ router.get('/:weddingId/tables', authenticateToken, requireWeddingAccess, (req, 
 // POST /api/weddings/:weddingId/tables - Add table
 router.post('/:weddingId/tables', authenticateToken, requireWeddingAccess, check5DayTableLock, (req, res) => {
   const { weddingId } = req.params;
-  const { name, type, capacity, x, y, rotation, width, height } = req.body;
+  const { name, type, capacity, x, y, rotation, width, height, seats_distribution } = req.body;
 
   if (!name || !type) {
     return res.status(400).json({ error: 'Nombre y tipo de mesa son obligatorios.' });
@@ -68,10 +68,11 @@ router.post('/:weddingId/tables', authenticateToken, requireWeddingAccess, check
   const cap = Math.max(1, parseInt(capacity, 10) || (type === 'imperial' ? 14 : 10));
   const defaultWidth = type === 'imperial' ? 190 : type === 'rectangular' ? 160 : 120;
   const defaultHeight = type === 'imperial' ? 95 : type === 'rectangular' ? 95 : 120;
+  const seatsDistStr = seats_distribution ? (typeof seats_distribution === 'string' ? seats_distribution : JSON.stringify(seats_distribution)) : null;
 
   db.prepare(`
-    INSERT INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, width, height, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, width, height, seats_distribution, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
     weddingId,
@@ -83,6 +84,7 @@ router.post('/:weddingId/tables', authenticateToken, requireWeddingAccess, check
     rotation ?? 0,
     width ?? defaultWidth,
     height ?? defaultHeight,
+    seatsDistStr,
     now,
     now
   );
@@ -102,6 +104,7 @@ router.post('/:weddingId/tables', authenticateToken, requireWeddingAccess, check
       rotation: rotation ?? 0,
       width: width ?? defaultWidth,
       height: height ?? defaultHeight,
+      seats_distribution: seatsDistStr,
       guests: [],
       used_seats: 0,
       available_seats: cap
@@ -109,10 +112,10 @@ router.post('/:weddingId/tables', authenticateToken, requireWeddingAccess, check
   });
 });
 
-// PUT /api/weddings/:weddingId/tables/:tableId - Update table (position, rotation, capacity, name, size)
+// PUT /api/weddings/:weddingId/tables/:tableId - Update table (position, rotation, capacity, name, size, seats_distribution)
 router.put('/:weddingId/tables/:tableId', authenticateToken, requireWeddingAccess, check5DayTableLock, (req, res) => {
   const { weddingId, tableId } = req.params;
-  const { name, type, capacity, x, y, rotation, width, height } = req.body;
+  const { name, type, capacity, x, y, rotation, width, height, seats_distribution } = req.body;
 
   const table = db.prepare('SELECT * FROM tables WHERE id = ? AND wedding_id = ?').get(tableId, weddingId) as any;
   if (!table) {
@@ -121,10 +124,13 @@ router.put('/:weddingId/tables/:tableId', authenticateToken, requireWeddingAcces
 
   const now = new Date().toISOString();
   const cap = capacity !== undefined ? Math.max(1, parseInt(capacity, 10)) : table.capacity;
+  const seatsDistStr = seats_distribution !== undefined
+    ? (seats_distribution ? (typeof seats_distribution === 'string' ? seats_distribution : JSON.stringify(seats_distribution)) : null)
+    : table.seats_distribution;
 
   db.prepare(`
     UPDATE tables SET
-      name = ?, type = ?, capacity = ?, x = ?, y = ?, rotation = ?, width = ?, height = ?, updated_at = ?
+      name = ?, type = ?, capacity = ?, x = ?, y = ?, rotation = ?, width = ?, height = ?, seats_distribution = ?, updated_at = ?
     WHERE id = ? AND wedding_id = ?
   `).run(
     name || table.name,
@@ -135,6 +141,7 @@ router.put('/:weddingId/tables/:tableId', authenticateToken, requireWeddingAcces
     rotation !== undefined ? rotation : table.rotation,
     width !== undefined ? width : (table.width ?? 120),
     height !== undefined ? height : (table.height ?? 120),
+    seatsDistStr,
     now,
     tableId,
     weddingId
@@ -281,11 +288,25 @@ router.post('/:weddingId/tables/versions/:versionId/restore', authenticateToken,
 
     // Reinsert tables
     const insertTable = db.prepare(`
-      INSERT INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, width, height, seats_distribution, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
     for (const t of snapshot.tables) {
-      insertTable.run(t.id, weddingId, t.name, t.type, t.capacity, t.x, t.y, t.rotation, now, now);
+      insertTable.run(
+        t.id,
+        weddingId,
+        t.name,
+        t.type,
+        t.capacity,
+        t.x,
+        t.y,
+        t.rotation,
+        t.width || 120,
+        t.height || 120,
+        t.seats_distribution || null,
+        now,
+        now
+      );
     }
 
     // Reinsert elements

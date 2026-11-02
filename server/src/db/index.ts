@@ -585,6 +585,9 @@ export function initDatabase() {
   try {
     db.exec('ALTER TABLE tables ADD COLUMN height REAL DEFAULT 120;');
   } catch {}
+  try {
+    db.exec('ALTER TABLE tables ADD COLUMN seats_distribution TEXT;');
+  } catch {}
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS calendar_events (

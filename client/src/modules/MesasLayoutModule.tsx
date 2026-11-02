@@ -19,6 +19,50 @@ const GROUP_PALETTES = [
   { bg: '#F7F4EF', border: '#EAE2D5', text: '#2B2826', tagBg: '#EFE5D7', tagText: '#544A3F' }  // Warm taupe
 ];
 
+export interface TableSeatsDistribution {
+  top: number;
+  bottom: number;
+  left: number;
+  right: number;
+}
+
+export const getTableSeatsDistribution = (table: {
+  type: string;
+  capacity?: number;
+  seats_distribution?: string;
+}): TableSeatsDistribution => {
+  if (table.seats_distribution) {
+    try {
+      const parsed = JSON.parse(table.seats_distribution);
+      if (
+        typeof parsed.top === 'number' &&
+        typeof parsed.bottom === 'number' &&
+        typeof parsed.left === 'number' &&
+        typeof parsed.right === 'number'
+      ) {
+        return parsed;
+      }
+    } catch {}
+  }
+
+  const cap = Math.max(1, table.capacity || 10);
+  if (table.type === 'circular') {
+    return { top: cap, bottom: 0, left: 0, right: 0 };
+  }
+
+  // Rectangular / Imperial default: 1 on each head (cabeceras) if capacity >= 6
+  if (cap >= 6) {
+    const remaining = cap - 2;
+    const top = Math.ceil(remaining / 2);
+    const bottom = Math.floor(remaining / 2);
+    return { top, bottom, left: 1, right: 1 };
+  } else if (cap >= 4) {
+    return { top: 1, bottom: 1, left: 1, right: 1 };
+  } else {
+    return { top: cap, bottom: 0, left: 0, right: 0 };
+  }
+};
+
 export const MesasLayoutModule: React.FC = () => {
   const { currentWedding, token, user, refreshWedding } = useAuth();
   const [tables, setTables] = useState<Table[]>([]);
@@ -449,6 +493,59 @@ export const MesasLayoutModule: React.FC = () => {
     } catch {}
   };
 
+  // Modify Seats Distribution (Cabeceras y lados)
+  const handleUpdateSeatsDistribution = async (
+    tableId: string,
+    newDist: { top: number; bottom: number; left: number; right: number }
+  ) => {
+    const top = Math.max(0, newDist.top);
+    const bottom = Math.max(0, newDist.bottom);
+    const left = Math.max(0, newDist.left);
+    const right = Math.max(0, newDist.right);
+    const newCapacity = top + bottom + left + right;
+    const distStr = JSON.stringify({ top, bottom, left, right });
+
+    setTables(prev =>
+      prev.map(t =>
+        t.id === tableId
+          ? {
+              ...t,
+              capacity: newCapacity,
+              seats_distribution: distStr,
+              available_seats: Math.max(0, newCapacity - (t.used_seats || 0))
+            }
+          : t
+      )
+    );
+
+    if (selectedTable?.id === tableId) {
+      setSelectedTable(prev =>
+        prev
+          ? {
+              ...prev,
+              capacity: newCapacity,
+              seats_distribution: distStr,
+              available_seats: Math.max(0, newCapacity - (prev.used_seats || 0))
+            }
+          : null
+      );
+    }
+
+    if (!currentWedding) return;
+    try {
+      await fetch(`/api/weddings/${currentWedding.id}/tables/${tableId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          capacity: newCapacity,
+          seats_distribution: distStr
+        })
+      });
+    } catch (err) {
+      console.error('Error al actualizar distribución de sillas:', err);
+    }
+  };
+
   // Auto-Acomodo (Neat symmetrical layout)
   const handleAutoArrange = async () => {
     if (!currentWedding || !token || tables.length === 0) return;
@@ -603,6 +700,10 @@ export const MesasLayoutModule: React.FC = () => {
     if (!currentWedding || isLocked) return;
     const defaultW = newTableData.type === 'imperial' ? 190 : newTableData.type === 'rectangular' ? 160 : 120;
     const defaultH = newTableData.type === 'imperial' ? 95 : newTableData.type === 'rectangular' ? 95 : 120;
+    const defaultDist = getTableSeatsDistribution({
+      type: newTableData.type,
+      capacity: newTableData.capacity
+    });
     try {
       const res = await fetch(`/api/weddings/${currentWedding.id}/tables`, {
         method: 'POST',
@@ -613,7 +714,8 @@ export const MesasLayoutModule: React.FC = () => {
           y: 100 + Math.floor(tables.length / 5) * 60,
           rotation: 0,
           width: defaultW,
-          height: defaultH
+          height: defaultH,
+          seats_distribution: JSON.stringify(defaultDist)
         })
       });
       if (res.ok) {
@@ -1367,64 +1469,189 @@ export const MesasLayoutModule: React.FC = () => {
                             </div>
                           </div>
                         ) : (
-                          /* Rectangular / Imperial Table with Perimeter Seats */
-                          <div className="relative w-full h-full flex items-center justify-center">
-                            {/* Top Edge Seats */}
-                            <div className="absolute -top-2 left-0 right-0 flex justify-around px-2">
-                              {Array.from({ length: Math.floor(capacity / 2) }).map((_, seatIdx) => {
-                                const isOccupied = seatIdx < usedSeats;
-                                return (
-                                  <div
-                                    key={`top-${seatIdx}`}
-                                    className={`w-3.5 h-3.5 rounded-full transition-colors ${
-                                      isOccupied
-                                        ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
-                                        : 'bg-white border border-[#D2C4B4]'
-                                    }`}
-                                    title={`Asiento: ${isOccupied ? 'Ocupado' : 'Disponible'}`}
-                                  />
-                                );
-                              })}
-                            </div>
+                          /* Rectangular / Imperial Table with Perimeter Seats (including Cabeceras) */
+                          (() => {
+                            const dist = getTableSeatsDistribution(table);
+                            let runningSeatIdx = 0;
 
-                            {/* Center table rectangle */}
-                            <div
-                              className={`w-full h-full rounded-2xl bg-white border flex flex-col items-center justify-center px-2 py-1 text-center transition shadow-xs ${
-                                isSelected
-                                  ? 'border-[#C48B81] ring-2 ring-[#C48B81] shadow-md'
-                                  : 'border-[#E8DFD5] hover:border-[#C48B81]'
-                              }`}
-                            >
-                              <span className="font-serif font-bold text-xs text-[#2B2826] leading-none">
-                                #{idx + 1}
-                              </span>
-                              <span className="text-[9px] text-[#7D6F6B] truncate max-w-[85%] mt-0.5 leading-tight">
-                                {table.name || 'Sin nombre'}
-                              </span>
-                              <span className="text-[8.5px] font-semibold text-[#8A7E72] mt-0.5">
-                                {usedSeats}/{capacity}
-                              </span>
-                            </div>
+                            return (
+                              <div className="relative w-full h-full flex items-center justify-center">
+                                {/* Top Edge Seats */}
+                                <div className="absolute -top-2 left-0 right-0 flex justify-around px-3 pointer-events-none z-20">
+                                  {Array.from({ length: dist.top }).map((_, seatIdx) => {
+                                    const isOccupied = runningSeatIdx < usedSeats;
+                                    runningSeatIdx++;
+                                    return (
+                                      <div
+                                        key={`top-${seatIdx}`}
+                                        className={`w-3.5 h-3.5 rounded-full transition-colors ${
+                                          isOccupied
+                                            ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
+                                            : 'bg-white border border-[#D2C4B4]'
+                                        }`}
+                                        title={`Asiento superior: ${isOccupied ? 'Ocupado' : 'Disponible'}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
 
-                            {/* Bottom Edge Seats */}
-                            <div className="absolute -bottom-2 left-0 right-0 flex justify-around px-2">
-                              {Array.from({ length: capacity - Math.floor(capacity / 2) }).map((_, seatIdx) => {
-                                const globalIdx = Math.floor(capacity / 2) + seatIdx;
-                                const isOccupied = globalIdx < usedSeats;
-                                return (
-                                  <div
-                                    key={`bot-${seatIdx}`}
-                                    className={`w-3.5 h-3.5 rounded-full transition-colors ${
-                                      isOccupied
-                                        ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
-                                        : 'bg-white border border-[#D2C4B4]'
-                                    }`}
-                                    title={`Asiento: ${isOccupied ? 'Ocupado' : 'Disponible'}`}
-                                  />
-                                );
-                              })}
-                            </div>
-                          </div>
+                                {/* Right Cabecera Seats */}
+                                <div className="absolute -right-2 top-0 bottom-0 flex flex-col justify-around py-3 pointer-events-none z-20">
+                                  {Array.from({ length: dist.right }).map((_, seatIdx) => {
+                                    const isOccupied = runningSeatIdx < usedSeats;
+                                    runningSeatIdx++;
+                                    return (
+                                      <div
+                                        key={`right-${seatIdx}`}
+                                        className={`w-3.5 h-3.5 rounded-full transition-colors ${
+                                          isOccupied
+                                            ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
+                                            : 'bg-white border border-[#D2C4B4]'
+                                        }`}
+                                        title={`Cabecera derecha: ${isOccupied ? 'Ocupado' : 'Disponible'}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Bottom Edge Seats */}
+                                <div className="absolute -bottom-2 left-0 right-0 flex justify-around px-3 pointer-events-none z-20">
+                                  {Array.from({ length: dist.bottom }).map((_, seatIdx) => {
+                                    const isOccupied = runningSeatIdx < usedSeats;
+                                    runningSeatIdx++;
+                                    return (
+                                      <div
+                                        key={`bot-${seatIdx}`}
+                                        className={`w-3.5 h-3.5 rounded-full transition-colors ${
+                                          isOccupied
+                                            ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
+                                            : 'bg-white border border-[#D2C4B4]'
+                                        }`}
+                                        title={`Asiento inferior: ${isOccupied ? 'Ocupado' : 'Disponible'}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Left Cabecera Seats */}
+                                <div className="absolute -left-2 top-0 bottom-0 flex flex-col justify-around py-3 pointer-events-none z-20">
+                                  {Array.from({ length: dist.left }).map((_, seatIdx) => {
+                                    const isOccupied = runningSeatIdx < usedSeats;
+                                    runningSeatIdx++;
+                                    return (
+                                      <div
+                                        key={`left-${seatIdx}`}
+                                        className={`w-3.5 h-3.5 rounded-full transition-colors ${
+                                          isOccupied
+                                            ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
+                                            : 'bg-white border border-[#D2C4B4]'
+                                        }`}
+                                        title={`Cabecera izquierda: ${isOccupied ? 'Ocupado' : 'Disponible'}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
+
+                                {/* Center table rectangle */}
+                                <div
+                                  className={`w-full h-full rounded-2xl bg-white border flex flex-col items-center justify-center px-2 py-1 text-center transition shadow-xs ${
+                                    isSelected
+                                      ? 'border-[#C48B81] ring-2 ring-[#C48B81] shadow-md'
+                                      : 'border-[#E8DFD5] hover:border-[#C48B81]'
+                                  }`}
+                                >
+                                  <span className="font-serif font-bold text-xs text-[#2B2826] leading-none">
+                                    #{idx + 1}
+                                  </span>
+                                  <span className="text-[9px] text-[#7D6F6B] truncate max-w-[85%] mt-0.5 leading-tight">
+                                    {table.name || 'Sin nombre'}
+                                  </span>
+                                  <span className="text-[8.5px] font-semibold text-[#8A7E72] mt-0.5">
+                                    {usedSeats}/{capacity}
+                                  </span>
+                                </div>
+
+                                {/* Interactive Cabecera Quick Buttons on Canvas when Selected */}
+                                {isSelected && !isLocked && (
+                                  <>
+                                    {/* Left Cabecera Button */}
+                                    {dist.left === 0 ? (
+                                      <button
+                                        type="button"
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          handleUpdateSeatsDistribution(table.id, { ...dist, left: 1 });
+                                        }}
+                                        title="Agregar silla a cabecera izquierda"
+                                        className="absolute -left-5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border border-dashed border-[#C48B81] text-[#C48B81] hover:bg-[#FAF7F5] flex items-center justify-center text-[10px] font-bold cursor-pointer shadow-xs z-30"
+                                      >
+                                        +
+                                      </button>
+                                    ) : (
+                                      <div
+                                        className="absolute -left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 bg-white/95 border border-[#EFE8E1] rounded-full p-0.5 shadow-2xs z-30"
+                                        onClick={e => e.stopPropagation()}
+                                      >
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateSeatsDistribution(table.id, { ...dist, left: dist.left + 1 })}
+                                          className="w-3.5 h-3.5 rounded-full hover:bg-[#FAF7F5] text-[9px] font-bold text-[#2B2826] flex items-center justify-center cursor-pointer"
+                                          title="Agregar silla a cabecera izq"
+                                        >
+                                          +
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateSeatsDistribution(table.id, { ...dist, left: Math.max(0, dist.left - 1) })}
+                                          className="w-3.5 h-3.5 rounded-full hover:bg-[#FAF7F5] text-[9px] font-bold text-[#A86B60] flex items-center justify-center cursor-pointer"
+                                          title="Quitar silla de cabecera izq"
+                                        >
+                                          −
+                                        </button>
+                                      </div>
+                                    )}
+
+                                    {/* Right Cabecera Button */}
+                                    {dist.right === 0 ? (
+                                      <button
+                                        type="button"
+                                        onClick={e => {
+                                          e.stopPropagation();
+                                          handleUpdateSeatsDistribution(table.id, { ...dist, right: 1 });
+                                        }}
+                                        title="Agregar silla a cabecera derecha"
+                                        className="absolute -right-5 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border border-dashed border-[#C48B81] text-[#C48B81] hover:bg-[#FAF7F5] flex items-center justify-center text-[10px] font-bold cursor-pointer shadow-xs z-30"
+                                      >
+                                        +
+                                      </button>
+                                    ) : (
+                                      <div
+                                        className="absolute -right-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 bg-white/95 border border-[#EFE8E1] rounded-full p-0.5 shadow-2xs z-30"
+                                        onClick={e => e.stopPropagation()}
+                                      >
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateSeatsDistribution(table.id, { ...dist, right: dist.right + 1 })}
+                                          className="w-3.5 h-3.5 rounded-full hover:bg-[#FAF7F5] text-[9px] font-bold text-[#2B2826] flex items-center justify-center cursor-pointer"
+                                          title="Agregar silla a cabecera der"
+                                        >
+                                          +
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => handleUpdateSeatsDistribution(table.id, { ...dist, right: Math.max(0, dist.right - 1) })}
+                                          className="w-3.5 h-3.5 rounded-full hover:bg-[#FAF7F5] text-[9px] font-bold text-[#A86B60] flex items-center justify-center cursor-pointer"
+                                          title="Quitar silla de cabecera der"
+                                        >
+                                          −
+                                        </button>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })()
                         )}
 
                         {/* Interactive Resize Handle (Shown when selected) */}
@@ -1677,6 +1904,252 @@ export const MesasLayoutModule: React.FC = () => {
                         </button>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Sillas y Distribución de Cabeceras */}
+                  <div className="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#EFE8E1] space-y-3">
+                    <div className="flex items-center justify-between text-xs font-bold text-[#2B2826]">
+                      <div className="flex items-center space-x-1.5">
+                        <Users className="w-3.5 h-3.5 text-[#C48B81]" />
+                        <span>Sillas y Cabeceras</span>
+                      </div>
+                      <span className="font-mono text-[11px] text-[#A86B60]">
+                        {selectedTable.capacity} sillas totales
+                      </span>
+                    </div>
+
+                    {selectedTable.type === 'circular' ? (
+                      /* Circular: Adjust Capacity */
+                      <div className="flex items-center justify-between bg-white p-2.5 rounded-xl border border-[#EFE8E1]">
+                        <span className="text-xs text-[#7D6F6B]">Número de asientos:</span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newCap = Math.max(2, (selectedTable.capacity || 10) - 1);
+                              handleUpdateSeatsDistribution(selectedTable.id, { top: newCap, bottom: 0, left: 0, right: 0 });
+                            }}
+                            className="w-6 h-6 rounded-lg bg-[#FAF8F5] border border-[#EFE8E1] text-xs font-bold hover:bg-[#F2ECE7] flex items-center justify-center cursor-pointer"
+                          >
+                            −
+                          </button>
+                          <span className="font-mono text-sm font-bold text-[#2B2826] w-6 text-center">
+                            {selectedTable.capacity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newCap = (selectedTable.capacity || 10) + 1;
+                              handleUpdateSeatsDistribution(selectedTable.id, { top: newCap, bottom: 0, left: 0, right: 0 });
+                            }}
+                            className="w-6 h-6 rounded-lg bg-[#FAF8F5] border border-[#EFE8E1] text-xs font-bold hover:bg-[#F2ECE7] flex items-center justify-center cursor-pointer"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Rectangular / Imperial: Full Cabeceras & Sides Controls */
+                      (() => {
+                        const dist = getTableSeatsDistribution(selectedTable);
+
+                        return (
+                          <div className="space-y-2.5">
+                            {/* Presets */}
+                            <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const cap = selectedTable.capacity || 10;
+                                  const remaining = Math.max(0, cap - 2);
+                                  const top = Math.ceil(remaining / 2);
+                                  const bottom = Math.floor(remaining / 2);
+                                  handleUpdateSeatsDistribution(selectedTable.id, { top, bottom, left: 1, right: 1 });
+                                }}
+                                className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
+                                  dist.left === 1 && dist.right === 1
+                                    ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                    : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                                }`}
+                                title="1 en cada cabecera"
+                              >
+                                1 y 1 en cabeceras
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const cap = selectedTable.capacity || 10;
+                                  const remaining = Math.max(0, cap - 4);
+                                  const top = Math.ceil(remaining / 2);
+                                  const bottom = Math.floor(remaining / 2);
+                                  handleUpdateSeatsDistribution(selectedTable.id, { top, bottom, left: 2, right: 2 });
+                                }}
+                                className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
+                                  dist.left === 2 && dist.right === 2
+                                    ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                    : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                                }`}
+                                title="2 en cada cabecera (imperiales)"
+                              >
+                                2 y 2 en cabeceras
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const cap = selectedTable.capacity || 10;
+                                  const top = Math.ceil(cap / 2);
+                                  const bottom = Math.floor(cap / 2);
+                                  handleUpdateSeatsDistribution(selectedTable.id, { top, bottom, left: 0, right: 0 });
+                                }}
+                                className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
+                                  dist.left === 0 && dist.right === 0
+                                    ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                    : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                                }`}
+                                title="Sin sillas en cabeceras"
+                              >
+                                Sin cabeceras
+                              </button>
+                            </div>
+
+                            {/* Steppers for each edge */}
+                            <div className="bg-white p-2.5 rounded-xl border border-[#EFE8E1] space-y-2">
+                              {/* Top Stepper */}
+                              <div className="flex items-center justify-between text-xs px-1">
+                                <span className="text-[#7D6F6B]">Lado superior:</span>
+                                <div className="flex items-center space-x-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateSeatsDistribution(selectedTable.id, { ...dist, top: Math.max(0, dist.top - 1) })}
+                                    className="w-5 h-5 rounded bg-[#FAF8F5] border border-[#EFE8E1] text-xs font-bold hover:bg-[#F2ECE7] flex items-center justify-center cursor-pointer"
+                                  >
+                                    −
+                                  </button>
+                                  <span className="font-mono text-xs font-bold text-[#2B2826] w-5 text-center">{dist.top}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateSeatsDistribution(selectedTable.id, { ...dist, top: dist.top + 1 })}
+                                    className="w-5 h-5 rounded bg-[#FAF8F5] border border-[#EFE8E1] text-xs font-bold hover:bg-[#F2ECE7] flex items-center justify-center cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Cabeceras Row */}
+                              <div className="flex items-center justify-between px-2 py-1.5 bg-[#FAF7F5] rounded-xl text-xs">
+                                {/* Cabecera Izq */}
+                                <div className="flex items-center space-x-1.5">
+                                  <span className="font-semibold text-[#2B2826]">Cabecera Izq:</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateSeatsDistribution(selectedTable.id, { ...dist, left: Math.max(0, dist.left - 1) })}
+                                    className="w-5 h-5 rounded bg-white border border-[#EFE8E1] text-xs font-bold hover:bg-[#FAF8F5] flex items-center justify-center cursor-pointer"
+                                  >
+                                    −
+                                  </button>
+                                  <span className="font-mono text-xs font-bold text-[#C48B81] w-4 text-center">{dist.left}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateSeatsDistribution(selectedTable.id, { ...dist, left: dist.left + 1 })}
+                                    className="w-5 h-5 rounded bg-white border border-[#EFE8E1] text-xs font-bold hover:bg-[#FAF8F5] flex items-center justify-center cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+
+                                <div className="w-[1px] h-4 bg-[#E8DFD5]" />
+
+                                {/* Cabecera Der */}
+                                <div className="flex items-center space-x-1.5">
+                                  <span className="font-semibold text-[#2B2826]">Cabecera Der:</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateSeatsDistribution(selectedTable.id, { ...dist, right: Math.max(0, dist.right - 1) })}
+                                    className="w-5 h-5 rounded bg-white border border-[#EFE8E1] text-xs font-bold hover:bg-[#FAF8F5] flex items-center justify-center cursor-pointer"
+                                  >
+                                    −
+                                  </button>
+                                  <span className="font-mono text-xs font-bold text-[#C48B81] w-4 text-center">{dist.right}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateSeatsDistribution(selectedTable.id, { ...dist, right: dist.right + 1 })}
+                                    className="w-5 h-5 rounded bg-white border border-[#EFE8E1] text-xs font-bold hover:bg-[#FAF8F5] flex items-center justify-center cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* Bottom Stepper */}
+                              <div className="flex items-center justify-between text-xs px-1">
+                                <span className="text-[#7D6F6B]">Lado inferior:</span>
+                                <div className="flex items-center space-x-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateSeatsDistribution(selectedTable.id, { ...dist, bottom: Math.max(0, dist.bottom - 1) })}
+                                    className="w-5 h-5 rounded bg-[#FAF8F5] border border-[#EFE8E1] text-xs font-bold hover:bg-[#F2ECE7] flex items-center justify-center cursor-pointer"
+                                  >
+                                    −
+                                  </button>
+                                  <span className="font-mono text-xs font-bold text-[#2B2826] w-5 text-center">{dist.bottom}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUpdateSeatsDistribution(selectedTable.id, { ...dist, bottom: dist.bottom + 1 })}
+                                    className="w-5 h-5 rounded bg-[#FAF8F5] border border-[#EFE8E1] text-xs font-bold hover:bg-[#F2ECE7] flex items-center justify-center cursor-pointer"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Quick Balance transfer between sides and cabeceras */}
+                            <div className="flex items-center justify-between text-[10.5px] pt-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (dist.top >= dist.bottom && dist.top > 1) {
+                                    if (dist.left <= dist.right) {
+                                      handleUpdateSeatsDistribution(selectedTable.id, { ...dist, top: dist.top - 1, left: dist.left + 1 });
+                                    } else {
+                                      handleUpdateSeatsDistribution(selectedTable.id, { ...dist, top: dist.top - 1, right: dist.right + 1 });
+                                    }
+                                  } else if (dist.bottom > 1) {
+                                    if (dist.left <= dist.right) {
+                                      handleUpdateSeatsDistribution(selectedTable.id, { ...dist, bottom: dist.bottom - 1, left: dist.left + 1 });
+                                    } else {
+                                      handleUpdateSeatsDistribution(selectedTable.id, { ...dist, bottom: dist.bottom - 1, right: dist.right + 1 });
+                                    }
+                                  }
+                                }}
+                                disabled={dist.top <= 1 && dist.bottom <= 1}
+                                className="text-[#C48B81] hover:text-[#A86B60] font-semibold underline disabled:opacity-40 disabled:no-underline cursor-pointer"
+                              >
+                                ⇄ Mover 1 silla a cabecera
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (dist.left > 0) {
+                                    handleUpdateSeatsDistribution(selectedTable.id, { ...dist, left: dist.left - 1, top: dist.top + 1 });
+                                  } else if (dist.right > 0) {
+                                    handleUpdateSeatsDistribution(selectedTable.id, { ...dist, right: dist.right - 1, bottom: dist.bottom + 1 });
+                                  }
+                                }}
+                                disabled={dist.left === 0 && dist.right === 0}
+                                className="text-[#7D6F6B] hover:text-[#2B2826] font-semibold underline disabled:opacity-40 disabled:no-underline cursor-pointer"
+                              >
+                                ⇄ Mover a lado largo
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()
+                    )}
                   </div>
 
                   {/* Actions: Rotate & Delete */}

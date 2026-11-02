@@ -111,6 +111,7 @@ export interface Table {
   rotation: number;
   width?: number;
   height?: number;
+  seats_distribution?: string;
   guests?: Guest[];
   used_seats?: number;
   available_seats?: number;
