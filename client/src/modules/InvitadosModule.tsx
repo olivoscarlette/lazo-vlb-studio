@@ -48,8 +48,17 @@ export const InvitadosModule: React.FC = () => {
     total_places_all: 0,
     confirmed_places: 0,
     pending_places: 0,
-    declined_places: 0
+    declined_places: 0,
+    unassigned: 0
   });
+
+  // Boda Civil vs Boda Principal multi-event separation
+  const [isCivilDifferentDay, setIsCivilDifferentDay] = useState(false);
+  const [civilDate, setCivilDate] = useState<string | null>(null);
+  const [principalDate, setPrincipalDate] = useState<string | null>(null);
+  const [eventTarget, setEventTarget] = useState<'principal' | 'civil'>('principal');
+  const [principalSummary, setPrincipalSummary] = useState<any>(null);
+  const [civilSummary, setCivilSummary] = useState<any>(null);
 
   // Modal / Drawer states
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
@@ -88,7 +97,11 @@ export const InvitadosModule: React.FC = () => {
     table_id: '',
     observations: '',
     dietary_requirements: '',
-    confirmed_places: 0
+    confirmed_places: 0,
+    is_invited_principal: true,
+    is_invited_civil: false,
+    status_civil: 'Pendiente de confirmar' as Guest['status'],
+    confirmed_places_civil: 0
   });
   const [formError, setFormError] = useState('');
 
@@ -102,7 +115,8 @@ export const InvitadosModule: React.FC = () => {
         status: statusFilter,
         priority: priorityFilter,
         tableId: tableFilter,
-        sortBy
+        sortBy,
+        eventTarget
       });
       const res = await fetch(`/api/weddings/${currentWedding.id}/guests?${query.toString()}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -112,6 +126,11 @@ export const InvitadosModule: React.FC = () => {
         setGuests(data.guests || []);
         setPagination(data.pagination);
         setSummary(data.summary);
+        setIsCivilDifferentDay(Boolean(data.isCivilDifferentDay));
+        setCivilDate(data.civilDate || null);
+        setPrincipalDate(data.principalDate || null);
+        if (data.principalSummary) setPrincipalSummary(data.principalSummary);
+        if (data.civilSummary) setCivilSummary(data.civilSummary);
       }
     } catch (err) {
       console.error('Error fetching guests:', err);
@@ -135,7 +154,7 @@ export const InvitadosModule: React.FC = () => {
 
   useEffect(() => {
     fetchGuests();
-  }, [currentWedding, token, page, statusFilter, priorityFilter, tableFilter, sortBy]);
+  }, [currentWedding, token, page, statusFilter, priorityFilter, tableFilter, sortBy, eventTarget]);
 
   // Debounced search
   useEffect(() => {
@@ -153,13 +172,17 @@ export const InvitadosModule: React.FC = () => {
   // Inline Status Change (Direct update in backend)
   const handleInlineStatusChange = async (guest: Guest, newStatus: Guest['status']) => {
     try {
+      const payload = (isCivilDifferentDay && eventTarget === 'civil')
+        ? { status_civil: newStatus }
+        : { status: newStatus };
+
       const res = await fetch(`/api/weddings/${currentWedding!.id}/guests/${guest.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         await fetchGuests();
@@ -250,6 +273,8 @@ export const InvitadosModule: React.FC = () => {
   const handleOpenEdit = (guest: Guest) => {
     setIsNewGuest(false);
     setEditingGuest(guest);
+    const invPrincipal = guest.is_invited_principal !== undefined ? Boolean(guest.is_invited_principal) : true;
+    const invCivil = guest.is_invited_civil !== undefined ? Boolean(guest.is_invited_civil) : false;
     setFormData({
       first_name: guest.first_name,
       last_name: guest.last_name,
@@ -260,7 +285,11 @@ export const InvitadosModule: React.FC = () => {
       table_id: guest.table_id || '',
       observations: guest.observations || (guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna' ? `Alergias: ${guest.dietary_requirements}` : ''),
       dietary_requirements: guest.dietary_requirements || '',
-      confirmed_places: guest.confirmed_places || (guest.status === 'Confirmado' ? 1 + guest.companion_count : 0)
+      confirmed_places: guest.confirmed_places || (guest.status === 'Confirmado' ? 1 + guest.companion_count : 0),
+      is_invited_principal: invPrincipal,
+      is_invited_civil: invCivil,
+      status_civil: guest.status_civil || 'Pendiente de confirmar',
+      confirmed_places_civil: guest.confirmed_places_civil || (guest.status_civil === 'Confirmado' ? 1 + guest.companion_count : 0)
     });
     setFormError('');
   };
@@ -269,6 +298,8 @@ export const InvitadosModule: React.FC = () => {
   const handleOpenAdd = () => {
     setIsNewGuest(true);
     setEditingGuest({} as Guest);
+    const defaultCivil = isCivilDifferentDay && eventTarget === 'civil';
+    const defaultPrincipal = isCivilDifferentDay && eventTarget === 'civil' ? false : true;
     setFormData({
       first_name: '',
       last_name: '',
@@ -279,7 +310,11 @@ export const InvitadosModule: React.FC = () => {
       table_id: '',
       observations: '',
       dietary_requirements: '',
-      confirmed_places: 0
+      confirmed_places: 0,
+      is_invited_principal: defaultPrincipal,
+      is_invited_civil: defaultCivil,
+      status_civil: 'Pendiente de confirmar',
+      confirmed_places_civil: 0
     });
     setFormError('');
   };
@@ -290,6 +325,11 @@ export const InvitadosModule: React.FC = () => {
 
     if (!formData.first_name || !formData.last_name || !formData.phone) {
       setFormError('Nombre, apellido y WhatsApp son campos obligatorios.');
+      return;
+    }
+
+    if (isCivilDifferentDay && !formData.is_invited_principal && !formData.is_invited_civil) {
+      setFormError('Debes seleccionar al menos un evento para el invitado (Boda Principal o Boda Civil).');
       return;
     }
 
@@ -431,18 +471,27 @@ export const InvitadosModule: React.FC = () => {
       }
 
       const formatGuestRows = (list: Guest[]) =>
-        list.map(g => ({
-          'NOMBRE': g.first_name,
-          'APELLIDO': g.last_name,
-          'WHATSAPP': g.phone,
-          'ACOMPAÑANTES': g.companion_count,
-          'TOTAL LUGARES': 1 + (g.companion_count || 0),
-          'LUGARES CONFIRMADOS': g.confirmed_places || (g.status === 'Confirmado' ? (1 + (g.companion_count || 0)) : 0),
-          'ESTATUS': g.status,
-          'MESA': g.status === 'No asistirá' ? 'Liberada' : (g.table_name || 'Sin mesa'),
-          'OBSERVACIONES': g.observations || (g.dietary_requirements && g.dietary_requirements !== 'Ninguna' ? `Alergias: ${g.dietary_requirements}` : ''),
-          'ALERGIAS / RESTRICCIONES': (g.dietary_requirements && g.dietary_requirements !== 'Ninguna') ? g.dietary_requirements : 'Sin restricciones'
-        }));
+        list.map(g => {
+          const row: any = {
+            'NOMBRE': g.first_name,
+            'APELLIDO': g.last_name,
+            'WHATSAPP': g.phone,
+            'ACOMPAÑANTES': g.companion_count,
+            'TOTAL LUGARES': 1 + (g.companion_count || 0),
+            'LUGARES CONFIRMADOS': g.confirmed_places || (g.status === 'Confirmado' ? (1 + (g.companion_count || 0)) : 0),
+            'ESTATUS': g.status,
+            'MESA': g.status === 'No asistirá' ? 'Liberada' : (g.table_name || 'Sin mesa'),
+            'OBSERVACIONES': g.observations || (g.dietary_requirements && g.dietary_requirements !== 'Ninguna' ? `Alergias: ${g.dietary_requirements}` : ''),
+            'ALERGIAS / RESTRICCIONES': (g.dietary_requirements && g.dietary_requirements !== 'Ninguna') ? g.dietary_requirements : 'Sin restricciones'
+          };
+          if (isCivilDifferentDay) {
+            row['ASISTE BODA PRINCIPAL'] = g.is_invited_principal ? 'SÍ' : 'NO';
+            row['ASISTE BODA CIVIL'] = g.is_invited_civil ? 'SÍ' : 'NO';
+            row['ESTATUS CIVIL'] = g.is_invited_civil ? (g.status_civil || 'Pendiente de confirmar') : 'No invitado';
+            row['LUGARES CONFIRMADOS CIVIL'] = g.is_invited_civil ? (g.confirmed_places_civil || (g.status_civil === 'Confirmado' ? 1 + (g.companion_count || 0) : 0)) : 0;
+          }
+          return row;
+        });
 
       const wb = XLSX.utils.book_new();
 
@@ -455,7 +504,8 @@ export const InvitadosModule: React.FC = () => {
           status: statusFilter,
           priority: priorityFilter,
           tableId: tableFilter,
-          sortBy
+          sortBy,
+          eventTarget
         });
         const fRes = await fetch(`/api/weddings/${currentWedding.id}/guests?${filteredQuery.toString()}`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -473,19 +523,37 @@ export const InvitadosModule: React.FC = () => {
       XLSX.utils.book_append_sheet(wb, wsAll, 'Todos los Invitados');
 
       // Sheet 2: Confirmados
-      const confirmedList = allGuests.filter(g => g.status === 'Confirmado');
+      const confirmedList = allGuests.filter(g => (eventTarget === 'civil' && isCivilDifferentDay ? g.status_civil === 'Confirmado' : g.status === 'Confirmado'));
       const wsConfirmed = XLSX.utils.json_to_sheet(formatGuestRows(confirmedList));
       XLSX.utils.book_append_sheet(wb, wsConfirmed, 'Confirmados');
 
       // Sheet 3: Pendientes
-      const pendingList = allGuests.filter(g => g.status === 'Pendiente de confirmar');
+      const pendingList = allGuests.filter(g => (eventTarget === 'civil' && isCivilDifferentDay ? g.status_civil === 'Pendiente de confirmar' : g.status === 'Pendiente de confirmar'));
       const wsPending = XLSX.utils.json_to_sheet(formatGuestRows(pendingList));
       XLSX.utils.book_append_sheet(wb, wsPending, 'Pendientes');
 
       // Sheet 4: No asistirán
-      const declinedList = allGuests.filter(g => g.status === 'No asistirá');
+      const declinedList = allGuests.filter(g => (eventTarget === 'civil' && isCivilDifferentDay ? g.status_civil === 'No asistirá' : g.status === 'No asistirá'));
       const wsDeclined = XLSX.utils.json_to_sheet(formatGuestRows(declinedList));
       XLSX.utils.book_append_sheet(wb, wsDeclined, 'No Asistiran');
+
+      // Sheet 5: Civil exclusivo si aplica
+      if (isCivilDifferentDay) {
+        const civilGuests = allGuests.filter(g => g.is_invited_civil);
+        if (civilGuests.length > 0) {
+          const wsCivilOnly = XLSX.utils.json_to_sheet(civilGuests.map(g => ({
+            'NOMBRE': g.first_name,
+            'APELLIDO': g.last_name,
+            'WHATSAPP': g.phone,
+            'ACOMPAÑANTES': g.companion_count,
+            'TOTAL LUGARES': 1 + (g.companion_count || 0),
+            'LUGARES CONFIRMADOS CIVIL': g.confirmed_places_civil || (g.status_civil === 'Confirmado' ? (1 + (g.companion_count || 0)) : 0),
+            'ESTATUS CIVIL': g.status_civil || 'Pendiente de confirmar',
+            'OBSERVACIONES': g.observations || ''
+          })));
+          XLSX.utils.book_append_sheet(wb, wsCivilOnly, 'Boda Civil');
+        }
+      }
 
       const safeWeddingName = currentWedding.name.replace(/[^a-zA-Z0-9_-]/g, '_');
       XLSX.writeFile(wb, `Lista_Invitados_${safeWeddingName}.xlsx`);
@@ -1022,6 +1090,54 @@ export const InvitadosModule: React.FC = () => {
         </div>
       </div>
 
+      {/* Event Switcher — ONLY rendered when Boda Civil is on a different date than Boda Principal */}
+      {isCivilDifferentDay && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-[#FAF8F5] rounded-2xl border border-[#EFE8E1] shadow-2xs">
+          <div className="flex items-center space-x-2">
+            <button
+              type="button"
+              onClick={() => { setEventTarget('principal'); setStatusFilter(''); setTableFilter(''); setPage(1); }}
+              className={`px-4 py-2 rounded-xl text-xs font-serif font-bold transition flex items-center space-x-2 cursor-pointer ${
+                eventTarget === 'principal'
+                  ? 'bg-[#332C2A] text-white shadow-xs'
+                  : 'bg-white text-[#6D5A43] border border-[#EFE8E1] hover:bg-[#F3EDE6]'
+              }`}
+            >
+              <span>Boda Principal</span>
+              {principalDate && <span className="text-[10px] opacity-80 font-sans font-normal hidden sm:inline">({principalDate})</span>}
+              <span className={`text-[10px] font-sans px-2 py-0.5 rounded-full ${eventTarget === 'principal' ? 'bg-white/20 text-white' : 'bg-[#EFE8DE] text-[#6D5A43]'}`}>
+                {principalSummary?.total ?? summary.total}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setEventTarget('civil'); setStatusFilter(''); setTableFilter(''); setPage(1); }}
+              className={`px-4 py-2 rounded-xl text-xs font-serif font-bold transition flex items-center space-x-2 cursor-pointer ${
+                eventTarget === 'civil'
+                  ? 'bg-[#C48B81] text-white shadow-xs'
+                  : 'bg-white text-[#6D5A43] border border-[#EFE8E1] hover:bg-[#F3EDE6]'
+              }`}
+            >
+              <span>Boda Civil</span>
+              {civilDate && <span className="text-[10px] opacity-80 font-sans font-normal hidden sm:inline">({civilDate})</span>}
+              <span className={`text-[10px] font-sans px-2 py-0.5 rounded-full ${eventTarget === 'civil' ? 'bg-white/20 text-white' : 'bg-[#EFE8DE] text-[#6D5A43]'}`}>
+                {civilSummary?.total ?? 0}
+              </span>
+            </button>
+          </div>
+
+          <div className="text-[11px] text-[#8C7A75] font-serif italic flex items-center space-x-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#C48B81] inline-block" />
+            <span>
+              {eventTarget === 'civil'
+                ? `Lista de invitados y confirmaciones para la Boda Civil (${civilDate || 'Fecha independiente'})`
+                : `Lista de invitados y confirmaciones para la Boda Principal (${principalDate || 'Evento principal'})`}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Barra de Pestañas de Filtro Rápido */}
       <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
         <button
@@ -1064,16 +1180,18 @@ export const InvitadosModule: React.FC = () => {
         >
           No asistirán ({summary.declined})
         </button>
-        <button
-          onClick={() => { setTableFilter('unassigned'); setStatusFilter(''); setPage(1); }}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
-            tableFilter === 'unassigned'
-              ? 'bg-[#C48B81] text-white shadow-xs'
-              : 'bg-[#FFFFFF] text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#F7F3EE]'
-          }`}
-        >
-          Sin Mesa Asignada ({(summary as any).unassigned ?? '—'})
-        </button>
+        {(!isCivilDifferentDay || eventTarget === 'principal') && (
+          <button
+            onClick={() => { setTableFilter('unassigned'); setStatusFilter(''); setPage(1); }}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+              tableFilter === 'unassigned'
+                ? 'bg-[#C48B81] text-white shadow-xs'
+                : 'bg-[#FFFFFF] text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#F7F3EE]'
+            }`}
+          >
+            Sin Mesa Asignada ({(summary as any).unassigned ?? '—'})
+          </button>
+        )}
       </div>
 
       {/* WhatsApp Feedback Banner */}
@@ -1111,9 +1229,13 @@ export const InvitadosModule: React.FC = () => {
           }`}
           title="Ver todos los invitados"
         >
-          <div className="text-[10px] uppercase font-bold text-[#786C68]">Total Invitados</div>
+          <div className="text-[10px] uppercase font-bold text-[#786C68]">
+            {isCivilDifferentDay && eventTarget === 'civil' ? 'Total Civil' : 'Total Invitados'}
+          </div>
           <div className="text-2xl font-serif font-bold text-[#332C2A] mt-0.5">{summary.total_places_all}</div>
-          <div className="text-[11px] text-[#786C68]">Asistentes con +1 ({summary.total} registros)</div>
+          <div className="text-[11px] text-[#786C68]">
+            Asistentes con +1 ({summary.total} registros{isCivilDifferentDay && eventTarget === 'civil' ? ' civil' : ''})
+          </div>
         </div>
 
         <div
@@ -1123,9 +1245,13 @@ export const InvitadosModule: React.FC = () => {
           }`}
           title="Filtrar solo Confirmados"
         >
-          <div className="text-[10px] uppercase font-bold text-[#82524D]">Confirmados</div>
+          <div className="text-[10px] uppercase font-bold text-[#82524D]">
+            {isCivilDifferentDay && eventTarget === 'civil' ? 'Confirmados Civil' : 'Confirmados'}
+          </div>
           <div className="text-2xl font-serif font-bold text-[#6E433F] mt-0.5">{summary.confirmed_places}</div>
-          <div className="text-[11px] text-[#82524D] font-semibold">Lugares confirmados ({summary.confirmed} registros)</div>
+          <div className="text-[11px] text-[#82524D] font-semibold">
+            Lugares confirmados ({summary.confirmed} registros)
+          </div>
         </div>
 
         <div
@@ -1135,7 +1261,9 @@ export const InvitadosModule: React.FC = () => {
           }`}
           title="Filtrar solo Pendientes de confirmar"
         >
-          <div className="text-[10px] uppercase font-bold text-[#6D5A43]">Pendientes</div>
+          <div className="text-[10px] uppercase font-bold text-[#6D5A43]">
+            {isCivilDifferentDay && eventTarget === 'civil' ? 'Pendientes Civil' : 'Pendientes'}
+          </div>
           <div className="text-2xl font-serif font-bold text-[#564734] mt-0.5">{summary.pending_places ?? summary.pending}</div>
           <div className="text-[11px] text-[#857056]">Por confirmar ({summary.pending} registros)</div>
         </div>
@@ -1147,13 +1275,17 @@ export const InvitadosModule: React.FC = () => {
           }`}
           title="Filtrar quienes No asistirán"
         >
-          <div className="text-[10px] uppercase font-bold text-[#6E4541]">No asistirán</div>
+          <div className="text-[10px] uppercase font-bold text-[#6E4541]">
+            {isCivilDifferentDay && eventTarget === 'civil' ? 'No asistirán Civil' : 'No asistirán'}
+          </div>
           <div className="text-2xl font-serif font-bold text-[#593734] mt-0.5">{summary.declined_places ?? summary.declined}</div>
           <div className="text-[11px] text-[#855652]">Lugares liberados ({summary.declined} registros)</div>
         </div>
 
         <div className="luxury-card rounded-xl p-4 col-span-2 sm:col-span-1">
-          <div className="text-[10px] uppercase font-bold text-[#786C68]">Avance RSVP</div>
+          <div className="text-[10px] uppercase font-bold text-[#786C68]">
+            {isCivilDifferentDay && eventTarget === 'civil' ? 'Avance Civil' : 'Avance RSVP'}
+          </div>
           <div className="text-2xl font-serif font-bold text-[#332C2A] mt-0.5">
             {summary.total_places_all > 0 ? Math.round((summary.confirmed_places / summary.total_places_all) * 100) : 0}%
           </div>
@@ -1234,7 +1366,9 @@ export const InvitadosModule: React.FC = () => {
                 </th>
                 <th className="py-3.5 px-4 whitespace-nowrap min-w-[175px]">WHATSAPP</th>
                 <th className="py-3.5 px-4 text-center whitespace-nowrap"># ACOMPAÑANTES</th>
-                <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">ESTATUS</th>
+                <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">
+                  {isCivilDifferentDay && eventTarget === 'civil' ? 'ESTATUS CIVIL' : 'ESTATUS'}
+                </th>
                 {canSendWhatsApp && (
                   <th className="py-3.5 px-4 text-center whitespace-nowrap">RSVP WHATSAPP</th>
                 )}
@@ -1315,11 +1449,19 @@ export const InvitadosModule: React.FC = () => {
                             ({1 + guest.companion_count} {1 + guest.companion_count === 1 ? 'pase' : 'pases'})
                           </span>
                         </div>
-                        {guest.confirmed_places ? (
-                          <span className="text-[10px] font-semibold text-[#354B38] bg-[#E4ECE5] px-2 py-0.5 rounded-full mt-1">
-                            ✓ {guest.confirmed_places} confirmados
-                          </span>
-                        ) : null}
+                        {isCivilDifferentDay && eventTarget === 'civil' ? (
+                          guest.confirmed_places_civil ? (
+                            <span className="text-[10px] font-semibold text-[#82524D] bg-[#EFE2DF] px-2 py-0.5 rounded-full mt-1">
+                              ✓ {guest.confirmed_places_civil} civil
+                            </span>
+                          ) : null
+                        ) : (
+                          guest.confirmed_places ? (
+                            <span className="text-[10px] font-semibold text-[#354B38] bg-[#E4ECE5] px-2 py-0.5 rounded-full mt-1">
+                              ✓ {guest.confirmed_places} confirmados
+                            </span>
+                          ) : null
+                        )}
                       </div>
                     </td>
 
@@ -1327,12 +1469,12 @@ export const InvitadosModule: React.FC = () => {
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="flex flex-col space-y-1">
                         <select
-                          value={guest.status}
+                          value={isCivilDifferentDay && eventTarget === 'civil' ? (guest.status_civil || 'Pendiente de confirmar') : guest.status}
                           onChange={e => handleInlineStatusChange(guest, e.target.value as any)}
                           className={`w-36 text-xs font-semibold rounded-xl px-2.5 py-1.5 border transition focus:outline-none cursor-pointer ${
-                            guest.status === 'Confirmado'
+                            (isCivilDifferentDay && eventTarget === 'civil' ? guest.status_civil : guest.status) === 'Confirmado'
                               ? 'bg-[#E5EDE6] text-[#384C3A] border-[#D0DDD1]'
-                              : guest.status === 'No asistirá'
+                              : (isCivilDifferentDay && eventTarget === 'civil' ? guest.status_civil : guest.status) === 'No asistirá'
                               ? 'bg-[#FAF4F3] text-[#9B6158] border-[#EEDAD6]'
                               : 'bg-[#FAF7F5] text-[#7D6F6B] border-[#EFE8E1]'
                           }`}
@@ -1407,7 +1549,9 @@ export const InvitadosModule: React.FC = () => {
 
                     {/* Mesa — Solo Informativa */}
                     <td className="py-3 px-4 whitespace-nowrap min-w-[150px]">
-                      {guest.status === 'No asistirá' ? (
+                      {isCivilDifferentDay && eventTarget === 'civil' ? (
+                        <span className="text-xs text-[#8A7E72] italic">Ceremonia Civil</span>
+                      ) : guest.status === 'No asistirá' ? (
                         <span className="text-[#786C68] italic text-xs whitespace-nowrap">Liberada</span>
                       ) : guest.table_id ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-[#FAF4F0] text-[#8C5E58] border border-[#ECD9D5]">
@@ -1533,73 +1677,206 @@ export const InvitadosModule: React.FC = () => {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[11px] font-bold text-stone-700 mb-1"># Acompañantes</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={formData.companion_count}
-                    onChange={e => setFormData({ ...formData, companion_count: Math.max(0, parseInt(e.target.value, 10) || 0) })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
-                  />
-                  <span className="text-[10px] text-stone-400 mt-0.5 block">
-                    Total: {1 + formData.companion_count} lugares
-                  </span>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-stone-700 mb-1">Estatus</label>
-                  <select
-                    value={formData.status}
-                    onChange={e => setFormData({ ...formData, status: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
-                  >
-                    <option value="Pendiente de confirmar">Pendiente</option>
-                    <option value="Confirmado">Confirmado</option>
-                    <option value="No asistirá">No asistirá</option>
-                  </select>
-                </div>
-              </div>
-
-              {formData.status === 'Confirmado' && (
-                <div className="grid grid-cols-2 gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200">
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="text-[11px] font-bold text-stone-700">
-                        Lugares Confirmados
-                      </label>
-                      <span className="text-[10px] text-stone-400">
-                        Máx: {1 + formData.companion_count}
+              {isCivilDifferentDay ? (
+                /* Multi-Event Configuration (Civil on distinct day) */
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 mb-1"># Acompañantes</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.companion_count}
+                        onChange={e => setFormData({ ...formData, companion_count: Math.max(0, parseInt(e.target.value, 10) || 0) })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                      />
+                      <span className="text-[10px] text-stone-400 mt-0.5 block">
+                        Total: {1 + formData.companion_count} lugares potenciales
                       </span>
                     </div>
-                    <input
-                      type="number"
-                      min="1"
-                      max={1 + formData.companion_count}
-                      value={formData.confirmed_places || (1 + formData.companion_count)}
-                      onChange={e => {
-                        const val = parseInt(e.target.value, 10) || 1;
-                        const maxVal = 1 + formData.companion_count;
-                        setFormData({ ...formData, confirmed_places: Math.min(maxVal, Math.max(1, val)) });
-                      }}
-                      className="w-full px-3 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-stone-900"
-                    />
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                        Alergias / Restricciones
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Ej. Vegetariano, celíaco"
+                        value={formData.dietary_requirements || ''}
+                        onChange={e => setFormData({ ...formData, dietary_requirements: e.target.value })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[11px] font-bold text-stone-700 mb-1">
-                      Alergias / Restricciones
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ej. Vegetariano, celíaco"
-                      value={formData.dietary_requirements || ''}
-                      onChange={e => setFormData({ ...formData, dietary_requirements: e.target.value })}
-                      className="w-full px-3 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-stone-900"
-                    />
+                  <div className="p-3 bg-[#FAF8F5] rounded-2xl border border-[#EFE8E1] space-y-2.5">
+                    <div className="text-[10px] uppercase font-bold text-[#786C68] tracking-wider">
+                      Asistencia por Evento
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {/* Boda Principal */}
+                      <div className={`p-3 rounded-xl border transition ${formData.is_invited_principal ? 'bg-white border-[#C48B81]' : 'bg-[#F5F2EE] border-[#E8E1DA] opacity-60'}`}>
+                        <label className="flex items-center space-x-2 cursor-pointer mb-2">
+                          <input
+                            type="checkbox"
+                            checked={formData.is_invited_principal}
+                            onChange={e => setFormData({ ...formData, is_invited_principal: e.target.checked })}
+                            className="rounded text-[#C48B81] focus:ring-[#C48B81] w-4 h-4 cursor-pointer"
+                          />
+                          <span className="font-serif font-bold text-xs text-[#332C2A]">Boda Principal</span>
+                        </label>
+                        {formData.is_invited_principal && (
+                          <div className="space-y-1.5 mt-2 pt-2 border-t border-[#EFE8E1]">
+                            <label className="block text-[10px] font-bold text-stone-600">Estatus Boda</label>
+                            <select
+                              value={formData.status}
+                              onChange={e => setFormData({ ...formData, status: e.target.value as any })}
+                              className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none"
+                            >
+                              <option value="Pendiente de confirmar">Pendiente</option>
+                              <option value="Confirmado">Confirmado</option>
+                              <option value="No asistirá">No asistirá</option>
+                            </select>
+                            {formData.status === 'Confirmado' && (
+                              <div className="mt-1">
+                                <span className="text-[10px] text-stone-500 block">Lugares confirmados:</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max={1 + formData.companion_count}
+                                  value={formData.confirmed_places || (1 + formData.companion_count)}
+                                  onChange={e => {
+                                    const val = parseInt(e.target.value, 10) || 1;
+                                    const maxVal = 1 + formData.companion_count;
+                                    setFormData({ ...formData, confirmed_places: Math.min(maxVal, Math.max(1, val)) });
+                                  }}
+                                  className="w-full px-2 py-1 border border-stone-300 rounded-lg text-xs bg-white"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Boda Civil */}
+                      <div className={`p-3 rounded-xl border transition ${formData.is_invited_civil ? 'bg-white border-[#C48B81]' : 'bg-[#F5F2EE] border-[#E8E1DA] opacity-60'}`}>
+                        <label className="flex items-center space-x-2 cursor-pointer mb-2">
+                          <input
+                            type="checkbox"
+                            checked={formData.is_invited_civil}
+                            onChange={e => setFormData({ ...formData, is_invited_civil: e.target.checked })}
+                            className="rounded text-[#C48B81] focus:ring-[#C48B81] w-4 h-4 cursor-pointer"
+                          />
+                          <span className="font-serif font-bold text-xs text-[#332C2A]">Boda Civil</span>
+                        </label>
+                        {formData.is_invited_civil && (
+                          <div className="space-y-1.5 mt-2 pt-2 border-t border-[#EFE8E1]">
+                            <label className="block text-[10px] font-bold text-stone-600">Estatus Civil</label>
+                            <select
+                              value={formData.status_civil}
+                              onChange={e => setFormData({ ...formData, status_civil: e.target.value as any })}
+                              className="w-full px-2 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none"
+                            >
+                              <option value="Pendiente de confirmar">Pendiente</option>
+                              <option value="Confirmado">Confirmado</option>
+                              <option value="No asistirá">No asistirá</option>
+                            </select>
+                            {formData.status_civil === 'Confirmado' && (
+                              <div className="mt-1">
+                                <span className="text-[10px] text-stone-500 block">Lugares civil confirmados:</span>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max={1 + formData.companion_count}
+                                  value={formData.confirmed_places_civil || (1 + formData.companion_count)}
+                                  onChange={e => {
+                                    const val = parseInt(e.target.value, 10) || 1;
+                                    const maxVal = 1 + formData.companion_count;
+                                    setFormData({ ...formData, confirmed_places_civil: Math.min(maxVal, Math.max(1, val)) });
+                                  }}
+                                  className="w-full px-2 py-1 border border-stone-300 rounded-lg text-xs bg-white"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
+              ) : (
+                /* Standard Single Event Configuration */
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 mb-1"># Acompañantes</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={formData.companion_count}
+                        onChange={e => setFormData({ ...formData, companion_count: Math.max(0, parseInt(e.target.value, 10) || 0) })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                      />
+                      <span className="text-[10px] text-stone-400 mt-0.5 block">
+                        Total: {1 + formData.companion_count} lugares
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-stone-700 mb-1">Estatus</label>
+                      <select
+                        value={formData.status}
+                        onChange={e => setFormData({ ...formData, status: e.target.value as any })}
+                        className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                      >
+                        <option value="Pendiente de confirmar">Pendiente</option>
+                        <option value="Confirmado">Confirmado</option>
+                        <option value="No asistirá">No asistirá</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {formData.status === 'Confirmado' && (
+                    <div className="grid grid-cols-2 gap-3 p-3 bg-stone-50 rounded-xl border border-stone-200">
+                      <div>
+                        <div className="flex justify-between items-center mb-1">
+                          <label className="text-[11px] font-bold text-stone-700">
+                            Lugares Confirmados
+                          </label>
+                          <span className="text-[10px] text-stone-400">
+                            Máx: {1 + formData.companion_count}
+                          </span>
+                        </div>
+                        <input
+                          type="number"
+                          min="1"
+                          max={1 + formData.companion_count}
+                          value={formData.confirmed_places || (1 + formData.companion_count)}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10) || 1;
+                            const maxVal = 1 + formData.companion_count;
+                            setFormData({ ...formData, confirmed_places: Math.min(maxVal, Math.max(1, val)) });
+                          }}
+                          className="w-full px-3 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-stone-900"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                          Alergias / Restricciones
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ej. Vegetariano, celíaco"
+                          value={formData.dietary_requirements || ''}
+                          onChange={e => setFormData({ ...formData, dietary_requirements: e.target.value })}
+                          className="w-full px-3 py-1.5 border border-stone-300 rounded-lg text-xs bg-white focus:outline-none focus:ring-2 focus:ring-stone-900"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               {formData.status !== 'No asistirá' && (

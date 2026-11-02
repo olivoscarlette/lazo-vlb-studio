@@ -190,6 +190,10 @@ export function initDatabase() {
       dietary_requirements TEXT,
       confirmed_places INTEGER DEFAULT 0,
       rsvp_step TEXT DEFAULT 'NONE',
+      is_invited_principal INTEGER DEFAULT 1,
+      is_invited_civil INTEGER DEFAULT 0,
+      status_civil TEXT DEFAULT 'Pendiente de confirmar',
+      confirmed_places_civil INTEGER DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       FOREIGN KEY (wedding_id) REFERENCES weddings(id) ON DELETE CASCADE,
@@ -556,6 +560,18 @@ export function initDatabase() {
   } catch {}
   try {
     db.exec("ALTER TABLE guests ADD COLUMN seating_sent_at TEXT;");
+  } catch {}
+  try {
+    db.exec('ALTER TABLE guests ADD COLUMN is_invited_principal INTEGER DEFAULT 1;');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE guests ADD COLUMN is_invited_civil INTEGER DEFAULT 0;');
+  } catch {}
+  try {
+    db.exec("ALTER TABLE guests ADD COLUMN status_civil TEXT DEFAULT 'Pendiente de confirmar';");
+  } catch {}
+  try {
+    db.exec('ALTER TABLE guests ADD COLUMN confirmed_places_civil INTEGER DEFAULT 0;');
   } catch {}
 
   db.exec(`

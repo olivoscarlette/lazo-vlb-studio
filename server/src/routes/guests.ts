@@ -20,25 +20,75 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
   const priority = (req.query.priority as string) || '';
   const tableId = (req.query.tableId as string) || '';
   const sortBy = (req.query.sortBy as string) || 'alpha_asc';
+  const eventTarget = (req.query.eventTarget as string) || 'principal'; // 'principal' | 'civil'
   const page = Math.max(1, parseInt(req.query.page as string, 10) || 1);
   const limit = Math.min(5000, Math.max(10, parseInt(req.query.limit as string, 10) || 30));
   const offset = (page - 1) * limit;
 
-  // Global counts for this wedding
-  const counts = db.prepare(`
+  // Check if civil ceremony date is different from main wedding date
+  const civilCeremony = db.prepare('SELECT date FROM civil_ceremony WHERE wedding_id = ?').get(weddingId) as any;
+  const wedding = db.prepare('SELECT wedding_date FROM weddings WHERE id = ?').get(weddingId) as any;
+  const civilDate = civilCeremony?.date ? civilCeremony.date.trim() : null;
+  const weddingDate = wedding?.wedding_date ? wedding.wedding_date.trim() : null;
+  const isCivilDifferentDay = Boolean(
+    civilDate &&
+    weddingDate &&
+    civilDate.substring(0, 10) !== weddingDate.substring(0, 10)
+  );
+
+  // Global counts for Principal
+  const principalCounts = db.prepare(`
     SELECT
       COUNT(*) as total,
       SUM(CASE WHEN status = 'Confirmado' THEN 1 ELSE 0 END) as confirmed,
       SUM(CASE WHEN status = 'Pendiente de confirmar' THEN 1 ELSE 0 END) as pending,
       SUM(CASE WHEN status = 'No asistirá' THEN 1 ELSE 0 END) as declined,
       COALESCE(SUM(1 + companion_count), 0) as total_places_all,
-      COALESCE(SUM(CASE WHEN status = 'Confirmado' THEN 1 + companion_count ELSE 0 END), 0) as confirmed_places,
+      COALESCE(SUM(CASE WHEN status = 'Confirmado' THEN confirmed_places ELSE 0 END), 0) as confirmed_places,
+      COALESCE(SUM(CASE WHEN status = 'Pendiente de confirmar' THEN 1 + companion_count ELSE 0 END), 0) as pending_places,
+      COALESCE(SUM(CASE WHEN status = 'No asistirá' THEN 1 + companion_count ELSE 0 END), 0) as declined_places,
+      SUM(CASE WHEN table_id IS NULL AND status != 'No asistirá' THEN 1 ELSE 0 END) as unassigned
+    FROM guests
+    WHERE wedding_id = ? AND COALESCE(is_invited_principal, 1) = 1
+  `).get(weddingId) as any;
+
+  // Global counts for Civil
+  const civilCounts = db.prepare(`
+    SELECT
+      COUNT(*) as total,
+      SUM(CASE WHEN status_civil = 'Confirmado' THEN 1 ELSE 0 END) as confirmed,
+      SUM(CASE WHEN status_civil = 'Pendiente de confirmar' THEN 1 ELSE 0 END) as pending,
+      SUM(CASE WHEN status_civil = 'No asistirá' THEN 1 ELSE 0 END) as declined,
+      COALESCE(SUM(1 + companion_count), 0) as total_places_all,
+      COALESCE(SUM(CASE WHEN status_civil = 'Confirmado' THEN confirmed_places_civil ELSE 0 END), 0) as confirmed_places,
+      COALESCE(SUM(CASE WHEN status_civil = 'Pendiente de confirmar' THEN 1 + companion_count ELSE 0 END), 0) as pending_places,
+      COALESCE(SUM(CASE WHEN status_civil = 'No asistirá' THEN 1 + companion_count ELSE 0 END), 0) as declined_places,
+      0 as unassigned
+    FROM guests
+    WHERE wedding_id = ? AND is_invited_civil = 1
+  `).get(weddingId) as any;
+
+  // Overall wedding legacy counts
+  const legacyCounts = db.prepare(`
+    SELECT
+      COUNT(*) as total,
+      SUM(CASE WHEN status = 'Confirmado' THEN 1 ELSE 0 END) as confirmed,
+      SUM(CASE WHEN status = 'Pendiente de confirmar' THEN 1 ELSE 0 END) as pending,
+      SUM(CASE WHEN status = 'No asistirá' THEN 1 ELSE 0 END) as declined,
+      COALESCE(SUM(1 + companion_count), 0) as total_places_all,
+      COALESCE(SUM(CASE WHEN status = 'Confirmado' THEN confirmed_places ELSE 0 END), 0) as confirmed_places,
       COALESCE(SUM(CASE WHEN status = 'Pendiente de confirmar' THEN 1 + companion_count ELSE 0 END), 0) as pending_places,
       COALESCE(SUM(CASE WHEN status = 'No asistirá' THEN 1 + companion_count ELSE 0 END), 0) as declined_places,
       SUM(CASE WHEN table_id IS NULL AND status != 'No asistirá' THEN 1 ELSE 0 END) as unassigned
     FROM guests
     WHERE wedding_id = ?
   `).get(weddingId) as any;
+
+  // Select active summary depending on isCivilDifferentDay and eventTarget
+  let activeCounts = legacyCounts;
+  if (isCivilDifferentDay) {
+    activeCounts = eventTarget === 'civil' ? civilCounts : principalCounts;
+  }
 
   // Query guests with optional table name
   let query = `
@@ -48,6 +98,11 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
       g.status, g.table_id, g.observations,
       COALESCE(g.whatsapp_status, 'NO_ENVIADO') as whatsapp_status,
       g.last_whatsapp_sent_at, g.whatsapp_message_id,
+      g.dietary_requirements, g.confirmed_places, g.rsvp_step,
+      COALESCE(g.is_invited_principal, 1) as is_invited_principal,
+      COALESCE(g.is_invited_civil, 0) as is_invited_civil,
+      COALESCE(g.status_civil, 'Pendiente de confirmar') as status_civil,
+      COALESCE(g.confirmed_places_civil, 0) as confirmed_places_civil,
       g.created_at, g.updated_at,
       t.name as table_name
     FROM guests g
@@ -56,9 +111,26 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
   `;
   const params: any[] = [weddingId];
 
-  if (status) {
-    query += ` AND g.status = ?`;
-    params.push(status);
+  // Apply event filtering if civil ceremony is on a different day
+  if (isCivilDifferentDay) {
+    if (eventTarget === 'civil') {
+      query += ` AND g.is_invited_civil = 1`;
+      if (status) {
+        query += ` AND g.status_civil = ?`;
+        params.push(status);
+      }
+    } else {
+      query += ` AND COALESCE(g.is_invited_principal, 1) = 1`;
+      if (status) {
+        query += ` AND g.status = ?`;
+        params.push(status);
+      }
+    }
+  } else {
+    if (status) {
+      query += ` AND g.status = ?`;
+      params.push(status);
+    }
   }
 
   if (priority) {
@@ -143,15 +215,42 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
       limit,
       totalPages: Math.ceil(totalFiltered / limit)
     },
+    isCivilDifferentDay,
+    civilDate,
+    principalDate: weddingDate,
+    eventTarget: isCivilDifferentDay ? eventTarget : 'principal',
+    principalSummary: {
+      total: principalCounts.total || 0,
+      confirmed: principalCounts.confirmed || 0,
+      pending: principalCounts.pending || 0,
+      declined: principalCounts.declined || 0,
+      total_places_all: principalCounts.total_places_all || 0,
+      confirmed_places: principalCounts.confirmed_places || 0,
+      pending_places: principalCounts.pending_places || 0,
+      declined_places: principalCounts.declined_places || 0,
+      unassigned: principalCounts.unassigned || 0
+    },
+    civilSummary: {
+      total: civilCounts.total || 0,
+      confirmed: civilCounts.confirmed || 0,
+      pending: civilCounts.pending || 0,
+      declined: civilCounts.declined || 0,
+      total_places_all: civilCounts.total_places_all || 0,
+      confirmed_places: civilCounts.confirmed_places || 0,
+      pending_places: civilCounts.pending_places || 0,
+      declined_places: civilCounts.declined_places || 0,
+      unassigned: 0
+    },
     summary: {
-      total: counts.total || 0,
-      confirmed: counts.confirmed || 0,
-      pending: counts.pending || 0,
-      declined: counts.declined || 0,
-      total_places_all: counts.total_places_all || 0,
-      confirmed_places: counts.confirmed_places || 0,
-      pending_places: counts.pending_places || 0,
-      declined_places: counts.declined_places || 0
+      total: activeCounts.total || 0,
+      confirmed: activeCounts.confirmed || 0,
+      pending: activeCounts.pending || 0,
+      declined: activeCounts.declined || 0,
+      total_places_all: activeCounts.total_places_all || 0,
+      confirmed_places: activeCounts.confirmed_places || 0,
+      pending_places: activeCounts.pending_places || 0,
+      declined_places: activeCounts.declined_places || 0,
+      unassigned: activeCounts.unassigned || 0
     }
   });
 });
@@ -159,7 +258,11 @@ router.get('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, 
 // POST /api/weddings/:weddingId/guests - Add single guest
 router.post('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
-  const { first_name, last_name, phone, companion_count, priority, status, table_id, observations, dietary_requirements, confirmed_places } = req.body;
+  const {
+    first_name, last_name, phone, companion_count, priority, status,
+    table_id, observations, dietary_requirements, confirmed_places,
+    is_invited_principal, is_invited_civil, status_civil, confirmed_places_civil
+  } = req.body;
 
   if (!first_name || !last_name || !phone) {
     return res.status(400).json({ error: 'Nombre, Apellido y WhatsApp / Teléfono son obligatorios.' });
@@ -172,23 +275,53 @@ router.post('/:weddingId/guests', authenticateToken, requireWeddingAccess, (req,
   const compCount = Math.max(0, parseInt(companion_count, 10) || 0);
   const confPlaces = confirmed_places !== undefined ? parseInt(confirmed_places, 10) : (validStatus === 'Confirmado' ? 1 + compCount : 0);
 
+  const invPrincipal = is_invited_principal === false || is_invited_principal === 0 ? 0 : 1;
+  const invCivil = is_invited_civil === true || is_invited_civil === 1 ? 1 : 0;
+  const validStatusCivil = status_civil || 'Pendiente de confirmar';
+  const confPlacesCivil = confirmed_places_civil !== undefined
+    ? parseInt(confirmed_places_civil, 10)
+    : (validStatusCivil === 'Confirmado' ? 1 + compCount : 0);
+
   // If status is 'No asistirá', table_id cannot be assigned
   const finalTableId = validStatus === 'No asistirá' ? null : (table_id || null);
 
   db.prepare(`
-    INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, priority, status, table_id, observations, dietary_requirements, confirmed_places, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO guests (
+      id, wedding_id, first_name, last_name, phone, companion_count, priority,
+      status, table_id, observations, dietary_requirements, confirmed_places,
+      is_invited_principal, is_invited_civil, status_civil, confirmed_places_civil,
+      created_at, updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id, weddingId, first_name.trim(), last_name.trim(), phone.trim(),
     compCount, validPriority, validStatus, finalTableId, observations ? observations.trim() : null,
-    dietary_requirements ? dietary_requirements.trim() : null, confPlaces, now, now
+    dietary_requirements ? dietary_requirements.trim() : null, confPlaces,
+    invPrincipal, invCivil, validStatusCivil, confPlacesCivil,
+    now, now
   );
 
   logAudit(weddingId, req.user!.id, req.user!.name, 'AGREGAR_INVITADO', 'GUEST', id, `Alta de invitado ${first_name} ${last_name}`);
 
   return res.status(201).json({
     message: 'Invitado registrado correctamente.',
-    guest: { id, first_name, last_name, phone, companion_count: compCount, priority: validPriority, status: validStatus, table_id: finalTableId, observations, dietary_requirements, confirmed_places: confPlaces }
+    guest: {
+      id,
+      first_name,
+      last_name,
+      phone,
+      companion_count: compCount,
+      priority: validPriority,
+      status: validStatus,
+      table_id: finalTableId,
+      observations,
+      dietary_requirements,
+      confirmed_places: confPlaces,
+      is_invited_principal: invPrincipal,
+      is_invited_civil: invCivil,
+      status_civil: validStatusCivil,
+      confirmed_places_civil: confPlacesCivil
+    }
   });
 });
 
@@ -204,7 +337,9 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
 
   const {
     first_name, last_name, phone, companion_count, priority,
-    status, table_id, observations, dietary_requirements, confirmed_places, expected_updated_at
+    status, table_id, observations, dietary_requirements, confirmed_places,
+    is_invited_principal, is_invited_civil, status_civil, confirmed_places_civil,
+    expected_updated_at
   } = req.body;
 
   if (expected_updated_at && guest.updated_at !== expected_updated_at) {
@@ -214,7 +349,6 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
     });
   }
 
-  // Novios y equipo tienen acceso total para asignar y desasignar mesas a sus invitados
   const newStatus = status !== undefined ? status : guest.status;
   const newPriority = priority !== undefined && ['Alta', 'Media', 'Baja'].includes(priority) ? priority : (guest.priority || 'Media');
   let newTableId = table_id !== undefined ? table_id : guest.table_id;
@@ -233,15 +367,35 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
   const newConfirmedPlaces = confirmed_places !== undefined
     ? parseInt(confirmed_places, 10)
     : (newStatus === 'Confirmado' && (!guest.confirmed_places || guest.confirmed_places === 0) ? (1 + newCompCount) : guest.confirmed_places);
+
+  const newInvPrincipal = is_invited_principal !== undefined
+    ? (is_invited_principal === false || is_invited_principal === 0 ? 0 : 1)
+    : (guest.is_invited_principal !== undefined ? guest.is_invited_principal : 1);
+  const newInvCivil = is_invited_civil !== undefined
+    ? (is_invited_civil === true || is_invited_civil === 1 ? 1 : 0)
+    : (guest.is_invited_civil !== undefined ? guest.is_invited_civil : 0);
+  const newStatusCivil = status_civil !== undefined ? status_civil : (guest.status_civil || 'Pendiente de confirmar');
+  const newConfPlacesCivil = confirmed_places_civil !== undefined
+    ? parseInt(confirmed_places_civil, 10)
+    : (newStatusCivil === 'Confirmado' && (!guest.confirmed_places_civil || guest.confirmed_places_civil === 0) ? (1 + newCompCount) : (guest.confirmed_places_civil || 0));
+
   const now = new Date().toISOString();
 
   db.prepare(`
     UPDATE guests SET
       first_name = ?, last_name = ?, phone = ?, companion_count = ?,
       priority = ?, status = ?, table_id = ?, observations = ?,
-      dietary_requirements = ?, confirmed_places = ?, updated_at = ?
+      dietary_requirements = ?, confirmed_places = ?,
+      is_invited_principal = ?, is_invited_civil = ?, status_civil = ?, confirmed_places_civil = ?,
+      updated_at = ?
     WHERE id = ? AND wedding_id = ?
-  `).run(newFirstName, newLastName, newPhone, newCompCount, newPriority, newStatus, newTableId, newObs, newDiet, newConfirmedPlaces, now, guestId, weddingId);
+  `).run(
+    newFirstName, newLastName, newPhone, newCompCount,
+    newPriority, newStatus, newTableId, newObs,
+    newDiet, newConfirmedPlaces,
+    newInvPrincipal, newInvCivil, newStatusCivil, newConfPlacesCivil,
+    now, guestId, weddingId
+  );
 
   logAudit(weddingId, user.id, user.name, 'ACTUALIZAR_INVITADO', 'GUEST', guestId, `Actualización de ${newFirstName} ${newLastName} (Prioridad: ${newPriority}, Estatus: ${newStatus}, Mesa: ${newTableId || 'Ninguna'})`);
 
@@ -259,6 +413,10 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
       observations: newObs,
       dietary_requirements: newDiet,
       confirmed_places: newConfirmedPlaces,
+      is_invited_principal: newInvPrincipal,
+      is_invited_civil: newInvCivil,
+      status_civil: newStatusCivil,
+      confirmed_places_civil: newConfPlacesCivil,
       updated_at: now
     }
   });
@@ -281,7 +439,38 @@ router.delete('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAc
 
 // GET /api/weddings/:weddingId/guests/template - Download updated Excel/CSV template
 router.get('/:weddingId/guests/template', authenticateToken, requireWeddingAccess, (req, res) => {
-  const templateData = [
+  const { weddingId } = req.params;
+  const civilCeremony = db.prepare('SELECT date FROM civil_ceremony WHERE wedding_id = ?').get(weddingId) as any;
+  const wedding = db.prepare('SELECT wedding_date FROM weddings WHERE id = ?').get(weddingId) as any;
+  const isCivilDifferentDay = Boolean(
+    civilCeremony?.date &&
+    wedding?.wedding_date &&
+    civilCeremony.date.trim() !== '' &&
+    civilCeremony.date.trim().substring(0, 10) !== wedding.wedding_date.trim().substring(0, 10)
+  );
+
+  const templateData = isCivilDifferentDay ? [
+    {
+      'NOMBRE': 'María José',
+      'APELLIDO': 'Fernández Silva',
+      'WHATSAPP': '+52 55 1234 5678',
+      'ACOMPAÑANTES': 1,
+      'EVENTO': 'Ambos',
+      'ESTATUS BODA': 'Pendiente de confirmar',
+      'ESTATUS CIVIL': 'Pendiente de confirmar',
+      'OBSERVACIONES': 'Familia cercana de la novia. Menú vegetariano.'
+    },
+    {
+      'NOMBRE': 'Carlos',
+      'APELLIDO': 'Mendoza Lozano',
+      'WHATSAPP': '+52 33 9876 5432',
+      'ACOMPAÑANTES': 0,
+      'EVENTO': 'Principal',
+      'ESTATUS BODA': 'Confirmado',
+      'ESTATUS CIVIL': 'No asistirá',
+      'OBSERVACIONES': 'Viaja desde Guadalajara.'
+    }
+  ] : [
     {
       'NOMBRE': 'María José',
       'APELLIDO': 'Fernández Silva',
@@ -331,7 +520,9 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
     const phone = (row['WHATSAPP'] || row['Whatsapp'] || row['whatsapp'] || row['TELEFONO'] || row['phone'] || '').toString().trim();
     const companionsRaw = row['ACOMPAÑANTES'] ?? row['Acompañantes'] ?? row['acompañantes'] ?? row['companion_count'] ?? 0;
     const priorityRaw = (row['PRIORIDAD'] || row['Prioridad'] || row['prioridad'] || row['priority'] || 'Media').toString().trim();
-    const statusRaw = (row['ESTATUS'] || row['Estatus'] || row['estatus'] || row['status'] || 'Pendiente de confirmar').toString().trim();
+    const statusRaw = (row['ESTATUS'] || row['Estatus'] || row['estatus'] || row['status'] || row['ESTATUS BODA'] || row['Estatus Boda'] || 'Pendiente de confirmar').toString().trim();
+    const statusCivilRaw = (row['ESTATUS CIVIL'] || row['Estatus Civil'] || row['estatus civil'] || row['status_civil'] || 'Pendiente de confirmar').toString().trim();
+    const eventRaw = (row['EVENTO'] || row['Evento'] || row['evento'] || row['EVENTOS'] || row['event'] || '').toString().trim().toLowerCase();
     const tableRaw = (row['MESA'] || row['Mesa'] || row['mesa'] || row['table'] || '').toString().trim();
     const observations = (row['OBSERVACIONES'] || row['Observaciones'] || row['observaciones'] || row['observations'] || '').toString().trim();
 
@@ -369,6 +560,29 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
       status = 'No asistirá';
     }
 
+    let statusCivil = 'Pendiente de confirmar';
+    const statusCivilNorm = statusCivilRaw.toLowerCase();
+    if (statusCivilNorm.includes('confirmad')) {
+      statusCivil = 'Confirmado';
+    } else if (statusCivilNorm.includes('no') || statusCivilNorm.includes('cancel')) {
+      statusCivil = 'No asistirá';
+    }
+
+    let isInvitedPrincipal = 1;
+    let isInvitedCivil = 0;
+    if (eventRaw) {
+      if (eventRaw.includes('ambos') || eventRaw.includes('dos') || eventRaw.includes('tod')) {
+        isInvitedPrincipal = 1;
+        isInvitedCivil = 1;
+      } else if (eventRaw.includes('civil') && !eventRaw.includes('principal') && !eventRaw.includes('boda')) {
+        isInvitedPrincipal = 0;
+        isInvitedCivil = 1;
+      } else {
+        isInvitedPrincipal = 1;
+        isInvitedCivil = 0;
+      }
+    }
+
     validRows.push({
       first_name: firstName,
       last_name: lastName,
@@ -376,6 +590,11 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
       companion_count: companions,
       priority,
       status,
+      status_civil: statusCivil,
+      is_invited_principal: isInvitedPrincipal,
+      is_invited_civil: isInvitedCivil,
+      confirmed_places: status === 'Confirmado' ? 1 + companions : 0,
+      confirmed_places_civil: statusCivil === 'Confirmado' ? 1 + companions : 0,
       table_name: status === 'No asistirá' ? '' : tableRaw,
       observations: observations || null
     });
@@ -405,8 +624,13 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
     `);
 
     const insertStmt = db.prepare(`
-      INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, priority, status, table_id, observations, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO guests (
+        id, wedding_id, first_name, last_name, phone, companion_count, priority,
+        status, table_id, observations, confirmed_places,
+        is_invited_principal, is_invited_civil, status_civil, confirmed_places_civil,
+        created_at, updated_at
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     db.exec('BEGIN TRANSACTION;');
@@ -434,7 +658,12 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
       }
 
       const id = 'gst_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-      insertStmt.run(id, weddingId, g.first_name, g.last_name, g.phone, g.companion_count, g.priority || 'Media', g.status, resolvedTableId, g.observations, now, now);
+      insertStmt.run(
+        id, weddingId, g.first_name, g.last_name, g.phone, g.companion_count,
+        g.priority || 'Media', g.status, resolvedTableId, g.observations, g.confirmed_places,
+        g.is_invited_principal, g.is_invited_civil, g.status_civil, g.confirmed_places_civil,
+        now, now
+      );
       insertedCount++;
     }
     db.exec('COMMIT;');

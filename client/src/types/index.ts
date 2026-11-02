@@ -90,6 +90,10 @@ export interface Guest {
   whatsapp_message_id?: string | null;
   dietary_requirements?: string | null;
   confirmed_places?: number;
+  is_invited_principal?: number | boolean;
+  is_invited_civil?: number | boolean;
+  status_civil?: 'Pendiente de confirmar' | 'Confirmado' | 'No asistirá';
+  confirmed_places_civil?: number;
   rsvp_step?: 'NONE' | 'INVITATION_SENT' | 'CONFIRMING_PLACES' | 'AWAITING_PLACES_NUMBER' | 'CONFIRMING_DIET' | 'AWAITING_DIET_TEXT' | 'COMPLETED' | 'DECLINED';
   created_at: string;
   updated_at: string;
