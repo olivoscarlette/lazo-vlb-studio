@@ -50,6 +50,24 @@ export const getTableSeatsDistribution = (table: {
     return { top: cap, bottom: 0, left: 0, right: 0 };
   }
 
+  // Cuadrada default: 8 a 10 personas (o simétrica en los 4 lados)
+  if (table.type === 'cuadrada') {
+    if (cap === 8) {
+      return { top: 2, bottom: 2, left: 2, right: 2 };
+    } else if (cap === 10) {
+      return { top: 3, bottom: 3, left: 2, right: 2 };
+    } else {
+      const base = Math.floor(cap / 4);
+      const rem = cap % 4;
+      return {
+        top: base + (rem > 0 ? 1 : 0),
+        bottom: base + (rem > 2 ? 1 : 0),
+        left: base + (rem > 1 ? 1 : 0),
+        right: base
+      };
+    }
+  }
+
   // Rectangular / Imperial default: 1 on each head (cabeceras) if capacity >= 6
   if (cap >= 6) {
     const remaining = cap - 2;
@@ -123,7 +141,7 @@ export const MesasLayoutModule: React.FC = () => {
   const [showNewTableModal, setShowNewTableModal] = useState(false);
   const [newTableData, setNewTableData] = useState({
     name: '',
-    type: 'circular' as 'circular' | 'rectangular' | 'imperial',
+    type: 'circular' as 'circular' | 'rectangular' | 'imperial' | 'cuadrada',
     capacity: 10
   });
 
@@ -350,8 +368,8 @@ export const MesasLayoutModule: React.FC = () => {
     e.stopPropagation();
     e.preventDefault();
     setResizingTableId(table.id);
-    const currentW = table.width || (table.type === 'imperial' ? 190 : table.type === 'rectangular' ? 160 : 120);
-    const currentH = table.height || (table.type === 'imperial' ? 95 : table.type === 'rectangular' ? 95 : 120);
+    const currentW = table.width || (table.type === 'imperial' ? 190 : table.type === 'rectangular' ? 160 : table.type === 'cuadrada' ? 130 : 120);
+    const currentH = table.height || (table.type === 'imperial' ? 95 : table.type === 'rectangular' ? 95 : table.type === 'cuadrada' ? 130 : 120);
     setResizeStart({
       mouseX: e.clientX,
       mouseY: e.clientY,
@@ -377,9 +395,10 @@ export const MesasLayoutModule: React.FC = () => {
 
       setTables(prev => prev.map(t => {
         if (t.id !== resizingTableId) return t;
-        if (t.type === 'circular') {
+        if (t.type === 'circular' || t.type === 'cuadrada') {
           const delta = (dx + dy) / 2;
-          const newDim = Math.max(50, Math.min(260, Math.round(resizeStart.width + delta)));
+          const minDim = t.type === 'cuadrada' ? 70 : 50;
+          const newDim = Math.max(minDim, Math.min(260, Math.round(resizeStart.width + delta)));
           return { ...t, width: newDim, height: newDim };
         } else {
           const newW = Math.max(70, Math.min(360, Math.round(resizeStart.width + dx)));
@@ -698,8 +717,8 @@ export const MesasLayoutModule: React.FC = () => {
   const handleCreateTable = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentWedding || isLocked) return;
-    const defaultW = newTableData.type === 'imperial' ? 190 : newTableData.type === 'rectangular' ? 160 : 120;
-    const defaultH = newTableData.type === 'imperial' ? 95 : newTableData.type === 'rectangular' ? 95 : 120;
+    const defaultW = newTableData.type === 'imperial' ? 190 : newTableData.type === 'rectangular' ? 160 : newTableData.type === 'cuadrada' ? 130 : 120;
+    const defaultH = newTableData.type === 'imperial' ? 95 : newTableData.type === 'rectangular' ? 95 : newTableData.type === 'cuadrada' ? 130 : 120;
     const defaultDist = getTableSeatsDistribution({
       type: newTableData.type,
       capacity: newTableData.capacity
@@ -1085,7 +1104,7 @@ export const MesasLayoutModule: React.FC = () => {
               <Users className="w-10 h-10 text-[#C48B81] mx-auto opacity-80" />
               <h3 className="font-serif text-xl font-bold text-[#2B2826]">Aún no has creado mesas</h3>
               <p className="text-xs text-[#7D6F6B] max-w-md mx-auto leading-relaxed">
-                Empieza agregando tu primera mesa (circular, rectangular o imperial) y sienta a tus invitados confirmados.
+                Empieza agregando tu primera mesa (circular, cuadrada, rectangular o imperial) y sienta a tus invitados confirmados.
               </p>
               {!isLocked && (
                 <button
@@ -1390,8 +1409,8 @@ export const MesasLayoutModule: React.FC = () => {
                     const usedSeats = table.used_seats || 0;
 
                     // Width & height per table (with sensible defaults)
-                    const tableW = table.width || (table.type === 'imperial' ? 190 : table.type === 'rectangular' ? 160 : 120);
-                    const tableH = table.height || (table.type === 'imperial' ? 95 : table.type === 'rectangular' ? 95 : 120);
+                    const tableW = table.width || (table.type === 'imperial' ? 190 : table.type === 'rectangular' ? 160 : table.type === 'cuadrada' ? 130 : 120);
+                    const tableH = table.height || (table.type === 'imperial' ? 95 : table.type === 'rectangular' ? 95 : table.type === 'cuadrada' ? 130 : 120);
 
                     // Circular calculations
                     const circDiameter = tableW;
@@ -1800,19 +1819,21 @@ export const MesasLayoutModule: React.FC = () => {
                       <span className="font-mono text-[11px] text-[#A86B60]">
                         {selectedTable.type === 'circular'
                           ? `${selectedTable.width || 120}px`
+                          : selectedTable.type === 'cuadrada'
+                          ? `${selectedTable.width || 130} × ${selectedTable.height || 130}px`
                           : `${selectedTable.width || 160} × ${selectedTable.height || 95}px`}
                       </span>
                     </div>
 
-                    {selectedTable.type === 'circular' ? (
-                      /* Circular Diameter Slider */
+                    {selectedTable.type === 'circular' || selectedTable.type === 'cuadrada' ? (
+                      /* Circular Diameter / Cuadrada Side Slider */
                       <div className="space-y-1">
                         <input
                           type="range"
-                          min="60"
+                          min={selectedTable.type === 'cuadrada' ? "80" : "60"}
                           max="240"
                           step="5"
-                          value={selectedTable.width || 120}
+                          value={selectedTable.width || (selectedTable.type === 'cuadrada' ? 130 : 120)}
                           onChange={e => {
                             const val = parseInt(e.target.value, 10);
                             handleUpdateTableSize(selectedTable.id, val, val);
@@ -1820,9 +1841,9 @@ export const MesasLayoutModule: React.FC = () => {
                           className="w-full accent-[#C48B81] cursor-pointer"
                         />
                         <div className="flex items-center justify-between text-[10px] text-[#7D6F6B]">
-                          <span>60px (chica)</span>
-                          <span>120px (estándar)</span>
-                          <span>240px (grande)</span>
+                          <span>{selectedTable.type === 'cuadrada' ? '80px (chica)' : '60px (chica)'}</span>
+                          <span>{selectedTable.type === 'cuadrada' ? '130px (estándar)' : '120px (estándar)'}</span>
+                          <span>{selectedTable.type === 'cuadrada' ? '200px (grande)' : '240px (grande)'}</span>
                         </div>
                       </div>
                     ) : (
@@ -1876,6 +1897,7 @@ export const MesasLayoutModule: React.FC = () => {
                           type="button"
                           onClick={() => {
                             if (selectedTable.type === 'circular') handleUpdateTableSize(selectedTable.id, 80, 80);
+                            else if (selectedTable.type === 'cuadrada') handleUpdateTableSize(selectedTable.id, 100, 100);
                             else handleUpdateTableSize(selectedTable.id, 120, 75);
                           }}
                           className="px-2 py-0.5 text-[10px] font-semibold bg-white rounded-md border border-[#EFE8E1] hover:border-[#C48B81] cursor-pointer"
@@ -1886,6 +1908,7 @@ export const MesasLayoutModule: React.FC = () => {
                           type="button"
                           onClick={() => {
                             if (selectedTable.type === 'circular') handleUpdateTableSize(selectedTable.id, 120, 120);
+                            else if (selectedTable.type === 'cuadrada') handleUpdateTableSize(selectedTable.id, 130, 130);
                             else handleUpdateTableSize(selectedTable.id, 160, 95);
                           }}
                           className="px-2 py-0.5 text-[10px] font-semibold bg-white rounded-md border border-[#EFE8E1] hover:border-[#C48B81] cursor-pointer"
@@ -1896,6 +1919,7 @@ export const MesasLayoutModule: React.FC = () => {
                           type="button"
                           onClick={() => {
                             if (selectedTable.type === 'circular') handleUpdateTableSize(selectedTable.id, 170, 170);
+                            else if (selectedTable.type === 'cuadrada') handleUpdateTableSize(selectedTable.id, 160, 160);
                             else handleUpdateTableSize(selectedTable.id, 220, 115);
                           }}
                           className="px-2 py-0.5 text-[10px] font-semibold bg-white rounded-md border border-[#EFE8E1] hover:border-[#C48B81] cursor-pointer"
@@ -1957,61 +1981,112 @@ export const MesasLayoutModule: React.FC = () => {
                           <div className="space-y-2.5">
                             {/* Presets */}
                             <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const cap = selectedTable.capacity || 10;
-                                  const remaining = Math.max(0, cap - 2);
-                                  const top = Math.ceil(remaining / 2);
-                                  const bottom = Math.floor(remaining / 2);
-                                  handleUpdateSeatsDistribution(selectedTable.id, { top, bottom, left: 1, right: 1 });
-                                }}
-                                className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
-                                  dist.left === 1 && dist.right === 1
-                                    ? 'bg-[#2B2826] text-white border-[#2B2826]'
-                                    : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
-                                }`}
-                                title="1 en cada cabecera"
-                              >
-                                1 y 1 en cabeceras
-                              </button>
+                              {selectedTable.type === 'cuadrada' ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdateSeatsDistribution(selectedTable.id, { top: 2, bottom: 2, left: 2, right: 2 });
+                                    }}
+                                    className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
+                                      dist.top === 2 && dist.bottom === 2 && dist.left === 2 && dist.right === 2
+                                        ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                        : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                                    }`}
+                                    title="8 personas (2 por lado)"
+                                  >
+                                    8 pers (2/lado)
+                                  </button>
 
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const cap = selectedTable.capacity || 10;
-                                  const remaining = Math.max(0, cap - 4);
-                                  const top = Math.ceil(remaining / 2);
-                                  const bottom = Math.floor(remaining / 2);
-                                  handleUpdateSeatsDistribution(selectedTable.id, { top, bottom, left: 2, right: 2 });
-                                }}
-                                className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
-                                  dist.left === 2 && dist.right === 2
-                                    ? 'bg-[#2B2826] text-white border-[#2B2826]'
-                                    : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
-                                }`}
-                                title="2 en cada cabecera (imperiales)"
-                              >
-                                2 y 2 en cabeceras
-                              </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdateSeatsDistribution(selectedTable.id, { top: 3, bottom: 3, left: 2, right: 2 });
+                                    }}
+                                    className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
+                                      dist.top === 3 && dist.bottom === 3 && dist.left === 2 && dist.right === 2
+                                        ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                        : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                                    }`}
+                                    title="10 personas (3 y 2 por lado)"
+                                  >
+                                    10 pers (3 y 2)
+                                  </button>
 
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const cap = selectedTable.capacity || 10;
-                                  const top = Math.ceil(cap / 2);
-                                  const bottom = Math.floor(cap / 2);
-                                  handleUpdateSeatsDistribution(selectedTable.id, { top, bottom, left: 0, right: 0 });
-                                }}
-                                className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
-                                  dist.left === 0 && dist.right === 0
-                                    ? 'bg-[#2B2826] text-white border-[#2B2826]'
-                                    : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
-                                }`}
-                                title="Sin sillas en cabeceras"
-                              >
-                                Sin cabeceras
-                              </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      handleUpdateSeatsDistribution(selectedTable.id, { top: 3, bottom: 3, left: 3, right: 3 });
+                                    }}
+                                    className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
+                                      dist.top === 3 && dist.bottom === 3 && dist.left === 3 && dist.right === 3
+                                        ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                        : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                                    }`}
+                                    title="12 personas (3 por lado)"
+                                  >
+                                    12 pers (3/lado)
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cap = selectedTable.capacity || 10;
+                                      const remaining = Math.max(0, cap - 2);
+                                      const top = Math.ceil(remaining / 2);
+                                      const bottom = Math.floor(remaining / 2);
+                                      handleUpdateSeatsDistribution(selectedTable.id, { top, bottom, left: 1, right: 1 });
+                                    }}
+                                    className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
+                                      dist.left === 1 && dist.right === 1
+                                        ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                        : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                                    }`}
+                                    title="1 en cada cabecera"
+                                  >
+                                    1 y 1 en cabeceras
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cap = selectedTable.capacity || 10;
+                                      const remaining = Math.max(0, cap - 4);
+                                      const top = Math.ceil(remaining / 2);
+                                      const bottom = Math.floor(remaining / 2);
+                                      handleUpdateSeatsDistribution(selectedTable.id, { top, bottom, left: 2, right: 2 });
+                                    }}
+                                    className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
+                                      dist.left === 2 && dist.right === 2
+                                        ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                        : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                                    }`}
+                                    title="2 en cada cabecera (imperiales)"
+                                  >
+                                    2 y 2 en cabeceras
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const cap = selectedTable.capacity || 10;
+                                      const top = Math.ceil(cap / 2);
+                                      const bottom = Math.floor(cap / 2);
+                                      handleUpdateSeatsDistribution(selectedTable.id, { top, bottom, left: 0, right: 0 });
+                                    }}
+                                    className={`py-1.5 px-1 rounded-xl border text-center font-medium transition cursor-pointer leading-tight ${
+                                      dist.left === 0 && dist.right === 0
+                                        ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                        : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                                    }`}
+                                    title="Sin sillas en cabeceras"
+                                  >
+                                    Sin cabeceras
+                                  </button>
+                                </>
+                              )}
                             </div>
 
                             {/* Steppers for each edge */}
@@ -2521,13 +2596,14 @@ export const MesasLayoutModule: React.FC = () => {
                     setNewTableData({
                       ...newTableData,
                       type: t,
-                      capacity: t === 'imperial' ? 14 : 10
+                      capacity: t === 'imperial' ? 14 : t === 'cuadrada' ? 10 : 10
                     });
                   }}
                   className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none cursor-pointer"
                 >
                   <option value="circular">Circular (8-12 personas)</option>
-                  <option value="rectangular">Rectangular (8-10 personas)</option>
+                  <option value="cuadrada">Cuadrada (8-10 personas)</option>
+                  <option value="rectangular">Rectangular (8-14 personas)</option>
                   <option value="imperial">Imperial (12-20 personas)</option>
                 </select>
               </div>
@@ -2541,6 +2617,11 @@ export const MesasLayoutModule: React.FC = () => {
                   onChange={e => setNewTableData({ ...newTableData, capacity: parseInt(e.target.value, 10) || 10 })}
                   className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF7F5] text-[#2B2826] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
                 />
+                {newTableData.type === 'cuadrada' && (
+                  <p className="text-[10px] text-[#8A7E72] mt-1 italic">
+                    Recomendado: 8 personas (2 por cada lado) o 10 personas (3 arriba/abajo y 2 a los lados).
+                  </p>
+                )}
               </div>
               <div className="flex justify-end space-x-2 pt-4 border-t border-[#FAF7F5]">
                 <button

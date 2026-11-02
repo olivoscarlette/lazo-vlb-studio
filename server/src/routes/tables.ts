@@ -65,9 +65,9 @@ router.post('/:weddingId/tables', authenticateToken, requireWeddingAccess, check
 
   const id = 'tbl_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
   const now = new Date().toISOString();
-  const cap = Math.max(1, parseInt(capacity, 10) || (type === 'imperial' ? 14 : 10));
-  const defaultWidth = type === 'imperial' ? 190 : type === 'rectangular' ? 160 : 120;
-  const defaultHeight = type === 'imperial' ? 95 : type === 'rectangular' ? 95 : 120;
+  const cap = Math.max(1, parseInt(capacity, 10) || (type === 'imperial' ? 14 : type === 'cuadrada' ? 10 : 10));
+  const defaultWidth = type === 'imperial' ? 190 : type === 'rectangular' ? 160 : type === 'cuadrada' ? 130 : 120;
+  const defaultHeight = type === 'imperial' ? 95 : type === 'rectangular' ? 95 : type === 'cuadrada' ? 130 : 120;
   const seatsDistStr = seats_distribution ? (typeof seats_distribution === 'string' ? seats_distribution : JSON.stringify(seats_distribution)) : null;
 
   db.prepare(`

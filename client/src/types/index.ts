@@ -104,7 +104,7 @@ export interface Table {
   id: string;
   wedding_id: string;
   name: string;
-  type: 'circular' | 'rectangular' | 'imperial';
+  type: 'circular' | 'rectangular' | 'imperial' | 'cuadrada';
   capacity: number;
   x: number;
   y: number;
