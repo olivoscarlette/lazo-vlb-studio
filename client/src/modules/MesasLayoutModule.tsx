@@ -160,9 +160,9 @@ export const MesasLayoutModule: React.FC = () => {
   // Permissions & 2D Lock
   const isNovios = user?.role === 'NOVIOS';
   const isPlannerVirtual = Boolean(
-    !currentWedding?.package_type ||
-    currentWedding.package_type.toLowerCase().includes('virtual') ||
-    currentWedding.package_type.toLowerCase().includes('autónomo')
+    currentWedding?.package_type &&
+    (currentWedding.package_type.toLowerCase().includes('virtual') ||
+     currentWedding.package_type.toLowerCase().includes('autónomo'))
   );
   const hasLayout2dAddon = Boolean(currentWedding?.has_layout_2d);
   const isLockedForVirtualNovios = isNovios && isPlannerVirtual && !hasLayout2dAddon;

@@ -267,10 +267,11 @@ export const ReunionesModule: React.FC = () => {
 
   const isNovios = user?.role === 'NOVIOS';
   const isPlannerVirtual = Boolean(
-    !currentWedding?.package_type ||
-    currentWedding?.package_type?.toLowerCase().includes('virtual') ||
-    currentWedding?.package_type?.toLowerCase().includes('autónomo') ||
-    packageInfo?.packageName?.toLowerCase().includes('virtual')
+    isNovios &&
+    currentWedding?.package_type &&
+    (currentWedding.package_type.toLowerCase().includes('virtual') ||
+     currentWedding.package_type.toLowerCase().includes('autónomo') ||
+     packageInfo?.packageName?.toLowerCase().includes('virtual'))
   );
 
   const vivaLaBrideWhatsAppUrl =

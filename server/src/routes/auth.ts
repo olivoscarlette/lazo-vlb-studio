@@ -299,10 +299,10 @@ router.get('/me', authenticateToken, (req, res) => {
 
   let assignedWeddings: any[] = [];
   if (req.user.role === 'ADMINISTRADOR') {
-    assignedWeddings = db.prepare('SELECT id, name, slug, wedding_date, status FROM weddings ORDER BY wedding_date ASC').all();
+    assignedWeddings = db.prepare('SELECT * FROM weddings ORDER BY wedding_date ASC').all();
   } else if (req.user.role === 'COORDINADOR' || req.user.role === 'STAFF') {
     assignedWeddings = db.prepare(`
-      SELECT w.id, w.name, w.slug, w.wedding_date, w.status, a.assigned_role
+      SELECT w.*, a.assigned_role
       FROM weddings w
       JOIN wedding_assignments a ON a.wedding_id = w.id
       WHERE a.user_id = ?

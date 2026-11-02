@@ -181,10 +181,11 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   // Requirement 4: Strictly only ADMINISTRADOR and COORDINADOR can see internal team
   const canSeeStaffSection = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR';
 
-  const isPlannerVirtual =
-    !weddingData.package_type ||
-    weddingData.package_type.toLowerCase().includes('virtual') ||
-    weddingData.package_type.toLowerCase().includes('autónomo');
+  const isPlannerVirtual = Boolean(
+    weddingData.package_type &&
+    (weddingData.package_type.toLowerCase().includes('virtual') ||
+     weddingData.package_type.toLowerCase().includes('autónomo'))
+  );
   const coordinationBrand = isPlannerVirtual ? 'Lazo Studio' : 'Viva la Bride';
 
   // Helper para convertir nombres a Title Case y evitar empalmes de letras mayúsculas en Atteron

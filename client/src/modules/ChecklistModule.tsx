@@ -160,10 +160,11 @@ export const ChecklistModule: React.FC = () => {
     } catch {}
   };
 
-  const isPlannerVirtual =
-    !currentWedding?.package_type ||
-    currentWedding.package_type.toLowerCase().includes('virtual') ||
-    currentWedding.package_type.toLowerCase().includes('autónomo');
+  const isPlannerVirtual = Boolean(
+    currentWedding?.package_type &&
+    (currentWedding.package_type.toLowerCase().includes('virtual') ||
+     currentWedding.package_type.toLowerCase().includes('autónomo'))
+  );
   const teamBrand = isPlannerVirtual ? 'Lazo Studio' : 'Viva la Bride';
 
   const handleOpenNewModal = () => {
