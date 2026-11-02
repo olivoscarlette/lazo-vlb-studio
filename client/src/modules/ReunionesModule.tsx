@@ -414,7 +414,7 @@ export const ReunionesModule: React.FC = () => {
                 className="inline-flex items-center justify-center gap-2 px-7 py-3.5 bg-gradient-to-r from-[#C48B81] to-[#B3796F] hover:from-[#B3796F] hover:to-[#9F675E] text-white text-xs font-semibold rounded-full shadow-[0_8px_24px_-4px_rgba(196,139,129,0.38)] hover:shadow-[0_10px_28px_-4px_rgba(196,139,129,0.5)] transition-all cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Cotizar Coordinación con Viva la Bride</span>
+                <span>Cotizar con Clara por WhatsApp</span>
               </a>
             </div>
           </div>

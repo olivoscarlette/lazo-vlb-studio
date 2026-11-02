@@ -991,7 +991,7 @@ export const MesasLayoutModule: React.FC = () => {
                     className="inline-flex items-center justify-center space-x-2 px-6 py-3.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-sm transition hover:shadow-md cursor-pointer"
                   >
                     <MessageSquare className="w-4 h-4" />
-                    <span>Cotizar Coordinación y Layout con Viva la Bride</span>
+                    <span>Cotizar Croquis 2D y Layout con Clara</span>
                   </a>
                 </div>
               </div>

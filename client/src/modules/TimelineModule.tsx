@@ -1379,13 +1379,13 @@ export const TimelineModule: React.FC = () => {
                   <span className="font-serif text-2xl font-bold text-[#2B2826]">$1,800 <span className="text-xs font-normal text-[#7D6F6B]">MXN</span></span>
                 </div>
                 <a
-                  href={`https://wa.me/528128663440?text=${encodeURIComponent(`¡Hola Scarlette! Estoy planeando mi boda en Lazo Studio (${currentWedding?.name || 'mi boda'}) y me gustaría agendar mi Asesoría 1 a 1 de Minuto a Minuto ($1,800 MXN).`)}`}
+                  href={`https://wa.me/528128663440?text=${encodeURIComponent(`¡Hola Clara! Estoy planeando mi boda en Lazo Studio (${currentWedding?.name || 'mi boda'}) y me gustaría agendar mi Asesoría 1 a 1 de Minuto a Minuto ($1,800 MXN).`)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-5 py-3 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-xs flex items-center space-x-2 cursor-pointer"
                 >
                   <MessageSquare className="w-4 h-4" />
-                  <span>Agendar por WhatsApp</span>
+                  <span>Agendar con Clara por WhatsApp</span>
                 </a>
               </div>
             </div>

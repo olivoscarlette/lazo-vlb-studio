@@ -2216,13 +2216,13 @@ export const InvitadosModule: React.FC = () => {
 
             <div className="space-y-2">
               <a
-                href={`https://wa.me/528128663440?text=${encodeURIComponent(`¡Hola Lazo Studio! Soy cliente de Lazo Studio (${currentWedding?.name || 'mi boda'}) y me gustaría cotizar y activar el Add-on de invitaciones y confirmación RSVP por WhatsApp.`)}`}
+                href={`https://wa.me/528128663440?text=${encodeURIComponent(`¡Hola Clara! Soy cliente de Lazo Studio (${currentWedding?.name || 'mi boda'}) y me gustaría cotizar y activar el Add-on de invitaciones y confirmación RSVP por WhatsApp.`)}`}
                 target="_blank"
                 rel="noreferrer"
                 className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-full shadow-md shadow-[#C48B81]/20 transition cursor-pointer"
               >
                 <MessageSquare className="w-4 h-4" />
-                <span>Solicitar cotización por WhatsApp</span>
+                <span>Cotizar con Clara vía WhatsApp</span>
               </a>
               <button
                 onClick={() => setShowLazoInvitationUpgradeModal(false)}
