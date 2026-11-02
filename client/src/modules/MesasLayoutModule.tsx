@@ -811,8 +811,8 @@ export const MesasLayoutModule: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* 1. Header: Clean & Elegant */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* 1. Header: Clean & Minimal */}
+      <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center space-x-2.5 mb-1">
             <span className="text-[10px] uppercase font-bold tracking-widest text-[#8A7E72]">
@@ -824,90 +824,66 @@ export const MesasLayoutModule: React.FC = () => {
           </h2>
         </div>
 
-        <div className="flex items-center space-x-2.5">
-          <button
-            type="button"
-            onClick={() => setShowHelpModal(true)}
-            className="w-9 h-9 rounded-xl bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B] hover:text-[#2B2826] flex items-center justify-center transition shadow-2xs cursor-pointer"
-            title="Ayuda y guía de uso"
-          >
-            <HelpCircle className="w-4 h-4" />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDownloadPDF}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
-            title="Descargar distribución en PDF"
-          >
-            <FileDown className="w-3.5 h-3.5 text-[#C48B81]" />
-            <span>Descargar PDF</span>
-          </button>
-
-          {!isLocked && (
-            <button
-              type="button"
-              onClick={() => setShowNewTableModal(true)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#2B2826] hover:bg-black text-white text-xs font-semibold rounded-xl shadow-2xs transition cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>+ Agregar Mesa</span>
-            </button>
-          )}
-        </div>
+        <button
+          type="button"
+          onClick={() => setShowHelpModal(true)}
+          className="w-9 h-9 rounded-xl bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B] hover:text-[#2B2826] flex items-center justify-center transition shadow-2xs cursor-pointer"
+          title="Ayuda y guía de uso"
+        >
+          <HelpCircle className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* 2. KPI Summary Strip */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-3">
-          <div className="flex items-start justify-between">
-            <div>
-              <span className="font-bold text-sm text-[#2B2826] block">
-                {totalAssigned} de {totalConfirmedPlaces} sentados
-              </span>
-              <span className="text-xs text-[#7D6F6B] mt-0.5 block">
-                {unassignedPlaces} invitados confirmados sin mesa
-              </span>
+      {/* 2. Discreet Compact Status Chips (Solo salen en caso necesario) */}
+      {(totalConfirmedPlaces > 0 || tables.length > 0) && (
+        <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs">
+          <div className="inline-flex items-center space-x-2.5 px-3 py-1.5 rounded-xl bg-white border border-[#EFE8E1] text-[#7D6F6B] shadow-2xs">
+            <span className="font-semibold text-[#2B2826]">
+              {totalAssigned} de {totalConfirmedPlaces} sentados
+            </span>
+            <span className="text-[#D2C4B4]">·</span>
+            <span>{unassignedPlaces} sin mesa</span>
+            <div className="w-16 bg-[#FAF7F5] h-1.5 rounded-full overflow-hidden border border-[#EFE8E1]">
+              <div
+                className="bg-[#C48B81] h-full rounded-full transition-all duration-300"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
-            <span className="text-xs font-bold font-mono text-[#C48B81]">
+            <span className="font-mono text-[10px] text-[#C48B81] font-bold">
               {progressPercent}%
             </span>
           </div>
-          <div className="w-full bg-[#FAF7F5] h-2 rounded-full overflow-hidden border border-[#EFE8E1]">
-            <div
-              className="bg-[#C48B81] h-full rounded-full transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
+
+          {tables.length > 0 && capacityDelta !== 0 && (
+            <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-xl border shadow-2xs text-[11px] ${
+              capacityDelta > 0
+                ? 'bg-[#FEF8ED] border-[#F6E9CF] text-[#7A602B]'
+                : 'bg-[#FCEEF2] border-[#F7DBE3] text-[#8F4B5E]'
+            }`}>
+              <span>
+                {capacityDelta > 0
+                  ? `${capacityDelta} lugares de sobra en ${tables.length} mesas`
+                  : `Faltan ${Math.abs(capacityDelta)} lugares en mesas`}
+              </span>
+              <button
+                type="button"
+                onClick={() => setViewMode('lista')}
+                className="underline font-semibold hover:opacity-80 cursor-pointer"
+              >
+                Revisar
+              </button>
+            </div>
+          )}
         </div>
+      )}
 
-        <div className={`p-4 sm:p-5 rounded-2xl border shadow-2xs flex items-center justify-between gap-3 ${
-          capacityDelta >= 0
-            ? 'bg-[#FEF8ED] border-[#F6E9CF] text-[#7A602B]'
-            : 'bg-[#FCEEF2] border-[#F7DBE3] text-[#8F4B5E]'
-        }`}>
-          <div>
-            <span className="font-bold text-xs sm:text-sm block text-[#2B2826]">
-              {capacityDelta >= 0
-                ? `${capacityDelta} lugares de sobra en ${tables.length} mesas — más capacidad que invitados`
-                : `Faltan ${Math.abs(capacityDelta)} lugares en mesas para tus invitados confirmados`}
-            </span>
-            <span className="text-[11px] text-[#7D6F6B] mt-0.5 block">
-              Capacidad total instalada: {totalCapacity} sillas en {tables.length} mesas.
-            </span>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setViewMode(viewMode === 'mapa' ? 'lista' : 'mapa')}
-            className="shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-[#EFE8E1] text-[#2B2826] hover:bg-[#FAF7F5] transition shadow-2xs cursor-pointer"
-          >
-            Revisar
-          </button>
-        </div>
-      </div>
-
-      {/* 3. Unified Control Bar: Tabs & Canvas Tools (No redundant buttons!) */}
+      {/* 3. Linea de Opciones Unificada:
+          + Agregar mesa (con solo 1 +),
+          Plano del venue,
+          + pista / elemento,
+          guardar version,
+          descargar PDF
+      */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Tab switch: Lista de mesas first, Mapa second */}
         <div className="inline-flex p-1 bg-white rounded-2xl border border-[#EFE8E1] shadow-2xs">
@@ -939,60 +915,63 @@ export const MesasLayoutModule: React.FC = () => {
           </button>
         </div>
 
-        {/* Unified Canvas Tools (Only shown in Mapa mode when unlocked) */}
-        {viewMode === 'mapa' && !isLockedForVirtualNovios && (
-          <div className="flex flex-wrap items-center gap-2">
+        {/* Toolbar de Acciones en la misma linea */}
+        <div className="flex flex-wrap items-center gap-2">
+          {!isLocked && (
             <button
               type="button"
-              onClick={() => setShowFloorPlanModal(true)}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
-              title="Cargar o cambiar plano base del venue (PDF o imagen)"
+              onClick={() => setShowNewTableModal(true)}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#2B2826] hover:bg-black text-white text-xs font-semibold rounded-xl shadow-2xs transition cursor-pointer"
             >
-              <ImageIcon className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Plano del Venue</span>
+              <Plus className="w-3.5 h-3.5" />
+              <span>Agregar mesa</span>
             </button>
+          )}
 
-            <button
-              type="button"
-              onClick={() => setShowNewElementModal(true)}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
-              title="Agregar pista de baile, escenario o barra"
-            >
-              <Layers className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>+ Pista / Elemento</span>
-            </button>
+          {viewMode === 'mapa' && !isLockedForVirtualNovios && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowFloorPlanModal(true)}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
+                title="Cargar o cambiar plano base del venue"
+              >
+                <ImageIcon className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span>Plano del venue</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={handleAutoArrange}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
-              title="Acomodar mesas simétricamente en el salón"
-            >
-              <LayoutGrid className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Auto acomodo</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setShowNewElementModal(true)}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
+                title="Agregar pista de baile, escenario o barra"
+              >
+                <Layers className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span>+ Pista / elemento</span>
+              </button>
 
-            <button
-              type="button"
-              onClick={handleCenterCanvas}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
-              title="Centrar vista del plano"
-            >
-              <Compass className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Centrar</span>
-            </button>
+              <button
+                type="button"
+                onClick={() => setShowSaveVersionModal(true)}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
+                title="Guardar versión de respaldo"
+              >
+                <Save className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span>Guardar versión</span>
+              </button>
+            </>
+          )}
 
-            <button
-              type="button"
-              onClick={() => setShowSaveVersionModal(true)}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
-              title="Guardar versión de respaldo"
-            >
-              <Save className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Guardar Versión</span>
-            </button>
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={handleDownloadPDF}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
+            title="Descargar distribución en PDF"
+          >
+            <FileDown className="w-3.5 h-3.5 text-[#C48B81]" />
+            <span>Descargar PDF</span>
+          </button>
+        </div>
       </div>
 
       {/* 4. Tab Content */}
