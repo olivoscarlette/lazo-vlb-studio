@@ -38,10 +38,19 @@ router.get('/:weddingId/tables', authenticateToken, requireWeddingAccess, (req, 
     ORDER BY first_name ASC
   `).all(weddingId) as any[];
 
+  // All attending guests for full sidebar overview
+  const allAttending = db.prepare(`
+    SELECT id, first_name, last_name, phone, companion_count, status, observations, table_id
+    FROM guests
+    WHERE wedding_id = ? AND status != 'No asistirá'
+    ORDER BY first_name ASC
+  `).all(weddingId) as any[];
+
   return res.json({
     tables,
     elements,
-    unassignedGuests: unassigned
+    unassignedGuests: unassigned,
+    allGuests: allAttending
   });
 });
 
