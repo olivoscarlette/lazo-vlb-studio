@@ -509,7 +509,7 @@ export const WhatsAppHubModule: React.FC = () => {
 
     let text = '';
     if (templateType === 1) {
-      text = `Hola ${name},\n\nEs un honor para nosotros invitarte a celebrar la boda de\n*${coupleClean}*\n\nFecha: ${dateFormatted}\nPases reservados: *${seats} persona(s)*\n\nNos encantaría compartir este día tan especial contigo.\nPor favor, ayúdanos confirmando tu asistencia seleccionando una opción abajo:\n\n[ Confirmar Asistencia ] [ No podré asistir ]`;
+      text = `Hola ${name},\n\nEs un honor para nosotros invitarte a celebrar la boda de\n*${coupleClean}*\n\n🗓 ${dateFormatted}\n🎟 Pases reservados: *${seats} persona(s)*\n\nNos encantaría compartir este día tan especial contigo.\nPor favor, ayúdanos confirmando tu asistencia seleccionando una opción abajo:\n\n[ Confirmar Asistencia ] [ No podré asistir ]`;
     } else if (templateType === 2) {
       const ceremony = activeWedding?.ceremony_venue || 'Templo / Parroquia';
       const cTime = activeWedding?.ceremony_time || 'Por confirmar';
@@ -522,11 +522,11 @@ export const WhatsAppHubModule: React.FC = () => {
       const fullLocation = rawLocation
         ? (rawLocation.startsWith('http') ? rawLocation : `${window.location.origin}${rawLocation}`)
         : '';
-      const locationLine = fullLocation ? `\nUbicación / Invitación digital: ${fullLocation}` : '';
+      const locationLine = fullLocation ? `\n📍 Ubicación / Invitación digital: ${fullLocation}` : '';
 
-      text = `RECORDATORIO Y DETALLES\n\nBoda *${coupleClean}*\n¡Estamos a solo 7 días de celebrar juntos!\n\nTe compartimos la información esencial para que disfrutes al máximo este gran día:\n\n• Ceremonia: *${ceremony}* · *${cTime}*\n• Recepción: *${reception}* · *${rTime}*\n• Código de vestimenta: ${dressCode}\n• Pases confirmados: ${seats} persona(s)${locationLine}\n\n¡Nos dará muchísimo gusto recibirte!`;
+      text = `RECORDATORIO & DETALLES ✨\n\nBoda *${coupleClean}*\n¡Estamos a solo 7 días de celebrar juntos!\n\nTe compartimos la información esencial para que disfrutes al máximo este gran día:\n\n• Ceremonia: *${ceremony}* · *${cTime}*\n• Recepción: *${reception}* · *${rTime}*\n• Código de vestimenta: ${dressCode}\n• Pases confirmados: ${seats} persona(s)${locationLine}\n\n¡Nos dará muchísimo gusto recibirte!`;
     } else if (templateType === 3) {
-      text = `¡HOY CELEBRAMOS!\n\nHola ${name},\n¡El gran día de *${coupleClean}* ha llegado!\n\nHemos preparado tu lugar con mucho cariño:\nTu mesa asignada: *${table}*\nPases reservados: *${seats} persona(s)*\n\nAl llegar a la recepción, el equipo de coordinación de Viva la Bride estará listo para darte la bienvenida y acompañarte a tu lugar.\n\n¡A disfrutar y celebrar juntos!`;
+      text = `¡HOY CELEBRAMOS! 🥂✨\n\nHola ${name},\n¡El gran día de *${coupleClean}* ha llegado!\n\nHemos preparado tu lugar con mucho cariño:\n🍽️ Tu mesa asignada: *${table}*\n🎟️ Pases reservados: *${seats} persona(s)*\n\nAl llegar a la recepción, el equipo de coordinación de Viva la Bride estará listo para darte la bienvenida y acompañarte a tu lugar.\n\n¡A disfrutar y celebrar juntos!`;
     }
     setNewMessage(text);
   };
@@ -984,7 +984,7 @@ export const WhatsAppHubModule: React.FC = () => {
                   }`}
                   title="Cargar invitación interactiva oficial RSVP aprobada por Meta (Viva La Bride)"
                 >
-                  1. Invitación RSVP (Oficial Meta)
+                  💍 1. Invitación RSVP (Oficial Meta)
                 </button>
                 <button
                   type="button"
@@ -996,7 +996,7 @@ export const WhatsAppHubModule: React.FC = () => {
                   }`}
                   title="Cargar recordatorio editorial de 7 días antes (Ubicación, Dress Code y Horarios)"
                 >
-                  2. Recordatorio & Dress Code (7 días)
+                  📍 2. Recordatorio & Dress Code (7 días)
                 </button>
                 <button
                   type="button"
@@ -1008,7 +1008,7 @@ export const WhatsAppHubModule: React.FC = () => {
                   }`}
                   title="Cargar asignación de mesa para el Día del Evento"
                 >
-                  3. Mesa Día Boda (Día del evento)
+                  🍽️ 3. Mesa Día Boda (Día del evento)
                 </button>
               </div>
 

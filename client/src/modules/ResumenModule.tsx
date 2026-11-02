@@ -880,7 +880,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#EBDCC5]/50 text-[#8A6332]">
-                    Plantilla 2 · Recordatorio
+                    📍 Plantilla 2 · Recordatorio
                   </span>
                   <span className="text-xs font-semibold text-[#25D366] flex items-center space-x-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
@@ -917,7 +917,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#E4ECE5] text-[#2B5235]">
-                    Plantilla 3 · Día de la Boda
+                    🍽️ Plantilla 3 · Día de la Boda
                   </span>
                   <span className="text-xs font-semibold text-[#25D366] flex items-center space-x-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>

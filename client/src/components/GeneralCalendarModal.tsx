@@ -151,7 +151,7 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
       const [ih, im] = item.time.split(':').map(Number);
       const itemMin = ih * 60 + (im || 0);
       if (Math.abs(targetMin - itemMin) < 45) {
-        setConflictWarning(`Alerta de Empalme: Ya existe "${item.title}" a las ${item.time} hrs (${item.event_type}).`);
+        setConflictWarning(`⚠️ Alerta de Empalme: Ya existe "${item.title}" a las ${item.time} hrs (${item.event_type}).`);
         return;
       }
     }
@@ -286,12 +286,12 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case 'EVENTO': return 'Evento';
-      case 'PLANNING': return 'Cita Planning';
-      case 'CITA_EXTERNA': return 'Cita Externa';
-      case 'OPEN_HOUSE': return 'Open House';
-      case 'SERVICIO': return 'Servicio';
-      default: return 'Otro';
+      case 'EVENTO': return '💍 Evento';
+      case 'PLANNING': return '📋 Cita Planning';
+      case 'CITA_EXTERNA': return '📍 Cita Externa';
+      case 'OPEN_HOUSE': return '✨ Open House';
+      case 'SERVICIO': return '⚡ Servicio';
+      default: return '📌 Otro';
     }
   };
 
@@ -675,12 +675,12 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
                       onChange={e => setFormData({ ...formData, event_type: e.target.value as any })}
                       className="w-full px-3 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] bg-[#FAF8F5] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                     >
-                      <option value="CITA_EXTERNA">Cita Externa (Proveedor / Locación)</option>
-                      <option value="OPEN_HOUSE">Open House / Showroom</option>
-                      <option value="SERVICIO">Servicio / Montaje</option>
-                      <option value="PLANNING">Sesión de Planeación</option>
-                      <option value="EVENTO">Boda / Evento Social</option>
-                      <option value="OTRO">Otro</option>
+                      <option value="CITA_EXTERNA">📍 Cita Externa (Proveedor / Locación)</option>
+                      <option value="OPEN_HOUSE">✨ Open House / Showroom</option>
+                      <option value="SERVICIO">⚡ Servicio / Montaje</option>
+                      <option value="PLANNING">📋 Sesión de Planeación</option>
+                      <option value="EVENTO">💍 Boda / Evento Social</option>
+                      <option value="OTRO">📌 Otro</option>
                     </select>
                   </div>
 

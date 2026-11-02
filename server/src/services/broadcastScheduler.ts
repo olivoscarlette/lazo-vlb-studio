@@ -31,7 +31,7 @@ export interface BroadcastScheduleInfo {
 }
 
 export class BroadcastScheduler {
-  public static readonly DEFAULT_REMINDER_TEMPLATE = `RECORDATORIO Y DETALLES
+  public static readonly DEFAULT_REMINDER_TEMPLATE = `RECORDATORIO & DETALLES ✨
 
 Boda *{{Novios}}*
 ¡Estamos a solo 7 días de celebrar juntos!
@@ -47,14 +47,14 @@ Te compartimos la información esencial para que disfrutes al máximo este gran 
 
 ¡Nos dará muchísimo gusto recibirte!`;
 
-  public static readonly DEFAULT_SEATING_TEMPLATE = `¡HOY CELEBRAMOS!
+  public static readonly DEFAULT_SEATING_TEMPLATE = `¡HOY CELEBRAMOS! 🥂✨
 
 Hola {{Nombre}},
 ¡El gran día de *{{Novios}}* ha llegado!
 
 Hemos preparado tu lugar con mucho cariño:
-Tu mesa asignada: *{{Mesa}}*
-Pases reservados: *{{Lugares}} persona(s)*
+🍽️ Tu mesa asignada: *{{Mesa}}*
+🎟️ Pases reservados: *{{Lugares}} persona(s)*
 
 Al llegar a la recepción, el equipo de coordinación de Viva la Bride estará listo para darte la bienvenida y acompañarte a tu lugar.
 
@@ -172,7 +172,7 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride estará l
       const fullUrl = rawUrl.startsWith('http') ? rawUrl : `${appUrl}${rawUrl}`;
       result = result.replace(
         /\{\{Ubicacion\}\}/gi,
-        `Ubicación / Invitación digital: ${fullUrl}`
+        `📍 Ubicación / Invitación digital: ${fullUrl}`
       );
     } else {
       result = result.replace(/\{\{Ubicacion\}\}/gi, '');
