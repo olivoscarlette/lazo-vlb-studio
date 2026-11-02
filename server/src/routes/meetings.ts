@@ -10,6 +10,7 @@ router.get('/:weddingId/meetings', authenticateToken, requireWeddingAccess, (req
 
   const wedding = db.prepare('SELECT package_type FROM weddings WHERE id = ?').get(weddingId) as any;
   const packageType = wedding?.package_type || 'Integral';
+  const isVirtual = packageType.toLowerCase().includes('virtual') || packageType.toLowerCase().includes('autónomo');
 
   // Get packages catalog
   const packagesRow = db.prepare("SELECT values_json FROM catalogs WHERE key = 'meeting_packages'").get() as any;
@@ -22,9 +23,11 @@ router.get('/:weddingId/meetings', authenticateToken, requireWeddingAccess, (req
 
   const currentPkg = packagesList.find(p => p.name.toLowerCase() === packageType.toLowerCase()) || {
     name: packageType,
-    maxMeetings: 6,
-    description: 'Paquete de reuniones VLB'
+    maxMeetings: isVirtual ? 0 : 6,
+    description: isVirtual ? 'Acceso autónomo a la suite digital' : 'Paquete de reuniones VLB'
   };
+
+  const effectiveMaxMeetings = isVirtual ? 0 : (currentPkg.maxMeetings ?? 4);
 
   const meetings = db.prepare(`
     SELECT * FROM meetings
@@ -52,15 +55,15 @@ router.get('/:weddingId/meetings', authenticateToken, requireWeddingAccess, (req
 
   // Count meetings held or scheduled
   const completedOrScheduled = meetings.filter(m => m.status !== 'CANCELADA').length;
-  const remainingMeetings = Math.max(0, currentPkg.maxMeetings - completedOrScheduled);
+  const remainingMeetings = effectiveMaxMeetings === 0 ? 0 : Math.max(0, effectiveMaxMeetings - completedOrScheduled);
 
   return res.json({
     meetings,
     packageInfo: {
       packageName: currentPkg.name,
-      maxMeetings: currentPkg.maxMeetings,
+      maxMeetings: effectiveMaxMeetings,
       usedMeetings: completedOrScheduled,
-      remainingMeetings: currentPkg.maxMeetings >= 999 ? 'Ilimitadas' : remainingMeetings,
+      remainingMeetings: effectiveMaxMeetings >= 999 ? 'Ilimitadas' : remainingMeetings,
       description: currentPkg.description,
       includes: Array.isArray(currentPkg.includes) ? currentPkg.includes : []
     }
@@ -72,6 +75,17 @@ router.post('/:weddingId/meetings', authenticateToken, requireWeddingAccess, (re
   const { weddingId } = req.params;
   const user = req.user!;
   const { title, date, time, participants, notes, meet_url, force_conflict } = req.body;
+
+  const wedding = db.prepare('SELECT package_type FROM weddings WHERE id = ?').get(weddingId) as any;
+  const packageType = wedding?.package_type || '';
+  const isVirtual = packageType.toLowerCase().includes('virtual') || packageType.toLowerCase().includes('autónomo');
+
+  // Virtual Novios are not allowed to request meetings
+  if (user.role === 'NOVIOS' && isVirtual) {
+    return res.status(403).json({
+      error: 'El paquete Planner Virtual no incluye sesiones de planeación 1 a 1. Tu plan está diseñado para autogestión en la plataforma digital.'
+    });
+  }
 
   if (!title || !date || !time) {
     return res.status(400).json({ error: 'Título, fecha y hora son obligatorios.' });

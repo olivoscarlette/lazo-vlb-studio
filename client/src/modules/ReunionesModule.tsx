@@ -294,7 +294,7 @@ export const ReunionesModule: React.FC = () => {
           </p>
         </div>
 
-        {!isPlannerVirtual && (
+        {(!isNovios || (packageInfo && packageInfo.maxMeetings > 0)) && (
           <button
             onClick={() => setShowScheduleModal(true)}
             className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer"
@@ -444,7 +444,13 @@ export const ReunionesModule: React.FC = () => {
                   </span>
                 </div>
                 <p className="text-[11px] text-[#8A7E72] mt-1">
-                  Tope acordado: <strong>{packageInfo.maxMeetings >= 999 ? 'Reuniones ilimitadas' : `${packageInfo.maxMeetings} sesiones`}</strong>
+                  Tope acordado: <strong>
+                    {packageInfo.maxMeetings >= 999
+                      ? 'Reuniones ilimitadas'
+                      : packageInfo.maxMeetings === 0
+                      ? 'Sin reuniones incluidas (Autónomo)'
+                      : `${packageInfo.maxMeetings} sesiones`}
+                  </strong>
                 </p>
               </div>
             </div>
@@ -453,9 +459,15 @@ export const ReunionesModule: React.FC = () => {
               <span className="px-3 py-1 rounded-xl bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] font-semibold">
                 Agendadas: <strong>{packageInfo.usedMeetings}</strong>
               </span>
-              <span className="px-3 py-1 rounded-xl bg-[#F7ECE8] text-[#A86B60] border border-[#E8D1CB] font-semibold">
-                Disponibles: <strong>{packageInfo.remainingMeetings}</strong>
-              </span>
+              {packageInfo.maxMeetings === 0 ? (
+                <span className="px-3 py-1 rounded-xl bg-[#FAF7F5] text-[#8A7E72] border border-[#EFE8E1] font-semibold">
+                  Reuniones no incluidas
+                </span>
+              ) : (
+                <span className="px-3 py-1 rounded-xl bg-[#F7ECE8] text-[#A86B60] border border-[#E8D1CB] font-semibold">
+                  Disponibles: <strong>{packageInfo.remainingMeetings}</strong>
+                </span>
+              )}
               <div className="p-1 rounded-lg text-[#8A7E72] hover:text-[#2B2826]">
                 <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isPackageExpanded ? 'rotate-180' : ''}`} />
               </div>
@@ -497,8 +509,25 @@ export const ReunionesModule: React.FC = () => {
         {loading ? (
           <div className="py-12 text-center text-[#8A7E72] text-sm">Cargando reuniones...</div>
         ) : meetings.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 text-center text-[#8A7E72] text-sm border border-dashed border-[#EFE8E1]">
-            No hay reuniones agendadas aún. Solicita tu primera reunión con el equipo.
+          <div className="bg-white rounded-3xl p-10 sm:p-12 text-center text-[#8A7E72] text-sm border border-dashed border-[#EFE8E1]">
+            {packageInfo?.maxMeetings === 0 ? (
+              <div className="space-y-2 max-w-lg mx-auto">
+                <p className="font-semibold text-[#2B2826] text-base">
+                  {isNovios
+                    ? 'El acceso Planner Virtual no incluye reuniones de coordinación 1 a 1'
+                    : 'Boda con paquete Planner Virtual (Sin reuniones 1 a 1 incluidas)'}
+                </p>
+                <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                  {isNovios
+                    ? 'Tu plan está diseñado para la autogestión de tu boda en la plataforma digital. Si deseas asesoría personalizada o supervisión el Gran Día, puedes cotizar un paquete de acompañamiento presencial con Viva la Bride.'
+                    : 'Este evento está configurado en modalidad digital autónoma. Como administrador o coordinador, puedes programar sesiones extraordinarias si es requerido usando el botón "Agendar Reunión".'}
+                </p>
+              </div>
+            ) : isNovios ? (
+              'No hay reuniones agendadas aún. Solicita tu primera reunión con el equipo.'
+            ) : (
+              'No hay reuniones agendadas aún en esta boda. Haz clic en "Agendar Reunión" para programar una sesión.'
+            )}
           </div>
         ) : (
           meetings.map(m => {

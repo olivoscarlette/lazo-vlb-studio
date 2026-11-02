@@ -1113,6 +1113,20 @@ export function initDatabase() {
       const mp = db.prepare('SELECT values_json FROM catalogs WHERE key = ?').get('meeting_packages') as any;
       if (!mp || !mp.values_json.includes('Planner Virtual')) {
         db.prepare('INSERT OR REPLACE INTO catalogs (key, values_json) VALUES (?, ?)').run('meeting_packages', JSON.stringify(defaultMeetingPackages));
+      } else {
+        try {
+          const list = JSON.parse(mp.values_json);
+          let changed = false;
+          for (const p of list) {
+            if ((p.name.toLowerCase().includes('virtual') || p.name.toLowerCase().includes('autónomo')) && p.maxMeetings !== 0) {
+              p.maxMeetings = 0;
+              changed = true;
+            }
+          }
+          if (changed) {
+            db.prepare("UPDATE catalogs SET values_json = ? WHERE key = 'meeting_packages'").run(JSON.stringify(list));
+          }
+        } catch {}
       }
 
       // Ensure Official Administrator Account ALWAYS exists and has active password

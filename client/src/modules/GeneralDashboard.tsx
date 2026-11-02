@@ -674,8 +674,9 @@ export const GeneralDashboard: React.FC = () => {
       .split('\n')
       .map(line => line.replace(/^[-•*]\s*/, '').trim())
       .filter(Boolean);
-    const maxMtg = newPackage.isUnlimited ? 999 : (Number(newPackage.maxMeetings) || 1);
-    const desc = newPackage.description.trim() || (maxMtg >= 999 ? 'Reuniones ilimitadas de planeación' : `${maxMtg} reuniones de coordinación y avance`);
+    const parsedMeetings = isNaN(Number(newPackage.maxMeetings)) ? 0 : Math.max(0, Number(newPackage.maxMeetings));
+    const maxMtg = newPackage.isUnlimited ? 999 : parsedMeetings;
+    const desc = newPackage.description.trim() || (maxMtg >= 999 ? 'Reuniones ilimitadas de planeación' : maxMtg === 0 ? 'Acceso autónomo sin reuniones 1 a 1 incluidas' : `${maxMtg} reuniones de coordinación y avance`);
     const updated = [
       ...meetingPackages,
       {
@@ -708,8 +709,9 @@ export const GeneralDashboard: React.FC = () => {
       .split('\n')
       .map(line => line.replace(/^[-•*]\s*/, '').trim())
       .filter(Boolean);
-    const maxMtg = editingPkgDraft.isUnlimited ? 999 : (Number(editingPkgDraft.maxMeetings) || 1);
-    const desc = editingPkgDraft.description.trim() || (maxMtg >= 999 ? 'Reuniones ilimitadas de planeación' : `${maxMtg} reuniones de coordinación y avance`);
+    const parsedMeetings = isNaN(Number(editingPkgDraft.maxMeetings)) ? 0 : Math.max(0, Number(editingPkgDraft.maxMeetings));
+    const maxMtg = editingPkgDraft.isUnlimited ? 999 : parsedMeetings;
+    const desc = editingPkgDraft.description.trim() || (maxMtg >= 999 ? 'Reuniones ilimitadas de planeación' : maxMtg === 0 ? 'Acceso autónomo sin reuniones 1 a 1 incluidas' : `${maxMtg} reuniones de coordinación y avance`);
     const updated = meetingPackages.map((p, i) =>
       i === idx
         ? {
@@ -3445,10 +3447,13 @@ export const GeneralDashboard: React.FC = () => {
                     {!newPackage.isUnlimited && (
                       <input
                         type="number"
-                        min={1}
+                        min={0}
                         placeholder="Reuniones"
                         value={newPackage.maxMeetings}
-                        onChange={e => setNewPackage({ ...newPackage, maxMeetings: parseInt(e.target.value, 10) || 1 })}
+                        onChange={e => {
+                          const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                          setNewPackage({ ...newPackage, maxMeetings: isNaN(val) ? 0 : Math.max(0, val) });
+                        }}
                         className="w-20 px-2.5 py-2 border border-stone-300 rounded-xl text-xs bg-white"
                       />
                     )}
@@ -3511,9 +3516,12 @@ export const GeneralDashboard: React.FC = () => {
                               {!editingPkgDraft.isUnlimited && (
                                 <input
                                   type="number"
-                                  min={1}
+                                  min={0}
                                   value={editingPkgDraft.maxMeetings}
-                                  onChange={e => setEditingPkgDraft({ ...editingPkgDraft, maxMeetings: parseInt(e.target.value, 10) || 1 })}
+                                  onChange={e => {
+                                    const val = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                                    setEditingPkgDraft({ ...editingPkgDraft, maxMeetings: isNaN(val) ? 0 : Math.max(0, val) });
+                                  }}
                                   className="w-24 px-3 py-1.5 border border-stone-300 rounded-xl text-xs bg-white"
                                 />
                               )}
