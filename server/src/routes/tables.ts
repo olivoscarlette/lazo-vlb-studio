@@ -57,7 +57,7 @@ router.get('/:weddingId/tables', authenticateToken, requireWeddingAccess, (req, 
 // POST /api/weddings/:weddingId/tables - Add table
 router.post('/:weddingId/tables', authenticateToken, requireWeddingAccess, check5DayTableLock, (req, res) => {
   const { weddingId } = req.params;
-  const { name, type, capacity, x, y, rotation } = req.body;
+  const { name, type, capacity, x, y, rotation, width, height } = req.body;
 
   if (!name || !type) {
     return res.status(400).json({ error: 'Nombre y tipo de mesa son obligatorios.' });
@@ -66,24 +66,53 @@ router.post('/:weddingId/tables', authenticateToken, requireWeddingAccess, check
   const id = 'tbl_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
   const now = new Date().toISOString();
   const cap = Math.max(1, parseInt(capacity, 10) || (type === 'imperial' ? 14 : 10));
+  const defaultWidth = type === 'imperial' ? 190 : type === 'rectangular' ? 160 : 120;
+  const defaultHeight = type === 'imperial' ? 95 : type === 'rectangular' ? 95 : 120;
 
   db.prepare(`
-    INSERT INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, weddingId, name.trim(), type, cap, x ?? 150, y ?? 150, rotation ?? 0, now, now);
+    INSERT INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, width, height, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    id,
+    weddingId,
+    name.trim(),
+    type,
+    cap,
+    x ?? 150,
+    y ?? 150,
+    rotation ?? 0,
+    width ?? defaultWidth,
+    height ?? defaultHeight,
+    now,
+    now
+  );
 
   logAudit(weddingId, req.user!.id, req.user!.name, 'CREAR_MESA', 'TABLE', id, `Creación de ${name} (${type}, capacidad ${cap})`);
 
   return res.status(201).json({
     message: 'Mesa creada exitosamente.',
-    table: { id, wedding_id: weddingId, name, type, capacity: cap, x: x ?? 150, y: y ?? 150, rotation: rotation ?? 0, guests: [], used_seats: 0, available_seats: cap }
+    table: {
+      id,
+      wedding_id: weddingId,
+      name,
+      type,
+      capacity: cap,
+      x: x ?? 150,
+      y: y ?? 150,
+      rotation: rotation ?? 0,
+      width: width ?? defaultWidth,
+      height: height ?? defaultHeight,
+      guests: [],
+      used_seats: 0,
+      available_seats: cap
+    }
   });
 });
 
-// PUT /api/weddings/:weddingId/tables/:tableId - Update table (position, rotation, capacity, name)
+// PUT /api/weddings/:weddingId/tables/:tableId - Update table (position, rotation, capacity, name, size)
 router.put('/:weddingId/tables/:tableId', authenticateToken, requireWeddingAccess, check5DayTableLock, (req, res) => {
   const { weddingId, tableId } = req.params;
-  const { name, type, capacity, x, y, rotation } = req.body;
+  const { name, type, capacity, x, y, rotation, width, height } = req.body;
 
   const table = db.prepare('SELECT * FROM tables WHERE id = ? AND wedding_id = ?').get(tableId, weddingId) as any;
   if (!table) {
@@ -95,7 +124,7 @@ router.put('/:weddingId/tables/:tableId', authenticateToken, requireWeddingAcces
 
   db.prepare(`
     UPDATE tables SET
-      name = ?, type = ?, capacity = ?, x = ?, y = ?, rotation = ?, updated_at = ?
+      name = ?, type = ?, capacity = ?, x = ?, y = ?, rotation = ?, width = ?, height = ?, updated_at = ?
     WHERE id = ? AND wedding_id = ?
   `).run(
     name || table.name,
@@ -104,6 +133,8 @@ router.put('/:weddingId/tables/:tableId', authenticateToken, requireWeddingAcces
     x !== undefined ? x : table.x,
     y !== undefined ? y : table.y,
     rotation !== undefined ? rotation : table.rotation,
+    width !== undefined ? width : (table.width ?? 120),
+    height !== undefined ? height : (table.height ?? 120),
     now,
     tableId,
     weddingId

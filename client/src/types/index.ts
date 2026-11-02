@@ -109,6 +109,8 @@ export interface Table {
   x: number;
   y: number;
   rotation: number;
+  width?: number;
+  height?: number;
   guests?: Guest[];
   used_seats?: number;
   available_seats?: number;

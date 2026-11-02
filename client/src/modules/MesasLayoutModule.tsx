@@ -3,11 +3,10 @@ import { jsPDF } from 'jspdf';
 import { useAuth } from '../context/AuthContext';
 import { Table, LayoutElement, LayoutVersion, Guest } from '../types';
 import {
-  Plus, RotateCw, Trash2, Save, History,
+  Plus, RotateCw, Trash2, Save,
   Lock, AlertTriangle, Move, Eye, EyeOff, Layers, Image as ImageIcon,
-  Maximize2, Minimize2, Unlock, Users, ChevronDown, ChevronUp,
   FileUp, Loader2, ChevronLeft, ChevronRight, CheckCircle2, X, FileDown, MessageSquare,
-  Search, ZoomIn, ZoomOut, HelpCircle, Check, RotateCcw, LayoutGrid, Compass, Sliders
+  Search, HelpCircle, RotateCcw, LayoutGrid, Compass, Sliders, Users, Settings2
 } from 'lucide-react';
 
 const GROUP_PALETTES = [
@@ -26,10 +25,10 @@ export const MesasLayoutModule: React.FC = () => {
   const [elements, setElements] = useState<LayoutElement[]>([]);
   const [unassignedGuests, setUnassignedGuests] = useState<Guest[]>([]);
   const [allGuests, setAllGuests] = useState<Guest[]>([]);
-  const [versions, setVersions] = useState<LayoutVersion[]>([]);
+  const [, setVersions] = useState<LayoutVersion[]>([]);
   const [, setLoading] = useState(true);
 
-  // View switch: 'lista' (Lista de mesas first) vs 'mapa' (Mapa 2D)
+  // View switch: 'lista' (first) vs 'mapa' (second)
   const [viewMode, setViewMode] = useState<'lista' | 'mapa'>('lista');
 
   // Sidebar controls
@@ -42,23 +41,24 @@ export const MesasLayoutModule: React.FC = () => {
   const [assigningGuest, setAssigningGuest] = useState<Guest | null>(null);
   const [tableSearchInPopover, setTableSearchInPopover] = useState('');
 
-  // Modo Lienzo Amplio & Table Size state
-  const [fullCanvasMode, setFullCanvasMode] = useState(false);
-  const [lockTouchScroll, setLockTouchScroll] = useState(false);
+  // Canvas State & Zoom
   const [zoomLevel, setZoomLevel] = useState(1.0);
-  const [tableScale, setTableScale] = useState<number>(1.0); // Table size adjustment (0.75x to 1.5x)
   const [handToolActive, setHandToolActive] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  // Active selected table for assignment drawer / details
+  // Selected table on canvas (for interactive resize & inspector)
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
 
-  // Dragging state on visual canvas
+  // Dragging state on canvas (moving items)
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [dragType, setDragType] = useState<'table' | 'element' | null>(null);
+
+  // Resizing state for tables
+  const [resizingTableId, setResizingTableId] = useState<string | null>(null);
+  const [resizeStart, setResizeStart] = useState({ mouseX: 0, mouseY: 0, width: 120, height: 120 });
 
   // Reference Venue Floor Plan (PDF & Images)
   const [floorPlanUrl, setFloorPlanUrl] = useState<string>(currentWedding?.floor_plan_url || '');
@@ -75,7 +75,7 @@ export const MesasLayoutModule: React.FC = () => {
   const [floorPlanError, setFloorPlanError] = useState<string | null>(null);
   const [floorPlanPendingBlob, setFloorPlanPendingBlob] = useState<Blob | null>(null);
 
-  // New Table Modal
+  // Modals
   const [showNewTableModal, setShowNewTableModal] = useState(false);
   const [newTableData, setNewTableData] = useState({
     name: '',
@@ -83,7 +83,6 @@ export const MesasLayoutModule: React.FC = () => {
     capacity: 10
   });
 
-  // New Element Modal
   const [showNewElementModal, setShowNewElementModal] = useState(false);
   const [newElementData, setNewElementData] = useState({
     name: 'Pista de Baile',
@@ -92,14 +91,11 @@ export const MesasLayoutModule: React.FC = () => {
     height: 180
   });
 
-  // Save Version Modal
   const [showSaveVersionModal, setShowSaveVersionModal] = useState(false);
   const [versionName, setVersionName] = useState('');
-
-  // Info Help Modal
   const [showHelpModal, setShowHelpModal] = useState(false);
 
-  // Permissions & Locking
+  // Permissions & 2D Lock
   const isNovios = user?.role === 'NOVIOS';
   const isPlannerVirtual = Boolean(
     !currentWedding?.package_type ||
@@ -108,7 +104,7 @@ export const MesasLayoutModule: React.FC = () => {
   );
   const hasLayout2dAddon = Boolean(currentWedding?.has_layout_2d);
   const isLockedForVirtualNovios = isNovios && isPlannerVirtual && !hasLayout2dAddon;
-  const isLocked = false; // Operative 5-day lock if applicable
+  const isLocked = false;
 
   const layoutUpgradeWhatsAppUrl =
     'https://wa.me/528128663440?text=' +
@@ -117,15 +113,9 @@ export const MesasLayoutModule: React.FC = () => {
   // PDF Export
   const handleDownloadPDF = () => {
     try {
-      const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const weddingName = currentWedding?.name || 'Boda';
       const cleanFileName = `Layout_Mesas_${weddingName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ_-]/g, '_')}.pdf`;
-
       const primaryColor: [number, number, number] = [43, 40, 38];
       const accentColor: [number, number, number] = [196, 139, 129];
       const secondaryColor: [number, number, number] = [125, 111, 107];
@@ -133,38 +123,31 @@ export const MesasLayoutModule: React.FC = () => {
 
       const totalCapacity = tables.reduce((acc, t) => acc + (t.capacity || 0), 0);
       const totalAssigned = tables.reduce((acc, t) => acc + (t.used_seats || (t.guests?.length || 0)), 0);
-
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 16;
       const contentWidth = pageWidth - (margin * 2);
-
       let currentY = 16;
 
       const renderHeader = () => {
         doc.setFillColor(250, 247, 245);
         doc.roundedRect(margin, 12, contentWidth, 34, 3, 3, 'F');
-
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
         doc.setTextColor(...accentColor);
         doc.text(isPlannerVirtual ? 'LAZO STUDIO' : 'LAZO STUDIO  ·  VIVA LA BRIDE', margin + 6, 20);
-
         doc.setFont('times', 'bold');
         doc.setFontSize(18);
         doc.setTextColor(...primaryColor);
         doc.text('DISTRIBUCIÓN DE MESAS Y LAYOUT', margin + 6, 28);
-
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8.5);
         doc.setTextColor(...secondaryColor);
         const metaLine = `${weddingName}   |   ${tables.length} Mesas   |   ${totalCapacity} Lugares   |   ${totalAssigned} Asignados`;
         doc.text(metaLine, margin + 6, 36);
-
         doc.setDrawColor(...accentColor);
         doc.setLineWidth(0.5);
         doc.line(margin + 6, 40, margin + contentWidth - 6, 40);
-
         currentY = 52;
       };
 
@@ -172,7 +155,6 @@ export const MesasLayoutModule: React.FC = () => {
         doc.setDrawColor(...borderColor);
         doc.setLineWidth(0.3);
         doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
-
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7.5);
         doc.setTextColor(...secondaryColor);
@@ -189,13 +171,12 @@ export const MesasLayoutModule: React.FC = () => {
       let pageCount = 1;
       renderHeader();
 
-      // Summary Cards
+      // Summary
       doc.setFillColor(254, 252, 250);
       doc.roundedRect(margin, currentY, contentWidth, 14, 2, 2, 'F');
       doc.setDrawColor(...borderColor);
       doc.setLineWidth(0.2);
       doc.roundedRect(margin, currentY, contentWidth, 14, 2, 2, 'D');
-
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
       doc.setTextColor(...primaryColor);
@@ -205,11 +186,10 @@ export const MesasLayoutModule: React.FC = () => {
       doc.text(`Sin Asignar: ${unassignedGuests.length}`, margin + 145, currentY + 9);
       currentY += 20;
 
-      // Render Tables
+      // Tables
       tables.forEach(table => {
         const assignedGuests = table.guests || [];
         const neededHeight = 16 + Math.ceil(assignedGuests.length / 2) * 6;
-
         if (currentY + neededHeight > pageHeight - 24) {
           renderFooter(pageCount);
           doc.addPage();
@@ -217,14 +197,12 @@ export const MesasLayoutModule: React.FC = () => {
           renderHeader();
         }
 
-        // Table Header
         doc.setFillColor(242, 237, 233);
         doc.roundedRect(margin, currentY, contentWidth, 8, 1.5, 1.5, 'F');
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8.5);
         doc.setTextColor(...primaryColor);
         doc.text(`${table.name.toUpperCase()}  (${table.type})`, margin + 4, currentY + 5.5);
-
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
         doc.setTextColor(...secondaryColor);
@@ -241,14 +219,11 @@ export const MesasLayoutModule: React.FC = () => {
           for (let i = 0; i < assignedGuests.length; i += 2) {
             const g1 = assignedGuests[i];
             const g2 = assignedGuests[i + 1];
-
             doc.setFont('helvetica', 'normal');
             doc.setFontSize(7.5);
             doc.setTextColor(...primaryColor);
-
             const g1Text = `• ${g1.first_name} ${g1.last_name || ''}${g1.companion_count ? ` (+${g1.companion_count})` : ''}`;
             doc.text(doc.splitTextToSize(g1Text, (contentWidth / 2) - 8)[0] || '', margin + 4, currentY + 4);
-
             if (g2) {
               const g2Text = `• ${g2.first_name} ${g2.last_name || ''}${g2.companion_count ? ` (+${g2.companion_count})` : ''}`;
               doc.text(doc.splitTextToSize(g2Text, (contentWidth / 2) - 8)[0] || '', margin + (contentWidth / 2) + 4, currentY + 4);
@@ -315,7 +290,7 @@ export const MesasLayoutModule: React.FC = () => {
 
   // Dragging handlers for canvas items
   const handleMouseDown = (e: React.MouseEvent, id: string, type: 'table' | 'element') => {
-    if (isLocked || handToolActive) return;
+    if (isLocked || handToolActive || resizingTableId) return;
     e.stopPropagation();
     setDraggingId(id);
     setDragType(type);
@@ -326,7 +301,23 @@ export const MesasLayoutModule: React.FC = () => {
     });
   };
 
+  // Resize handler start
+  const handleResizeMouseDown = (e: React.MouseEvent, table: Table) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setResizingTableId(table.id);
+    const currentW = table.width || (table.type === 'imperial' ? 190 : table.type === 'rectangular' ? 160 : 120);
+    const currentH = table.height || (table.type === 'imperial' ? 95 : table.type === 'rectangular' ? 95 : 120);
+    setResizeStart({
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      width: currentW,
+      height: currentH
+    });
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    // 1. Pan mode
     if (isPanning) {
       setPanOffset({
         x: e.clientX - panStart.x,
@@ -335,6 +326,27 @@ export const MesasLayoutModule: React.FC = () => {
       return;
     }
 
+    // 2. Interactive table resizing
+    if (resizingTableId) {
+      const dx = (e.clientX - resizeStart.mouseX) / zoomLevel;
+      const dy = (e.clientY - resizeStart.mouseY) / zoomLevel;
+
+      setTables(prev => prev.map(t => {
+        if (t.id !== resizingTableId) return t;
+        if (t.type === 'circular') {
+          const delta = (dx + dy) / 2;
+          const newDim = Math.max(50, Math.min(260, Math.round(resizeStart.width + delta)));
+          return { ...t, width: newDim, height: newDim };
+        } else {
+          const newW = Math.max(70, Math.min(360, Math.round(resizeStart.width + dx)));
+          const newH = Math.max(45, Math.min(260, Math.round(resizeStart.height + dy)));
+          return { ...t, width: newW, height: newH };
+        }
+      }));
+      return;
+    }
+
+    // 3. Moving items
     if (!draggingId || !dragType || isLocked) return;
     const canvas = e.currentTarget.getBoundingClientRect();
     const newX = Math.max(10, (e.clientX - canvas.left - panOffset.x) / zoomLevel - dragOffset.x);
@@ -353,6 +365,26 @@ export const MesasLayoutModule: React.FC = () => {
       return;
     }
 
+    // Finished resizing table
+    if (resizingTableId) {
+      const targetId = resizingTableId;
+      setResizingTableId(null);
+      const table = tables.find(t => t.id === targetId);
+      if (table && currentWedding) {
+        try {
+          await fetch(`/api/weddings/${currentWedding.id}/tables/${table.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ width: table.width, height: table.height })
+          });
+        } catch (err) {
+          console.error('Error saving table size:', err);
+        }
+      }
+      return;
+    }
+
+    // Finished moving item
     if (!draggingId || !dragType || isLocked) {
       setDraggingId(null);
       setDragType(null);
@@ -401,6 +433,22 @@ export const MesasLayoutModule: React.FC = () => {
     }
   };
 
+  // Modify Table Size directly via Inspector
+  const handleUpdateTableSize = async (tableId: string, width: number, height: number) => {
+    setTables(prev => prev.map(t => t.id === tableId ? { ...t, width, height } : t));
+    if (selectedTable?.id === tableId) {
+      setSelectedTable(prev => prev ? { ...prev, width, height } : null);
+    }
+    if (!currentWedding) return;
+    try {
+      await fetch(`/api/weddings/${currentWedding.id}/tables/${tableId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ width, height })
+      });
+    } catch {}
+  };
+
   // Auto-Acomodo (Neat symmetrical layout)
   const handleAutoArrange = async () => {
     if (!currentWedding || !token || tables.length === 0) return;
@@ -426,8 +474,8 @@ export const MesasLayoutModule: React.FC = () => {
     const cols = Math.min(4, Math.max(3, Math.ceil(Math.sqrt(tables.length))));
     const startX = 60;
     const startY = 60;
-    const stepX = 200 * tableScale;
-    const stepY = 180 * tableScale;
+    const stepX = 190;
+    const stepY = 170;
 
     const updatedTables = tables.map((t, idx) => {
       const col = idx % cols;
@@ -553,6 +601,8 @@ export const MesasLayoutModule: React.FC = () => {
   const handleCreateTable = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentWedding || isLocked) return;
+    const defaultW = newTableData.type === 'imperial' ? 190 : newTableData.type === 'rectangular' ? 160 : 120;
+    const defaultH = newTableData.type === 'imperial' ? 95 : newTableData.type === 'rectangular' ? 95 : 120;
     try {
       const res = await fetch(`/api/weddings/${currentWedding.id}/tables`, {
         method: 'POST',
@@ -561,7 +611,9 @@ export const MesasLayoutModule: React.FC = () => {
           ...newTableData,
           x: 100 + (tables.length % 5) * 60,
           y: 100 + Math.floor(tables.length / 5) * 60,
-          rotation: 0
+          rotation: 0,
+          width: defaultW,
+          height: defaultH
         })
       });
       if (res.ok) {
@@ -759,7 +811,7 @@ export const MesasLayoutModule: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Top Header & Global Actions */}
+      {/* 1. Header: Clean & Elegant */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2.5 mb-1">
@@ -772,29 +824,26 @@ export const MesasLayoutModule: React.FC = () => {
           </h2>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Help Tooltip Button */}
+        <div className="flex items-center space-x-2.5">
           <button
             type="button"
             onClick={() => setShowHelpModal(true)}
             className="w-9 h-9 rounded-xl bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B] hover:text-[#2B2826] flex items-center justify-center transition shadow-2xs cursor-pointer"
-            title="Ayuda y guía de asignación de mesas"
+            title="Ayuda y guía de uso"
           >
             <HelpCircle className="w-4 h-4" />
           </button>
 
-          {/* Download PDF */}
           <button
             type="button"
             onClick={handleDownloadPDF}
             className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#F7F3EE] text-[#332A28] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
-            title="Descargar lista oficial de mesas y asientos en PDF"
+            title="Descargar distribución en PDF"
           >
             <FileDown className="w-3.5 h-3.5 text-[#C48B81]" />
             <span>Descargar PDF</span>
           </button>
 
-          {/* Add Table */}
           {!isLocked && (
             <button
               type="button"
@@ -802,15 +851,14 @@ export const MesasLayoutModule: React.FC = () => {
               className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#2B2826] hover:bg-black text-white text-xs font-semibold rounded-xl shadow-2xs transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>+ Agregar</span>
+              <span>+ Agregar Mesa</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* KPI Top Strip */}
+      {/* 2. KPI Summary Strip */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-        {/* Left Progress Card */}
         <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-3">
           <div className="flex items-start justify-between">
             <div>
@@ -825,7 +873,6 @@ export const MesasLayoutModule: React.FC = () => {
               {progressPercent}%
             </span>
           </div>
-          {/* Progress bar */}
           <div className="w-full bg-[#FAF7F5] h-2 rounded-full overflow-hidden border border-[#EFE8E1]">
             <div
               className="bg-[#C48B81] h-full rounded-full transition-all duration-300"
@@ -834,7 +881,6 @@ export const MesasLayoutModule: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Alert / Capacity Card */}
         <div className={`p-4 sm:p-5 rounded-2xl border shadow-2xs flex items-center justify-between gap-3 ${
           capacityDelta >= 0
             ? 'bg-[#FEF8ED] border-[#F6E9CF] text-[#7A602B]'
@@ -861,12 +907,16 @@ export const MesasLayoutModule: React.FC = () => {
         </div>
       </div>
 
-      {/* View Switcher: Lista de mesas FIRST, Mapa SECOND */}
+      {/* 3. Unified Control Bar: Tabs & Canvas Tools (No redundant buttons!) */}
       <div className="flex flex-wrap items-center justify-between gap-3">
+        {/* Tab switch: Lista de mesas first, Mapa second */}
         <div className="inline-flex p-1 bg-white rounded-2xl border border-[#EFE8E1] shadow-2xs">
           <button
             type="button"
-            onClick={() => setViewMode('lista')}
+            onClick={() => {
+              setViewMode('lista');
+              setSelectedTable(null);
+            }}
             className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
               viewMode === 'lista'
                 ? 'bg-[#2B2826] text-white shadow-2xs'
@@ -889,40 +939,29 @@ export const MesasLayoutModule: React.FC = () => {
           </button>
         </div>
 
-        {/* Toolbar when in Mapa mode */}
+        {/* Unified Canvas Tools (Only shown in Mapa mode when unlocked) */}
         {viewMode === 'mapa' && !isLockedForVirtualNovios && (
           <div className="flex flex-wrap items-center gap-2">
-            {/* Table scale adjustment slider */}
-            <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-white rounded-xl border border-[#EFE8E1] shadow-2xs text-xs text-[#7D6F6B]">
-              <Sliders className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span className="text-[11px] font-semibold text-[#2B2826]">Tamaño mesas:</span>
-              <input
-                type="range"
-                min="0.75"
-                max="1.5"
-                step="0.05"
-                value={tableScale}
-                onChange={e => setTableScale(parseFloat(e.target.value))}
-                className="w-20 accent-[#C48B81] cursor-pointer"
-                title="Ajustar tamaño de las mesas en el plano"
-              />
-              <span className="font-mono text-[10px] text-[#2B2826] font-semibold">
-                {Math.round(tableScale * 100)}%
-              </span>
-            </div>
-
-            {/* Venue Floor Plan Button */}
             <button
               type="button"
               onClick={() => setShowFloorPlanModal(true)}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
-              title="Subir o configurar plano arquitectónico del venue"
+              title="Cargar o cambiar plano base del venue (PDF o imagen)"
             >
               <ImageIcon className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Plano Base Venue</span>
+              <span>Plano del Venue</span>
             </button>
 
-            {/* Auto-arrange & Center */}
+            <button
+              type="button"
+              onClick={() => setShowNewElementModal(true)}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
+              title="Agregar pista de baile, escenario o barra"
+            >
+              <Layers className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>+ Pista / Elemento</span>
+            </button>
+
             <button
               type="button"
               onClick={handleAutoArrange}
@@ -937,25 +976,35 @@ export const MesasLayoutModule: React.FC = () => {
               type="button"
               onClick={handleCenterCanvas}
               className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
-              title="Centrar y reajustar lienzo"
+              title="Centrar vista del plano"
             >
               <Compass className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Centrar</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowSaveVersionModal(true)}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
+              title="Guardar versión de respaldo"
+            >
+              <Save className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Guardar Versión</span>
             </button>
           </div>
         )}
       </div>
 
-      {/* Content depending on viewMode & permissions */}
+      {/* 4. Tab Content */}
       {viewMode === 'lista' ? (
-        /* Full Table List View (Default tab) */
+        /* Lista de Mesas Tab */
         <div className="space-y-6">
           {tables.length === 0 ? (
             <div className="bg-white rounded-3xl p-10 border border-[#EFE8E1] text-center space-y-3">
               <Users className="w-10 h-10 text-[#C48B81] mx-auto opacity-80" />
               <h3 className="font-serif text-xl font-bold text-[#2B2826]">Aún no has creado mesas</h3>
               <p className="text-xs text-[#7D6F6B] max-w-md mx-auto leading-relaxed">
-                Empieza agregando tu primera mesa (circular, rectangular o imperial) y asigna a tus invitados confirmados.
+                Empieza agregando tu primera mesa (circular, rectangular o imperial) y sienta a tus invitados confirmados.
               </p>
               {!isLocked && (
                 <button
@@ -1009,7 +1058,6 @@ export const MesasLayoutModule: React.FC = () => {
                         )}
                       </div>
 
-                      {/* Capacity Bar */}
                       <div className="space-y-1">
                         <div className="flex items-center justify-between text-xs font-medium">
                           <span className="text-[#7D6F6B]">Ocupación</span>
@@ -1029,7 +1077,6 @@ export const MesasLayoutModule: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Guest list */}
                       <div className="pt-2 border-t border-[#FAF7F5] space-y-1.5">
                         <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A7E72] block">
                           Invitados ({assignedGuests.length})
@@ -1072,7 +1119,6 @@ export const MesasLayoutModule: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Quick assign guest dropdown */}
                     {!isLocked && unassignedGuests.length > 0 && (
                       <div className="pt-2 border-t border-[#FAF7F5]">
                         <select
@@ -1101,9 +1147,9 @@ export const MesasLayoutModule: React.FC = () => {
           )}
         </div>
       ) : (
-        /* Mapa 2D View */
+        /* Mapa 2D Tab */
         isLockedForVirtualNovios ? (
-          /* Locked State for Virtual Novios without 2D Add-on */
+          /* Lock state with Quiet Luxury card */
           <div className="space-y-6">
             <div className="bg-gradient-to-br from-[#FFFFFF] via-[#FAF7F5] to-[#F7EDEB]/70 rounded-[32px] p-6 sm:p-8 border border-[#ECD9D5] shadow-[0_12px_36px_-8px_rgba(196,139,129,0.12)] relative overflow-hidden">
               <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-[#C48B81]/10 blur-3xl pointer-events-none" />
@@ -1166,23 +1212,23 @@ export const MesasLayoutModule: React.FC = () => {
             </div>
           </div>
         ) : (
-          /* Unlocked Full 2D Seating Chart + Right Guests Sidebar */
+          /* Unlocked Interactive Canvas + Dynamic Inspector / Sidebar */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* 2D Canvas Area */}
-            <div className={fullCanvasMode ? 'lg:col-span-12' : 'lg:col-span-8'}>
+            {/* 2D Canvas Area (8 cols) */}
+            <div className="lg:col-span-8">
               <div
                 onMouseDown={handleCanvasMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
-                className={`w-full h-[640px] bg-[#FDFBF9] rounded-3xl border border-[#EFE8E1] relative overflow-hidden select-none shadow-xs ${
+                className={`w-full h-[650px] bg-[#FDFBF9] rounded-3xl border border-[#EFE8E1] relative overflow-hidden select-none shadow-xs ${
                   handToolActive ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'
-                } ${lockTouchScroll ? 'touch-none overscroll-contain' : ''}`}
+                }`}
                 style={{
                   backgroundImage: 'radial-gradient(#D2C4B4 1.5px, transparent 1.5px)',
                   backgroundSize: '24px 24px'
                 }}
               >
-                {/* Optional Venue Floor Plan Layer */}
+                {/* Reference Venue Floor Plan (PDF/Image) */}
                 {floorPlanUrl && floorPlanVisible && (
                   floorPlanUrl.toLowerCase().includes('.pdf') ? (
                     <iframe
@@ -1215,7 +1261,7 @@ export const MesasLayoutModule: React.FC = () => {
                     left: 0
                   }}
                 >
-                  {/* Render Elements (Pista de Baile, Escenario, etc.) */}
+                  {/* Layout Elements (Pista de Baile, etc.) */}
                   {elements.map(el => (
                     <div
                       key={el.id}
@@ -1227,7 +1273,7 @@ export const MesasLayoutModule: React.FC = () => {
                         height: `${el.height}px`,
                         transform: `rotate(${el.rotation || 0}deg)`
                       }}
-                      className="absolute rounded-3xl border-2 border-dashed border-[#D2C4B4] bg-white/40 flex flex-col items-center justify-center p-3 font-serif font-bold text-xs uppercase tracking-widest text-[#7D6F6B] shadow-xs cursor-move hover:border-[#C48B81] group"
+                      className="absolute rounded-3xl border-2 border-dashed border-[#D2C4B4] bg-white/40 flex flex-col items-center justify-center p-3 font-serif font-bold text-xs uppercase tracking-widest text-[#7D6F6B] shadow-xs cursor-move hover:border-[#C48B81] group select-none"
                     >
                       <span>{el.name}</span>
                       <span className="text-[9px] font-sans font-normal opacity-60 mt-0.5 lowercase">
@@ -1238,7 +1284,7 @@ export const MesasLayoutModule: React.FC = () => {
                           <button
                             type="button"
                             onClick={e => handleRotateElement(e, el)}
-                            title="Girar elemento 45°"
+                            title="Girar 45°"
                             className="bg-[#C48B81] text-white p-1 rounded-full hover:bg-[#A86B60] shadow cursor-pointer"
                           >
                             <RotateCw className="w-2.5 h-2.5" />
@@ -1256,23 +1302,21 @@ export const MesasLayoutModule: React.FC = () => {
                     </div>
                   ))}
 
-                  {/* Render Tables with Adjustable Size & Proportional Seats */}
+                  {/* Render Tables with Custom Width / Height & Interactive Corner Resizing */}
                   {tables.map((table, idx) => {
                     const isSelected = selectedTable?.id === table.id;
                     const capacity = Math.max(1, table.capacity || 10);
                     const usedSeats = table.used_seats || 0;
 
-                    // Proportional sizing based on tableScale and previous configuration
-                    const circDiameter = Math.round(128 * tableScale);
-                    const circDiscDiameter = Math.round(76 * tableScale);
-                    const circSeatRadius = Math.round(52 * tableScale);
-                    const circCenter = circDiameter / 2;
+                    // Width & height per table (with sensible defaults)
+                    const tableW = table.width || (table.type === 'imperial' ? 190 : table.type === 'rectangular' ? 160 : 120);
+                    const tableH = table.height || (table.type === 'imperial' ? 95 : table.type === 'rectangular' ? 95 : 120);
 
-                    const rectWidth = Math.round(160 * tableScale);
-                    const rectHeight = Math.round(96 * tableScale);
-
-                    const impWidth = Math.round(200 * tableScale);
-                    const impHeight = Math.round(100 * tableScale);
+                    // Circular calculations
+                    const circDiameter = tableW;
+                    const circRadius = circDiameter / 2;
+                    const circSeatRadius = Math.max(20, circRadius - 10);
+                    const circDiscDiameter = Math.max(36, circDiameter - 36);
 
                     return (
                       <div
@@ -1285,33 +1329,35 @@ export const MesasLayoutModule: React.FC = () => {
                         style={{
                           left: `${table.x}px`,
                           top: `${table.y}px`,
-                          transform: `rotate(${table.rotation || 0}deg)`
+                          transform: `rotate(${table.rotation || 0}deg)`,
+                          width: `${tableW}px`,
+                          height: `${tableH}px`
                         }}
                         className={`absolute cursor-move select-none transition-shadow ${
-                          isSelected ? 'z-20' : 'z-10'
+                          isSelected ? 'z-30' : 'z-10'
                         }`}
                       >
                         {table.type === 'circular' ? (
                           /* Circular Table with Radial Seats */
-                          <div
-                            style={{ width: `${circDiameter}px`, height: `${circDiameter}px` }}
-                            className="relative flex items-center justify-center"
-                          >
+                          <div className="relative w-full h-full flex items-center justify-center">
                             {/* Radial seats calculated around perimeter */}
                             {Array.from({ length: capacity }).map((_, seatIdx) => {
                               const angle = (2 * Math.PI * seatIdx) / capacity - Math.PI / 2;
-                              const sx = circCenter + circSeatRadius * Math.cos(angle);
-                              const sy = circCenter + circSeatRadius * Math.sin(angle);
+                              const sx = circRadius + circSeatRadius * Math.cos(angle);
+                              const sy = circRadius + circSeatRadius * Math.sin(angle);
                               const isOccupied = seatIdx < usedSeats;
+                              const seatSize = Math.max(8, Math.min(18, Math.round(circDiameter * 0.12)));
 
                               return (
                                 <div
                                   key={seatIdx}
                                   style={{
-                                    left: `${sx - 8}px`,
-                                    top: `${sy - 8}px`
+                                    left: `${sx - seatSize / 2}px`,
+                                    top: `${sy - seatSize / 2}px`,
+                                    width: `${seatSize}px`,
+                                    height: `${seatSize}px`
                                   }}
-                                  className={`absolute w-4 h-4 rounded-full transition-colors ${
+                                  className={`absolute rounded-full transition-colors ${
                                     isOccupied
                                       ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
                                       : 'bg-white border border-[#D2C4B4]'
@@ -1326,14 +1372,14 @@ export const MesasLayoutModule: React.FC = () => {
                               style={{ width: `${circDiscDiameter}px`, height: `${circDiscDiameter}px` }}
                               className={`rounded-full bg-white border flex flex-col items-center justify-center p-1 text-center transition shadow-xs ${
                                 isSelected
-                                  ? 'border-[#C48B81] ring-2 ring-[#C48B81]/40 shadow-md'
+                                  ? 'border-[#C48B81] ring-2 ring-[#C48B81] shadow-md'
                                   : 'border-[#E8DFD5] hover:border-[#C48B81]'
                               }`}
                             >
                               <span className="font-serif font-bold text-xs text-[#2B2826] leading-none">
                                 #{idx + 1}
                               </span>
-                              <span className="text-[9px] text-[#7D6F6B] truncate max-w-[64px] mt-0.5 leading-tight">
+                              <span className="text-[9px] text-[#7D6F6B] truncate max-w-[85%] mt-0.5 leading-tight">
                                 {table.name || 'Sin nombre'}
                               </span>
                               <span className="text-[8.5px] font-semibold text-[#8A7E72] mt-0.5">
@@ -1343,21 +1389,15 @@ export const MesasLayoutModule: React.FC = () => {
                           </div>
                         ) : (
                           /* Rectangular / Imperial Table with Perimeter Seats */
-                          <div
-                            style={{
-                              width: `${table.type === 'imperial' ? impWidth : rectWidth}px`,
-                              height: `${table.type === 'imperial' ? impHeight : rectHeight}px`
-                            }}
-                            className="relative flex items-center justify-center"
-                          >
+                          <div className="relative w-full h-full flex items-center justify-center">
                             {/* Top Edge Seats */}
-                            <div className="absolute -top-2.5 left-0 right-0 flex justify-around px-3">
+                            <div className="absolute -top-2 left-0 right-0 flex justify-around px-2">
                               {Array.from({ length: Math.floor(capacity / 2) }).map((_, seatIdx) => {
                                 const isOccupied = seatIdx < usedSeats;
                                 return (
                                   <div
                                     key={`top-${seatIdx}`}
-                                    className={`w-4 h-4 rounded-full transition-colors ${
+                                    className={`w-3.5 h-3.5 rounded-full transition-colors ${
                                       isOccupied
                                         ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
                                         : 'bg-white border border-[#D2C4B4]'
@@ -1368,34 +1408,34 @@ export const MesasLayoutModule: React.FC = () => {
                               })}
                             </div>
 
-                            {/* Table center card */}
+                            {/* Center table rectangle */}
                             <div
-                              className={`w-full h-full rounded-2xl bg-white border flex flex-col items-center justify-center px-3 py-1.5 text-center transition shadow-xs ${
+                              className={`w-full h-full rounded-2xl bg-white border flex flex-col items-center justify-center px-2 py-1 text-center transition shadow-xs ${
                                 isSelected
-                                  ? 'border-[#C48B81] ring-2 ring-[#C48B81]/40 shadow-md'
+                                  ? 'border-[#C48B81] ring-2 ring-[#C48B81] shadow-md'
                                   : 'border-[#E8DFD5] hover:border-[#C48B81]'
                               }`}
                             >
                               <span className="font-serif font-bold text-xs text-[#2B2826] leading-none">
                                 #{idx + 1}
                               </span>
-                              <span className="text-[9.5px] text-[#7D6F6B] truncate max-w-[120px] mt-0.5 leading-tight">
+                              <span className="text-[9px] text-[#7D6F6B] truncate max-w-[85%] mt-0.5 leading-tight">
                                 {table.name || 'Sin nombre'}
                               </span>
-                              <span className="text-[9px] font-semibold text-[#8A7E72] mt-0.5">
+                              <span className="text-[8.5px] font-semibold text-[#8A7E72] mt-0.5">
                                 {usedSeats}/{capacity}
                               </span>
                             </div>
 
                             {/* Bottom Edge Seats */}
-                            <div className="absolute -bottom-2.5 left-0 right-0 flex justify-around px-3">
+                            <div className="absolute -bottom-2 left-0 right-0 flex justify-around px-2">
                               {Array.from({ length: capacity - Math.floor(capacity / 2) }).map((_, seatIdx) => {
                                 const globalIdx = Math.floor(capacity / 2) + seatIdx;
                                 const isOccupied = globalIdx < usedSeats;
                                 return (
                                   <div
                                     key={`bot-${seatIdx}`}
-                                    className={`w-4 h-4 rounded-full transition-colors ${
+                                    className={`w-3.5 h-3.5 rounded-full transition-colors ${
                                       isOccupied
                                         ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
                                         : 'bg-white border border-[#D2C4B4]'
@@ -1405,127 +1445,46 @@ export const MesasLayoutModule: React.FC = () => {
                                 );
                               })}
                             </div>
-
-                            {/* Rotate button on hover */}
-                            {!isLocked && isSelected && (
-                              <button
-                                type="button"
-                                onClick={e => handleRotate(e, table)}
-                                title="Girar mesa 45°"
-                                className="absolute -top-3 -right-3 bg-[#C48B81] text-white p-1 rounded-full hover:bg-[#A86B60] shadow transition cursor-pointer"
-                              >
-                                <RotateCw className="w-2.5 h-2.5" />
-                              </button>
-                            )}
                           </div>
+                        )}
+
+                        {/* Interactive Resize Handle (Shown when selected) */}
+                        {isSelected && !isLocked && (
+                          <div
+                            onMouseDown={e => handleResizeMouseDown(e, table)}
+                            className="absolute -bottom-1.5 -right-1.5 w-4 h-4 bg-white border-2 border-[#C48B81] rounded-full cursor-se-resize shadow-md hover:scale-125 transition-transform z-40"
+                            title="Arrastra para cambiar el tamaño de la mesa"
+                          />
                         )}
                       </div>
                     );
                   })}
                 </div>
 
-                {/* Floating Canvas Controls Toolbar (Right side) */}
-                <div className="absolute top-4 right-4 z-20 bg-white/95 backdrop-blur-md rounded-2xl border border-[#EFE8E1] shadow-2xs p-1.5 flex flex-col items-center space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel(prev => Math.min(1.6, prev + 0.1))}
-                    className="p-1.5 rounded-xl text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer"
-                    title="Acercar (Zoom In)"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-
-                  <div className="w-1.5 h-16 bg-[#FAF7F5] rounded-full relative flex items-center justify-center">
-                    <div
-                      className="w-3.5 h-3.5 bg-white border-2 border-[#C48B81] rounded-full shadow-2xs absolute"
-                      style={{
-                        top: `${Math.round(((1.6 - zoomLevel) / 1.0) * 80)}%`
-                      }}
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setZoomLevel(prev => Math.max(0.6, prev - 0.1))}
-                    className="p-1.5 rounded-xl text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer"
-                    title="Alejar (Zoom Out)"
-                  >
-                    <span className="font-bold text-xs leading-none">−</span>
-                  </button>
-
-                  <div className="w-4 h-px bg-[#EFE8E1]" />
-
-                  {/* Hand pan tool */}
-                  <button
-                    type="button"
-                    onClick={() => setHandToolActive(!handToolActive)}
-                    className={`p-1.5 rounded-xl transition cursor-pointer ${
-                      handToolActive
-                        ? 'bg-[#2B2826] text-white'
-                        : 'text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5]'
-                    }`}
-                    title="Herramienta Mano para mover lienzo"
-                  >
-                    <Move className="w-3.5 h-3.5" />
-                  </button>
-
-                  {/* Reset view */}
-                  <button
-                    type="button"
-                    onClick={handleCenterCanvas}
-                    className="p-1.5 rounded-xl text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer"
-                    title="Restablecer vista"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                {/* Bottom Canvas Legend */}
-                <div className="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-[#EFE8E1] text-[11px] font-medium text-[#7D6F6B] flex items-center space-x-4 shadow-2xs">
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#C48B81]" />
-                    <span>Lugar ocupado</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-white border border-[#D2C4B4]" />
-                    <span>Lugar disponible</span>
-                  </div>
-                  <div className="flex items-center space-x-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#2B2826]" />
-                    <span>Mesa bloqueada</span>
-                  </div>
-                </div>
-
-                {/* Venue Floor Plan Floating Controls (Previous configuration restored) */}
+                {/* Floating Discreet Venue Plan Pill (Top Left) */}
                 {floorPlanUrl && (
-                  <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-[#EFE8E1] text-[11px] space-y-1.5 shadow-2xs">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center space-x-1.5 font-bold text-xs text-[#2B2826]">
-                        <ImageIcon className="w-3.5 h-3.5 text-[#C48B81]" />
-                        <span>Plano Base Venue</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <button
-                          type="button"
-                          onClick={() => setFloorPlanVisible(!floorPlanVisible)}
-                          className="p-1 rounded-md text-[#786C68] hover:text-[#2B2826] hover:bg-[#F2ECE7] transition cursor-pointer"
-                          title={floorPlanVisible ? 'Ocultar plano' : 'Mostrar plano'}
-                        >
-                          {floorPlanVisible ? <Eye className="w-3.5 h-3.5 text-[#C48B81]" /> : <EyeOff className="w-3.5 h-3.5 text-stone-400" />}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFloorPlanFitMode(floorPlanFitMode === 'contain' ? 'cover' : 'contain')}
-                          className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B] hover:bg-[#FAF8F5]"
-                          title="Ajuste: Contener o Cubrir todo el lienzo"
-                        >
-                          {floorPlanFitMode === 'contain' ? 'Ajustar' : 'Llenar'}
-                        </button>
-                      </div>
-                    </div>
+                  <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-[#EFE8E1] text-[11px] font-medium text-[#7D6F6B] flex items-center space-x-2.5 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={() => setFloorPlanVisible(!floorPlanVisible)}
+                      className="flex items-center space-x-1 hover:text-[#2B2826] cursor-pointer"
+                      title={floorPlanVisible ? 'Ocultar plano' : 'Mostrar plano'}
+                    >
+                      {floorPlanVisible ? <Eye className="w-3.5 h-3.5 text-[#C48B81]" /> : <EyeOff className="w-3.5 h-3.5 text-stone-400" />}
+                      <span>Plano</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFloorPlanFitMode(floorPlanFitMode === 'contain' ? 'cover' : 'contain')}
+                      className="text-[9.5px] font-bold uppercase bg-[#FAF8F5] border border-[#EFE8E1] px-1.5 py-0.5 rounded-md hover:bg-[#F2ECE7] cursor-pointer"
+                    >
+                      {floorPlanFitMode === 'contain' ? 'Ajustar' : 'Llenar'}
+                    </button>
+
                     {floorPlanVisible && (
-                      <div className="flex items-center space-x-2 pt-1 border-t border-[#FAF7F5]">
-                        <span className="text-[9px] text-[#8A7E7A]">Opacidad:</span>
+                      <div className="flex items-center space-x-1.5 border-l border-[#EFE8E1] pl-2">
+                        <span className="text-[9.5px]">Opac:</span>
                         <input
                           type="range"
                           min="0.1"
@@ -1533,258 +1492,445 @@ export const MesasLayoutModule: React.FC = () => {
                           step="0.05"
                           value={floorPlanOpacity}
                           onChange={e => setFloorPlanOpacity(parseFloat(e.target.value))}
-                          className="w-20 accent-[#C48B81] cursor-pointer"
+                          className="w-14 accent-[#C48B81] cursor-pointer"
                         />
-                        <span className="text-[9px] font-mono text-[#8A7E7A]">{Math.round(floorPlanOpacity * 100)}%</span>
                       </div>
                     )}
                   </div>
                 )}
-              </div>
 
-              {/* Extra Canvas Actions Strip */}
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center space-x-2">
+                {/* Floating Clean Zoom Controls (Top Right) */}
+                <div className="absolute top-4 right-4 z-20 bg-white/95 backdrop-blur-md rounded-2xl border border-[#EFE8E1] shadow-2xs p-1 flex flex-col items-center space-y-1">
                   <button
                     type="button"
-                    onClick={() => setShowNewElementModal(true)}
-                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF7F5] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
+                    onClick={() => setZoomLevel(prev => Math.min(1.6, prev + 0.1))}
+                    className="p-1.5 rounded-xl text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer"
+                    title="Acercar"
                   >
-                    <Layers className="w-3.5 h-3.5 text-[#C48B81]" />
-                    <span>Pista de Baile</span>
+                    <Plus className="w-3.5 h-3.5" />
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => setShowFloorPlanModal(true)}
-                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF7F5] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
+                    onClick={() => setZoomLevel(prev => Math.max(0.6, prev - 0.1))}
+                    className="p-1.5 rounded-xl text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer"
+                    title="Alejar"
                   >
-                    <ImageIcon className="w-3.5 h-3.5 text-[#C48B81]" />
-                    <span>Configurar Plano Base</span>
+                    <span className="font-bold text-xs leading-none">−</span>
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => setShowSaveVersionModal(true)}
-                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF7F5] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
+                    onClick={() => setHandToolActive(!handToolActive)}
+                    className={`p-1.5 rounded-xl transition cursor-pointer ${
+                      handToolActive ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5]'
+                    }`}
+                    title="Herramienta Mano para mover plano"
                   >
-                    <Save className="w-3.5 h-3.5 text-[#C48B81]" />
-                    <span>Guardar Versión</span>
+                    <Move className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCenterCanvas}
+                    className="p-1.5 rounded-xl text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer"
+                    title="Restablecer centro"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  {/* Fijar Lienzo Táctil */}
-                  <button
-                    type="button"
-                    onClick={() => setLockTouchScroll(!lockTouchScroll)}
-                    className={`inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition shadow-2xs cursor-pointer ${
-                      lockTouchScroll
-                        ? 'bg-[#E4ECE5] text-[#2B5235] border-[#BDD4C1]'
-                        : 'bg-white hover:bg-[#FAF7F5] text-[#7D6F6B] border-[#EFE8E1]'
-                    }`}
-                    title="Bloquea el scroll de la página al arrastrar sobre el plano en tablets"
-                  >
-                    <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
-                    <span>{lockTouchScroll ? 'Lienzo Fijado' : 'Fijar Táctil'}</span>
-                  </button>
-
-                  {/* Modo Lienzo Amplio */}
-                  <button
-                    type="button"
-                    onClick={() => setFullCanvasMode(!fullCanvasMode)}
-                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF7F5] text-[#7D6F6B] hover:text-[#2B2826] text-xs font-medium rounded-xl border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
-                  >
-                    {fullCanvasMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
-                    <span>{fullCanvasMode ? 'Mostrar Panel' : 'Lienzo Completo'}</span>
-                  </button>
+                {/* Minimalist Legend (Bottom Left) */}
+                <div className="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-[#EFE8E1] text-[10.5px] font-medium text-[#7D6F6B] flex items-center space-x-3 shadow-2xs">
+                  <div className="flex items-center space-x-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#C48B81]" />
+                    <span>Ocupado</span>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-white border border-[#D2C4B4]" />
+                    <span>Disponible</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Guests Sidebar */}
-            {!fullCanvasMode && (
-              <div className="lg:col-span-4 bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-2xs space-y-4">
-                {/* Header */}
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="font-bold text-sm text-[#2B2826]">
-                      Invitados confirmados
-                    </h3>
-                    <p className="text-[11px] text-[#7D6F6B] mt-0.5">
-                      {unassignedCount} sin mesa · {assignedCount} sentados · {distinctGroupsCount} grupos
-                    </p>
-                  </div>
-                  <span className="font-serif text-3xl font-bold text-[#2B2826] leading-none">
-                    {totalConfirmedPlaces}
-                  </span>
-                </div>
-
-                {/* Search Bar */}
-                <div className="relative">
-                  <Search className="w-3.5 h-3.5 text-[#8A7E72] absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    placeholder="Buscar invitado..."
-                    value={guestSearch}
-                    onChange={e => setGuestSearch(e.target.value)}
-                    className="w-full pl-8 pr-3 py-2 bg-[#FAF7F5] border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] placeholder-[#8A7E72] focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
-                  />
-                </div>
-
-                {/* Filter Pills */}
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => setColorGroups(!colorGroups)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                      colorGroups
-                        ? 'bg-[#2B2826] text-white shadow-2xs'
-                        : 'bg-[#FAF7F5] text-[#7D6F6B] border border-[#EFE8E1] hover:text-[#2B2826]'
-                    }`}
-                  >
-                    Colorear grupos
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFilterOnlyUnassigned(!filterOnlyUnassigned)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                      filterOnlyUnassigned
-                        ? 'bg-[#2B2826] text-white shadow-2xs'
-                        : 'bg-[#FAF7F5] text-[#7D6F6B] border border-[#EFE8E1] hover:text-[#2B2826]'
-                    }`}
-                  >
-                    Sin mesa · {unassignedCount}
-                  </button>
-                </div>
-
-                {/* Guest Cards List with Pastel Group Color Coding */}
-                <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
-                  {displayGuests.length === 0 ? (
-                    <div className="text-center py-8 text-xs text-[#7D6F6B]">
-                      No se encontraron invitados con los filtros seleccionados.
+            {/* Right Dynamic Sidebar: Table Inspector OR Guests List (4 cols) */}
+            <div className="lg:col-span-4 bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-2xs space-y-4">
+              {selectedTable ? (
+                /* Table Inspector & Custom Sizing Controls */
+                <div className="space-y-4 animate-in fade-in duration-150">
+                  <div className="flex items-start justify-between pb-3 border-b border-[#FAF7F5]">
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-serif text-lg font-bold text-[#2B2826]">
+                          {selectedTable.name}
+                        </h3>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-full">
+                          {selectedTable.type}
+                        </span>
+                      </div>
+                      <span className="text-xs text-[#7D6F6B]">
+                        Capacidad: {selectedTable.capacity} personas
+                      </span>
                     </div>
-                  ) : (
-                    displayGuests.map((g, idx) => {
-                      const palette = colorGroups
-                        ? GROUP_PALETTES[idx % GROUP_PALETTES.length]
-                        : {
-                            bg: '#FFFFFF',
-                            border: '#EFE8E1',
-                            text: '#2B2826',
-                            tagBg: '#FAF7F5',
-                            tagText: '#7D6F6B'
-                          };
 
-                      const hasCompanions = (g.companion_count || 0) > 0;
-                      const isAssigned = Boolean(g.table_id);
-                      const assignedTable = tables.find(t => t.id === g.table_id);
-                      const isInfoOpen = infoGuestId === g.id;
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTable(null)}
+                      className="p-1 text-[#7D6F6B] hover:text-[#2B2826] rounded-lg hover:bg-[#FAF8F5] transition cursor-pointer"
+                      title="Volver a lista de invitados"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
 
-                      return (
-                        <div
-                          key={g.id}
-                          style={{ backgroundColor: palette.bg, borderColor: palette.border }}
-                          className="p-3 rounded-2xl border transition-all duration-150 space-y-1.5 shadow-2xs"
+                  {/* Size Adjustment Controls for this Table */}
+                  <div className="bg-[#FAF8F5] p-3.5 rounded-2xl border border-[#EFE8E1] space-y-2.5">
+                    <div className="flex items-center justify-between text-xs font-bold text-[#2B2826]">
+                      <div className="flex items-center space-x-1.5">
+                        <Sliders className="w-3.5 h-3.5 text-[#C48B81]" />
+                        <span>Modificar Tamaño de Mesa</span>
+                      </div>
+                      <span className="font-mono text-[11px] text-[#A86B60]">
+                        {selectedTable.type === 'circular'
+                          ? `${selectedTable.width || 120}px`
+                          : `${selectedTable.width || 160} × ${selectedTable.height || 95}px`}
+                      </span>
+                    </div>
+
+                    {selectedTable.type === 'circular' ? (
+                      /* Circular Diameter Slider */
+                      <div className="space-y-1">
+                        <input
+                          type="range"
+                          min="60"
+                          max="240"
+                          step="5"
+                          value={selectedTable.width || 120}
+                          onChange={e => {
+                            const val = parseInt(e.target.value, 10);
+                            handleUpdateTableSize(selectedTable.id, val, val);
+                          }}
+                          className="w-full accent-[#C48B81] cursor-pointer"
+                        />
+                        <div className="flex items-center justify-between text-[10px] text-[#7D6F6B]">
+                          <span>60px (chica)</span>
+                          <span>120px (estándar)</span>
+                          <span>240px (grande)</span>
+                        </div>
+                      </div>
+                    ) : (
+                      /* Rectangular / Imperial Width & Height Sliders */
+                      <div className="space-y-2">
+                        <div>
+                          <div className="flex justify-between text-[10px] text-[#7D6F6B] mb-0.5">
+                            <span>Ancho</span>
+                            <span className="font-mono">{selectedTable.width || 160}px</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="80"
+                            max="320"
+                            step="5"
+                            value={selectedTable.width || 160}
+                            onChange={e => {
+                              const w = parseInt(e.target.value, 10);
+                              handleUpdateTableSize(selectedTable.id, w, selectedTable.height || 95);
+                            }}
+                            className="w-full accent-[#C48B81] cursor-pointer"
+                          />
+                        </div>
+
+                        <div>
+                          <div className="flex justify-between text-[10px] text-[#7D6F6B] mb-0.5">
+                            <span>Alto</span>
+                            <span className="font-mono">{selectedTable.height || 95}px</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="50"
+                            max="200"
+                            step="5"
+                            value={selectedTable.height || 95}
+                            onChange={e => {
+                              const h = parseInt(e.target.value, 10);
+                              handleUpdateTableSize(selectedTable.id, selectedTable.width || 160, h);
+                            }}
+                            className="w-full accent-[#C48B81] cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Quick Presets */}
+                    <div className="pt-1 flex items-center justify-between gap-1.5 border-t border-[#EFE8E1]">
+                      <span className="text-[10px] font-semibold text-[#7D6F6B]">Presets:</span>
+                      <div className="flex items-center space-x-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedTable.type === 'circular') handleUpdateTableSize(selectedTable.id, 80, 80);
+                            else handleUpdateTableSize(selectedTable.id, 120, 75);
+                          }}
+                          className="px-2 py-0.5 text-[10px] font-semibold bg-white rounded-md border border-[#EFE8E1] hover:border-[#C48B81] cursor-pointer"
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="min-w-0">
-                              <div className="flex items-center space-x-2">
-                                <span className="font-bold text-xs uppercase tracking-wide text-[#2B2826] truncate">
-                                  {g.first_name} {g.last_name || ''}
-                                </span>
-                                {hasCompanions ? (
-                                  <span
-                                    style={{ backgroundColor: palette.tagBg, color: palette.tagText }}
-                                    className="text-[9.5px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                          Chica
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedTable.type === 'circular') handleUpdateTableSize(selectedTable.id, 120, 120);
+                            else handleUpdateTableSize(selectedTable.id, 160, 95);
+                          }}
+                          className="px-2 py-0.5 text-[10px] font-semibold bg-white rounded-md border border-[#EFE8E1] hover:border-[#C48B81] cursor-pointer"
+                        >
+                          Media
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (selectedTable.type === 'circular') handleUpdateTableSize(selectedTable.id, 170, 170);
+                            else handleUpdateTableSize(selectedTable.id, 220, 115);
+                          }}
+                          className="px-2 py-0.5 text-[10px] font-semibold bg-white rounded-md border border-[#EFE8E1] hover:border-[#C48B81] cursor-pointer"
+                        >
+                          Grande
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions: Rotate & Delete */}
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      onClick={e => handleRotate(e, selectedTable)}
+                      className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white hover:bg-[#FAF7F5] border border-[#EFE8E1] text-[#2B2826] cursor-pointer shadow-2xs"
+                    >
+                      <RotateCw className="w-3.5 h-3.5 text-[#C48B81]" />
+                      <span>Girar 45°</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTable(selectedTable.id)}
+                      className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#A86B60] hover:bg-[#F7EDEB] transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Eliminar Mesa</span>
+                    </button>
+                  </div>
+
+                  {/* Assigned Guests list in this table */}
+                  <div className="space-y-2 pt-2 border-t border-[#FAF7F5]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10.5px] font-bold uppercase tracking-wider text-[#8A7E72]">
+                        Sentados en esta mesa ({selectedTable.guests?.length || 0})
+                      </span>
+                      <span className="font-mono text-xs font-bold text-[#2B2826]">
+                        {selectedTable.used_seats || 0}/{selectedTable.capacity}
+                      </span>
+                    </div>
+
+                    {(!selectedTable.guests || selectedTable.guests.length === 0) ? (
+                      <p className="text-xs text-[#8A7E7A] italic py-2">
+                        No hay invitados sentados en esta mesa aún.
+                      </p>
+                    ) : (
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        {selectedTable.guests.map(g => (
+                          <div
+                            key={g.id}
+                            className="flex items-center justify-between p-2 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] text-xs"
+                          >
+                            <span className="font-semibold text-[#2B2826] truncate">
+                              {g.first_name} {g.last_name || ''}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => handleUnassignGuest(g.id)}
+                              className="text-[#7D6F6B] hover:text-[#A86B60] p-1 cursor-pointer"
+                              title="Quitar de la mesa"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Return to guests list */}
+                  <div className="pt-2 border-t border-[#FAF7F5]">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedTable(null)}
+                      className="w-full py-2 text-xs font-semibold text-[#7D6F6B] hover:text-[#2B2826] bg-[#FAF7F5] hover:bg-[#F2ECE7] rounded-xl transition cursor-pointer"
+                    >
+                      ← Volver a lista de invitados
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                /* Confirmed Guests List with Group Color Coding */
+                <div className="space-y-4">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-bold text-sm text-[#2B2826]">
+                        Invitados confirmados
+                      </h3>
+                      <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                        {unassignedCount} sin mesa · {assignedCount} sentados · {distinctGroupsCount} grupos
+                      </p>
+                    </div>
+                    <span className="font-serif text-3xl font-bold text-[#2B2826] leading-none">
+                      {totalConfirmedPlaces}
+                    </span>
+                  </div>
+
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-[#8A7E72] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Buscar invitado..."
+                      value={guestSearch}
+                      onChange={e => setGuestSearch(e.target.value)}
+                      className="w-full pl-8 pr-3 py-2 bg-[#FAF7F5] border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] placeholder-[#8A7E72] focus:outline-none focus:ring-1 focus:ring-[#C48B81]"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setColorGroups(!colorGroups)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        colorGroups
+                          ? 'bg-[#2B2826] text-white shadow-2xs'
+                          : 'bg-[#FAF7F5] text-[#7D6F6B] border border-[#EFE8E1] hover:text-[#2B2826]'
+                      }`}
+                    >
+                      Colorear grupos
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFilterOnlyUnassigned(!filterOnlyUnassigned)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        filterOnlyUnassigned
+                          ? 'bg-[#2B2826] text-white shadow-2xs'
+                          : 'bg-[#FAF7F5] text-[#7D6F6B] border border-[#EFE8E1] hover:text-[#2B2826]'
+                      }`}
+                    >
+                      Sin mesa · {unassignedCount}
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+                    {displayGuests.length === 0 ? (
+                      <div className="text-center py-8 text-xs text-[#7D6F6B]">
+                        No se encontraron invitados con los filtros seleccionados.
+                      </div>
+                    ) : (
+                      displayGuests.map((g, idx) => {
+                        const palette = colorGroups
+                          ? GROUP_PALETTES[idx % GROUP_PALETTES.length]
+                          : { bg: '#FFFFFF', border: '#EFE8E1', text: '#2B2826', tagBg: '#FAF7F5', tagText: '#7D6F6B' };
+
+                        const hasCompanions = (g.companion_count || 0) > 0;
+                        const isAssigned = Boolean(g.table_id);
+                        const assignedTable = tables.find(t => t.id === g.table_id);
+                        const isInfoOpen = infoGuestId === g.id;
+
+                        return (
+                          <div
+                            key={g.id}
+                            style={{ backgroundColor: palette.bg, borderColor: palette.border }}
+                            className="p-3 rounded-2xl border transition-all duration-150 space-y-1.5 shadow-2xs"
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <div className="flex items-center space-x-2">
+                                  <span className="font-bold text-xs uppercase tracking-wide text-[#2B2826] truncate">
+                                    {g.first_name} {g.last_name || ''}
+                                  </span>
+                                  {hasCompanions ? (
+                                    <span
+                                      style={{ backgroundColor: palette.tagBg, color: palette.tagText }}
+                                      className="text-[9.5px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                                    >
+                                      grupo de {1 + g.companion_count}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[9.5px] font-medium text-[#7D6F6B] shrink-0">
+                                      sin acompañantes
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center space-x-1 shrink-0">
+                                {isAssigned ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => setAssigningGuest(g)}
+                                    className="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-[#2B2826] text-white hover:bg-black transition cursor-pointer"
+                                    title="Cambiar mesa asignada"
                                   >
-                                    grupo de {1 + g.companion_count}
-                                  </span>
+                                    {assignedTable?.name || 'Mesa'}
+                                  </button>
                                 ) : (
-                                  <span className="text-[9.5px] font-medium text-[#7D6F6B] shrink-0">
-                                    sin acompañantes
-                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setAssigningGuest(g)}
+                                    className="px-3 py-1 rounded-xl text-[11px] font-semibold bg-[#E8DEF8] hover:bg-[#DCD0F0] text-[#2B2826] transition cursor-pointer shadow-2xs"
+                                  >
+                                    Asignar
+                                  </button>
                                 )}
+
+                                <button
+                                  type="button"
+                                  onClick={() => setInfoGuestId(isInfoOpen ? null : g.id)}
+                                  className="w-6 h-6 rounded-full border border-[#D2C4B4] bg-white text-[#7D6F6B] hover:text-[#2B2826] text-[11px] font-bold flex items-center justify-center transition cursor-pointer"
+                                  title="Ver detalles"
+                                >
+                                  ?
+                                </button>
                               </div>
                             </div>
 
-                            <div className="flex items-center space-x-1 shrink-0">
-                              {isAssigned ? (
-                                <button
-                                  type="button"
-                                  onClick={() => setAssigningGuest(g)}
-                                  className="px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-[#2B2826] text-white hover:bg-black transition cursor-pointer"
-                                  title="Cambiar mesa asignada"
-                                >
-                                  {assignedTable?.name || 'Mesa'}
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => setAssigningGuest(g)}
-                                  className="px-3 py-1 rounded-xl text-[11px] font-semibold bg-[#E8DEF8] hover:bg-[#DCD0F0] text-[#2B2826] transition cursor-pointer shadow-2xs"
-                                >
-                                  Asignar
-                                </button>
-                              )}
+                            {hasCompanions && (
+                              <p className="text-[10.5px] text-[#7D6F6B] leading-tight">
+                                {g.observations && g.observations.toLowerCase().includes('acompañ')
+                                  ? g.observations
+                                  : `Acompaña a ${g.first_name} ${g.last_name || ''} (+${g.companion_count} persona${g.companion_count > 1 ? 's' : ''})`}
+                              </p>
+                            )}
 
-                              <button
-                                type="button"
-                                onClick={() => setInfoGuestId(isInfoOpen ? null : g.id)}
-                                className="w-6 h-6 rounded-full border border-[#D2C4B4] bg-white text-[#7D6F6B] hover:text-[#2B2826] hover:border-[#2B2826] text-[11px] font-bold flex items-center justify-center transition cursor-pointer"
-                                title="Ver detalles del invitado"
-                              >
-                                ?
-                              </button>
-                            </div>
+                            {isInfoOpen && (
+                              <div className="pt-2 border-t border-black/5 text-[11px] space-y-1 text-[#5E524E] bg-white/70 p-2.5 rounded-xl">
+                                <div><strong className="text-[#2B2826]">Teléfono:</strong> {g.phone || 'No registrado'}</div>
+                                <div><strong className="text-[#2B2826]">Estado:</strong> {g.status || 'Confirmado'}</div>
+                                {g.dietary_requirements && (
+                                  <div><strong className="text-[#2B2826]">Dieta:</strong> {g.dietary_requirements}</div>
+                                )}
+                                {g.observations && (
+                                  <div><strong className="text-[#2B2826]">Observaciones:</strong> {g.observations}</div>
+                                )}
+                              </div>
+                            )}
                           </div>
-
-                          {/* Companions Subtitle */}
-                          {hasCompanions && (
-                            <p className="text-[10.5px] text-[#7D6F6B] leading-tight">
-                              {g.observations && g.observations.toLowerCase().includes('acompañ')
-                                ? g.observations
-                                : `Acompaña a ${g.first_name} ${g.last_name || ''} (+${g.companion_count} persona${g.companion_count > 1 ? 's' : ''})`}
-                            </p>
-                          )}
-
-                          {/* Expanded Info Drawer */}
-                          {isInfoOpen && (
-                            <div className="pt-2 border-t border-black/5 text-[11px] space-y-1 text-[#5E524E] bg-white/70 p-2.5 rounded-xl">
-                              <div><strong className="text-[#2B2826]">Teléfono:</strong> {g.phone || 'No registrado'}</div>
-                              <div><strong className="text-[#2B2826]">Estado:</strong> {g.status || 'Confirmado'}</div>
-                              {g.dietary_requirements && (
-                                <div><strong className="text-[#2B2826]">Dieta:</strong> {g.dietary_requirements}</div>
-                              )}
-                              {g.observations && (
-                                <div><strong className="text-[#2B2826]">Observaciones:</strong> {g.observations}</div>
-                              )}
-                              {isAssigned && (
-                                <div className="pt-1 flex items-center justify-between">
-                                  <span className="text-[10px] text-[#384C3A] font-semibold">
-                                    ✓ Asignado a {assignedTable?.name}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleUnassignGuest(g.id)}
-                                    className="text-[10px] text-[#A86B60] hover:underline font-semibold cursor-pointer"
-                                  >
-                                    Desasignar
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
-                  )}
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )
       )}
 
-      {/* Quick Assignment Popover Modal (Image 1 reference) */}
+      {/* Quick Assignment Popover Modal */}
       {assigningGuest && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-[#EFE8E1] space-y-4">
@@ -1812,7 +1958,6 @@ export const MesasLayoutModule: React.FC = () => {
               </button>
             </div>
 
-            {/* Popover search input */}
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-[#8A7E72] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -1824,14 +1969,12 @@ export const MesasLayoutModule: React.FC = () => {
               />
             </div>
 
-            {/* Pill: Con espacio · X */}
             <div className="flex items-center justify-between">
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#2B2826] text-white">
                 Con espacio · {tables.filter(t => (t.capacity - (t.used_seats || 0)) >= (1 + (assigningGuest.companion_count || 0))).length}
               </span>
             </div>
 
-            {/* Table options */}
             <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
               {tables
                 .filter(t => {
@@ -1893,7 +2036,6 @@ export const MesasLayoutModule: React.FC = () => {
                 })}
             </div>
 
-            {/* Disclaimer at bottom */}
             <p className="text-[10.5px] text-[#7D6F6B] leading-tight border-t border-[#FAF7F5] pt-3">
               Las mesas completas y las bloqueadas aparecen en gris: no se puede soltar a nadie ahí.
             </p>
@@ -2206,7 +2348,7 @@ export const MesasLayoutModule: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Ayuda y Guía de Uso */}
+      {/* Modal: Ayuda */}
       {showHelpModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1] space-y-4">
@@ -2230,16 +2372,12 @@ export const MesasLayoutModule: React.FC = () => {
 
             <div className="space-y-3 text-xs text-[#7D6F6B] leading-relaxed">
               <div className="p-3 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-1">
-                <strong className="text-[#2B2826] block">1. Lista de mesas:</strong>
-                Consulta todas tus mesas, su ocupación y agrega invitados directamente desde el selector de cada mesa o descarga el PDF oficial.
+                <strong className="text-[#2B2826] block">1. Modificar el tamaño de las mesas:</strong>
+                Haz clic sobre cualquier mesa en el mapa. Aparecerá un punto de ajuste en la esquina inferior derecha para redimensionarla arrastrando con el mouse. También verás los sliders de tamaño en el panel derecho con opciones de tamaño predefinidas (Chica, Media, Grande).
               </div>
               <div className="p-3 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-1">
-                <strong className="text-[#2B2826] block">2. Plano Base del Venue:</strong>
-                En la pestaña Mapa puedes subir el PDF o imagen arquitectónica que te entrega tu salón o hacienda y calibrar su opacidad y ajuste.
-              </div>
-              <div className="p-3 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-1">
-                <strong className="text-[#2B2826] block">3. Ajuste de Tamaño de Mesas:</strong>
-                Usa el control deslizante <span className="font-semibold text-[#2B2826]">Tamaño mesas</span> para adaptar el diámetro y escala de las mesas para que coincidan con la escala del plano arquitectónico.
+                <strong className="text-[#2B2826] block">2. Plano del Venue:</strong>
+                Sube el plano arquitectónico en PDF o imagen mediante el botón <span className="font-semibold text-[#2B2826]">Plano del Venue</span> para alinear con exactitud tus mesas reales sobre el croquis del lugar.
               </div>
             </div>
 

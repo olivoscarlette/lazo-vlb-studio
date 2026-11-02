@@ -579,6 +579,12 @@ export function initDatabase() {
   try {
     db.exec('ALTER TABLE guests ADD COLUMN confirmed_places_civil INTEGER DEFAULT 0;');
   } catch {}
+  try {
+    db.exec('ALTER TABLE tables ADD COLUMN width REAL DEFAULT 120;');
+  } catch {}
+  try {
+    db.exec('ALTER TABLE tables ADD COLUMN height REAL DEFAULT 120;');
+  } catch {}
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS calendar_events (
