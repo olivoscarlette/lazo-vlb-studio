@@ -73,6 +73,7 @@ export const GeneralDashboard: React.FC = () => {
     wedding_id: '',
     assigned_wedding_ids: [] as string[],
     assigned_role: '',
+    salutation: 'AUTO' as 'AUTO' | 'NOVIO' | 'NOVIA' | 'PAREJA',
     send_welcome_email: true
   });
   const [userError, setUserError] = useState('');
@@ -415,6 +416,7 @@ export const GeneralDashboard: React.FC = () => {
       wedding_id: '',
       assigned_wedding_ids: weddings.map(w => w.id),
       assigned_role: 'Coordinadora Senior',
+      salutation: 'AUTO',
       send_welcome_email: true
     });
     setShowUserModal(true);
@@ -432,6 +434,7 @@ export const GeneralDashboard: React.FC = () => {
       wedding_id: u.wedding_id || '',
       assigned_wedding_ids: Array.isArray(u.assigned_wedding_ids) ? u.assigned_wedding_ids : [],
       assigned_role: u.assignments?.[0]?.assigned_role || (u.role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día Boda'),
+      salutation: u.salutation || 'AUTO',
       send_welcome_email: false
     });
     setShowUserModal(true);
@@ -2529,8 +2532,19 @@ export const GeneralDashboard: React.FC = () => {
                                     </div>
                                   )}
                                   <div className="min-w-0">
-                                    <div className="font-semibold text-[#2B2826] truncate leading-snug">
-                                      {u.name}
+                                    <div className="font-semibold text-[#2B2826] truncate leading-snug flex items-center space-x-1.5">
+                                      <span>{u.name}</span>
+                                      {u.role === 'NOVIOS' && (
+                                        <span className="text-[9px] px-1.5 py-0.2 rounded font-medium bg-[#FAF7F5] border border-[#EFE8E1] text-[#8A7E72]">
+                                          {u.salutation === 'NOVIO'
+                                            ? 'Novio'
+                                            : u.salutation === 'NOVIA'
+                                            ? 'Novia'
+                                            : u.salutation === 'PAREJA'
+                                            ? 'Pareja'
+                                            : (/[&+/]|(\s+(y|e)\s+)/i.test(u.name || '') ? 'Pareja' : (u.name?.trim()?.split(/\s+/)[0]?.toLowerCase()?.endsWith('a') ? 'Novia' : 'Novio'))}
+                                        </span>
+                                      )}
                                     </div>
                                     <div className="text-[11px] text-[#7D6F6B] font-mono truncate">
                                       {u.email}
@@ -3784,6 +3798,25 @@ export const GeneralDashboard: React.FC = () => {
                     className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">
+                  Tratamiento / Identificación (Novio, Novia o Pareja)
+                </label>
+                <select
+                  value={userForm.salutation}
+                  onChange={e => setUserForm({ ...userForm, salutation: e.target.value as any })}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-xs bg-white text-stone-800"
+                >
+                  <option value="AUTO">Automático (Detectar por el nombre)</option>
+                  <option value="NOVIO">Novio (Masculino: "¡Bienvenido a tu portal!")</option>
+                  <option value="NOVIA">Novia (Femenino: "¡Bienvenida a tu portal!")</option>
+                  <option value="PAREJA">Pareja / Ambos (Plural: "¡Bienvenidos a su portal!")</option>
+                </select>
+                <p className="text-[10px] text-stone-500 mt-1">
+                  Garantiza que el saludo sea exacto ("Bienvenido" o "Bienvenida") según quién esté registrado.
+                </p>
               </div>
               {userForm.role === 'NOVIOS' && (
                 <div>

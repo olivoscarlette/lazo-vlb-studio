@@ -468,6 +468,12 @@ export function initDatabase() {
     // Column already exists
   }
 
+  try {
+    db.exec('ALTER TABLE users ADD COLUMN salutation TEXT;');
+  } catch {
+    // Column already exists
+  }
+
   // Weddings - Invitation & Event Details Migrations
   try {
     db.exec("ALTER TABLE weddings ADD COLUMN invitation_type TEXT DEFAULT 'LINK';");

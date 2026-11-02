@@ -8,6 +8,7 @@ export interface User {
   phone?: string;
   wedding_id?: string | null;
   avatar_url?: string | null;
+  salutation?: 'AUTO' | 'NOVIO' | 'NOVIA' | 'PAREJA' | null;
 }
 
 export interface WeddingTeamMember {

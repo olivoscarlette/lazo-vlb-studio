@@ -14,6 +14,7 @@ export interface SendWelcomeEmailOptions {
   role?: string;
   weddingName?: string;
   loginUrl?: string;
+  salutation?: string | null;
 }
 
 export class EmailService {
@@ -298,6 +299,105 @@ Wedding Planning & Experience
   }
 
   /**
+   * Helper para identificar automáticamente si el usuario registrado es el Novio, la Novia o la Pareja
+   * y generar el tratamiento adecuado en español (Bienvenido / Bienvenida / Bienvenidos).
+   */
+  public static detectGreetingDetails(name: string, salutation?: string | null, role?: string) {
+    let mode: 'M' | 'F' | 'PAIR' = 'F';
+
+    if (salutation === 'NOVIO') {
+      mode = 'M';
+    } else if (salutation === 'NOVIA') {
+      mode = 'F';
+    } else if (salutation === 'PAREJA') {
+      mode = 'PAIR';
+    } else {
+      // Auto-detección inteligente basada en el primer nombre y caracteres de pareja
+      const clean = (name || '').trim();
+      if (/[&+/]|(\s+(y|e)\s+)/i.test(clean)) {
+        mode = 'PAIR';
+      } else {
+        const first = clean.split(/\s+/)[0].toLowerCase()
+          .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+        const maleNames = new Set([
+          'carlos','rodrigo','david','juan','luis','jorge','alejandro','eduardo',
+          'diego','fernando','ricardo','gabriel','manuel','daniel','miguel','javier',
+          'hector','alberto','arturo','santiago','sebastian','mateo','emiliano','leo',
+          'leonardo','lucas','rafael','oscar','cesar','victor','hugo','ruben','sergio',
+          'pablo','gonzalo','adrian','ivan','mauricio','jose','jesus','andres','angel',
+          'memo','nacho','pancho','paco','pepe','beto','tono','chema','alex','borja',
+          'luka','luca','sasha','ezra','rene','noah','ian','liam','alan','brian','kevin',
+          'bruno','pedro','mario','marcos','marco','raul','antonio','gerardo','guillermo',
+          'enrique','felipe','alvaro','ignacio','patricio','jaime','joaquin','alonso',
+          'samuel','tomas','cristian','christian','gustavo','martin','emilio','ramon',
+          'dario','bernardo','esteban','salvador','roberto','julio','armando','dante',
+          'ernesto','max','maximiliano','joel','orlando','roque','saul','elias','isaias'
+        ]);
+
+        const femaleNames = new Set([
+          'ana','maria','sofia','mariana','valentina','camila','isabella','lucia',
+          'daniela','paola','valeria','fernanda','gabriela','andrea','carolina',
+          'alejandra','rebeca','natalia','elena','victoria','juliet','julieta',
+          'renata','xio','claudia','patricia','monica','laura','lorena','carmen',
+          'pilar','mercedes','dolores','lourdes','rocio','consuelo','rosario','amparo',
+          'luz','ines','beatriz','raquel','miriam','esther','noemi','belen','karen',
+          'marisol','soledad','monserrat','itzel','xochitl','ivonne','nicole','michelle',
+          'fatima','diana','alicia','susana','paulina','adriana','marina','clara',
+          'marisa','regina','alondra','jimena','ximena','brenda','sandra','luciana'
+        ]);
+
+        if (maleNames.has(first)) {
+          mode = 'M';
+        } else if (femaleNames.has(first)) {
+          mode = 'F';
+        } else if (first.endsWith('a') || first.endsWith('ia') || first.endsWith('na') || first.endsWith('da')) {
+          mode = 'F';
+        } else if (first.endsWith('o') || first.endsWith('os') || first.endsWith('or') || first.endsWith('an') || first.endsWith('el')) {
+          mode = 'M';
+        } else {
+          // Por defecto si no se reconoce
+          mode = role === 'NOVIOS' ? 'M' : 'F';
+        }
+      }
+    }
+
+    const isPair = mode === 'PAIR';
+    const isMale = mode === 'M';
+
+    const greetingWord = isPair ? 'Bienvenidos' : isMale ? 'Bienvenido' : 'Bienvenida';
+    const possessive = isPair ? 'su' : 'tu';
+    const ctaPortal = isPair ? 'nuestro portal' : 'mi portal';
+    const accompanyingText = isPair
+      ? 'Nos llena de emoción acompañarlos en cada paso hacia el gran día. Hemos preparado su espacio exclusivo en <strong>Lazo Studio</strong> para que puedan consultar y gestionar su lista de invitados, itinerario, confirmaciones y detalles de su boda en tiempo real.'
+      : 'Nos llena de emoción acompañarte en cada paso hacia el gran día. Hemos preparado tu espacio exclusivo en <strong>Lazo Studio</strong> para que puedas consultar y gestionar tu lista de invitados, itinerario, confirmaciones y detalles de tu boda en tiempo real.';
+
+    const roleLabel = role === 'NOVIOS'
+      ? (isPair ? 'Novios (Acceso Compartido)' : isMale ? 'Novio (Acceso Exclusivo)' : 'Novia (Acceso Exclusivo)')
+      : role === 'COORDINADOR'
+      ? (isMale ? 'Coordinador de Bodas' : 'Coordinadora de Bodas')
+      : role === 'STAFF'
+      ? 'Staff Operativo'
+      : 'Administrador del Estudio';
+
+    const greetingBadge = role === 'NOVIOS'
+      ? (isPair ? 'Portal de Novios' : isMale ? 'Portal del Novio' : 'Portal de la Novia')
+      : 'Acceso a Plataforma';
+
+    return {
+      mode,
+      isPair,
+      isMale,
+      greetingWord,
+      possessive,
+      ctaPortal,
+      accompanyingText,
+      roleLabel,
+      greetingBadge
+    };
+  }
+
+  /**
    * Envia correo de bienvenida con credenciales de acceso y copia de respaldo (BCC) a Lazo Studio
    */
   static async sendWelcomeEmail({
@@ -307,7 +407,8 @@ Wedding Planning & Experience
     password,
     role,
     weddingName,
-    loginUrl
+    loginUrl,
+    salutation
   }: SendWelcomeEmailOptions): Promise<{ success: boolean; simulated?: boolean; messageId?: string }> {
     const transporter = this.getTransporter();
     const senderEmail = process.env.EMAIL_FROM_ADDRESS || 'hola@lazostudio.mx';
@@ -319,17 +420,11 @@ Wedding Planning & Experience
     const backupEmail = (process.env.STUDIO_BACKUP_EMAIL || process.env.GMAIL_USER || 'vivalabride.mex@gmail.com').trim();
 
     const isNovios = role === 'NOVIOS';
-    const subject = isNovios
-      ? `¡Bienvenida a tu portal de boda, ${name}! — Lazo Studio`
-      : `Tus accesos a la plataforma — Lazo Studio`;
+    const greetingInfo = this.detectGreetingDetails(name, salutation, role);
 
-    const roleLabel = isNovios
-      ? 'Novios (Acceso Exclusivo)'
-      : role === 'COORDINADOR'
-      ? 'Coordinadora de Bodas'
-      : role === 'STAFF'
-      ? 'Staff Operativo'
-      : 'Administrador del Estudio';
+    const subject = isNovios
+      ? `¡${greetingInfo.greetingWord} a ${greetingInfo.possessive} portal de boda, ${name}! — Lazo Studio`
+      : `Tus accesos a la plataforma — Lazo Studio`;
 
     const html = `
 <!DOCTYPE html>
@@ -499,12 +594,12 @@ Wedding Planning & Experience
       </div>
 
       <div class="content">
-        <div class="greeting">${isNovios ? 'Portal de Novios' : 'Acceso a Plataforma'}</div>
-        <h2 class="title">¡Bienvenida a tu portal, ${name}!</h2>
+        <div class="greeting">${greetingInfo.greetingBadge}</div>
+        <h2 class="title">¡${greetingInfo.greetingWord} a ${greetingInfo.possessive} portal, ${name}!</h2>
         <p class="text">
           ${isNovios
-            ? 'Nos llena de emoción acompañarte en cada paso hacia el gran día. Hemos preparado tu espacio exclusivo en <strong>Lazo Studio</strong> para que puedas consultar y gestionar tu lista de invitados, itinerario, confirmaciones y detalles de tu boda en tiempo real.'
-            : 'Te damos la bienvenida al equipo de <strong>Lazo Studio</strong>. A continuación encontrarás tus credenciales de acceso para la coordinación y gestión operativa de eventos.'}
+            ? greetingInfo.accompanyingText
+            : `Te damos la bienvenida al equipo de <strong>Lazo Studio</strong>. A continuación encontrarás tus credenciales de acceso para la coordinación y gestión operativa de eventos.`}
         </p>
 
         <div class="credentials-box">
@@ -519,7 +614,7 @@ Wedding Planning & Experience
               </td>
             </tr>
             <tr>
-              <td class="cred-label">Usuario:</td>
+              <td class="cred-label">Usuario / Correo:</td>
               <td class="cred-value">${email}</td>
             </tr>
             ${password ? `
@@ -530,7 +625,7 @@ Wedding Planning & Experience
             ` : ''}
             <tr>
               <td class="cred-label">Rol:</td>
-              <td class="cred-value">${roleLabel}</td>
+              <td class="cred-value">${greetingInfo.roleLabel}</td>
             </tr>
             ${weddingName ? `
             <tr>
@@ -543,7 +638,7 @@ Wedding Planning & Experience
 
         <div class="cta-container">
           <a href="${appUrl}" class="cta-button" target="_blank" rel="noopener noreferrer">
-            Ingresar a mi portal
+            Ingresar a ${greetingInfo.ctaPortal}
           </a>
         </div>
 
@@ -552,7 +647,7 @@ Wedding Planning & Experience
         </div>
 
         <div class="backup-tag">
-          Copia de respaldo registrada en el sistema de Lazo Studio.
+          Copia de respaldo registrada para Lazo Studio (Monterrey, N.L.).
         </div>
       </div>
 
@@ -570,16 +665,18 @@ Wedding Planning & Experience
 Lazo Studio
 ${subject}
 
-¡Bienvenida a tu portal, ${name}!
+¡${greetingInfo.greetingWord} a ${greetingInfo.possessive} portal, ${name}!
 
 ${isNovios
-  ? 'Nos llena de emoción acompañarte en cada paso hacia el gran día. Hemos preparado tu espacio exclusivo en Lazo Studio para que puedas consultar tu lista de invitados, itinerario, proveedores y confirmaciones en tiempo real.'
+  ? (greetingInfo.isPair
+      ? 'Nos llena de emoción acompañarlos en cada paso hacia el gran día. Hemos preparado su espacio exclusivo en Lazo Studio para que puedan consultar su lista de invitados, itinerario, proveedores y confirmaciones en tiempo real.'
+      : 'Nos llena de emoción acompañarte en cada paso hacia el gran día. Hemos preparado tu espacio exclusivo en Lazo Studio para que puedas consultar tu lista de invitados, itinerario, proveedores y confirmaciones en tiempo real.')
   : 'Te damos la bienvenida a Lazo Studio. Aquí tienes tus credenciales de acceso:'}
 
 DATOS DE ACCESO:
 • Enlace: ${appUrl}
 • Usuario: ${email}
-${password ? `• Contraseña: ${password}\n` : ''}• Rol: ${roleLabel}
+${password ? `• Contraseña: ${password}\n` : ''}• Rol: ${greetingInfo.roleLabel}
 ${weddingName ? `• Boda: ${weddingName}\n` : ''}
 Puedes ingresar directamente desde tu navegador en: ${appUrl}
 
