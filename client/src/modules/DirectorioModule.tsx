@@ -119,7 +119,8 @@ export const DirectorioModule: React.FC = () => {
             phone: newMemberForm.phone,
             role: newMemberForm.role,
             assigned_wedding_ids: [currentWedding.id],
-            assigned_role: newMemberForm.assigned_role
+            assigned_role: newMemberForm.assigned_role,
+            send_welcome_email: true
           })
         });
         const data = await res.json();

@@ -401,7 +401,7 @@ router.get('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, re
 
 // Admin: Create User
 router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
-  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role, avatar_url } = req.body;
+  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role, avatar_url, send_welcome_email = true } = req.body;
   if (!name || !email || !password || !role) {
     return res.status(400).json({ error: 'Nombre, email, contraseña y rol son requeridos.' });
   }
@@ -435,10 +435,76 @@ router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, r
 
   logAudit(null, req.user!.id, req.user!.name, 'CREAR_USUARIO', 'USER', id, `Creación de usuario ${name} con rol ${role}`);
 
+  // Enviar correo de bienvenida con credenciales y respaldo a Lazo Studio
+  if (send_welcome_email !== false) {
+    let weddingName: string | undefined;
+    if (wedding_id) {
+      const w = db.prepare('SELECT name FROM weddings WHERE id = ?').get(wedding_id) as any;
+      if (w) weddingName = w.name;
+    } else if (Array.isArray(assigned_wedding_ids) && assigned_wedding_ids[0]) {
+      const w = db.prepare('SELECT name FROM weddings WHERE id = ?').get(assigned_wedding_ids[0]) as any;
+      if (w) weddingName = w.name;
+    }
+
+    EmailService.sendWelcomeEmail({
+      to: email.toLowerCase().trim(),
+      name: name.trim(),
+      email: email.toLowerCase().trim(),
+      password,
+      role,
+      weddingName
+    }).catch(err => {
+      console.error('[Welcome Email] Error enviando correo de bienvenida:', err);
+    });
+  }
+
   return res.status(201).json({
     message: 'Usuario creado exitosamente.',
     user: { id, name, email: email.toLowerCase().trim(), role, phone, wedding_id, avatar_url: avatar_url || null }
   });
+});
+
+// Admin: Resend Welcome Email with Credentials Backup
+router.post('/users/:id/resend-welcome', authenticateToken, requireRole(['ADMINISTRADOR']), async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+  if (!user) {
+    return res.status(404).json({ error: 'Usuario no encontrado.' });
+  }
+
+  let finalPassword = password;
+  if (password && password.trim()) {
+    const hash = bcrypt.hashSync(password.trim(), 10);
+    db.prepare('UPDATE users SET password_hash = ?, updated_at = ? WHERE id = ?').run(hash, new Date().toISOString(), id);
+  }
+
+  let weddingName: string | undefined;
+  if (user.wedding_id) {
+    const w = db.prepare('SELECT name FROM weddings WHERE id = ?').get(user.wedding_id) as any;
+    if (w) weddingName = w.name;
+  } else {
+    const asg = db.prepare('SELECT w.name FROM wedding_assignments a JOIN weddings w ON w.id = a.wedding_id WHERE a.user_id = ? LIMIT 1').get(id) as any;
+    if (asg) weddingName = asg.name;
+  }
+
+  try {
+    const result = await EmailService.sendWelcomeEmail({
+      to: user.email,
+      name: user.name,
+      email: user.email,
+      password: finalPassword || undefined,
+      role: user.role,
+      weddingName
+    });
+    logAudit(null, req.user!.id, req.user!.name, 'REENVIAR_ACCESO', 'USER', id, `Reenvío de correo de acceso a ${user.name} (${user.email})`);
+    return res.json({
+      message: `Correo de bienvenida y acceso enviado a ${user.email} con respaldo a Lazo Studio.`,
+      simulated: result.simulated
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'No se pudo enviar el correo de bienvenida: ' + (err.message || 'Error del servidor') });
+  }
 });
 
 // Admin: Edit User

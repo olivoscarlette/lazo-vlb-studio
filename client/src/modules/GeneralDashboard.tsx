@@ -72,9 +72,11 @@ export const GeneralDashboard: React.FC = () => {
     phone: '',
     wedding_id: '',
     assigned_wedding_ids: [] as string[],
-    assigned_role: ''
+    assigned_role: '',
+    send_welcome_email: true
   });
   const [userError, setUserError] = useState('');
+  const [sendingWelcomeId, setSendingWelcomeId] = useState<string | null>(null);
 
   // Segmentación y filtros de Usuarios & Accesos
   const [userFilterSegment, setUserFilterSegment] = useState<'ALL' | 'EQUIPO' | 'NOVIOS_VLB' | 'NOVIOS_VIRTUAL'>('ALL');
@@ -411,9 +413,9 @@ export const GeneralDashboard: React.FC = () => {
       role: 'COORDINADOR',
       phone: '',
       wedding_id: '',
-      avatar_url: null,
       assigned_wedding_ids: weddings.map(w => w.id),
-      assigned_role: 'Coordinadora Senior'
+      assigned_role: 'Coordinadora Senior',
+      send_welcome_email: true
     });
     setShowUserModal(true);
   };
@@ -428,11 +430,35 @@ export const GeneralDashboard: React.FC = () => {
       role: u.role,
       phone: u.phone || '',
       wedding_id: u.wedding_id || '',
-      avatar_url: u.avatar_url || null,
       assigned_wedding_ids: Array.isArray(u.assigned_wedding_ids) ? u.assigned_wedding_ids : [],
-      assigned_role: u.assignments?.[0]?.assigned_role || (u.role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día Boda')
+      assigned_role: u.assignments?.[0]?.assigned_role || (u.role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día Boda'),
+      send_welcome_email: false
     });
     setShowUserModal(true);
+  };
+
+  const handleResendWelcome = async (u: any) => {
+    const confirmMsg = `¿Deseas enviar el correo de bienvenida y acceso a ${u.name} (${u.email})?\n\nSe enviará también una copia de respaldo a la cuenta del estudio (Monterrey, N.L.).`;
+    if (!window.confirm(confirmMsg)) return;
+
+    setSendingWelcomeId(u.id);
+    try {
+      const res = await fetch(`/api/auth/users/${u.id}/resend-welcome`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({})
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Error al enviar correo.');
+      alert(data.message || 'Correo de bienvenida enviado exitosamente.');
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setSendingWelcomeId(null);
+    }
   };
 
   const handleDeleteUser = async (u: any) => {
@@ -2642,6 +2668,17 @@ export const GeneralDashboard: React.FC = () => {
 
                                   <button
                                     type="button"
+                                    onClick={() => handleResendWelcome(u)}
+                                    disabled={sendingWelcomeId === u.id}
+                                    title="Enviar o reenviar correo de bienvenida y accesos (con copia de respaldo a Lazo Studio Monterrey)"
+                                    className="inline-flex items-center space-x-1 text-[#C48B81] hover:text-[#A86B60] font-semibold px-2.5 py-1 rounded-lg hover:bg-[#FAF7F5] border border-[#EFE8E1] transition cursor-pointer"
+                                  >
+                                    <Mail className="w-3.5 h-3.5" />
+                                    <span>{sendingWelcomeId === u.id ? 'Enviando...' : 'Reenviar Acceso'}</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
                                     onClick={() => handleOpenEditUser(u)}
                                     className="inline-flex items-center space-x-1 text-[#7D6F6B] hover:text-[#2B2826] font-semibold px-2.5 py-1 rounded-lg hover:bg-stone-100 transition cursor-pointer"
                                   >
@@ -3794,6 +3831,23 @@ export const GeneralDashboard: React.FC = () => {
                   </div>
                 </>
               )}
+              {!editingUser && (
+                <div className="p-3 bg-[#FAF7F4] border border-[#EFE8E1] rounded-xl text-xs space-y-1">
+                  <label className="flex items-center space-x-2 font-semibold text-[#2B2826] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={userForm.send_welcome_email}
+                      onChange={e => setUserForm({ ...userForm, send_welcome_email: e.target.checked })}
+                      className="rounded border-[#C48B81] text-[#C48B81] focus:ring-[#C48B81]"
+                    />
+                    <span>Enviar correo de bienvenida con credenciales de acceso</span>
+                  </label>
+                  <p className="text-[11px] text-[#7D6F6B] pl-5">
+                    Se enviará el correo editorial a la persona y una copia de respaldo automática a la cuenta de Lazo Studio (Monterrey, N.L.).
+                  </p>
+                </div>
+              )}
+
               <div className="flex justify-end space-x-2 pt-4 border-t border-stone-100">
                 <button
                   type="button"
