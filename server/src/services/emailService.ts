@@ -18,7 +18,7 @@ export interface SendWelcomeEmailOptions {
 
 export class EmailService {
   private static getTransporter() {
-    const user = (process.env.GMAIL_USER || process.env.SMTP_USER || '').trim();
+    const user = (process.env.GMAIL_USER || process.env.SMTP_USER || 'vivalabride.mex@gmail.com').trim();
     const pass = (process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || '').replace(/\s+/g, '');
 
     if (!user || !pass) {
@@ -56,6 +56,7 @@ export class EmailService {
     const senderEmail = process.env.EMAIL_FROM_ADDRESS || 'hola@lazostudio.mx';
     const senderName = process.env.EMAIL_FROM_NAME || 'Lazo Studio';
     const from = `"${senderName}" <${senderEmail}>`;
+    const replyTo = process.env.REPLY_TO_EMAIL || 'vivalabride.mex@gmail.com';
     const appUrl = process.env.APP_URL || 'https://www.lazostudio.mx';
     const logoUrl = `${appUrl}/lazo-logo.png?v=4`;
 
@@ -255,6 +256,7 @@ Wedding Planning & Experience
           body: JSON.stringify({
             from: fromAddress,
             to: [to],
+            reply_to: replyTo,
             subject: 'Restablecer tu contraseña — Lazo Studio',
             html,
             text
@@ -282,6 +284,7 @@ Wedding Planning & Experience
       const info = await transporter.sendMail({
         from,
         to,
+        replyTo,
         subject: 'Restablecer tu contraseña — Lazo Studio',
         text,
         html
@@ -310,9 +313,10 @@ Wedding Planning & Experience
     const senderEmail = process.env.EMAIL_FROM_ADDRESS || 'hola@lazostudio.mx';
     const senderName = process.env.EMAIL_FROM_NAME || 'Lazo Studio';
     const from = `"${senderName}" <${senderEmail}>`;
+    const replyTo = process.env.REPLY_TO_EMAIL || 'vivalabride.mex@gmail.com';
     const appUrl = loginUrl || process.env.APP_URL || 'https://www.lazostudio.mx';
     const logoUrl = `${appUrl}/lazo-logo.png?v=4`;
-    const backupEmail = (process.env.STUDIO_BACKUP_EMAIL || process.env.GMAIL_USER || senderEmail || 'hola@lazostudio.mx').trim();
+    const backupEmail = (process.env.STUDIO_BACKUP_EMAIL || process.env.GMAIL_USER || 'vivalabride.mex@gmail.com').trim();
 
     const isNovios = role === 'NOVIOS';
     const subject = isNovios
@@ -599,6 +603,7 @@ Wedding Planning & Experience
           body: JSON.stringify({
             from: fromAddress,
             to: [to],
+            reply_to: replyTo,
             bcc: bccList,
             subject,
             html,
@@ -627,6 +632,7 @@ Wedding Planning & Experience
       const info = await transporter.sendMail({
         from,
         to,
+        replyTo,
         bcc: backupEmail && backupEmail !== to ? backupEmail : undefined,
         subject,
         text,

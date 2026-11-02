@@ -438,7 +438,7 @@ export const GeneralDashboard: React.FC = () => {
   };
 
   const handleResendWelcome = async (u: any) => {
-    const confirmMsg = `¿Deseas enviar el correo de bienvenida y acceso a ${u.name} (${u.email})?\n\nSe enviará también una copia de respaldo a la cuenta del estudio (Monterrey, N.L.).`;
+    const confirmMsg = `¿Deseas enviar el correo de bienvenida y acceso a ${u.name} (${u.email})?\n\nSe enviará también una copia de respaldo automática a vivalabride.mex@gmail.com.`;
     if (!window.confirm(confirmMsg)) return;
 
     setSendingWelcomeId(u.id);
@@ -3843,7 +3843,7 @@ export const GeneralDashboard: React.FC = () => {
                     <span>Enviar correo de bienvenida con credenciales de acceso</span>
                   </label>
                   <p className="text-[11px] text-[#7D6F6B] pl-5">
-                    Se enviará el correo editorial a la persona y una copia de respaldo automática a la cuenta de Lazo Studio (Monterrey, N.L.).
+                    Se enviará el correo editorial a la persona y una copia de respaldo automática a vivalabride.mex@gmail.com.
                   </p>
                 </div>
               )}
