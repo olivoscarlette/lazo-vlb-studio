@@ -7,7 +7,7 @@ import {
   Lock, AlertTriangle, Move, Eye, EyeOff, Layers, Image as ImageIcon,
   Maximize2, Minimize2, Unlock, Users, ChevronDown, ChevronUp,
   FileUp, Loader2, ChevronLeft, ChevronRight, CheckCircle2, X, FileDown, MessageSquare,
-  Search, ZoomIn, ZoomOut, HelpCircle, Check, RotateCcw, LayoutGrid, Compass
+  Search, ZoomIn, ZoomOut, HelpCircle, Check, RotateCcw, LayoutGrid, Compass, Sliders
 } from 'lucide-react';
 
 const GROUP_PALETTES = [
@@ -29,8 +29,8 @@ export const MesasLayoutModule: React.FC = () => {
   const [versions, setVersions] = useState<LayoutVersion[]>([]);
   const [, setLoading] = useState(true);
 
-  // View switch: 'mapa' (2D Seating Chart) vs 'lista' (Tables List)
-  const [viewMode, setViewMode] = useState<'mapa' | 'lista'>('mapa');
+  // View switch: 'lista' (Lista de mesas first) vs 'mapa' (Mapa 2D)
+  const [viewMode, setViewMode] = useState<'lista' | 'mapa'>('lista');
 
   // Sidebar controls
   const [colorGroups, setColorGroups] = useState(true);
@@ -42,10 +42,11 @@ export const MesasLayoutModule: React.FC = () => {
   const [assigningGuest, setAssigningGuest] = useState<Guest | null>(null);
   const [tableSearchInPopover, setTableSearchInPopover] = useState('');
 
-  // Modo Lienzo Amplio state
+  // Modo Lienzo Amplio & Table Size state
   const [fullCanvasMode, setFullCanvasMode] = useState(false);
   const [lockTouchScroll, setLockTouchScroll] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1.0);
+  const [tableScale, setTableScale] = useState<number>(1.0); // Table size adjustment (0.75x to 1.5x)
   const [handToolActive, setHandToolActive] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -326,7 +327,6 @@ export const MesasLayoutModule: React.FC = () => {
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Handle pan mode
     if (isPanning) {
       setPanOffset({
         x: e.clientX - panStart.x,
@@ -426,8 +426,8 @@ export const MesasLayoutModule: React.FC = () => {
     const cols = Math.min(4, Math.max(3, Math.ceil(Math.sqrt(tables.length))));
     const startX = 60;
     const startY = 60;
-    const stepX = 180;
-    const stepY = 160;
+    const stepX = 200 * tableScale;
+    const stepY = 180 * tableScale;
 
     const updatedTables = tables.map((t, idx) => {
       const col = idx % cols;
@@ -735,7 +735,6 @@ export const MesasLayoutModule: React.FC = () => {
   const totalCapacity = tables.reduce((acc, t) => acc + (t.capacity || 0), 0);
   const totalAssigned = tables.reduce((acc, t) => acc + (t.used_seats || 0), 0);
 
-  // Confirmed attendees source: allGuests or unassigned + assigned
   const effectiveGuestsList = allGuests.length > 0 ? allGuests : unassignedGuests;
   const totalConfirmedPlaces = effectiveGuestsList.reduce((acc, g) => acc + 1 + (g.companion_count || 0), 0);
   const unassignedCount = unassignedGuests.length;
@@ -769,7 +768,7 @@ export const MesasLayoutModule: React.FC = () => {
             </span>
           </div>
           <h2 className="font-serif text-3xl font-bold text-[#2B2826]">
-            Organización por mesas
+            Mesas y Layout
           </h2>
         </div>
 
@@ -862,9 +861,20 @@ export const MesasLayoutModule: React.FC = () => {
         </div>
       </div>
 
-      {/* View Switcher: Mapa vs Lista de mesas */}
-      <div className="flex items-center justify-between">
+      {/* View Switcher: Lista de mesas FIRST, Mapa SECOND */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex p-1 bg-white rounded-2xl border border-[#EFE8E1] shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setViewMode('lista')}
+            className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
+              viewMode === 'lista'
+                ? 'bg-[#2B2826] text-white shadow-2xs'
+                : 'text-[#7D6F6B] hover:text-[#2B2826]'
+            }`}
+          >
+            Lista de mesas
+          </button>
           <button
             type="button"
             onClick={() => setViewMode('mapa')}
@@ -877,21 +887,42 @@ export const MesasLayoutModule: React.FC = () => {
             {isLockedForVirtualNovios && <Lock className="w-3 h-3 text-[#C48B81]" />}
             <span>Mapa</span>
           </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('lista')}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
-              viewMode === 'lista'
-                ? 'bg-[#2B2826] text-white shadow-2xs'
-                : 'text-[#7D6F6B] hover:text-[#2B2826]'
-            }`}
-          >
-            Lista de mesas
-          </button>
         </div>
 
+        {/* Toolbar when in Mapa mode */}
         {viewMode === 'mapa' && !isLockedForVirtualNovios && (
-          <div className="hidden sm:flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Table scale adjustment slider */}
+            <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-white rounded-xl border border-[#EFE8E1] shadow-2xs text-xs text-[#7D6F6B]">
+              <Sliders className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span className="text-[11px] font-semibold text-[#2B2826]">Tamaño mesas:</span>
+              <input
+                type="range"
+                min="0.75"
+                max="1.5"
+                step="0.05"
+                value={tableScale}
+                onChange={e => setTableScale(parseFloat(e.target.value))}
+                className="w-20 accent-[#C48B81] cursor-pointer"
+                title="Ajustar tamaño de las mesas en el plano"
+              />
+              <span className="font-mono text-[10px] text-[#2B2826] font-semibold">
+                {Math.round(tableScale * 100)}%
+              </span>
+            </div>
+
+            {/* Venue Floor Plan Button */}
+            <button
+              type="button"
+              onClick={() => setShowFloorPlanModal(true)}
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-white hover:bg-[#FAF7F5] text-[#2B2826] border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
+              title="Subir o configurar plano arquitectónico del venue"
+            >
+              <ImageIcon className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Plano Base Venue</span>
+            </button>
+
+            {/* Auto-arrange & Center */}
             <button
               type="button"
               onClick={handleAutoArrange}
@@ -901,6 +932,7 @@ export const MesasLayoutModule: React.FC = () => {
               <LayoutGrid className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Auto acomodo</span>
             </button>
+
             <button
               type="button"
               onClick={handleCenterCanvas}
@@ -915,7 +947,161 @@ export const MesasLayoutModule: React.FC = () => {
       </div>
 
       {/* Content depending on viewMode & permissions */}
-      {viewMode === 'mapa' ? (
+      {viewMode === 'lista' ? (
+        /* Full Table List View (Default tab) */
+        <div className="space-y-6">
+          {tables.length === 0 ? (
+            <div className="bg-white rounded-3xl p-10 border border-[#EFE8E1] text-center space-y-3">
+              <Users className="w-10 h-10 text-[#C48B81] mx-auto opacity-80" />
+              <h3 className="font-serif text-xl font-bold text-[#2B2826]">Aún no has creado mesas</h3>
+              <p className="text-xs text-[#7D6F6B] max-w-md mx-auto leading-relaxed">
+                Empieza agregando tu primera mesa (circular, rectangular o imperial) y asigna a tus invitados confirmados.
+              </p>
+              {!isLocked && (
+                <button
+                  type="button"
+                  onClick={() => setShowNewTableModal(true)}
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Crear Primera Mesa</span>
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {tables.map(table => {
+                const assignedGuests = table.guests || [];
+                const used = table.used_seats || 0;
+                const isOver = used > table.capacity;
+                const isFull = used === table.capacity;
+
+                return (
+                  <div
+                    key={table.id}
+                    className="bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-2xs space-y-4 hover:border-[#C48B81] transition flex flex-col justify-between"
+                  >
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-serif text-lg font-bold text-[#2B2826]">
+                              {table.name}
+                            </span>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-full">
+                              {table.type}
+                            </span>
+                          </div>
+                          <span className="text-xs text-[#7D6F6B]">
+                            {table.capacity} lugares totales
+                          </span>
+                        </div>
+
+                        {!isLocked && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTable(table.id)}
+                            className="text-[#7D6F6B] hover:text-[#A86B60] p-1 rounded-lg hover:bg-[#FAF7F5] transition cursor-pointer"
+                            title="Eliminar mesa"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Capacity Bar */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-xs font-medium">
+                          <span className="text-[#7D6F6B]">Ocupación</span>
+                          <span className={`font-mono font-bold ${isOver ? 'text-[#A86B60]' : isFull ? 'text-[#384C3A]' : 'text-[#2B2826]'}`}>
+                            {used} / {table.capacity}
+                          </span>
+                        </div>
+                        <div className="w-full bg-[#FAF7F5] h-2 rounded-full overflow-hidden border border-[#EFE8E1]">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${
+                              isOver ? 'bg-[#A86B60]' : isFull ? 'bg-[#384C3A]' : 'bg-[#C48B81]'
+                            }`}
+                            style={{
+                              width: `${Math.min(100, Math.round((used / table.capacity) * 100))}%`
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Guest list */}
+                      <div className="pt-2 border-t border-[#FAF7F5] space-y-1.5">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A7E72] block">
+                          Invitados ({assignedGuests.length})
+                        </span>
+                        {assignedGuests.length === 0 ? (
+                          <p className="text-xs text-[#8A7E7A] italic py-1">
+                            Sin invitados asignados aún.
+                          </p>
+                        ) : (
+                          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                            {assignedGuests.map(g => (
+                              <div
+                                key={g.id}
+                                className="flex items-center justify-between p-2 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] text-xs"
+                              >
+                                <div className="min-w-0 pr-2">
+                                  <span className="font-semibold text-[#2B2826] block truncate">
+                                    {g.first_name} {g.last_name || ''}
+                                  </span>
+                                  {Boolean(g.companion_count) && (
+                                    <span className="text-[10px] text-[#7D6F6B]">
+                                      +{g.companion_count} comp. ({1 + g.companion_count} lugares)
+                                    </span>
+                                  )}
+                                </div>
+                                {!isLocked && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleUnassignGuest(g.id)}
+                                    className="text-[#7D6F6B] hover:text-[#A86B60] p-1 rounded-md cursor-pointer"
+                                    title="Quitar de la mesa"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Quick assign guest dropdown */}
+                    {!isLocked && unassignedGuests.length > 0 && (
+                      <div className="pt-2 border-t border-[#FAF7F5]">
+                        <select
+                          defaultValue=""
+                          onChange={e => {
+                            const val = e.target.value;
+                            if (val) {
+                              handleAssignGuest(val, table.id);
+                            }
+                          }}
+                          className="w-full px-2.5 py-1.5 text-xs border border-[#EFE8E1] rounded-xl bg-[#FAF7F5] text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81] cursor-pointer"
+                        >
+                          <option value="">+ Sentar invitado aquí...</option>
+                          {unassignedGuests.map(g => (
+                            <option key={g.id} value={g.id}>
+                              {g.first_name} {g.last_name || ''} (+{g.companion_count || 0} acomp.)
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Mapa 2D View */
         isLockedForVirtualNovios ? (
           /* Locked State for Virtual Novios without 2D Add-on */
           <div className="space-y-6">
@@ -982,7 +1168,7 @@ export const MesasLayoutModule: React.FC = () => {
         ) : (
           /* Unlocked Full 2D Seating Chart + Right Guests Sidebar */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* 2D Canvas Area (8 cols on desktop or 12 if fullCanvasMode) */}
+            {/* 2D Canvas Area */}
             <div className={fullCanvasMode ? 'lg:col-span-12' : 'lg:col-span-8'}>
               <div
                 onMouseDown={handleCanvasMouseDown}
@@ -1070,11 +1256,23 @@ export const MesasLayoutModule: React.FC = () => {
                     </div>
                   ))}
 
-                  {/* Render Tables with Radial or Perimeter Seats */}
+                  {/* Render Tables with Adjustable Size & Proportional Seats */}
                   {tables.map((table, idx) => {
                     const isSelected = selectedTable?.id === table.id;
                     const capacity = Math.max(1, table.capacity || 10);
                     const usedSeats = table.used_seats || 0;
+
+                    // Proportional sizing based on tableScale and previous configuration
+                    const circDiameter = Math.round(128 * tableScale);
+                    const circDiscDiameter = Math.round(76 * tableScale);
+                    const circSeatRadius = Math.round(52 * tableScale);
+                    const circCenter = circDiameter / 2;
+
+                    const rectWidth = Math.round(160 * tableScale);
+                    const rectHeight = Math.round(96 * tableScale);
+
+                    const impWidth = Math.round(200 * tableScale);
+                    const impHeight = Math.round(100 * tableScale);
 
                     return (
                       <div
@@ -1095,23 +1293,25 @@ export const MesasLayoutModule: React.FC = () => {
                       >
                         {table.type === 'circular' ? (
                           /* Circular Table with Radial Seats */
-                          <div className="relative w-28 h-28 flex items-center justify-center">
+                          <div
+                            style={{ width: `${circDiameter}px`, height: `${circDiameter}px` }}
+                            className="relative flex items-center justify-center"
+                          >
                             {/* Radial seats calculated around perimeter */}
                             {Array.from({ length: capacity }).map((_, seatIdx) => {
                               const angle = (2 * Math.PI * seatIdx) / capacity - Math.PI / 2;
-                              const radius = 46;
-                              const sx = 56 + radius * Math.cos(angle);
-                              const sy = 56 + radius * Math.sin(angle);
+                              const sx = circCenter + circSeatRadius * Math.cos(angle);
+                              const sy = circCenter + circSeatRadius * Math.sin(angle);
                               const isOccupied = seatIdx < usedSeats;
 
                               return (
                                 <div
                                   key={seatIdx}
                                   style={{
-                                    left: `${sx - 7}px`,
-                                    top: `${sy - 7}px`
+                                    left: `${sx - 8}px`,
+                                    top: `${sy - 8}px`
                                   }}
-                                  className={`absolute w-3.5 h-3.5 rounded-full transition-colors ${
+                                  className={`absolute w-4 h-4 rounded-full transition-colors ${
                                     isOccupied
                                       ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
                                       : 'bg-white border border-[#D2C4B4]'
@@ -1123,7 +1323,8 @@ export const MesasLayoutModule: React.FC = () => {
 
                             {/* Table center disc */}
                             <div
-                              className={`w-18 h-18 rounded-full bg-white border flex flex-col items-center justify-center p-1 text-center transition shadow-xs ${
+                              style={{ width: `${circDiscDiameter}px`, height: `${circDiscDiameter}px` }}
+                              className={`rounded-full bg-white border flex flex-col items-center justify-center p-1 text-center transition shadow-xs ${
                                 isSelected
                                   ? 'border-[#C48B81] ring-2 ring-[#C48B81]/40 shadow-md'
                                   : 'border-[#E8DFD5] hover:border-[#C48B81]'
@@ -1132,10 +1333,10 @@ export const MesasLayoutModule: React.FC = () => {
                               <span className="font-serif font-bold text-xs text-[#2B2826] leading-none">
                                 #{idx + 1}
                               </span>
-                              <span className="text-[8.5px] text-[#7D6F6B] truncate max-w-[56px] mt-0.5 leading-tight">
+                              <span className="text-[9px] text-[#7D6F6B] truncate max-w-[64px] mt-0.5 leading-tight">
                                 {table.name || 'Sin nombre'}
                               </span>
-                              <span className="text-[8px] font-semibold text-[#8A7E72] mt-0.5">
+                              <span className="text-[8.5px] font-semibold text-[#8A7E72] mt-0.5">
                                 {usedSeats}/{capacity}
                               </span>
                             </div>
@@ -1144,19 +1345,19 @@ export const MesasLayoutModule: React.FC = () => {
                           /* Rectangular / Imperial Table with Perimeter Seats */
                           <div
                             style={{
-                              width: table.type === 'imperial' ? '160px' : '136px',
-                              height: '64px'
+                              width: `${table.type === 'imperial' ? impWidth : rectWidth}px`,
+                              height: `${table.type === 'imperial' ? impHeight : rectHeight}px`
                             }}
                             className="relative flex items-center justify-center"
                           >
                             {/* Top Edge Seats */}
-                            <div className="absolute -top-2 left-0 right-0 flex justify-around px-2.5">
+                            <div className="absolute -top-2.5 left-0 right-0 flex justify-around px-3">
                               {Array.from({ length: Math.floor(capacity / 2) }).map((_, seatIdx) => {
                                 const isOccupied = seatIdx < usedSeats;
                                 return (
                                   <div
                                     key={`top-${seatIdx}`}
-                                    className={`w-3.5 h-3.5 rounded-full transition-colors ${
+                                    className={`w-4 h-4 rounded-full transition-colors ${
                                       isOccupied
                                         ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
                                         : 'bg-white border border-[#D2C4B4]'
@@ -1169,7 +1370,7 @@ export const MesasLayoutModule: React.FC = () => {
 
                             {/* Table center card */}
                             <div
-                              className={`w-full h-full rounded-2xl bg-white border flex flex-col items-center justify-center px-2 py-1 text-center transition shadow-xs ${
+                              className={`w-full h-full rounded-2xl bg-white border flex flex-col items-center justify-center px-3 py-1.5 text-center transition shadow-xs ${
                                 isSelected
                                   ? 'border-[#C48B81] ring-2 ring-[#C48B81]/40 shadow-md'
                                   : 'border-[#E8DFD5] hover:border-[#C48B81]'
@@ -1178,23 +1379,23 @@ export const MesasLayoutModule: React.FC = () => {
                               <span className="font-serif font-bold text-xs text-[#2B2826] leading-none">
                                 #{idx + 1}
                               </span>
-                              <span className="text-[8.5px] text-[#7D6F6B] truncate max-w-[100px] mt-0.5 leading-tight">
+                              <span className="text-[9.5px] text-[#7D6F6B] truncate max-w-[120px] mt-0.5 leading-tight">
                                 {table.name || 'Sin nombre'}
                               </span>
-                              <span className="text-[8px] font-semibold text-[#8A7E72] mt-0.5">
+                              <span className="text-[9px] font-semibold text-[#8A7E72] mt-0.5">
                                 {usedSeats}/{capacity}
                               </span>
                             </div>
 
                             {/* Bottom Edge Seats */}
-                            <div className="absolute -bottom-2 left-0 right-0 flex justify-around px-2.5">
+                            <div className="absolute -bottom-2.5 left-0 right-0 flex justify-around px-3">
                               {Array.from({ length: capacity - Math.floor(capacity / 2) }).map((_, seatIdx) => {
                                 const globalIdx = Math.floor(capacity / 2) + seatIdx;
                                 const isOccupied = globalIdx < usedSeats;
                                 return (
                                   <div
                                     key={`bot-${seatIdx}`}
-                                    className={`w-3.5 h-3.5 rounded-full transition-colors ${
+                                    className={`w-4 h-4 rounded-full transition-colors ${
                                       isOccupied
                                         ? 'bg-[#C48B81] border border-[#B0776D] shadow-2xs'
                                         : 'bg-white border border-[#D2C4B4]'
@@ -1223,7 +1424,7 @@ export const MesasLayoutModule: React.FC = () => {
                   })}
                 </div>
 
-                {/* Floating Canvas Controls Toolbar (Right side, matching image) */}
+                {/* Floating Canvas Controls Toolbar (Right side) */}
                 <div className="absolute top-4 right-4 z-20 bg-white/95 backdrop-blur-md rounded-2xl border border-[#EFE8E1] shadow-2xs p-1.5 flex flex-col items-center space-y-2">
                   <button
                     type="button"
@@ -1279,7 +1480,7 @@ export const MesasLayoutModule: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Bottom Canvas Legend (Matching reference image) */}
+                {/* Bottom Canvas Legend */}
                 <div className="absolute bottom-4 left-4 z-20 bg-white/90 backdrop-blur-md px-3.5 py-2 rounded-xl border border-[#EFE8E1] text-[11px] font-medium text-[#7D6F6B] flex items-center space-x-4 shadow-2xs">
                   <div className="flex items-center space-x-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#C48B81]" />
@@ -1295,11 +1496,14 @@ export const MesasLayoutModule: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Floor Plan Controls Overlay (if enabled) */}
+                {/* Venue Floor Plan Floating Controls (Previous configuration restored) */}
                 {floorPlanUrl && (
-                  <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md px-3 py-2 rounded-2xl border border-[#EFE8E1] text-[11px] space-y-1.5 shadow-2xs">
+                  <div className="absolute top-4 left-4 z-20 bg-white/95 backdrop-blur-md px-3.5 py-2.5 rounded-2xl border border-[#EFE8E1] text-[11px] space-y-1.5 shadow-2xs">
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#C48B81]">Plano Base</span>
+                      <div className="flex items-center space-x-1.5 font-bold text-xs text-[#2B2826]">
+                        <ImageIcon className="w-3.5 h-3.5 text-[#C48B81]" />
+                        <span>Plano Base Venue</span>
+                      </div>
                       <div className="flex items-center space-x-1">
                         <button
                           type="button"
@@ -1312,7 +1516,8 @@ export const MesasLayoutModule: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setFloorPlanFitMode(floorPlanFitMode === 'contain' ? 'cover' : 'contain')}
-                          className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B]"
+                          className="px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B] hover:bg-[#FAF8F5]"
+                          title="Ajuste: Contener o Cubrir todo el lienzo"
                         >
                           {floorPlanFitMode === 'contain' ? 'Ajustar' : 'Llenar'}
                         </button>
@@ -1328,7 +1533,7 @@ export const MesasLayoutModule: React.FC = () => {
                           step="0.05"
                           value={floorPlanOpacity}
                           onChange={e => setFloorPlanOpacity(parseFloat(e.target.value))}
-                          className="w-16 accent-[#C48B81] cursor-pointer"
+                          className="w-20 accent-[#C48B81] cursor-pointer"
                         />
                         <span className="text-[9px] font-mono text-[#8A7E7A]">{Math.round(floorPlanOpacity * 100)}%</span>
                       </div>
@@ -1354,7 +1559,7 @@ export const MesasLayoutModule: React.FC = () => {
                     className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF7F5] text-[#2B2826] text-xs font-semibold rounded-xl border border-[#EFE8E1] shadow-2xs transition cursor-pointer"
                   >
                     <ImageIcon className="w-3.5 h-3.5 text-[#C48B81]" />
-                    <span>Plano Base Venue</span>
+                    <span>Configurar Plano Base</span>
                   </button>
                   <button
                     type="button"
@@ -1367,6 +1572,22 @@ export const MesasLayoutModule: React.FC = () => {
                 </div>
 
                 <div className="flex items-center space-x-2">
+                  {/* Fijar Lienzo Táctil */}
+                  <button
+                    type="button"
+                    onClick={() => setLockTouchScroll(!lockTouchScroll)}
+                    className={`inline-flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition shadow-2xs cursor-pointer ${
+                      lockTouchScroll
+                        ? 'bg-[#E4ECE5] text-[#2B5235] border-[#BDD4C1]'
+                        : 'bg-white hover:bg-[#FAF7F5] text-[#7D6F6B] border-[#EFE8E1]'
+                    }`}
+                    title="Bloquea el scroll de la página al arrastrar sobre el plano en tablets"
+                  >
+                    <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
+                    <span>{lockTouchScroll ? 'Lienzo Fijado' : 'Fijar Táctil'}</span>
+                  </button>
+
+                  {/* Modo Lienzo Amplio */}
                   <button
                     type="button"
                     onClick={() => setFullCanvasMode(!fullCanvasMode)}
@@ -1379,7 +1600,7 @@ export const MesasLayoutModule: React.FC = () => {
               </div>
             </div>
 
-            {/* Right Guests Sidebar (4 cols on desktop) */}
+            {/* Right Guests Sidebar */}
             {!fullCanvasMode && (
               <div className="lg:col-span-4 bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-2xs space-y-4">
                 {/* Header */}
@@ -1561,159 +1782,6 @@ export const MesasLayoutModule: React.FC = () => {
             )}
           </div>
         )
-      ) : (
-        /* Full Table List View (Accessible to all packages) */
-        <div className="space-y-6">
-          {tables.length === 0 ? (
-            <div className="bg-white rounded-3xl p-10 border border-[#EFE8E1] text-center space-y-3">
-              <Users className="w-10 h-10 text-[#C48B81] mx-auto opacity-80" />
-              <h3 className="font-serif text-xl font-bold text-[#2B2826]">Aún no has creado mesas</h3>
-              <p className="text-xs text-[#7D6F6B] max-w-md mx-auto leading-relaxed">
-                Empieza agregando tu primera mesa (circular, rectangular o imperial) y asigna a tus invitados confirmados.
-              </p>
-              {!isLocked && (
-                <button
-                  type="button"
-                  onClick={() => setShowNewTableModal(true)}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Crear Primera Mesa</span>
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {tables.map(table => {
-                const assignedGuests = table.guests || [];
-                const used = table.used_seats || 0;
-                const isOver = used > table.capacity;
-                const isFull = used === table.capacity;
-
-                return (
-                  <div
-                    key={table.id}
-                    className="bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-2xs space-y-4 hover:border-[#C48B81] transition flex flex-col justify-between"
-                  >
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <span className="font-serif text-lg font-bold text-[#2B2826]">
-                              {table.name}
-                            </span>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-full">
-                              {table.type}
-                            </span>
-                          </div>
-                          <span className="text-xs text-[#7D6F6B]">
-                            {table.capacity} lugares totales
-                          </span>
-                        </div>
-
-                        {!isLocked && (
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteTable(table.id)}
-                            className="text-[#7D6F6B] hover:text-[#A86B60] p-1 rounded-lg hover:bg-[#FAF7F5] transition cursor-pointer"
-                            title="Eliminar mesa"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Capacity Bar */}
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs font-medium">
-                          <span className="text-[#7D6F6B]">Ocupación</span>
-                          <span className={`font-mono font-bold ${isOver ? 'text-[#A86B60]' : isFull ? 'text-[#384C3A]' : 'text-[#2B2826]'}`}>
-                            {used} / {table.capacity}
-                          </span>
-                        </div>
-                        <div className="w-full bg-[#FAF7F5] h-2 rounded-full overflow-hidden border border-[#EFE8E1]">
-                          <div
-                            className={`h-full rounded-full transition-all duration-300 ${
-                              isOver ? 'bg-[#A86B60]' : isFull ? 'bg-[#384C3A]' : 'bg-[#C48B81]'
-                            }`}
-                            style={{
-                              width: `${Math.min(100, Math.round((used / table.capacity) * 100))}%`
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Guest list */}
-                      <div className="pt-2 border-t border-[#FAF7F5] space-y-1.5">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#8A7E72] block">
-                          Invitados ({assignedGuests.length})
-                        </span>
-                        {assignedGuests.length === 0 ? (
-                          <p className="text-xs text-[#8A7E7A] italic py-1">
-                            Sin invitados asignados aún.
-                          </p>
-                        ) : (
-                          <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                            {assignedGuests.map(g => (
-                              <div
-                                key={g.id}
-                                className="flex items-center justify-between p-2 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] text-xs"
-                              >
-                                <div className="min-w-0 pr-2">
-                                  <span className="font-semibold text-[#2B2826] block truncate">
-                                    {g.first_name} {g.last_name || ''}
-                                  </span>
-                                  {Boolean(g.companion_count) && (
-                                    <span className="text-[10px] text-[#7D6F6B]">
-                                      +{g.companion_count} comp. ({1 + g.companion_count} lugares)
-                                    </span>
-                                  )}
-                                </div>
-                                {!isLocked && (
-                                  <button
-                                    type="button"
-                                    onClick={() => handleUnassignGuest(g.id)}
-                                    className="text-[#7D6F6B] hover:text-[#A86B60] p-1 rounded-md cursor-pointer"
-                                    title="Quitar de la mesa"
-                                  >
-                                    ✕
-                                  </button>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Quick assign guest dropdown */}
-                    {!isLocked && unassignedGuests.length > 0 && (
-                      <div className="pt-2 border-t border-[#FAF7F5]">
-                        <select
-                          defaultValue=""
-                          onChange={e => {
-                            const val = e.target.value;
-                            if (val) {
-                              handleAssignGuest(val, table.id);
-                            }
-                          }}
-                          className="w-full px-2.5 py-1.5 text-xs border border-[#EFE8E1] rounded-xl bg-[#FAF7F5] text-[#2B2826] focus:outline-none focus:ring-1 focus:ring-[#C48B81] cursor-pointer"
-                        >
-                          <option value="">+ Sentar invitado aquí...</option>
-                          {unassignedGuests.map(g => (
-                            <option key={g.id} value={g.id}>
-                              {g.first_name} {g.last_name || ''} (+{g.companion_count || 0} acomp.)
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
       )}
 
       {/* Quick Assignment Popover Modal (Image 1 reference) */}
@@ -2010,7 +2078,7 @@ export const MesasLayoutModule: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Plano Base del Lugar */}
+      {/* Modal: Plano Base del Venue (PDF & Imágenes) */}
       {showFloorPlanModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EFE8E1] space-y-4">
@@ -2020,7 +2088,7 @@ export const MesasLayoutModule: React.FC = () => {
                   Plantilla de Fondo · Layout 2D
                 </span>
                 <h3 className="font-serif text-2xl text-[#2B2826] mt-0.5">
-                  Plano Base del Lugar
+                  Plano Base del Venue
                 </h3>
               </div>
               <button
@@ -2033,7 +2101,7 @@ export const MesasLayoutModule: React.FC = () => {
             </div>
 
             <p className="text-xs text-[#7D6F6B] leading-relaxed">
-              Carga el plano arquitectónico en <strong>PDF</strong> o imagen (PNG/JPG) de la hacienda o salón para utilizarlo como referencia visual exacta debajo de tus mesas.
+              Carga el plano arquitectónico en <strong>PDF</strong> o imagen (PNG/JPG) que te entregó la hacienda o salón para utilizarlo como referencia visual exacta debajo de tus mesas.
             </p>
 
             {floorPlanError && (
@@ -2148,7 +2216,7 @@ export const MesasLayoutModule: React.FC = () => {
                   Guía Rápida
                 </span>
                 <h3 className="font-serif text-xl font-bold text-[#2B2826]">
-                  Organización de Mesas y Layout
+                  Mesas y Layout
                 </h3>
               </div>
               <button
@@ -2162,16 +2230,16 @@ export const MesasLayoutModule: React.FC = () => {
 
             <div className="space-y-3 text-xs text-[#7D6F6B] leading-relaxed">
               <div className="p-3 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-1">
-                <strong className="text-[#2B2826] block">1. Asignar invitados con 1 clic:</strong>
-                Haz clic en el botón <span className="bg-[#E8DEF8] px-2 py-0.5 rounded-md font-semibold text-[#2B2826]">Asignar</span> en la columna de la derecha para abrir las mesas con lugares disponibles.
+                <strong className="text-[#2B2826] block">1. Lista de mesas:</strong>
+                Consulta todas tus mesas, su ocupación y agrega invitados directamente desde el selector de cada mesa o descarga el PDF oficial.
               </div>
               <div className="p-3 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-1">
-                <strong className="text-[#2B2826] block">2. Colorear Grupos:</strong>
-                Activa el botón <span className="font-semibold text-[#2B2826]">Colorear grupos</span> para distinguir rápidamente cada familia o grupo con tonos pastel suaves.
+                <strong className="text-[#2B2826] block">2. Plano Base del Venue:</strong>
+                En la pestaña Mapa puedes subir el PDF o imagen arquitectónica que te entrega tu salón o hacienda y calibrar su opacidad y ajuste.
               </div>
               <div className="p-3 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-1">
-                <strong className="text-[#2B2826] block">3. Movimiento en Plano 2D:</strong>
-                Arrastra libremente cualquier mesa o pista de baile en el mapa. Los lugares ocupados se muestran en tono terracota <span className="text-[#C48B81] font-bold">●</span> y los disponibles en blanco <span className="text-stone-400 font-bold">○</span>.
+                <strong className="text-[#2B2826] block">3. Ajuste de Tamaño de Mesas:</strong>
+                Usa el control deslizante <span className="font-semibold text-[#2B2826]">Tamaño mesas</span> para adaptar el diámetro y escala de las mesas para que coincidan con la escala del plano arquitectónico.
               </div>
             </div>
 
