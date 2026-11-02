@@ -21,7 +21,7 @@ import { BitacoraModule } from './modules/BitacoraModule';
 import { WhatsAppHubModule } from './modules/WhatsAppHubModule';
 import { CalendarioModule } from './modules/CalendarioModule';
 import {
-  Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff
+  Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff, Sparkles
 } from 'lucide-react';
 
 const LoginView: React.FC = () => {
@@ -564,8 +564,8 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
           {weddingDayMode && (
             <div className="mb-6 bg-gradient-to-r from-[#C48B81] via-[#85534A] to-[#6E433D] text-white p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center space-x-3.5">
-                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center text-xl shrink-0">
-                  💍
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">

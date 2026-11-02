@@ -306,7 +306,7 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
                 : 'border-transparent text-[#7D6F6B] hover:text-[#332A28]'
             }`}
           >
-            <span>📍 2. Recordatorio 7 Días Antes</span>
+            <span>2. Recordatorio 7 Días Antes</span>
             {scheduleData && (
               <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B]">
                 {scheduleData.reminder7Days.status === 'SENT' ? 'Enviado ✓' : 'Programado'}
@@ -322,7 +322,7 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
                 : 'border-transparent text-[#7D6F6B] hover:text-[#332A28]'
             }`}
           >
-            <span>🍽️ 3. Asignación de Mesa (Día Evento)</span>
+            <span>3. Asignación de Mesa (Día Evento)</span>
             {scheduleData && (
               <span className="px-2 py-0.5 rounded-full text-[10px] bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B]">
                 {scheduleData.dayOfSeating.status === 'SENT' ? 'Enviado ✓' : 'Programado'}

@@ -537,11 +537,11 @@ router.post('/send', async (req, res) => {
           phone,
           fullPdfUrl,
           wedding.invitation_pdf_filename || `Invitacion_${coupleNames.replace(/\s+/g, '_')}.pdf`,
-          `💌 Aquí tienes tu invitación formal para la boda de *${coupleNames}*.`,
+          `Aquí tienes tu invitación formal para la boda de *${coupleNames}*.`,
           { weddingId: !isSpecialId ? weddingId : undefined, guestId, sender: 'AGENT' }
         );
       } else {
-        const linkMsg = `💌 *Invitación de Boda - ${coupleNames}*\n\nPuedes ver la invitación digital aquí:\n${wedding?.invitation_url || 'https://labodadeferyvic.com'}`;
+        const linkMsg = `*Invitación de Boda - ${coupleNames}*\n\nPuedes ver la invitación digital aquí:\n${wedding?.invitation_url || 'https://labodadeferyvic.com'}`;
         result = await WhatsAppService.sendTextMessage(phone, linkMsg, {
           weddingId: !isSpecialId ? weddingId : undefined,
           guestId,

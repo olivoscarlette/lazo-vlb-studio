@@ -834,7 +834,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               {/* Paso 3 */}
               <div className="p-3.5 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#2B2826]">3. Ficha Final & Entrega ✨</span>
+                  <span className="font-bold text-[#2B2826]">3. Ficha Final & Entrega</span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60] font-semibold">PDF o Enlace</span>
                 </div>
                 <p className="text-[11px] text-[#7D6F6B]">
@@ -880,7 +880,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#EBDCC5]/50 text-[#8A6332]">
-                    📍 Plantilla 2 · Recordatorio
+                    Plantilla 2 · Recordatorio
                   </span>
                   <span className="text-xs font-semibold text-[#25D366] flex items-center space-x-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>
@@ -917,7 +917,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#E4ECE5] text-[#2B5235]">
-                    🍽️ Plantilla 3 · Día de la Boda
+                    Plantilla 3 · Día de la Boda
                   </span>
                   <span className="text-xs font-semibold text-[#25D366] flex items-center space-x-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#25D366] animate-pulse"></span>

@@ -1030,10 +1030,10 @@ export const InvitadosModule: React.FC = () => {
               <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>
                 {currentWedding?.invitation_type === 'PDF' && currentWedding?.invitation_pdf_url
-                  ? '📄 Invitación PDF lista'
+                  ? 'Invitación PDF lista'
                   : currentWedding?.invitation_url
-                  ? '🔗 Enlace Canva listo'
-                  : '💌 Subir Invitación (PDF / Enlace)'}
+                  ? 'Enlace Canva listo'
+                  : 'Subir Invitación (PDF / Enlace)'}
               </span>
             </button>
           )}
@@ -1062,7 +1062,7 @@ export const InvitadosModule: React.FC = () => {
               title="Programar envíos automáticos de WhatsApp (Recordatorio 7 días antes y Asignación de mesa)"
             >
               <Clock className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>⏰ Programar Recordatorios & Mesas</span>
+              <span>Programar Recordatorios & Mesas</span>
             </button>
           )}
 
@@ -1417,7 +1417,7 @@ export const InvitadosModule: React.FC = () => {
                               let cleaned = guest.phone.replace(/\D/g, '');
                               if (cleaned.length === 10) cleaned = '52' + cleaned;
                               if (cleaned.length === 13 && cleaned.startsWith('521')) cleaned = '52' + cleaned.slice(3);
-                              const text = `Hola ${guest.first_name}! 💍 Nos emociona mucho celebrar nuestra boda contigo (${
+                              const text = `Hola ${guest.first_name}! Nos emociona mucho celebrar nuestra boda contigo (${
                                 currentWedding?.partner_1_name && currentWedding?.partner_2_name
                                   ? `${currentWedding.partner_1_name} & ${currentWedding.partner_2_name}`
                                   : (currentWedding?.name || 'Lazo Studio')
@@ -1486,12 +1486,12 @@ export const InvitadosModule: React.FC = () => {
 
                         {guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna' && (
                           <span className="text-[10px] font-semibold text-[#8A6D5E] bg-[#FAF4F0] px-2 py-0.5 rounded-md border border-[#EFE8E1] truncate max-w-[144px]" title={guest.dietary_requirements}>
-                            🥗 {guest.dietary_requirements}
+                            Restricción: {guest.dietary_requirements}
                           </span>
                         )}
                         {guest.rsvp_step === 'COMPLETED' && (
                           <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-md border border-[#ECD9D5] truncate max-w-[144px]">
-                            ✨ Bot: Completado
+                            Bot: Completado
                           </span>
                         )}
                       </div>
@@ -1571,7 +1571,7 @@ export const InvitadosModule: React.FC = () => {
                         <span title={guest.observations}>{guest.observations}</span>
                       ) : (guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna') ? (
                         <span title={`Alergias: ${guest.dietary_requirements}`} className="text-[#8A6D5E] font-medium">
-                          🥗 {guest.dietary_requirements}
+                          Restricción: {guest.dietary_requirements}
                         </span>
                       ) : (
                         <span className="text-[#D2C4B4] italic">—</span>
@@ -1898,7 +1898,6 @@ export const InvitadosModule: React.FC = () => {
               {/* Dietary requirements callout if captured via WhatsApp */}
               {!isNewGuest && editingGuest?.dietary_requirements && editingGuest.dietary_requirements !== 'Ninguna' && (
                 <div className="p-3 bg-[#FAF4F0] border border-[#EFE8E1] rounded-xl text-xs flex items-center space-x-2.5">
-                  <span className="text-base shrink-0">🥗</span>
                   <div className="min-w-0">
                     <span className="font-semibold text-[#2B2826] block text-[11px]">Restricciones registradas vía WhatsApp:</span>
                     <span className="text-[#8A6D5E] font-medium text-xs break-words">{editingGuest.dietary_requirements}</span>
@@ -2081,12 +2080,12 @@ export const InvitadosModule: React.FC = () => {
                   ) : null}
                   {chatGuest.dietary_requirements && chatGuest.dietary_requirements !== 'Ninguna' && (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
-                      🥗 {chatGuest.dietary_requirements}
+                      Restricción: {chatGuest.dietary_requirements}
                     </span>
                   )}
                   {chatGuest.rsvp_step === 'COMPLETED' && (
                     <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F7EDEB] text-[#A86B60]">
-                      ✨ Bot: Completado
+                      Bot: Completado
                     </span>
                   )}
                 </div>

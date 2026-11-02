@@ -34,7 +34,7 @@ export const CALENDAR_CATEGORIES = [
     label: 'Cita planning',
     color: '#C48B81',
     dotColor: '#C48B81',
-    icon: '🌸',
+    icon: '',
     description: 'Citas y reuniones de seguimiento de planeación con novios'
   },
   {
@@ -42,7 +42,7 @@ export const CALENDAR_CATEGORIES = [
     label: 'Cita externa',
     color: '#2563EB',
     dotColor: '#2563EB',
-    icon: '💼',
+    icon: '',
     description: 'Citas externas, visitas a locaciones, degustaciones y proveedores'
   },
   {
@@ -50,7 +50,7 @@ export const CALENDAR_CATEGORIES = [
     label: 'Boda',
     color: '#059669',
     dotColor: '#059669',
-    icon: '💍',
+    icon: '',
     description: 'Día oficial de la boda (agregadas automáticamente desde Bodas)'
   },
   {
@@ -58,7 +58,7 @@ export const CALENDAR_CATEGORIES = [
     label: 'Open house',
     color: '#7C3AED',
     dotColor: '#7C3AED',
-    icon: '🏛️',
+    icon: '',
     description: 'Open house de venues, showrooms y presentaciones'
   },
   {
@@ -66,7 +66,7 @@ export const CALENDAR_CATEGORIES = [
     label: 'Servicios',
     color: '#D97706',
     dotColor: '#D97706',
-    icon: '🍸',
+    icon: '',
     description: 'Servicios'
   },
   {
@@ -74,7 +74,7 @@ export const CALENDAR_CATEGORIES = [
     label: 'Papelería',
     color: '#E11D48',
     dotColor: '#E11D48',
-    icon: '💌',
+    icon: '',
     description: 'Entregas, revisiones y pruebas de papelería nupcial'
   },
   {
@@ -82,7 +82,7 @@ export const CALENDAR_CATEGORIES = [
     label: 'Otro',
     color: '#78716C',
     dotColor: '#78716C',
-    icon: '📌',
+    icon: '',
     description: 'Otros eventos y actividades del estudio'
   }
 ];
@@ -326,7 +326,7 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
       const [ih, im] = item.time.split(':').map(Number);
       const itemMin = ih * 60 + (im || 0);
       if (Math.abs(targetMin - itemMin) < 45) {
-        setConflictWarning(`⚠️ Alerta de Empalme: Ya existe "${item.title}" a las ${item.time} hrs (${item.event_type}).`);
+        setConflictWarning(`Alerta de Empalme: Ya existe "${item.title}" a las ${item.time} hrs (${item.event_type}).`);
         return;
       }
     }
@@ -1107,10 +1107,10 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                 onChange={e => setSelectedWeddingFilter(e.target.value)}
                 className="w-full text-xs px-2.5 py-1.5 bg-[#FFFFFF] border border-[#EFE8E1] rounded-lg text-[#332A28] focus:outline-none"
               >
-                <option value="TODAS">🌟 Todas las Bodas</option>
+                <option value="TODAS">Todas las Bodas</option>
                 {assignedWeddings.map(w => (
                   <option key={w.id} value={w.id}>
-                    💍 {w.name}
+                    {w.name}
                   </option>
                 ))}
               </select>
@@ -1404,7 +1404,7 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                                 </span>
                                 {evt.wedding_name && (
                                   <span className="text-xs text-[#7D6F6B] font-semibold">
-                                    💍 {evt.wedding_name}
+                                    {evt.wedding_name}
                                   </span>
                                 )}
                               </div>
@@ -1819,8 +1819,8 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                         {evt.time && <span className="text-xs font-bold text-[#2B2826]">{evt.time}</span>}
                       </div>
                       <div className="font-semibold text-sm text-[#2B2826]">{evt.title}</div>
-                      {evt.wedding_name && <div className="text-xs text-[#8A7E72]">💍 {evt.wedding_name}</div>}
-                      {evt.location && <div className="text-xs text-[#8A7E72]">📍 {evt.location}</div>}
+                      {evt.wedding_name && <div className="text-xs text-[#8A7E72]">{evt.wedding_name}</div>}
+                      {evt.location && <div className="text-xs text-[#8A7E72]">{evt.location}</div>}
                     </div>
                     <ChevronRight className="w-4 h-4 text-stone-400 shrink-0" />
                   </div>
@@ -1885,13 +1885,13 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                     onChange={e => setFormData({ ...formData, event_type: e.target.value as any })}
                     className="w-full text-xs px-3 py-2.5 bg-[#FFFFFF] border border-[#EFE8E1] rounded-xl focus:outline-none focus:border-[#C48B81]"
                   >
-                    <option value="PLANNING">🌸 Cita planning</option>
-                    <option value="CITA_EXTERNA">💼 Cita externa</option>
-                    <option value="BODA">💍 Boda</option>
-                    <option value="OPEN_HOUSE">🏛️ Open house</option>
-                    <option value="SERVICIO">🍸 Servicios</option>
-                    <option value="PAPELERIA">💌 Papelería</option>
-                    <option value="OTRO">📌 Otro</option>
+                    <option value="PLANNING">Cita planning</option>
+                    <option value="CITA_EXTERNA">Cita externa</option>
+                    <option value="BODA">Boda</option>
+                    <option value="OPEN_HOUSE">Open house</option>
+                    <option value="SERVICIO">Servicios</option>
+                    <option value="PAPELERIA">Papelería</option>
+                    <option value="OTRO">Otro</option>
                   </select>
                 </div>
 
@@ -2237,7 +2237,7 @@ export const CalendarioModule: React.FC<CalendarioModuleProps> = ({ onToggleSide
                 }}
                 className="px-3 py-1.5 bg-[#FFFFFF] hover:bg-[#F3ECE2] border border-[#EFE8E1] text-[#C48B81] font-semibold rounded-xl transition shadow-2xs whitespace-nowrap cursor-pointer shrink-0"
               >
-                ✨ Aplicar Regla
+                Aplicar Regla
               </button>
             </div>
 

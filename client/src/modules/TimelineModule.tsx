@@ -819,8 +819,8 @@ export const TimelineModule: React.FC = () => {
                           {item.activity}
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#786C68]">
-                          {item.location && <span>📍 {item.location}</span>}
-                          {item.responsible && <span>👤 Resp: {item.responsible}</span>}
+                          {item.location && <span>Sede: {item.location}</span>}
+                          {item.responsible && <span>Resp: {item.responsible}</span>}
                           {item.notes && <span className="italic">“{item.notes}”</span>}
                         </div>
                         {item.status === 'COMPLETADO' && (
@@ -1010,9 +1010,9 @@ export const TimelineModule: React.FC = () => {
               <div className="space-y-2.5 text-xs text-[#5A524C] pt-1">
                 <div className="p-3 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                   <div className="font-bold text-[#332C2A]">Ceremonia Religiosa</div>
-                  <div>📍 {religiousData?.temple_name || weddingDetails?.ceremony_venue || 'Por definir'}</div>
-                  <div>🕒 {religiousData?.time || weddingDetails?.ceremony_time || 'Por definir'} hrs</div>
-                  {religiousData?.officiant && <div>👤 Oficiante: {religiousData.officiant}</div>}
+                  <div>Sede: {religiousData?.temple_name || weddingDetails?.ceremony_venue || 'Por definir'}</div>
+                  <div>Hora: {religiousData?.time || weddingDetails?.ceremony_time || 'Por definir'} hrs</div>
+                  {religiousData?.officiant && <div>Oficiante: {religiousData.officiant}</div>}
                 </div>
                 <div className={`p-3 rounded-xl border ${isCivilSeparateDay ? 'bg-[#FFF7ED] border-[#FED7AA]' : 'bg-[#F9F6F2] border border-[#EFE8DE]'}`}>
                   <div className="flex items-center justify-between gap-2">
@@ -1027,14 +1027,14 @@ export const TimelineModule: React.FC = () => {
                       {isCivilSeparateDay ? `Otro día: ${civilData?.date}` : 'Mismo día boda'}
                     </span>
                   </div>
-                  <div className="mt-1">📍 {civilData?.location || weddingDetails?.reception_venue || 'Por definir'}</div>
-                  <div>🕒 {civilData?.time || 'Por definir'} hrs</div>
-                  {civilData?.juez_oficial && <div>👤 Juez: {civilData.juez_oficial}</div>}
+                  <div className="mt-1">Sede: {civilData?.location || weddingDetails?.reception_venue || 'Por definir'}</div>
+                  <div>Hora: {civilData?.time || 'Por definir'} hrs</div>
+                  {civilData?.juez_oficial && <div>Juez: {civilData.juez_oficial}</div>}
                 </div>
                 <div className="p-3 rounded-xl bg-[#F9F6F2] border border-[#EFE8DE]">
                   <div className="font-bold text-[#332C2A]">Recepción</div>
-                  <div>📍 {weddingDetails?.reception_venue || 'Por definir'}</div>
-                  <div>🕒 {weddingDetails?.reception_time || 'Por definir'} hrs</div>
+                  <div>Sede: {weddingDetails?.reception_venue || 'Por definir'}</div>
+                  <div>Hora: {weddingDetails?.reception_time || 'Por definir'} hrs</div>
                 </div>
               </div>
             </div>

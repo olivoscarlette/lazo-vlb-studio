@@ -25,7 +25,7 @@ async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, ph
   const formattedDate = formatWeddingDateHuman(wedding.wedding_date);
   const places = guest.confirmed_places || (1 + (guest.companion_count || 0));
 
-  let summary = `ASISTENCIA CONFIRMADA ✨\n\n` +
+  let summary = `ASISTENCIA CONFIRMADA\n\n` +
     `Boda *${coupleNames}*\n` +
     `${formattedDate}\n\n`;
 
@@ -57,7 +57,7 @@ async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, ph
   summary += `\n`;
 
   if (wedding.invitation_type === 'LINK' && wedding.invitation_url) {
-    summary += `💌 Tu invitación digital:\n${wedding.invitation_url}\n\n`;
+    summary += `Tu invitación digital:\n${wedding.invitation_url}\n\n`;
   }
 
   summary += `¡Estamos contando los días para celebrar juntos!`;
@@ -79,7 +79,7 @@ async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, ph
       phone,
       fullPdfUrl,
       wedding.invitation_pdf_filename || `Invitacion_${coupleNames.replace(/\s+/g, '_')}.pdf`,
-      `💌 Aquí tienes tu invitación formal para la boda de *${coupleNames}*.`,
+      `Aquí tienes tu invitación formal para la boda de *${coupleNames}*.`,
       { weddingId, guestId: guest.id }
     );
   }
@@ -153,7 +153,7 @@ async function handleAutomatedRsvpStep(params: {
 
     await WhatsAppService.sendTextMessage(
       normalizedPhone,
-      `Muchas gracias por avisarnos, ${matchedGuest.first_name}.\n\nLamentamos que no puedas acompañarnos físicamente, ¡te tendremos muy presente y te mandamos un abrazo con mucho cariño! 💕`,
+      `Muchas gracias por avisarnos, ${matchedGuest.first_name}.\n\nLamentamos que no puedas acompañarnos físicamente, ¡te tendremos muy presente y te mandamos un abrazo con mucho cariño!`,
       { weddingId, guestId: matchedGuest.id }
     );
     return;

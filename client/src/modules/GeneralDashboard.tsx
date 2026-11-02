@@ -1531,7 +1531,7 @@ export const GeneralDashboard: React.FC = () => {
               <div>
                 <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
                   <h1 className="font-serif text-2xl sm:text-4xl font-bold text-[#2B2826] tracking-tight">
-                    Hola, {userName} 👋
+                    Hola, {userName}
                   </h1>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5] shrink-0">
                     <span className="w-2 h-2 rounded-full bg-[#C48B81]"></span>

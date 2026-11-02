@@ -155,7 +155,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       if (diffDays < 0) {
         return {
           status: 'VENCIDO',
-          label: `⚠️ Vencido hace ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'día' : 'días'}`,
+          label: `Vencido hace ${Math.abs(diffDays)} ${Math.abs(diffDays) === 1 ? 'día' : 'días'}`,
           badgeClass: 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5] font-semibold',
           isAlert: true
         };
@@ -163,7 +163,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       if (diffDays === 0) {
         return {
           status: 'HOY',
-          label: '⚠️ ¡Vence hoy!',
+          label: '¡Vence hoy!',
           badgeClass: 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5] font-semibold',
           isAlert: true
         };
@@ -171,7 +171,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       if (diffDays <= 7) {
         return {
           status: 'PROXIMO',
-          label: `⏳ Vence en ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`,
+          label: `Vence en ${diffDays} ${diffDays === 1 ? 'día' : 'días'}`,
           badgeClass: 'bg-[#F5EFEB] text-[#7D6F6B] border-[#EFE8E1] font-semibold',
           isAlert: true
         };

@@ -345,7 +345,7 @@ router.get('/feed.ics', (req, res) => {
       lines.push(`UID:lazo-wedding-day-${w.id}@vlb.studio`);
       lines.push(`DTSTAMP:${nowIso}`);
       lines.push(`DTSTART;VALUE=DATE:${cleanDate}`);
-      lines.push(`SUMMARY:${escapeIcs(`💍 BODA VLB: ${w.name}`)}`);
+      lines.push(`SUMMARY:${escapeIcs(`Boda: ${w.name}`)}`);
       lines.push(`DESCRIPTION:${escapeIcs(`Día oficial de celebración para la boda de ${w.name}.\\nLugar: ${venue}\\nPlataforma: LAZO VLB Studio`)}`);
       if (venue && venue !== 'Por definir') {
         lines.push(`LOCATION:${escapeIcs(venue)}`);

@@ -273,11 +273,11 @@ export const CivilModule: React.FC = () => {
                 </h3>
                 {civil.date && currentWedding?.wedding_date && civil.date !== currentWedding.wedding_date ? (
                   <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#F7EDEB] text-[#C48B81] border border-[#F0D5D1]">
-                    📅 Otro Día · Fecha Independiente ({civil.date})
+                    Otro Día · Fecha Independiente ({civil.date})
                   </span>
                 ) : (
                   <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1]">
-                    📅 Mismo Día de la Boda
+                    Mismo Día de la Boda
                   </span>
                 )}
               </div>
