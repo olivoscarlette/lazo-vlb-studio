@@ -57,7 +57,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   // Navigation Tabs: 'quotes' | 'orders' | 'packing' | 'templates' | 'catalog'
   const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog' | 'packing' | 'templates'>('quotes');
   const [quoteDiscountPct, setQuoteDiscountPct] = useState<number>(0);
-  const [depositMode, setDepositMode] = useState<'AUTO' | 'SERVICIO' | 'PAPELERIA'>('AUTO');
 
   // Packing Checklist State (Día del Evento / Packing al Auto)
   const [selectedPackingOrderId, setSelectedPackingOrderId] = useState<string>('');
@@ -499,16 +498,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const quoteDiscountAmount = (quoteSubtotal * (Number(quoteDiscountPct) || 0)) / 100;
   const quoteTotal = Math.max(0, quoteSubtotal - quoteDiscountAmount);
 
-  // Reglas de negocio Viva la Bride:
-  // Es uno u otro:
-  // - Si es Servicio/Stand: separación fija de $1,000 (saldo se liquida 10 días antes del evento).
-  // - Si es Papelería Social: anticipo del 50% (saldo se liquida al entregar o programar envío).
+  // Reglas de negocio Viva la Bride: Selección 100% Automática
+  // - Si la propuesta incluye algún Servicio o Stand: separación fija de $1,000 (saldo se liquida 10 días antes del evento).
+  // - Si es únicamente Papelería Social: anticipo del 50% (saldo se liquida al entregar o programar envío).
   const stationeryItems = quoteItems.filter(i => i.category === 'PAPELERIA');
   const servicesItems = quoteItems.filter(i => i.category === 'STANDS_EXPERIENCIAS' || i.category === 'SERVICIOS_DIGITALES');
   const hasStationery = stationeryItems.length > 0;
   const hasServices = servicesItems.length > 0;
 
-  const isServiceQuote = depositMode === 'SERVICIO' ? true : depositMode === 'PAPELERIA' ? false : hasServices;
+  const isServiceQuote = hasServices;
 
   let quoteDownPayment = 0;
   if (isServiceQuote) {
@@ -1359,32 +1357,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   <span className="text-[11px] font-bold text-[#9C665C] bg-[#FAF6F2] px-2.5 py-1 rounded-full border border-[#EAE3DA]">
                     {isServiceQuote ? 'Separación $1,000' : 'Anticipo 50%'}
                   </span>
-                </div>
-
-                {/* Selector rápido: Servicios ($1,000) o Papelería (50%) */}
-                <div className="flex items-center justify-between p-1 bg-[#FCFAF7] rounded-xl border border-[#EAE3DA] text-[11px]">
-                  <button
-                    type="button"
-                    onClick={() => setDepositMode('SERVICIO')}
-                    className={`flex-1 py-1 px-2 rounded-lg font-bold transition cursor-pointer text-center ${
-                      isServiceQuote
-                        ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                        : 'text-[#7D6F6B] hover:text-[#332A28]'
-                    }`}
-                  >
-                    ✨ Servicios ($1,000)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDepositMode('PAPELERIA')}
-                    className={`flex-1 py-1 px-2 rounded-lg font-bold transition cursor-pointer text-center ${
-                      !isServiceQuote
-                        ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                        : 'text-[#7D6F6B] hover:text-[#332A28]'
-                    }`}
-                  >
-                    📦 Papelería (50%)
-                  </button>
                 </div>
 
                 <div className="space-y-3 text-sm">
