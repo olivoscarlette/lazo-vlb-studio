@@ -27,7 +27,11 @@ import {
   Percent,
   Check,
   RefreshCw,
-  MessageSquare
+  MessageSquare,
+  CheckSquare,
+  Square,
+  ListTodo,
+  Tag
 } from 'lucide-react';
 import {
   VlbCatalogItem,
@@ -37,7 +41,8 @@ import {
   VlbQuoteItem,
   VlbOrder,
   VlbPayment,
-  VlbDocument
+  VlbDocument,
+  VlbTask
 } from '../types/vlb';
 import { generateVlbQuotePdf } from '../utils/vlbPdfGenerator';
 
@@ -123,6 +128,12 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     stand_setup_date: '',
     stand_setup_time: '14:00'
   });
+
+  // Dynamic tasks state for CRM Drawer
+  const [showNewTaskRow, setShowNewTaskRow] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskDate, setNewTaskDate] = useState('');
+  const [newTaskCategory, setNewTaskCategory] = useState<'PAPELERIA' | 'SERVICIO'>('SERVICIO');
 
   // Search & Filters
   const [catalogSearch, setCatalogSearch] = useState('');
@@ -444,6 +455,70 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleToggleTaskCompleted = async (taskId: string) => {
+    if (!selectedOrder) return;
+    const currentTasks = selectedOrder.tasks || [];
+    const updatedTasks = currentTasks.map(t =>
+      t.id === taskId ? { ...t, completed: !t.completed } : t
+    );
+    setSelectedOrder({ ...selectedOrder, tasks: updatedTasks });
+    try {
+      await apiFetch(`/api/vlb/orders/${selectedOrder.id}/tasks`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tasks: updatedTasks })
+      });
+      loadData();
+    } catch (err: any) {
+      showToast('Error al actualizar tarea', 'error');
+    }
+  };
+
+  const handleAddNewTask = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOrder || !newTaskTitle.trim()) return;
+    const newTask: VlbTask = {
+      id: 'task_' + Date.now(),
+      title: newTaskTitle.trim(),
+      due_date: newTaskDate || selectedOrder.event_date,
+      completed: false,
+      category: newTaskCategory
+    };
+    const updatedTasks = [...(selectedOrder.tasks || []), newTask];
+    setSelectedOrder({ ...selectedOrder, tasks: updatedTasks });
+    setNewTaskTitle('');
+    setNewTaskDate('');
+    setShowNewTaskRow(false);
+    try {
+      await apiFetch(`/api/vlb/orders/${selectedOrder.id}/tasks`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tasks: updatedTasks })
+      });
+      showToast('Tarea agregada exitosamente');
+      loadData();
+    } catch (err: any) {
+      showToast('Error al guardar tarea', 'error');
+    }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    if (!selectedOrder) return;
+    const updatedTasks = (selectedOrder.tasks || []).filter(t => t.id !== taskId);
+    setSelectedOrder({ ...selectedOrder, tasks: updatedTasks });
+    try {
+      await apiFetch(`/api/vlb/orders/${selectedOrder.id}/tasks`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tasks: updatedTasks })
+      });
+      showToast('Tarea eliminada');
+      loadData();
+    } catch (err: any) {
+      showToast('Error al eliminar tarea', 'error');
     }
   };
 
@@ -1214,26 +1289,97 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </div>
                   </div>
 
-                  {/* Semáforo de Fechas Críticas */}
+                  {/* DISTINCIÓN VISUAL CLARA DEL TIPO DE SERVICIO Y PRODUCTOS CONTRATADOS */}
+                  <div className="space-y-1.5 pt-1">
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          order.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D] border border-[#ECD9D5]'
+                            : order.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A] border border-[#D3E0D3]'
+                            : 'bg-gradient-to-r from-[#F7EDEB] to-[#EBF2EB] text-[#58352F] border border-[#E0D4CE]'
+                        }`}
+                      >
+                        <Tag className="w-3 h-3 mr-0.5" />
+                        <span>
+                          {order.service_type === 'PAPELERIA'
+                            ? 'Papelería Social Fina'
+                            : order.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'Stands & Experiencias'
+                            : 'Papelería + Stands'}
+                        </span>
+                      </span>
+                    </div>
+
+                    {/* Chips de Artículos Contratados */}
+                    <div className="flex flex-wrap gap-1">
+                      {order.items && order.items.length > 0 ? (
+                        <>
+                          {order.items.slice(0, 3).map((it, idx) => (
+                            <span
+                              key={idx}
+                              className="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA] truncate max-w-[190px]"
+                              title={it.item_name}
+                            >
+                              {it.pricing_type === 'PER_PIECE' ? `${it.quantity}x ` : ''}{it.item_name}
+                            </span>
+                          ))}
+                          {order.items.length > 3 && (
+                            <span className="px-1.5 py-0.5 rounded-lg text-[10px] font-bold bg-[#F3EDE6] text-[#7D6F6B]">
+                              +{order.items.length - 3} más
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-[10px] text-[#7D6F6B] italic">Sin detalle de artículos</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* TAREAS & FECHAS CRÍTICAS OPERATIVAS (ADAPTADAS A SERVICIOS O PAPELERÍA) */}
                   <div className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-1.5 text-[11px]">
-                    <div className="flex items-center justify-between text-[#7D6F6B]">
-                      <span>Límite VoBo Diseño:</span>
-                      <span className="font-bold text-[#332A28]">
-                        {order.vobo_design_deadline || 'No asignada'}
-                      </span>
+                    <div className="flex items-center justify-between text-[#7D6F6B] pb-1 border-b border-[#F0EAE4]">
+                      <div className="flex items-center space-x-1 font-semibold text-[#332A28]">
+                        <ListTodo className="w-3.5 h-3.5 text-[#B88A82]" />
+                        <span>Tareas & Logística</span>
+                      </div>
+                      {order.tasks && order.tasks.length > 0 && (
+                        <span className="text-[10px] font-bold text-[#9C665C]">
+                          {order.tasks.filter(t => t.completed).length}/{order.tasks.length} listas
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center justify-between text-[#7D6F6B]">
-                      <span>Entrega Papelería:</span>
-                      <span className="font-bold text-[#332A28]">
-                        {order.physical_delivery_date || 'No asignada'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-[#7D6F6B]">
-                      <span>Montaje Stands:</span>
-                      <span className="font-bold text-[#70443D]">
-                        {order.stand_setup_date || order.event_date} {order.stand_setup_time ? `(${order.stand_setup_time})` : ''}
-                      </span>
-                    </div>
+
+                    {order.tasks && order.tasks.length > 0 ? (
+                      <div className="space-y-1">
+                        {order.tasks.slice(0, 3).map(task => (
+                          <div key={task.id} className="flex items-center justify-between text-[11px]">
+                            <span className={`truncate max-w-[170px] ${task.completed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28] font-medium'}`}>
+                              {task.completed ? '✓ ' : '• '}{task.title}
+                            </span>
+                            <span className="text-[10px] font-bold text-[#9C665C] shrink-0 ml-1">
+                              {task.due_date || 'Sin fecha'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-1">
+                        {order.service_type !== 'STANDS_EXPERIENCIAS' && (
+                          <div className="flex items-center justify-between text-[#7D6F6B]">
+                            <span>Entrega Papelería:</span>
+                            <span className="font-bold text-[#332A28]">{order.physical_delivery_date || 'Por definir'}</span>
+                          </div>
+                        )}
+                        {order.service_type !== 'PAPELERIA' && (
+                          <div className="flex items-center justify-between text-[#7D6F6B]">
+                            <span>Montaje Stands:</span>
+                            <span className="font-bold text-[#70443D]">{order.stand_setup_date || order.event_date}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1451,8 +1597,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       {/* DRAWER / MODAL: DETALLE DEL PROYECTO (CRM)               */}
       {/* ======================================================== */}
       {selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex justify-end">
-          <div className="w-full max-w-2xl bg-[#FFFFFF] h-full overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6 flex flex-col justify-between">
+        <div
+          className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex justify-end"
+          onClick={() => setSelectedOrder(null)}
+        >
+          <div
+            className="w-full max-w-2xl bg-[#FFFFFF] h-full overflow-y-auto shadow-2xl p-6 sm:p-8 space-y-6 flex flex-col justify-between"
+            onClick={e => e.stopPropagation()}
+          >
             <div className="space-y-6">
               {/* Header Drawer */}
               <div className="flex items-start justify-between pb-4 border-b border-[#EFE8E1]">
@@ -1519,6 +1671,57 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   >
                     🥂 Recordar Saldo Final
                   </button>
+                </div>
+              </div>
+
+              {/* Artículos & Servicios Contratados */}
+              <div className="p-5 rounded-3xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Tag className="w-4 h-4 text-[#B88A82]" />
+                    <h4 className="font-serif text-base font-bold text-[#332A28]">
+                      Artículos & Servicios Contratados
+                    </h4>
+                  </div>
+                  <span
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      selectedOrder.service_type === 'PAPELERIA'
+                        ? 'bg-[#F7EDEB] text-[#70443D]'
+                        : selectedOrder.service_type === 'STANDS_EXPERIENCIAS'
+                        ? 'bg-[#EBF2EB] text-[#384C3A]'
+                        : 'bg-[#F3EDE6] text-[#58352F]'
+                    }`}
+                  >
+                    {selectedOrder.service_type === 'PAPELERIA'
+                      ? 'Papelería Social'
+                      : selectedOrder.service_type === 'STANDS_EXPERIENCIAS'
+                      ? 'Stands & Servicios'
+                      : 'Papelería + Stands'}
+                  </span>
+                </div>
+
+                <div className="divide-y divide-[#EFE8E1] bg-[#FFFFFF] rounded-2xl border border-[#EAE3DA] overflow-hidden">
+                  {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                    selectedOrder.items.map((it, idx) => (
+                      <div key={idx} className="p-3 flex items-center justify-between text-xs hover:bg-[#FCFAF7] transition">
+                        <div>
+                          <div className="font-semibold text-[#332A28]">
+                            {it.item_name}
+                          </div>
+                          <div className="text-[11px] text-[#7D6F6B]">
+                            {it.category === 'PAPELERIA' ? 'Papelería Fina' : 'Stand / Servicio'} · {it.pricing_type === 'PER_PIECE' ? `${it.quantity} piezas a $${it.unit_price.toLocaleString('es-MX')} c/u` : 'Tarifa por evento'}
+                          </div>
+                        </div>
+                        <span className="font-bold text-[#332A28] text-sm">
+                          ${it.total_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-xs text-[#7D6F6B] italic">
+                      Sin desglose de artículos individuales.
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1595,73 +1798,161 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 )}
               </div>
 
-              {/* 2. SECCIÓN LOGÍSTICA DE FECHAS CRÍTICAS */}
+              {/* 2. LOGÍSTICA DE TAREAS Y FECHAS CRÍTICAS (Adaptable a Servicios y Papelería) */}
               <div className="p-5 rounded-3xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-[#B88A82]" />
+                    <ListTodo className="w-4 h-4 text-[#B88A82]" />
                     <h4 className="font-serif text-base font-bold text-[#332A28]">
-                      Logística de Fechas Críticas
+                      Tareas & Fechas Críticas
                     </h4>
+                    {selectedOrder.tasks && selectedOrder.tasks.length > 0 && (
+                      <span className="text-[10px] font-bold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                        {selectedOrder.tasks.filter(t => t.completed).length} de {selectedOrder.tasks.length} completadas
+                      </span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => {
-                      setDatesForm({
-                        vobo_design_deadline: selectedOrder.vobo_design_deadline || '',
-                        physical_delivery_date: selectedOrder.physical_delivery_date || '',
-                        stand_setup_date: selectedOrder.stand_setup_date || selectedOrder.event_date,
-                        stand_setup_time: selectedOrder.stand_setup_time || '14:00'
-                      });
-                      setShowDatesEditModal(true);
-                    }}
-                    className="text-xs font-semibold text-[#9C665C] hover:underline cursor-pointer"
-                  >
-                    Editar Fechas
-                  </button>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setShowNewTaskRow(!showNewTaskRow)}
+                      className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-semibold shadow-2xs transition cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Nueva Tarea</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setDatesForm({
+                          vobo_design_deadline: selectedOrder.vobo_design_deadline || '',
+                          physical_delivery_date: selectedOrder.physical_delivery_date || '',
+                          stand_setup_date: selectedOrder.stand_setup_date || selectedOrder.event_date,
+                          stand_setup_time: selectedOrder.stand_setup_time || '14:00'
+                        });
+                        setShowDatesEditModal(true);
+                      }}
+                      className="text-xs font-semibold text-[#7D6F6B] hover:text-[#9C665C] hover:underline cursor-pointer"
+                      title="Editar fechas principales"
+                    >
+                      Fechas Clave
+                    </button>
+                  </div>
                 </div>
 
-                <div className="space-y-2.5">
-                  <div className="p-3 bg-[#FFFFFF] rounded-2xl border border-[#EAE3DA] flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-semibold text-[#332A28] block">
-                        1. Aprobación de Diseño Digital (VoBo)
-                      </span>
-                      <span className="text-[11px] text-[#7D6F6B]">
-                        Fecha límite previa a entrar a imprenta
-                      </span>
+                {/* Formulario Agregar Tarea */}
+                {showNewTaskRow && (
+                  <form onSubmit={handleAddNewTask} className="p-3 bg-[#FFFFFF] rounded-2xl border border-[#BCE8CB] space-y-2.5 animate-fadeIn">
+                    <div className="text-xs font-bold text-[#384C3A]">
+                      Agregar Nueva Tarea Operativa
                     </div>
-                    <span className="font-bold text-[#9C665C] bg-[#FAF6F2] px-2.5 py-1 rounded-lg">
-                      {selectedOrder.vobo_design_deadline || 'Sin definir'}
-                    </span>
-                  </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Ej. Compra de bebidas, Armado de vinil..."
+                        value={newTaskTitle}
+                        onChange={e => setNewTaskTitle(e.target.value)}
+                        className="px-3 py-1.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                        required
+                      />
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="date"
+                          value={newTaskDate}
+                          onChange={e => setNewTaskDate(e.target.value)}
+                          className="px-2.5 py-1.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] flex-1"
+                        />
+                        <select
+                          value={newTaskCategory}
+                          onChange={e => setNewTaskCategory(e.target.value as any)}
+                          className="px-2 py-1.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                        >
+                          <option value="SERVICIO">Servicio</option>
+                          <option value="PAPELERIA">Papelería</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setShowNewTaskRow(false)}
+                        className="px-2.5 py-1 text-xs text-[#7D6F6B] hover:text-[#332A28] cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-3 py-1 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl shadow-2xs transition cursor-pointer"
+                      >
+                        Guardar Tarea
+                      </button>
+                    </div>
+                  </form>
+                )}
 
-                  <div className="p-3 bg-[#FFFFFF] rounded-2xl border border-[#EAE3DA] flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-semibold text-[#332A28] block">
-                        2. Entrega Física de Papelería
-                      </span>
-                      <span className="text-[11px] text-[#7D6F6B]">
-                        En atelier o envío a domicilio
-                      </span>
-                    </div>
-                    <span className="font-bold text-[#332A28] bg-[#FAF6F2] px-2.5 py-1 rounded-lg">
-                      {selectedOrder.physical_delivery_date || 'Sin definir'}
-                    </span>
-                  </div>
+                {/* Lista Interactiva de Tareas */}
+                <div className="space-y-2">
+                  {selectedOrder.tasks && selectedOrder.tasks.length > 0 ? (
+                    selectedOrder.tasks.map(task => (
+                      <div
+                        key={task.id}
+                        className={`p-3 rounded-2xl border transition flex items-center justify-between text-xs ${
+                          task.completed
+                            ? 'bg-[#F9FAF9] border-[#E2E8E2] text-[#7D6F6B]'
+                            : 'bg-[#FFFFFF] border-[#EAE3DA] text-[#332A28]'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2.5 min-w-0 flex-1">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleTaskCompleted(task.id)}
+                            className="text-[#9C665C] hover:scale-110 transition cursor-pointer shrink-0"
+                            title={task.completed ? 'Marcar como pendiente' : 'Marcar como completada'}
+                          >
+                            {task.completed ? (
+                              <CheckSquare className="w-4 h-4 text-[#1EBE5D]" />
+                            ) : (
+                              <Square className="w-4 h-4 text-[#B88A82]" />
+                            )}
+                          </button>
+                          <div className="min-w-0">
+                            <span className={`block font-medium truncate ${task.completed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'}`}>
+                              {task.title}
+                            </span>
+                            {task.notes && (
+                              <span className="text-[10px] text-[#7D6F6B] block truncate">
+                                {task.notes}
+                              </span>
+                            )}
+                          </div>
+                        </div>
 
-                  <div className="p-3 bg-[#FFFFFF] rounded-2xl border border-[#EAE3DA] flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-semibold text-[#332A28] block">
-                        3. Montaje de Stands en el Venue
-                      </span>
-                      <span className="text-[11px] text-[#7D6F6B]">
-                        Welcome Drinks, Audio Guestbook, Seating
-                      </span>
+                        <div className="flex items-center space-x-2 shrink-0 ml-2">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                            task.category === 'PAPELERIA'
+                              ? 'bg-[#F7EDEB] text-[#70443D]'
+                              : 'bg-[#EBF2EB] text-[#384C3A]'
+                          }`}>
+                            {task.category === 'PAPELERIA' ? 'Papelería' : 'Servicio'}
+                          </span>
+                          <span className="font-bold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-lg text-[11px]">
+                            {task.due_date || 'Sin fecha'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="p-1 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                            title="Eliminar tarea"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-4 text-center text-xs text-[#7D6F6B]">
+                      No hay tareas registradas. Haz clic en "+ Nueva Tarea" para agregar una.
                     </div>
-                    <span className="font-bold text-[#70443D] bg-[#F7EDEB] px-2.5 py-1 rounded-lg">
-                      {selectedOrder.stand_setup_date || selectedOrder.event_date} a las {selectedOrder.stand_setup_time || '14:00'}
-                    </span>
-                  </div>
+                  )}
                 </div>
               </div>
 

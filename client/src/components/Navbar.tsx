@@ -101,48 +101,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               />
             </div>
 
-            {/* Platform Switcher: Lazo Planning ⇄ Viva la Bride (EXCLUSIVO ADMINISTRADOR) */}
-            {/* Posición fija y constante siempre del mismo lado */}
-            {user.role === 'ADMINISTRADOR' && (
-              <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0 ml-1 sm:ml-2">
-                <button
-                  onClick={() => {
-                    setActiveModule('lazo');
-                    setCurrentWedding(null);
-                    setGeneralDashboardTab('weddings');
-                    if (typeof window !== 'undefined') {
-                      window.history.pushState({ type: 'dashboard', tab: 'weddings' }, '', '/');
-                    }
-                  }}
-                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                    activeModule === 'lazo'
-                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                  title="Ir al inicio de Lazo Planning (Home)"
-                >
-                  <Heart className="w-3.5 h-3.5 text-[#C48B81]" />
-                  <span className="hidden md:inline">Lazo Planning</span>
-                  <span className="md:hidden">Lazo</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveModule('vlb');
-                  }}
-                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                    activeModule === 'vlb'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                  title="Atelier Viva la Bride (Papelería & Stands)"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-[#CCDACC]" />
-                  <span className="hidden md:inline">Viva la Bride</span>
-                  <span className="md:hidden">Viva la Bride</span>
-                </button>
-              </div>
-            )}
-
             {/* Wedding selector dropdown if user has multiple weddings: ONLY in Lazo mode and inside a wedding */}
             {activeModule === 'lazo' && currentWedding && user.role !== 'NOVIOS' && assignedWeddings.length > 1 && (
               <div className="relative ml-1 sm:ml-2">
@@ -201,10 +159,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             )}
           </div>
 
-          {/* Right Area: Calendario General, Role Badge, Notifications & User Info */}
-          <div className="flex items-center space-x-1 sm:space-x-2.5 shrink-0">
-            {/* Calendario General Button for Admin, Coordinador, Staff */}
-            {user.role !== 'NOVIOS' && (
+          {/* Right Area: Calendario General (solo en Lazo), Switcher de Plataforma, Role Badge, Notifications & User Info */}
+          <div className="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+            {/* Calendario General Button for Admin, Coordinador, Staff (OCULTO EN VIVA LA BRIDE) */}
+            {user.role !== 'NOVIOS' && activeModule !== 'vlb' && (
               <button
                 onClick={() => {
                   if (user.role === 'ADMINISTRADOR') {
@@ -222,6 +180,47 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                 <Calendar className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span className="hidden sm:inline">Calendario General</span>
               </button>
+            )}
+
+            {/* Platform Switcher: Lazo Planning ⇄ Viva la Bride (EXCLUSIVO ADMINISTRADOR - LADO DERECHO) */}
+            {user.role === 'ADMINISTRADOR' && (
+              <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
+                <button
+                  onClick={() => {
+                    setActiveModule('lazo');
+                    setCurrentWedding(null);
+                    setGeneralDashboardTab('weddings');
+                    if (typeof window !== 'undefined') {
+                      window.history.pushState({ type: 'dashboard', tab: 'weddings' }, '', '/');
+                    }
+                  }}
+                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    activeModule === 'lazo'
+                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                  title="Ir al inicio de Lazo Planning (Home)"
+                >
+                  <Heart className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span className="hidden md:inline">Lazo Planning</span>
+                  <span className="md:hidden">Lazo</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveModule('vlb');
+                  }}
+                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    activeModule === 'vlb'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                  title="Atelier Viva la Bride (Papelería & Stands)"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#CCDACC]" />
+                  <span className="hidden md:inline">Viva la Bride</span>
+                  <span className="md:hidden">Viva la Bride</span>
+                </button>
+              </div>
             )}
 
             {/* Authentic Role Badge */}

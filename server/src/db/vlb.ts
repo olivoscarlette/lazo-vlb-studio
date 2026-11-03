@@ -113,6 +113,17 @@ export function initVlbDatabase() {
     );
   `);
 
+  // Migrations for dynamic tasks and service type
+  try {
+    db.prepare('ALTER TABLE vlb_orders ADD COLUMN tasks_json TEXT').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_orders ADD COLUMN service_type TEXT').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_orders ADD COLUMN items_json TEXT').run();
+  } catch {}
+
   // Seed default catalog if empty
   const catalogCount = db.prepare('SELECT COUNT(*) as count FROM vlb_catalog').get() as { count: number };
   if (catalogCount.count === 0) {

@@ -68,6 +68,16 @@ export type VlbProductionStatus =
   | 'ENTREGADO_MONTADO'
   | 'FINALIZADO';
 
+export interface VlbTask {
+  id: string;
+  title: string;
+  due_date?: string | null;
+  due_time?: string | null;
+  completed: boolean;
+  category: 'PAPELERIA' | 'SERVICIO' | 'OTRO';
+  notes?: string | null;
+}
+
 export interface VlbOrder {
   id: string;
   order_number: string;
@@ -89,6 +99,9 @@ export interface VlbOrder {
   stand_setup_date?: string | null;
   stand_setup_time?: string | null;
   notes?: string | null;
+  service_type?: 'PAPELERIA' | 'STANDS_EXPERIENCIAS' | 'MIXTO';
+  items?: VlbQuoteItem[];
+  tasks?: VlbTask[];
   created_at: string;
   updated_at: string;
   docs_count?: number;

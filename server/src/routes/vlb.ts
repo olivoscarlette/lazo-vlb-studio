@@ -494,20 +494,90 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
     const orderId = 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     const now = new Date().toISOString();
 
+    const quoteItems = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ? ORDER BY sort_order ASC').all(id) as any[];
+    const hasPapeleria = quoteItems.some(i => i.category === 'PAPELERIA');
+    const hasStands = quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS');
+    const service_type = (hasPapeleria && hasStands) ? 'MIXTO' : hasStands ? 'STANDS_EXPERIENCIAS' : 'PAPELERIA';
+
     // Default dates derived from event_date
     let voboDeadline: string | null = null;
     let deliveryDate: string | null = null;
     let setupDate = quote.event_date || null;
     let setupTime = '14:00';
 
+    const evtTime = quote.event_date ? new Date(quote.event_date).getTime() : Date.now();
     if (quote.event_date) {
-      const evt = new Date(quote.event_date);
       // VoBo 21 days before event
-      const vobo = new Date(evt.getTime() - 21 * 24 * 60 * 60 * 1000);
+      const vobo = new Date(evtTime - 21 * 24 * 60 * 60 * 1000);
       voboDeadline = vobo.toISOString().split('T')[0];
       // Physical delivery 5 days before event
-      const delivery = new Date(evt.getTime() - 5 * 24 * 60 * 60 * 1000);
+      const delivery = new Date(evtTime - 5 * 24 * 60 * 60 * 1000);
       deliveryDate = delivery.toISOString().split('T')[0];
+    }
+
+    // Dynamic initial tasks based on service type
+    const initialTasks: any[] = [];
+    if (hasPapeleria) {
+      initialTasks.push({
+        id: 't_vobo_' + Date.now() + '_1',
+        title: 'Aprobación de Diseño Digital (VoBo)',
+        due_date: voboDeadline,
+        completed: false,
+        category: 'PAPELERIA',
+        notes: 'Fecha límite previa a entrar a imprenta'
+      });
+      initialTasks.push({
+        id: 't_taller_' + Date.now() + '_2',
+        title: 'Entrada a Taller / Imprenta & Caligrafía',
+        due_date: new Date(evtTime - 14 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'PAPELERIA',
+        notes: 'Impresión en algodón, rasgado a mano y lacrado'
+      });
+      initialTasks.push({
+        id: 't_entrega_' + Date.now() + '_3',
+        title: 'Entrega Física de Papelería',
+        due_date: deliveryDate,
+        completed: false,
+        category: 'PAPELERIA',
+        notes: 'En atelier o envío a domicilio'
+      });
+    }
+
+    if (hasStands) {
+      initialTasks.push({
+        id: 't_insumos_' + Date.now() + '_4',
+        title: 'Compra de bebidas e insumos',
+        due_date: new Date(evtTime - 7 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Licores, jarabes, botánicos o cristalería'
+      });
+      initialTasks.push({
+        id: 't_vinil_' + Date.now() + '_5',
+        title: 'Armado e impresión de vinil personalizado',
+        due_date: new Date(evtTime - 4 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Barras, letreros de bienvenida o copas'
+      });
+      initialTasks.push({
+        id: 't_audio_' + Date.now() + '_6',
+        title: 'Pruebas técnicas de Audio Guestbook / saludo',
+        due_date: new Date(evtTime - 2 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Grabación del saludo de los novios y prueba de carga'
+      });
+      initialTasks.push({
+        id: 't_montaje_' + Date.now() + '_7',
+        title: 'Montaje de Stands en el Venue',
+        due_date: setupDate,
+        due_time: setupTime,
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Welcome Drinks, Audio Guestbook, Seating'
+      });
     }
 
     db.prepare(`
@@ -515,8 +585,8 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
         id, order_number, quote_id, client_name, partner_name, client_email, client_phone,
         event_date, event_venue, total_amount, down_payment_required, total_paid, balance_pending,
         payment_status, production_status, vobo_design_deadline, physical_delivery_date,
-        stand_setup_date, stand_setup_time, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        stand_setup_date, stand_setup_time, notes, service_type, tasks_json, items_json, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       orderId,
       order_number,
@@ -538,6 +608,9 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
       setupDate,
       setupTime,
       `Convertido desde cotización ${quote.quote_number}.`,
+      service_type,
+      JSON.stringify(initialTasks),
+      JSON.stringify(quoteItems),
       now,
       now
     );
@@ -586,7 +659,88 @@ router.get('/orders', (req, res) => {
     }
 
     query += ' ORDER BY o.event_date ASC, o.created_at DESC';
-    const orders = db.prepare(query).all(...params);
+    const rawOrders = db.prepare(query).all(...params) as any[];
+
+    const orders = rawOrders.map(o => {
+      let items: any[] = [];
+      try {
+        if (o.items_json) {
+          items = JSON.parse(o.items_json);
+        } else if (o.quote_id) {
+          items = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ? ORDER BY sort_order ASC').all(o.quote_id);
+        }
+      } catch {}
+
+      let service_type = o.service_type;
+      if (!service_type) {
+        const hasPap = items.some(i => i.category === 'PAPELERIA');
+        const hasStands = items.some(i => i.category === 'STANDS_EXPERIENCIAS');
+        service_type = (hasPap && hasStands) ? 'MIXTO' : hasStands ? 'STANDS_EXPERIENCIAS' : 'PAPELERIA';
+      }
+
+      let tasks: any[] = [];
+      try {
+        if (o.tasks_json) {
+          tasks = JSON.parse(o.tasks_json);
+        }
+      } catch {}
+
+      if (tasks.length === 0) {
+        const evt = o.event_date ? new Date(o.event_date).getTime() : Date.now();
+        if (service_type === 'PAPELERIA' || service_type === 'MIXTO') {
+          tasks.push({
+            id: 't_vobo_' + o.id,
+            title: 'Aprobación de Diseño Digital (VoBo)',
+            due_date: o.vobo_design_deadline || new Date(evt - 21 * 86400000).toISOString().split('T')[0],
+            completed: false,
+            category: 'PAPELERIA',
+            notes: 'Fecha límite previa a entrar a imprenta'
+          });
+          tasks.push({
+            id: 't_entrega_' + o.id,
+            title: 'Entrega Física de Papelería',
+            due_date: o.physical_delivery_date || new Date(evt - 5 * 86400000).toISOString().split('T')[0],
+            completed: false,
+            category: 'PAPELERIA',
+            notes: 'En atelier o envío a domicilio'
+          });
+        }
+        if (service_type === 'STANDS_EXPERIENCIAS' || service_type === 'MIXTO') {
+          tasks.push({
+            id: 't_insumos_' + o.id,
+            title: 'Compra de bebidas e insumos',
+            due_date: new Date(evt - 7 * 86400000).toISOString().split('T')[0],
+            completed: false,
+            category: 'SERVICIO',
+            notes: 'Licores, jarabes, botánicos o cristalería'
+          });
+          tasks.push({
+            id: 't_vinil_' + o.id,
+            title: 'Armado e impresión de vinil',
+            due_date: new Date(evt - 4 * 86400000).toISOString().split('T')[0],
+            completed: false,
+            category: 'SERVICIO',
+            notes: 'Barras, letreros o copas'
+          });
+          tasks.push({
+            id: 't_montaje_' + o.id,
+            title: 'Montaje de Stands en el Venue',
+            due_date: o.stand_setup_date || o.event_date,
+            due_time: o.stand_setup_time || '14:00',
+            completed: false,
+            category: 'SERVICIO',
+            notes: 'Welcome Drinks, Audio Guestbook, Seating'
+          });
+        }
+      }
+
+      return {
+        ...o,
+        service_type,
+        items,
+        tasks
+      };
+    });
 
     res.json({ orders });
   } catch (err: any) {
@@ -620,11 +774,61 @@ router.get('/orders/:id', (req, res) => {
     if (order.quote_id) {
       quote = db.prepare('SELECT * FROM vlb_quotes WHERE id = ?').get(order.quote_id);
       quoteItems = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ? ORDER BY sort_order ASC').all(order.quote_id);
+    } else if (order.items_json) {
+      try {
+        quoteItems = JSON.parse(order.items_json);
+      } catch {}
     }
 
-    res.json({ order, payments, documents, quote, quoteItems });
+    let service_type = order.service_type;
+    if (!service_type) {
+      const hasPap = quoteItems.some(i => i.category === 'PAPELERIA');
+      const hasStands = quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS');
+      service_type = (hasPap && hasStands) ? 'MIXTO' : hasStands ? 'STANDS_EXPERIENCIAS' : 'PAPELERIA';
+    }
+
+    let tasks: any[] = [];
+    try {
+      if (order.tasks_json) {
+        tasks = JSON.parse(order.tasks_json);
+      }
+    } catch {}
+
+    res.json({
+      order: {
+        ...order,
+        service_type,
+        items: quoteItems,
+        tasks
+      },
+      payments,
+      documents,
+      quote,
+      quoteItems
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al obtener detalle del proyecto.' });
+  }
+});
+
+// PUT /api/vlb/orders/:id/tasks - Update tasks list for order
+router.put('/orders/:id/tasks', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tasks } = req.body;
+    if (!Array.isArray(tasks)) {
+      return res.status(400).json({ error: 'Formato de tareas inválido.' });
+    }
+    const now = new Date().toISOString();
+    db.prepare('UPDATE vlb_orders SET tasks_json = ?, updated_at = ? WHERE id = ?').run(
+      JSON.stringify(tasks),
+      now,
+      id
+    );
+    const updated = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(id) as any;
+    res.json({ order: { ...updated, tasks }, message: 'Tareas actualizadas correctamente.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al actualizar tareas.' });
   }
 });
 

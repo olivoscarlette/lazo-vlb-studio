@@ -154,7 +154,103 @@ router.get('/', authenticateToken, (req, res) => {
       source: 'WEDDING_DAY'
     }));
 
-    let allEvents = [...formattedCustom, ...formattedMeetings, ...formattedWeddings];
+    // 4. Viva la Bride Logistics, Deliveries, Montages & Tasks (Vinculación Automática)
+    let vlbEvents: any[] = [];
+    if (user.role === 'ADMINISTRADOR' || user.role === 'COORDINADOR') {
+      try {
+        const vlbOrders = db.prepare('SELECT * FROM vlb_orders').all() as any[];
+        for (const ord of vlbOrders) {
+          const clientTitle = ord.client_name + (ord.partner_name ? ` & ${ord.partner_name}` : '');
+
+          // A. Entrega física de papelería
+          if (ord.physical_delivery_date) {
+            vlbEvents.push({
+              id: 'vlb_del_' + ord.id,
+              wedding_id: null,
+              title: `📦 Entrega Papelería · ${clientTitle}`,
+              event_type: 'PAPELERIA',
+              date: ord.physical_delivery_date,
+              time: '11:00',
+              end_time: '12:00',
+              location: 'Atelier Viva la Bride / Envío',
+              responsible: 'Atelier VLB',
+              notes: `Entrega de papelería social para ${clientTitle}. Folio: ${ord.order_number}.`,
+              status: ord.production_status === 'ENTREGADO_MONTADO' ? 'COMPLETADA' : 'CONFIRMADA',
+              source: 'VLB_ORDER',
+              wedding_name: 'Viva la Bride'
+            });
+          }
+
+          // B. Montaje de stands en venue
+          if (ord.stand_setup_date) {
+            vlbEvents.push({
+              id: 'vlb_setup_' + ord.id,
+              wedding_id: null,
+              title: `✨ Montaje Stands & Exp · ${clientTitle}`,
+              event_type: 'SERVICIO',
+              date: ord.stand_setup_date,
+              time: ord.stand_setup_time || '14:00',
+              end_time: '17:00',
+              location: ord.event_venue || 'Venue del Evento',
+              responsible: 'Equipo Operativo VLB',
+              notes: `Montaje de stands (Audio Guestbook, Welcome Drinks, etc.). Folio: ${ord.order_number}.`,
+              status: ord.production_status === 'ENTREGADO_MONTADO' ? 'COMPLETADA' : 'CONFIRMADA',
+              source: 'VLB_ORDER',
+              wedding_name: 'Viva la Bride'
+            });
+          }
+
+          // C. Límite VoBo Diseño Digital
+          if (ord.vobo_design_deadline) {
+            vlbEvents.push({
+              id: 'vlb_vobo_' + ord.id,
+              wedding_id: null,
+              title: `💌 Límite VoBo Diseño · ${clientTitle}`,
+              event_type: 'PAPELERIA',
+              date: ord.vobo_design_deadline,
+              time: '18:00',
+              end_time: '19:00',
+              location: 'En línea / WhatsApp',
+              responsible: 'Diseño Editorial VLB',
+              notes: `Visto bueno final previo a entrar al taller de imprenta. Folio: ${ord.order_number}.`,
+              status: 'CONFIRMADA',
+              source: 'VLB_ORDER',
+              wedding_name: 'Viva la Bride'
+            });
+          }
+
+          // D. Tareas operativas de VLB con fecha (Compra de bebidas, armado de vinil, etc.)
+          if (ord.tasks_json) {
+            try {
+              const tasks = JSON.parse(ord.tasks_json);
+              for (const t of tasks) {
+                if (t.due_date && !t.id.startsWith('t_vobo_') && !t.id.startsWith('t_entrega_') && !t.id.startsWith('t_montaje_')) {
+                  vlbEvents.push({
+                    id: 'vlb_task_' + t.id,
+                    wedding_id: null,
+                    title: `📝 ${t.title} · ${clientTitle}`,
+                    event_type: t.category === 'PAPELERIA' ? 'PAPELERIA' : 'SERVICIO',
+                    date: t.due_date,
+                    time: t.due_time || '10:00',
+                    end_time: '11:00',
+                    location: ord.event_venue || 'Atelier VLB',
+                    responsible: 'Equipo VLB',
+                    notes: `${t.notes || ''} (Proyecto ${ord.order_number})`,
+                    status: t.completed ? 'COMPLETADA' : 'CONFIRMADA',
+                    source: 'VLB_TASK',
+                    wedding_name: 'Viva la Bride'
+                  });
+                }
+              }
+            } catch {}
+          }
+        }
+      } catch (err) {
+        console.error('Error loading VLB events for calendar:', err);
+      }
+    }
+
+    let allEvents = [...formattedCustom, ...formattedMeetings, ...formattedWeddings, ...vlbEvents];
 
     // Determine allowed categories for the authenticated user
     const permissions = getCalendarPermissions();
