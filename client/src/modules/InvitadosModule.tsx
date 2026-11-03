@@ -6,7 +6,7 @@ import {
   Search, Filter, ChevronLeft, ChevronRight, Phone, MessageSquare,
   AlertTriangle, CheckCircle, Clock, XCircle, Edit2, AlertCircle,
   Send, Loader2, Check, FileText, Sparkles, Link as LinkIcon, ExternalLink, Trash2,
-  ShieldAlert, ShieldCheck, Lock, Unlock
+  ShieldAlert, ShieldCheck, Lock, Unlock, SlidersHorizontal, Settings2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { BroadcastScheduleModal } from '../components/BroadcastScheduleModal';
@@ -1040,31 +1040,37 @@ export const InvitadosModule: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Dropdown Descargables */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+          {/* Menú Desplegable Unificado: Herramientas y Opciones */}
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowDownloadsMenu(!showDownloadsMenu)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#332C2A] text-xs font-semibold rounded-xl transition border border-[#EFE8E1] shadow-2xs cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-xl transition border border-[#EFE8E1] shadow-2xs cursor-pointer focus:outline-none"
+              title="Descargas, importación de Excel, configuración de invitaciones y opciones"
             >
-              <Download className="w-3.5 h-3.5 text-[#786C68]" />
-              <span>Descargables</span>
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#786C68]" />
+              <span>Herramientas</span>
               <span className="text-[10px] text-[#786C68]">▾</span>
             </button>
 
             {showDownloadsMenu && (
               <div
-                className="absolute right-0 mt-1.5 w-64 bg-white rounded-2xl shadow-xl border border-[#EFE8E1] py-1.5 z-30 animate-in fade-in zoom-in-95"
+                className="absolute right-0 mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-[#EFE8E1] py-2 z-40 animate-in fade-in zoom-in-95"
                 onMouseLeave={() => setShowDownloadsMenu(false)}
               >
+                {/* Sección 1: Archivos y Listas */}
+                <div className="px-4 py-1.5 text-[10px] uppercase font-bold tracking-widest text-[#8A7E72]">
+                  Archivos y Listas
+                </div>
+
                 <button
                   type="button"
                   onClick={() => {
                     setShowDownloadsMenu(false);
                     handleDownloadAttendanceTablesExcel();
                   }}
-                  className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer"
+                  className="w-full text-left px-4 py-2 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer"
                 >
                   <FileSpreadsheet className="w-4 h-4 text-[#C48B81] shrink-0" />
                   <div>
@@ -1072,13 +1078,14 @@ export const InvitadosModule: React.FC = () => {
                     <div className="text-[10px] text-[#786C68]">Confirmados en orden A-Z con mesa</div>
                   </div>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => {
                     setShowDownloadsMenu(false);
                     handleExportGuestList();
                   }}
-                  className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
+                  className="w-full text-left px-4 py-2 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
                 >
                   <Download className="w-4 h-4 text-[#786C68] shrink-0" />
                   <div>
@@ -1086,13 +1093,14 @@ export const InvitadosModule: React.FC = () => {
                     <div className="text-[10px] text-[#786C68]">Todos los invitados y estatus</div>
                   </div>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => {
                     setShowDownloadsMenu(false);
                     handleDownloadTemplate();
                   }}
-                  className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
+                  className="w-full text-left px-4 py-2 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
                 >
                   <Download className="w-4 h-4 text-[#C48B81] shrink-0" />
                   <div>
@@ -1100,6 +1108,7 @@ export const InvitadosModule: React.FC = () => {
                     <div className="text-[10px] text-[#786C68]">Formato oficial para importar</div>
                   </div>
                 </button>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -1108,7 +1117,7 @@ export const InvitadosModule: React.FC = () => {
                     setImportRows([]);
                     setImportErrors([]);
                   }}
-                  className="w-full text-left px-4 py-2.5 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
+                  className="w-full text-left px-4 py-2 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
                 >
                   <Upload className="w-4 h-4 text-[#C48B81] shrink-0" />
                   <div>
@@ -1117,127 +1126,135 @@ export const InvitadosModule: React.FC = () => {
                   </div>
                 </button>
 
-                {user?.role === 'ADMINISTRADOR' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowDownloadsMenu(false);
-                      setDeleteConfirmWord('');
-                      setDeleteAllError('');
-                      setShowDeleteAllModal(true);
-                    }}
-                    className="w-full text-left px-4 py-2.5 text-xs text-rose-700 hover:bg-rose-50 flex items-center space-x-2.5 cursor-pointer border-t border-rose-100"
-                  >
-                    <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
-                    <div>
-                      <div className="font-semibold text-rose-700">Vaciar lista de invitados</div>
-                      <div className="text-[10px] text-rose-500">Eliminar todos los invitados permanentemente</div>
+                {/* Sección 2: Configuración de Difusiones e Invitación */}
+                {canSendWhatsApp && (
+                  <>
+                    <div className="px-4 pt-2.5 pb-1 text-[10px] uppercase font-bold tracking-widest text-[#8A7E72] border-t border-[#F5EFEB] mt-1">
+                      Invitación & Difusiones
                     </div>
-                  </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDownloadsMenu(false);
+                        setShowInvitationModal(true);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer"
+                    >
+                      <Sparkles className="w-4 h-4 text-[#C48B81] shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-[#2B2826] flex items-center justify-between">
+                          <span>Invitación Formal (PDF/Link)</span>
+                          <span className="text-[9px] uppercase font-bold text-[#A86B60] bg-[#F7EDEB] px-1.5 py-0.5 rounded">
+                            {currentWedding?.invitation_type === 'PDF' && currentWedding?.invitation_pdf_url
+                              ? 'PDF'
+                              : currentWedding?.invitation_url
+                              ? 'Canva'
+                              : 'Subir'}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-[#786C68]">Enlace o archivo que se adjunta al RSVP</div>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDownloadsMenu(false);
+                        setShowBroadcastModal(true);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-[#332C2A] hover:bg-[#FAF8F5] flex items-center space-x-2.5 cursor-pointer border-t border-[#F5EFEB]"
+                    >
+                      <Clock className="w-4 h-4 text-[#C48B81] shrink-0" />
+                      <div>
+                        <div className="font-semibold text-[#2B2826]">Programar Recordatorios & Mesas</div>
+                        <div className="text-[10px] text-[#786C68]">Difusión 7 días antes y asignación de mesa</div>
+                      </div>
+                    </button>
+                  </>
+                )}
+
+                {/* Sección 3: Zona de Administración */}
+                {user?.role === 'ADMINISTRADOR' && (
+                  <>
+                    <div className="px-4 pt-2.5 pb-1 text-[10px] uppercase font-bold tracking-widest text-rose-700/80 border-t border-rose-100 mt-1">
+                      Zona de Administración
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowDownloadsMenu(false);
+                        setDeleteConfirmWord('');
+                        setDeleteAllError('');
+                        setShowDeleteAllModal(true);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-rose-700 hover:bg-rose-50 flex items-center space-x-2.5 cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
+                      <div>
+                        <div className="font-semibold text-rose-700">Vaciar lista de invitados</div>
+                        <div className="text-[10px] text-rose-500">Eliminar todos los invitados permanentemente</div>
+                      </div>
+                    </button>
+                  </>
                 )}
               </div>
             )}
           </div>
 
-          {/* Botón directo para Vaciar Lista (Exclusivo Administrador) */}
-          {user?.role === 'ADMINISTRADOR' && (summary.total > 0 || guests.length > 0) && (
+          {/* Botón de Modo Seguro (Bloqueo de Envíos WhatsApp) — Admin & Coordinadores */}
+          {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
             <button
               type="button"
-              onClick={() => {
-                setDeleteConfirmWord('');
-                setDeleteAllError('');
-                setShowDeleteAllModal(true);
-              }}
-              className="inline-flex items-center space-x-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer"
-              title="Vaciar lista: Eliminar todos los invitados de esta boda permanentemente (Solo Administrador)"
+              onClick={handleToggleWhatsappLock}
+              disabled={togglingLock}
+              className={`inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition border shadow-2xs cursor-pointer focus:outline-none ${
+                isSendingBlocked
+                  ? 'bg-[#FAF3F0] hover:bg-[#F5EAE6] text-[#A86B60] border-[#ECD9D5]'
+                  : 'bg-white hover:bg-[#FAF8F5] text-[#7D6F6B] hover:text-[#2B2826] border-[#EFE8E1]'
+              }`}
+              title={
+                isSendingBlocked
+                  ? 'Envíos y recordatorios pausados por seguridad. Haz clic para activar.'
+                  : 'Activar Modo Seguro: Pausar envíos de WhatsApp y recordatorios automáticos.'
+              }
             >
-              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-              <span className="hidden sm:inline">Vaciar Lista</span>
+              {togglingLock ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : isSendingBlocked ? (
+                <ShieldAlert className="w-3.5 h-3.5 text-[#C48B81]" />
+              ) : (
+                <ShieldCheck className="w-3.5 h-3.5 text-[#6B8E6E]" />
+              )}
+              <span>{isSendingBlocked ? 'Modo Seguro Activo' : 'Pausar Envíos'}</span>
             </button>
           )}
 
-          {/* Botón para Configurar Invitación Formal (PDF / Enlace) — Exclusivo Admin y Coordinadores */}
-          {canSendWhatsApp && (
-            <button
-              type="button"
-              onClick={() => setShowInvitationModal(true)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F7EDEB] hover:bg-[#EFE2DF] text-[#A86B60] text-xs font-semibold rounded-xl transition border border-[#ECD9D5] shadow-2xs cursor-pointer"
-              title="Subir archivo PDF o pegar enlace de Canva para la invitación"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>
-                {currentWedding?.invitation_type === 'PDF' && currentWedding?.invitation_pdf_url
-                  ? 'Invitación PDF lista'
-                  : currentWedding?.invitation_url
-                  ? 'Enlace Canva listo'
-                  : 'Subir Invitación (PDF / Enlace)'}
-              </span>
-            </button>
-          )}
-
+          {/* Botón de Envío Masivo WhatsApp */}
           {canSendWhatsApp && (
             <button
               onClick={handleSendBulkWhatsapp}
               disabled={bulkSendingWhatsapp || isSendingBlocked}
-              className={`inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition shadow-2xs ${
+              className={`inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition shadow-2xs focus:outline-none ${
                 isSendingBlocked
-                  ? 'bg-stone-300 text-stone-500 cursor-not-allowed border border-stone-300'
-                  : 'bg-[#C48B81] hover:bg-[#A86B60] text-white cursor-pointer'
+                  ? 'bg-[#FAF7F5] text-[#A39690] cursor-not-allowed border border-[#EFE8E1]'
+                  : 'bg-[#C48B81] hover:bg-[#A86B60] text-white cursor-pointer shadow-xs'
               }`}
               title={
                 isSendingBlocked
-                  ? 'Envíos bloqueados para evitar disparos accidentales (Modo Seguro activo)'
+                  ? 'Los envíos de RSVP están pausados en Modo Seguro'
                   : 'Enviar plantilla oficial de WhatsApp RSVP a los invitados pendientes'
               }
             >
               {bulkSendingWhatsapp ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : isSendingBlocked ? (
-                <Lock className="w-3.5 h-3.5 text-stone-500" />
+                <Lock className="w-3.5 h-3.5 text-[#A39690]" />
               ) : (
                 <Send className="w-3.5 h-3.5" />
               )}
-              <span>{bulkSendingWhatsapp ? 'Enviando...' : isSendingBlocked ? 'RSVP Bloqueado' : 'Enviar RSVP WhatsApp'}</span>
-            </button>
-          )}
-
-          {/* Interruptor de Modo Seguro / Candado de Envíos WhatsApp (Admin & Coordinadores) */}
-          {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
-            <button
-              type="button"
-              onClick={handleToggleWhatsappLock}
-              disabled={togglingLock}
-              className={`inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition border shadow-2xs cursor-pointer ${
-                isSendingBlocked
-                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 ring-1 ring-amber-300'
-                  : 'bg-[#FAF7F5] hover:bg-[#F5EFEB] text-[#7D6F6B] hover:text-[#2B2826] border-[#EFE8E1]'
-              }`}
-              title={
-                isSendingBlocked
-                  ? 'Envíos y recordatorios bloqueados. Haz clic para desbloquear.'
-                  : 'Haz clic para bloquear envíos de WhatsApp y recordatorios automáticos (Modo Seguro).'
-              }
-            >
-              {togglingLock ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : isSendingBlocked ? (
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
-              ) : (
-                <ShieldCheck className="w-3.5 h-3.5 text-[#6B8E6E]" />
-              )}
-              <span>{isSendingBlocked ? 'Envíos Bloqueados' : 'Bloquear Envíos'}</span>
-            </button>
-          )}
-
-          {canSendWhatsApp && (
-            <button
-              type="button"
-              onClick={() => setShowBroadcastModal(true)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#FAF7F5] hover:bg-[#F5EFEB] text-[#2B2826] text-xs font-semibold rounded-xl transition border border-[#EFE8E1] shadow-2xs cursor-pointer"
-              title="Programar envíos automáticos de WhatsApp (Recordatorio 7 días antes y Asignación de mesa)"
-            >
-              <Clock className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Programar Recordatorios & Mesas</span>
+              <span>{bulkSendingWhatsapp ? 'Enviando...' : isSendingBlocked ? 'RSVP Pausado' : 'Enviar RSVP WhatsApp'}</span>
             </button>
           )}
 
@@ -1255,6 +1272,7 @@ export const InvitadosModule: React.FC = () => {
             </button>
           )}
 
+          {/* Botón Principal: + Nuevo Invitado */}
           <button
             onClick={handleOpenAdd}
             className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#2B2826] hover:bg-[#1E1B19] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer shrink-0"

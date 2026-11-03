@@ -143,13 +143,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Select or clear wedding and sync browser URL
   const setCurrentWedding = useCallback((wedding: Wedding | null) => {
+    const prevWedding = currentWeddingRef.current;
     setCurrentWeddingState(wedding);
     if (wedding) {
-      setActiveTabState('resumen');
-      const tab = 'resumen';
+      const isSameWedding = Boolean(prevWedding && prevWedding.id === wedding.id);
+      const tab = isSameWedding ? (activeTabRef.current || 'resumen') : 'resumen';
+      if (!isSameWedding) {
+        setActiveTabState('resumen');
+      }
       const newUrl = `/boda/${wedding.id}/${tab}`;
       if (window.location.pathname !== newUrl) {
-        window.history.pushState({ type: 'wedding', weddingId: wedding.id, tab }, '', newUrl);
+        if (isSameWedding) {
+          window.history.replaceState({ type: 'wedding', weddingId: wedding.id, tab }, '', newUrl);
+        } else {
+          window.history.pushState({ type: 'wedding', weddingId: wedding.id, tab }, '', newUrl);
+        }
       }
     } else {
       const tab = generalDashboardTabRef.current || 'weddings';
