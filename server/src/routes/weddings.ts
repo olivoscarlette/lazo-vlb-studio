@@ -363,7 +363,7 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     estimated_guests, status, notes, package_type, floor_plan_url,
     invitation_type, invitation_url, invitation_pdf_url, invitation_pdf_filename,
     dress_code, no_children, event_type,
-    has_whatsapp_rsvp, has_layout_2d,
+    has_whatsapp_rsvp, has_layout_2d, whatsapp_sending_blocked,
     expected_updated_at
   } = req.body;
 
@@ -388,7 +388,7 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
       estimated_guests = ?, status = ?, notes = ?, package_type = ?, floor_plan_url = ?,
       invitation_type = ?, invitation_url = ?, invitation_pdf_url = ?, invitation_pdf_filename = ?,
       dress_code = ?, no_children = ?, event_type = ?,
-      has_whatsapp_rsvp = ?, has_layout_2d = ?, updated_at = ?
+      has_whatsapp_rsvp = ?, has_layout_2d = ?, whatsapp_sending_blocked = ?, updated_at = ?
     WHERE id = ?
   `).run(
     name || wedding.name,
@@ -413,6 +413,7 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
     event_type !== undefined ? event_type : (wedding.event_type || 'Boda Completa'),
     has_whatsapp_rsvp !== undefined ? (has_whatsapp_rsvp ? 1 : 0) : (wedding.has_whatsapp_rsvp || 0),
     has_layout_2d !== undefined ? (has_layout_2d ? 1 : 0) : (wedding.has_layout_2d || 0),
+    whatsapp_sending_blocked !== undefined ? (whatsapp_sending_blocked ? 1 : 0) : (wedding.whatsapp_sending_blocked || 0),
     now,
     weddingId
   );
@@ -421,6 +422,43 @@ router.put('/:weddingId', authenticateToken, requireWeddingAccess, (req, res) =>
 
   const updatedWedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
   return res.json({ message: 'Boda actualizada correctamente.', updated_at: now, wedding: updatedWedding });
+});
+
+// PUT /api/weddings/:weddingId/whatsapp-lock - Bloquear o desbloquear envíos de WhatsApp y recordatorios (Modo Seguro)
+router.put('/:weddingId/whatsapp-lock', authenticateToken, requireWeddingAccess, (req, res) => {
+  const { weddingId } = req.params;
+  const { blocked } = req.body;
+  const user = req.user!;
+  
+  if (user.role !== 'ADMINISTRADOR' && user.role !== 'COORDINADOR') {
+    return res.status(403).json({ error: 'Solo administradores o coordinadores pueden cambiar el bloqueo de envíos.' });
+  }
+
+  const wedding = db.prepare('SELECT id, name FROM weddings WHERE id = ?').get(weddingId) as any;
+  if (!wedding) {
+    return res.status(404).json({ error: 'Boda no encontrada.' });
+  }
+
+  const now = new Date().toISOString();
+  db.prepare('UPDATE weddings SET whatsapp_sending_blocked = ?, updated_at = ? WHERE id = ?').run(
+    blocked ? 1 : 0,
+    now,
+    weddingId
+  );
+
+  const actionMsg = blocked
+    ? 'Envíos de WhatsApp y recordatorios automáticos bloqueados (Modo Seguro activado)'
+    : 'Envíos de WhatsApp y recordatorios automáticos desbloqueados';
+
+  logAudit(weddingId, user.id, user.name, blocked ? 'BLOQUEAR_WHATSAPP' : 'DESBLOQUEAR_WHATSAPP', 'WEDDING', weddingId, actionMsg);
+
+  const updatedWedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+  return res.json({
+    success: true,
+    whatsapp_sending_blocked: Boolean(blocked),
+    message: actionMsg,
+    wedding: updatedWedding
+  });
 });
 
 // POST /api/weddings/:weddingId/invitation-file - Subir archivo PDF de la invitación

@@ -4,6 +4,8 @@ import { WhatsAppService } from './whatsappService.js';
 export interface BroadcastScheduleInfo {
   weddingId: string;
   weddingDate: string;
+  whatsappSendingBlocked?: boolean;
+  hasWhatsappRsvp?: boolean;
   reminder7Days: {
     enabled: boolean;
     time: string;
@@ -249,6 +251,8 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride estará l
     return {
       weddingId,
       weddingDate,
+      whatsappSendingBlocked: Boolean(wedding.whatsapp_sending_blocked),
+      hasWhatsappRsvp: Boolean(wedding.has_whatsapp_rsvp),
       reminder7Days: {
         enabled: Boolean(wedding.reminder_7days_enabled ?? 1),
         time: wedding.reminder_7days_time || '11:00',
@@ -346,6 +350,14 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride estará l
   ): Promise<{ success: boolean; sentCount: number; errorCount: number; details: any[] }> {
     const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
     if (!wedding) throw new Error('Boda no encontrada');
+
+    if (Boolean(wedding.whatsapp_sending_blocked)) {
+      throw new Error('Los envíos de WhatsApp y recordatorios están bloqueados para esta boda (Modo Seguro).');
+    }
+
+    if (!Boolean(wedding.has_whatsapp_rsvp) && !options?.isTest) {
+      throw new Error('El servicio de WhatsApp RSVP no está activo para esta boda.');
+    }
 
     const coupleNames = this.getCoupleNames(wedding);
     const template = wedding.reminder_template_text || this.DEFAULT_REMINDER_TEMPLATE;
@@ -457,6 +469,14 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride estará l
     const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
     if (!wedding) throw new Error('Boda no encontrada');
 
+    if (Boolean(wedding.whatsapp_sending_blocked)) {
+      throw new Error('Los envíos de WhatsApp y recordatorios están bloqueados para esta boda (Modo Seguro).');
+    }
+
+    if (!Boolean(wedding.has_whatsapp_rsvp) && !options?.isTest) {
+      throw new Error('El servicio de WhatsApp RSVP no está activo para esta boda.');
+    }
+
     const coupleNames = this.getCoupleNames(wedding);
     const template = wedding.seating_template_text || this.DEFAULT_SEATING_TEMPLATE;
 
@@ -545,7 +565,7 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride estará l
     try {
       const { currentDate, currentTime } = this.getMexicoCurrentDateTime();
       const weddings = db.prepare(`
-        SELECT id, name, wedding_date,
+        SELECT id, name, wedding_date, has_whatsapp_rsvp, whatsapp_sending_blocked,
                reminder_7days_enabled, reminder_7days_time, reminder_7days_status,
                dayof_seating_enabled, dayof_seating_time, dayof_seating_status
         FROM weddings
@@ -553,6 +573,10 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride estará l
       `).all() as any[];
 
       for (const w of weddings) {
+        // Strict safety lock: if WhatsApp is blocked or add-on is inactive, never fire automated messages
+        if (Boolean(w.whatsapp_sending_blocked) || !Boolean(w.has_whatsapp_rsvp)) {
+          continue;
+        }
         const weddingDate = (w.wedding_date || '').split('T')[0];
         if (!weddingDate) continue;
 

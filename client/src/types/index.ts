@@ -62,6 +62,7 @@ export interface Wedding {
   no_children?: number | boolean | null;
   has_whatsapp_rsvp?: number | boolean;
   has_layout_2d?: number | boolean;
+  whatsapp_sending_blocked?: number | boolean;
   updated_at?: string;
   team?: WeddingTeamMember[];
   stats?: WeddingStats;

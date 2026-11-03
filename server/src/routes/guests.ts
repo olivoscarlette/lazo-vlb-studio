@@ -437,6 +437,29 @@ router.delete('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAc
   return res.json({ message: 'Invitado eliminado correctamente.' });
 });
 
+// DELETE /api/weddings/:weddingId/guests-all - Vaciar lista completa de invitados (Exclusivo Administrador)
+router.delete('/:weddingId/guests-all', authenticateToken, requireWeddingAccess, (req, res) => {
+  const { weddingId } = req.params;
+  const user = req.user!;
+
+  if (user.role !== 'ADMINISTRADOR') {
+    return res.status(403).json({ error: 'Solo los administradores del sistema pueden vaciar la lista de invitados.' });
+  }
+
+  const countRow = db.prepare('SELECT COUNT(*) as count FROM guests WHERE wedding_id = ?').get(weddingId) as any;
+  const count = countRow?.count || 0;
+
+  db.prepare('DELETE FROM guests WHERE wedding_id = ?').run(weddingId);
+
+  logAudit(weddingId, user.id, user.name, 'VACIAR_LISTA_INVITADOS', 'GUEST', weddingId, `Eliminación total: Se eliminaron ${count} invitados de la lista oficial.`);
+
+  return res.json({
+    success: true,
+    deletedCount: count,
+    message: `Se han eliminado los ${count} invitados de la boda.`
+  });
+});
+
 // GET /api/weddings/:weddingId/guests/template - Download updated Excel/CSV template
 router.get('/:weddingId/guests/template', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
@@ -690,6 +713,9 @@ router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requ
 
   try {
     const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+    if (wedding?.whatsapp_sending_blocked) {
+      return res.status(403).json({ error: 'Los envíos de WhatsApp están bloqueados para esta boda (Modo Seguro activo). Desbloquea los envíos antes de enviar mensajes.' });
+    }
     if (req.user?.role === 'NOVIOS' && !wedding?.has_whatsapp_rsvp) {
       return res.status(403).json({ error: 'El servicio de WhatsApp RSVP no está activo para esta boda. Contacta a tu coordinadora para activarlo.' });
     }
@@ -766,6 +792,9 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
 
   try {
     const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+    if (wedding?.whatsapp_sending_blocked) {
+      return res.status(403).json({ error: 'Los envíos de WhatsApp están bloqueados para esta boda (Modo Seguro activo). Desbloquea los envíos antes de enviar mensajes.' });
+    }
     if (req.user?.role === 'NOVIOS' && !wedding?.has_whatsapp_rsvp) {
       return res.status(403).json({ error: 'El servicio de WhatsApp RSVP no está activo para esta boda. Contacta a tu coordinadora para activarlo.' });
     }

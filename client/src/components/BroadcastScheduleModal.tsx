@@ -295,6 +295,17 @@ export const BroadcastScheduleModal: React.FC<BroadcastScheduleModalProps> = ({
           </div>
         )}
 
+        {/* Safety Lock Warning */}
+        {scheduleData?.whatsappSendingBlocked && (
+          <div className="mx-6 mt-3 p-3.5 rounded-2xl bg-amber-50 text-amber-900 border border-amber-300 text-xs flex items-center space-x-2.5">
+            <span className="text-base">🛡️</span>
+            <div>
+              <p className="font-semibold text-amber-950">Modo Seguro Activo — Envíos Bloqueados</p>
+              <p className="text-[11px] text-amber-800">Los recordatorios y mensajes automáticos no se enviarán a los invitados mientras este bloqueo esté activo. Puedes desbloquearlos desde la lista de invitados.</p>
+            </div>
+          </div>
+        )}
+
         {/* Tab Navigation */}
         <div className="px-6 pt-4 border-b border-[#EFE8E1] bg-[#FFFFFF] flex space-x-3">
           <button

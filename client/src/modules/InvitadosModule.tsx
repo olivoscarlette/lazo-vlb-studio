@@ -5,7 +5,8 @@ import {
   Users, UserPlus, FileSpreadsheet, Download, Upload,
   Search, Filter, ChevronLeft, ChevronRight, Phone, MessageSquare,
   AlertTriangle, CheckCircle, Clock, XCircle, Edit2, AlertCircle,
-  Send, Loader2, Check, FileText, Sparkles, Link as LinkIcon, ExternalLink, Trash2
+  Send, Loader2, Check, FileText, Sparkles, Link as LinkIcon, ExternalLink, Trash2,
+  ShieldAlert, ShieldCheck, Lock, Unlock
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { BroadcastScheduleModal } from '../components/BroadcastScheduleModal';
@@ -85,6 +86,14 @@ export const InvitadosModule: React.FC = () => {
 
   // Permiso para WhatsApp: Administradores, Coordinadores o Bodas con Add-on RSVP WhatsApp activo
   const canSendWhatsApp = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR' || Boolean(currentWedding?.has_whatsapp_rsvp);
+  const isSendingBlocked = Boolean(currentWedding?.whatsapp_sending_blocked);
+  const [togglingLock, setTogglingLock] = useState(false);
+
+  // Vaciar lista de invitados (Exclusivo Administrador)
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
+  const [deleteConfirmWord, setDeleteConfirmWord] = useState('');
+  const [deletingAll, setDeletingAll] = useState(false);
+  const [deleteAllError, setDeleteAllError] = useState('');
 
   // Form for Add/Edit
   const [formData, setFormData] = useState({
@@ -379,6 +388,87 @@ export const InvitadosModule: React.FC = () => {
     } catch {}
   };
 
+  // Toggle WhatsApp sending lock (Modo Seguro)
+  const handleToggleWhatsappLock = async () => {
+    if (!currentWedding || !token) return;
+    const nextState = !isSendingBlocked;
+    const confirmMessage = nextState
+      ? '¿Deseas activar el MODO SEGURO y bloquear todos los envíos de WhatsApp y recordatorios automáticos de esta boda? Ningún mensaje saldrá hasta que lo desbloquees.'
+      : '¿Deseas desbloquear los envíos de WhatsApp y recordatorios automáticos de esta boda?';
+
+    if (!confirm(confirmMessage)) return;
+
+    setTogglingLock(true);
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/whatsapp-lock`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ blocked: nextState })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || 'Error al cambiar estado de bloqueo.');
+      } else {
+        if (setCurrentWedding) {
+          setCurrentWedding({
+            ...currentWedding,
+            whatsapp_sending_blocked: nextState
+          });
+        }
+        setWhatsappBanner({
+          type: nextState ? 'error' : 'success',
+          text: nextState
+            ? '🔒 Modo Seguro activado: Se han bloqueado los envíos de RSVP y recordatorios automáticos de esta boda.'
+            : '✓ Envíos desbloqueados: Las funciones de WhatsApp y recordatorios están activas.'
+        });
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error de conexión.');
+    } finally {
+      setTogglingLock(false);
+    }
+  };
+
+  // Vaciar lista de invitados (Admin only)
+  const handleDeleteAllGuests = async () => {
+    if (!currentWedding || !token) return;
+    if (deleteConfirmWord.trim().toUpperCase() !== 'BORRAR') {
+      setDeleteAllError('Debes escribir exactamente la palabra BORRAR para confirmar.');
+      return;
+    }
+
+    setDeletingAll(true);
+    setDeleteAllError('');
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/guests-all`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setDeleteAllError(data.error || 'Error al vaciar la lista de invitados.');
+      } else {
+        setShowDeleteAllModal(false);
+        setDeleteConfirmWord('');
+        setWhatsappBanner({
+          type: 'success',
+          text: `Se han eliminado los ${data.deletedCount ?? 'todos los'} invitados correctamente. Lista vaciada.`
+        });
+        await fetchGuests();
+        await fetchTables();
+      }
+    } catch (err: any) {
+      setDeleteAllError(err.message || 'Error de conexión.');
+    } finally {
+      setDeletingAll(false);
+    }
+  };
+
   // Excel Template Download
   const handleDownloadTemplate = () => {
     window.open(`/api/weddings/${currentWedding!.id}/guests/template?token=${token}`, '_blank');
@@ -617,6 +707,13 @@ export const InvitadosModule: React.FC = () => {
 
   const handleSendSingleWhatsapp = async (guest: Guest) => {
     if (!currentWedding || !token) return;
+    if (isSendingBlocked) {
+      setWhatsappBanner({
+        text: 'Los envíos de WhatsApp están bloqueados para esta boda (Modo Seguro activo). Desbloquea los envíos en la barra superior para continuar.',
+        type: 'error'
+      });
+      return;
+    }
     setSendingWhatsappIds(prev => ({ ...prev, [guest.id]: true }));
     setWhatsappBanner(null);
 
@@ -884,6 +981,10 @@ export const InvitadosModule: React.FC = () => {
 
   const handleSendBulkWhatsapp = async () => {
     if (!currentWedding || !token) return;
+    if (isSendingBlocked) {
+      alert('Los envíos de WhatsApp están bloqueados para esta boda (Modo Seguro activo). Desbloquea los envíos en la barra superior antes de enviar.');
+      return;
+    }
     const pendingGuests = guests.filter(g => g.status === 'Pendiente de confirmar');
     const count = summary.pending || pendingGuests.length;
 
@@ -1015,9 +1116,45 @@ export const InvitadosModule: React.FC = () => {
                     <div className="text-[10px] text-[#786C68]">Cargar lista desde archivo</div>
                   </div>
                 </button>
+
+                {user?.role === 'ADMINISTRADOR' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowDownloadsMenu(false);
+                      setDeleteConfirmWord('');
+                      setDeleteAllError('');
+                      setShowDeleteAllModal(true);
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs text-rose-700 hover:bg-rose-50 flex items-center space-x-2.5 cursor-pointer border-t border-rose-100"
+                  >
+                    <Trash2 className="w-4 h-4 text-rose-600 shrink-0" />
+                    <div>
+                      <div className="font-semibold text-rose-700">Vaciar lista de invitados</div>
+                      <div className="text-[10px] text-rose-500">Eliminar todos los invitados permanentemente</div>
+                    </div>
+                  </button>
+                )}
               </div>
             )}
           </div>
+
+          {/* Botón directo para Vaciar Lista (Exclusivo Administrador) */}
+          {user?.role === 'ADMINISTRADOR' && (summary.total > 0 || guests.length > 0) && (
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteConfirmWord('');
+                setDeleteAllError('');
+                setShowDeleteAllModal(true);
+              }}
+              className="inline-flex items-center space-x-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer"
+              title="Vaciar lista: Eliminar todos los invitados de esta boda permanentemente (Solo Administrador)"
+            >
+              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <span className="hidden sm:inline">Vaciar Lista</span>
+            </button>
+          )}
 
           {/* Botón para Configurar Invitación Formal (PDF / Enlace) — Exclusivo Admin y Coordinadores */}
           {canSendWhatsApp && (
@@ -1041,16 +1178,54 @@ export const InvitadosModule: React.FC = () => {
           {canSendWhatsApp && (
             <button
               onClick={handleSendBulkWhatsapp}
-              disabled={bulkSendingWhatsapp}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#C48B81] hover:bg-[#A86B60] disabled:opacity-50 text-white text-xs font-semibold rounded-xl transition shadow-2xs cursor-pointer"
-              title="Enviar plantilla oficial de WhatsApp RSVP a los invitados pendientes"
+              disabled={bulkSendingWhatsapp || isSendingBlocked}
+              className={`inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition shadow-2xs ${
+                isSendingBlocked
+                  ? 'bg-stone-300 text-stone-500 cursor-not-allowed border border-stone-300'
+                  : 'bg-[#C48B81] hover:bg-[#A86B60] text-white cursor-pointer'
+              }`}
+              title={
+                isSendingBlocked
+                  ? 'Envíos bloqueados para evitar disparos accidentales (Modo Seguro activo)'
+                  : 'Enviar plantilla oficial de WhatsApp RSVP a los invitados pendientes'
+              }
             >
               {bulkSendingWhatsapp ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : isSendingBlocked ? (
+                <Lock className="w-3.5 h-3.5 text-stone-500" />
               ) : (
                 <Send className="w-3.5 h-3.5" />
               )}
-              <span>{bulkSendingWhatsapp ? 'Enviando...' : 'Enviar RSVP WhatsApp'}</span>
+              <span>{bulkSendingWhatsapp ? 'Enviando...' : isSendingBlocked ? 'RSVP Bloqueado' : 'Enviar RSVP WhatsApp'}</span>
+            </button>
+          )}
+
+          {/* Interruptor de Modo Seguro / Candado de Envíos WhatsApp (Admin & Coordinadores) */}
+          {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+            <button
+              type="button"
+              onClick={handleToggleWhatsappLock}
+              disabled={togglingLock}
+              className={`inline-flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition border shadow-2xs cursor-pointer ${
+                isSendingBlocked
+                  ? 'bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-300 ring-1 ring-amber-300'
+                  : 'bg-[#FAF7F5] hover:bg-[#F5EFEB] text-[#7D6F6B] hover:text-[#2B2826] border-[#EFE8E1]'
+              }`}
+              title={
+                isSendingBlocked
+                  ? 'Envíos y recordatorios bloqueados. Haz clic para desbloquear.'
+                  : 'Haz clic para bloquear envíos de WhatsApp y recordatorios automáticos (Modo Seguro).'
+              }
+            >
+              {togglingLock ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : isSendingBlocked ? (
+                <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+              ) : (
+                <ShieldCheck className="w-3.5 h-3.5 text-[#6B8E6E]" />
+              )}
+              <span>{isSendingBlocked ? 'Envíos Bloqueados' : 'Bloquear Envíos'}</span>
             </button>
           )}
 
@@ -1534,6 +1709,14 @@ export const InvitadosModule: React.FC = () => {
                             <AlertCircle className="w-3 h-3 text-rose-600" />
                             <span>Reintentar</span>
                           </button>
+                        ) : isSendingBlocked ? (
+                          <span
+                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-stone-500 bg-stone-100 rounded-lg border border-stone-200 cursor-not-allowed"
+                            title="Envíos bloqueados (Modo Seguro activo)"
+                          >
+                            <Lock className="w-3 h-3 text-stone-400" />
+                            <span>Bloqueado</span>
+                          </span>
                         ) : (
                           <button
                             onClick={() => handleSendSingleWhatsapp(guest)}
@@ -2505,6 +2688,97 @@ export const InvitadosModule: React.FC = () => {
                 className="w-full py-2 text-xs font-semibold text-[#7D6F6B] hover:text-[#2B2826] transition cursor-pointer"
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Seguro para Vaciar Lista de Invitados (Exclusivo Administrador) */}
+      {showDeleteAllModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-rose-200 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-start space-x-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-rose-100 border border-rose-200 flex items-center justify-center text-rose-600 shrink-0">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2">
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">
+                    Solo Administrador
+                  </span>
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#2B2826] mt-1">
+                  Vaciar lista de invitados
+                </h3>
+                <p className="text-xs text-[#7D6F6B] mt-0.5">
+                  Acción irreversible para la boda: <strong>{currentWedding?.name}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-rose-50/70 rounded-2xl border border-rose-200 text-xs text-rose-900 space-y-1.5 leading-relaxed">
+              <p className="font-semibold flex items-center gap-1.5 text-rose-950">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                ¿Estás seguro de que deseas eliminar a todos los invitados?
+              </p>
+              <ul className="list-disc list-inside text-rose-800 space-y-1 pl-1">
+                <li>Se eliminarán permanentemente los <strong>{summary.total || guests.length} invitados</strong> registrados.</li>
+                <li>Se liberarán automáticamente todas las mesas asignadas en el Layout.</li>
+                <li>Esta acción <strong>no se puede deshacer</strong>.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-[#2B2826]">
+                Para confirmar, escribe la palabra <strong className="text-rose-600 tracking-wider">BORRAR</strong> a continuación:
+              </label>
+              <input
+                type="text"
+                value={deleteConfirmWord}
+                onChange={e => {
+                  setDeleteConfirmWord(e.target.value);
+                  setDeleteAllError('');
+                }}
+                placeholder="Escribe BORRAR"
+                className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:border-rose-500 focus:ring-1 focus:ring-rose-500 focus:outline-none"
+                autoFocus
+              />
+              {deleteAllError && (
+                <p className="text-xs text-rose-600 font-semibold">{deleteAllError}</p>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDeleteAllModal(false);
+                  setDeleteConfirmWord('');
+                  setDeleteAllError('');
+                }}
+                disabled={deletingAll}
+                className="px-4 py-2.5 text-xs font-semibold text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] rounded-xl transition border border-transparent cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteAllGuests}
+                disabled={deletingAll || deleteConfirmWord.trim().toUpperCase() !== 'BORRAR'}
+                className="inline-flex items-center space-x-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-xl shadow-xs transition cursor-pointer"
+              >
+                {deletingAll ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Eliminar a todos los invitados</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

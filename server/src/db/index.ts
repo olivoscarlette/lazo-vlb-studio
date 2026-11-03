@@ -109,6 +109,7 @@ export function initDatabase() {
       no_children INTEGER DEFAULT 0,
       has_whatsapp_rsvp INTEGER DEFAULT 0,
       has_layout_2d INTEGER DEFAULT 0,
+      whatsapp_sending_blocked INTEGER DEFAULT 0,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
@@ -533,6 +534,9 @@ export function initDatabase() {
   } catch {}
   try {
     db.exec("ALTER TABLE weddings ADD COLUMN has_layout_2d INTEGER DEFAULT 0;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN whatsapp_sending_blocked INTEGER DEFAULT 0;");
   } catch {}
 
   // Update legacy templates to strictly use "Viva la Bride"
