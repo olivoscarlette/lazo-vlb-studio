@@ -292,6 +292,14 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                   Propuesta Vigente
                 </span>
               )}
+              <button
+                onClick={() => generateVlbQuotePdf(quote, items)}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#222222] hover:bg-[#333333] text-white cursor-pointer transition shadow-2xs"
+                title="Descargar Contrato en PDF"
+              >
+                <Download className="w-3.5 h-3.5 text-[#F8E4E9]" />
+                <span>PDF</span>
+              </button>
             </div>
           </div>
 
@@ -452,10 +460,10 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
           <div className="pt-2">
             <button
               onClick={() => generateVlbQuotePdf(quote, items)}
-              className="w-full py-3 px-4 bg-[#FFFFFF] hover:bg-[#FAF6F2] text-[#222222] border border-[#EAE3DA] rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer shadow-2xs"
+              className="w-full py-3.5 px-4 bg-[#FFFFFF] hover:bg-[#FAF6F2] text-[#222222] border border-[#EAE3DA] rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer shadow-xs"
             >
               <Download className="w-4 h-4 text-[#C83460]" />
-              <span>Descargar Propuesta en PDF Oficial</span>
+              <span>{isSigned ? 'Descargar Contrato Digital Firmado (PDF Oficial)' : 'Descargar Contrato Digital & Propuesta (PDF)'}</span>
             </button>
           </div>
         </div>
@@ -472,18 +480,21 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
           </div>
 
           {isSigned ? (
-            <div className="p-6 rounded-2xl bg-[#F0FDF4] border border-[#BCE8CB] text-center space-y-3">
-              <CheckCircle2 className="w-10 h-10 text-[#1EBE5D] mx-auto" />
-              <h4 className="font-serif text-xl font-bold text-[#1EBE5D]">
-                ¡Propuesta Aceptada y Firmada Digitalmente!
-              </h4>
-              <p className="text-xs text-[#384C3A] max-w-md mx-auto leading-relaxed">
-                Tu aceptación ha sido resguardada formalmente en la nube. En breve nuestro equipo de atelier se pondrá en contacto contigo para agendar tu sesión de diseño y VoBo.
-              </p>
+            <div className="p-6 sm:p-8 rounded-2xl bg-[#F0FDF4] border border-[#BCE8CB] text-center space-y-4">
+              <CheckCircle2 className="w-12 h-12 text-[#1EBE5D] mx-auto" />
+              <div className="space-y-1">
+                <h4 className="font-serif text-xl font-bold text-[#1EBE5D]">
+                  ¡Propuesta Aceptada y Firmada Digitalmente!
+                </h4>
+                <p className="text-xs text-[#384C3A] max-w-md mx-auto leading-relaxed">
+                  Tu aceptación y contrato digital han sido resguardados formalmente en la nube de Viva la Bride.
+                </p>
+              </div>
+
               {quote.signature_data && (
-                <div className="pt-3 max-w-xs mx-auto">
+                <div className="py-2 max-w-xs mx-auto">
                   <span className="text-[10px] text-[#7D6F6B] uppercase font-bold block mb-1">
-                    Firma Registrada:
+                    Firma Registrada en el Contrato:
                   </span>
                   <img
                     src={quote.signature_data}
@@ -502,6 +513,19 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                   )}
                 </div>
               )}
+
+              <div className="pt-2">
+                <button
+                  onClick={() => generateVlbQuotePdf(quote, items)}
+                  className="w-full sm:w-auto px-6 py-3.5 bg-[#1EBE5D] hover:bg-[#18A14E] text-[#FFFFFF] rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 mx-auto cursor-pointer shadow-md"
+                >
+                  <Download className="w-4 h-4 text-white" />
+                  <span>Descargar Contrato Oficial Firmado en PDF</span>
+                </button>
+                <p className="text-[11px] text-[#7D6F6B] mt-2">
+                  El PDF generado incluye todas tus partidas vigentes y tu firma digital estampada.
+                </p>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmitSignature} className="space-y-4">

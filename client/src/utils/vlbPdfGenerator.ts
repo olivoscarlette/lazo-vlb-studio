@@ -307,17 +307,25 @@ export function buildVlbQuotePdf(
   doc.line(margin + 4.5, y + 8, margin + 6.5, y + 10.5);
   doc.line(margin + 6.5, y + 10.5, margin + 11.5, y + 5.5);
 
+  const isSigned = Boolean(quote.signature_data);
+  const signDateFormatted = quote.signed_at
+    ? new Date(quote.signed_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+    : todayFormatted;
+  const signerDisplayName = quote.signed_by_name || clientFullName;
+
   // Disclaimer text
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text('Contrato digital', margin + 20, y + 4.5);
+  doc.text(isSigned ? 'Contrato digital · Aceptado y Firmado' : 'Contrato digital', margin + 20, y + 4.5);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
   const legalNotice = doc.splitTextToSize(
-    'La aceptación y/o pago de esta cotización implica aceptación total de términos y condiciones del contrato digital de Viva La Bride incluidos en este documento.',
+    isSigned
+      ? `Aceptado formalmente por ${signerDisplayName} el ${signDateFormatted}. Este folio cuenta con firma y validez vinculante conforme a los términos de Viva La Bride.`
+      : 'La aceptación y/o pago de esta cotización implica aceptación total de términos y condiciones del contrato digital de Viva La Bride incluidos en este documento.',
     84
   );
   doc.text(legalNotice, margin + 20, y + 9);
@@ -328,12 +336,18 @@ export function buildVlbQuotePdf(
   doc.roundedRect(relBoxX, y - 2, relBoxWidth, 20, 2, 2, 'D');
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text('FOLIO RELACIONADO:', relBoxX + (relBoxWidth / 2), y + 5, { align: 'center' });
+  doc.text('FOLIO RELACIONADO:', relBoxX + (relBoxWidth / 2), y + 4.5, { align: 'center' });
 
-  doc.setFontSize(12);
-  doc.text(folioNumber, relBoxX + (relBoxWidth / 2), y + 13.5, { align: 'center' });
+  doc.setFontSize(11.5);
+  doc.text(folioNumber, relBoxX + (relBoxWidth / 2), y + 11.5, { align: 'center' });
+
+  if (isSigned) {
+    doc.setFontSize(7);
+    doc.setTextColor(30, 140, 60);
+    doc.text('FIRMADO DIGITALMENTE', relBoxX + (relBoxWidth / 2), y + 16, { align: 'center' });
+  }
 
   // Page 1 Footer
   drawVlbFooter(doc, pageWidth, pageHeight);
@@ -546,7 +560,7 @@ export function buildVlbQuotePdf(
   // Digital Signature Image if available
   if (quote.signature_data) {
     try {
-      doc.addImage(quote.signature_data, 'PNG', margin + 8, sigY - 16, 48, 14);
+      doc.addImage(quote.signature_data, 'PNG', margin + 12, sigY - 15, 50, 14);
     } catch (e) {
       console.warn('Could not render client digital signature:', e);
     }
@@ -565,6 +579,11 @@ export function buildVlbQuotePdf(
   doc.setFontSize(8);
   doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
   doc.text('La Contratante', margin + 5 + (sigColWidth / 2), sigY + 8.5, { align: 'center' });
+  if (isSigned) {
+    doc.setFontSize(6.5);
+    doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
+    doc.text(`Firma digital: ${signerDisplayName} (${signDateFormatted})`, margin + 5 + (sigColWidth / 2), sigY + 11.5, { align: 'center' });
+  }
 
   // Line right: Prestadora de Servicios
   const sigRightX = pageWidth - margin - 5 - sigColWidth;
