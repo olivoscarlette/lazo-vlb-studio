@@ -220,11 +220,24 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     setTimeout(() => setFeedback(null), 4000);
   };
 
-  const handleCopyProposalLink = (quoteId: string) => {
-    const url = `${window.location.origin}/vlb/propuesta/${quoteId}`;
+  const handleCopyProposalLink = async (quoteId: string) => {
+    let url = `${window.location.origin}/vlb/propuesta/${quoteId}`;
+    try {
+      showToast('Generando enlace corto...');
+      const res = await apiFetch(`/api/vlb/quotes/public/${quoteId}/shorten`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.short_url) {
+          url = data.short_url;
+        }
+      }
+    } catch (e) {
+      console.warn('Could not shorten link:', e);
+    }
+
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
-      showToast('¡Liga de la propuesta copiada al portapapeles!');
+      showToast(`¡Liga copiada al portapapeles! (${url})`);
     } else {
       prompt('Copia este enlace para enviarlo a los novios:', url);
     }
@@ -750,7 +763,19 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       }
     }
 
-    const proposalUrl = quote ? `${window.location.origin}/vlb/propuesta/${quote.id}` : '';
+    let proposalUrl = quote ? `${window.location.origin}/vlb/propuesta/${quote.id}` : '';
+    if (quote?.id) {
+      try {
+        const shortRes = await apiFetch(`/api/vlb/quotes/public/${quote.id}/shorten`);
+        if (shortRes.ok) {
+          const sData = await shortRes.json();
+          if (sData.short_url) proposalUrl = sData.short_url;
+        }
+      } catch (e) {
+        console.warn('Could not shorten proposal url:', e);
+      }
+    }
+
     const directPdfText = pdfDirectUrl ? `\n📎 *Descargar archivo PDF oficial:* ${pdfDirectUrl}` : '';
     const proposalLinkText = proposalUrl ? `\n✍️ *Revisar propuesta y firmar en línea:* ${proposalUrl}` : '';
 

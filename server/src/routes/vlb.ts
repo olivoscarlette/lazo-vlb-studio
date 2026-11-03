@@ -179,6 +179,66 @@ router.get('/quotes/public/:token/:filename', (req, res) => {
   }
 });
 
+// Helper para generar o recuperar enlace corto gratuito tipo tinyurl.com/vlb-... (sin mención de lazo)
+async function getOrGenerateShortUrl(quoteId: string, folio?: string): Promise<string> {
+  const quote = db.prepare('SELECT id, quote_number, short_url FROM vlb_quotes WHERE id = ?').get(quoteId) as any;
+  if (!quote) return '';
+  if (quote.short_url && quote.short_url.trim()) {
+    return quote.short_url;
+  }
+
+  const longUrl = `https://lazostudio.mx/vlb/propuesta/${quote.id}`;
+  const cleanFolio = (folio || quote.quote_number || 'propuesta').replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
+  const alias = `vlb-${cleanFolio}-${Math.random().toString(36).substring(2, 5)}`;
+
+  try {
+    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}&alias=${encodeURIComponent(alias)}`, {
+      signal: AbortSignal.timeout(3500)
+    });
+    if (res.ok) {
+      let short = await res.text();
+      short = short.trim();
+      if (short.startsWith('http')) {
+        db.prepare('UPDATE vlb_quotes SET short_url = ? WHERE id = ?').run(short, quote.id);
+        return short;
+      }
+    }
+  } catch (err) {
+    console.warn('TinyURL alias error, falling back:', err);
+  }
+
+  try {
+    const res = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`, {
+      signal: AbortSignal.timeout(3500)
+    });
+    if (res.ok) {
+      let short = await res.text();
+      short = short.trim();
+      if (short.startsWith('http')) {
+        db.prepare('UPDATE vlb_quotes SET short_url = ? WHERE id = ?').run(short, quote.id);
+        return short;
+      }
+    }
+  } catch (err) {
+    console.warn('TinyURL fallback error:', err);
+  }
+
+  return longUrl;
+}
+
+// GET /api/vlb/quotes/public/:token/shorten - Obtener liga corta pública
+router.get('/quotes/public/:token/shorten', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const quote = db.prepare('SELECT id, quote_number FROM vlb_quotes WHERE id = ? OR public_token = ?').get(token, token) as any;
+    if (!quote) return res.status(404).json({ error: 'Cotización no encontrada.' });
+    const short_url = await getOrGenerateShortUrl(quote.id, quote.quote_number);
+    res.json({ short_url });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al acortar URL.' });
+  }
+});
+
 // All VLB routes below require authentication and strictly ADMINISTRADOR role
 router.use(authenticateToken);
 router.use((req, res, next) => {
@@ -623,6 +683,17 @@ router.delete('/quotes/:id', (req, res) => {
     res.json({ message: 'Cotización eliminada correctamente.' });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al eliminar cotización.' });
+  }
+});
+
+// POST /api/vlb/quotes/:id/shorten - Generar o recuperar liga corta (TinyURL sin lazo)
+router.post('/quotes/:id/shorten', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const short_url = await getOrGenerateShortUrl(id);
+    res.json({ short_url });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al acortar URL.' });
   }
 });
 
