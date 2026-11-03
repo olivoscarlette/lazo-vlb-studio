@@ -31,7 +31,10 @@ import {
   CheckSquare,
   Square,
   ListTodo,
-  Tag
+  Tag,
+  Truck,
+  Link,
+  Copy
 } from 'lucide-react';
 import {
   VlbCatalogItem,
@@ -51,8 +54,26 @@ interface VivaLaBrideModuleProps {
 }
 
 export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLazo }) => {
-  // Navigation Tabs: 'catalog' | 'quotes' | 'orders'
-  const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog'>('quotes');
+  // Navigation Tabs: 'quotes' | 'orders' | 'packing' | 'templates' | 'catalog'
+  const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog' | 'packing' | 'templates'>('quotes');
+  const [quoteDiscountPct, setQuoteDiscountPct] = useState<number>(0);
+
+  // Packing Checklist State (Día del Evento / Packing al Auto)
+  const [selectedPackingOrderId, setSelectedPackingOrderId] = useState<string>('');
+  const [packingList, setPackingList] = useState<any[]>([]);
+  const [loadingPacking, setLoadingPacking] = useState(false);
+  const [newPackingItemName, setNewPackingItemName] = useState('');
+  const [newPackingItemCategory, setNewPackingItemCategory] = useState('Mobiliario / Stand');
+
+  // Task Templates State (Lista Maestra de Actividades)
+  const [taskTemplates, setTaskTemplates] = useState<any[]>([]);
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [templateFilterCategory, setTemplateFilterCategory] = useState<'PAPELERIA' | 'SERVICIO'>('PAPELERIA');
+  const [newTemplateTitle, setNewTemplateTitle] = useState('');
+  const [newTemplateCategory, setNewTemplateCategory] = useState<'PAPELERIA' | 'SERVICIO'>('PAPELERIA');
+  const [newTemplateDays, setNewTemplateDays] = useState<number>(7);
+  const [newTemplateTime, setNewTemplateTime] = useState<string>('');
+  const [newTemplateNotes, setNewTemplateNotes] = useState<string>('');
 
   // Loading & Feedback
   const [loading, setLoading] = useState(false);
@@ -155,10 +176,11 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const loadData = async () => {
     setLoading(true);
     try {
-      const [catRes, quotesRes, ordersRes] = await Promise.all([
+      const [catRes, quotesRes, ordersRes, tplRes] = await Promise.all([
         apiFetch('/api/vlb/catalog'),
         apiFetch('/api/vlb/quotes'),
-        apiFetch('/api/vlb/orders')
+        apiFetch('/api/vlb/orders'),
+        apiFetch('/api/vlb/task-templates')
       ]);
 
       if (catRes.ok) {
@@ -172,6 +194,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       if (ordersRes.ok) {
         const oData = await ordersRes.json();
         setOrders(oData.orders || []);
+      }
+      if (tplRes.ok) {
+        const tplData = await tplRes.json();
+        setTaskTemplates(tplData.templates || []);
       }
     } catch (err: any) {
       console.error('Error loading VLB data:', err);
@@ -187,6 +213,167 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setFeedback({ type, text });
     setTimeout(() => setFeedback(null), 4000);
+  };
+
+  const handleCopyProposalLink = (quoteId: string) => {
+    const url = `${window.location.origin}/vlb/propuesta/${quoteId}`;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url);
+      showToast('¡Liga de la propuesta copiada al portapapeles!');
+    } else {
+      prompt('Copia este enlace para enviarlo a los novios:', url);
+    }
+  };
+
+  // ----------------------------------------
+  // TASK TEMPLATES ACTIONS (LISTA MAESTRA DE ACTIVIDADES)
+  // ----------------------------------------
+  const loadTaskTemplates = async () => {
+    setLoadingTemplates(true);
+    try {
+      const res = await apiFetch('/api/vlb/task-templates');
+      if (res.ok) {
+        const data = await res.json();
+        setTaskTemplates(data.templates || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingTemplates(false);
+    }
+  };
+
+  const handleAddMasterTemplate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTemplateTitle.trim()) {
+      showToast('Ingresa el título de la actividad.', 'error');
+      return;
+    }
+    try {
+      const res = await apiFetch('/api/vlb/task-templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: newTemplateCategory,
+          title: newTemplateTitle.trim(),
+          days_before_event: newTemplateDays,
+          default_time: newTemplateTime,
+          notes: newTemplateNotes.trim()
+        })
+      });
+      if (!res.ok) throw new Error('Error al agregar actividad.');
+      showToast('Actividad agregada a la plantilla maestra.');
+      setNewTemplateTitle('');
+      setNewTemplateNotes('');
+      loadTaskTemplates();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleDeleteMasterTemplate = async (id: string) => {
+    if (!window.confirm('¿Deseas eliminar esta actividad de tu plantilla maestra?')) return;
+    try {
+      const res = await apiFetch(`/api/vlb/task-templates/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al eliminar actividad.');
+      showToast('Actividad eliminada de la plantilla maestra.');
+      loadTaskTemplates();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleApplyTemplatesToOrder = async (orderId: string) => {
+    if (!window.confirm('¿Deseas recalcular y sincronizar las actividades de este pedido con tu plantilla maestra?')) return;
+    try {
+      const res = await apiFetch(`/api/vlb/orders/${orderId}/apply-templates`, { method: 'POST' });
+      if (!res.ok) throw new Error('Error al sincronizar actividades.');
+      const data = await res.json();
+      showToast(data.message || 'Actividades sincronizadas.');
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, tasks: data.tasks });
+      }
+      loadData();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  // ----------------------------------------
+  // PACKING CHECKLIST ACTIONS (DÍA DEL EVENTO - CARGAR EL AUTO)
+  // ----------------------------------------
+  const loadOrderPackingList = async (orderId: string) => {
+    if (!orderId) return;
+    setSelectedPackingOrderId(orderId);
+    setLoadingPacking(true);
+    try {
+      const res = await apiFetch(`/api/vlb/orders/${orderId}/packing-list`);
+      if (res.ok) {
+        const data = await res.json();
+        setPackingList(data.packingList || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoadingPacking(false);
+    }
+  };
+
+  const handleTogglePackingItem = async (itemId: string) => {
+    if (!selectedPackingOrderId) return;
+    const updated = packingList.map(it =>
+      it.id === itemId ? { ...it, packed: !it.packed } : it
+    );
+    setPackingList(updated);
+    try {
+      await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packingList: updated })
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddPackingItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedPackingOrderId || !newPackingItemName.trim()) return;
+    const newItem = {
+      id: 'pack_custom_' + Date.now(),
+      item_name: newPackingItemName.trim(),
+      category: newPackingItemCategory,
+      packed: true,
+      notes: 'Añadido manualmente al cargar el vehículo'
+    };
+    const updated = [...packingList, newItem];
+    setPackingList(updated);
+    setNewPackingItemName('');
+    try {
+      await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packingList: updated })
+      });
+      showToast('Artículo añadido y marcado en el carro.');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeletePackingItem = async (itemId: string) => {
+    if (!selectedPackingOrderId) return;
+    const updated = packingList.filter(it => it.id !== itemId);
+    setPackingList(updated);
+    try {
+      await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packingList: updated })
+      });
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // ----------------------------------------
@@ -284,13 +471,54 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   };
 
   const quoteSubtotal = quoteItems.reduce((acc, curr) => acc + curr.total_price, 0);
-  const quoteTotal = Math.max(0, quoteSubtotal - (Number(quoteForm.discount) || 0));
-  const quoteDownPayment = (quoteTotal * (Number(quoteForm.down_payment_pct) || 50)) / 100;
-  const quoteBalanceDue = quoteTotal - quoteDownPayment;
+  const quoteDiscountAmount = (quoteSubtotal * (Number(quoteDiscountPct) || 0)) / 100;
+  const quoteTotal = Math.max(0, quoteSubtotal - quoteDiscountAmount);
+
+  // Business logic:
+  // En servicios la separación es de $1,000.
+  // Papelería se liquida al entregar el pedido o al programar envío y servicios se liquida 10 días antes del evento.
+  const hasPapeleriaInQuote = quoteItems.some(i => i.category === 'PAPELERIA');
+  const hasServiciosInQuote = quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS');
+
+  const papeleriaSubtotalQuote = quoteItems
+    .filter(i => i.category === 'PAPELERIA')
+    .reduce((sum, i) => sum + i.total_price, 0);
+  const serviciosSubtotalQuote = quoteItems
+    .filter(i => i.category === 'STANDS_EXPERIENCIAS')
+    .reduce((sum, i) => sum + i.total_price, 0);
+
+  const papeleriaRatio = quoteSubtotal > 0 ? (papeleriaSubtotalQuote / quoteSubtotal) : 0;
+  const serviciosRatio = quoteSubtotal > 0 ? (serviciosSubtotalQuote / quoteSubtotal) : 0;
+  const netPapeleria = Math.max(0, papeleriaSubtotalQuote - (quoteDiscountAmount * papeleriaRatio));
+  const netServicios = Math.max(0, serviciosSubtotalQuote - (quoteDiscountAmount * serviciosRatio));
+
+  let quoteDownPayment = 0;
+  let papeleriaDownPayment = 0;
+  let serviciosDownPayment = 0;
+
+  if (hasPapeleriaInQuote && hasServiciosInQuote) {
+    papeleriaDownPayment = netPapeleria * 0.5;
+    serviciosDownPayment = Math.min(1000, netServicios);
+    quoteDownPayment = papeleriaDownPayment + serviciosDownPayment;
+  } else if (hasServiciosInQuote) {
+    serviciosDownPayment = Math.min(1000, netServicios);
+    quoteDownPayment = serviciosDownPayment;
+  } else {
+    papeleriaDownPayment = netPapeleria * 0.5;
+    quoteDownPayment = papeleriaDownPayment;
+  }
+
+  const quoteBalanceDue = Math.max(0, quoteTotal - quoteDownPayment);
+  const papeleriaBalanceQuote = Math.max(0, netPapeleria - papeleriaDownPayment);
+  const serviciosBalanceQuote = Math.max(0, netServicios - serviciosDownPayment);
 
   const handleSaveQuote = async (status: 'BORRADOR' | 'ENVIADA' = 'BORRADOR') => {
     if (!quoteForm.client_name.trim()) {
       showToast('Por favor ingresa el nombre de la clienta o pareja.', 'error');
+      return;
+    }
+    if (!quoteForm.client_phone.trim()) {
+      showToast('El teléfono WhatsApp es obligatorio.', 'error');
       return;
     }
     if (quoteItems.length === 0) {
@@ -304,6 +532,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...quoteForm,
+          discount: quoteDiscountAmount,
+          down_payment_amount: quoteDownPayment,
+          balance_due: quoteBalanceDue,
+          total: quoteTotal,
           items: quoteItems
         })
       });
@@ -417,7 +649,24 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const activeItems = isCurrent ? quoteItems : (items || []);
     const itemsList = activeItems.map(i => `• ${i.pricing_type === 'PER_PIECE' ? `${i.quantity}x ` : ''}${i.item_name}`).join('\n');
 
-    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nTe comparto el detalle de tu propuesta editorial (*${folio}*):\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n✨ *Artículos & Experiencias seleccionadas:*\n${itemsList || 'Personalizado'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *Anticipo requerido (50% para apartar fecha):* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo contra entrega:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n\n*Nota:* El 50% de anticipo aparta formalmente la fecha del taller de imprenta y bloquea el mobiliario para tu evento.\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
+    const quoteIdForLink = quote ? quote.id : null;
+    const proposalLinkText = quoteIdForLink
+      ? `\n\n📄 *Revisa y Firma tu Propuesta en Línea:*\n👉 ${window.location.origin}/vlb/propuesta/${quoteIdForLink}\n(Puedes descargar tu PDF oficial y autorizarla con firma digital en 1 clic desde tu celular)`
+      : '';
+
+    const hasStands = activeItems.some(i => i.category === 'STANDS_EXPERIENCIAS');
+    const hasPap = activeItems.some(i => i.category === 'PAPELERIA');
+
+    let paymentTermsMsg = '';
+    if (hasStands && hasPap) {
+      paymentTermsMsg = `💳 *Anticipo requerido para apartar:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN (50% Papelería + $1,000 Separación de Stands)\n📦 *Saldo Papelería:* Se liquida al entregar el pedido o al programar envío.\n✨ *Saldo Servicios:* Se liquida 10 días antes del evento.`;
+    } else if (hasStands) {
+      paymentTermsMsg = `💳 *Separación requerida:* $1,000.00 MXN para apartar fecha y mobiliario.\n✨ *Saldo Servicios:* Se liquida 10 días antes del evento.`;
+    } else {
+      paymentTermsMsg = `💳 *Anticipo requerido (50%):* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN para entrar al taller de imprenta.\n📦 *Saldo:* Se liquida al entregar el pedido o al programar envío.`;
+    }
+
+    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nTe comparto el detalle de tu propuesta editorial (*${folio}*):\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${formatDateMX(eventDate) || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n✨ *Artículos & Experiencias seleccionadas:*\n${itemsList || 'Personalizado'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n${paymentTermsMsg}${proposalLinkText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
 
     openWhatsAppMessage(phone, msg);
   };
@@ -477,6 +726,28 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const evt = order.event_date ? new Date(order.event_date).getTime() : Date.now();
     const defTasks: VlbTask[] = [];
     const sType = order.service_type || 'PAPELERIA';
+
+    if (taskTemplates && taskTemplates.length > 0) {
+      for (const tpl of taskTemplates) {
+        if (
+          (tpl.category === 'PAPELERIA' && (sType === 'PAPELERIA' || sType === 'MIXTO')) ||
+          (tpl.category === 'SERVICIO' && (sType === 'STANDS_EXPERIENCIAS' || sType === 'MIXTO'))
+        ) {
+          const dueDate = new Date(evt - (tpl.days_before_event || 0) * 86400000).toISOString().split('T')[0];
+          defTasks.push({
+            id: 't_' + tpl.id + '_' + order.id,
+            title: tpl.title,
+            due_date: dueDate,
+            due_time: tpl.default_time || '',
+            completed: false,
+            category: tpl.category,
+            notes: tpl.notes || ''
+          });
+        }
+      }
+      if (defTasks.length > 0) return defTasks;
+    }
+
     if (sType === 'PAPELERIA' || sType === 'MIXTO') {
       defTasks.push({
         id: 't_vobo_' + order.id,
@@ -758,6 +1029,382 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         </div>
       )}
 
+      {/* ======================================================== */}
+      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* ======================================================== */}
+      {activeTab === 'packing' && (
+        <div className="space-y-6">
+          {/* Header & Selector de Evento */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <Truck className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Checklist de Carga al Auto · Día D
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de Evento */}
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
+                  Evento:
+                </label>
+                <select
+                  value={selectedPackingOrderId}
+                  onChange={e => {
+                    setSelectedPackingOrderId(e.target.value);
+                    loadOrderPackingList(e.target.value);
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
+                >
+                  {orders.length === 0 ? (
+                    <option value="">No hay eventos activos</option>
+                  ) : (
+                    orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Event Info & Progress Bar */}
+            {(() => {
+              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+              const packedCount = packingList.filter(it => it.packed).length;
+              const totalCount = packingList.length;
+              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+              const isAllPacked = totalCount > 0 && packedCount === totalCount;
+
+              return (
+                <div className="space-y-4">
+                  {currentPackingOrder && (
+                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-[#332A28] font-serif text-base">
+                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {formatOrderFolio(currentPackingOrder.order_number)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          currentPackingOrder.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D]'
+                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A]'
+                            : 'bg-[#F3EDE6] text-[#58352F]'
+                        }`}>
+                          {getServiceLabel(currentPackingOrder.service_type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
+                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
+                        </span>
+                        <span>·</span>
+                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#332A28]">
+                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
+                      </span>
+                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                        {progressPct}% completado
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {isAllPacked && (
+                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Checklist Items List */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                Material, Estructuras & Herramientas a Subir
+              </h3>
+              <span className="text-xs text-[#7D6F6B]">
+                Toca cada casilla conforme lo coloques en la cajuela
+              </span>
+            </div>
+
+            {loadingPacking ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Cargando checklist del auto...
+              </div>
+            ) : packingList.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {packingList.map(it => (
+                  <div
+                    key={it.id}
+                    onClick={() => handleTogglePackingItem(it.id)}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
+                      it.packed
+                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
+                        it.packed
+                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
+                          : 'bg-[#FFFFFF] border-[#B88A82]'
+                      }`}>
+                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
+                        }`}>
+                          {it.item_name}
+                        </span>
+                        {it.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block truncate">
+                            {it.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                      }`}>
+                        {it.category || 'Equipo'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackingItem(it.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la lista de carga"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para Agregar Algo Extra al Auto */}
+            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
+                value={newPackingItemName}
+                onChange={e => setNewPackingItemName(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+              />
+              <select
+                value={newPackingItemCategory}
+                onChange={e => setNewPackingItemCategory(e.target.value)}
+                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+              >
+                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Herramientas">Herramientas</option>
+                <option value="Eléctrico">Eléctrico</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Audio Guestbook">Audio Guestbook</option>
+                <option value="Extra">Extra</option>
+              </select>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Subir al Auto</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* ======================================================== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Mis Actividades Maestras
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Pill Switcher */}
+              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
+                <button
+                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'PAPELERIA'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  📦 Papelería Social
+                </button>
+                <button
+                  onClick={() => setTemplateFilterCategory('SERVICIO')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'SERVICIO'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  ✨ Stands & Servicios
+                </button>
+              </div>
+            </div>
+
+            {/* List of Templates for Selected Category */}
+            <div className="space-y-2.5">
+              {taskTemplates
+                .filter(t => t.category === templateFilterCategory)
+                .map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#332A28] text-sm block">
+                          {t.title}
+                        </span>
+                        {t.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {t.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                        {t.default_time ? ` (${t.default_time})` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteMasterTemplate(t.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la plantilla maestra"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Add New Master Task */}
+            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
+              <div className="text-xs font-bold text-[#384C3A]">
+                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
+                    value={newTemplateTitle}
+                    onChange={e => {
+                      setNewTemplateTitle(e.target.value);
+                      setNewTemplateCategory(templateFilterCategory);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Días antes (ej. 7)"
+                    value={newTemplateDays}
+                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                  <input
+                    type="time"
+                    placeholder="14:00"
+                    value={newTemplateTime}
+                    onChange={e => setNewTemplateTime(e.target.value)}
+                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Notas u observaciones (opcional)"
+                  value={newTemplateNotes}
+                  onChange={e => setNewTemplateNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
+                >
+                  Guardar en Plantilla
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Header Editorial Exclusivo Viva la Bride - Versión Compacta y Elegante */}
       <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-2xl px-5 py-3.5 shadow-2xs relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
@@ -771,13 +1418,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 <span>Atelier & Experiencias</span>
               </span>
             </div>
-            <p className="text-xs text-[#7D6F6B]">
-              Cotizador ágil, papelería fina en algodón & lacre, stands de bienvenida, anticipos y VoBo digital.
-            </p>
           </div>
 
           {/* Quick Tab Switcher Compacto */}
-          <div className="flex items-center bg-[#FFFFFF]/90 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs self-start sm:self-auto shrink-0">
+          <div className="flex flex-wrap items-center bg-[#FFFFFF]/90 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs self-start sm:self-auto gap-1">
             <button
               onClick={() => setActiveTab('quotes')}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
@@ -787,7 +1431,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>Cotizador Rápido</span>
+              <span>Cotizador</span>
             </button>
             <button
               onClick={() => setActiveTab('orders')}
@@ -798,12 +1442,40 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               }`}
             >
               <Users className="w-3.5 h-3.5" />
-              <span>CRM Parejas & Fechas</span>
+              <span>CRM Parejas</span>
               {orders.length > 0 && (
                 <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full">
                   {orders.length}
                 </span>
               )}
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab('packing');
+                if (orders.length > 0 && !selectedPackingOrderId) {
+                  setSelectedPackingOrderId(orders[0].id);
+                  loadOrderPackingList(orders[0].id);
+                }
+              }}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === 'packing'
+                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                  : 'text-[#7D6F6B] hover:text-[#332A28]'
+              }`}
+            >
+              <Truck className="w-3.5 h-3.5" />
+              <span>Carga al Auto (Día D)</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('templates')}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                activeTab === 'templates'
+                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                  : 'text-[#7D6F6B] hover:text-[#332A28]'
+              }`}
+            >
+              <ListTodo className="w-3.5 h-3.5" />
+              <span>Mis Actividades</span>
             </button>
             <button
               onClick={() => setActiveTab('catalog')}
@@ -814,7 +1486,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               }`}
             >
               <Package className="w-3.5 h-3.5" />
-              <span>Catálogo & Precios</span>
+              <span>Catálogo</span>
             </button>
           </div>
         </div>
@@ -881,10 +1553,11 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-1">
-                      Teléfono WhatsApp
+                      Teléfono WhatsApp *
                     </label>
                     <input
                       type="text"
+                      required
                       placeholder="+52 33 1234 5678"
                       value={quoteForm.client_phone}
                       onChange={e => setQuoteForm({ ...quoteForm, client_phone: e.target.value })}
@@ -1038,7 +1711,11 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </h3>
                   </div>
                   <span className="text-[11px] font-bold text-[#9C665C] bg-[#FAF6F2] px-2.5 py-1 rounded-full border border-[#EAE3DA]">
-                    Anticipo 50%
+                    {hasServiciosInQuote && !hasPapeleriaInQuote
+                      ? 'Separación $1,000'
+                      : hasPapeleriaInQuote && !hasServiciosInQuote
+                      ? 'Anticipo 50%'
+                      : '50% Pap. + $1,000 Serv.'}
                   </span>
                 </div>
 
@@ -1051,15 +1728,19 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-[#7D6F6B]">Descuento ($):</span>
-                    <input
-                      type="number"
-                      min={0}
-                      value={quoteForm.discount}
-                      onChange={e => setQuoteForm({ ...quoteForm, discount: Math.max(0, parseFloat(e.target.value) || 0) })}
-                      className="w-24 px-2 py-1 text-right text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-lg text-[#332A28]"
-                      placeholder="0.00"
-                    />
+                    <span className="text-[#7D6F6B]">Descuento (%):</span>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={quoteDiscountPct === 0 ? '' : quoteDiscountPct}
+                        onChange={e => setQuoteDiscountPct(e.target.value === '' ? 0 : Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                        className="w-24 px-2 py-1 text-right text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-lg text-[#332A28] pr-6"
+                        placeholder="0"
+                      />
+                      <span className="absolute right-2 top-1 text-xs text-[#7D6F6B] pointer-events-none">%</span>
+                    </div>
                   </div>
 
                   <div className="pt-3 border-t border-[#F7F3EE] flex justify-between items-baseline">
@@ -1071,22 +1752,36 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </span>
                   </div>
 
-                  {/* Highlight Box Anticipo 50% */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FAF6F2] to-[#F6ECE8] border border-[#EAD2D0] space-y-2">
+                  {/* Highlight Box Anticipo / Separación y Liquidación Exacta */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FAF6F2] to-[#F6ECE8] border border-[#EAD2D0] space-y-2.5">
                     <div className="flex justify-between items-center text-xs font-bold text-[#70443D]">
-                      <span>Anticipo Requerido (50%):</span>
-                      <span className="text-sm">
+                      <span>Anticipo / Separación Requerida:</span>
+                      <span className="text-sm font-serif font-bold text-[#9C665C]">
                         ${quoteDownPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-[11px] text-[#7D6F6B]">
-                      <span>Saldo Pendiente al Entregar:</span>
-                      <span className="font-semibold text-[#332A28]">
-                        ${quoteBalanceDue.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                      </span>
+
+                    <div className="space-y-1.5 pt-1.5 border-t border-[#EAE3DA] text-[11px] text-[#58352F]">
+                      {hasPapeleriaInQuote && (
+                        <div className="flex items-start justify-between">
+                          <span className="font-semibold">📦 Saldo Papelería:</span>
+                          <span className="text-right text-[10px] text-[#7D6F6B]">
+                            ${papeleriaBalanceQuote.toLocaleString('es-MX', { minimumFractionDigits: 2 })} · Al entregar o programar envío
+                          </span>
+                        </div>
+                      )}
+                      {hasServiciosInQuote && (
+                        <div className="flex items-start justify-between">
+                          <span className="font-semibold">✨ Saldo Servicios:</span>
+                          <span className="text-right text-[10px] text-[#7D6F6B]">
+                            ${serviciosBalanceQuote.toLocaleString('es-MX', { minimumFractionDigits: 2 })} · 10 días antes del evento
+                          </span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-[10px] text-[#7D6F6B] leading-relaxed pt-1 border-t border-[#EAE3DA]">
-                      * El 50% de anticipo reserva la fecha del taller de imprenta y bloquea el mobiliario para el día del evento.
+
+                    <p className="text-[10px] text-[#7D6F6B] leading-relaxed pt-1.5 border-t border-[#EAE3DA]">
+                      * En servicios la separación es de $1,000 MXN. Papelería se liquida al entregar el pedido o programar envío, y servicios se liquida 10 días antes del evento.
                     </p>
                   </div>
                 </div>
@@ -1180,7 +1875,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       <th className="py-3 px-3">Clienta / Pareja</th>
                       <th className="py-3 px-3">Fecha Evento</th>
                       <th className="py-3 px-3">Total</th>
-                      <th className="py-3 px-3">Anticipo 50%</th>
+                      <th className="py-3 px-3">Anticipo / Separación</th>
                       <th className="py-3 px-3">Estatus</th>
                       <th className="py-3 px-3 text-right">Acciones</th>
                     </tr>
@@ -1231,6 +1926,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             <span>WhatsApp</span>
                           </button>
                           <button
+                            onClick={() => handleCopyProposalLink(q.id)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"
+                            title="Copiar liga interactiva de propuesta con firma digital"
+                          >
+                            <Link className="w-3.5 h-3.5" />
+                            <span>Liga</span>
+                          </button>
+                          <button
                             onClick={() => handleExportSavedQuotePdf(q)}
                             className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"
                             title="Descargar PDF"
@@ -1255,6 +1958,382 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 </table>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* ======================================================== */}
+      {activeTab === 'packing' && (
+        <div className="space-y-6">
+          {/* Header & Selector de Evento */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <Truck className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Checklist de Carga al Auto · Día D
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de Evento */}
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
+                  Evento:
+                </label>
+                <select
+                  value={selectedPackingOrderId}
+                  onChange={e => {
+                    setSelectedPackingOrderId(e.target.value);
+                    loadOrderPackingList(e.target.value);
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
+                >
+                  {orders.length === 0 ? (
+                    <option value="">No hay eventos activos</option>
+                  ) : (
+                    orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Event Info & Progress Bar */}
+            {(() => {
+              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+              const packedCount = packingList.filter(it => it.packed).length;
+              const totalCount = packingList.length;
+              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+              const isAllPacked = totalCount > 0 && packedCount === totalCount;
+
+              return (
+                <div className="space-y-4">
+                  {currentPackingOrder && (
+                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-[#332A28] font-serif text-base">
+                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {formatOrderFolio(currentPackingOrder.order_number)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          currentPackingOrder.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D]'
+                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A]'
+                            : 'bg-[#F3EDE6] text-[#58352F]'
+                        }`}>
+                          {getServiceLabel(currentPackingOrder.service_type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
+                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
+                        </span>
+                        <span>·</span>
+                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#332A28]">
+                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
+                      </span>
+                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                        {progressPct}% completado
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {isAllPacked && (
+                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Checklist Items List */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                Material, Estructuras & Herramientas a Subir
+              </h3>
+              <span className="text-xs text-[#7D6F6B]">
+                Toca cada casilla conforme lo coloques en la cajuela
+              </span>
+            </div>
+
+            {loadingPacking ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Cargando checklist del auto...
+              </div>
+            ) : packingList.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {packingList.map(it => (
+                  <div
+                    key={it.id}
+                    onClick={() => handleTogglePackingItem(it.id)}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
+                      it.packed
+                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
+                        it.packed
+                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
+                          : 'bg-[#FFFFFF] border-[#B88A82]'
+                      }`}>
+                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
+                        }`}>
+                          {it.item_name}
+                        </span>
+                        {it.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block truncate">
+                            {it.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                      }`}>
+                        {it.category || 'Equipo'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackingItem(it.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la lista de carga"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para Agregar Algo Extra al Auto */}
+            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
+                value={newPackingItemName}
+                onChange={e => setNewPackingItemName(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+              />
+              <select
+                value={newPackingItemCategory}
+                onChange={e => setNewPackingItemCategory(e.target.value)}
+                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+              >
+                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Herramientas">Herramientas</option>
+                <option value="Eléctrico">Eléctrico</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Audio Guestbook">Audio Guestbook</option>
+                <option value="Extra">Extra</option>
+              </select>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Subir al Auto</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* ======================================================== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Mis Actividades Maestras
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Pill Switcher */}
+              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
+                <button
+                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'PAPELERIA'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  📦 Papelería Social
+                </button>
+                <button
+                  onClick={() => setTemplateFilterCategory('SERVICIO')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'SERVICIO'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  ✨ Stands & Servicios
+                </button>
+              </div>
+            </div>
+
+            {/* List of Templates for Selected Category */}
+            <div className="space-y-2.5">
+              {taskTemplates
+                .filter(t => t.category === templateFilterCategory)
+                .map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#332A28] text-sm block">
+                          {t.title}
+                        </span>
+                        {t.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {t.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                        {t.default_time ? ` (${t.default_time})` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteMasterTemplate(t.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la plantilla maestra"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Add New Master Task */}
+            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
+              <div className="text-xs font-bold text-[#384C3A]">
+                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
+                    value={newTemplateTitle}
+                    onChange={e => {
+                      setNewTemplateTitle(e.target.value);
+                      setNewTemplateCategory(templateFilterCategory);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Días antes (ej. 7)"
+                    value={newTemplateDays}
+                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                  <input
+                    type="time"
+                    placeholder="14:00"
+                    value={newTemplateTime}
+                    onChange={e => setNewTemplateTime(e.target.value)}
+                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Notas u observaciones (opcional)"
+                  value={newTemplateNotes}
+                  onChange={e => setNewTemplateNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
+                >
+                  Guardar en Plantilla
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -1486,6 +2565,382 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* ======================================================== */}
+      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* ======================================================== */}
+      {activeTab === 'packing' && (
+        <div className="space-y-6">
+          {/* Header & Selector de Evento */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <Truck className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Checklist de Carga al Auto · Día D
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de Evento */}
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
+                  Evento:
+                </label>
+                <select
+                  value={selectedPackingOrderId}
+                  onChange={e => {
+                    setSelectedPackingOrderId(e.target.value);
+                    loadOrderPackingList(e.target.value);
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
+                >
+                  {orders.length === 0 ? (
+                    <option value="">No hay eventos activos</option>
+                  ) : (
+                    orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Event Info & Progress Bar */}
+            {(() => {
+              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+              const packedCount = packingList.filter(it => it.packed).length;
+              const totalCount = packingList.length;
+              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+              const isAllPacked = totalCount > 0 && packedCount === totalCount;
+
+              return (
+                <div className="space-y-4">
+                  {currentPackingOrder && (
+                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-[#332A28] font-serif text-base">
+                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {formatOrderFolio(currentPackingOrder.order_number)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          currentPackingOrder.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D]'
+                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A]'
+                            : 'bg-[#F3EDE6] text-[#58352F]'
+                        }`}>
+                          {getServiceLabel(currentPackingOrder.service_type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
+                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
+                        </span>
+                        <span>·</span>
+                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#332A28]">
+                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
+                      </span>
+                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                        {progressPct}% completado
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {isAllPacked && (
+                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Checklist Items List */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                Material, Estructuras & Herramientas a Subir
+              </h3>
+              <span className="text-xs text-[#7D6F6B]">
+                Toca cada casilla conforme lo coloques en la cajuela
+              </span>
+            </div>
+
+            {loadingPacking ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Cargando checklist del auto...
+              </div>
+            ) : packingList.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {packingList.map(it => (
+                  <div
+                    key={it.id}
+                    onClick={() => handleTogglePackingItem(it.id)}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
+                      it.packed
+                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
+                        it.packed
+                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
+                          : 'bg-[#FFFFFF] border-[#B88A82]'
+                      }`}>
+                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
+                        }`}>
+                          {it.item_name}
+                        </span>
+                        {it.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block truncate">
+                            {it.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                      }`}>
+                        {it.category || 'Equipo'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackingItem(it.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la lista de carga"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para Agregar Algo Extra al Auto */}
+            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
+                value={newPackingItemName}
+                onChange={e => setNewPackingItemName(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+              />
+              <select
+                value={newPackingItemCategory}
+                onChange={e => setNewPackingItemCategory(e.target.value)}
+                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+              >
+                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Herramientas">Herramientas</option>
+                <option value="Eléctrico">Eléctrico</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Audio Guestbook">Audio Guestbook</option>
+                <option value="Extra">Extra</option>
+              </select>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Subir al Auto</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* ======================================================== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Mis Actividades Maestras
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Pill Switcher */}
+              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
+                <button
+                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'PAPELERIA'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  📦 Papelería Social
+                </button>
+                <button
+                  onClick={() => setTemplateFilterCategory('SERVICIO')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'SERVICIO'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  ✨ Stands & Servicios
+                </button>
+              </div>
+            </div>
+
+            {/* List of Templates for Selected Category */}
+            <div className="space-y-2.5">
+              {taskTemplates
+                .filter(t => t.category === templateFilterCategory)
+                .map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#332A28] text-sm block">
+                          {t.title}
+                        </span>
+                        {t.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {t.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                        {t.default_time ? ` (${t.default_time})` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteMasterTemplate(t.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la plantilla maestra"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Add New Master Task */}
+            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
+              <div className="text-xs font-bold text-[#384C3A]">
+                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
+                    value={newTemplateTitle}
+                    onChange={e => {
+                      setNewTemplateTitle(e.target.value);
+                      setNewTemplateCategory(templateFilterCategory);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Días antes (ej. 7)"
+                    value={newTemplateDays}
+                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                  <input
+                    type="time"
+                    placeholder="14:00"
+                    value={newTemplateTime}
+                    onChange={e => setNewTemplateTime(e.target.value)}
+                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Notas u observaciones (opcional)"
+                  value={newTemplateNotes}
+                  onChange={e => setNewTemplateNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
+                >
+                  Guardar en Plantilla
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
       {/* TAB 3: CATÁLOGO DE ARTÍCULOS Y PRECIOS                   */}
       {/* ======================================================== */}
       {activeTab === 'catalog' && (
@@ -1657,6 +3112,382 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* ======================================================== */}
+      {activeTab === 'packing' && (
+        <div className="space-y-6">
+          {/* Header & Selector de Evento */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <Truck className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Checklist de Carga al Auto · Día D
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de Evento */}
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
+                  Evento:
+                </label>
+                <select
+                  value={selectedPackingOrderId}
+                  onChange={e => {
+                    setSelectedPackingOrderId(e.target.value);
+                    loadOrderPackingList(e.target.value);
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
+                >
+                  {orders.length === 0 ? (
+                    <option value="">No hay eventos activos</option>
+                  ) : (
+                    orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Event Info & Progress Bar */}
+            {(() => {
+              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+              const packedCount = packingList.filter(it => it.packed).length;
+              const totalCount = packingList.length;
+              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+              const isAllPacked = totalCount > 0 && packedCount === totalCount;
+
+              return (
+                <div className="space-y-4">
+                  {currentPackingOrder && (
+                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-[#332A28] font-serif text-base">
+                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {formatOrderFolio(currentPackingOrder.order_number)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          currentPackingOrder.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D]'
+                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A]'
+                            : 'bg-[#F3EDE6] text-[#58352F]'
+                        }`}>
+                          {getServiceLabel(currentPackingOrder.service_type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
+                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
+                        </span>
+                        <span>·</span>
+                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#332A28]">
+                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
+                      </span>
+                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                        {progressPct}% completado
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {isAllPacked && (
+                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Checklist Items List */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                Material, Estructuras & Herramientas a Subir
+              </h3>
+              <span className="text-xs text-[#7D6F6B]">
+                Toca cada casilla conforme lo coloques en la cajuela
+              </span>
+            </div>
+
+            {loadingPacking ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Cargando checklist del auto...
+              </div>
+            ) : packingList.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {packingList.map(it => (
+                  <div
+                    key={it.id}
+                    onClick={() => handleTogglePackingItem(it.id)}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
+                      it.packed
+                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
+                        it.packed
+                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
+                          : 'bg-[#FFFFFF] border-[#B88A82]'
+                      }`}>
+                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
+                        }`}>
+                          {it.item_name}
+                        </span>
+                        {it.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block truncate">
+                            {it.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                      }`}>
+                        {it.category || 'Equipo'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackingItem(it.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la lista de carga"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para Agregar Algo Extra al Auto */}
+            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
+                value={newPackingItemName}
+                onChange={e => setNewPackingItemName(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+              />
+              <select
+                value={newPackingItemCategory}
+                onChange={e => setNewPackingItemCategory(e.target.value)}
+                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+              >
+                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Herramientas">Herramientas</option>
+                <option value="Eléctrico">Eléctrico</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Audio Guestbook">Audio Guestbook</option>
+                <option value="Extra">Extra</option>
+              </select>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Subir al Auto</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* ======================================================== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Mis Actividades Maestras
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Pill Switcher */}
+              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
+                <button
+                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'PAPELERIA'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  📦 Papelería Social
+                </button>
+                <button
+                  onClick={() => setTemplateFilterCategory('SERVICIO')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'SERVICIO'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  ✨ Stands & Servicios
+                </button>
+              </div>
+            </div>
+
+            {/* List of Templates for Selected Category */}
+            <div className="space-y-2.5">
+              {taskTemplates
+                .filter(t => t.category === templateFilterCategory)
+                .map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#332A28] text-sm block">
+                          {t.title}
+                        </span>
+                        {t.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {t.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                        {t.default_time ? ` (${t.default_time})` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteMasterTemplate(t.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la plantilla maestra"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Add New Master Task */}
+            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
+              <div className="text-xs font-bold text-[#384C3A]">
+                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
+                    value={newTemplateTitle}
+                    onChange={e => {
+                      setNewTemplateTitle(e.target.value);
+                      setNewTemplateCategory(templateFilterCategory);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Días antes (ej. 7)"
+                    value={newTemplateDays}
+                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                  <input
+                    type="time"
+                    placeholder="14:00"
+                    value={newTemplateTime}
+                    onChange={e => setNewTemplateTime(e.target.value)}
+                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Notas u observaciones (opcional)"
+                  value={newTemplateNotes}
+                  onChange={e => setNewTemplateNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
+                >
+                  Guardar en Plantilla
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
@@ -1877,13 +3708,35 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     )}
                   </div>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center flex-wrap gap-2">
                     <button
                       onClick={() => setShowNewTaskRow(!showNewTaskRow)}
                       className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-semibold shadow-2xs transition cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Nueva Tarea</span>
+                    </button>
+                    <button
+                      onClick={() => handleApplyTemplatesToOrder(selectedOrder.id)}
+                      className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] text-xs font-semibold shadow-2xs transition cursor-pointer"
+                      title="Sincronizar tareas con mi plantilla maestra de actividades"
+                    >
+                      <ListTodo className="w-3.5 h-3.5 text-[#B88A82]" />
+                      <span>Cargar Plantilla</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        const orderId = selectedOrder.id;
+                        setSelectedPackingOrderId(orderId);
+                        loadOrderPackingList(orderId);
+                        setActiveTab('packing');
+                        setSelectedOrder(null);
+                      }}
+                      className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] text-xs font-semibold shadow-2xs transition cursor-pointer"
+                      title="Ver lista de carga de vehículo para el día del evento"
+                    >
+                      <Truck className="w-3.5 h-3.5 text-[#B88A82]" />
+                      <span>Carga al Auto</span>
                     </button>
                     <button
                       onClick={() => {
@@ -2148,6 +4001,382 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* ======================================================== */}
+      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* ======================================================== */}
+      {activeTab === 'packing' && (
+        <div className="space-y-6">
+          {/* Header & Selector de Evento */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <Truck className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Checklist de Carga al Auto · Día D
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de Evento */}
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
+                  Evento:
+                </label>
+                <select
+                  value={selectedPackingOrderId}
+                  onChange={e => {
+                    setSelectedPackingOrderId(e.target.value);
+                    loadOrderPackingList(e.target.value);
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
+                >
+                  {orders.length === 0 ? (
+                    <option value="">No hay eventos activos</option>
+                  ) : (
+                    orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Event Info & Progress Bar */}
+            {(() => {
+              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+              const packedCount = packingList.filter(it => it.packed).length;
+              const totalCount = packingList.length;
+              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+              const isAllPacked = totalCount > 0 && packedCount === totalCount;
+
+              return (
+                <div className="space-y-4">
+                  {currentPackingOrder && (
+                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-[#332A28] font-serif text-base">
+                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {formatOrderFolio(currentPackingOrder.order_number)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          currentPackingOrder.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D]'
+                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A]'
+                            : 'bg-[#F3EDE6] text-[#58352F]'
+                        }`}>
+                          {getServiceLabel(currentPackingOrder.service_type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
+                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
+                        </span>
+                        <span>·</span>
+                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#332A28]">
+                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
+                      </span>
+                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                        {progressPct}% completado
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {isAllPacked && (
+                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Checklist Items List */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                Material, Estructuras & Herramientas a Subir
+              </h3>
+              <span className="text-xs text-[#7D6F6B]">
+                Toca cada casilla conforme lo coloques en la cajuela
+              </span>
+            </div>
+
+            {loadingPacking ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Cargando checklist del auto...
+              </div>
+            ) : packingList.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {packingList.map(it => (
+                  <div
+                    key={it.id}
+                    onClick={() => handleTogglePackingItem(it.id)}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
+                      it.packed
+                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
+                        it.packed
+                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
+                          : 'bg-[#FFFFFF] border-[#B88A82]'
+                      }`}>
+                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
+                        }`}>
+                          {it.item_name}
+                        </span>
+                        {it.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block truncate">
+                            {it.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                      }`}>
+                        {it.category || 'Equipo'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackingItem(it.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la lista de carga"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para Agregar Algo Extra al Auto */}
+            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
+                value={newPackingItemName}
+                onChange={e => setNewPackingItemName(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+              />
+              <select
+                value={newPackingItemCategory}
+                onChange={e => setNewPackingItemCategory(e.target.value)}
+                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+              >
+                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Herramientas">Herramientas</option>
+                <option value="Eléctrico">Eléctrico</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Audio Guestbook">Audio Guestbook</option>
+                <option value="Extra">Extra</option>
+              </select>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Subir al Auto</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* ======================================================== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Mis Actividades Maestras
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Pill Switcher */}
+              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
+                <button
+                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'PAPELERIA'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  📦 Papelería Social
+                </button>
+                <button
+                  onClick={() => setTemplateFilterCategory('SERVICIO')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'SERVICIO'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  ✨ Stands & Servicios
+                </button>
+              </div>
+            </div>
+
+            {/* List of Templates for Selected Category */}
+            <div className="space-y-2.5">
+              {taskTemplates
+                .filter(t => t.category === templateFilterCategory)
+                .map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#332A28] text-sm block">
+                          {t.title}
+                        </span>
+                        {t.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {t.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                        {t.default_time ? ` (${t.default_time})` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteMasterTemplate(t.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la plantilla maestra"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Add New Master Task */}
+            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
+              <div className="text-xs font-bold text-[#384C3A]">
+                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
+                    value={newTemplateTitle}
+                    onChange={e => {
+                      setNewTemplateTitle(e.target.value);
+                      setNewTemplateCategory(templateFilterCategory);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Días antes (ej. 7)"
+                    value={newTemplateDays}
+                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                  <input
+                    type="time"
+                    placeholder="14:00"
+                    value={newTemplateTime}
+                    onChange={e => setNewTemplateTime(e.target.value)}
+                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Notas u observaciones (opcional)"
+                  value={newTemplateNotes}
+                  onChange={e => setNewTemplateNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
+                >
+                  Guardar en Plantilla
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
       {/* MODAL: REGISTRAR PAGO SPEI / ANTICIPO                    */}
       {/* ======================================================== */}
       {showPaymentModal && selectedOrder && (
@@ -2264,6 +4493,382 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* ======================================================== */}
+      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* ======================================================== */}
+      {activeTab === 'packing' && (
+        <div className="space-y-6">
+          {/* Header & Selector de Evento */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <Truck className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Checklist de Carga al Auto · Día D
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de Evento */}
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
+                  Evento:
+                </label>
+                <select
+                  value={selectedPackingOrderId}
+                  onChange={e => {
+                    setSelectedPackingOrderId(e.target.value);
+                    loadOrderPackingList(e.target.value);
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
+                >
+                  {orders.length === 0 ? (
+                    <option value="">No hay eventos activos</option>
+                  ) : (
+                    orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Event Info & Progress Bar */}
+            {(() => {
+              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+              const packedCount = packingList.filter(it => it.packed).length;
+              const totalCount = packingList.length;
+              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+              const isAllPacked = totalCount > 0 && packedCount === totalCount;
+
+              return (
+                <div className="space-y-4">
+                  {currentPackingOrder && (
+                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-[#332A28] font-serif text-base">
+                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {formatOrderFolio(currentPackingOrder.order_number)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          currentPackingOrder.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D]'
+                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A]'
+                            : 'bg-[#F3EDE6] text-[#58352F]'
+                        }`}>
+                          {getServiceLabel(currentPackingOrder.service_type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
+                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
+                        </span>
+                        <span>·</span>
+                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#332A28]">
+                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
+                      </span>
+                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                        {progressPct}% completado
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {isAllPacked && (
+                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Checklist Items List */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                Material, Estructuras & Herramientas a Subir
+              </h3>
+              <span className="text-xs text-[#7D6F6B]">
+                Toca cada casilla conforme lo coloques en la cajuela
+              </span>
+            </div>
+
+            {loadingPacking ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Cargando checklist del auto...
+              </div>
+            ) : packingList.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {packingList.map(it => (
+                  <div
+                    key={it.id}
+                    onClick={() => handleTogglePackingItem(it.id)}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
+                      it.packed
+                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
+                        it.packed
+                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
+                          : 'bg-[#FFFFFF] border-[#B88A82]'
+                      }`}>
+                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
+                        }`}>
+                          {it.item_name}
+                        </span>
+                        {it.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block truncate">
+                            {it.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                      }`}>
+                        {it.category || 'Equipo'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackingItem(it.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la lista de carga"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para Agregar Algo Extra al Auto */}
+            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
+                value={newPackingItemName}
+                onChange={e => setNewPackingItemName(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+              />
+              <select
+                value={newPackingItemCategory}
+                onChange={e => setNewPackingItemCategory(e.target.value)}
+                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+              >
+                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Herramientas">Herramientas</option>
+                <option value="Eléctrico">Eléctrico</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Audio Guestbook">Audio Guestbook</option>
+                <option value="Extra">Extra</option>
+              </select>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Subir al Auto</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* ======================================================== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Mis Actividades Maestras
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Pill Switcher */}
+              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
+                <button
+                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'PAPELERIA'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  📦 Papelería Social
+                </button>
+                <button
+                  onClick={() => setTemplateFilterCategory('SERVICIO')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'SERVICIO'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  ✨ Stands & Servicios
+                </button>
+              </div>
+            </div>
+
+            {/* List of Templates for Selected Category */}
+            <div className="space-y-2.5">
+              {taskTemplates
+                .filter(t => t.category === templateFilterCategory)
+                .map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#332A28] text-sm block">
+                          {t.title}
+                        </span>
+                        {t.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {t.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                        {t.default_time ? ` (${t.default_time})` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteMasterTemplate(t.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la plantilla maestra"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Add New Master Task */}
+            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
+              <div className="text-xs font-bold text-[#384C3A]">
+                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
+                    value={newTemplateTitle}
+                    onChange={e => {
+                      setNewTemplateTitle(e.target.value);
+                      setNewTemplateCategory(templateFilterCategory);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Días antes (ej. 7)"
+                    value={newTemplateDays}
+                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                  <input
+                    type="time"
+                    placeholder="14:00"
+                    value={newTemplateTime}
+                    onChange={e => setNewTemplateTime(e.target.value)}
+                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Notas u observaciones (opcional)"
+                  value={newTemplateNotes}
+                  onChange={e => setNewTemplateNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
+                >
+                  Guardar en Plantilla
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
       {/* MODAL: SUBIR DOCUMENTO A LA BÓVEDA                       */}
       {/* ======================================================== */}
       {showDocUploadModal && selectedOrder && (
@@ -2341,6 +4946,382 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   className="px-5 py-2.5 bg-[#332A28] hover:bg-[#58352F] text-[#FFFFFF] text-xs font-bold rounded-xl shadow-xs transition disabled:opacity-50"
                 >
                   Cargar a Bóveda
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* ======================================================== */}
+      {activeTab === 'packing' && (
+        <div className="space-y-6">
+          {/* Header & Selector de Evento */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <Truck className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Checklist de Carga al Auto · Día D
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de Evento */}
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
+                  Evento:
+                </label>
+                <select
+                  value={selectedPackingOrderId}
+                  onChange={e => {
+                    setSelectedPackingOrderId(e.target.value);
+                    loadOrderPackingList(e.target.value);
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
+                >
+                  {orders.length === 0 ? (
+                    <option value="">No hay eventos activos</option>
+                  ) : (
+                    orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Event Info & Progress Bar */}
+            {(() => {
+              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+              const packedCount = packingList.filter(it => it.packed).length;
+              const totalCount = packingList.length;
+              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+              const isAllPacked = totalCount > 0 && packedCount === totalCount;
+
+              return (
+                <div className="space-y-4">
+                  {currentPackingOrder && (
+                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-[#332A28] font-serif text-base">
+                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {formatOrderFolio(currentPackingOrder.order_number)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          currentPackingOrder.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D]'
+                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A]'
+                            : 'bg-[#F3EDE6] text-[#58352F]'
+                        }`}>
+                          {getServiceLabel(currentPackingOrder.service_type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
+                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
+                        </span>
+                        <span>·</span>
+                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#332A28]">
+                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
+                      </span>
+                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                        {progressPct}% completado
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {isAllPacked && (
+                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Checklist Items List */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                Material, Estructuras & Herramientas a Subir
+              </h3>
+              <span className="text-xs text-[#7D6F6B]">
+                Toca cada casilla conforme lo coloques en la cajuela
+              </span>
+            </div>
+
+            {loadingPacking ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Cargando checklist del auto...
+              </div>
+            ) : packingList.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {packingList.map(it => (
+                  <div
+                    key={it.id}
+                    onClick={() => handleTogglePackingItem(it.id)}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
+                      it.packed
+                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
+                        it.packed
+                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
+                          : 'bg-[#FFFFFF] border-[#B88A82]'
+                      }`}>
+                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
+                        }`}>
+                          {it.item_name}
+                        </span>
+                        {it.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block truncate">
+                            {it.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                      }`}>
+                        {it.category || 'Equipo'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackingItem(it.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la lista de carga"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para Agregar Algo Extra al Auto */}
+            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
+                value={newPackingItemName}
+                onChange={e => setNewPackingItemName(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+              />
+              <select
+                value={newPackingItemCategory}
+                onChange={e => setNewPackingItemCategory(e.target.value)}
+                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+              >
+                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Herramientas">Herramientas</option>
+                <option value="Eléctrico">Eléctrico</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Audio Guestbook">Audio Guestbook</option>
+                <option value="Extra">Extra</option>
+              </select>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Subir al Auto</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* ======================================================== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Mis Actividades Maestras
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Pill Switcher */}
+              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
+                <button
+                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'PAPELERIA'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  📦 Papelería Social
+                </button>
+                <button
+                  onClick={() => setTemplateFilterCategory('SERVICIO')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'SERVICIO'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  ✨ Stands & Servicios
+                </button>
+              </div>
+            </div>
+
+            {/* List of Templates for Selected Category */}
+            <div className="space-y-2.5">
+              {taskTemplates
+                .filter(t => t.category === templateFilterCategory)
+                .map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#332A28] text-sm block">
+                          {t.title}
+                        </span>
+                        {t.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {t.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                        {t.default_time ? ` (${t.default_time})` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteMasterTemplate(t.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la plantilla maestra"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Add New Master Task */}
+            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
+              <div className="text-xs font-bold text-[#384C3A]">
+                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
+                    value={newTemplateTitle}
+                    onChange={e => {
+                      setNewTemplateTitle(e.target.value);
+                      setNewTemplateCategory(templateFilterCategory);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Días antes (ej. 7)"
+                    value={newTemplateDays}
+                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                  <input
+                    type="time"
+                    placeholder="14:00"
+                    value={newTemplateTime}
+                    onChange={e => setNewTemplateTime(e.target.value)}
+                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Notas u observaciones (opcional)"
+                  value={newTemplateNotes}
+                  onChange={e => setNewTemplateNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
+                >
+                  Guardar en Plantilla
                 </button>
               </div>
             </form>
@@ -2432,6 +5413,382 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl shadow-xs transition"
                 >
                   Guardar Fechas
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* ======================================================== */}
+      {activeTab === 'packing' && (
+        <div className="space-y-6">
+          {/* Header & Selector de Evento */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <Truck className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Checklist de Carga al Auto · Día D
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de Evento */}
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
+                  Evento:
+                </label>
+                <select
+                  value={selectedPackingOrderId}
+                  onChange={e => {
+                    setSelectedPackingOrderId(e.target.value);
+                    loadOrderPackingList(e.target.value);
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
+                >
+                  {orders.length === 0 ? (
+                    <option value="">No hay eventos activos</option>
+                  ) : (
+                    orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Event Info & Progress Bar */}
+            {(() => {
+              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+              const packedCount = packingList.filter(it => it.packed).length;
+              const totalCount = packingList.length;
+              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+              const isAllPacked = totalCount > 0 && packedCount === totalCount;
+
+              return (
+                <div className="space-y-4">
+                  {currentPackingOrder && (
+                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-[#332A28] font-serif text-base">
+                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {formatOrderFolio(currentPackingOrder.order_number)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          currentPackingOrder.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D]'
+                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A]'
+                            : 'bg-[#F3EDE6] text-[#58352F]'
+                        }`}>
+                          {getServiceLabel(currentPackingOrder.service_type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
+                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
+                        </span>
+                        <span>·</span>
+                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#332A28]">
+                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
+                      </span>
+                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                        {progressPct}% completado
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {isAllPacked && (
+                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Checklist Items List */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                Material, Estructuras & Herramientas a Subir
+              </h3>
+              <span className="text-xs text-[#7D6F6B]">
+                Toca cada casilla conforme lo coloques en la cajuela
+              </span>
+            </div>
+
+            {loadingPacking ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Cargando checklist del auto...
+              </div>
+            ) : packingList.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {packingList.map(it => (
+                  <div
+                    key={it.id}
+                    onClick={() => handleTogglePackingItem(it.id)}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
+                      it.packed
+                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
+                        it.packed
+                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
+                          : 'bg-[#FFFFFF] border-[#B88A82]'
+                      }`}>
+                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
+                        }`}>
+                          {it.item_name}
+                        </span>
+                        {it.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block truncate">
+                            {it.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                      }`}>
+                        {it.category || 'Equipo'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackingItem(it.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la lista de carga"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para Agregar Algo Extra al Auto */}
+            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
+                value={newPackingItemName}
+                onChange={e => setNewPackingItemName(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+              />
+              <select
+                value={newPackingItemCategory}
+                onChange={e => setNewPackingItemCategory(e.target.value)}
+                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+              >
+                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Herramientas">Herramientas</option>
+                <option value="Eléctrico">Eléctrico</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Audio Guestbook">Audio Guestbook</option>
+                <option value="Extra">Extra</option>
+              </select>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Subir al Auto</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* ======================================================== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Mis Actividades Maestras
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Pill Switcher */}
+              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
+                <button
+                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'PAPELERIA'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  📦 Papelería Social
+                </button>
+                <button
+                  onClick={() => setTemplateFilterCategory('SERVICIO')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'SERVICIO'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  ✨ Stands & Servicios
+                </button>
+              </div>
+            </div>
+
+            {/* List of Templates for Selected Category */}
+            <div className="space-y-2.5">
+              {taskTemplates
+                .filter(t => t.category === templateFilterCategory)
+                .map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#332A28] text-sm block">
+                          {t.title}
+                        </span>
+                        {t.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {t.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                        {t.default_time ? ` (${t.default_time})` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteMasterTemplate(t.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la plantilla maestra"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Add New Master Task */}
+            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
+              <div className="text-xs font-bold text-[#384C3A]">
+                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
+                    value={newTemplateTitle}
+                    onChange={e => {
+                      setNewTemplateTitle(e.target.value);
+                      setNewTemplateCategory(templateFilterCategory);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Días antes (ej. 7)"
+                    value={newTemplateDays}
+                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                  <input
+                    type="time"
+                    placeholder="14:00"
+                    value={newTemplateTime}
+                    onChange={e => setNewTemplateTime(e.target.value)}
+                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Notas u observaciones (opcional)"
+                  value={newTemplateNotes}
+                  onChange={e => setNewTemplateNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
+                >
+                  Guardar en Plantilla
                 </button>
               </div>
             </form>
@@ -2597,6 +5954,382 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     Guardar
                   </button>
                 </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* ======================================================== */}
+      {activeTab === 'packing' && (
+        <div className="space-y-6">
+          {/* Header & Selector de Evento */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <Truck className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Checklist de Carga al Auto · Día D
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
+                  </p>
+                </div>
+              </div>
+
+              {/* Selector de Evento */}
+              <div className="flex items-center space-x-2">
+                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
+                  Evento:
+                </label>
+                <select
+                  value={selectedPackingOrderId}
+                  onChange={e => {
+                    setSelectedPackingOrderId(e.target.value);
+                    loadOrderPackingList(e.target.value);
+                  }}
+                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
+                >
+                  {orders.length === 0 ? (
+                    <option value="">No hay eventos activos</option>
+                  ) : (
+                    orders.map(o => (
+                      <option key={o.id} value={o.id}>
+                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
+
+            {/* Event Info & Progress Bar */}
+            {(() => {
+              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+              const packedCount = packingList.filter(it => it.packed).length;
+              const totalCount = packingList.length;
+              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
+              const isAllPacked = totalCount > 0 && packedCount === totalCount;
+
+              return (
+                <div className="space-y-4">
+                  {currentPackingOrder && (
+                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-[#332A28] font-serif text-base">
+                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
+                        </span>
+                        <span>·</span>
+                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {formatOrderFolio(currentPackingOrder.order_number)}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          currentPackingOrder.service_type === 'PAPELERIA'
+                            ? 'bg-[#F7EDEB] text-[#70443D]'
+                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
+                            ? 'bg-[#EBF2EB] text-[#384C3A]'
+                            : 'bg-[#F3EDE6] text-[#58352F]'
+                        }`}>
+                          {getServiceLabel(currentPackingOrder.service_type)}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className="flex items-center space-x-1">
+                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
+                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
+                        </span>
+                        <span>·</span>
+                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Progress Indicator */}
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-[#332A28]">
+                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
+                      </span>
+                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                        {progressPct}% completado
+                      </span>
+                    </div>
+
+                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full transition-all duration-300 ${
+                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
+                        }`}
+                        style={{ width: `${progressPct}%` }}
+                      />
+                    </div>
+
+                    {isAllPacked && (
+                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
+          {/* Checklist Items List */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                Material, Estructuras & Herramientas a Subir
+              </h3>
+              <span className="text-xs text-[#7D6F6B]">
+                Toca cada casilla conforme lo coloques en la cajuela
+              </span>
+            </div>
+
+            {loadingPacking ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Cargando checklist del auto...
+              </div>
+            ) : packingList.length === 0 ? (
+              <div className="py-12 text-center text-xs text-[#7D6F6B]">
+                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {packingList.map(it => (
+                  <div
+                    key={it.id}
+                    onClick={() => handleTogglePackingItem(it.id)}
+                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
+                      it.packed
+                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
+                        it.packed
+                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
+                          : 'bg-[#FFFFFF] border-[#B88A82]'
+                      }`}>
+                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
+                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
+                        }`}>
+                          {it.item_name}
+                        </span>
+                        {it.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block truncate">
+                            {it.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                      }`}>
+                        {it.category || 'Equipo'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePackingItem(it.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la lista de carga"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Formulario para Agregar Algo Extra al Auto */}
+            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
+                value={newPackingItemName}
+                onChange={e => setNewPackingItemName(e.target.value)}
+                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+              />
+              <select
+                value={newPackingItemCategory}
+                onChange={e => setNewPackingItemCategory(e.target.value)}
+                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+              >
+                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
+                <option value="Papelería">Papelería</option>
+                <option value="Herramientas">Herramientas</option>
+                <option value="Eléctrico">Eléctrico</option>
+                <option value="Bebidas">Bebidas</option>
+                <option value="Audio Guestbook">Audio Guestbook</option>
+                <option value="Extra">Extra</option>
+              </select>
+              <button
+                type="submit"
+                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Subir al Auto</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* ======================================================== */}
+      {activeTab === 'templates' && (
+        <div className="space-y-6">
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-3">
+                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
+                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
+                    Mis Actividades Maestras
+                  </h2>
+                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
+                  </p>
+                </div>
+              </div>
+
+              {/* Category Pill Switcher */}
+              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
+                <button
+                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'PAPELERIA'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  📦 Papelería Social
+                </button>
+                <button
+                  onClick={() => setTemplateFilterCategory('SERVICIO')}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    templateFilterCategory === 'SERVICIO'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                >
+                  ✨ Stands & Servicios
+                </button>
+              </div>
+            </div>
+
+            {/* List of Templates for Selected Category */}
+            <div className="space-y-2.5">
+              {taskTemplates
+                .filter(t => t.category === templateFilterCategory)
+                .map((t, idx) => (
+                  <div
+                    key={t.id}
+                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
+                  >
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                        {idx + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#332A28] text-sm block">
+                          {t.title}
+                        </span>
+                        {t.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {t.notes}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                        {t.default_time ? ` (${t.default_time})` : ''}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteMasterTemplate(t.id)}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        title="Eliminar de la plantilla maestra"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+
+            {/* Add New Master Task */}
+            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
+              <div className="text-xs font-bold text-[#384C3A]">
+                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                <div className="sm:col-span-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
+                    value={newTemplateTitle}
+                    onChange={e => {
+                      setNewTemplateTitle(e.target.value);
+                      setNewTemplateCategory(templateFilterCategory);
+                    }}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min={0}
+                    placeholder="Días antes (ej. 7)"
+                    value={newTemplateDays}
+                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
+                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                  <input
+                    type="time"
+                    placeholder="14:00"
+                    value={newTemplateTime}
+                    onChange={e => setNewTemplateTime(e.target.value)}
+                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Notas u observaciones (opcional)"
+                  value={newTemplateNotes}
+                  onChange={e => setNewTemplateNotes(e.target.value)}
+                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                />
+                <button
+                  type="submit"
+                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
+                >
+                  Guardar en Plantilla
+                </button>
               </div>
             </form>
           </div>

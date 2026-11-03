@@ -21,6 +21,7 @@ import { BitacoraModule } from './modules/BitacoraModule';
 import { WhatsAppHubModule } from './modules/WhatsAppHubModule';
 import { CalendarioModule } from './modules/CalendarioModule';
 import { VivaLaBrideModule } from './modules/VivaLaBrideModule';
+import { PublicProposalView } from './modules/PublicProposalView';
 import {
   Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff, Sparkles
 } from 'lucide-react';
@@ -647,6 +648,17 @@ const AppContent: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Check if viewing public proposal (without login)
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const proposalToken = currentPath.startsWith('/vlb/propuesta/')
+    ? currentPath.replace('/vlb/propuesta/', '').split('/')[0].trim()
+    : searchParams?.get('propuesta');
+
+  if (proposalToken) {
+    return <PublicProposalView token={proposalToken} />;
+  }
 
   if (loading) {
     return (

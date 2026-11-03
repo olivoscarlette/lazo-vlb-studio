@@ -111,6 +111,16 @@ export function initVlbDatabase() {
       created_at TEXT NOT NULL,
       FOREIGN KEY (order_id) REFERENCES vlb_orders(id) ON DELETE CASCADE
     );
+    CREATE TABLE IF NOT EXISTS vlb_task_templates (
+      id TEXT PRIMARY KEY,
+      category TEXT NOT NULL, -- 'PAPELERIA' | 'SERVICIO'
+      title TEXT NOT NULL,
+      days_before_event INTEGER DEFAULT 7,
+      default_time TEXT,
+      notes TEXT,
+      sort_order INTEGER DEFAULT 0,
+      created_at TEXT NOT NULL
+    );
   `);
 
   // Migrations for dynamic tasks and service type
@@ -124,8 +134,52 @@ export function initVlbDatabase() {
     db.prepare('ALTER TABLE vlb_orders ADD COLUMN items_json TEXT').run();
   } catch {}
   try {
+    db.prepare('ALTER TABLE vlb_orders ADD COLUMN packing_list_json TEXT').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_quotes ADD COLUMN public_token TEXT').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_quotes ADD COLUMN signature_data TEXT').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_quotes ADD COLUMN signed_at TEXT').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_quotes ADD COLUMN signed_by_name TEXT').run();
+  } catch {}
+  try {
     db.prepare("UPDATE vlb_orders SET order_number = 'VLB-' || SUBSTR(order_number, -3) WHERE order_number LIKE 'ORD-VLB-%'").run();
   } catch {}
+
+  // Seed default master task templates if empty
+  const templateCount = db.prepare('SELECT COUNT(*) as count FROM vlb_task_templates').get() as { count: number };
+  if (templateCount.count === 0) {
+    const now = new Date().toISOString();
+    const defaultTemplates = [
+      // Papelería Social
+      { id: 'tpl_pap_1', category: 'PAPELERIA', title: 'Aprobación de Diseño Digital (VoBo)', days_before_event: 21, default_time: '', notes: 'Fecha límite previa a entrar a imprenta', sort_order: 1 },
+      { id: 'tpl_pap_2', category: 'PAPELERIA', title: 'Compra de papel algodón e insumos', days_before_event: 18, default_time: '', notes: 'Papel algodón 300g, lacre, sobres y sellos', sort_order: 2 },
+      { id: 'tpl_pap_3', category: 'PAPELERIA', title: 'Impresión tipográfica & sellado en lacre', days_before_event: 12, default_time: '', notes: 'Grabado tipográfico y aplicación de sellos botánicos', sort_order: 3 },
+      { id: 'tpl_pap_4', category: 'PAPELERIA', title: 'Empaque y caligrafía de sobres', days_before_event: 7, default_time: '', notes: 'Rotulación de nombres y empaque protector', sort_order: 4 },
+      { id: 'tpl_pap_5', category: 'PAPELERIA', title: 'Entrega Física de Papelería', days_before_event: 5, default_time: '', notes: 'En atelier o envío a domicilio de los novios', sort_order: 5 },
+      // Servicios & Stands
+      { id: 'tpl_srv_1', category: 'SERVICIO', title: 'Compra de bebidas e insumos', days_before_event: 7, default_time: '', notes: 'Licores, jarabes, botánicos o cristalería', sort_order: 1 },
+      { id: 'tpl_srv_2', category: 'SERVICIO', title: 'Corte, armado e impresión de vinil', days_before_event: 4, default_time: '', notes: 'Barras, letreros, copas o acrílicos', sort_order: 2 },
+      { id: 'tpl_srv_3', category: 'SERVICIO', title: 'Prueba técnica de Audio Guestbook & telefonía', days_before_event: 2, default_time: '', notes: 'Verificar batería, memoria y saludo de bienvenida', sort_order: 3 },
+      { id: 'tpl_srv_4', category: 'SERVICIO', title: 'Checklist de Carga y Packing al Vehículo', days_before_event: 0, default_time: '10:00', notes: 'Subir todo al carro y verificar antes de salir', sort_order: 4 },
+      { id: 'tpl_srv_5', category: 'SERVICIO', title: 'Montaje de Stands en el Venue', days_before_event: 0, default_time: '14:00', notes: 'Welcome Drinks, Audio Guestbook, Seating Chart', sort_order: 5 }
+    ];
+
+    const insertStmt = db.prepare(`
+      INSERT INTO vlb_task_templates (id, category, title, days_before_event, default_time, notes, sort_order, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const tpl of defaultTemplates) {
+      insertStmt.run(tpl.id, tpl.category, tpl.title, tpl.days_before_event, tpl.default_time, tpl.notes, tpl.sort_order, now);
+    }
+  }
 
   // Seed default catalog if empty
   const catalogCount = db.prepare('SELECT COUNT(*) as count FROM vlb_catalog').get() as { count: number };

@@ -30,7 +30,98 @@ const upload = multer({
   limits: { fileSize: 25 * 1024 * 1024 } // 25MB limit for large editorial proofs & contracts
 });
 
-// All VLB routes require authentication and strictly ADMINISTRADOR role
+// ==========================================
+// 0. PUBLIC PROPOSAL & DIGITAL SIGNATURE ROUTES (Sin Login para Novios)
+// ==========================================
+
+// GET /api/vlb/quotes/public/:token - Detalle público de propuesta
+router.get('/quotes/public/:token', (req, res) => {
+  try {
+    const { token } = req.params;
+    const quote = db.prepare(`
+      SELECT * FROM vlb_quotes
+      WHERE id = ? OR public_token = ?
+    `).get(token, token) as any;
+
+    if (!quote) {
+      return res.status(404).json({ error: 'Propuesta no encontrada o enlace expirado.' });
+    }
+
+    const items = db.prepare(`
+      SELECT * FROM vlb_quote_items
+      WHERE quote_id = ?
+      ORDER BY sort_order ASC
+    `).all(quote.id);
+
+    res.json({ quote, items });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al obtener propuesta.' });
+  }
+});
+
+// POST /api/vlb/quotes/public/:token/sign - Aceptar y firmar propuesta en la nube
+router.post('/quotes/public/:token/sign', (req, res) => {
+  try {
+    const { token } = req.params;
+    const { signature_data, signer_name } = req.body;
+
+    if (!signature_data || !signer_name || !signer_name.trim()) {
+      return res.status(400).json({ error: 'Firma y nombre completo de quien autoriza son requeridos.' });
+    }
+
+    const quote = db.prepare(`
+      SELECT * FROM vlb_quotes
+      WHERE id = ? OR public_token = ?
+    `).get(token, token) as any;
+
+    if (!quote) {
+      return res.status(404).json({ error: 'Propuesta no encontrada.' });
+    }
+
+    const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE vlb_quotes
+      SET status = 'APROBADA',
+          signature_data = ?,
+          signed_by_name = ?,
+          signed_at = ?,
+          updated_at = ?
+      WHERE id = ?
+    `).run(signature_data, signer_name.trim(), now, now, quote.id);
+
+    // Si ya existe un pedido asociado en CRM, resguardar en bóveda de documentos
+    const existingOrder = db.prepare('SELECT * FROM vlb_orders WHERE quote_id = ?').get(quote.id) as any;
+    if (existingOrder) {
+      const docId = 'doc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      try {
+        db.prepare(`
+          INSERT INTO vlb_documents (id, order_id, category, original_name, file_path, mime_type, file_size, vobo_status, vobo_approved_at, vobo_notes, notes, uploaded_by, created_at)
+          VALUES (?, ?, 'CONTRATO_FIRMADO', ?, ?, 'image/png', ?, 'APROBADO', ?, 'Aceptación formal con firma digital en la nube', ?, 'Novios (Firma Digital)', ?)
+        `).run(
+          docId,
+          existingOrder.id,
+          `Contrato_Firmado_${signer_name.trim().replace(/\s+/g, '_')}.png`,
+          signature_data,
+          signature_data.length,
+          now,
+          `Firmado formalmente por ${signer_name.trim()} el ${now.split('T')[0]}`,
+          now
+        );
+      } catch {}
+    }
+
+    res.json({
+      success: true,
+      message: 'Propuesta aceptada y firmada exitosamente.',
+      signed_at: now,
+      signed_by_name: signer_name.trim()
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al firmar propuesta.' });
+  }
+});
+
+// All VLB routes below require authentication and strictly ADMINISTRADOR role
 router.use(authenticateToken);
 router.use((req, res, next) => {
   if (req.user?.role !== 'ADMINISTRADOR') {
@@ -658,50 +749,75 @@ function enrichVlbOrder(o: any) {
 
   if (!tasks || tasks.length === 0) {
     const evt = o.event_date ? new Date(o.event_date).getTime() : Date.now();
-    if (service_type === 'PAPELERIA' || service_type === 'MIXTO') {
-      tasks.push({
-        id: 't_vobo_' + o.id,
-        title: 'Aprobación de Diseño Digital (VoBo)',
-        due_date: o.vobo_design_deadline || new Date(evt - 21 * 86400000).toISOString().split('T')[0],
-        completed: false,
-        category: 'PAPELERIA',
-        notes: 'Fecha límite previa a entrar a imprenta'
-      });
-      tasks.push({
-        id: 't_entrega_' + o.id,
-        title: 'Entrega Física de Papelería',
-        due_date: o.physical_delivery_date || new Date(evt - 5 * 86400000).toISOString().split('T')[0],
-        completed: false,
-        category: 'PAPELERIA',
-        notes: 'En atelier o envío a domicilio'
-      });
-    }
-    if (service_type === 'STANDS_EXPERIENCIAS' || service_type === 'MIXTO') {
-      tasks.push({
-        id: 't_insumos_' + o.id,
-        title: 'Compra de bebidas e insumos',
-        due_date: new Date(evt - 7 * 86400000).toISOString().split('T')[0],
-        completed: false,
-        category: 'SERVICIO',
-        notes: 'Licores, jarabes, botánicos o cristalería'
-      });
-      tasks.push({
-        id: 't_vinil_' + o.id,
-        title: 'Armado e impresión de vinil',
-        due_date: new Date(evt - 4 * 86400000).toISOString().split('T')[0],
-        completed: false,
-        category: 'SERVICIO',
-        notes: 'Barras, letreros o copas'
-      });
-      tasks.push({
-        id: 't_montaje_' + o.id,
-        title: 'Montaje de Stands en el Venue',
-        due_date: o.stand_setup_date || o.event_date,
-        due_time: o.stand_setup_time || '14:00',
-        completed: false,
-        category: 'SERVICIO',
-        notes: 'Welcome Drinks, Audio Guestbook, Seating'
-      });
+    let templates: any[] = [];
+    try {
+      templates = db.prepare('SELECT * FROM vlb_task_templates ORDER BY sort_order ASC').all();
+    } catch {}
+
+    if (templates && templates.length > 0) {
+      for (const tpl of templates) {
+        if (
+          (tpl.category === 'PAPELERIA' && (service_type === 'PAPELERIA' || service_type === 'MIXTO')) ||
+          (tpl.category === 'SERVICIO' && (service_type === 'STANDS_EXPERIENCIAS' || service_type === 'MIXTO'))
+        ) {
+          const dueDate = new Date(evt - (tpl.days_before_event || 0) * 86400000).toISOString().split('T')[0];
+          tasks.push({
+            id: 't_' + tpl.id + '_' + o.id,
+            title: tpl.title,
+            due_date: dueDate,
+            due_time: tpl.default_time || '',
+            completed: false,
+            category: tpl.category,
+            notes: tpl.notes || ''
+          });
+        }
+      }
+    } else {
+      if (service_type === 'PAPELERIA' || service_type === 'MIXTO') {
+        tasks.push({
+          id: 't_vobo_' + o.id,
+          title: 'Aprobación de Diseño Digital (VoBo)',
+          due_date: o.vobo_design_deadline || new Date(evt - 21 * 86400000).toISOString().split('T')[0],
+          completed: false,
+          category: 'PAPELERIA',
+          notes: 'Fecha límite previa a entrar a imprenta'
+        });
+        tasks.push({
+          id: 't_entrega_' + o.id,
+          title: 'Entrega Física de Papelería',
+          due_date: o.physical_delivery_date || new Date(evt - 5 * 86400000).toISOString().split('T')[0],
+          completed: false,
+          category: 'PAPELERIA',
+          notes: 'En atelier o envío a domicilio'
+        });
+      }
+      if (service_type === 'STANDS_EXPERIENCIAS' || service_type === 'MIXTO') {
+        tasks.push({
+          id: 't_insumos_' + o.id,
+          title: 'Compra de bebidas e insumos',
+          due_date: new Date(evt - 7 * 86400000).toISOString().split('T')[0],
+          completed: false,
+          category: 'SERVICIO',
+          notes: 'Licores, jarabes, botánicos o cristalería'
+        });
+        tasks.push({
+          id: 't_vinil_' + o.id,
+          title: 'Armado e impresión de vinil',
+          due_date: new Date(evt - 4 * 86400000).toISOString().split('T')[0],
+          completed: false,
+          category: 'SERVICIO',
+          notes: 'Barras, letreros o copas'
+        });
+        tasks.push({
+          id: 't_montaje_' + o.id,
+          title: 'Montaje de Stands en el Venue',
+          due_date: o.stand_setup_date || o.event_date,
+          due_time: o.stand_setup_time || '14:00',
+          completed: false,
+          category: 'SERVICIO',
+          notes: 'Welcome Drinks, Audio Guestbook, Seating'
+        });
+      }
     }
     try {
       db.prepare('UPDATE vlb_orders SET tasks_json = ? WHERE id = ?').run(JSON.stringify(tasks), o.id);
@@ -824,6 +940,224 @@ router.put('/orders/:id/tasks', (req, res) => {
     res.json({ order: { ...updated, tasks }, message: 'Tareas actualizadas correctamente.' });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al actualizar tareas.' });
+  }
+});
+
+// GET /api/vlb/orders/:id/packing-list - Checklist de Carga / Packing de Evento (Día D)
+router.get('/orders/:id/packing-list', (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(id) as any;
+    if (!order) return res.status(404).json({ error: 'Pedido no encontrado' });
+
+    let packingList: any[] = [];
+    if (order.packing_list_json) {
+      try {
+        packingList = JSON.parse(order.packing_list_json);
+      } catch {}
+    }
+
+    if (!packingList || packingList.length === 0) {
+      // Auto-generar checklist inteligente con artículos contratados + kit indispensable para el auto
+      let items: any[] = [];
+      if (order.items_json) {
+        try { items = JSON.parse(order.items_json); } catch {}
+      } else if (order.quote_id) {
+        items = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ?').all(order.quote_id);
+      }
+
+      // 1. Partidas y artículos específicos del evento
+      for (const it of items) {
+        packingList.push({
+          id: 'pack_it_' + (it.id || Math.random().toString(36).substring(2, 7)),
+          item_name: `${it.pricing_type === 'PER_PIECE' ? `${it.quantity}x ` : ''}${it.item_name}`,
+          category: it.category === 'PAPELERIA' ? 'Papelería' : 'Mobiliario / Stand',
+          packed: false,
+          notes: it.category === 'PAPELERIA' ? 'Empacado con protección' : 'Verificar armado y limpieza'
+        });
+      }
+
+      // 2. Kit de Logística y Herramientas Indispensables para el Auto
+      const essentialKit = [
+        { name: 'Caballete(s) y bases de soporte pesadas', cat: 'Estructuras', notes: 'Para letreros de bienvenida y seating chart' },
+        { name: 'Caja de herramientas de montaje (tijeras, cinta doble cara, cúter, masking)', cat: 'Herramientas', notes: 'Indispensable en cajuela' },
+        { name: 'Extensiones eléctricas uso rudo & multicontacto', cat: 'Eléctrico', notes: 'Mínimo 15m para áreas abiertas' },
+        { name: 'Paños de microfibra & limpiador para acrílicos y vidrio', cat: 'Limpieza', notes: 'Dejar todo impecable en venue' },
+        { name: 'Kit de emergencia de lacre, encendedor y silicón', cat: 'Emergencia', notes: 'Para cualquier imprevisto' }
+      ];
+
+      if (order.service_type !== 'PAPELERIA') {
+        essentialKit.push({ name: 'Hielera con insumos / botánicos / jarabes / hielo', cat: 'Bebidas', notes: 'Bien refrigerado antes de salir' });
+        essentialKit.push({ name: 'Audio Guestbook: Teléfono, instructivo enmarcado y batería', cat: 'Audio Guestbook', notes: 'Verificar batería 100% y memoria' });
+      }
+
+      for (const kit of essentialKit) {
+        packingList.push({
+          id: 'pack_kit_' + Math.random().toString(36).substring(2, 7),
+          item_name: kit.name,
+          category: kit.cat,
+          packed: false,
+          notes: kit.notes
+        });
+      }
+
+      try {
+        db.prepare('UPDATE vlb_orders SET packing_list_json = ? WHERE id = ?').run(JSON.stringify(packingList), id);
+      } catch {}
+    }
+
+    res.json({
+      packingList,
+      orderNumber: order.order_number,
+      clientName: order.client_name,
+      partnerName: order.partner_name,
+      eventDate: order.event_date,
+      eventVenue: order.event_venue,
+      serviceType: order.service_type
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al obtener checklist de carga.' });
+  }
+});
+
+// PUT /api/vlb/orders/:id/packing-list - Guardar checklist de carga
+router.put('/orders/:id/packing-list', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { packingList } = req.body;
+    if (!Array.isArray(packingList)) {
+      return res.status(400).json({ error: 'Formato inválido de checklist.' });
+    }
+    const now = new Date().toISOString();
+    db.prepare('UPDATE vlb_orders SET packing_list_json = ?, updated_at = ? WHERE id = ?').run(
+      JSON.stringify(packingList),
+      now,
+      id
+    );
+    res.json({ success: true, packingList, message: 'Checklist de carga actualizado.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==========================================
+// 4. PLANTILLAS MAESTRAS DE ACTIVIDADES (Configurables por el Usuario)
+// ==========================================
+
+// GET /api/vlb/task-templates - Listar plantillas maestras
+router.get('/task-templates', (req, res) => {
+  try {
+    const templates = db.prepare('SELECT * FROM vlb_task_templates ORDER BY category ASC, sort_order ASC').all();
+    res.json({ templates });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/vlb/task-templates - Crear nueva actividad maestra
+router.post('/task-templates', (req, res) => {
+  try {
+    const { category, title, days_before_event = 7, default_time = '', notes = '' } = req.body;
+    if (!title || !title.trim() || !category) {
+      return res.status(400).json({ error: 'Título y categoría son requeridos.' });
+    }
+    const id = 'tpl_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+    const countRow = db.prepare('SELECT COUNT(*) as count FROM vlb_task_templates WHERE category = ?').get(category) as { count: number };
+    const now = new Date().toISOString();
+    db.prepare(`
+      INSERT INTO vlb_task_templates (id, category, title, days_before_event, default_time, notes, sort_order, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(id, category, title.trim(), Number(days_before_event) || 0, default_time, notes.trim(), countRow.count + 1, now);
+    const template = db.prepare('SELECT * FROM vlb_task_templates WHERE id = ?').get(id);
+    res.json({ template });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// PUT /api/vlb/task-templates - Guardar todas las plantillas maestras
+router.put('/task-templates', (req, res) => {
+  try {
+    const { templates } = req.body;
+    if (!Array.isArray(templates)) {
+      return res.status(400).json({ error: 'Se esperaba un arreglo de plantillas.' });
+    }
+    db.prepare('DELETE FROM vlb_task_templates').run();
+    const insert = db.prepare(`
+      INSERT INTO vlb_task_templates (id, category, title, days_before_event, default_time, notes, sort_order, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const now = new Date().toISOString();
+    for (let i = 0; i < templates.length; i++) {
+      const t = templates[i];
+      insert.run(
+        t.id || ('tpl_' + Date.now() + '_' + i),
+        t.category,
+        t.title.trim(),
+        Number(t.days_before_event) || 0,
+        t.default_time || '',
+        t.notes || '',
+        i + 1,
+        now
+      );
+    }
+    const updated = db.prepare('SELECT * FROM vlb_task_templates ORDER BY category ASC, sort_order ASC').all();
+    res.json({ templates: updated, message: 'Lista maestra de actividades guardada.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/vlb/task-templates/:id - Eliminar actividad maestra
+router.delete('/task-templates/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    db.prepare('DELETE FROM vlb_task_templates WHERE id = ?').run(id);
+    res.json({ success: true, message: 'Actividad maestra eliminada.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/vlb/orders/:id/apply-templates - Re-aplicar actividades desde la plantilla maestra
+router.post('/orders/:id/apply-templates', (req, res) => {
+  try {
+    const { id } = req.params;
+    const order = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(id) as any;
+    if (!order) return res.status(404).json({ error: 'Pedido no encontrado' });
+
+    const templates = db.prepare('SELECT * FROM vlb_task_templates ORDER BY sort_order ASC').all() as any[];
+    const evt = order.event_date ? new Date(order.event_date).getTime() : Date.now();
+    const sType = order.service_type || 'PAPELERIA';
+
+    const tasks: any[] = [];
+    for (const tpl of templates) {
+      if (
+        (tpl.category === 'PAPELERIA' && (sType === 'PAPELERIA' || sType === 'MIXTO')) ||
+        (tpl.category === 'SERVICIO' && (sType === 'STANDS_EXPERIENCIAS' || sType === 'MIXTO'))
+      ) {
+        const dueDate = new Date(evt - (tpl.days_before_event || 0) * 86400000).toISOString().split('T')[0];
+        tasks.push({
+          id: 't_' + tpl.id + '_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
+          title: tpl.title,
+          due_date: dueDate,
+          due_time: tpl.default_time || '',
+          completed: false,
+          category: tpl.category,
+          notes: tpl.notes || ''
+        });
+      }
+    }
+
+    db.prepare('UPDATE vlb_orders SET tasks_json = ?, updated_at = ? WHERE id = ?').run(
+      JSON.stringify(tasks),
+      new Date().toISOString(),
+      id
+    );
+
+    res.json({ success: true, tasks, message: 'Actividades actualizadas con la plantilla maestra.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
   }
 });
 
