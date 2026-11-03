@@ -215,13 +215,14 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
 
   // Regla estricta: uno u otro (Servicios = $1,000 | Papelería = 50%)
   const isServiceProposal = hasServicios;
-  const downPaymentRequired = quote?.down_payment_amount && quote.down_payment_amount > 0
-    ? quote.down_payment_amount
-    : isServiceProposal
+  const downPaymentRequired = isServiceProposal
     ? Math.min(1000, totalCalculated)
-    : totalCalculated * 0.5;
+    : (quote?.down_payment_amount && quote.down_payment_amount > 0
+        ? quote.down_payment_amount
+        : totalCalculated * 0.5);
 
   const balancePending = Math.max(0, totalCalculated - downPaymentRequired);
+  const isSigned = Boolean(signSuccess || quote?.signature_data);
 
   if (loading) {
     return (
@@ -281,7 +282,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               <span className="text-xs font-mono font-bold text-[#C83460] bg-[#FAF6F2] px-3 py-1 rounded-full border border-[#EAE3DA]">
                 {formatFolio(quote.quote_number)}
               </span>
-              {signSuccess || quote.status === 'APROBADA' || quote.status === 'CONVERTIDA' ? (
+              {isSigned ? (
                 <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold bg-[#CCDACC] text-[#384C3A]">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#384C3A]" />
                   <span>Aceptada & Firmada</span>
@@ -470,7 +471,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
             </h3>
           </div>
 
-          {signSuccess || quote.status === 'APROBADA' || quote.status === 'CONVERTIDA' ? (
+          {isSigned ? (
             <div className="p-6 rounded-2xl bg-[#F0FDF4] border border-[#BCE8CB] text-center space-y-3">
               <CheckCircle2 className="w-10 h-10 text-[#1EBE5D] mx-auto" />
               <h4 className="font-serif text-xl font-bold text-[#1EBE5D]">
