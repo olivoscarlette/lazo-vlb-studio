@@ -50,6 +50,13 @@ export interface VlbQuote {
   down_payment_pct: number;
   down_payment_amount: number;
   balance_due: number;
+  total_paid?: number;
+  balance_pending?: number;
+  payment_status?: VlbPaymentStatus;
+  signature_data?: string | null;
+  signed_by_name?: string | null;
+  signed_at?: string | null;
+  short_url?: string | null;
   notes?: string | null;
   valid_until?: string | null;
   created_by?: string;

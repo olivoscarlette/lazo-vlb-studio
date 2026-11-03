@@ -13,6 +13,7 @@ interface PublicProposalViewProps {
 export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token }) => {
   const [quote, setQuote] = useState<VlbQuote | null>(null);
   const [items, setItems] = useState<VlbQuoteItem[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +44,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
       const data = await res.json();
       setQuote(data.quote);
       setItems(data.items || []);
+      setPayments(data.payments || []);
       if (data.quote?.client_name) {
         setSignerName(data.quote.client_name);
       }
@@ -214,15 +216,31 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
   const totalCalculated = quote ? quote.total : (papeleriaSubtotal + serviciosSubtotal);
 
   // Regla estricta: uno u otro (Servicios = $1,000 | Papelería = 50%)
-  const isServiceProposal = hasServicios;
+  const isServiceProposal = Boolean(
+    quote?.quote_number?.startsWith('SV-') ||
+    hasServicios ||
+    items.some(i => i.pricing_type === 'FIXED_EVENT')
+  );
   const downPaymentRequired = isServiceProposal
     ? Math.min(1000, totalCalculated)
-    : (quote?.down_payment_amount && quote.down_payment_amount > 0
-        ? quote.down_payment_amount
-        : totalCalculated * 0.5);
+    : Math.round(totalCalculated * 0.5);
 
-  const balancePending = Math.max(0, totalCalculated - downPaymentRequired);
+  // Pagos en vivo registrados desde el CRM / Pedidos
+  const totalPaid = Number(quote?.total_paid) || (payments.length > 0 ? payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) : 0);
+  const remainingAfterPaid = Math.max(0, totalCalculated - totalPaid);
+  const balancePending = totalPaid > 0 ? remainingAfterPaid : Math.max(0, totalCalculated - downPaymentRequired);
+  const isLiquidated = totalPaid >= totalCalculated && totalCalculated > 0;
   const isSigned = Boolean(signSuccess || quote?.signature_data);
+
+  const handleDownloadPdf = () => {
+    if (!quote) return;
+    generateVlbQuotePdf({
+      ...quote,
+      down_payment_amount: downPaymentRequired,
+      total_paid: totalPaid,
+      balance_due: totalPaid > 0 ? remainingAfterPaid : (totalCalculated - downPaymentRequired)
+    }, items);
+  };
 
   if (loading) {
     return (
@@ -244,7 +262,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
             {error || 'El enlace que recibiste es inválido o la propuesta fue removida. Por favor contacta al equipo de Viva la Bride para solicitar un nuevo enlace.'}
           </p>
           <a
-            href="https://wa.me/523312908472"
+            href="https://wa.me/525661406247"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#25D366] text-[#FFFFFF] text-xs font-bold"
@@ -293,7 +311,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                 </span>
               )}
               <button
-                onClick={() => generateVlbQuotePdf(quote, items)}
+                onClick={handleDownloadPdf}
                 className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#222222] hover:bg-[#333333] text-white cursor-pointer transition shadow-2xs"
                 title="Descargar Contrato en PDF"
               >
@@ -425,6 +443,49 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               </span>
             </div>
 
+            {/* ABONOS REGISTRADOS EN VIVO */}
+            {totalPaid > 0 && (
+              <div className="p-5 rounded-2xl bg-[#F0FDF4] border border-[#BCE8CB] space-y-3 mt-3">
+                <div className="flex justify-between items-center text-sm font-bold text-[#1EBE5D] pb-2 border-b border-[#BCE8CB]/60">
+                  <span className="flex items-center space-x-1.5">
+                    <CheckCircle2 className="w-4 h-4 text-[#1EBE5D]" />
+                    <span>Total Abonado a la Fecha:</span>
+                  </span>
+                  <span className="text-base text-[#1EBE5D]">
+                    ${totalPaid.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN
+                  </span>
+                </div>
+
+                {payments && payments.length > 0 && (
+                  <div className="pt-1 space-y-1.5 text-xs text-[#384C3A]">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#384C3A] block mb-1">
+                      Comprobante de Pagos Aplicados:
+                    </span>
+                    {payments.map((p, pIdx) => (
+                      <div key={p.id || pIdx} className="flex justify-between items-center py-1 border-b border-[#BCE8CB]/40 last:border-b-0">
+                        <span>
+                          • <strong className="font-semibold">{formatDateMX(p.payment_date)}</strong>{' '}
+                          <span className="text-[#7D6F6B]">({p.payment_method || 'Abono'}{p.reference_notes ? ` · ${p.reference_notes}` : ''})</span>
+                        </span>
+                        <span className="font-bold text-[#384C3A]">
+                          ${Number(p.amount).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex justify-between items-baseline pt-2 border-t border-[#BCE8CB]/60">
+                  <span className="text-xs font-bold text-[#384C3A]">
+                    {isLiquidated ? 'Estatus de Liquidación:' : 'Saldo Pendiente por Liquidar:'}
+                  </span>
+                  <span className={`font-serif font-bold text-lg ${isLiquidated ? 'text-[#1EBE5D]' : 'text-[#C83460]'}`}>
+                    {isLiquidated ? '✓ TOTALMENTE LIQUIDADO' : `$${remainingAfterPaid.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`}
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* ESQUEMA EXACTO DE SEPARACIÓN Y LIQUIDACIÓN */}
             <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAD2D0] space-y-3 mt-3">
               <div className="flex justify-between items-center text-sm font-bold text-[#70443D] pb-2 border-b border-[#EAE3DA]">
@@ -440,7 +501,20 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                     <span className="font-bold shrink-0">✨ Stands & Servicios:</span>
                     <span>
                       Separación fija de <strong>$1,000 MXN</strong>.
-                      El saldo restante (<strong>${balancePending.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong>) se liquida <strong>10 días antes del evento</strong>.
+                      {totalPaid > 0 ? (
+                        <>
+                          {' '}Cuentas con <strong>${totalPaid.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong> registrados en abonos.{' '}
+                          {isLiquidated ? (
+                            <strong className="text-[#1EBE5D]">¡Tu paquete está 100% liquidado!</strong>
+                          ) : (
+                            <>El saldo restante (<strong>${remainingAfterPaid.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong>) se liquida <strong>10 días antes del evento</strong>.</>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {' '}El saldo restante (<strong>${balancePending.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong>) se liquida <strong>10 días antes del evento</strong>.
+                        </>
+                      )}
                     </span>
                   </div>
                 ) : (
@@ -448,7 +522,20 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                     <span className="font-bold shrink-0">📦 Papelería Social:</span>
                     <span>
                       Anticipo del <strong>50% (${downPaymentRequired.toLocaleString('es-MX', { minimumFractionDigits: 2 })})</strong> para apartar taller de imprenta.
-                      El saldo restante (<strong>${balancePending.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong>) <strong>se liquida al entregar el pedido o al programar el envío</strong>.
+                      {totalPaid > 0 ? (
+                        <>
+                          {' '}Cuentas con <strong>${totalPaid.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong> registrados en abonos.{' '}
+                          {isLiquidated ? (
+                            <strong className="text-[#1EBE5D]">¡Tu pedido está 100% liquidado!</strong>
+                          ) : (
+                            <>El saldo restante (<strong>${remainingAfterPaid.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong>) <strong>se liquida al entregar el pedido o al programar el envío</strong>.</>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          {' '}El saldo restante (<strong>${balancePending.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN</strong>) <strong>se liquida al entregar el pedido o al programar el envío</strong>.
+                        </>
+                      )}
                     </span>
                   </div>
                 )}
@@ -459,7 +546,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
           {/* DESCARGAR PDF */}
           <div className="pt-2">
             <button
-              onClick={() => generateVlbQuotePdf(quote, items)}
+              onClick={handleDownloadPdf}
               className="w-full py-3.5 px-4 bg-[#FFFFFF] hover:bg-[#FAF6F2] text-[#222222] border border-[#EAE3DA] rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer shadow-xs"
             >
               <Download className="w-4 h-4 text-[#C83460]" />
@@ -516,7 +603,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
 
               <div className="pt-2">
                 <button
-                  onClick={() => generateVlbQuotePdf(quote, items)}
+                  onClick={handleDownloadPdf}
                   className="w-full sm:w-auto px-6 py-3.5 bg-[#1EBE5D] hover:bg-[#18A14E] text-[#FFFFFF] rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 mx-auto cursor-pointer shadow-md"
                 >
                   <Download className="w-4 h-4 text-white" />

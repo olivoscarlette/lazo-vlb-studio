@@ -34,7 +34,7 @@ const upload = multer({
 // 0. PUBLIC PROPOSAL & DIGITAL SIGNATURE ROUTES (Sin Login para Novios)
 // ==========================================
 
-// GET /api/vlb/quotes/public/:token - Detalle público de propuesta
+// GET /api/vlb/quotes/public/:token - Detalle público de propuesta (con pagos y saldos en vivo)
 router.get('/quotes/public/:token', (req, res) => {
   try {
     const { token } = req.params;
@@ -53,7 +53,41 @@ router.get('/quotes/public/:token', (req, res) => {
       ORDER BY sort_order ASC
     `).all(quote.id);
 
-    res.json({ quote, items });
+    // Buscar si ya tiene pedido asociado en el CRM con abonos / pagos registrados
+    const order = db.prepare(`
+      SELECT * FROM vlb_orders WHERE quote_id = ? ORDER BY created_at DESC LIMIT 1
+    `).get(quote.id) as any;
+
+    let payments: any[] = [];
+    if (order) {
+      payments = db.prepare(`
+        SELECT * FROM vlb_payments WHERE order_id = ? ORDER BY payment_date DESC, created_at DESC
+      `).all(order.id);
+    }
+
+    const totalPaid = order ? (Number(order.total_paid) || 0) : (Number(quote.total_paid) || 0);
+    const balancePending = order
+      ? (order.balance_pending !== undefined ? Number(order.balance_pending) : Math.max(0, quote.total - totalPaid))
+      : Math.max(0, quote.total - totalPaid);
+    const paymentStatus = order ? (order.payment_status || 'ANTICIPO_PENDIENTE') : (quote.payment_status || 'ANTICIPO_PENDIENTE');
+
+    // Regla estricta de anticipo: Stands = $1,000 MXN, Papelería = 50%
+    const isService = quote.quote_number?.startsWith('SV-') || items.some((i: any) => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT');
+    const downPaymentRequired = isService ? Math.min(1000, quote.total) : Math.round(quote.total * 0.5);
+
+    res.json({
+      quote: {
+        ...quote,
+        down_payment_amount: downPaymentRequired,
+        total_paid: totalPaid,
+        balance_due: balancePending,
+        balance_pending: balancePending,
+        payment_status: paymentStatus
+      },
+      items,
+      order: order || null,
+      payments
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al obtener propuesta.' });
   }
@@ -494,9 +528,11 @@ router.post('/quotes', (req, res) => {
 
     const discountAmount = Math.max(0, Number(discount) || 0);
     const total = Math.max(0, subtotal - discountAmount);
-    const pct = Number(down_payment_pct) || 50;
-    const down_payment_amount = (total * pct) / 100;
-    const balance_due = total - down_payment_amount;
+    // Regla estricta: Servicios / Stands es Separación de $1,000 MXN. Papelería es 50%
+    const isService = quote_number.startsWith('SV-') || (processedItems.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT'));
+    const down_payment_amount = isService ? Math.min(1000, total) : (total * 0.5);
+    const balance_due = Math.max(0, total - down_payment_amount);
+    const pct = total > 0 ? (isService ? Math.round((down_payment_amount / total) * 100) : 50) : 50;
     const now = new Date().toISOString();
     const created_by = req.user?.name || 'VLB Studio';
 
@@ -623,9 +659,10 @@ router.put('/quotes/:id', (req, res) => {
 
     const discountAmount = Number(discount) !== undefined ? Number(discount) : existing.discount;
     const total = Math.max(0, subtotal - discountAmount);
-    const pct = Number(down_payment_pct) !== undefined ? Number(down_payment_pct) : existing.down_payment_pct;
-    const down_payment_amount = (total * pct) / 100;
-    const balance_due = total - down_payment_amount;
+    const isService = existing.quote_number.startsWith('SV-') || (items && items.some((i: any) => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT'));
+    const down_payment_amount = isService ? Math.min(1000, total) : (total * 0.5);
+    const balance_due = Math.max(0, total - down_payment_amount);
+    const pct = total > 0 ? (isService ? Math.round((down_payment_amount / total) * 100) : 50) : 50;
 
     db.prepare(`
       UPDATE vlb_quotes SET
@@ -1530,6 +1567,18 @@ router.post('/orders/:orderId/payments', (req, res) => {
       WHERE id = ?
     `).run(totalPaid, balancePending, paymentStatus, now, orderId);
 
+    // Sincronizar cotización si el pedido proviene de una cotización
+    if (order.quote_id) {
+      db.prepare(`
+        UPDATE vlb_quotes SET
+          total_paid = ?,
+          balance_due = ?,
+          payment_status = ?,
+          updated_at = ?
+        WHERE id = ?
+      `).run(totalPaid, balancePending, paymentStatus, now, order.quote_id);
+    }
+
     const payment = db.prepare('SELECT * FROM vlb_payments WHERE id = ?').get(id);
     const updatedOrder = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(orderId);
 
@@ -1574,6 +1623,17 @@ router.delete('/payments/:id', (req, res) => {
           updated_at = ?
         WHERE id = ?
       `).run(totalPaid, balancePending, paymentStatus, now, orderId);
+
+      if (order.quote_id) {
+        db.prepare(`
+          UPDATE vlb_quotes SET
+            total_paid = ?,
+            balance_due = ?,
+            payment_status = ?,
+            updated_at = ?
+          WHERE id = ?
+        `).run(totalPaid, balancePending, paymentStatus, now, order.quote_id);
+      }
     }
 
     res.json({ message: 'Pago eliminado y saldos recalculados correctamente.' });

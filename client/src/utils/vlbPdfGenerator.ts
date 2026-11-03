@@ -98,7 +98,8 @@ export function buildVlbQuotePdf(
   // Financial calculations
   const total = Number(quote.total) || 0;
   const downPayment = isService ? Math.min(1000, total) : Math.round(total * 0.5);
-  const balanceDue = Math.max(0, total - downPayment);
+  const totalPaid = Number(quote.total_paid) || 0;
+  const balanceDue = totalPaid > 0 ? Math.max(0, total - totalPaid) : Math.max(0, total - downPayment);
 
   // Client name
   const clientFullName = quote.partner_name
@@ -256,17 +257,33 @@ export function buildVlbQuotePdf(
   doc.text(`$${total.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, amountsX, y, { align: 'right' });
   y += 6.5;
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(10);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  const anticipoLabel = isService ? 'Separación' : 'Anticipo';
-  doc.text(anticipoLabel, totalsLabelX, y);
-  doc.text(`$${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, amountsX, y, { align: 'right' });
-  y += 6;
+  if (totalPaid > 0) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(30, 140, 60);
+    doc.text('Abonado', totalsLabelX, y);
+    doc.text(`-$${totalPaid.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, amountsX, y, { align: 'right' });
+    y += 6;
 
-  doc.setFont('helvetica', 'bold');
-  doc.text('RESTAN', totalsLabelX, y);
-  doc.text(`$${balanceDue.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, amountsX, y, { align: 'right' });
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+    doc.text('RESTAN', totalsLabelX, y);
+    const restanAmount = Math.max(0, total - totalPaid);
+    const restanText = restanAmount <= 0 ? '$0 (LIQUIDADO)' : `$${restanAmount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`;
+    doc.text(restanText, amountsX, y, { align: 'right' });
+  } else {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+    const anticipoLabel = isService ? 'Separación' : 'Anticipo';
+    doc.text(anticipoLabel, totalsLabelX, y);
+    doc.text(`$${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, amountsX, y, { align: 'right' });
+    y += 6;
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('RESTAN', totalsLabelX, y);
+    doc.text(`$${balanceDue.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, amountsX, y, { align: 'right' });
+  }
 
   y += 12;
 

@@ -155,6 +155,49 @@ export function initVlbDatabase() {
     db.prepare('ALTER TABLE vlb_quotes ADD COLUMN short_url TEXT').run();
   } catch {}
   try {
+    db.prepare('ALTER TABLE vlb_quotes ADD COLUMN total_paid REAL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare("ALTER TABLE vlb_quotes ADD COLUMN payment_status TEXT DEFAULT 'ANTICIPO_PENDIENTE'").run();
+  } catch {}
+
+  // Corregir cotizaciones de servicios históricas para que el anticipo sea exactamente MIN(1000, total)
+  try {
+    db.prepare(`
+      UPDATE vlb_quotes 
+      SET down_payment_amount = MIN(1000, total),
+          balance_due = MAX(0, total - MIN(1000, total)),
+          down_payment_pct = CASE WHEN total > 0 THEN ROUND((MIN(1000, total) / total) * 100) ELSE 0 END
+      WHERE quote_number LIKE 'SV-%'
+    `).run();
+  } catch {}
+
+  // Sincronizar pagos registrados en pedidos hacia las cotizaciones
+  try {
+    db.prepare(`
+      UPDATE vlb_quotes
+      SET total_paid = (
+        SELECT COALESCE(o.total_paid, 0)
+        FROM vlb_orders o
+        WHERE o.quote_id = vlb_quotes.id
+        ORDER BY o.created_at DESC LIMIT 1
+      ),
+      balance_due = MAX(0, total - (
+        SELECT COALESCE(o.total_paid, 0)
+        FROM vlb_orders o
+        WHERE o.quote_id = vlb_quotes.id
+        ORDER BY o.created_at DESC LIMIT 1
+      )),
+      payment_status = (
+        SELECT COALESCE(o.payment_status, 'ANTICIPO_PENDIENTE')
+        FROM vlb_orders o
+        WHERE o.quote_id = vlb_quotes.id
+        ORDER BY o.created_at DESC LIMIT 1
+      )
+      WHERE id IN (SELECT quote_id FROM vlb_orders WHERE quote_id IS NOT NULL)
+    `).run();
+  } catch {}
+  try {
     db.prepare("UPDATE vlb_orders SET order_number = 'VLB-' || SUBSTR(order_number, -3) WHERE order_number LIKE 'ORD-VLB-%'").run();
   } catch {}
 

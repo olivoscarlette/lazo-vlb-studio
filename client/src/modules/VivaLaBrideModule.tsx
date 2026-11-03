@@ -1591,34 +1591,42 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       <th className="py-3 px-3">Clienta / Pareja</th>
                       <th className="py-3 px-3">Fecha Evento</th>
                       <th className="py-3 px-3">Total</th>
-                      <th className="py-3 px-3">Anticipo 50%</th>
+                      <th className="py-3 px-3">Anticipo / Separación</th>
                       <th className="py-3 px-3">Estatus</th>
                       <th className="py-3 px-3 text-right">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F7F3EE]">
-                    {quotes.map(q => (
-                      <tr key={q.id} className="hover:bg-[#FCFAF7] transition">
-                        <td className="py-3.5 px-3 font-semibold text-[#9C665C]">
-                          {q.quote_number}
-                        </td>
-                        <td className="py-3.5 px-3">
-                          <div className="font-serif font-bold text-sm text-[#332A28]">
-                            {q.client_name} {q.partner_name ? `& ${q.partner_name}` : ''}
-                          </div>
-                          <div className="text-[11px] text-[#7D6F6B]">
-                            {q.client_phone || q.client_email || 'Sin contacto'}
-                          </div>
-                        </td>
-                        <td className="py-3.5 px-3 text-[#7D6F6B]">
-                          {formatDateMX(q.event_date)}
-                        </td>
-                        <td className="py-3.5 px-3 font-bold text-[#332A28]">
-                          ${q.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="py-3.5 px-3 font-semibold text-[#70443D]">
-                          ${q.down_payment_amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                        </td>
+                    {quotes.map(q => {
+                      const isService = q.quote_number?.startsWith('SV-');
+                      const downPayment = isService ? Math.min(1000, q.total) : (q.total * 0.5);
+                      return (
+                        <tr key={q.id} className="hover:bg-[#FCFAF7] transition">
+                          <td className="py-3.5 px-3 font-semibold text-[#9C665C]">
+                            {q.quote_number}
+                          </td>
+                          <td className="py-3.5 px-3">
+                            <div className="font-serif font-bold text-sm text-[#332A28]">
+                              {q.client_name} {q.partner_name ? `& ${q.partner_name}` : ''}
+                            </div>
+                            <div className="text-[11px] text-[#7D6F6B]">
+                              {q.client_phone || q.client_email || 'Sin contacto'}
+                            </div>
+                          </td>
+                          <td className="py-3.5 px-3 text-[#7D6F6B]">
+                            {formatDateMX(q.event_date)}
+                          </td>
+                          <td className="py-3.5 px-3 font-bold text-[#332A28]">
+                            ${q.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                          </td>
+                          <td className="py-3.5 px-3 font-semibold text-[#70443D]">
+                            <div>
+                              <span>${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                              <span className="text-[10px] text-[#7D6F6B] block font-normal">
+                                {isService ? 'Separación fija $1,000' : 'Anticipo 50%'}
+                              </span>
+                            </div>
+                          </td>
                         <td className="py-3.5 px-3">
                           <span
                             className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
@@ -1676,7 +1684,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                           </button>
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })}
                   </tbody>
                 </table>
               </div>
