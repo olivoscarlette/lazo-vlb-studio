@@ -20,6 +20,7 @@ import { DirectorioModule } from './modules/DirectorioModule';
 import { BitacoraModule } from './modules/BitacoraModule';
 import { WhatsAppHubModule } from './modules/WhatsAppHubModule';
 import { CalendarioModule } from './modules/CalendarioModule';
+import { VivaLaBrideModule } from './modules/VivaLaBrideModule';
 import {
   Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff, Sparkles
 } from 'lucide-react';
@@ -444,7 +445,7 @@ interface MainWorkspaceProps {
 }
 
 const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOpen }) => {
-  const { user, currentWedding, activeTab, setActiveTab } = useAuth();
+  const { user, currentWedding, activeTab, setActiveTab, activeModule, setActiveModule } = useAuth();
 
   // Check if today matches the wedding date
   const todayStr = new Date().toISOString().split('T')[0];
@@ -483,6 +484,15 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
       return next;
     });
   };
+
+  // If in Viva la Bride Studio mode -> Render Viva la Bride Studio
+  if (activeModule === 'vlb') {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+        <VivaLaBrideModule onBackToLazo={() => setActiveModule('lazo')} />
+      </div>
+    );
+  }
 
   // If Admin and no specific wedding selected -> General Dashboard
   if (user?.role === 'ADMINISTRADOR' && !currentWedding) {

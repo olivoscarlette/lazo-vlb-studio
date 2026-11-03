@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   Bell, LogOut, ChevronDown, Building2,
-  CheckCircle2, ShieldCheck, Menu, PanelLeft, Calendar
+  CheckCircle2, ShieldCheck, Menu, PanelLeft, Calendar, Heart, Sparkles
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { UserProfileModal } from './UserProfileModal';
@@ -23,7 +23,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
     refreshNotifications,
     navigateToNotification,
     setActiveTab,
-    setGeneralDashboardTab
+    setGeneralDashboardTab,
+    activeModule,
+    setActiveModule
   } = useAuth();
 
   const [showRoleMenu, setShowRoleMenu] = useState(false);
@@ -149,6 +151,38 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* Platform Switcher: Lazo Planning ⇄ Viva la Bride */}
+            {user.role !== 'NOVIOS' && (
+              <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0 ml-1 sm:ml-3">
+                <button
+                  onClick={() => setActiveModule('lazo')}
+                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    activeModule === 'lazo'
+                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                  title="Módulo de Bodas, Invitados y Logística"
+                >
+                  <Heart className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span className="hidden md:inline">Lazo Planning</span>
+                  <span className="md:hidden">Lazo</span>
+                </button>
+                <button
+                  onClick={() => setActiveModule('vlb')}
+                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    activeModule === 'vlb'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                  title="Papelería Social & Stands de Bienvenida"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#CCDACC]" />
+                  <span className="hidden md:inline">Viva la Bride</span>
+                  <span className="md:hidden">VLB</span>
+                </button>
               </div>
             )}
           </div>

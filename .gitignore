@@ -7,9 +7,11 @@ client/dist/
 
 # Base de datos local y archivos privados subidos
 data/*.db
+data/*.db.backup
 data/*.db-journal
 data/*.db-wal
 data/backups/
+data/uploads/
 storage/uploads/*
 storage/backups/*
 *.sqlite

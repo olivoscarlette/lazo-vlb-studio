@@ -22,6 +22,7 @@ import catalogsBackupRouter from './routes/catalogsBackup.js';
 import whatsappHubRouter from './routes/whatsappHub.js';
 import whatsappWebhookRouter from './routes/whatsappWebhook.js';
 import calendarRouter from './routes/calendar.js';
+import vlbRouter from './routes/vlb.js';
 import { BroadcastScheduler } from './services/broadcastScheduler.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -122,6 +123,7 @@ app.use('/api/weddings', directoryRouter);
 app.use('/api/whatsapp', whatsappWebhookRouter);
 app.use('/api/whatsapp', whatsappHubRouter);
 app.use('/api/calendar', calendarRouter);
+app.use('/api/vlb', vlbRouter);
 app.use('/api', catalogsBackupRouter);
 
 // Serve uploaded public documents & invitations (e.g. for WhatsApp Cloud API)

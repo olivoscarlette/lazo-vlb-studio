@@ -77,6 +77,8 @@ interface AuthContextType {
   notifications: NotificationItem[];
   refreshUserData: () => Promise<void>;
   refreshNotifications: () => Promise<void>;
+  activeModule: 'lazo' | 'vlb';
+  setActiveModule: (mod: 'lazo' | 'vlb') => void;
   loading: boolean;
 }
 
@@ -107,6 +109,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [generalDashboardTab, setGeneralDashboardTabState] = useState<string>('weddings');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [activeModule, setActiveModuleState] = useState<'lazo' | 'vlb'>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('vlb_active_module');
+      if (saved === 'vlb' || saved === 'lazo') return saved;
+    }
+    return 'lazo';
+  });
+
+  const setActiveModule = useCallback((mod: 'lazo' | 'vlb') => {
+    setActiveModuleState(mod);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vlb_active_module', mod);
+    }
+  }, []);
 
   const assignedWeddingsRef = useRef<Wedding[]>([]);
   assignedWeddingsRef.current = assignedWeddings;
@@ -445,6 +461,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         notifications,
         refreshUserData,
         refreshNotifications,
+        activeModule,
+        setActiveModule,
         loading
       }}
     >

@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
+import { initVlbDatabase } from './vlb.js';
 
 const DATA_DIR = path.resolve(process.cwd(), 'data');
 if (!fs.existsSync(DATA_DIR)) {
@@ -1159,6 +1160,13 @@ export function initDatabase() {
     } catch (e) {
       console.error('Error ensuring accounts on startup:', e);
     }
+  }
+
+  // Initialize Viva la Bride Studio module database
+  try {
+    initVlbDatabase();
+  } catch (err) {
+    console.error('Error initializing Viva la Bride DB:', err);
   }
 }
 
