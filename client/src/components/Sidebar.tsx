@@ -50,7 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   weddingDayMode = false,
   onToggleWeddingDayMode
 }) => {
-  const { user, currentWedding, setCurrentWedding } = useAuth();
+  const { user, currentWedding, setCurrentWedding, setActiveModule } = useAuth();
 
   if (!user || !currentWedding || user.role === 'NOVIOS') return null;
 
@@ -256,6 +256,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <Sparkles className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
               {isOpen && <span>{weddingDayMode ? 'Ver Planeación Completa' : 'Modo Día de Boda'}</span>}
+            </button>
+          </div>
+        )}
+
+        {/* Viva la Bride Shortcut */}
+        {user?.role !== 'NOVIOS' && (
+          <div className="p-2 border-t border-[#EFE8E1] bg-[#FAF7F5]">
+            <button
+              onClick={() => setActiveModule('vlb')}
+              title="Abrir Viva la Bride (Papelería & Stands)"
+              className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center transition cursor-pointer bg-[#F7EDEB] text-[#70443D] hover:bg-[#F2ECE7] border border-[#ECD9D5] ${
+                isOpen ? 'px-3 space-x-2' : 'p-2'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
+              {isOpen && <span>Viva la Bride Atelier</span>}
             </button>
           </div>
         )}

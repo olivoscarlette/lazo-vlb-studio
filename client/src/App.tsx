@@ -610,7 +610,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
 };
 
 const AppContent: React.FC = () => {
-  const { user, loading, currentWedding } = useAuth();
+  const { user, loading, currentWedding, activeModule, setActiveModule } = useAuth();
 
   // Initialize sidebar state: default open on desktop (>=1024px), closed on mobile
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -656,6 +656,18 @@ const AppContent: React.FC = () => {
 
   if (!user) {
     return <LoginView />;
+  }
+
+  // Active Global Platform Switch: Viva la Bride vs Lazo Planning
+  if (activeModule === 'vlb') {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
+        <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
+        <div className="flex-1 bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+          <VivaLaBrideModule onBackToLazo={() => setActiveModule('lazo')} />
+        </div>
+      </div>
+    );
   }
 
   if (user.role !== 'NOVIOS' && !currentWedding) {
