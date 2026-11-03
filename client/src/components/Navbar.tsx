@@ -85,7 +85,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
 
             <div
               onClick={() => {
-                if (user.role === 'ADMINISTRADOR') setCurrentWedding(null);
+                setActiveModule('lazo');
+                if (user.role !== 'NOVIOS') {
+                  setCurrentWedding(null);
+                  setGeneralDashboardTab('weddings');
+                }
               }}
               className="cursor-pointer flex items-center group py-1 shrink-0"
               title="Ir al inicio de LAZO"
@@ -97,16 +101,58 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               />
             </div>
 
-            {/* Wedding selector dropdown if user has multiple weddings */}
-            {user.role !== 'NOVIOS' && assignedWeddings.length > 1 && (
-              <div className="relative">
+            {/* Platform Switcher: Lazo Planning ⇄ Viva la Bride (EXCLUSIVO ADMINISTRADOR) */}
+            {/* Posición fija y constante siempre del mismo lado */}
+            {user.role === 'ADMINISTRADOR' && (
+              <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0 ml-1 sm:ml-2">
+                <button
+                  onClick={() => {
+                    setActiveModule('lazo');
+                    setCurrentWedding(null);
+                    setGeneralDashboardTab('weddings');
+                    if (typeof window !== 'undefined') {
+                      window.history.pushState({ type: 'dashboard', tab: 'weddings' }, '', '/');
+                    }
+                  }}
+                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    activeModule === 'lazo'
+                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                  title="Ir al inicio de Lazo Planning (Home)"
+                >
+                  <Heart className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span className="hidden md:inline">Lazo Planning</span>
+                  <span className="md:hidden">Lazo</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveModule('vlb');
+                  }}
+                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                    activeModule === 'vlb'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
+                  }`}
+                  title="Atelier Viva la Bride (Papelería & Stands)"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-[#CCDACC]" />
+                  <span className="hidden md:inline">Viva la Bride</span>
+                  <span className="md:hidden">Viva la Bride</span>
+                </button>
+              </div>
+            )}
+
+            {/* Wedding selector dropdown if user has multiple weddings: ONLY in Lazo mode and inside a wedding */}
+            {activeModule === 'lazo' && currentWedding && user.role !== 'NOVIOS' && assignedWeddings.length > 1 && (
+              <div className="relative ml-1 sm:ml-2">
                 <button
                   onClick={() => setShowWeddingMenu(!showWeddingMenu)}
                   className="hidden sm:flex items-center space-x-2 text-sm font-medium text-[#2B2826] bg-[#FFFFFF] hover:bg-[#FAF7F5] px-4 py-2 rounded-full border border-[#EFE8E1] transition shadow-xs"
                 >
                   <Building2 className="w-4 h-4 text-[#C48B81]" />
                   <span className="truncate max-w-[180px]">
-                    {currentWedding ? currentWedding.name : 'Seleccionar Boda'}
+                    {currentWedding.name}
                   </span>
                   <ChevronDown className="w-4 h-4 text-[#7D6F6B]" />
                 </button>
@@ -151,38 +197,6 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                     ))}
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* Platform Switcher: Lazo Planning ⇄ Viva la Bride (EXCLUSIVO ADMINISTRADOR) */}
-            {user.role === 'ADMINISTRADOR' && (
-              <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0 ml-1 sm:ml-3">
-                <button
-                  onClick={() => setActiveModule('lazo')}
-                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                    activeModule === 'lazo'
-                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                  title="Módulo de Bodas, Invitados y Logística"
-                >
-                  <Heart className="w-3.5 h-3.5 text-[#C48B81]" />
-                  <span className="hidden md:inline">Lazo Planning</span>
-                  <span className="md:hidden">Lazo</span>
-                </button>
-                <button
-                  onClick={() => setActiveModule('vlb')}
-                  className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                    activeModule === 'vlb'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                  title="Papelería Social & Stands de Bienvenida"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-[#CCDACC]" />
-                  <span className="hidden md:inline">Viva la Bride</span>
-                  <span className="md:hidden">VLB</span>
-                </button>
               </div>
             )}
           </div>

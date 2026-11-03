@@ -445,7 +445,7 @@ interface MainWorkspaceProps {
 }
 
 const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOpen }) => {
-  const { user, currentWedding, activeTab, setActiveTab, activeModule, setActiveModule } = useAuth();
+  const { user, currentWedding, setCurrentWedding, activeTab, setActiveTab, activeModule, setActiveModule, setGeneralDashboardTab } = useAuth();
 
   // Check if today matches the wedding date
   const todayStr = new Date().toISOString().split('T')[0];
@@ -489,7 +489,11 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
   if (user?.role === 'ADMINISTRADOR' && activeModule === 'vlb') {
     return (
       <div className="min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-        <VivaLaBrideModule onBackToLazo={() => setActiveModule('lazo')} />
+        <VivaLaBrideModule onBackToLazo={() => {
+          setActiveModule('lazo');
+          setCurrentWedding(null);
+          setGeneralDashboardTab('weddings');
+        }} />
       </div>
     );
   }
@@ -610,7 +614,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
 };
 
 const AppContent: React.FC = () => {
-  const { user, loading, currentWedding, activeModule, setActiveModule } = useAuth();
+  const { user, loading, currentWedding, setCurrentWedding, activeModule, setActiveModule, setGeneralDashboardTab } = useAuth();
 
   // Initialize sidebar state: default open on desktop (>=1024px), closed on mobile
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -664,7 +668,11 @@ const AppContent: React.FC = () => {
       <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
         <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
         <div className="flex-1 bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-          <VivaLaBrideModule onBackToLazo={() => setActiveModule('lazo')} />
+          <VivaLaBrideModule onBackToLazo={() => {
+            setActiveModule('lazo');
+            setCurrentWedding(null);
+            setGeneralDashboardTab('weddings');
+          }} />
         </div>
       </div>
     );

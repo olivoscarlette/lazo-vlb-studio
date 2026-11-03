@@ -26,7 +26,8 @@ import {
   Layers,
   Percent,
   Check,
-  RefreshCw
+  RefreshCw,
+  MessageSquare
 } from 'lucide-react';
 import {
   VlbCatalogItem,
@@ -368,6 +369,64 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     } catch (err: any) {
       showToast(err.message, 'error');
     }
+  };
+
+  // ----------------------------------------
+  // WHATSAPP DIRECT INTEGRATION (SIN API)
+  // ----------------------------------------
+  const openWhatsAppMessage = (phone: string, text: string) => {
+    if (!phone || !phone.trim()) {
+      showToast('No se encontró teléfono para enviar WhatsApp.', 'error');
+      return;
+    }
+    const cleanPhone = phone.replace(/\D/g, '');
+    const finalPhone = cleanPhone.length === 10 ? `52${cleanPhone}` : cleanPhone;
+    const url = `https://wa.me/${finalPhone}?text=${encodeURIComponent(text.trim())}`;
+    window.open(url, '_blank');
+  };
+
+  const handleSendQuoteWhatsApp = (quote: VlbQuote | null, items?: VlbQuoteItem[]) => {
+    const isCurrent = !quote;
+    const clientName = isCurrent ? quoteForm.client_name : quote.client_name;
+    const partnerName = isCurrent ? quoteForm.partner_name : quote.partner_name;
+    const phone = isCurrent ? quoteForm.client_phone : quote.client_phone;
+    const eventDate = isCurrent ? quoteForm.event_date : quote.event_date;
+    const eventVenue = isCurrent ? quoteForm.event_venue : quote.event_venue;
+    const total = isCurrent ? quoteTotal : quote.total;
+    const downPayment = isCurrent ? quoteDownPayment : quote.down_payment_amount;
+    const balance = isCurrent ? quoteBalanceDue : quote.balance_due;
+    const folio = isCurrent ? 'Propuesta Editorial' : quote.quote_number;
+
+    if (!phone || !phone.trim()) {
+      showToast('Por favor captura el WhatsApp de la clienta en el formulario.', 'error');
+      return;
+    }
+
+    const couple = [clientName, partnerName].filter(Boolean).join(' & ');
+    const activeItems = isCurrent ? quoteItems : (items || []);
+    const itemsList = activeItems.map(i => `• ${i.pricing_type === 'PER_PIECE' ? `${i.quantity}x ` : ''}${i.item_name}`).join('\n');
+
+    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nTe comparto el detalle de tu propuesta editorial (*${folio}*):\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n✨ *Artículos & Experiencias seleccionadas:*\n${itemsList || 'Personalizado'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *Anticipo requerido (50% para apartar fecha):* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo contra entrega:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n\n*Nota:* El 50% de anticipo aparta formalmente la fecha del taller de imprenta y bloquea el mobiliario para tu evento.\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
+
+    openWhatsAppMessage(phone, msg);
+  };
+
+  const handleSendOrderWhatsApp = (order: VlbOrder, type: 'anticipo' | 'vobo' | 'saldo' | 'general') => {
+    if (!order.client_phone) {
+      showToast('Este pedido no tiene número de teléfono registrado.', 'error');
+      return;
+    }
+    let text = '';
+    if (type === 'anticipo') {
+      text = `¡Hola ${order.client_name}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nQueremos confirmar tu proyecto con folio *${order.order_number}* para su gran día. 💍\n\nPara apartar formalmente tu fecha en el taller de imprenta y asegurar el mobiliario, te recordamos que el anticipo es del 50%:\n💳 *Anticipo Requerido:* $${(order.total_amount * 0.5).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN.\n\nEn cuanto realices tu transferencia, por favor envíanos tu comprobante por aquí para agendar tu primera muestra personalizada. ¡Muchas gracias! 🌸`;
+    } else if (type === 'vobo') {
+      text = `¡Hola ${order.client_name}! 💌 Te saluda Scarlette de *Viva la Bride*.\n\n¡El diseño de tu papelería / proyecto *${order.order_number}* está listo para revisión!\nPor favor confírmanos tu VoBo (Visto Bueno) de ortografía, fechas y nombres para proceder al taller de impresión y sellado en lacre. ✨\n\n¡Quedamos atentas a tus comentarios!`;
+    } else if (type === 'saldo') {
+      text = `¡Hola ${order.client_name}! 🥂 Te saluda Scarlette de *Viva la Bride*.\n\nTu pedido *${order.order_number}* está casi listo para entrega / montaje para el evento del ${order.event_date || 'próximo fin de semana'}.\n\nTe compartimos el recordatorio del saldo pendiente:\n🏷️ *Saldo Final:* $${(order.balance_due || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN.\n\n¡Muchísimas gracias y estamos muy emocionadas de ser parte de su gran día! 🤍`;
+    } else {
+      text = `¡Hola ${order.client_name}! ✨ Te saluda Scarlette de *Viva la Bride*. Me pongo en contacto contigo sobre tu proyecto *${order.order_number}*. ¿Cómo estás?`;
+    }
+    openWhatsAppMessage(order.client_phone, text);
   };
 
   // ----------------------------------------
@@ -880,6 +939,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   </button>
 
                   <button
+                    onClick={() => handleSendQuoteWhatsApp(null)}
+                    className="w-full py-3 px-4 bg-[#25D366] hover:bg-[#20BA5A] text-[#FFFFFF] text-xs font-bold uppercase tracking-wider rounded-2xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer"
+                    title="Enviar resumen de cotización prellenado al WhatsApp de la novia"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Enviar Cotización por WhatsApp</span>
+                  </button>
+
+                  <button
                     onClick={() => handleSaveQuote('BORRADOR')}
                     className="w-full py-2.5 px-4 bg-[#FFFFFF] hover:bg-[#FCFAF7] text-[#70443D] border border-[#EAE3DA] text-xs font-bold uppercase tracking-wider rounded-2xl transition flex items-center justify-center space-x-2 cursor-pointer"
                   >
@@ -991,6 +1059,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                           </span>
                         </td>
                         <td className="py-3.5 px-3 text-right space-x-2">
+                          <button
+                            onClick={() => handleSendQuoteWhatsApp(q)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#E8F8EE] hover:bg-[#D5F2DF] text-[#1EBE5D] border border-[#BCE8CB] font-semibold text-[11px] cursor-pointer"
+                            title="Enviar Cotización por WhatsApp"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>WhatsApp</span>
+                          </button>
                           <button
                             onClick={() => handleExportSavedQuotePdf(q)}
                             className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"
@@ -1408,6 +1484,42 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 >
                   <X className="w-5 h-5" />
                 </button>
+              </div>
+
+              {/* WhatsApp Quick Actions (1-Click directo sin API) */}
+              <div className="p-4 rounded-2xl bg-[#E8F8EE] border border-[#BCE8CB] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-[#1EBE5D]">
+                    <MessageSquare className="w-4 h-4" />
+                    <span>WhatsApp Directo (Sin API · 1-Clic)</span>
+                  </div>
+                  <span className="text-[11px] font-mono text-[#384C3A]">
+                    {selectedOrder.client_phone || 'Sin número registrado'}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <button
+                    onClick={() => handleSendOrderWhatsApp(selectedOrder, 'anticipo')}
+                    className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F0FDF4] text-[#1EBE5D] border border-[#BCE8CB] text-xs font-semibold shadow-2xs transition cursor-pointer"
+                    title="Enviar recordatorio formal de anticipo 50% con desglose"
+                  >
+                    💳 Recordar Anticipo (50%)
+                  </button>
+                  <button
+                    onClick={() => handleSendOrderWhatsApp(selectedOrder, 'vobo')}
+                    className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F0FDF4] text-[#1EBE5D] border border-[#BCE8CB] text-xs font-semibold shadow-2xs transition cursor-pointer"
+                    title="Pedir VoBo de ortografía y fechas antes de mandar al taller de imprenta"
+                  >
+                    💌 Solicitar VoBo de Diseño
+                  </button>
+                  <button
+                    onClick={() => handleSendOrderWhatsApp(selectedOrder, 'saldo')}
+                    className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F0FDF4] text-[#1EBE5D] border border-[#BCE8CB] text-xs font-semibold shadow-2xs transition cursor-pointer"
+                    title="Recordar liquidación de saldo previo a entrega y montaje"
+                  >
+                    🥂 Recordar Saldo Final
+                  </button>
+                </div>
               </div>
 
               {/* 1. SECCIÓN FINANCIERA: ANTICIPO (50%) & SALDOS */}
