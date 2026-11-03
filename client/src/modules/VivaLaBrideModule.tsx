@@ -193,7 +193,12 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       }
       if (ordersRes.ok) {
         const oData = await ordersRes.json();
-        setOrders(oData.orders || []);
+        const oList = oData.orders || [];
+        setOrders(oList);
+        if (oList.length > 0 && !selectedPackingOrderId) {
+          setSelectedPackingOrderId(oList[0].id);
+          loadOrderPackingList(oList[0].id);
+        }
       }
       if (tplRes.ok) {
         const tplData = await tplRes.json();
@@ -261,7 +266,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
           notes: newTemplateNotes.trim()
         })
       });
-      if (!res.ok) throw new Error('Error al agregar actividad.');
+      if (!res.ok) throw new Error('Error al guardar actividad maestra.');
       showToast('Actividad agregada a la plantilla maestra.');
       setNewTemplateTitle('');
       setNewTemplateNotes('');
@@ -272,10 +277,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   };
 
   const handleDeleteMasterTemplate = async (id: string) => {
-    if (!window.confirm('¿Deseas eliminar esta actividad de tu plantilla maestra?')) return;
+    if (!window.confirm('¿Deseas eliminar esta actividad de la plantilla maestra?')) return;
     try {
       const res = await apiFetch(`/api/vlb/task-templates/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Error al eliminar actividad.');
+      if (!res.ok) throw new Error('Error al eliminar');
       showToast('Actividad eliminada de la plantilla maestra.');
       loadTaskTemplates();
     } catch (err: any) {
@@ -284,33 +289,36 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   };
 
   const handleApplyTemplatesToOrder = async (orderId: string) => {
-    if (!window.confirm('¿Deseas recalcular y sincronizar las actividades de este pedido con tu plantilla maestra?')) return;
+    if (!window.confirm('¿Deseas recalcular y sincronizar las actividades de este proyecto según tus plantillas maestras?')) return;
     try {
       const res = await apiFetch(`/api/vlb/orders/${orderId}/apply-templates`, { method: 'POST' });
       if (!res.ok) throw new Error('Error al sincronizar actividades.');
       const data = await res.json();
       showToast(data.message || 'Actividades sincronizadas.');
-      if (selectedOrder && selectedOrder.id === orderId) {
-        setSelectedOrder({ ...selectedOrder, tasks: data.tasks });
-      }
       loadData();
+      if (selectedOrder && selectedOrder.id === orderId) {
+        const updated = await apiFetch(`/api/vlb/orders/${orderId}`);
+        if (updated.ok) {
+          const uData = await updated.json();
+          setSelectedOrder(uData.order);
+        }
+      }
     } catch (err: any) {
       showToast(err.message, 'error');
     }
   };
 
   // ----------------------------------------
-  // PACKING CHECKLIST ACTIONS (DÍA DEL EVENTO - CARGAR EL AUTO)
+  // PACKING CHECKLIST ACTIONS (DÍA DEL EVENTO)
   // ----------------------------------------
   const loadOrderPackingList = async (orderId: string) => {
     if (!orderId) return;
-    setSelectedPackingOrderId(orderId);
     setLoadingPacking(true);
     try {
       const res = await apiFetch(`/api/vlb/orders/${orderId}/packing-list`);
       if (res.ok) {
         const data = await res.json();
-        setPackingList(data.packingList || []);
+        setPackingList(data.packing_list || []);
       }
     } catch (err) {
       console.error(err);
@@ -319,58 +327,74 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     }
   };
 
-  const handleTogglePackingItem = async (itemId: string) => {
+  const handleTogglePackingItem = async (itemId: string, packed: boolean) => {
+    const updated = packingList.map(it => it.id === itemId ? { ...it, packed } : it);
+    setPackingList(updated);
     if (!selectedPackingOrderId) return;
-    const updated = packingList.map(it =>
-      it.id === itemId ? { ...it, packed: !it.packed } : it
-    );
-    setPackingList(updated);
     try {
       await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packingList: updated })
+        body: JSON.stringify({ packing_list: updated })
       });
     } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleAddPackingItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedPackingOrderId || !newPackingItemName.trim()) return;
-    const newItem = {
-      id: 'pack_custom_' + Date.now(),
-      item_name: newPackingItemName.trim(),
-      category: newPackingItemCategory,
-      packed: true,
-      notes: 'Añadido manualmente al cargar el vehículo'
-    };
-    const updated = [...packingList, newItem];
-    setPackingList(updated);
-    setNewPackingItemName('');
-    try {
-      await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packingList: updated })
-      });
-      showToast('Artículo añadido y marcado en el carro.');
-    } catch (err) {
-      console.error(err);
+      console.error('Error auto-saving packing status:', err);
     }
   };
 
   const handleDeletePackingItem = async (itemId: string) => {
-    if (!selectedPackingOrderId) return;
     const updated = packingList.filter(it => it.id !== itemId);
+    setPackingList(updated);
+    if (!selectedPackingOrderId) return;
+    try {
+      await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packing_list: updated })
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAddCustomPackingItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPackingItemName.trim()) return;
+    const newItem = {
+      id: `custom_${Date.now()}`,
+      category: newPackingItemCategory,
+      name: newPackingItemName.trim(),
+      notes: 'Elemento añadido manualmente',
+      packed: false
+    };
+    const updated = [...packingList, newItem];
+    setPackingList(updated);
+    setNewPackingItemName('');
+    if (!selectedPackingOrderId) return;
+    try {
+      await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packing_list: updated })
+      });
+      showToast('Elemento agregado a la lista de carga.');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleResetPackingList = async () => {
+    if (!selectedPackingOrderId) return;
+    if (!window.confirm('¿Reiniciar todos los elementos como NO subidos al vehículo?')) return;
+    const updated = packingList.map(it => ({ ...it, packed: false }));
     setPackingList(updated);
     try {
       await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packingList: updated })
+        body: JSON.stringify({ packing_list: updated })
       });
+      showToast('Checklist reiniciado a 0% para el evento.');
     } catch (err) {
       console.error(err);
     }
@@ -474,43 +498,25 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const quoteDiscountAmount = (quoteSubtotal * (Number(quoteDiscountPct) || 0)) / 100;
   const quoteTotal = Math.max(0, quoteSubtotal - quoteDiscountAmount);
 
-  // Business logic:
-  // En servicios la separación es de $1,000.
-  // Papelería se liquida al entregar el pedido o al programar envío y servicios se liquida 10 días antes del evento.
-  const hasPapeleriaInQuote = quoteItems.some(i => i.category === 'PAPELERIA');
-  const hasServiciosInQuote = quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS');
-
-  const papeleriaSubtotalQuote = quoteItems
-    .filter(i => i.category === 'PAPELERIA')
-    .reduce((sum, i) => sum + i.total_price, 0);
-  const serviciosSubtotalQuote = quoteItems
-    .filter(i => i.category === 'STANDS_EXPERIENCIAS')
-    .reduce((sum, i) => sum + i.total_price, 0);
-
-  const papeleriaRatio = quoteSubtotal > 0 ? (papeleriaSubtotalQuote / quoteSubtotal) : 0;
-  const serviciosRatio = quoteSubtotal > 0 ? (serviciosSubtotalQuote / quoteSubtotal) : 0;
-  const netPapeleria = Math.max(0, papeleriaSubtotalQuote - (quoteDiscountAmount * papeleriaRatio));
-  const netServicios = Math.max(0, serviciosSubtotalQuote - (quoteDiscountAmount * serviciosRatio));
+  // Reglas de negocio Viva la Bride:
+  // - Servicios/Stands: separación fija de $1,000 (saldo se liquida 10 días antes del evento).
+  // - Papelería social: anticipo 50% (saldo se liquida al entregar o programar envío).
+  const stationeryItems = quoteItems.filter(i => i.category === 'PAPELERIA');
+  const servicesItems = quoteItems.filter(i => i.category === 'STANDS_EXPERIENCIAS' || i.category === 'SERVICIOS_DIGITALES');
+  const hasStationery = stationeryItems.length > 0;
+  const hasServices = servicesItems.length > 0;
+  const stationeryTotal = stationeryItems.reduce((acc, curr) => acc + curr.total_price, 0);
+  const servicesTotal = servicesItems.reduce((acc, curr) => acc + curr.total_price, 0);
 
   let quoteDownPayment = 0;
-  let papeleriaDownPayment = 0;
-  let serviciosDownPayment = 0;
-
-  if (hasPapeleriaInQuote && hasServiciosInQuote) {
-    papeleriaDownPayment = netPapeleria * 0.5;
-    serviciosDownPayment = Math.min(1000, netServicios);
-    quoteDownPayment = papeleriaDownPayment + serviciosDownPayment;
-  } else if (hasServiciosInQuote) {
-    serviciosDownPayment = Math.min(1000, netServicios);
-    quoteDownPayment = serviciosDownPayment;
+  if (hasStationery && hasServices) {
+    quoteDownPayment = (stationeryTotal * 0.5) + Math.min(1000, servicesTotal);
+  } else if (hasServices) {
+    quoteDownPayment = Math.min(1000, quoteTotal);
   } else {
-    papeleriaDownPayment = netPapeleria * 0.5;
-    quoteDownPayment = papeleriaDownPayment;
+    quoteDownPayment = quoteTotal * 0.5;
   }
-
   const quoteBalanceDue = Math.max(0, quoteTotal - quoteDownPayment);
-  const papeleriaBalanceQuote = Math.max(0, netPapeleria - papeleriaDownPayment);
-  const serviciosBalanceQuote = Math.max(0, netServicios - serviciosDownPayment);
 
   const handleSaveQuote = async (status: 'BORRADOR' | 'ENVIADA' = 'BORRADOR') => {
     if (!quoteForm.client_name.trim()) {
@@ -518,7 +524,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       return;
     }
     if (!quoteForm.client_phone.trim()) {
-      showToast('El teléfono WhatsApp es obligatorio.', 'error');
+      showToast('El teléfono WhatsApp de la novia es obligatorio.', 'error');
       return;
     }
     if (quoteItems.length === 0) {
@@ -533,9 +539,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         body: JSON.stringify({
           ...quoteForm,
           discount: quoteDiscountAmount,
+          down_payment_pct: quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50,
           down_payment_amount: quoteDownPayment,
           balance_due: quoteBalanceDue,
-          total: quoteTotal,
           items: quoteItems
         })
       });
@@ -633,7 +639,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const clientName = isCurrent ? quoteForm.client_name : quote.client_name;
     const partnerName = isCurrent ? quoteForm.partner_name : quote.partner_name;
     const phone = isCurrent ? quoteForm.client_phone : quote.client_phone;
-    const eventDate = isCurrent ? quoteForm.event_date : quote.event_date;
+    const eventDate = isCurrent ? formatDateMX(quoteForm.event_date) : formatDateMX(quote.event_date);
     const eventVenue = isCurrent ? quoteForm.event_venue : quote.event_venue;
     const total = isCurrent ? quoteTotal : quote.total;
     const downPayment = isCurrent ? quoteDownPayment : quote.down_payment_amount;
@@ -649,24 +655,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const activeItems = isCurrent ? quoteItems : (items || []);
     const itemsList = activeItems.map(i => `• ${i.pricing_type === 'PER_PIECE' ? `${i.quantity}x ` : ''}${i.item_name}`).join('\n');
 
-    const quoteIdForLink = quote ? quote.id : null;
-    const proposalLinkText = quoteIdForLink
-      ? `\n\n📄 *Revisa y Firma tu Propuesta en Línea:*\n👉 ${window.location.origin}/vlb/propuesta/${quoteIdForLink}\n(Puedes descargar tu PDF oficial y autorizarla con firma digital en 1 clic desde tu celular)`
-      : '';
+    const proposalUrl = quote ? `${window.location.origin}/vlb/propuesta/${quote.id}` : '';
+    const proposalLinkText = proposalUrl ? `\n\n📄 *Liga de propuesta para revisar, descargar PDF y firmar en línea:*\n${proposalUrl}\n` : '';
 
-    const hasStands = activeItems.some(i => i.category === 'STANDS_EXPERIENCIAS');
-    const hasPap = activeItems.some(i => i.category === 'PAPELERIA');
-
-    let paymentTermsMsg = '';
-    if (hasStands && hasPap) {
-      paymentTermsMsg = `💳 *Anticipo requerido para apartar:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN (50% Papelería + $1,000 Separación de Stands)\n📦 *Saldo Papelería:* Se liquida al entregar el pedido o al programar envío.\n✨ *Saldo Servicios:* Se liquida 10 días antes del evento.`;
-    } else if (hasStands) {
-      paymentTermsMsg = `💳 *Separación requerida:* $1,000.00 MXN para apartar fecha y mobiliario.\n✨ *Saldo Servicios:* Se liquida 10 días antes del evento.`;
-    } else {
-      paymentTermsMsg = `💳 *Anticipo requerido (50%):* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN para entrar al taller de imprenta.\n📦 *Saldo:* Se liquida al entregar el pedido o al programar envío.`;
-    }
-
-    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nTe comparto el detalle de tu propuesta editorial (*${folio}*):\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${formatDateMX(eventDate) || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n✨ *Artículos & Experiencias seleccionadas:*\n${itemsList || 'Personalizado'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n${paymentTermsMsg}${proposalLinkText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
+    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nTe comparto el detalle de tu propuesta editorial (*${folio}*):\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n✨ *Artículos & Experiencias seleccionadas:*\n${itemsList || 'Personalizado'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *Separación / Anticipo:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${proposalLinkText}\n*Condiciones de Pago:*\n• Servicios & Stands: Separación $1,000 MXN; el saldo se liquida 10 días antes del evento.\n• Papelería Social: 50% de anticipo; saldo se liquida al entregar el pedido o programar envío.\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
 
     openWhatsAppMessage(phone, msg);
   };
@@ -726,28 +718,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const evt = order.event_date ? new Date(order.event_date).getTime() : Date.now();
     const defTasks: VlbTask[] = [];
     const sType = order.service_type || 'PAPELERIA';
-
-    if (taskTemplates && taskTemplates.length > 0) {
-      for (const tpl of taskTemplates) {
-        if (
-          (tpl.category === 'PAPELERIA' && (sType === 'PAPELERIA' || sType === 'MIXTO')) ||
-          (tpl.category === 'SERVICIO' && (sType === 'STANDS_EXPERIENCIAS' || sType === 'MIXTO'))
-        ) {
-          const dueDate = new Date(evt - (tpl.days_before_event || 0) * 86400000).toISOString().split('T')[0];
-          defTasks.push({
-            id: 't_' + tpl.id + '_' + order.id,
-            title: tpl.title,
-            due_date: dueDate,
-            due_time: tpl.default_time || '',
-            completed: false,
-            category: tpl.category,
-            notes: tpl.notes || ''
-          });
-        }
-      }
-      if (defTasks.length > 0) return defTasks;
-    }
-
     if (sType === 'PAPELERIA' || sType === 'MIXTO') {
       defTasks.push({
         id: 't_vobo_' + order.id,
@@ -1029,399 +999,21 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
-      {/* ======================================================== */}
-      {activeTab === 'packing' && (
-        <div className="space-y-6">
-          {/* Header & Selector de Evento */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <Truck className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Checklist de Carga al Auto · Día D
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
-                  </p>
-                </div>
-              </div>
-
-              {/* Selector de Evento */}
-              <div className="flex items-center space-x-2">
-                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
-                  Evento:
-                </label>
-                <select
-                  value={selectedPackingOrderId}
-                  onChange={e => {
-                    setSelectedPackingOrderId(e.target.value);
-                    loadOrderPackingList(e.target.value);
-                  }}
-                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
-                >
-                  {orders.length === 0 ? (
-                    <option value="">No hay eventos activos</option>
-                  ) : (
-                    orders.map(o => (
-                      <option key={o.id} value={o.id}>
-                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Event Info & Progress Bar */}
-            {(() => {
-              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
-              const packedCount = packingList.filter(it => it.packed).length;
-              const totalCount = packingList.length;
-              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
-              const isAllPacked = totalCount > 0 && packedCount === totalCount;
-
-              return (
-                <div className="space-y-4">
-                  {currentPackingOrder && (
-                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-[#332A28] font-serif text-base">
-                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
-                        </span>
-                        <span>·</span>
-                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          {formatOrderFolio(currentPackingOrder.order_number)}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          currentPackingOrder.service_type === 'PAPELERIA'
-                            ? 'bg-[#F7EDEB] text-[#70443D]'
-                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
-                            ? 'bg-[#EBF2EB] text-[#384C3A]'
-                            : 'bg-[#F3EDE6] text-[#58352F]'
-                        }`}>
-                          {getServiceLabel(currentPackingOrder.service_type)}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
-                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
-                        </span>
-                        <span>·</span>
-                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress Indicator */}
-                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-[#332A28]">
-                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
-                      </span>
-                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
-                        {progressPct}% completado
-                      </span>
-                    </div>
-
-                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
-                        }`}
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-
-                    {isAllPacked && (
-                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Checklist Items List */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
-              <h3 className="font-serif text-lg font-bold text-[#332A28]">
-                Material, Estructuras & Herramientas a Subir
-              </h3>
-              <span className="text-xs text-[#7D6F6B]">
-                Toca cada casilla conforme lo coloques en la cajuela
-              </span>
-            </div>
-
-            {loadingPacking ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Cargando checklist del auto...
-              </div>
-            ) : packingList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Selecciona un evento arriba para generar o visualizar su checklist de carga.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {packingList.map(it => (
-                  <div
-                    key={it.id}
-                    onClick={() => handleTogglePackingItem(it.id)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
-                      it.packed
-                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
-                        it.packed
-                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
-                          : 'bg-[#FFFFFF] border-[#B88A82]'
-                      }`}>
-                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
-                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
-                        }`}>
-                          {it.item_name}
-                        </span>
-                        {it.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block truncate">
-                            {it.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
-                      }`}>
-                        {it.category || 'Equipo'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePackingItem(it.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la lista de carga"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Formulario para Agregar Algo Extra al Auto */}
-            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
-              <input
-                type="text"
-                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
-                value={newPackingItemName}
-                onChange={e => setNewPackingItemName(e.target.value)}
-                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-              />
-              <select
-                value={newPackingItemCategory}
-                onChange={e => setNewPackingItemCategory(e.target.value)}
-                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-              >
-                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
-                <option value="Papelería">Papelería</option>
-                <option value="Herramientas">Herramientas</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Audio Guestbook">Audio Guestbook</option>
-                <option value="Extra">Extra</option>
-              </select>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Subir al Auto</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
-      {/* ======================================================== */}
-      {activeTab === 'templates' && (
-        <div className="space-y-6">
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Mis Actividades Maestras
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category Pill Switcher */}
-              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
-                <button
-                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'PAPELERIA'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  📦 Papelería Social
-                </button>
-                <button
-                  onClick={() => setTemplateFilterCategory('SERVICIO')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'SERVICIO'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  ✨ Stands & Servicios
-                </button>
-              </div>
-            </div>
-
-            {/* List of Templates for Selected Category */}
-            <div className="space-y-2.5">
-              {taskTemplates
-                .filter(t => t.category === templateFilterCategory)
-                .map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-bold text-[#332A28] text-sm block">
-                          {t.title}
-                        </span>
-                        {t.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block">
-                            {t.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
-                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
-                        {t.default_time ? ` (${t.default_time})` : ''}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteMasterTemplate(t.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la plantilla maestra"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* Add New Master Task */}
-            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
-              <div className="text-xs font-bold text-[#384C3A]">
-                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
-                    value={newTemplateTitle}
-                    onChange={e => {
-                      setNewTemplateTitle(e.target.value);
-                      setNewTemplateCategory(templateFilterCategory);
-                    }}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="Días antes (ej. 7)"
-                    value={newTemplateDays}
-                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                  <input
-                    type="time"
-                    placeholder="14:00"
-                    value={newTemplateTime}
-                    onChange={e => setNewTemplateTime(e.target.value)}
-                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Notas u observaciones (opcional)"
-                  value={newTemplateNotes}
-                  onChange={e => setNewTemplateNotes(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                />
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
-                >
-                  Guardar en Plantilla
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* Header Editorial Exclusivo Viva la Bride - Versión Compacta y Elegante */}
-      <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-2xl px-5 py-3.5 shadow-2xs relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-2xl px-5 py-3 shadow-2xs relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
-          <div className="space-y-0.5">
-            <div className="flex items-center space-x-2">
-              <h1 className="font-serif text-xl sm:text-2xl text-[#332A28] font-bold tracking-tight">
-                Viva la Bride
-              </h1>
-              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-[#EFE2DF] text-[#70443D] text-[10px] font-semibold uppercase tracking-wider">
-                <Sparkles className="w-3 h-3 text-[#B88A82]" />
-                <span>Atelier & Experiencias</span>
-              </span>
-            </div>
+          <div className="flex items-center space-x-2">
+            <h1 className="font-serif text-xl sm:text-2xl text-[#332A28] font-bold tracking-tight">
+              Viva la Bride
+            </h1>
+            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-[#EFE2DF] text-[#70443D] text-[10px] font-semibold uppercase tracking-wider">
+              <Sparkles className="w-3 h-3 text-[#B88A82]" />
+              <span>Atelier & Experiencias</span>
+            </span>
           </div>
 
           {/* Quick Tab Switcher Compacto */}
-          <div className="flex flex-wrap items-center bg-[#FFFFFF]/90 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs self-start sm:self-auto gap-1">
+          <div className="flex items-center flex-wrap gap-1 bg-[#FFFFFF]/90 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs self-start sm:self-auto shrink-0">
             <button
               onClick={() => setActiveTab('quotes')}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
@@ -1450,13 +1042,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               )}
             </button>
             <button
-              onClick={() => {
-                setActiveTab('packing');
-                if (orders.length > 0 && !selectedPackingOrderId) {
-                  setSelectedPackingOrderId(orders[0].id);
-                  loadOrderPackingList(orders[0].id);
-                }
-              }}
+              onClick={() => setActiveTab('packing')}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeTab === 'packing'
                   ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
@@ -1711,11 +1297,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </h3>
                   </div>
                   <span className="text-[11px] font-bold text-[#9C665C] bg-[#FAF6F2] px-2.5 py-1 rounded-full border border-[#EAE3DA]">
-                    {hasServiciosInQuote && !hasPapeleriaInQuote
-                      ? 'Separación $1,000'
-                      : hasPapeleriaInQuote && !hasServiciosInQuote
-                      ? 'Anticipo 50%'
-                      : '50% Pap. + $1,000 Serv.'}
+                    {hasServices && !hasStationery ? 'Separación $1,000' : hasStationery && !hasServices ? 'Anticipo 50%' : 'Separación $1,000 + 50%'}
                   </span>
                 </div>
 
@@ -1729,18 +1311,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-[#7D6F6B]">Descuento (%):</span>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={quoteDiscountPct === 0 ? '' : quoteDiscountPct}
-                        onChange={e => setQuoteDiscountPct(e.target.value === '' ? 0 : Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
-                        className="w-24 px-2 py-1 text-right text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-lg text-[#332A28] pr-6"
-                        placeholder="0"
-                      />
-                      <span className="absolute right-2 top-1 text-xs text-[#7D6F6B] pointer-events-none">%</span>
-                    </div>
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={quoteDiscountPct === 0 ? '' : quoteDiscountPct}
+                      onChange={e => setQuoteDiscountPct(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+                      className="w-24 px-2 py-1 text-right text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-lg text-[#332A28]"
+                      placeholder="0"
+                    />
                   </div>
 
                   <div className="pt-3 border-t border-[#F7F3EE] flex justify-between items-baseline">
@@ -1752,37 +1331,35 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </span>
                   </div>
 
-                  {/* Highlight Box Anticipo / Separación y Liquidación Exacta */}
-                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FAF6F2] to-[#F6ECE8] border border-[#EAD2D0] space-y-2.5">
+                  {/* Highlight Box Separación / Anticipo */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FAF6F2] to-[#F6ECE8] border border-[#EAD2D0] space-y-2">
                     <div className="flex justify-between items-center text-xs font-bold text-[#70443D]">
-                      <span>Anticipo / Separación Requerida:</span>
-                      <span className="text-sm font-serif font-bold text-[#9C665C]">
+                      <span>{hasServices && !hasStationery ? 'Separación Requerida:' : 'Anticipo / Separación:'}</span>
+                      <span className="text-sm">
                         ${quoteDownPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
-
-                    <div className="space-y-1.5 pt-1.5 border-t border-[#EAE3DA] text-[11px] text-[#58352F]">
-                      {hasPapeleriaInQuote && (
-                        <div className="flex items-start justify-between">
-                          <span className="font-semibold">📦 Saldo Papelería:</span>
-                          <span className="text-right text-[10px] text-[#7D6F6B]">
-                            ${papeleriaBalanceQuote.toLocaleString('es-MX', { minimumFractionDigits: 2 })} · Al entregar o programar envío
-                          </span>
-                        </div>
+                    <div className="flex justify-between items-center text-[11px] text-[#7D6F6B]">
+                      <span>Saldo Pendiente:</span>
+                      <span className="font-semibold text-[#332A28]">
+                        ${quoteBalanceDue.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-[#7D6F6B] leading-relaxed pt-1 border-t border-[#EAE3DA] space-y-1">
+                      {hasServices && (
+                        <p className="text-[#70443D] font-medium">
+                          • <strong>Stands & Servicios:</strong> Separación $1,000. Saldo se liquida 10 días antes del evento.
+                        </p>
                       )}
-                      {hasServiciosInQuote && (
-                        <div className="flex items-start justify-between">
-                          <span className="font-semibold">✨ Saldo Servicios:</span>
-                          <span className="text-right text-[10px] text-[#7D6F6B]">
-                            ${serviciosBalanceQuote.toLocaleString('es-MX', { minimumFractionDigits: 2 })} · 10 días antes del evento
-                          </span>
-                        </div>
+                      {hasStationery && (
+                        <p className="text-[#70443D] font-medium">
+                          • <strong>Papelería Social:</strong> Anticipo 50%. Saldo se liquida al entregar el pedido o al programar envío.
+                        </p>
+                      )}
+                      {!hasServices && !hasStationery && (
+                        <p>* 50% de anticipo para apartar fecha y agenda del taller.</p>
                       )}
                     </div>
-
-                    <p className="text-[10px] text-[#7D6F6B] leading-relaxed pt-1.5 border-t border-[#EAE3DA]">
-                      * En servicios la separación es de $1,000 MXN. Papelería se liquida al entregar el pedido o programar envío, y servicios se liquida 10 días antes del evento.
-                    </p>
                   </div>
                 </div>
 
@@ -1875,7 +1452,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       <th className="py-3 px-3">Clienta / Pareja</th>
                       <th className="py-3 px-3">Fecha Evento</th>
                       <th className="py-3 px-3">Total</th>
-                      <th className="py-3 px-3">Anticipo / Separación</th>
+                      <th className="py-3 px-3">Anticipo 50%</th>
                       <th className="py-3 px-3">Estatus</th>
                       <th className="py-3 px-3 text-right">Acciones</th>
                     </tr>
@@ -1918,20 +1495,20 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                         </td>
                         <td className="py-3.5 px-3 text-right space-x-2">
                           <button
+                            onClick={() => handleCopyProposalLink(q.id)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#9C665C] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"
+                            title="Copiar liga pública para novios (PDF y Firma)"
+                          >
+                            <Link className="w-3.5 h-3.5" />
+                            <span>Liga</span>
+                          </button>
+                          <button
                             onClick={() => handleSendQuoteWhatsApp(q)}
                             className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#E8F8EE] hover:bg-[#D5F2DF] text-[#1EBE5D] border border-[#BCE8CB] font-semibold text-[11px] cursor-pointer"
                             title="Enviar Cotización por WhatsApp"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                             <span>WhatsApp</span>
-                          </button>
-                          <button
-                            onClick={() => handleCopyProposalLink(q.id)}
-                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"
-                            title="Copiar liga interactiva de propuesta con firma digital"
-                          >
-                            <Link className="w-3.5 h-3.5" />
-                            <span>Liga</span>
                           </button>
                           <button
                             onClick={() => handleExportSavedQuotePdf(q)}
@@ -1958,382 +1535,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 </table>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
-      {/* ======================================================== */}
-      {activeTab === 'packing' && (
-        <div className="space-y-6">
-          {/* Header & Selector de Evento */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <Truck className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Checklist de Carga al Auto · Día D
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
-                  </p>
-                </div>
-              </div>
-
-              {/* Selector de Evento */}
-              <div className="flex items-center space-x-2">
-                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
-                  Evento:
-                </label>
-                <select
-                  value={selectedPackingOrderId}
-                  onChange={e => {
-                    setSelectedPackingOrderId(e.target.value);
-                    loadOrderPackingList(e.target.value);
-                  }}
-                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
-                >
-                  {orders.length === 0 ? (
-                    <option value="">No hay eventos activos</option>
-                  ) : (
-                    orders.map(o => (
-                      <option key={o.id} value={o.id}>
-                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Event Info & Progress Bar */}
-            {(() => {
-              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
-              const packedCount = packingList.filter(it => it.packed).length;
-              const totalCount = packingList.length;
-              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
-              const isAllPacked = totalCount > 0 && packedCount === totalCount;
-
-              return (
-                <div className="space-y-4">
-                  {currentPackingOrder && (
-                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-[#332A28] font-serif text-base">
-                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
-                        </span>
-                        <span>·</span>
-                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          {formatOrderFolio(currentPackingOrder.order_number)}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          currentPackingOrder.service_type === 'PAPELERIA'
-                            ? 'bg-[#F7EDEB] text-[#70443D]'
-                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
-                            ? 'bg-[#EBF2EB] text-[#384C3A]'
-                            : 'bg-[#F3EDE6] text-[#58352F]'
-                        }`}>
-                          {getServiceLabel(currentPackingOrder.service_type)}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
-                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
-                        </span>
-                        <span>·</span>
-                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress Indicator */}
-                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-[#332A28]">
-                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
-                      </span>
-                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
-                        {progressPct}% completado
-                      </span>
-                    </div>
-
-                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
-                        }`}
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-
-                    {isAllPacked && (
-                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Checklist Items List */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
-              <h3 className="font-serif text-lg font-bold text-[#332A28]">
-                Material, Estructuras & Herramientas a Subir
-              </h3>
-              <span className="text-xs text-[#7D6F6B]">
-                Toca cada casilla conforme lo coloques en la cajuela
-              </span>
-            </div>
-
-            {loadingPacking ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Cargando checklist del auto...
-              </div>
-            ) : packingList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Selecciona un evento arriba para generar o visualizar su checklist de carga.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {packingList.map(it => (
-                  <div
-                    key={it.id}
-                    onClick={() => handleTogglePackingItem(it.id)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
-                      it.packed
-                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
-                        it.packed
-                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
-                          : 'bg-[#FFFFFF] border-[#B88A82]'
-                      }`}>
-                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
-                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
-                        }`}>
-                          {it.item_name}
-                        </span>
-                        {it.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block truncate">
-                            {it.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
-                      }`}>
-                        {it.category || 'Equipo'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePackingItem(it.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la lista de carga"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Formulario para Agregar Algo Extra al Auto */}
-            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
-              <input
-                type="text"
-                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
-                value={newPackingItemName}
-                onChange={e => setNewPackingItemName(e.target.value)}
-                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-              />
-              <select
-                value={newPackingItemCategory}
-                onChange={e => setNewPackingItemCategory(e.target.value)}
-                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-              >
-                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
-                <option value="Papelería">Papelería</option>
-                <option value="Herramientas">Herramientas</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Audio Guestbook">Audio Guestbook</option>
-                <option value="Extra">Extra</option>
-              </select>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Subir al Auto</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
-      {/* ======================================================== */}
-      {activeTab === 'templates' && (
-        <div className="space-y-6">
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Mis Actividades Maestras
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category Pill Switcher */}
-              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
-                <button
-                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'PAPELERIA'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  📦 Papelería Social
-                </button>
-                <button
-                  onClick={() => setTemplateFilterCategory('SERVICIO')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'SERVICIO'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  ✨ Stands & Servicios
-                </button>
-              </div>
-            </div>
-
-            {/* List of Templates for Selected Category */}
-            <div className="space-y-2.5">
-              {taskTemplates
-                .filter(t => t.category === templateFilterCategory)
-                .map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-bold text-[#332A28] text-sm block">
-                          {t.title}
-                        </span>
-                        {t.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block">
-                            {t.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
-                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
-                        {t.default_time ? ` (${t.default_time})` : ''}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteMasterTemplate(t.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la plantilla maestra"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* Add New Master Task */}
-            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
-              <div className="text-xs font-bold text-[#384C3A]">
-                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
-                    value={newTemplateTitle}
-                    onChange={e => {
-                      setNewTemplateTitle(e.target.value);
-                      setNewTemplateCategory(templateFilterCategory);
-                    }}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="Días antes (ej. 7)"
-                    value={newTemplateDays}
-                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                  <input
-                    type="time"
-                    placeholder="14:00"
-                    value={newTemplateTime}
-                    onChange={e => setNewTemplateTime(e.target.value)}
-                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Notas u observaciones (opcional)"
-                  value={newTemplateNotes}
-                  onChange={e => setNewTemplateNotes(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                />
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
-                >
-                  Guardar en Plantilla
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
@@ -2565,382 +1766,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* ======================================================== */}
-      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
-      {/* ======================================================== */}
-      {activeTab === 'packing' && (
-        <div className="space-y-6">
-          {/* Header & Selector de Evento */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <Truck className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Checklist de Carga al Auto · Día D
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
-                  </p>
-                </div>
-              </div>
-
-              {/* Selector de Evento */}
-              <div className="flex items-center space-x-2">
-                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
-                  Evento:
-                </label>
-                <select
-                  value={selectedPackingOrderId}
-                  onChange={e => {
-                    setSelectedPackingOrderId(e.target.value);
-                    loadOrderPackingList(e.target.value);
-                  }}
-                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
-                >
-                  {orders.length === 0 ? (
-                    <option value="">No hay eventos activos</option>
-                  ) : (
-                    orders.map(o => (
-                      <option key={o.id} value={o.id}>
-                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Event Info & Progress Bar */}
-            {(() => {
-              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
-              const packedCount = packingList.filter(it => it.packed).length;
-              const totalCount = packingList.length;
-              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
-              const isAllPacked = totalCount > 0 && packedCount === totalCount;
-
-              return (
-                <div className="space-y-4">
-                  {currentPackingOrder && (
-                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-[#332A28] font-serif text-base">
-                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
-                        </span>
-                        <span>·</span>
-                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          {formatOrderFolio(currentPackingOrder.order_number)}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          currentPackingOrder.service_type === 'PAPELERIA'
-                            ? 'bg-[#F7EDEB] text-[#70443D]'
-                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
-                            ? 'bg-[#EBF2EB] text-[#384C3A]'
-                            : 'bg-[#F3EDE6] text-[#58352F]'
-                        }`}>
-                          {getServiceLabel(currentPackingOrder.service_type)}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
-                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
-                        </span>
-                        <span>·</span>
-                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress Indicator */}
-                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-[#332A28]">
-                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
-                      </span>
-                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
-                        {progressPct}% completado
-                      </span>
-                    </div>
-
-                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
-                        }`}
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-
-                    {isAllPacked && (
-                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Checklist Items List */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
-              <h3 className="font-serif text-lg font-bold text-[#332A28]">
-                Material, Estructuras & Herramientas a Subir
-              </h3>
-              <span className="text-xs text-[#7D6F6B]">
-                Toca cada casilla conforme lo coloques en la cajuela
-              </span>
-            </div>
-
-            {loadingPacking ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Cargando checklist del auto...
-              </div>
-            ) : packingList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Selecciona un evento arriba para generar o visualizar su checklist de carga.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {packingList.map(it => (
-                  <div
-                    key={it.id}
-                    onClick={() => handleTogglePackingItem(it.id)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
-                      it.packed
-                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
-                        it.packed
-                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
-                          : 'bg-[#FFFFFF] border-[#B88A82]'
-                      }`}>
-                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
-                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
-                        }`}>
-                          {it.item_name}
-                        </span>
-                        {it.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block truncate">
-                            {it.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
-                      }`}>
-                        {it.category || 'Equipo'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePackingItem(it.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la lista de carga"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Formulario para Agregar Algo Extra al Auto */}
-            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
-              <input
-                type="text"
-                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
-                value={newPackingItemName}
-                onChange={e => setNewPackingItemName(e.target.value)}
-                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-              />
-              <select
-                value={newPackingItemCategory}
-                onChange={e => setNewPackingItemCategory(e.target.value)}
-                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-              >
-                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
-                <option value="Papelería">Papelería</option>
-                <option value="Herramientas">Herramientas</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Audio Guestbook">Audio Guestbook</option>
-                <option value="Extra">Extra</option>
-              </select>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Subir al Auto</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
-      {/* ======================================================== */}
-      {activeTab === 'templates' && (
-        <div className="space-y-6">
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Mis Actividades Maestras
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category Pill Switcher */}
-              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
-                <button
-                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'PAPELERIA'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  📦 Papelería Social
-                </button>
-                <button
-                  onClick={() => setTemplateFilterCategory('SERVICIO')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'SERVICIO'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  ✨ Stands & Servicios
-                </button>
-              </div>
-            </div>
-
-            {/* List of Templates for Selected Category */}
-            <div className="space-y-2.5">
-              {taskTemplates
-                .filter(t => t.category === templateFilterCategory)
-                .map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-bold text-[#332A28] text-sm block">
-                          {t.title}
-                        </span>
-                        {t.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block">
-                            {t.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
-                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
-                        {t.default_time ? ` (${t.default_time})` : ''}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteMasterTemplate(t.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la plantilla maestra"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* Add New Master Task */}
-            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
-              <div className="text-xs font-bold text-[#384C3A]">
-                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
-                    value={newTemplateTitle}
-                    onChange={e => {
-                      setNewTemplateTitle(e.target.value);
-                      setNewTemplateCategory(templateFilterCategory);
-                    }}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="Días antes (ej. 7)"
-                    value={newTemplateDays}
-                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                  <input
-                    type="time"
-                    placeholder="14:00"
-                    value={newTemplateTime}
-                    onChange={e => setNewTemplateTime(e.target.value)}
-                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Notas u observaciones (opcional)"
-                  value={newTemplateNotes}
-                  onChange={e => setNewTemplateNotes(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                />
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
-                >
-                  Guardar en Plantilla
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
       {/* TAB 3: CATÁLOGO DE ARTÍCULOS Y PRECIOS                   */}
       {/* ======================================================== */}
       {activeTab === 'catalog' && (
@@ -3117,7 +1942,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* ======================================================== */}
-      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
+      {/* TAB 4: CARGA AL AUTO (CHECKLIST OPERATIVO DÍA D)         */}
       {/* ======================================================== */}
       {activeTab === 'packing' && (
         <div className="space-y-6">
@@ -3199,36 +2024,38 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                           <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
                           <span>{formatDateMX(currentPackingOrder.event_date)}</span>
                         </span>
-                        <span>·</span>
-                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
+                        {currentPackingOrder.event_venue && (
+                          <span className="flex items-center space-x-1">
+                            <Building2 className="w-3.5 h-3.5 text-[#B88A82]" />
+                            <span>{currentPackingOrder.event_venue}</span>
+                          </span>
+                        )}
                       </div>
                     </div>
                   )}
 
-                  {/* Progress Indicator */}
+                  {/* Progress Card */}
                   <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-[#332A28]">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-[#332A28]">
                         Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
                       </span>
-                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
+                      <span className={`font-bold ${isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}`}>
                         {progressPct}% completado
                       </span>
                     </div>
-
-                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
+                    <div className="w-full bg-[#EAE3DA] h-2.5 rounded-full overflow-hidden">
                       <div
-                        className={`h-full transition-all duration-300 ${
+                        className={`h-full transition-all duration-300 rounded-full ${
                           isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
                         }`}
                         style={{ width: `${progressPct}%` }}
                       />
                     </div>
-
-                    {isAllPacked && (
-                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
+                    {isAllPacked && totalCount > 0 && (
+                      <div className="pt-2 text-center text-xs font-bold text-[#1EBE5D] flex items-center justify-center space-x-1">
+                        <Sparkles className="w-4 h-4" />
+                        <span>¡Vehículo 100% cargado! No falta nada para el evento. ¡Buen viaje al venue! 🚗💨</span>
                       </div>
                     )}
                   </div>
@@ -3237,70 +2064,75 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
             })()}
           </div>
 
-          {/* Checklist Items List */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+          {/* Checklist Items Grouped by Category */}
+          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-6">
+            <div className="flex items-center justify-between">
               <h3 className="font-serif text-lg font-bold text-[#332A28]">
                 Material, Estructuras & Herramientas a Subir
               </h3>
-              <span className="text-xs text-[#7D6F6B]">
-                Toca cada casilla conforme lo coloques en la cajuela
-              </span>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleResetPackingList}
+                  className="text-xs text-[#7D6F6B] hover:text-[#70443D] hover:underline cursor-pointer"
+                >
+                  Reiniciar lista
+                </button>
+                <span className="text-xs text-[#7D6F6B]">
+                  Toca cada casilla conforme lo coloques en la cajuela
+                </span>
+              </div>
             </div>
 
             {loadingPacking ? (
               <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Cargando checklist del auto...
+                Cargando lista de empaque...
               </div>
             ) : packingList.length === 0 ? (
               <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Selecciona un evento arriba para generar o visualizar su checklist de carga.
+                No hay elementos en el checklist. Selecciona un evento o agrega elementos abajo.
               </div>
             ) : (
-              <div className="space-y-2.5">
-                {packingList.map(it => (
+              <div className="space-y-3">
+                {packingList.map(item => (
                   <div
-                    key={it.id}
-                    onClick={() => handleTogglePackingItem(it.id)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
-                      it.packed
-                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
+                    key={item.id}
+                    onClick={() => handleTogglePackingItem(item.id, !item.packed)}
+                    className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                      item.packed
+                        ? 'bg-[#F2FAF4] border-[#BCE8CB] text-[#384C3A]'
+                        : 'bg-[#FCFAF7] border-[#EAE3DA] hover:border-[#9C665C] text-[#332A28]'
                     }`}
                   >
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
-                        it.packed
-                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
-                          : 'bg-[#FFFFFF] border-[#B88A82]'
-                      }`}>
-                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
+                    <div className="flex items-center space-x-3 min-w-0 flex-1">
+                      <div className="shrink-0 text-xl">
+                        {item.packed ? (
+                          <CheckCircle2 className="w-6 h-6 text-[#1EBE5D]" />
+                        ) : (
+                          <div className="w-6 h-6 rounded-lg border-2 border-[#D1C6BD] bg-[#FFFFFF]" />
+                        )}
                       </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
-                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
-                        }`}>
-                          {it.item_name}
+                      <div className="min-w-0">
+                        <span className={`text-sm font-bold block ${item.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'}`}>
+                          {item.name}
                         </span>
-                        {it.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block truncate">
-                            {it.notes}
+                        {item.notes && (
+                          <span className="text-[11px] text-[#7D6F6B] block">
+                            {item.notes}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
-                      }`}>
-                        {it.category || 'Equipo'}
+                    <div className="flex items-center space-x-2 shrink-0">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#FFFFFF] border border-[#EAE3DA] text-[#7D6F6B]">
+                        {item.category}
                       </span>
                       <button
-                        type="button"
-                        onClick={() => handleDeletePackingItem(it.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleDeletePackingItem(item.id);
+                        }}
+                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition"
                         title="Eliminar de la lista de carga"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -3311,31 +2143,30 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               </div>
             )}
 
-            {/* Formulario para Agregar Algo Extra al Auto */}
-            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
+            {/* Quick Add Custom Item */}
+            <form onSubmit={handleAddCustomPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
                 value={newPackingItemName}
                 onChange={e => setNewPackingItemName(e.target.value)}
-                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                className="flex-1 px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
               />
               <select
                 value={newPackingItemCategory}
                 onChange={e => setNewPackingItemCategory(e.target.value)}
-                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                className="px-3 py-2 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
               >
                 <option value="Mobiliario / Stand">Mobiliario / Stand</option>
                 <option value="Papelería">Papelería</option>
-                <option value="Herramientas">Herramientas</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Bebidas">Bebidas</option>
+                <option value="Herramientas & Fijación">Herramientas & Fijación</option>
                 <option value="Audio Guestbook">Audio Guestbook</option>
-                <option value="Extra">Extra</option>
+                <option value="Bebidas & Cristalería">Bebidas & Cristalería</option>
+                <option value="Emergencia">Emergencia</option>
               </select>
               <button
                 type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
+                className="px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 cursor-pointer shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Subir al Auto</span>
@@ -3346,7 +2177,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* ======================================================== */}
-      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
+      {/* TAB 5: MIS ACTIVIDADES (PLANTILLAS MAESTRAS DE TAREAS)   */}
       {/* ======================================================== */}
       {activeTab === 'templates' && (
         <div className="space-y-6">
@@ -3708,35 +2539,13 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     )}
                   </div>
 
-                  <div className="flex items-center flex-wrap gap-2">
+                  <div className="flex items-center space-x-2">
                     <button
                       onClick={() => setShowNewTaskRow(!showNewTaskRow)}
                       className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-semibold shadow-2xs transition cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Nueva Tarea</span>
-                    </button>
-                    <button
-                      onClick={() => handleApplyTemplatesToOrder(selectedOrder.id)}
-                      className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] text-xs font-semibold shadow-2xs transition cursor-pointer"
-                      title="Sincronizar tareas con mi plantilla maestra de actividades"
-                    >
-                      <ListTodo className="w-3.5 h-3.5 text-[#B88A82]" />
-                      <span>Cargar Plantilla</span>
-                    </button>
-                    <button
-                      onClick={() => {
-                        const orderId = selectedOrder.id;
-                        setSelectedPackingOrderId(orderId);
-                        loadOrderPackingList(orderId);
-                        setActiveTab('packing');
-                        setSelectedOrder(null);
-                      }}
-                      className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] text-xs font-semibold shadow-2xs transition cursor-pointer"
-                      title="Ver lista de carga de vehículo para el día del evento"
-                    >
-                      <Truck className="w-3.5 h-3.5 text-[#B88A82]" />
-                      <span>Carga al Auto</span>
                     </button>
                     <button
                       onClick={() => {
@@ -4001,382 +2810,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* ======================================================== */}
-      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
-      {/* ======================================================== */}
-      {activeTab === 'packing' && (
-        <div className="space-y-6">
-          {/* Header & Selector de Evento */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <Truck className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Checklist de Carga al Auto · Día D
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
-                  </p>
-                </div>
-              </div>
-
-              {/* Selector de Evento */}
-              <div className="flex items-center space-x-2">
-                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
-                  Evento:
-                </label>
-                <select
-                  value={selectedPackingOrderId}
-                  onChange={e => {
-                    setSelectedPackingOrderId(e.target.value);
-                    loadOrderPackingList(e.target.value);
-                  }}
-                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
-                >
-                  {orders.length === 0 ? (
-                    <option value="">No hay eventos activos</option>
-                  ) : (
-                    orders.map(o => (
-                      <option key={o.id} value={o.id}>
-                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Event Info & Progress Bar */}
-            {(() => {
-              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
-              const packedCount = packingList.filter(it => it.packed).length;
-              const totalCount = packingList.length;
-              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
-              const isAllPacked = totalCount > 0 && packedCount === totalCount;
-
-              return (
-                <div className="space-y-4">
-                  {currentPackingOrder && (
-                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-[#332A28] font-serif text-base">
-                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
-                        </span>
-                        <span>·</span>
-                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          {formatOrderFolio(currentPackingOrder.order_number)}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          currentPackingOrder.service_type === 'PAPELERIA'
-                            ? 'bg-[#F7EDEB] text-[#70443D]'
-                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
-                            ? 'bg-[#EBF2EB] text-[#384C3A]'
-                            : 'bg-[#F3EDE6] text-[#58352F]'
-                        }`}>
-                          {getServiceLabel(currentPackingOrder.service_type)}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
-                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
-                        </span>
-                        <span>·</span>
-                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress Indicator */}
-                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-[#332A28]">
-                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
-                      </span>
-                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
-                        {progressPct}% completado
-                      </span>
-                    </div>
-
-                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
-                        }`}
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-
-                    {isAllPacked && (
-                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Checklist Items List */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
-              <h3 className="font-serif text-lg font-bold text-[#332A28]">
-                Material, Estructuras & Herramientas a Subir
-              </h3>
-              <span className="text-xs text-[#7D6F6B]">
-                Toca cada casilla conforme lo coloques en la cajuela
-              </span>
-            </div>
-
-            {loadingPacking ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Cargando checklist del auto...
-              </div>
-            ) : packingList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Selecciona un evento arriba para generar o visualizar su checklist de carga.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {packingList.map(it => (
-                  <div
-                    key={it.id}
-                    onClick={() => handleTogglePackingItem(it.id)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
-                      it.packed
-                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
-                        it.packed
-                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
-                          : 'bg-[#FFFFFF] border-[#B88A82]'
-                      }`}>
-                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
-                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
-                        }`}>
-                          {it.item_name}
-                        </span>
-                        {it.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block truncate">
-                            {it.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
-                      }`}>
-                        {it.category || 'Equipo'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePackingItem(it.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la lista de carga"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Formulario para Agregar Algo Extra al Auto */}
-            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
-              <input
-                type="text"
-                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
-                value={newPackingItemName}
-                onChange={e => setNewPackingItemName(e.target.value)}
-                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-              />
-              <select
-                value={newPackingItemCategory}
-                onChange={e => setNewPackingItemCategory(e.target.value)}
-                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-              >
-                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
-                <option value="Papelería">Papelería</option>
-                <option value="Herramientas">Herramientas</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Audio Guestbook">Audio Guestbook</option>
-                <option value="Extra">Extra</option>
-              </select>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Subir al Auto</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
-      {/* ======================================================== */}
-      {activeTab === 'templates' && (
-        <div className="space-y-6">
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Mis Actividades Maestras
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category Pill Switcher */}
-              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
-                <button
-                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'PAPELERIA'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  📦 Papelería Social
-                </button>
-                <button
-                  onClick={() => setTemplateFilterCategory('SERVICIO')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'SERVICIO'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  ✨ Stands & Servicios
-                </button>
-              </div>
-            </div>
-
-            {/* List of Templates for Selected Category */}
-            <div className="space-y-2.5">
-              {taskTemplates
-                .filter(t => t.category === templateFilterCategory)
-                .map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-bold text-[#332A28] text-sm block">
-                          {t.title}
-                        </span>
-                        {t.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block">
-                            {t.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
-                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
-                        {t.default_time ? ` (${t.default_time})` : ''}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteMasterTemplate(t.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la plantilla maestra"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* Add New Master Task */}
-            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
-              <div className="text-xs font-bold text-[#384C3A]">
-                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
-                    value={newTemplateTitle}
-                    onChange={e => {
-                      setNewTemplateTitle(e.target.value);
-                      setNewTemplateCategory(templateFilterCategory);
-                    }}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="Días antes (ej. 7)"
-                    value={newTemplateDays}
-                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                  <input
-                    type="time"
-                    placeholder="14:00"
-                    value={newTemplateTime}
-                    onChange={e => setNewTemplateTime(e.target.value)}
-                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Notas u observaciones (opcional)"
-                  value={newTemplateNotes}
-                  onChange={e => setNewTemplateNotes(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                />
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
-                >
-                  Guardar en Plantilla
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
       {/* MODAL: REGISTRAR PAGO SPEI / ANTICIPO                    */}
       {/* ======================================================== */}
       {showPaymentModal && selectedOrder && (
@@ -4493,382 +2926,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* ======================================================== */}
-      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
-      {/* ======================================================== */}
-      {activeTab === 'packing' && (
-        <div className="space-y-6">
-          {/* Header & Selector de Evento */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <Truck className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Checklist de Carga al Auto · Día D
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
-                  </p>
-                </div>
-              </div>
-
-              {/* Selector de Evento */}
-              <div className="flex items-center space-x-2">
-                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
-                  Evento:
-                </label>
-                <select
-                  value={selectedPackingOrderId}
-                  onChange={e => {
-                    setSelectedPackingOrderId(e.target.value);
-                    loadOrderPackingList(e.target.value);
-                  }}
-                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
-                >
-                  {orders.length === 0 ? (
-                    <option value="">No hay eventos activos</option>
-                  ) : (
-                    orders.map(o => (
-                      <option key={o.id} value={o.id}>
-                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Event Info & Progress Bar */}
-            {(() => {
-              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
-              const packedCount = packingList.filter(it => it.packed).length;
-              const totalCount = packingList.length;
-              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
-              const isAllPacked = totalCount > 0 && packedCount === totalCount;
-
-              return (
-                <div className="space-y-4">
-                  {currentPackingOrder && (
-                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-[#332A28] font-serif text-base">
-                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
-                        </span>
-                        <span>·</span>
-                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          {formatOrderFolio(currentPackingOrder.order_number)}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          currentPackingOrder.service_type === 'PAPELERIA'
-                            ? 'bg-[#F7EDEB] text-[#70443D]'
-                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
-                            ? 'bg-[#EBF2EB] text-[#384C3A]'
-                            : 'bg-[#F3EDE6] text-[#58352F]'
-                        }`}>
-                          {getServiceLabel(currentPackingOrder.service_type)}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
-                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
-                        </span>
-                        <span>·</span>
-                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress Indicator */}
-                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-[#332A28]">
-                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
-                      </span>
-                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
-                        {progressPct}% completado
-                      </span>
-                    </div>
-
-                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
-                        }`}
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-
-                    {isAllPacked && (
-                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Checklist Items List */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
-              <h3 className="font-serif text-lg font-bold text-[#332A28]">
-                Material, Estructuras & Herramientas a Subir
-              </h3>
-              <span className="text-xs text-[#7D6F6B]">
-                Toca cada casilla conforme lo coloques en la cajuela
-              </span>
-            </div>
-
-            {loadingPacking ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Cargando checklist del auto...
-              </div>
-            ) : packingList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Selecciona un evento arriba para generar o visualizar su checklist de carga.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {packingList.map(it => (
-                  <div
-                    key={it.id}
-                    onClick={() => handleTogglePackingItem(it.id)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
-                      it.packed
-                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
-                        it.packed
-                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
-                          : 'bg-[#FFFFFF] border-[#B88A82]'
-                      }`}>
-                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
-                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
-                        }`}>
-                          {it.item_name}
-                        </span>
-                        {it.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block truncate">
-                            {it.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
-                      }`}>
-                        {it.category || 'Equipo'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePackingItem(it.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la lista de carga"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Formulario para Agregar Algo Extra al Auto */}
-            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
-              <input
-                type="text"
-                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
-                value={newPackingItemName}
-                onChange={e => setNewPackingItemName(e.target.value)}
-                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-              />
-              <select
-                value={newPackingItemCategory}
-                onChange={e => setNewPackingItemCategory(e.target.value)}
-                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-              >
-                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
-                <option value="Papelería">Papelería</option>
-                <option value="Herramientas">Herramientas</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Audio Guestbook">Audio Guestbook</option>
-                <option value="Extra">Extra</option>
-              </select>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Subir al Auto</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
-      {/* ======================================================== */}
-      {activeTab === 'templates' && (
-        <div className="space-y-6">
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Mis Actividades Maestras
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category Pill Switcher */}
-              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
-                <button
-                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'PAPELERIA'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  📦 Papelería Social
-                </button>
-                <button
-                  onClick={() => setTemplateFilterCategory('SERVICIO')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'SERVICIO'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  ✨ Stands & Servicios
-                </button>
-              </div>
-            </div>
-
-            {/* List of Templates for Selected Category */}
-            <div className="space-y-2.5">
-              {taskTemplates
-                .filter(t => t.category === templateFilterCategory)
-                .map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-bold text-[#332A28] text-sm block">
-                          {t.title}
-                        </span>
-                        {t.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block">
-                            {t.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
-                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
-                        {t.default_time ? ` (${t.default_time})` : ''}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteMasterTemplate(t.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la plantilla maestra"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* Add New Master Task */}
-            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
-              <div className="text-xs font-bold text-[#384C3A]">
-                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
-                    value={newTemplateTitle}
-                    onChange={e => {
-                      setNewTemplateTitle(e.target.value);
-                      setNewTemplateCategory(templateFilterCategory);
-                    }}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="Días antes (ej. 7)"
-                    value={newTemplateDays}
-                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                  <input
-                    type="time"
-                    placeholder="14:00"
-                    value={newTemplateTime}
-                    onChange={e => setNewTemplateTime(e.target.value)}
-                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Notas u observaciones (opcional)"
-                  value={newTemplateNotes}
-                  onChange={e => setNewTemplateNotes(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                />
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
-                >
-                  Guardar en Plantilla
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
       {/* MODAL: SUBIR DOCUMENTO A LA BÓVEDA                       */}
       {/* ======================================================== */}
       {showDocUploadModal && selectedOrder && (
@@ -4946,382 +3003,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   className="px-5 py-2.5 bg-[#332A28] hover:bg-[#58352F] text-[#FFFFFF] text-xs font-bold rounded-xl shadow-xs transition disabled:opacity-50"
                 >
                   Cargar a Bóveda
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
-      {/* ======================================================== */}
-      {activeTab === 'packing' && (
-        <div className="space-y-6">
-          {/* Header & Selector de Evento */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <Truck className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Checklist de Carga al Auto · Día D
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
-                  </p>
-                </div>
-              </div>
-
-              {/* Selector de Evento */}
-              <div className="flex items-center space-x-2">
-                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
-                  Evento:
-                </label>
-                <select
-                  value={selectedPackingOrderId}
-                  onChange={e => {
-                    setSelectedPackingOrderId(e.target.value);
-                    loadOrderPackingList(e.target.value);
-                  }}
-                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
-                >
-                  {orders.length === 0 ? (
-                    <option value="">No hay eventos activos</option>
-                  ) : (
-                    orders.map(o => (
-                      <option key={o.id} value={o.id}>
-                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Event Info & Progress Bar */}
-            {(() => {
-              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
-              const packedCount = packingList.filter(it => it.packed).length;
-              const totalCount = packingList.length;
-              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
-              const isAllPacked = totalCount > 0 && packedCount === totalCount;
-
-              return (
-                <div className="space-y-4">
-                  {currentPackingOrder && (
-                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-[#332A28] font-serif text-base">
-                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
-                        </span>
-                        <span>·</span>
-                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          {formatOrderFolio(currentPackingOrder.order_number)}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          currentPackingOrder.service_type === 'PAPELERIA'
-                            ? 'bg-[#F7EDEB] text-[#70443D]'
-                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
-                            ? 'bg-[#EBF2EB] text-[#384C3A]'
-                            : 'bg-[#F3EDE6] text-[#58352F]'
-                        }`}>
-                          {getServiceLabel(currentPackingOrder.service_type)}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
-                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
-                        </span>
-                        <span>·</span>
-                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress Indicator */}
-                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-[#332A28]">
-                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
-                      </span>
-                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
-                        {progressPct}% completado
-                      </span>
-                    </div>
-
-                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
-                        }`}
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-
-                    {isAllPacked && (
-                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Checklist Items List */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
-              <h3 className="font-serif text-lg font-bold text-[#332A28]">
-                Material, Estructuras & Herramientas a Subir
-              </h3>
-              <span className="text-xs text-[#7D6F6B]">
-                Toca cada casilla conforme lo coloques en la cajuela
-              </span>
-            </div>
-
-            {loadingPacking ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Cargando checklist del auto...
-              </div>
-            ) : packingList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Selecciona un evento arriba para generar o visualizar su checklist de carga.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {packingList.map(it => (
-                  <div
-                    key={it.id}
-                    onClick={() => handleTogglePackingItem(it.id)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
-                      it.packed
-                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
-                        it.packed
-                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
-                          : 'bg-[#FFFFFF] border-[#B88A82]'
-                      }`}>
-                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
-                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
-                        }`}>
-                          {it.item_name}
-                        </span>
-                        {it.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block truncate">
-                            {it.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
-                      }`}>
-                        {it.category || 'Equipo'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePackingItem(it.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la lista de carga"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Formulario para Agregar Algo Extra al Auto */}
-            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
-              <input
-                type="text"
-                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
-                value={newPackingItemName}
-                onChange={e => setNewPackingItemName(e.target.value)}
-                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-              />
-              <select
-                value={newPackingItemCategory}
-                onChange={e => setNewPackingItemCategory(e.target.value)}
-                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-              >
-                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
-                <option value="Papelería">Papelería</option>
-                <option value="Herramientas">Herramientas</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Audio Guestbook">Audio Guestbook</option>
-                <option value="Extra">Extra</option>
-              </select>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Subir al Auto</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
-      {/* ======================================================== */}
-      {activeTab === 'templates' && (
-        <div className="space-y-6">
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Mis Actividades Maestras
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category Pill Switcher */}
-              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
-                <button
-                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'PAPELERIA'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  📦 Papelería Social
-                </button>
-                <button
-                  onClick={() => setTemplateFilterCategory('SERVICIO')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'SERVICIO'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  ✨ Stands & Servicios
-                </button>
-              </div>
-            </div>
-
-            {/* List of Templates for Selected Category */}
-            <div className="space-y-2.5">
-              {taskTemplates
-                .filter(t => t.category === templateFilterCategory)
-                .map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-bold text-[#332A28] text-sm block">
-                          {t.title}
-                        </span>
-                        {t.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block">
-                            {t.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
-                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
-                        {t.default_time ? ` (${t.default_time})` : ''}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteMasterTemplate(t.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la plantilla maestra"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* Add New Master Task */}
-            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
-              <div className="text-xs font-bold text-[#384C3A]">
-                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
-                    value={newTemplateTitle}
-                    onChange={e => {
-                      setNewTemplateTitle(e.target.value);
-                      setNewTemplateCategory(templateFilterCategory);
-                    }}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="Días antes (ej. 7)"
-                    value={newTemplateDays}
-                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                  <input
-                    type="time"
-                    placeholder="14:00"
-                    value={newTemplateTime}
-                    onChange={e => setNewTemplateTime(e.target.value)}
-                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Notas u observaciones (opcional)"
-                  value={newTemplateNotes}
-                  onChange={e => setNewTemplateNotes(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                />
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
-                >
-                  Guardar en Plantilla
                 </button>
               </div>
             </form>
@@ -5413,382 +3094,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl shadow-xs transition"
                 >
                   Guardar Fechas
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
-      {/* ======================================================== */}
-      {activeTab === 'packing' && (
-        <div className="space-y-6">
-          {/* Header & Selector de Evento */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <Truck className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Checklist de Carga al Auto · Día D
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
-                  </p>
-                </div>
-              </div>
-
-              {/* Selector de Evento */}
-              <div className="flex items-center space-x-2">
-                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
-                  Evento:
-                </label>
-                <select
-                  value={selectedPackingOrderId}
-                  onChange={e => {
-                    setSelectedPackingOrderId(e.target.value);
-                    loadOrderPackingList(e.target.value);
-                  }}
-                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
-                >
-                  {orders.length === 0 ? (
-                    <option value="">No hay eventos activos</option>
-                  ) : (
-                    orders.map(o => (
-                      <option key={o.id} value={o.id}>
-                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Event Info & Progress Bar */}
-            {(() => {
-              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
-              const packedCount = packingList.filter(it => it.packed).length;
-              const totalCount = packingList.length;
-              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
-              const isAllPacked = totalCount > 0 && packedCount === totalCount;
-
-              return (
-                <div className="space-y-4">
-                  {currentPackingOrder && (
-                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-[#332A28] font-serif text-base">
-                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
-                        </span>
-                        <span>·</span>
-                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          {formatOrderFolio(currentPackingOrder.order_number)}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          currentPackingOrder.service_type === 'PAPELERIA'
-                            ? 'bg-[#F7EDEB] text-[#70443D]'
-                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
-                            ? 'bg-[#EBF2EB] text-[#384C3A]'
-                            : 'bg-[#F3EDE6] text-[#58352F]'
-                        }`}>
-                          {getServiceLabel(currentPackingOrder.service_type)}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
-                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
-                        </span>
-                        <span>·</span>
-                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress Indicator */}
-                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-[#332A28]">
-                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
-                      </span>
-                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
-                        {progressPct}% completado
-                      </span>
-                    </div>
-
-                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
-                        }`}
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-
-                    {isAllPacked && (
-                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Checklist Items List */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
-              <h3 className="font-serif text-lg font-bold text-[#332A28]">
-                Material, Estructuras & Herramientas a Subir
-              </h3>
-              <span className="text-xs text-[#7D6F6B]">
-                Toca cada casilla conforme lo coloques en la cajuela
-              </span>
-            </div>
-
-            {loadingPacking ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Cargando checklist del auto...
-              </div>
-            ) : packingList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Selecciona un evento arriba para generar o visualizar su checklist de carga.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {packingList.map(it => (
-                  <div
-                    key={it.id}
-                    onClick={() => handleTogglePackingItem(it.id)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
-                      it.packed
-                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
-                        it.packed
-                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
-                          : 'bg-[#FFFFFF] border-[#B88A82]'
-                      }`}>
-                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
-                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
-                        }`}>
-                          {it.item_name}
-                        </span>
-                        {it.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block truncate">
-                            {it.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
-                      }`}>
-                        {it.category || 'Equipo'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePackingItem(it.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la lista de carga"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Formulario para Agregar Algo Extra al Auto */}
-            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
-              <input
-                type="text"
-                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
-                value={newPackingItemName}
-                onChange={e => setNewPackingItemName(e.target.value)}
-                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-              />
-              <select
-                value={newPackingItemCategory}
-                onChange={e => setNewPackingItemCategory(e.target.value)}
-                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-              >
-                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
-                <option value="Papelería">Papelería</option>
-                <option value="Herramientas">Herramientas</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Audio Guestbook">Audio Guestbook</option>
-                <option value="Extra">Extra</option>
-              </select>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Subir al Auto</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
-      {/* ======================================================== */}
-      {activeTab === 'templates' && (
-        <div className="space-y-6">
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Mis Actividades Maestras
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category Pill Switcher */}
-              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
-                <button
-                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'PAPELERIA'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  📦 Papelería Social
-                </button>
-                <button
-                  onClick={() => setTemplateFilterCategory('SERVICIO')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'SERVICIO'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  ✨ Stands & Servicios
-                </button>
-              </div>
-            </div>
-
-            {/* List of Templates for Selected Category */}
-            <div className="space-y-2.5">
-              {taskTemplates
-                .filter(t => t.category === templateFilterCategory)
-                .map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-bold text-[#332A28] text-sm block">
-                          {t.title}
-                        </span>
-                        {t.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block">
-                            {t.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
-                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
-                        {t.default_time ? ` (${t.default_time})` : ''}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteMasterTemplate(t.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la plantilla maestra"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* Add New Master Task */}
-            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
-              <div className="text-xs font-bold text-[#384C3A]">
-                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
-                    value={newTemplateTitle}
-                    onChange={e => {
-                      setNewTemplateTitle(e.target.value);
-                      setNewTemplateCategory(templateFilterCategory);
-                    }}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="Días antes (ej. 7)"
-                    value={newTemplateDays}
-                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                  <input
-                    type="time"
-                    placeholder="14:00"
-                    value={newTemplateTime}
-                    onChange={e => setNewTemplateTime(e.target.value)}
-                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Notas u observaciones (opcional)"
-                  value={newTemplateNotes}
-                  onChange={e => setNewTemplateNotes(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                />
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
-                >
-                  Guardar en Plantilla
                 </button>
               </div>
             </form>
@@ -5954,382 +3259,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     Guardar
                   </button>
                 </div>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 4: CHECKLIST DE CARGA AL AUTO (DÍA D DEL EVENTO)     */}
-      {/* ======================================================== */}
-      {activeTab === 'packing' && (
-        <div className="space-y-6">
-          {/* Header & Selector de Evento */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <Truck className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Checklist de Carga al Auto · Día D
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Verificación operativa para subir todo el material y equipo al vehículo antes de salir al venue.
-                  </p>
-                </div>
-              </div>
-
-              {/* Selector de Evento */}
-              <div className="flex items-center space-x-2">
-                <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
-                  Evento:
-                </label>
-                <select
-                  value={selectedPackingOrderId}
-                  onChange={e => {
-                    setSelectedPackingOrderId(e.target.value);
-                    loadOrderPackingList(e.target.value);
-                  }}
-                  className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
-                >
-                  {orders.length === 0 ? (
-                    <option value="">No hay eventos activos</option>
-                  ) : (
-                    orders.map(o => (
-                      <option key={o.id} value={o.id}>
-                        {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
-            </div>
-
-            {/* Event Info & Progress Bar */}
-            {(() => {
-              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
-              const packedCount = packingList.filter(it => it.packed).length;
-              const totalCount = packingList.length;
-              const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
-              const isAllPacked = totalCount > 0 && packedCount === totalCount;
-
-              return (
-                <div className="space-y-4">
-                  {currentPackingOrder && (
-                    <div className="flex flex-wrap items-center justify-between text-xs text-[#7D6F6B] gap-2">
-                      <div className="flex items-center space-x-2">
-                        <span className="font-bold text-[#332A28] font-serif text-base">
-                          {currentPackingOrder.client_name} {currentPackingOrder.partner_name ? `& ${currentPackingOrder.partner_name}` : ''}
-                        </span>
-                        <span>·</span>
-                        <span className="font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          {formatOrderFolio(currentPackingOrder.order_number)}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          currentPackingOrder.service_type === 'PAPELERIA'
-                            ? 'bg-[#F7EDEB] text-[#70443D]'
-                            : currentPackingOrder.service_type === 'STANDS_EXPERIENCIAS'
-                            ? 'bg-[#EBF2EB] text-[#384C3A]'
-                            : 'bg-[#F3EDE6] text-[#58352F]'
-                        }`}>
-                          {getServiceLabel(currentPackingOrder.service_type)}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <span className="flex items-center space-x-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
-                          <span>{formatDateMX(currentPackingOrder.event_date)}</span>
-                        </span>
-                        <span>·</span>
-                        <span>{currentPackingOrder.event_venue || 'Sede por definir'}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Progress Indicator */}
-                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EAE3DA] space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold">
-                      <span className="text-[#332A28]">
-                        Estado del Cargamento: {packedCount} de {totalCount} cosas en el auto
-                      </span>
-                      <span className={isAllPacked ? 'text-[#1EBE5D]' : 'text-[#9C665C]'}>
-                        {progressPct}% completado
-                      </span>
-                    </div>
-
-                    <div className="w-full h-3 bg-[#EAE3DA] rounded-full overflow-hidden">
-                      <div
-                        className={`h-full transition-all duration-300 ${
-                          isAllPacked ? 'bg-[#1EBE5D]' : 'bg-[#9C665C]'
-                        }`}
-                        style={{ width: `${progressPct}%` }}
-                      />
-                    </div>
-
-                    {isAllPacked && (
-                      <div className="p-2.5 rounded-xl bg-[#E8F8EE] border border-[#BCE8CB] text-xs font-bold text-[#1EBE5D] flex items-center space-x-2">
-                        <CheckCircle2 className="w-4 h-4 shrink-0" />
-                        <span>¡Todo el material está arriba del carro! Listos para arrancar al venue sin olvidar nada. 🚗✨</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Checklist Items List */}
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
-              <h3 className="font-serif text-lg font-bold text-[#332A28]">
-                Material, Estructuras & Herramientas a Subir
-              </h3>
-              <span className="text-xs text-[#7D6F6B]">
-                Toca cada casilla conforme lo coloques en la cajuela
-              </span>
-            </div>
-
-            {loadingPacking ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Cargando checklist del auto...
-              </div>
-            ) : packingList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                Selecciona un evento arriba para generar o visualizar su checklist de carga.
-              </div>
-            ) : (
-              <div className="space-y-2.5">
-                {packingList.map(it => (
-                  <div
-                    key={it.id}
-                    onClick={() => handleTogglePackingItem(it.id)}
-                    className={`p-3.5 sm:p-4 rounded-2xl border transition flex items-center justify-between cursor-pointer select-none ${
-                      it.packed
-                        ? 'bg-[#F0FDF4] border-[#BCE8CB] text-[#384C3A]'
-                        : 'bg-[#FCFAF7] border-[#EAE3DA] text-[#332A28] hover:border-[#9C665C]'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-3.5 min-w-0 flex-1">
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 border transition ${
-                        it.packed
-                          ? 'bg-[#1EBE5D] border-[#1EBE5D] text-[#FFFFFF]'
-                          : 'bg-[#FFFFFF] border-[#B88A82]'
-                      }`}>
-                        {it.packed && <Check className="w-4 h-4 stroke-[3]" />}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <span className={`block text-xs sm:text-sm font-semibold truncate ${
-                          it.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'
-                        }`}>
-                          {it.item_name}
-                        </span>
-                        {it.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block truncate">
-                            {it.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0 ml-2" onClick={e => e.stopPropagation()}>
-                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                        it.packed ? 'bg-[#D5F2DF] text-[#1EBE5D]' : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
-                      }`}>
-                        {it.category || 'Equipo'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePackingItem(it.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la lista de carga"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Formulario para Agregar Algo Extra al Auto */}
-            <form onSubmit={handleAddPackingItem} className="pt-4 border-t border-[#F7F3EE] flex flex-col sm:flex-row items-center gap-2">
-              <input
-                type="text"
-                placeholder="Ej. Banquito, 2 manteles extras, Hielera grande..."
-                value={newPackingItemName}
-                onChange={e => setNewPackingItemName(e.target.value)}
-                className="flex-1 w-full px-3.5 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-              />
-              <select
-                value={newPackingItemCategory}
-                onChange={e => setNewPackingItemCategory(e.target.value)}
-                className="px-3 py-2.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-              >
-                <option value="Mobiliario / Stand">Mobiliario / Stand</option>
-                <option value="Papelería">Papelería</option>
-                <option value="Herramientas">Herramientas</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Bebidas">Bebidas</option>
-                <option value="Audio Guestbook">Audio Guestbook</option>
-                <option value="Extra">Extra</option>
-              </select>
-              <button
-                type="submit"
-                className="w-full sm:w-auto px-4 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs flex items-center justify-center space-x-1.5"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Subir al Auto</span>
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* TAB 5: MIS ACTIVIDADES MAESTRAS (Plantilla de Tareas)     */}
-      {/* ======================================================== */}
-      {activeTab === 'templates' && (
-        <div className="space-y-6">
-          <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F7F3EE]">
-              <div className="flex items-center space-x-3">
-                <div className="p-3 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA]">
-                  <ListTodo className="w-6 h-6 text-[#9C665C]" />
-                </div>
-                <div>
-                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#332A28]">
-                    Mis Actividades Maestras
-                  </h2>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    Define tus propias listas de actividades por defecto. Cada proyecto calculará sus fechas ideales según estos tiempos.
-                  </p>
-                </div>
-              </div>
-
-              {/* Category Pill Switcher */}
-              <div className="flex items-center bg-[#FCFAF7] p-1 rounded-xl border border-[#EAE3DA]">
-                <button
-                  onClick={() => setTemplateFilterCategory('PAPELERIA')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'PAPELERIA'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  📦 Papelería Social
-                </button>
-                <button
-                  onClick={() => setTemplateFilterCategory('SERVICIO')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    templateFilterCategory === 'SERVICIO'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28]'
-                  }`}
-                >
-                  ✨ Stands & Servicios
-                </button>
-              </div>
-            </div>
-
-            {/* List of Templates for Selected Category */}
-            <div className="space-y-2.5">
-              {taskTemplates
-                .filter(t => t.category === templateFilterCategory)
-                .map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-bold text-[#332A28] text-sm block">
-                          {t.title}
-                        </span>
-                        {t.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block">
-                            {t.notes}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
-                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
-                        {t.default_time ? ` (${t.default_time})` : ''}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteMasterTemplate(t.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la plantilla maestra"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            {/* Add New Master Task */}
-            <form onSubmit={handleAddMasterTemplate} className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#BCE8CB] space-y-3 mt-4">
-              <div className="text-xs font-bold text-[#384C3A]">
-                + Agregar Nueva Actividad Maestra para {templateFilterCategory === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Servicios'}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                <div className="sm:col-span-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej. Impresión de menús, Compra de hielo, Armado de vinil..."
-                    value={newTemplateTitle}
-                    onChange={e => {
-                      setNewTemplateTitle(e.target.value);
-                      setNewTemplateCategory(templateFilterCategory);
-                    }}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                  />
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    min={0}
-                    placeholder="Días antes (ej. 7)"
-                    value={newTemplateDays}
-                    onChange={e => setNewTemplateDays(parseInt(e.target.value, 10) || 0)}
-                    className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                  <input
-                    type="time"
-                    placeholder="14:00"
-                    value={newTemplateTime}
-                    onChange={e => setNewTemplateTime(e.target.value)}
-                    className="w-28 px-2 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Notas u observaciones (opcional)"
-                  value={newTemplateNotes}
-                  onChange={e => setNewTemplateNotes(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-[#FFFFFF] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                />
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto px-4 py-2 bg-[#1EBE5D] hover:bg-[#18A04E] text-[#FFFFFF] text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-2xs"
-                >
-                  Guardar en Plantilla
-                </button>
               </div>
             </form>
           </div>
