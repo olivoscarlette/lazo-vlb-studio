@@ -428,28 +428,116 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       return;
     }
     let text = '';
+    const folioStr = formatOrderFolio(order.order_number);
+    const eventDateStr = formatDateMX(order.event_date);
     if (type === 'anticipo') {
-      text = `¡Hola ${order.client_name}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nQueremos confirmar tu proyecto con folio *${order.order_number}* para su gran día. 💍\n\nPara apartar formalmente tu fecha en el taller de imprenta y asegurar el mobiliario, te recordamos que el anticipo es del 50%:\n💳 *Anticipo Requerido:* $${(order.total_amount * 0.5).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN.\n\nEn cuanto realices tu transferencia, por favor envíanos tu comprobante por aquí para agendar tu primera muestra personalizada. ¡Muchas gracias! 🌸`;
+      text = `¡Hola ${order.client_name}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nQueremos confirmar tu proyecto con folio *${folioStr}* para su gran día. 💍\n\nPara apartar formalmente tu fecha en el taller de imprenta y asegurar el mobiliario, te recordamos que el anticipo es del 50%:\n💳 *Anticipo Requerido:* $${(order.total_amount * 0.5).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN.\n\nEn cuanto realices tu transferencia, por favor envíanos tu comprobante por aquí para agendar tu primera muestra personalizada. ¡Muchas gracias! 🌸`;
     } else if (type === 'vobo') {
-      text = `¡Hola ${order.client_name}! 💌 Te saluda Scarlette de *Viva la Bride*.\n\n¡El diseño de tu papelería / proyecto *${order.order_number}* está listo para revisión!\nPor favor confírmanos tu VoBo (Visto Bueno) de ortografía, fechas y nombres para proceder al taller de impresión y sellado en lacre. ✨\n\n¡Quedamos atentas a tus comentarios!`;
+      text = `¡Hola ${order.client_name}! 💌 Te saluda Scarlette de *Viva la Bride*.\n\n¡El diseño de tu papelería / proyecto *${folioStr}* está listo para revisión!\nPor favor confírmanos tu VoBo (Visto Bueno) de ortografía, fechas y nombres para proceder al taller de impresión y sellado en lacre. ✨\n\n¡Quedamos atentas a tus comentarios!`;
     } else if (type === 'saldo') {
-      text = `¡Hola ${order.client_name}! 🥂 Te saluda Scarlette de *Viva la Bride*.\n\nTu pedido *${order.order_number}* está casi listo para entrega / montaje para el evento del ${order.event_date || 'próximo fin de semana'}.\n\nTe compartimos el recordatorio del saldo pendiente:\n🏷️ *Saldo Final:* $${(order.balance_due || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN.\n\n¡Muchísimas gracias y estamos muy emocionadas de ser parte de su gran día! 🤍`;
+      const balanceAmount = order.balance_pending || Math.max(0, order.total_amount - (order.total_paid || 0));
+      text = `¡Hola ${order.client_name}! 🥂 Te saluda Scarlette de *Viva la Bride*.\n\nTu pedido *${folioStr}* está casi listo para entrega / montaje para el evento del ${eventDateStr}.\n\nTe compartimos el recordatorio del saldo pendiente:\n🏷️ *Saldo Final:* $${balanceAmount.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN.\n\n¡Muchísimas gracias y estamos muy emocionadas de ser parte de su gran día! 🤍`;
     } else {
-      text = `¡Hola ${order.client_name}! ✨ Te saluda Scarlette de *Viva la Bride*. Me pongo en contacto contigo sobre tu proyecto *${order.order_number}*. ¿Cómo estás?`;
+      text = `¡Hola ${order.client_name}! ✨ Te saluda Scarlette de *Viva la Bride*. Me pongo en contacto contigo sobre tu proyecto *${folioStr}*. ¿Cómo estás?`;
     }
     openWhatsAppMessage(order.client_phone, text);
+  };
+
+  // ----------------------------------------
+  // FORMATTERS: FECHAS MX, FOLIOS & CATEGORÍAS
+  // ----------------------------------------
+  const formatDateMX = (dateStr?: string | null): string => {
+    if (!dateStr) return 'Por definir';
+    const clean = dateStr.trim();
+    const parts = clean.split('T')[0].split(' ')[0].split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts;
+      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const monthIdx = parseInt(month, 10) - 1;
+      const monthName = months[monthIdx] || month;
+      const rest = clean.includes('a las') ? ' ' + clean.substring(clean.indexOf('a las')) : '';
+      return `${parseInt(day, 10)} ${monthName} ${year}${rest}`;
+    }
+    return dateStr;
+  };
+
+  const getServiceLabel = (serviceType?: string): string => {
+    if (serviceType === 'STANDS_EXPERIENCIAS') return 'Stand bienvenida';
+    if (serviceType === 'MIXTO') return 'Papelería + Stand';
+    return 'Papelería social';
+  };
+
+  const formatOrderFolio = (folio?: string): string => {
+    if (!folio) return 'VLB-001';
+    return folio.replace(/^ORD-VLB-\d{4}-/, 'VLB-').replace(/^ORD-VLB-/, 'VLB-');
+  };
+
+  const getOrderTasks = (order: VlbOrder): VlbTask[] => {
+    if (order.tasks && order.tasks.length > 0) return order.tasks;
+    const evt = order.event_date ? new Date(order.event_date).getTime() : Date.now();
+    const defTasks: VlbTask[] = [];
+    const sType = order.service_type || 'PAPELERIA';
+    if (sType === 'PAPELERIA' || sType === 'MIXTO') {
+      defTasks.push({
+        id: 't_vobo_' + order.id,
+        title: 'Aprobación de Diseño Digital (VoBo)',
+        due_date: order.vobo_design_deadline || new Date(evt - 21 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'PAPELERIA',
+        notes: 'Límite previo a imprenta'
+      });
+      defTasks.push({
+        id: 't_entrega_' + order.id,
+        title: 'Entrega Física de Papelería',
+        due_date: order.physical_delivery_date || new Date(evt - 5 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'PAPELERIA',
+        notes: 'En atelier o envío a domicilio'
+      });
+    }
+    if (sType === 'STANDS_EXPERIENCIAS' || sType === 'MIXTO') {
+      defTasks.push({
+        id: 't_insumos_' + order.id,
+        title: 'Compra de bebidas e insumos',
+        due_date: new Date(evt - 7 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Licores, jarabes, botánicos o cristalería'
+      });
+      defTasks.push({
+        id: 't_vinil_' + order.id,
+        title: 'Armado e impresión de vinil',
+        due_date: new Date(evt - 4 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Barras, letreros o copas'
+      });
+      defTasks.push({
+        id: 't_montaje_' + order.id,
+        title: 'Montaje de Stands en el Venue',
+        due_date: order.stand_setup_date || order.event_date,
+        due_time: order.stand_setup_time || '14:00',
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Welcome Drinks, Audio Guestbook, Seating'
+      });
+    }
+    return defTasks;
   };
 
   // ----------------------------------------
   // CRM ORDERS & DOCUMENTS
   // ----------------------------------------
   const handleOpenOrderDetail = async (order: VlbOrder) => {
-    setSelectedOrder(order);
+    const tasks = getOrderTasks(order);
+    setSelectedOrder({ ...order, tasks });
     try {
       const res = await apiFetch(`/api/vlb/orders/${order.id}`);
       if (res.ok) {
         const data = await res.json();
-        setSelectedOrder(data.order);
+        const serverOrder = data.order || order;
+        const serverTasks = getOrderTasks(serverOrder);
+        setSelectedOrder({ ...serverOrder, tasks: serverTasks });
         setOrderPayments(data.payments || []);
         setOrderDocs(data.documents || []);
       }
@@ -670,62 +758,62 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         </div>
       )}
 
-      {/* Header Editorial Exclusivo Viva la Bride */}
-      <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-3xl p-6 sm:p-8 shadow-xs relative overflow-hidden">
-        <div className="absolute -right-16 -top-16 w-64 h-64 bg-[#EFE2DF]/50 rounded-full blur-3xl pointer-events-none" />
-        
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-          <div>
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#EFE2DF] text-[#70443D] text-[11px] font-semibold tracking-wider uppercase mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-[#B88A82]" />
-              <span>Atelier de Papelería Social & Experiencias de Bienvenida</span>
+      {/* Header Editorial Exclusivo Viva la Bride - Versión Compacta y Elegante */}
+      <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-2xl px-5 py-3.5 shadow-2xs relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
+          <div className="space-y-0.5">
+            <div className="flex items-center space-x-2">
+              <h1 className="font-serif text-xl sm:text-2xl text-[#332A28] font-bold tracking-tight">
+                Viva la Bride
+              </h1>
+              <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-[#EFE2DF] text-[#70443D] text-[10px] font-semibold uppercase tracking-wider">
+                <Sparkles className="w-3 h-3 text-[#B88A82]" />
+                <span>Atelier & Experiencias</span>
+              </span>
             </div>
-            <h1 className="font-serif text-3xl sm:text-4xl text-[#332A28] font-bold tracking-tight">
-              Viva la Bride
-            </h1>
-            <p className="text-sm text-[#7D6F6B] mt-1.5 max-w-2xl leading-relaxed">
-              Módulo integral para cotización ágil, catálogo editorial de papelería en algodón y lacre, stands nupciales, control de anticipos (50%) y bóveda de VoBo digital protegida.
+            <p className="text-xs text-[#7D6F6B]">
+              Cotizador ágil, papelería fina en algodón & lacre, stands de bienvenida, anticipos y VoBo digital.
             </p>
           </div>
 
-          {/* Quick Tab Switcher */}
-          <div className="flex flex-wrap items-center bg-[#FFFFFF]/90 backdrop-blur-xs p-1.5 rounded-2xl border border-[#EAE3DA] shadow-xs">
+          {/* Quick Tab Switcher Compacto */}
+          <div className="flex items-center bg-[#FFFFFF]/90 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs self-start sm:self-auto shrink-0">
             <button
               onClick={() => setActiveTab('quotes')}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeTab === 'quotes'
-                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
+                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
                   : 'text-[#7D6F6B] hover:text-[#332A28]'
               }`}
             >
-              <FileText className="w-4 h-4" />
+              <FileText className="w-3.5 h-3.5" />
               <span>Cotizador Rápido</span>
             </button>
             <button
               onClick={() => setActiveTab('orders')}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeTab === 'orders'
-                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
+                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
                   : 'text-[#7D6F6B] hover:text-[#332A28]'
               }`}
             >
-              <Users className="w-4 h-4" />
+              <Users className="w-3.5 h-3.5" />
               <span>CRM Parejas & Fechas</span>
               {orders.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full">
+                <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full">
                   {orders.length}
                 </span>
               )}
             </button>
             <button
               onClick={() => setActiveTab('catalog')}
-              className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition cursor-pointer ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeTab === 'catalog'
-                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
+                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
                   : 'text-[#7D6F6B] hover:text-[#332A28]'
               }`}
             >
-              <Package className="w-4 h-4" />
+              <Package className="w-3.5 h-3.5" />
               <span>Catálogo & Precios</span>
             </button>
           </div>
@@ -1112,7 +1200,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                           </div>
                         </td>
                         <td className="py-3.5 px-3 text-[#7D6F6B]">
-                          {q.event_date || 'A definir'}
+                          {formatDateMX(q.event_date)}
                         </td>
                         <td className="py-3.5 px-3 font-bold text-[#332A28]">
                           ${q.total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
@@ -1254,7 +1342,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-[#9C665C] bg-[#FAF6F2] px-2.5 py-1 rounded-full border border-[#EAE3DA]">
-                      {order.order_number}
+                      {formatOrderFolio(order.order_number)}
                     </span>
                     <span
                       className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
@@ -1279,7 +1367,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </h3>
                     <div className="flex items-center space-x-1.5 text-xs text-[#7D6F6B] mt-1">
                       <Calendar className="w-3.5 h-3.5 text-[#B88A82]" />
-                      <span>{order.event_date}</span>
+                      <span>{formatDateMX(order.event_date)}</span>
                       {order.event_venue && (
                         <>
                           <span>·</span>
@@ -1289,11 +1377,11 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </div>
                   </div>
 
-                  {/* DISTINCIÓN VISUAL CLARA DEL TIPO DE SERVICIO Y PRODUCTOS CONTRATADOS */}
+                  {/* DISTINCIÓN VISUAL CLARA: Papelería + Stand, Stand bienvenida, Papelería social */}
                   <div className="space-y-1.5 pt-1">
                     <div className="flex items-center justify-between">
                       <span
-                        className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        className={`inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           order.service_type === 'PAPELERIA'
                             ? 'bg-[#F7EDEB] text-[#70443D] border border-[#ECD9D5]'
                             : order.service_type === 'STANDS_EXPERIENCIAS'
@@ -1302,13 +1390,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                         }`}
                       >
                         <Tag className="w-3 h-3 mr-0.5" />
-                        <span>
-                          {order.service_type === 'PAPELERIA'
-                            ? 'Papelería Social Fina'
-                            : order.service_type === 'STANDS_EXPERIENCIAS'
-                            ? 'Stands & Experiencias'
-                            : 'Papelería + Stands'}
-                        </span>
+                        <span>{getServiceLabel(order.service_type)}</span>
                       </span>
                     </div>
 
@@ -1332,55 +1414,41 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                           )}
                         </>
                       ) : (
-                        <span className="text-[10px] text-[#7D6F6B] italic">Sin detalle de artículos</span>
+                        <span className="text-[10px] text-[#7D6F6B] italic">Proyecto personalizado</span>
                       )}
                     </div>
                   </div>
 
-                  {/* TAREAS & FECHAS CRÍTICAS OPERATIVAS (ADAPTADAS A SERVICIOS O PAPELERÍA) */}
-                  <div className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-1.5 text-[11px]">
-                    <div className="flex items-center justify-between text-[#7D6F6B] pb-1 border-b border-[#F0EAE4]">
-                      <div className="flex items-center space-x-1 font-semibold text-[#332A28]">
-                        <ListTodo className="w-3.5 h-3.5 text-[#B88A82]" />
-                        <span>Tareas & Logística</span>
-                      </div>
-                      {order.tasks && order.tasks.length > 0 && (
-                        <span className="text-[10px] font-bold text-[#9C665C]">
-                          {order.tasks.filter(t => t.completed).length}/{order.tasks.length} listas
-                        </span>
-                      )}
-                    </div>
+                  {/* TAREAS & FECHAS CRÍTICAS OPERATIVAS (Garantizadas en todas las tarjetas) */}
+                  {(() => {
+                    const cardTasks = getOrderTasks(order);
+                    return (
+                      <div className="p-3 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-1.5 text-[11px]">
+                        <div className="flex items-center justify-between text-[#7D6F6B] pb-1 border-b border-[#F0EAE4]">
+                          <div className="flex items-center space-x-1 font-semibold text-[#332A28]">
+                            <ListTodo className="w-3.5 h-3.5 text-[#B88A82]" />
+                            <span>Tareas & Logística</span>
+                          </div>
+                          <span className="text-[10px] font-bold text-[#9C665C]">
+                            {cardTasks.filter(t => t.completed).length}/{cardTasks.length} listas
+                          </span>
+                        </div>
 
-                    {order.tasks && order.tasks.length > 0 ? (
-                      <div className="space-y-1">
-                        {order.tasks.slice(0, 3).map(task => (
-                          <div key={task.id} className="flex items-center justify-between text-[11px]">
-                            <span className={`truncate max-w-[170px] ${task.completed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28] font-medium'}`}>
-                              {task.completed ? '✓ ' : '• '}{task.title}
-                            </span>
-                            <span className="text-[10px] font-bold text-[#9C665C] shrink-0 ml-1">
-                              {task.due_date || 'Sin fecha'}
-                            </span>
-                          </div>
-                        ))}
+                        <div className="space-y-1">
+                          {cardTasks.slice(0, 3).map(task => (
+                            <div key={task.id} className="flex items-center justify-between text-[11px]">
+                              <span className={`truncate max-w-[170px] ${task.completed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28] font-medium'}`}>
+                                {task.completed ? '✓ ' : '• '}{task.title}
+                              </span>
+                              <span className="text-[10px] font-bold text-[#9C665C] shrink-0 ml-1">
+                                {formatDateMX(task.due_date)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ) : (
-                      <div className="space-y-1">
-                        {order.service_type !== 'STANDS_EXPERIENCIAS' && (
-                          <div className="flex items-center justify-between text-[#7D6F6B]">
-                            <span>Entrega Papelería:</span>
-                            <span className="font-bold text-[#332A28]">{order.physical_delivery_date || 'Por definir'}</span>
-                          </div>
-                        )}
-                        {order.service_type !== 'PAPELERIA' && (
-                          <div className="flex items-center justify-between text-[#7D6F6B]">
-                            <span>Montaje Stands:</span>
-                            <span className="font-bold text-[#70443D]">{order.stand_setup_date || order.event_date}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Footer Financiero */}
@@ -1611,7 +1679,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 <div>
                   <div className="flex items-center space-x-2">
                     <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#FAF6F2] text-[#9C665C] border border-[#EAE3DA]">
-                      {selectedOrder.order_number}
+                      {formatOrderFolio(selectedOrder.order_number)}
                     </span>
                     <span
                       className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
@@ -1627,7 +1695,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     {selectedOrder.client_name} {selectedOrder.partner_name ? `& ${selectedOrder.partner_name}` : ''}
                   </h2>
                   <p className="text-xs text-[#7D6F6B] mt-0.5">
-                    {selectedOrder.event_venue || 'Sede sin definir'} · Evento el {selectedOrder.event_date}
+                    {selectedOrder.event_venue || 'Sede sin definir'} · Evento el {formatDateMX(selectedOrder.event_date)}
                   </p>
                 </div>
                 <button
@@ -1684,19 +1752,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </h4>
                   </div>
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                       selectedOrder.service_type === 'PAPELERIA'
-                        ? 'bg-[#F7EDEB] text-[#70443D]'
+                        ? 'bg-[#F7EDEB] text-[#70443D] border border-[#ECD9D5]'
                         : selectedOrder.service_type === 'STANDS_EXPERIENCIAS'
-                        ? 'bg-[#EBF2EB] text-[#384C3A]'
-                        : 'bg-[#F3EDE6] text-[#58352F]'
+                        ? 'bg-[#EBF2EB] text-[#384C3A] border border-[#D3E0D3]'
+                        : 'bg-[#F3EDE6] text-[#58352F] border border-[#E0D4CE]'
                     }`}
                   >
-                    {selectedOrder.service_type === 'PAPELERIA'
-                      ? 'Papelería Social'
-                      : selectedOrder.service_type === 'STANDS_EXPERIENCIAS'
-                      ? 'Stands & Servicios'
-                      : 'Papelería + Stands'}
+                    {getServiceLabel(selectedOrder.service_type)}
                   </span>
                 </div>
 
@@ -1786,7 +1850,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             {p.payment_type === 'ANTICIPO_50' ? 'Anticipo 50%' : p.payment_type} · {p.payment_method}
                           </div>
                           <div className="text-[11px] text-[#7D6F6B]">
-                            {p.payment_date} {p.reference_num ? `· Ref: ${p.reference_num}` : ''}
+                            {formatDateMX(p.payment_date)} {p.reference_num ? `· Ref: ${p.reference_num}` : ''}
                           </div>
                         </div>
                         <span className="font-bold text-[#384C3A] text-sm">
@@ -1935,7 +1999,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             {task.category === 'PAPELERIA' ? 'Papelería' : 'Servicio'}
                           </span>
                           <span className="font-bold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-lg text-[11px]">
-                            {task.due_date || 'Sin fecha'}
+                            {formatDateMX(task.due_date)}
                           </span>
                           <button
                             type="button"
@@ -2000,7 +2064,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             {doc.category}
                           </span>
                           <span className="text-[10px] text-[#7D6F6B]">
-                            {(doc.file_size / 1024).toFixed(1)} KB · {doc.created_at.split('T')[0]}
+                            {(doc.file_size / 1024).toFixed(1)} KB · {formatDateMX(doc.created_at)}
                           </span>
                         </div>
 

@@ -486,10 +486,9 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
       return res.status(404).json({ error: 'Cotización no encontrada.' });
     }
 
-    const currentYear = new Date().getFullYear();
-    const countRow = db.prepare("SELECT COUNT(*) as count FROM vlb_orders WHERE order_number LIKE ?").get(`ORD-VLB-${currentYear}-%`) as { count: number };
+    const countRow = db.prepare("SELECT COUNT(*) as count FROM vlb_orders").get() as { count: number };
     const nextSeq = String(countRow.count + 1).padStart(3, '0');
-    const order_number = `ORD-VLB-${currentYear}-${nextSeq}`;
+    const order_number = `VLB-${nextSeq}`;
 
     const orderId = 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     const now = new Date().toISOString();
@@ -629,6 +628,104 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
 // 3. CRM ORDERS ROUTES (Parejas & Operación)
 // ==========================================
 
+function enrichVlbOrder(o: any) {
+  let items: any[] = [];
+  try {
+    if (o.items_json) {
+      items = JSON.parse(o.items_json);
+    } else if (o.quote_id) {
+      items = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ? ORDER BY sort_order ASC').all(o.quote_id);
+      db.prepare('UPDATE vlb_orders SET items_json = ? WHERE id = ?').run(JSON.stringify(items), o.id);
+    }
+  } catch {}
+
+  let service_type = o.service_type;
+  if (!service_type) {
+    const hasPap = items.some(i => i.category === 'PAPELERIA');
+    const hasStands = items.some(i => i.category === 'STANDS_EXPERIENCIAS');
+    service_type = (hasPap && hasStands) ? 'MIXTO' : hasStands ? 'STANDS_EXPERIENCIAS' : 'PAPELERIA';
+    try {
+      db.prepare('UPDATE vlb_orders SET service_type = ? WHERE id = ?').run(service_type, o.id);
+    } catch {}
+  }
+
+  let tasks: any[] = [];
+  try {
+    if (o.tasks_json) {
+      tasks = JSON.parse(o.tasks_json);
+    }
+  } catch {}
+
+  if (!tasks || tasks.length === 0) {
+    const evt = o.event_date ? new Date(o.event_date).getTime() : Date.now();
+    if (service_type === 'PAPELERIA' || service_type === 'MIXTO') {
+      tasks.push({
+        id: 't_vobo_' + o.id,
+        title: 'Aprobación de Diseño Digital (VoBo)',
+        due_date: o.vobo_design_deadline || new Date(evt - 21 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'PAPELERIA',
+        notes: 'Fecha límite previa a entrar a imprenta'
+      });
+      tasks.push({
+        id: 't_entrega_' + o.id,
+        title: 'Entrega Física de Papelería',
+        due_date: o.physical_delivery_date || new Date(evt - 5 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'PAPELERIA',
+        notes: 'En atelier o envío a domicilio'
+      });
+    }
+    if (service_type === 'STANDS_EXPERIENCIAS' || service_type === 'MIXTO') {
+      tasks.push({
+        id: 't_insumos_' + o.id,
+        title: 'Compra de bebidas e insumos',
+        due_date: new Date(evt - 7 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Licores, jarabes, botánicos o cristalería'
+      });
+      tasks.push({
+        id: 't_vinil_' + o.id,
+        title: 'Armado e impresión de vinil',
+        due_date: new Date(evt - 4 * 86400000).toISOString().split('T')[0],
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Barras, letreros o copas'
+      });
+      tasks.push({
+        id: 't_montaje_' + o.id,
+        title: 'Montaje de Stands en el Venue',
+        due_date: o.stand_setup_date || o.event_date,
+        due_time: o.stand_setup_time || '14:00',
+        completed: false,
+        category: 'SERVICIO',
+        notes: 'Welcome Drinks, Audio Guestbook, Seating'
+      });
+    }
+    try {
+      db.prepare('UPDATE vlb_orders SET tasks_json = ? WHERE id = ?').run(JSON.stringify(tasks), o.id);
+    } catch {}
+  }
+
+  // Ensure clean, elegant folio
+  let cleanOrderNumber = o.order_number;
+  if (cleanOrderNumber && cleanOrderNumber.startsWith('ORD-VLB-')) {
+    cleanOrderNumber = cleanOrderNumber.replace(/^ORD-VLB-\d{4}-/, 'VLB-');
+    try {
+      db.prepare('UPDATE vlb_orders SET order_number = ? WHERE id = ?').run(cleanOrderNumber, o.id);
+    } catch {}
+  }
+
+  return {
+    ...o,
+    order_number: cleanOrderNumber,
+    service_type,
+    items,
+    tasks
+  };
+}
+
 // GET /api/vlb/orders - List all CRM orders
 router.get('/orders', (req, res) => {
   try {
@@ -661,86 +758,7 @@ router.get('/orders', (req, res) => {
     query += ' ORDER BY o.event_date ASC, o.created_at DESC';
     const rawOrders = db.prepare(query).all(...params) as any[];
 
-    const orders = rawOrders.map(o => {
-      let items: any[] = [];
-      try {
-        if (o.items_json) {
-          items = JSON.parse(o.items_json);
-        } else if (o.quote_id) {
-          items = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ? ORDER BY sort_order ASC').all(o.quote_id);
-        }
-      } catch {}
-
-      let service_type = o.service_type;
-      if (!service_type) {
-        const hasPap = items.some(i => i.category === 'PAPELERIA');
-        const hasStands = items.some(i => i.category === 'STANDS_EXPERIENCIAS');
-        service_type = (hasPap && hasStands) ? 'MIXTO' : hasStands ? 'STANDS_EXPERIENCIAS' : 'PAPELERIA';
-      }
-
-      let tasks: any[] = [];
-      try {
-        if (o.tasks_json) {
-          tasks = JSON.parse(o.tasks_json);
-        }
-      } catch {}
-
-      if (tasks.length === 0) {
-        const evt = o.event_date ? new Date(o.event_date).getTime() : Date.now();
-        if (service_type === 'PAPELERIA' || service_type === 'MIXTO') {
-          tasks.push({
-            id: 't_vobo_' + o.id,
-            title: 'Aprobación de Diseño Digital (VoBo)',
-            due_date: o.vobo_design_deadline || new Date(evt - 21 * 86400000).toISOString().split('T')[0],
-            completed: false,
-            category: 'PAPELERIA',
-            notes: 'Fecha límite previa a entrar a imprenta'
-          });
-          tasks.push({
-            id: 't_entrega_' + o.id,
-            title: 'Entrega Física de Papelería',
-            due_date: o.physical_delivery_date || new Date(evt - 5 * 86400000).toISOString().split('T')[0],
-            completed: false,
-            category: 'PAPELERIA',
-            notes: 'En atelier o envío a domicilio'
-          });
-        }
-        if (service_type === 'STANDS_EXPERIENCIAS' || service_type === 'MIXTO') {
-          tasks.push({
-            id: 't_insumos_' + o.id,
-            title: 'Compra de bebidas e insumos',
-            due_date: new Date(evt - 7 * 86400000).toISOString().split('T')[0],
-            completed: false,
-            category: 'SERVICIO',
-            notes: 'Licores, jarabes, botánicos o cristalería'
-          });
-          tasks.push({
-            id: 't_vinil_' + o.id,
-            title: 'Armado e impresión de vinil',
-            due_date: new Date(evt - 4 * 86400000).toISOString().split('T')[0],
-            completed: false,
-            category: 'SERVICIO',
-            notes: 'Barras, letreros o copas'
-          });
-          tasks.push({
-            id: 't_montaje_' + o.id,
-            title: 'Montaje de Stands en el Venue',
-            due_date: o.stand_setup_date || o.event_date,
-            due_time: o.stand_setup_time || '14:00',
-            completed: false,
-            category: 'SERVICIO',
-            notes: 'Welcome Drinks, Audio Guestbook, Seating'
-          });
-        }
-      }
-
-      return {
-        ...o,
-        service_type,
-        items,
-        tasks
-      };
-    });
+    const orders = rawOrders.map(o => enrichVlbOrder(o));
 
     res.json({ orders });
   } catch (err: any) {
@@ -752,10 +770,12 @@ router.get('/orders', (req, res) => {
 router.get('/orders/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const order = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(id) as any;
-    if (!order) {
+    const rawOrder = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(id) as any;
+    if (!rawOrder) {
       return res.status(404).json({ error: 'Pedido / Pareja no encontrada.' });
     }
+
+    const order = enrichVlbOrder(rawOrder);
 
     const payments = db.prepare(`
       SELECT * FROM vlb_payments
@@ -770,41 +790,16 @@ router.get('/orders/:id', (req, res) => {
     `).all(id);
 
     let quote = null;
-    let quoteItems: any[] = [];
     if (order.quote_id) {
       quote = db.prepare('SELECT * FROM vlb_quotes WHERE id = ?').get(order.quote_id);
-      quoteItems = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ? ORDER BY sort_order ASC').all(order.quote_id);
-    } else if (order.items_json) {
-      try {
-        quoteItems = JSON.parse(order.items_json);
-      } catch {}
     }
-
-    let service_type = order.service_type;
-    if (!service_type) {
-      const hasPap = quoteItems.some(i => i.category === 'PAPELERIA');
-      const hasStands = quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS');
-      service_type = (hasPap && hasStands) ? 'MIXTO' : hasStands ? 'STANDS_EXPERIENCIAS' : 'PAPELERIA';
-    }
-
-    let tasks: any[] = [];
-    try {
-      if (order.tasks_json) {
-        tasks = JSON.parse(order.tasks_json);
-      }
-    } catch {}
 
     res.json({
-      order: {
-        ...order,
-        service_type,
-        items: quoteItems,
-        tasks
-      },
+      order,
       payments,
       documents,
       quote,
-      quoteItems
+      quoteItems: order.items || []
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al obtener detalle del proyecto.' });
@@ -855,10 +850,9 @@ router.post('/orders', (req, res) => {
       return res.status(400).json({ error: 'Nombre de la clienta y fecha del evento son requeridos.' });
     }
 
-    const currentYear = new Date().getFullYear();
-    const countRow = db.prepare("SELECT COUNT(*) as count FROM vlb_orders WHERE order_number LIKE ?").get(`ORD-VLB-${currentYear}-%`) as { count: number };
+    const countRow = db.prepare("SELECT COUNT(*) as count FROM vlb_orders").get() as { count: number };
     const nextSeq = String(countRow.count + 1).padStart(3, '0');
-    const order_number = `ORD-VLB-${currentYear}-${nextSeq}`;
+    const order_number = `VLB-${nextSeq}`;
 
     const id = 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     const total = Number(total_amount) || 0;
