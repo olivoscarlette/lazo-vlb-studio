@@ -213,25 +213,14 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
 
   const totalCalculated = quote ? quote.total : (papeleriaSubtotal + serviciosSubtotal);
 
-  // Cálculo de anticipo / separación según partidas contratadas
-  let downPaymentRequired = 0;
-  let papeleriaDownPayment = 0;
-  let serviciosDownPayment = 0;
+  // Regla estricta: uno u otro (Servicios = $1,000 | Papelería = 50%)
+  const isServiceProposal = hasServicios;
+  const downPaymentRequired = quote?.down_payment_amount && quote.down_payment_amount > 0
+    ? quote.down_payment_amount
+    : isServiceProposal
+    ? Math.min(1000, totalCalculated)
+    : totalCalculated * 0.5;
 
-  if (hasPapeleria && hasServicios) {
-    papeleriaDownPayment = papeleriaSubtotal * 0.5;
-    serviciosDownPayment = Math.min(1000, serviciosSubtotal);
-    downPaymentRequired = papeleriaDownPayment + serviciosDownPayment;
-  } else if (hasServicios) {
-    serviciosDownPayment = Math.min(1000, serviciosSubtotal);
-    downPaymentRequired = serviciosDownPayment;
-  } else {
-    papeleriaDownPayment = papeleriaSubtotal * 0.5;
-    downPaymentRequired = papeleriaDownPayment;
-  }
-
-  const papeleriaBalance = Math.max(0, papeleriaSubtotal - papeleriaDownPayment);
-  const serviciosBalance = Math.max(0, serviciosSubtotal - serviciosDownPayment);
   const balancePending = Math.max(0, totalCalculated - downPaymentRequired);
 
   if (loading) {
@@ -430,29 +419,27 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
             {/* ESQUEMA EXACTO DE SEPARACIÓN Y LIQUIDACIÓN */}
             <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-[#EAD2D0] space-y-3 mt-3">
               <div className="flex justify-between items-center text-sm font-bold text-[#70443D] pb-2 border-b border-[#EAE3DA]">
-                <span>Anticipo / Separación Requerida para Apartar:</span>
+                <span>{isServiceProposal ? 'Separación Requerida para Apartar:' : 'Anticipo Requerido (50%):'}</span>
                 <span className="text-base text-[#C83460]">
                   ${downPaymentRequired.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                 </span>
               </div>
 
               <div className="space-y-2 text-xs text-[#58352F] leading-relaxed">
-                {hasServicios && (
+                {isServiceProposal ? (
                   <div className="flex items-start space-x-2">
-                    <span className="font-bold shrink-0">✨ Stands & Experiencias:</span>
+                    <span className="font-bold shrink-0">✨ Stands & Servicios:</span>
                     <span>
-                      Separación con <strong>${serviciosDownPayment.toLocaleString('es-MX')} MXN</strong>.
-                      El saldo restante de servicios (<strong>${serviciosBalance.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong>) se liquida <strong>10 días antes del evento</strong>.
+                      Separación fija de <strong>$1,000 MXN</strong>.
+                      El saldo restante (<strong>${balancePending.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong>) se liquida <strong>10 días antes del evento</strong>.
                     </span>
                   </div>
-                )}
-
-                {hasPapeleria && (
+                ) : (
                   <div className="flex items-start space-x-2">
                     <span className="font-bold shrink-0">📦 Papelería Social:</span>
                     <span>
-                      Anticipo del <strong>50% (${papeleriaDownPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })})</strong> para apartar taller de imprenta.
-                      El saldo restante (<strong>${papeleriaBalance.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong>) <strong>se liquida al entregar el pedido o al programar el envío</strong>.
+                      Anticipo del <strong>50% (${downPaymentRequired.toLocaleString('es-MX', { minimumFractionDigits: 2 })})</strong> para apartar taller de imprenta.
+                      El saldo restante (<strong>${balancePending.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</strong>) <strong>se liquida al entregar el pedido o al programar el envío</strong>.
                     </span>
                   </div>
                 )}

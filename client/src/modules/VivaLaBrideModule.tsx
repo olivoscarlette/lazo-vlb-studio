@@ -57,6 +57,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   // Navigation Tabs: 'quotes' | 'orders' | 'packing' | 'templates' | 'catalog'
   const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog' | 'packing' | 'templates'>('quotes');
   const [quoteDiscountPct, setQuoteDiscountPct] = useState<number>(0);
+  const [depositMode, setDepositMode] = useState<'AUTO' | 'SERVICIO' | 'PAPELERIA'>('AUTO');
 
   // Packing Checklist State (Día del Evento / Packing al Auto)
   const [selectedPackingOrderId, setSelectedPackingOrderId] = useState<string>('');
@@ -499,19 +500,18 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const quoteTotal = Math.max(0, quoteSubtotal - quoteDiscountAmount);
 
   // Reglas de negocio Viva la Bride:
-  // - Servicios/Stands: separación fija de $1,000 (saldo se liquida 10 días antes del evento).
-  // - Papelería social: anticipo 50% (saldo se liquida al entregar o programar envío).
+  // Es uno u otro:
+  // - Si es Servicio/Stand: separación fija de $1,000 (saldo se liquida 10 días antes del evento).
+  // - Si es Papelería Social: anticipo del 50% (saldo se liquida al entregar o programar envío).
   const stationeryItems = quoteItems.filter(i => i.category === 'PAPELERIA');
   const servicesItems = quoteItems.filter(i => i.category === 'STANDS_EXPERIENCIAS' || i.category === 'SERVICIOS_DIGITALES');
   const hasStationery = stationeryItems.length > 0;
   const hasServices = servicesItems.length > 0;
-  const stationeryTotal = stationeryItems.reduce((acc, curr) => acc + curr.total_price, 0);
-  const servicesTotal = servicesItems.reduce((acc, curr) => acc + curr.total_price, 0);
+
+  const isServiceQuote = depositMode === 'SERVICIO' ? true : depositMode === 'PAPELERIA' ? false : hasServices;
 
   let quoteDownPayment = 0;
-  if (hasStationery && hasServices) {
-    quoteDownPayment = (stationeryTotal * 0.5) + Math.min(1000, servicesTotal);
-  } else if (hasServices) {
+  if (isServiceQuote) {
     quoteDownPayment = Math.min(1000, quoteTotal);
   } else {
     quoteDownPayment = quoteTotal * 0.5;
@@ -620,6 +620,62 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     }
   };
 
+  const handleDeleteQuote = async (quoteId: string, quoteNumber?: string) => {
+    if (!window.confirm(`¿Estás segura de eliminar la cotización ${quoteNumber || ''}? Esta acción no se puede deshacer.`)) return;
+    try {
+      const res = await apiFetch(`/api/vlb/quotes/${quoteId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al eliminar cotización.');
+      showToast('Cotización eliminada correctamente.');
+      loadData();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string, clientName?: string) => {
+    if (!window.confirm(`¿Estás segura de eliminar el proyecto de ${clientName || 'esta pareja'}? Se eliminará de la lista, pagos y logística.`)) return;
+    try {
+      const res = await apiFetch(`/api/vlb/orders/${orderId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al eliminar proyecto.');
+      showToast('Proyecto eliminado correctamente.');
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder(null);
+      }
+      loadData();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!window.confirm('¿Deseas eliminar este registro de pago? Los saldos se recalcularán automáticamente.')) return;
+    try {
+      const res = await apiFetch(`/api/vlb/payments/${paymentId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al eliminar el pago.');
+      showToast('Pago eliminado y saldos recalculados.');
+      if (selectedOrder) {
+        handleOpenOrderDrawer(selectedOrder);
+      }
+      loadData();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    if (!window.confirm('¿Deseas eliminar este documento?')) return;
+    try {
+      const res = await apiFetch(`/api/vlb/documents/${docId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Error al eliminar el documento.');
+      showToast('Documento eliminado.');
+      if (selectedOrder) {
+        handleOpenOrderDrawer(selectedOrder);
+      }
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
   // ----------------------------------------
   // WHATSAPP DIRECT INTEGRATION (SIN API)
   // ----------------------------------------
@@ -658,7 +714,11 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const proposalUrl = quote ? `${window.location.origin}/vlb/propuesta/${quote.id}` : '';
     const proposalLinkText = proposalUrl ? `\n\n📄 *Liga de propuesta para revisar, descargar PDF y firmar en línea:*\n${proposalUrl}\n` : '';
 
-    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nTe comparto el detalle de tu propuesta editorial (*${folio}*):\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n✨ *Artículos & Experiencias seleccionadas:*\n${itemsList || 'Personalizado'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *Separación / Anticipo:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${proposalLinkText}\n*Condiciones de Pago:*\n• Servicios & Stands: Separación $1,000 MXN; el saldo se liquida 10 días antes del evento.\n• Papelería Social: 50% de anticipo; saldo se liquida al entregar el pedido o programar envío.\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
+    const paymentConditionText = isServiceQuote
+      ? '• *Stands & Servicios:* Separación fija de $1,000 MXN; el saldo se liquida 10 días antes del evento.'
+      : '• *Papelería Social:* 50% de anticipo; el saldo se liquida al entregar el pedido o programar envío.';
+
+    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nTe comparto el detalle de tu propuesta editorial (*${folio}*):\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n✨ *Artículos & Experiencias seleccionadas:*\n${itemsList || 'Personalizado'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${isServiceQuote ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${proposalLinkText}\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
 
     openWhatsAppMessage(phone, msg);
   };
@@ -1297,8 +1357,34 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </h3>
                   </div>
                   <span className="text-[11px] font-bold text-[#9C665C] bg-[#FAF6F2] px-2.5 py-1 rounded-full border border-[#EAE3DA]">
-                    {hasServices && !hasStationery ? 'Separación $1,000' : hasStationery && !hasServices ? 'Anticipo 50%' : 'Separación $1,000 + 50%'}
+                    {isServiceQuote ? 'Separación $1,000' : 'Anticipo 50%'}
                   </span>
+                </div>
+
+                {/* Selector rápido: Servicios ($1,000) o Papelería (50%) */}
+                <div className="flex items-center justify-between p-1 bg-[#FCFAF7] rounded-xl border border-[#EAE3DA] text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setDepositMode('SERVICIO')}
+                    className={`flex-1 py-1 px-2 rounded-lg font-bold transition cursor-pointer text-center ${
+                      isServiceQuote
+                        ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                        : 'text-[#7D6F6B] hover:text-[#332A28]'
+                    }`}
+                  >
+                    ✨ Servicios ($1,000)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDepositMode('PAPELERIA')}
+                    className={`flex-1 py-1 px-2 rounded-lg font-bold transition cursor-pointer text-center ${
+                      !isServiceQuote
+                        ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                        : 'text-[#7D6F6B] hover:text-[#332A28]'
+                    }`}
+                  >
+                    📦 Papelería (50%)
+                  </button>
                 </div>
 
                 <div className="space-y-3 text-sm">
@@ -1334,7 +1420,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   {/* Highlight Box Separación / Anticipo */}
                   <div className="p-4 rounded-2xl bg-gradient-to-br from-[#FAF6F2] to-[#F6ECE8] border border-[#EAD2D0] space-y-2">
                     <div className="flex justify-between items-center text-xs font-bold text-[#70443D]">
-                      <span>{hasServices && !hasStationery ? 'Separación Requerida:' : 'Anticipo / Separación:'}</span>
+                      <span>{isServiceQuote ? 'Separación Requerida:' : 'Anticipo Requerido (50%):'}</span>
                       <span className="text-sm">
                         ${quoteDownPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </span>
@@ -1345,19 +1431,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                         ${quoteBalanceDue.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
-                    <div className="text-[10px] text-[#7D6F6B] leading-relaxed pt-1 border-t border-[#EAE3DA] space-y-1">
-                      {hasServices && (
+                    <div className="text-[10px] text-[#7D6F6B] leading-relaxed pt-1 border-t border-[#EAE3DA]">
+                      {isServiceQuote ? (
                         <p className="text-[#70443D] font-medium">
-                          • <strong>Stands & Servicios:</strong> Separación $1,000. Saldo se liquida 10 días antes del evento.
+                          • <strong>Stands & Servicios:</strong> Separación fija de $1,000 MXN. El saldo se liquida 10 días antes del evento.
                         </p>
-                      )}
-                      {hasStationery && (
+                      ) : (
                         <p className="text-[#70443D] font-medium">
-                          • <strong>Papelería Social:</strong> Anticipo 50%. Saldo se liquida al entregar el pedido o al programar envío.
+                          • <strong>Papelería Social:</strong> Anticipo del 50%. El saldo se liquida al entregar el pedido o al programar envío.
                         </p>
-                      )}
-                      {!hasServices && !hasStationery && (
-                        <p>* 50% de anticipo para apartar fecha y agenda del taller.</p>
                       )}
                     </div>
                   </div>
@@ -1528,6 +1610,13 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                               <span>Convertir</span>
                             </button>
                           )}
+                          <button
+                            onClick={() => handleDeleteQuote(q.id, q.quote_number)}
+                            className="inline-flex items-center space-x-1 px-2 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#FCE8E6] text-[#70443D] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"
+                            title="Eliminar cotización"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -1624,21 +1713,34 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     <span className="text-xs font-bold text-[#9C665C] bg-[#FAF6F2] px-2.5 py-1 rounded-full border border-[#EAE3DA]">
                       {formatOrderFolio(order.order_number)}
                     </span>
-                    <span
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                        order.payment_status === 'LIQUIDADO'
-                          ? 'bg-[#CCDACC] text-[#384C3A]'
+                    <div className="flex items-center space-x-1.5">
+                      <span
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                          order.payment_status === 'LIQUIDADO'
+                            ? 'bg-[#CCDACC] text-[#384C3A]'
+                            : order.payment_status === 'ANTICIPO_PAGADO'
+                            ? 'bg-[#EFE2DF] text-[#70443D]'
+                            : 'bg-[#FBF4F3] text-[#70443D] border border-[#EAD2D0]'
+                        }`}
+                      >
+                        {order.payment_status === 'LIQUIDADO'
+                          ? 'Liquidado 100%'
                           : order.payment_status === 'ANTICIPO_PAGADO'
-                          ? 'bg-[#EFE2DF] text-[#70443D]'
-                          : 'bg-[#FBF4F3] text-[#70443D] border border-[#EAD2D0]'
-                      }`}
-                    >
-                      {order.payment_status === 'LIQUIDADO'
-                        ? 'Liquidado 100%'
-                        : order.payment_status === 'ANTICIPO_PAGADO'
-                        ? 'Anticipo 50% Cubierto'
-                        : 'Anticipo Pendiente'}
-                    </span>
+                          ? 'Anticipo Cubierto'
+                          : 'Anticipo Pendiente'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleDeleteOrder(order.id, order.client_name);
+                        }}
+                        className="p-1 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#FCE8E6] rounded-lg transition cursor-pointer"
+                        title="Eliminar proyecto / pareja"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -2360,12 +2462,21 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     {selectedOrder.event_venue || 'Sede sin definir'} · Evento el {formatDateMX(selectedOrder.event_date)}
                   </p>
                 </div>
-                <button
-                  onClick={() => setSelectedOrder(null)}
-                  className="p-2 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2] rounded-xl transition cursor-pointer"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => handleDeleteOrder(selectedOrder.id, selectedOrder.client_name)}
+                    className="p-2 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#FCE8E6] rounded-xl transition cursor-pointer"
+                    title="Eliminar este proyecto"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setSelectedOrder(null)}
+                    className="p-2 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2] rounded-xl transition cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* WhatsApp Quick Actions (1-Click directo sin API) */}
@@ -2477,7 +2588,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </span>
                   </div>
                   <div className="bg-[#FFFFFF] p-3 rounded-2xl border border-[#EAE3DA]">
-                    <span className="text-[10px] text-[#7D6F6B] uppercase block">Anticipo 50%</span>
+                    <span className="text-[10px] text-[#7D6F6B] uppercase block">
+                      {selectedOrder.service_type === 'STANDS_EXPERIENCIAS' ? 'Separación $1,000' : 'Anticipo 50%'}
+                    </span>
                     <span className="font-bold text-[#70443D] text-sm">
                       ${selectedOrder.down_payment_required.toLocaleString('es-MX')}
                     </span>
@@ -2515,9 +2628,19 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             {formatDateMX(p.payment_date)} {p.reference_num ? `· Ref: ${p.reference_num}` : ''}
                           </div>
                         </div>
-                        <span className="font-bold text-[#384C3A] text-sm">
-                          +${p.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="font-bold text-[#384C3A] text-sm">
+                            +${p.amount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePayment(p.id)}
+                            className="p-1 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#FCE8E6] rounded-lg transition cursor-pointer"
+                            title="Eliminar este pago del historial"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -2779,8 +2902,16 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                           </div>
                         )}
 
-                        {/* Download button */}
-                        <div className="pt-2 flex justify-end">
+                        {/* Download & Delete buttons */}
+                        <div className="pt-2 flex justify-between items-center">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            className="inline-flex items-center space-x-1 text-[#70443D] hover:underline font-semibold text-[11px] cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Eliminar</span>
+                          </button>
                           <a
                             href={`/api/vlb/documents/${doc.id}/download`}
                             download
