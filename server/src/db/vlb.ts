@@ -149,6 +149,9 @@ export function initVlbDatabase() {
     db.prepare('ALTER TABLE vlb_quotes ADD COLUMN signed_by_name TEXT').run();
   } catch {}
   try {
+    db.prepare('ALTER TABLE vlb_quotes ADD COLUMN pdf_path TEXT').run();
+  } catch {}
+  try {
     db.prepare("UPDATE vlb_orders SET order_number = 'VLB-' || SUBSTR(order_number, -3) WHERE order_number LIKE 'ORD-VLB-%'").run();
   } catch {}
 

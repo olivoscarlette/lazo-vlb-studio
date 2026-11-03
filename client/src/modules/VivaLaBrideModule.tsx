@@ -47,7 +47,7 @@ import {
   VlbDocument,
   VlbTask
 } from '../types/vlb';
-import { generateVlbQuotePdf } from '../utils/vlbPdfGenerator';
+import { generateVlbQuotePdf, buildVlbQuotePdf } from '../utils/vlbPdfGenerator';
 
 interface VivaLaBrideModuleProps {
   onBackToLazo?: () => void;
@@ -688,7 +688,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     window.open(url, '_blank');
   };
 
-  const handleSendQuoteWhatsApp = (quote: VlbQuote | null, items?: VlbQuoteItem[]) => {
+  const handleSendQuoteWhatsApp = async (quote: VlbQuote | null, items?: VlbQuoteItem[]) => {
     const isCurrent = !quote;
     const clientName = isCurrent ? quoteForm.client_name : quote.client_name;
     const partnerName = isCurrent ? quoteForm.partner_name : quote.partner_name;
@@ -709,15 +709,77 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const activeItems = isCurrent ? quoteItems : (items || []);
     const itemsList = activeItems.map(i => `• ${i.pricing_type === 'PER_PIECE' ? `${i.quantity}x ` : ''}${i.item_name}`).join('\n');
 
+    // Construir el objeto de cotización completo para el PDF
+    const targetQuote: VlbQuote = quote || {
+      id: 'preview_' + Date.now(),
+      quote_number: (activeItems.some(i => i.category === 'STANDS_EXPERIENCIAS') ? 'SV' : 'PS') + '-' + new Date().getFullYear().toString().slice(-2) + '-' + (4100 + quotes.length + 1),
+      client_name: clientName || 'Novia',
+      partner_name: partnerName,
+      client_email: isCurrent ? quoteForm.client_email : quote.client_email,
+      client_phone: phone,
+      event_date: isCurrent ? quoteForm.event_date : quote.event_date,
+      event_venue: eventVenue,
+      status: 'BORRADOR',
+      subtotal: isCurrent ? quoteSubtotal : quote.subtotal,
+      discount: isCurrent ? quoteDiscountAmount : quote.discount,
+      total: total,
+      down_payment_pct: isCurrent ? (quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50) : quote.down_payment_pct,
+      down_payment_amount: downPayment,
+      balance_due: balance,
+      valid_until: isCurrent ? quoteForm.valid_until : quote.valid_until,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    // Generar el archivo PDF en memoria (sin forzar descarga aún)
+    const { file, fileName, doc } = buildVlbQuotePdf(targetQuote, activeItems, { autoDownload: false });
+
+    // Subir el PDF al servidor para link directo si la cotización ya existe en base de datos
+    let pdfDirectUrl = '';
+    if (quote?.id) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file, fileName);
+        await apiFetch(`/api/vlb/quotes/public/${quote.id}/pdf`, {
+          method: 'POST',
+          body: formData
+        });
+        pdfDirectUrl = `${window.location.origin}/api/vlb/quotes/public/${quote.id}/${encodeURIComponent(fileName)}`;
+      } catch (e) {
+        console.warn('PDF upload warning:', e);
+      }
+    }
+
     const proposalUrl = quote ? `${window.location.origin}/vlb/propuesta/${quote.id}` : '';
-    const proposalLinkText = proposalUrl ? `\n\n📄 *Liga de propuesta para revisar, descargar PDF y firmar en línea:*\n${proposalUrl}\n` : '';
+    const directPdfText = pdfDirectUrl ? `\n📎 *Descargar archivo PDF oficial:* ${pdfDirectUrl}` : '';
+    const proposalLinkText = proposalUrl ? `\n✍️ *Revisar propuesta y firmar en línea:* ${proposalUrl}` : '';
 
     const paymentConditionText = isServiceQuote
       ? '• *Stands & Servicios:* Separación fija de $1,000 MXN; el saldo se liquida 10 días antes del evento.'
       : '• *Papelería Social:* 50% de anticipo; el saldo se liquida al entregar el pedido o programar envío.';
 
-    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nTe comparto el detalle de tu propuesta editorial (*${folio}*):\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n✨ *Artículos & Experiencias seleccionadas:*\n${itemsList || 'Personalizado'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${isServiceQuote ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${proposalLinkText}\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
+    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te comparto tu *Cotización Oficial en PDF* de *Viva la Bride* (*${folio}*):\n\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${isServiceQuote ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${directPdfText}${proposalLinkText}\n\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
 
+    // 1. INTENTO DE ENVÍO DIRECTO DEL ARCHIVO PDF VÍA WEB SHARE (Móviles & Mac Safari)
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({
+          files: [file],
+          title: `Cotización ${folio} · Viva la Bride`,
+          text: msg
+        });
+        showToast('¡Archivo PDF compartido exitosamente por WhatsApp!');
+        return;
+      } catch (err: any) {
+        if (err.name === 'AbortError') return; // Cancelado por el usuario
+        console.warn('Fallback standard WhatsApp:', err);
+      }
+    }
+
+    // 2. EN ESCRITORIO / NAVEGADORES SIN WEB SHARE DE ARCHIVOS:
+    // Descarga el PDF automáticamente y abre WhatsApp Web para arrastrar o enviar con el link directo
+    doc.save(fileName);
+    showToast(`📄 Se descargó "${fileName}". Arrástralo a WhatsApp Web para enviarlo como documento.`);
     openWhatsAppMessage(phone, msg);
   };
 

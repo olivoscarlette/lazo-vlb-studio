@@ -121,6 +121,64 @@ router.post('/quotes/public/:token/sign', (req, res) => {
   }
 });
 
+// POST /api/vlb/quotes/public/:token/pdf - Subir y almacenar PDF generado
+router.post('/quotes/public/:token/pdf', upload.single('file'), (req, res) => {
+  try {
+    const { token } = req.params;
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'No se subió ningún archivo PDF.' });
+    }
+
+    const quote = db.prepare(`
+      SELECT * FROM vlb_quotes
+      WHERE id = ? OR public_token = ?
+    `).get(token, token) as any;
+
+    if (!quote) {
+      return res.status(404).json({ error: 'Cotización no encontrada.' });
+    }
+
+    const now = new Date().toISOString();
+    db.prepare('UPDATE vlb_quotes SET pdf_path = ?, updated_at = ? WHERE id = ?').run(file.filename, now, quote.id);
+
+    res.json({
+      success: true,
+      message: 'PDF guardado en el servidor.',
+      pdf_path: file.filename,
+      pdf_url: `/api/vlb/quotes/public/${quote.id}/${encodeURIComponent(file.originalname)}`
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al almacenar PDF.' });
+  }
+});
+
+// GET /api/vlb/quotes/public/:token/:filename - Descarga directa del archivo PDF
+router.get('/quotes/public/:token/:filename', (req, res) => {
+  try {
+    const { token, filename } = req.params;
+    const quote = db.prepare(`
+      SELECT * FROM vlb_quotes
+      WHERE id = ? OR public_token = ?
+    `).get(token, token) as any;
+
+    if (!quote || !quote.pdf_path) {
+      return res.status(404).send('PDF no disponible en el servidor.');
+    }
+
+    const filePath = path.join(VLB_UPLOADS_DIR, quote.pdf_path);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send('El archivo PDF no se encuentra físicamente en el servidor.');
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${filename || 'Cotizacion_VivaLaBride.pdf'}"`);
+    res.sendFile(filePath);
+  } catch (err: any) {
+    res.status(500).send('Error al descargar PDF.');
+  }
+});
+
 // All VLB routes below require authentication and strictly ADMINISTRADOR role
 router.use(authenticateToken);
 router.use((req, res, next) => {

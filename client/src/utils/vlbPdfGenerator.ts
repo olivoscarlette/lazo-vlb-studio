@@ -87,7 +87,11 @@ function drawVlbFooter(doc: jsPDF, pageWidth: number, pageHeight: number, pageLa
   }
 }
 
-export function generateVlbQuotePdf(quote: VlbQuote, items: VlbQuoteItem[]) {
+export function buildVlbQuotePdf(
+  quote: VlbQuote,
+  items: VlbQuoteItem[],
+  options?: { autoDownload?: boolean }
+): { doc: jsPDF; blob: Blob; file: File; fileName: string } {
   const doc = new jsPDF({
     orientation: 'portrait',
     unit: 'mm',
@@ -563,8 +567,20 @@ export function generateVlbQuotePdf(quote: VlbQuote, items: VlbQuoteItem[]) {
   // Page 3 Footer
   drawVlbFooter(doc, pageWidth, pageHeight, 'PÁGINA 2/2');
 
-  // Trigger download
-  const cleanName = quote.client_name.replace(/\s+/g, '_');
+  // Build Blob & File
+  const cleanName = (quote.client_name || 'Novia').replace(/\s+/g, '_');
   const fileName = `Cotizacion_Contrato_${folioNumber}_${cleanName}_VLB.pdf`;
-  doc.save(fileName);
+
+  const blob = doc.output('blob');
+  const file = new File([blob], fileName, { type: 'application/pdf' });
+
+  if (options?.autoDownload !== false) {
+    doc.save(fileName);
+  }
+
+  return { doc, blob, file, fileName };
+}
+
+export function generateVlbQuotePdf(quote: VlbQuote, items: VlbQuoteItem[]) {
+  return buildVlbQuotePdf(quote, items, { autoDownload: true });
 }
