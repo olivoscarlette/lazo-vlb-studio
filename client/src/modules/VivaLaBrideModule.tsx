@@ -321,7 +321,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
     const mockQuote: VlbQuote = {
       id: 'current_preview',
-      quote_number: 'VLB-' + new Date().getFullYear() + '-DRAFT',
+      quote_number: (quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS') ? 'SV' : 'PS') + '-' + new Date().getFullYear().toString().slice(-2) + '-' + (4100 + quotes.length + 1),
       client_name: quoteForm.client_name,
       partner_name: quoteForm.partner_name,
       client_email: quoteForm.client_email,
@@ -615,8 +615,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       Datos de la Pareja & Evento
                     </h2>
                   </div>
-                  <span className="text-xs text-[#7D6F6B]">
-                    Folio sugerido: VLB-{new Date().getFullYear()}-00{quotes.length + 1}
+                  <span className="text-xs font-semibold text-[#C83460] bg-[#F8E4E9] px-2.5 py-1 rounded-full">
+                    Folio: {(quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS') ? 'SV' : 'PS')}-{new Date().getFullYear().toString().slice(-2)}-{4100 + quotes.length + 1}
                   </span>
                 </div>
 

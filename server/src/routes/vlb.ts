@@ -248,11 +248,12 @@ router.post('/quotes', (req, res) => {
 
     const id = 'quote_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     
-    // Generate quote number like VLB-2026-002
-    const currentYear = new Date().getFullYear();
-    const countRow = db.prepare("SELECT COUNT(*) as count FROM vlb_quotes WHERE quote_number LIKE ?").get(`VLB-${currentYear}-%`) as { count: number };
-    const nextSeq = String(countRow.count + 1).padStart(3, '0');
-    const quote_number = `VLB-${currentYear}-${nextSeq}`;
+    // Generate official Viva la Bride quote number (PS-26-XXXX for Papelería Social, SV-26-XXXX for Stands)
+    const currentYearShort = new Date().getFullYear().toString().slice(-2);
+    const hasStands = Array.isArray(items) && items.some((i: any) => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT');
+    const prefix = hasStands ? 'SV' : 'PS';
+    const randCode = Math.floor(1000 + Math.random() * 9000);
+    const quote_number = req.body.quote_number || `${prefix}-${currentYearShort}-${randCode}`;
 
     // Calculate subtotal from items
     let subtotal = 0;
