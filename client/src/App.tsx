@@ -485,8 +485,8 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     });
   };
 
-  // If in Viva la Bride Studio mode -> Render Viva la Bride Studio
-  if (activeModule === 'vlb') {
+  // If in Viva la Bride Studio mode (STRICTLY EXCLUSIVE TO ADMINISTRADOR)
+  if (user?.role === 'ADMINISTRADOR' && activeModule === 'vlb') {
     return (
       <div className="min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         <VivaLaBrideModule onBackToLazo={() => setActiveModule('lazo')} />
@@ -658,8 +658,8 @@ const AppContent: React.FC = () => {
     return <LoginView />;
   }
 
-  // Active Global Platform Switch: Viva la Bride vs Lazo Planning
-  if (activeModule === 'vlb') {
+  // Active Global Platform Switch: STRICTLY EXCLUSIVE TO ADMINISTRADOR
+  if (user?.role === 'ADMINISTRADOR' && activeModule === 'vlb') {
     return (
       <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
         <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />

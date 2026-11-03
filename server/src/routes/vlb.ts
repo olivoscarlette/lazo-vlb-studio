@@ -30,8 +30,14 @@ const upload = multer({
   limits: { fileSize: 25 * 1024 * 1024 } // 25MB limit for large editorial proofs & contracts
 });
 
-// All VLB routes require authentication
+// All VLB routes require authentication and strictly ADMINISTRADOR role
 router.use(authenticateToken);
+router.use((req, res, next) => {
+  if (req.user?.role !== 'ADMINISTRADOR') {
+    return res.status(403).json({ error: 'Acceso restringido: Módulo exclusivo para Administrador.' });
+  }
+  next();
+});
 
 // ==========================================
 // 1. CATALOG ROUTES (Artículos y Precios)

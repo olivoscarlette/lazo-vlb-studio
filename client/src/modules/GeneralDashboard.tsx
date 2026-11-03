@@ -1248,7 +1248,7 @@ export const GeneralDashboard: React.FC = () => {
 
   const sidebarNavItems = [
     { id: 'weddings', label: 'Eventos', icon: Users2 },
-    { id: 'vlb', label: 'Viva la Bride', icon: Sparkles },
+    ...(user?.role === 'ADMINISTRADOR' ? [{ id: 'vlb', label: 'Viva la Bride', icon: Sparkles }] : []),
     { id: 'calendario', label: 'Calendario General', icon: Calendar },
     { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare },
     { id: 'plantillas', label: 'Plantillas', icon: FileText },
@@ -1479,31 +1479,33 @@ export const GeneralDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Switcher Móvil: Lazo ⇄ VLB */}
-            <div className="flex items-center bg-[#F3EDE6] p-0.5 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
-              <button
-                onClick={() => {
-                  setActiveTab('weddings');
-                  setActiveModule('lazo');
-                }}
-                className={`px-2 py-1 rounded-full text-[11px] font-semibold transition ${
-                  activeTab !== 'vlb' ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs' : 'text-[#7D6F6B]'
-                }`}
-              >
-                Lazo
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab('vlb');
-                  setActiveModule('vlb');
-                }}
-                className={`px-2 py-1 rounded-full text-[11px] font-semibold transition ${
-                  activeTab === 'vlb' ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs' : 'text-[#7D6F6B]'
-                }`}
-              >
-                VLB
-              </button>
-            </div>
+            {/* Switcher Móvil: Lazo ⇄ VLB (EXCLUSIVO ADMINISTRADOR) */}
+            {user?.role === 'ADMINISTRADOR' && (
+              <div className="flex items-center bg-[#F3EDE6] p-0.5 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
+                <button
+                  onClick={() => {
+                    setActiveTab('weddings');
+                    setActiveModule('lazo');
+                  }}
+                  className={`px-2 py-1 rounded-full text-[11px] font-semibold transition ${
+                    activeTab !== 'vlb' ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs' : 'text-[#7D6F6B]'
+                  }`}
+                >
+                  Lazo
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab('vlb');
+                    setActiveModule('vlb');
+                  }}
+                  className={`px-2 py-1 rounded-full text-[11px] font-semibold transition ${
+                    activeTab === 'vlb' ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs' : 'text-[#7D6F6B]'
+                  }`}
+                >
+                  VLB
+                </button>
+              </div>
+            )}
 
             {/* Campana de Notificaciones Móvil */}
             <div className="relative">
@@ -1604,40 +1606,42 @@ export const GeneralDashboard: React.FC = () => {
 
               {/* Switcher Plataforma & Botón de Agregar Evento */}
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-                <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
-                  <button
-                    onClick={() => {
-                      setActiveTab('weddings');
-                      setActiveModule('lazo');
-                    }}
-                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                      activeTab !== 'vlb'
-                        ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
-                        : 'text-[#7D6F6B] hover:text-[#332A28]'
-                    }`}
-                    title="Módulo de Bodas, Invitados y Logística"
-                  >
-                    <Heart className="w-3.5 h-3.5 text-[#C48B81]" />
-                    <span className="hidden sm:inline">Lazo Planning</span>
-                    <span className="sm:hidden">Lazo</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setActiveTab('vlb');
-                      setActiveModule('vlb');
-                    }}
-                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
-                      activeTab === 'vlb'
-                        ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
-                        : 'text-[#7D6F6B] hover:text-[#332A28]'
-                    }`}
-                    title="Papelería Social & Stands de Bienvenida"
-                  >
-                    <Sparkles className="w-3.5 h-3.5 text-[#CCDACC]" />
-                    <span className="hidden sm:inline">Viva la Bride</span>
-                    <span className="sm:hidden">VLB</span>
-                  </button>
-                </div>
+                {user?.role === 'ADMINISTRADOR' && (
+                  <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
+                    <button
+                      onClick={() => {
+                        setActiveTab('weddings');
+                        setActiveModule('lazo');
+                      }}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        activeTab !== 'vlb'
+                          ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
+                          : 'text-[#7D6F6B] hover:text-[#332A28]'
+                      }`}
+                      title="Módulo de Bodas, Invitados y Logística"
+                    >
+                      <Heart className="w-3.5 h-3.5 text-[#C48B81]" />
+                      <span className="hidden sm:inline">Lazo Planning</span>
+                      <span className="sm:hidden">Lazo</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveTab('vlb');
+                        setActiveModule('vlb');
+                      }}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                        activeTab === 'vlb'
+                          ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
+                          : 'text-[#7D6F6B] hover:text-[#332A28]'
+                      }`}
+                      title="Papelería Social & Stands de Bienvenida"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#CCDACC]" />
+                      <span className="hidden sm:inline">Viva la Bride</span>
+                      <span className="sm:hidden">VLB</span>
+                    </button>
+                  </div>
+                )}
 
                 <button
                   onClick={() => setShowCreateModal(true)}
@@ -2271,8 +2275,8 @@ export const GeneralDashboard: React.FC = () => {
           </div>
         )}
 
-        {/* PESTAÑA VIVA LA BRIDE (PAPELERÍA SOCIAL & STANDS) */}
-        {activeTab === 'vlb' && (
+        {/* PESTAÑA VIVA LA BRIDE (PAPELERÍA SOCIAL & STANDS - EXCLUSIVO ADMINISTRADOR) */}
+        {activeTab === 'vlb' && user?.role === 'ADMINISTRADOR' && (
           <div className="py-2">
             <VivaLaBrideModule onBackToLazo={() => setActiveTab('weddings')} />
           </div>

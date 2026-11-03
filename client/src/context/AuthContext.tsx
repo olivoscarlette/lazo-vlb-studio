@@ -109,20 +109,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [generalDashboardTab, setGeneralDashboardTabState] = useState<string>('weddings');
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeModule, setActiveModuleState] = useState<'lazo' | 'vlb'>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('vlb_active_module');
-      if (saved === 'vlb' || saved === 'lazo') return saved;
+  const [activeModule, setActiveModuleState] = useState<'lazo' | 'vlb'>('lazo');
+
+  // Hard security lock: ONLY ADMINISTRADOR can have activeModule === 'vlb'
+  useEffect(() => {
+    if (user) {
+      if (user.role !== 'ADMINISTRADOR') {
+        setActiveModuleState('lazo');
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('vlb_active_module', 'lazo');
+        }
+      } else {
+        if (typeof window !== 'undefined') {
+          const saved = localStorage.getItem('vlb_active_module');
+          if (saved === 'vlb' || saved === 'lazo') {
+            setActiveModuleState(saved);
+          }
+        }
+      }
     }
-    return 'lazo';
-  });
+  }, [user]);
 
   const setActiveModule = useCallback((mod: 'lazo' | 'vlb') => {
+    if (user?.role !== 'ADMINISTRADOR') {
+      setActiveModuleState('lazo');
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('vlb_active_module', 'lazo');
+      }
+      return;
+    }
     setActiveModuleState(mod);
     if (typeof window !== 'undefined') {
       localStorage.setItem('vlb_active_module', mod);
     }
-  }, []);
+  }, [user]);
 
   const assignedWeddingsRef = useRef<Wedding[]>([]);
   assignedWeddingsRef.current = assignedWeddings;
