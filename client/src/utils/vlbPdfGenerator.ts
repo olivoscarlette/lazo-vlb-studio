@@ -1,90 +1,57 @@
 import { jsPDF } from 'jspdf';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
+import { VLB_LOGO_BASE64 } from './vlbLogoBase64';
 
 // Colors exact to Viva la Bride branding
 const COLOR_PRIMARY_ROSE = [200, 52, 96]; // #C83460
+const COLOR_DEEP_PLUM = [112, 38, 62];    // #70263E
 const COLOR_LIGHT_BLUSH = [248, 228, 233]; // #F8E4E9
-const COLOR_DARK_TEXT = [34, 34, 34]; // #222222
-const COLOR_MUTED_TEXT = [95, 95, 95]; // #5F5F5F
-const COLOR_BORDER = [232, 166, 183]; // #E8A6B7
-const COLOR_LINE_LIGHT = [240, 230, 233]; // #F0E6E9
+const COLOR_WARM_BG = [252, 249, 250];     // #FCF9FA
+const COLOR_DARK_TEXT = [34, 34, 34];      // #222222
+const COLOR_MUTED_TEXT = [95, 95, 95];     // #5F5F5F
+const COLOR_BORDER = [232, 166, 183];      // #E8A6B7
+const COLOR_LINE_LIGHT = [240, 230, 233];  // #F0E6E9
 
 /**
- * Draws the iconic "vb viva la bride" logo
+ * Draws the high-end editorial stationery double frame on the page
  */
-function drawVlbLogo(doc: jsPDF, x: number, y: number, scale = 1) {
+function drawPageFrame(doc: jsPDF, pageWidth: number, pageHeight: number) {
   doc.saveGraphicsState();
+  doc.setDrawColor(COLOR_LINE_LIGHT[0], COLOR_LINE_LIGHT[1], COLOR_LINE_LIGHT[2]);
+  doc.setLineWidth(0.4);
+  doc.rect(7, 7, pageWidth - 14, pageHeight - 14);
 
-  // Draw "v"
-  doc.setFillColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  
-  // Left pillar of 'v'
-  doc.roundedRect(x, y + (8 * scale), 4.5 * scale, 16 * scale, 1 * scale, 1 * scale, 'F');
-  // Right diagonal/stem of 'v'
-  doc.roundedRect(x + (6 * scale), y + (10 * scale), 4.2 * scale, 14 * scale, 1 * scale, 1 * scale, 'F');
-  
-  // Draw 'b'
-  // Tall ascender of 'b'
-  doc.roundedRect(x + (12.5 * scale), y, 4.5 * scale, 24 * scale, 1 * scale, 1 * scale, 'F');
-  // Counter bowl of 'b'
-  doc.circle(x + (21 * scale), y + (16 * scale), 6.5 * scale, 'F');
-  doc.setFillColor(255, 255, 255);
-  doc.circle(x + (21 * scale), y + (16 * scale), 3 * scale, 'F');
-
-  // Script text "viva la bride" wrapping around
-  doc.setFont('times', 'italic');
-  doc.setFontSize(7.5 * scale);
-  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text('viva la', x + (29 * scale), y + (9 * scale));
-  doc.text('bride', x + (32 * scale), y + (15 * scale));
-
+  doc.setDrawColor(245, 236, 238);
+  doc.setLineWidth(0.18);
+  doc.rect(8.2, 8.2, pageWidth - 16.4, pageHeight - 16.4);
   doc.restoreGraphicsState();
 }
 
 /**
- * Draws the elegant delicate spiral arches in corners
+ * Draws the official VLB footer across all pages with dynamic page numbers
  */
-function drawCornerFlourish(doc: jsPDF, corner: 'TOP_LEFT' | 'BOTTOM_RIGHT', pageWidth: number, pageHeight: number) {
+function drawVlbFooter(doc: jsPDF, pageNum: number, totalPages: number) {
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const footerY = pageHeight - 11;
+
   doc.saveGraphicsState();
-  doc.setDrawColor(COLOR_BORDER[0], COLOR_BORDER[1], COLOR_BORDER[2]);
-  doc.setLineWidth(0.35);
+  doc.setDrawColor(COLOR_LINE_LIGHT[0], COLOR_LINE_LIGHT[1], COLOR_LINE_LIGHT[2]);
+  doc.setLineWidth(0.3);
+  doc.line(14, footerY - 3, pageWidth - 14, footerY - 3);
 
-  if (corner === 'TOP_LEFT') {
-    doc.ellipse(0, 0, 48, 22);
-    doc.ellipse(0, 0, 42, 18);
-    doc.ellipse(0, 0, 34, 14);
-  } else {
-    doc.ellipse(pageWidth, pageHeight, 52, 24);
-    doc.ellipse(pageWidth, pageHeight, 44, 19);
-    doc.ellipse(pageWidth, pageHeight, 36, 14);
-  }
-  doc.restoreGraphicsState();
-}
-
-/**
- * Draws the official VLB footer across all pages
- */
-function drawVlbFooter(doc: jsPDF, pageWidth: number, pageHeight: number, pageLabel?: string) {
-  const footerY = pageHeight - 12;
-
-  // Social icons + handles
+  // Social handles & Contact (Clean ASCII to prevent character corruption)
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+  doc.text('WhatsApp: 56 6140 6247   |   Instagram: @vivalabride.mx   |   Viva la Bride Atelier', 14, footerY + 2);
 
-  // Instagram
-  doc.text('© @vivalabride.mx', 42, footerY, { align: 'center' });
-  // WhatsApp
-  doc.text('✆ 56 6140 6247', pageWidth / 2, footerY, { align: 'center' });
-  // TikTok
-  doc.text('♪ @vivalabride.mx', pageWidth - 42, footerY, { align: 'center' });
-
-  if (pageLabel) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7);
-    doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
-    doc.text(pageLabel, pageWidth - 20, footerY + 5, { align: 'right' });
-  }
+  // Dynamic Page Counter
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
+  doc.text(`Pagina ${pageNum} de ${totalPages}`, pageWidth - 14, footerY + 2, { align: 'right' });
+  doc.restoreGraphicsState();
 }
 
 export function buildVlbQuotePdf(
@@ -98,20 +65,26 @@ export function buildVlbQuotePdf(
     format: 'a4'
   });
 
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 18;
+  const pageWidth = doc.internal.pageSize.getWidth();   // 210mm
+  const pageHeight = doc.internal.pageSize.getHeight(); // 297mm
+  const margin = 14;
+  const contentWidth = pageWidth - (margin * 2);        // 182mm
 
-  // Determine proposal type: Papelería Social vs Stands de Bienvenida
-  const hasStands = items.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT');
-  const serviceTypeTitle = hasStands ? 'BEER STAND & EXPERIENCIAS' : 'PAPELERÍA SOCIAL';
-  
-  // Format Folio with official prefix (PS-26-XXXX o SV-26-XXXX)
+  // Determine proposal category strictly
+  const isService = (items && items.length > 0)
+    ? items.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT')
+    : (quote.quote_number?.startsWith('SV-') ?? false);
+
+  const serviceTypeTitle = isService
+    ? 'STANDS & EXPERIENCIAS DE BIENVENIDA'
+    : 'PAPELERIA SOCIAL & DISENO EDITORIAL';
+
+  // Format Folio
   let folioNumber = quote.quote_number;
-  if (!folioNumber.startsWith('PS-') && !folioNumber.startsWith('SV-')) {
+  if (!folioNumber || (!folioNumber.startsWith('PS-') && !folioNumber.startsWith('SV-'))) {
     const yearShort = new Date().getFullYear().toString().slice(-2);
     const randCode = Math.floor(1000 + Math.random() * 9000);
-    const prefix = hasStands ? 'SV' : 'PS';
+    const prefix = isService ? 'SV' : 'PS';
     folioNumber = `${prefix}-${yearShort}-${randCode}`;
   }
 
@@ -121,454 +94,564 @@ export function buildVlbQuotePdf(
     month: 'long',
     year: 'numeric'
   });
-  const deliveryFormatted = quote.event_date ? quote.event_date : '--';
+  const deliveryFormatted = quote.event_date ? quote.event_date : 'Por definir';
+
+  // Financial calculations strictly according to business rules
+  const subtotal = Number(quote.subtotal) || 0;
+  const discount = Number(quote.discount) || 0;
+  const total = Number(quote.total) || Math.max(0, subtotal - discount);
+
+  // Stand/Service: Fijo $1,000 MXN. Papelería: 50%
+  const downPayment = isService ? Math.min(1000, total) : Math.round(total * 0.5);
+  const balanceDue = Math.max(0, total - downPayment);
+
+  // Client full name
+  const clientFullName = quote.partner_name
+    ? `${quote.client_name} & ${quote.partner_name}`
+    : quote.client_name || 'Novia';
 
   // ========================================================
-  // PÁGINA 1: COTIZACIÓN OFICIAL
+  // PAGINA 1: COTIZACION Y PROPUESTA EDITORIAL
   // ========================================================
+  drawPageFrame(doc, pageWidth, pageHeight);
 
-  // Background clean white
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, pageWidth, pageHeight, 'F');
-
-  // Corner decorative flourishes
-  drawCornerFlourish(doc, 'TOP_LEFT', pageWidth, pageHeight);
-  drawCornerFlourish(doc, 'BOTTOM_RIGHT', pageWidth, pageHeight);
-
-  // Top-Right Logo
-  drawVlbLogo(doc, pageWidth - margin - 38, margin + 4, 0.95);
-
-  let y = margin + 12;
-
-  // Meta Information Block (Folio, Vigencia, Fecha, Cliente, Contacto, Fecha entrega)
-  const labelX = margin;
-  const valueX = margin + 38;
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-
-  // Folio Cotización
-  doc.text('Folio cotización:', labelX, y);
-  doc.setFont('helvetica', 'bold');
-  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text(folioNumber, valueX, y);
-  y += 5.5;
-
-  // Vigencia
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text('Vigencia:', labelX, y);
-  doc.text(quote.valid_until || '--', valueX, y);
-  y += 5.5;
-
-  // Fecha
-  doc.text('Fecha:', labelX, y);
-  doc.text(todayFormatted, valueX, y);
-  y += 5.5;
-
-  // Cliente
-  doc.text('Cliente:', labelX, y);
-  doc.setFont('helvetica', 'bold');
-  const clientFullName = quote.partner_name ? `${quote.client_name} & ${quote.partner_name}` : quote.client_name;
-  doc.text(clientFullName, valueX, y);
-  y += 5.5;
-
-  // Contacto
-  doc.setFont('helvetica', 'normal');
-  doc.text('Contacto:', labelX, y);
-  doc.text(quote.client_phone || quote.client_email || '8133883833', valueX, y);
-  y += 5.5;
-
-  // Lugar y fecha del evento o Fecha de entrega
-  if (quote.event_venue) {
-    doc.text('Lugar y fecha evento:', labelX, y);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`${quote.event_venue} | ${quote.event_date || 'Por confirmar'}`, valueX, y);
-    y += 5.5;
-  } else {
-    doc.text('Fecha de entrega:', labelX, y);
-    doc.text(deliveryFormatted, valueX, y);
-    y += 5.5;
+  // 1. Header (y = 12)
+  try {
+    // Official Logo (545x71 px, aspect ratio ~7.67)
+    const logoW = 48;
+    const logoH = 6.25;
+    doc.addImage(`data:image/png;base64,${VLB_LOGO_BASE64}`, 'PNG', pageWidth - margin - logoW, 13, logoW, logoH);
+  } catch (e) {
+    console.warn('Could not draw logo image:', e);
   }
 
-  y += 8;
-
-  // TABLE HEADER
-  const tableWidth = pageWidth - (margin * 2);
-  doc.setFillColor(COLOR_LIGHT_BLUSH[0], COLOR_LIGHT_BLUSH[1], COLOR_LIGHT_BLUSH[2]);
-  doc.rect(margin, y, tableWidth, 7, 'F');
-
+  // Brand Titles (Left)
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-
-  doc.text('Cantidad', margin + 8, y + 4.8);
-  doc.text('Producto', margin + 35, y + 4.8);
-  doc.text('Descripción', margin + 78, y + 4.8);
-  doc.text('Importe', pageWidth - margin - 8, y + 4.8, { align: 'right' });
-
-  y += 11;
-
-  // TABLE ITEMS
-  items.forEach((item) => {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-
-    // Cantidad
-    const qtyText = item.pricing_type === 'FIXED_EVENT' ? '1' : String(item.quantity);
-    doc.text(qtyText, margin + 12, y);
-
-    // Producto
-    doc.setFont('helvetica', 'bold');
-    doc.text(item.item_name, margin + 35, y);
-
-    // Descripción multilínea
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
-    const descLines = doc.splitTextToSize(item.description || '', 65);
-    doc.text(descLines, margin + 78, y);
-
-    // Importe
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8.5);
-    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-    doc.text(`$${item.total_price.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, pageWidth - margin - 8, y, { align: 'right' });
-
-    const rowHeight = Math.max(8, descLines.length * 3.8 + 3);
-    y += rowHeight;
-  });
-
-  y += 4;
-
-  // TOTALS SECTION (Right Aligned)
-  const totalsX = pageWidth - margin - 45;
-  const amountsX = pageWidth - margin - 8;
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(11);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text('Total', totalsX, y);
-
-  doc.setFontSize(13);
+  doc.setFontSize(14);
   doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text(`$${quote.total.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, amountsX, y, { align: 'right' });
-  y += 6;
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8.5);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text('Anticipo', totalsX, y);
-  doc.text(`$${quote.down_payment_amount.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, amountsX, y, { align: 'right' });
-  y += 5.5;
-
-  doc.setFont('helvetica', 'bold');
-  doc.text('RESTAN', totalsX, y);
-  doc.text(`$${quote.balance_due.toLocaleString('es-MX', { minimumFractionDigits: 0 })}`, amountsX, y, { align: 'right' });
-
-  y += 10;
-
-  // OBSERVACIONES
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text('Observaciones:', margin, y);
-  y += 4.5;
+  doc.text('VIVA LA BRIDE', margin, 18);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
-  const observations = [
-    '• El pago total deberá ser liquidado para su envío.',
-    '• El cliente acepta términos y condiciones del contrato digital.',
-    '• Entregas en oficina ubicada en Cumbres 1er sector, envíos a domicilio con costo extra.'
+  doc.text('ATELIER DE PAPELERIA SOCIAL & EXPERIENCIAS DE BIENVENIDA', margin, 22.5);
+
+  doc.setFontSize(7);
+  doc.setTextColor(140, 140, 140);
+  doc.text('Monterrey, N.L.  |  Atencion y Cobertura Nacional  |  IG: @vivalabride.mx', margin, 26.5);
+
+  // Hairline separator
+  doc.setDrawColor(COLOR_LINE_LIGHT[0], COLOR_LINE_LIGHT[1], COLOR_LINE_LIGHT[2]);
+  doc.setLineWidth(0.3);
+  doc.line(margin, 30, pageWidth - margin, 30);
+
+  // 2. Client & Proposal Card (y = 33 to 55)
+  const metaCardY = 33;
+  const metaCardH = 22;
+  doc.setFillColor(COLOR_WARM_BG[0], COLOR_WARM_BG[1], COLOR_WARM_BG[2]);
+  doc.setDrawColor(COLOR_BORDER[0], COLOR_BORDER[1], COLOR_BORDER[2]);
+  doc.setLineWidth(0.35);
+  doc.roundedRect(margin, metaCardY, contentWidth, metaCardH, 2.5, 2.5, 'FD');
+
+  // Column 1: Client Info
+  const col1X = margin + 5;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+  doc.text('PAREJA / CLIENTA:', col1X, metaCardY + 5.5);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+  doc.text(clientFullName, col1X, metaCardY + 10.5);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
+  doc.text(`WhatsApp: ${quote.client_phone || 'Por confirmar'}   |   Email: ${quote.client_email || 'Por confirmar'}`, col1X, metaCardY + 16);
+
+  // Column 2: Event & Folio Info
+  const col2X = margin + 105;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7);
+  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+  doc.text('FOLIO OFICIAL:', col2X, metaCardY + 5.5);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+  doc.text(folioNumber, col2X + 26, metaCardY + 5.5);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+  doc.text(`Fecha Evento: ${deliveryFormatted}`, col2X, metaCardY + 10.5);
+  doc.text(`Sede / Venue: ${quote.event_venue || 'Por definir'}`, col2X, metaCardY + 15);
+  doc.text(`Emision: ${todayFormatted}`, col2X, metaCardY + 19);
+
+  // 3. Items Table Header (y = 59)
+  let y = 59;
+  doc.setFillColor(COLOR_LIGHT_BLUSH[0], COLOR_LIGHT_BLUSH[1], COLOR_LIGHT_BLUSH[2]);
+  doc.rect(margin, y, contentWidth, 7, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(COLOR_DEEP_PLUM[0], COLOR_DEEP_PLUM[1], COLOR_DEEP_PLUM[2]);
+
+  doc.text('CANT.', margin + 7, y + 4.8, { align: 'center' });
+  doc.text('CONCEPTO / SERVICIO', margin + 18, y + 4.8);
+  doc.text('ESPECIFICACIONES & DETALLES', margin + 72, y + 4.8);
+  doc.text('P. UNITARIO', margin + 148, y + 4.8, { align: 'right' });
+  doc.text('TOTAL', pageWidth - margin - 5, y + 4.8, { align: 'right' });
+
+  y += 7;
+
+  // Safeguard: Ensure items list is never completely empty
+  const displayItems = (items && items.length > 0) ? items : [
+    {
+      id: 'fallback_1',
+      quote_id: quote.id || '',
+      category: isService ? 'STANDS_EXPERIENCIAS' : 'PAPELERIA_SOCIAL',
+      item_name: isService ? 'Servicio de Barra & Experiencias de Bienvenida' : 'Paquete de Papeleria Social y Diseno Editorial',
+      description: isService
+        ? 'Servicio completo de stand nupcial con ambientacion, insumos y atencion personalizada para recepcion de invitados.'
+        : 'Diseno e impresion personalizada de papeleria nupcial con acabados artesanales segun especificaciones.',
+      pricing_type: 'FIXED_EVENT',
+      quantity: 1,
+      unit_price: total,
+      total_price: total,
+      sort_order: 1,
+      created_at: new Date().toISOString()
+    } as VlbQuoteItem
   ];
-  observations.forEach(obs => {
-    doc.text(obs, margin, y);
-    y += 4;
+
+  // Render Table Rows
+  displayItems.forEach((item, index) => {
+    const isEven = index % 2 === 1;
+    const descLines = doc.splitTextToSize(item.description || 'Sin descripcion adicional.', 64);
+    const rowHeight = Math.max(8.5, descLines.length * 3.6 + 4);
+
+    if (isEven) {
+      doc.setFillColor(253, 250, 251);
+      doc.rect(margin, y, contentWidth, rowHeight, 'F');
+    }
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+
+    // Cantidad
+    const qtyText = item.pricing_type === 'FIXED_EVENT' ? '1 serv' : `${item.quantity} pzs`;
+    doc.text(qtyText, margin + 7, y + 5, { align: 'center' });
+
+    // Concepto
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text(item.item_name, margin + 18, y + 5);
+
+    // Descripción multilínea
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.2);
+    doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
+    doc.text(descLines, margin + 72, y + 4.5);
+
+    // Precio Unitario
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+    const unitPriceText = `$${item.unit_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+    doc.text(unitPriceText, margin + 148, y + 5, { align: 'right' });
+
+    // Total
+    doc.setFont('helvetica', 'bold');
+    const totalPriceText = `$${item.total_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+    doc.text(totalPriceText, pageWidth - margin - 5, y + 5, { align: 'right' });
+
+    // Bottom hairline divider
+    doc.setDrawColor(240, 230, 233);
+    doc.setLineWidth(0.2);
+    doc.line(margin, y + rowHeight, pageWidth - margin, y + rowHeight);
+
+    y += rowHeight;
   });
 
-  y += 6;
+  y += 5;
 
-  // CONTRATO DIGITAL CALLOUT BOX
-  const boxWidth = pageWidth - (margin * 2);
-  const boxHeight = 22;
+  // 4. Financial Summary & Payment Policy Box (y side-by-side)
+  const boxTopY = y;
+  const leftBoxW = 104;
+  const rightBoxW = 73;
+  const boxH = 46;
 
-  // Left card: Icon & Acceptance text
+  // Left Box: Payment Policies & Service Conditions
+  doc.setFillColor(COLOR_WARM_BG[0], COLOR_WARM_BG[1], COLOR_WARM_BG[2]);
   doc.setDrawColor(COLOR_BORDER[0], COLOR_BORDER[1], COLOR_BORDER[2]);
   doc.setLineWidth(0.3);
+  doc.roundedRect(margin, boxTopY, leftBoxW, boxH, 2, 2, 'FD');
 
-  // Icon Contract
-  doc.setFillColor(COLOR_LIGHT_BLUSH[0], COLOR_LIGHT_BLUSH[1], COLOR_LIGHT_BLUSH[2]);
-  doc.roundedRect(margin, y, 16, 16, 2, 2, 'FD');
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text('✓', margin + 6, y + 10);
+  doc.text('POLITICAS DE RESERVA & CONDICIONES DE PAGO', margin + 4, boxTopY + 5.5);
 
-  // Disclaimer text
-  doc.setFont('helvetica', 'bold');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7);
+  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+
+  if (isService) {
+    const policies = [
+      '• Separacion Fija: $1,000.00 MXN para bloqueo formal de fecha en agenda.',
+      `• Saldo Pendiente: $${balanceDue.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN se liquida a mas tardar 10 dias antes del evento.`,
+      '• Operacion en Sede: Montaje y horarios coordinados directamente con sede/planner.',
+      '• Duracion: Servicio asistido de bienvenida de aprox. 1.5 horas en coctel.',
+      '• Anticipos y separaciones no son reembolsables en caso de cancelacion.'
+    ];
+    let polY = boxTopY + 11;
+    policies.forEach(p => {
+      doc.text(p, margin + 4, polY);
+      polY += 5;
+    });
+  } else {
+    const policies = [
+      `• Anticipo Inicial: 50% ($${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) para iniciar fase de diseno y pruebas.`,
+      `• Saldo Pendiente: $${balanceDue.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN se liquida antes de entrega o envio.`,
+      '• Muestras y Vo.Bo.: Incluye hasta 3 rondas de ajustes antes de impresion final.',
+      '• Tiempos de Elaboracion: 7 a 15 dias habiles posteriores a la aprobacion final.',
+      '• Anticipos no son reembolsables una vez iniciado el proceso de diseno.'
+    ];
+    let polY = boxTopY + 11;
+    policies.forEach(p => {
+      doc.text(p, margin + 4, polY);
+      polY += 5;
+    });
+  }
+
+  // Right Box: Financial Breakdown Card
+  const rightBoxX = margin + leftBoxW + 5;
+  doc.setFillColor(255, 255, 255);
+  doc.setDrawColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(rightBoxX, boxTopY, rightBoxW, boxH, 2, 2, 'FD');
+
+  let rY = boxTopY + 6.5;
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
+  doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
+  doc.text('Subtotal:', rightBoxX + 5, rY);
+  doc.text(`$${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, rightBoxX + rightBoxW - 5, rY, { align: 'right' });
+
+  if (discount > 0) {
+    rY += 5;
+    doc.text('Descuento aplicado:', rightBoxX + 5, rY);
+    doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+    doc.text(`-$${discount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`, rightBoxX + rightBoxW - 5, rY, { align: 'right' });
+  }
+
+  rY += 5;
+  doc.setDrawColor(COLOR_LINE_LIGHT[0], COLOR_LINE_LIGHT[1], COLOR_LINE_LIGHT[2]);
+  doc.setLineWidth(0.25);
+  doc.line(rightBoxX + 4, rY, rightBoxX + rightBoxW - 4, rY);
+
+  rY += 6;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+  doc.text('TOTAL:', rightBoxX + 5, rY);
+
+  doc.setFontSize(11);
   doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text('Contrato digital', margin + 20, y + 4);
+  doc.text(`$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`, rightBoxX + rightBoxW - 5, rY, { align: 'right' });
+
+  rY += 6.5;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+  const depLabel = isService ? 'Separacion Requerida:' : 'Anticipo (50%):';
+  doc.text(depLabel, rightBoxX + 5, rY);
+  doc.setFont('helvetica', 'bold');
+  doc.text(`$${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`, rightBoxX + rightBoxW - 5, rY, { align: 'right' });
+
+  rY += 6;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(COLOR_DEEP_PLUM[0], COLOR_DEEP_PLUM[1], COLOR_DEEP_PLUM[2]);
+  doc.text('SALDO RESTANTE:', rightBoxX + 5, rY);
+  doc.text(`$${balanceDue.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`, rightBoxX + rightBoxW - 5, rY, { align: 'right' });
+
+  // 5. Contract Notice & Legal Acceptance Callout (y = boxTopY + boxH + 6)
+  const calloutY = boxTopY + boxH + 6;
+  const calloutH = 17;
+  doc.setFillColor(254, 248, 250);
+  doc.setDrawColor(COLOR_BORDER[0], COLOR_BORDER[1], COLOR_BORDER[2]);
+  doc.setLineWidth(0.35);
+  doc.roundedRect(margin, calloutY, contentWidth, calloutH, 2, 2, 'FD');
+
+  // Small clean shield/check mark drawing
+  doc.setDrawColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+  doc.setLineWidth(0.6);
+  doc.circle(margin + 6, calloutY + 8.5, 3.5);
+  doc.line(margin + 4.8, calloutY + 8.5, margin + 5.8, calloutY + 9.8);
+  doc.line(margin + 5.8, calloutY + 9.8, margin + 7.5, calloutY + 7.2);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+  doc.text('CONTRATO DE PRESTACION DE SERVICIOS ADJUNTO', margin + 12, calloutY + 5.5);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(6.8);
   doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
   const legalNotice = doc.splitTextToSize(
-    'La aceptación y/o pago de esta cotización implica aceptación total de términos y condiciones del contrato digital de Viva La Bride incluidos en este documento.',
-    82
+    `La aceptacion formal y/o realizacion del pago de anticipo o separacion formaliza la contratacion y constituye la aceptacion plena y sin reserva de todas las clausulas estipuladas en el Contrato de Prestacion de Servicios adjunto en las paginas 2 y 3 de este documento oficial (Folio de referencia: ${folioNumber}).`,
+    contentWidth - 18
   );
-  doc.text(legalNotice, margin + 20, y + 8);
-
-  // Right box: Folio Relacionado
-  const relBoxWidth = 58;
-  const relBoxX = pageWidth - margin - relBoxWidth;
-  doc.setDrawColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.setLineWidth(0.6);
-  doc.roundedRect(relBoxX, y - 2, relBoxWidth, 20, 2, 2, 'D');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text('FOLIO RELACIONADO:', relBoxX + (relBoxWidth / 2), y + 5, { align: 'center' });
-
-  doc.setFontSize(11);
-  doc.text(folioNumber, relBoxX + (relBoxWidth / 2), y + 13, { align: 'center' });
-
-  // Page 1 Footer
-  drawVlbFooter(doc, pageWidth, pageHeight);
+  doc.text(legalNotice, margin + 12, calloutY + 9.5);
 
   // ========================================================
-  // PÁGINA 2: CONTRATO DE PRESTACIÓN DE SERVICIOS (PARTE 1)
+  // PAGINA 2: CONTRATO DE PRESTACION DE SERVICIOS (PARTE 1)
   // ========================================================
   doc.addPage();
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, pageWidth, pageHeight, 'F');
-  drawCornerFlourish(doc, 'TOP_LEFT', pageWidth, pageHeight);
-  drawCornerFlourish(doc, 'BOTTOM_RIGHT', pageWidth, pageHeight);
+  drawPageFrame(doc, pageWidth, pageHeight);
 
-  // Top Logo Left
-  drawVlbLogo(doc, margin, margin, 0.7);
+  // Top Logo (Page 2)
+  try {
+    const p2LogoW = 40;
+    const p2LogoH = 5.2;
+    doc.addImage(`data:image/png;base64,${VLB_LOGO_BASE64}`, 'PNG', margin, 12, p2LogoW, p2LogoH);
+  } catch (e) {
+    console.warn('Could not draw p2 logo:', e);
+  }
 
-  // Contract Header Title (Center)
+  // Contract Header Titles (Center-Right)
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text('CONTRATO DE PRESTACIÓN DE SERVICIOS', pageWidth / 2 + 10, margin + 5, { align: 'center' });
-
   doc.setFontSize(9.5);
-  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text(serviceTypeTitle, pageWidth / 2 + 10, margin + 10, { align: 'center' });
+  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+  doc.text('CONTRATO DE PRESTACION DE SERVICIOS', pageWidth / 2 + 15, 14, { align: 'center' });
 
-  // Rounded Pill Meta Box
-  const pillY = margin + 15;
+  doc.setFontSize(8);
+  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+  doc.text(serviceTypeTitle, pageWidth / 2 + 15, 18.5, { align: 'center' });
+
+  // Metadata Pill Box (y = 23, height = 8)
+  const pillY = 22;
+  doc.setFillColor(COLOR_WARM_BG[0], COLOR_WARM_BG[1], COLOR_WARM_BG[2]);
   doc.setDrawColor(COLOR_BORDER[0], COLOR_BORDER[1], COLOR_BORDER[2]);
-  doc.setLineWidth(0.4);
-  doc.roundedRect(margin + 15, pillY, pageWidth - (margin * 2) - 30, 14, 4, 4, 'D');
+  doc.setLineWidth(0.3);
+  doc.roundedRect(margin, pillY, contentWidth, 7.5, 2, 2, 'FD');
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text(`Folio relacionado: ${folioNumber}`, margin + 20, pillY + 5.5);
-  doc.text(`Cliente: ${quote.client_name}`, margin + 20, pillY + 10.5);
+  doc.text(`Folio: ${folioNumber}   |   Cliente: ${clientFullName}   |   Fecha Evento: ${deliveryFormatted}`, margin + 5, pillY + 4.8);
+  doc.text(`Sede: ${quote.event_venue || 'Por definir'}`, pageWidth - margin - 5, pillY + 4.8, { align: 'right' });
 
-  const eventOrDeliveryText = quote.event_venue
-    ? `Fecha y lugar: ${deliveryFormatted} | ${quote.event_venue}`
-    : `Fecha de entrega: ${deliveryFormatted}`;
-  doc.text(eventOrDeliveryText, pageWidth - margin - 20, pillY + 8, { align: 'right' });
+  // Thin separator at y = 32
+  doc.setDrawColor(COLOR_LINE_LIGHT[0], COLOR_LINE_LIGHT[1], COLOR_LINE_LIGHT[2]);
+  doc.setLineWidth(0.25);
+  doc.line(margin, 32, pageWidth - margin, 32);
 
-  let cY = pillY + 22;
+  let cY = 37;
 
   doc.setFont('helvetica', 'italic');
-  doc.setFontSize(7.5);
+  doc.setFontSize(7.2);
   doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
-  doc.text('Entre "La Contratante" y Viva la Bride, en adelante "Prestadora de Servicios".', pageWidth / 2, cY, { align: 'center' });
-  cY += 4;
-
-  // Star separator
-  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text('✦', pageWidth / 2, cY, { align: 'center' });
+  doc.text('Celebrado entre "La Contratante" y Viva la Bride, en adelante "La Prestadora de Servicios".', pageWidth / 2, cY, { align: 'center' });
   cY += 6;
 
-  // Helper for rendering clauses
+  // Helper function to render contract clauses cleanly
   const renderClause = (num: number, title: string, body: string[]) => {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8.5);
+    doc.setFontSize(8);
     doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
     doc.text(`${num}. ${title}`, margin, cY);
-    cY += 4.5;
+    cY += 4;
 
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(7.2);
     doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+
     body.forEach(paragraph => {
-      const lines = doc.splitTextToSize(paragraph, pageWidth - (margin * 2));
+      const lines = doc.splitTextToSize(paragraph, contentWidth);
       doc.text(lines, margin, cY);
-      cY += lines.length * 3.5 + 1.5;
+      cY += lines.length * 3.4 + 1.5;
     });
 
-    // Small divider diamond
-    doc.setFontSize(6);
-    doc.setTextColor(COLOR_BORDER[0], COLOR_BORDER[1], COLOR_BORDER[2]);
-    doc.text('✦', pageWidth / 2, cY - 0.5, { align: 'center' });
-    cY += 3;
+    cY += 2;
   };
 
-  if (!hasStands) {
-    // CLAUSULAS PAPELERÍA SOCIAL (Pág 1)
+  if (!isService) {
+    // CLAUSULAS PAPELERIA SOCIAL (Pagina 2)
     renderClause(1, 'OBJETO DEL CONTRATO', [
-      'La Prestadora de Servicios se compromete a diseñar y proporcionar la papelería social solicitada por La Contratante conforme a lo establecido en la cotización relacionada al folio anteriormente señalado.'
+      'La Prestadora de Servicios se compromete a elaborar, disenar y proveer los articulos y conceptos de papeleria social especificados en la cotizacion identificada con el folio de referencia senalado al calce.'
     ]);
 
-    renderClause(2, 'ALCANCE DEL SERVICIO', [
-      'El servicio podrá incluir, según lo contratado: invitaciones digitales e impresas, menús de mesa, números de mesa, etiquetas, place cards, papelería personalizada, impresión en algodón y acabados en lacre de cera.',
-      'Los elementos incluidos dependerán exclusivamente del paquete contratado en la cotización correspondiente.'
+    renderClause(2, 'ALCANCE DEL SERVICIO Y ENTREGABLES', [
+      'El proyecto comprende exclusivamente las piezas, formatos, cantidades y acabados estipulados en la cotizacion aceptada (incluyendo invitaciones, sobres, lacres, menus, tarjetas de lugar y senaletica segun aplique).',
+      'Cualquier pieza, cambio de material o impresion no prevista originalmente requerira cotizacion complementaria y autorizacion expresa.'
     ]);
 
-    renderClause(3, 'PROCESO DE DISEÑO', [
-      'La Contratante deberá proporcionar toda la información necesaria para el desarrollo del diseño, incluyendo nombres, fechas, horarios, textos, referencias y cualquier dato requerido.',
-      'Viva La Bride no será responsable por errores derivados de información incorrecta, incompleta o enviada fuera de tiempo por parte de La Contratante.'
+    renderClause(3, 'PROCESO CREATIVO Y REQUISITOS DE INFORMACION', [
+      'La Contratante proporcionara oportunamente textos definitivos, nombres completos, horarios y sedes requeridas para el armado de diseno.',
+      'La Prestadora de Servicios no sera responsable por faltas ortograficas, fechas u horarios inexactos provistos directamente por La Contratante una vez otorgado el visto bueno formal.'
     ]);
 
-    renderClause(4, 'CAMBIOS Y MODIFICACIONES', [
-      'El servicio incluye únicamente 3 modificaciones dentro del paquete contratado.',
-      'Cambios adicionales, rediseños completos o modificaciones posteriores a la aprobación final podrán generar costos extra.',
-      'Una vez aprobado el diseño final por La Contratante, no podrán realizarse modificaciones sin costo adicional.'
+    renderClause(4, 'REVISIONES Y VISTO BUENO (Vo.Bo.)', [
+      'Se incluyen hasta 3 rondas de revision de diseno dentro de la cotizacion base.',
+      'Una vez otorgado el Vo.Bo. final de manera digital o por escrito, los archivos pasan a produccion e impresion, tras lo cual no podran realizarse modificaciones sin costo de reimpresion.'
     ]);
   } else {
-    // CLAUSULAS STANDS DE BIENVENIDA / BEER STAND (Pág 1)
+    // CLAUSULAS STANDS & BEER STAND (Pagina 2)
     renderClause(1, 'OBJETO DEL CONTRATO', [
-      'La Prestadora de Servicios se compromete a proporcionar el servicio de Stands de Bienvenida / Beer Stand solicitado por La Contratante conforme a lo establecido en la cotización relacionada al folio anteriormente señalado.'
+      'La Prestadora de Servicios se compromete a instalar, operar y prestar el servicio de Stands de Bienvenida / Beer Stand para el evento social indicado, conforme a las especificaciones de la cotizacion relacionada.'
     ]);
 
-    renderClause(2, 'ALCANCE DEL SERVICIO', [
-      'El servicio podrá incluir, según lo contratado: Beer Stand o barra decorativa, bebidas contratadas, hielo y enfriadores, insertos y accesorios de servicio, personal de apoyo para reposición, elementos decorativos y montaje y desmontaje.',
-      'El stand está diseñado como una estación de autoservicio asistido para recepción o cóctel de bienvenida, con una duración aproximada de 1 hora y 30 minutos.',
-      'El servicio contratado no constituye barra libre ni servicio ilimitado de bebidas. La cantidad estará determinada exclusivamente por el paquete contratado.'
+    renderClause(2, 'ALCANCE DEL SERVICIO Y CARACTERISTICAS', [
+      'El servicio comprende mobiliario de bienvenida, montaje estetico, insumos acordados, elementos decorativos, accesorios de servicio y personal operativo de apoyo.',
+      'El stand opera bajo la modalidad de barra de bienvenida asistida con duracion estimada de 1 hora y 30 minutos durante la recepcion del evento.',
+      'No constituye servicio de barra libre ni consumo ilimitado; la cantidad de bebidas se encuentra estrictamente limitada al paquete contratado.'
     ]);
 
-    renderClause(3, 'MONTAJE Y OPERACIÓN DEL SERVICIO', [
-      'El montaje se realizará aproximadamente 40 minutos antes del inicio del evento o en el horario previamente acordado.',
-      'El servicio comenzará y concluirá conforme al horario establecido en la cotización correspondiente.',
-      'La Prestadora de Servicios no será responsable de retrasos ocasionados por accesos restringidos, falta de información o condiciones ajenas a su control.'
+    renderClause(3, 'MONTAJE, ACCESOS Y HORARIOS', [
+      'El equipo se presentara en la sede con aproximadamente 40 a 60 minutos de anticipacion al inicio formal del coctel de bienvenida para montaje y acondicionamiento.',
+      'La Contratante coordinara con la sede o wedding planner el libre acceso vehicular, facilidades de carga y energia en caso de requerirse.'
     ]);
 
-    renderClause(4, 'CONSUMO RESPONSABLE DE ALCOHOL', [
-      'La Prestadora de Servicios promueve el consumo responsable de bebidas alcohólicas. El servicio está destinado exclusivamente para personas mayores de edad.',
-      'La Prestadora de Servicios no será responsable por el consumo excesivo, indebido o no supervisado de bebidas alcohólicas por parte de los asistentes, ni por incidentes derivados de dicho consumo durante o después del evento.'
+    renderClause(4, 'CONSUMO RESPONSABLE Y SEGURIDAD', [
+      'El servicio de bebidas alcoholicas esta destinado exclusivamente a personas mayores de edad conforme a la legislacion vigente.',
+      'La Prestadora de Servicios no asumira responsabilidad por incidentes derivados del consumo excesivo, imprudente o no supervisado por parte de los asistentes al evento.'
     ]);
   }
 
-  // Page 2 Footer
-  drawVlbFooter(doc, pageWidth, pageHeight, 'PÁGINA 1/2');
-
   // ========================================================
-  // PÁGINA 3: CONTRATO DE PRESTACIÓN DE SERVICIOS (PARTE 2)
+  // PAGINA 3: CONTRATO DE PRESTACION DE SERVICIOS (PARTE 2) & FIRMAS
   // ========================================================
   doc.addPage();
-  doc.setFillColor(255, 255, 255);
-  doc.rect(0, 0, pageWidth, pageHeight, 'F');
-  drawCornerFlourish(doc, 'TOP_LEFT', pageWidth, pageHeight);
-  drawCornerFlourish(doc, 'BOTTOM_RIGHT', pageWidth, pageHeight);
+  drawPageFrame(doc, pageWidth, pageHeight);
 
-  drawVlbLogo(doc, margin, margin, 0.7);
+  // Top Logo (Page 3)
+  try {
+    const p3LogoW = 40;
+    const p3LogoH = 5.2;
+    doc.addImage(`data:image/png;base64,${VLB_LOGO_BASE64}`, 'PNG', margin, 12, p3LogoW, p3LogoH);
+  } catch (e) {
+    console.warn('Could not draw p3 logo:', e);
+  }
 
-  cY = margin + 14;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+  doc.text('CONTRATO DE PRESTACION DE SERVICIOS (CONTINUACION)', pageWidth / 2 + 15, 14, { align: 'center' });
 
-  if (!hasStands) {
-    // CLAUSULAS PAPELERÍA SOCIAL (Pág 2)
-    renderClause(5, 'IMPRESIÓN Y TONOS', [
-      'Los colores, materiales, texturas y acabados pueden presentar ligeras variaciones derivadas de impresión, iluminación, proveedores o visualización en pantalla.',
-      'Viva La Bride no garantiza coincidencia exacta de tonos entre archivos digitales e impresos.'
+  doc.setFontSize(8);
+  doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
+  doc.text(`FOLIO: ${folioNumber}  |  ${serviceTypeTitle}`, pageWidth / 2 + 15, 18.5, { align: 'center' });
+
+  // Thin separator at y = 24
+  doc.setDrawColor(COLOR_LINE_LIGHT[0], COLOR_LINE_LIGHT[1], COLOR_LINE_LIGHT[2]);
+  doc.setLineWidth(0.25);
+  doc.line(margin, 24, pageWidth - margin, 24);
+
+  // Start clauses at y = 30 to leave full breathing room
+  cY = 30;
+
+  if (!isService) {
+    // CLAUSULAS PAPELERIA SOCIAL (Pagina 3)
+    renderClause(5, 'VARIACIONES DE IMPRESION Y TONALIDADES', [
+      'Pudiendo existir variaciones menores y naturales entre pantallas digitales y papeles artesanales, algodon o lacres, Viva la Bride procura la maxima fidelidad en cada tiraje artesanal.'
     ]);
 
-    renderClause(6, 'TIEMPOS DE ENTREGA', [
-      'Los tiempos de entrega podrán variar entre 7 y 15 días hábiles dependiendo de la carga de trabajo, complejidad del proyecto, tiempos de aprobación y materiales solicitados.',
-      'Los tiempos comenzarán a contar una vez recibido el anticipo correspondiente y toda la información necesaria para el desarrollo del diseño.'
+    renderClause(6, 'TIEMPOS DE PRODUCCION Y ENTREGA', [
+      'El tiempo estandar de elaboracion es de 7 a 15 dias habiles computados a partir del visto bueno definitivo de diseno y recepcion del anticipo correspondiente.'
     ]);
 
-    renderClause(7, 'PAGOS', [
-      'El servicio podrá separarse mediante anticipo previamente acordado (50%). La liquidación total deberá realizarse antes de la entrega final del material digital o impreso. Los anticipos no son reembolsables.'
+    renderClause(7, 'CONDICIONES DE PAGO Y LIQUIDACION', [
+      `El proyecto se formaliza con un anticipo del 50% ($${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN). El saldo restante del 50% ($${balanceDue.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN) debera liquidarse previo al envio o entrega final del pedido. Los anticipos no son reembolsables una vez iniciado el trabajo de taller.`
     ]);
 
-    renderClause(8, 'ENVÍOS Y ENTREGAS', [
-      'En servicios impresos, Viva La Bride no será responsable por retrasos ocasionados por paqueterías o servicios externos. El cliente deberá verificar previamente direcciones y datos de envío.'
+    renderClause(8, 'ENVIO, TRASLADOS Y RECEPCION', [
+      'Los envios foraneos se canalizan a traves de empresas de paqueteria certificadas. La Contratante revisara cuidadosamente la guia y confirmara la recepcion integra del pedido.'
     ]);
 
-    renderClause(9, 'CANCELACIONES', [
-      'En caso de cancelación por parte de La Contratante no se realizará reembolso de anticipos ni pagos realizados. Si el proyecto se encuentra en producción, el cliente cubrirá los gastos generados.'
-    ]);
-
-    renderClause(10, 'AUTORIZACIÓN DE USO DE IMAGEN', [
-      'La Contratante autoriza a Viva La Bride utilizar fotografías, videos y diseños realizados con fines de promoción y difusión en redes sociales y medios publicitarios.'
-    ]);
-
-    renderClause(11, 'RELACIÓN CON COTIZACIÓN', [
-      'El presente contrato se encuentra directamente vinculado a la cotización identificada mediante el folio relacionado anteriormente señalado. La aceptación de la cotización y/o realización de anticipo implica aceptación total de los presentes términos y condiciones.'
+    renderClause(9, 'USO DE IMAGEN Y PORTAFOLIO', [
+      'La Contratante autoriza a Viva la Bride a documentar fotograficamente y publicar imagenes de las piezas disenadas en portafolio y redes sociales institucionales.'
     ]);
   } else {
-    // CLAUSULAS STANDS / BEER STAND (Pág 2)
-    renderClause(5, 'CUIDADO DEL MOBILIARIO Y EQUIPO', [
-      'La Contratante será responsable por cualquier daño, pérdida o robo total o parcial del mobiliario, equipo o accesorios proporcionados por La Prestadora de Servicios durante el evento. En caso de daño o pérdida, La Contratante se compromete a cubrir el costo total de reposición o reparación dentro de los 3 días naturales posteriores al evento.'
+    // CLAUSULAS STANDS & BEER STAND (Pagina 3)
+    renderClause(5, 'CUIDADO Y RESGUARDO DE MOBILIARIO Y EQUIPO', [
+      'La Contratante velara por la integridad de los stands, dispensadores, cristaleria y elementos decorativos durante el transcurso del evento.',
+      'En caso de robo, extravio o dano imputable a los asistentes, La Contratante se compromete a cubrir el costo de reparacion o reposicion dentro de los 3 dias habiles posteriores al evento.'
     ]);
 
-    renderClause(6, 'TIEMPOS DE SERVICIO', [
-      'El servicio de Beer Stand se presta como cóctel de bienvenida y tendrá una duración aproximada de 1 hora y 30 minutos, contados a partir de la hora de inicio establecida en la cotización.',
-      'En caso de que las bebidas se consuman antes de concluir el tiempo estimado, éste se considerará prestado en su totalidad. Las bebidas restantes al finalizar serán entregadas al coordinador o persona designada.'
+    renderClause(6, 'DURACION Y CONCLUSION DEL SERVICIO', [
+      'El stand se operara durante el tiempo contratado (aprox. 1 hora y 30 minutos). Si las bebidas asignadas se agotaran antes de finalizar dicho periodo por ritmo de consumo de los invitados, el servicio se considerara plenamente prestado.',
+      'Cualquier bebida remanente sellada sera entregada integramente al coordinador o persona designada al desmontar.'
     ]);
 
-    renderClause(7, 'PAGOS Y CANCELACIONES', [
-      'El servicio podrá separarse mediante un anticipo formal para reservar la fecha. La liquidación total deberá realizarse a más tardar 15 días naturales antes de la fecha del evento. Los anticipos no son reembolsables.',
-      'El servicio podrá reagendarse dentro de los siguientes 30 días naturales, sujeto a disponibilidad de La Prestadora de Servicios y siempre que el servicio se encuentre liquidado.'
+    renderClause(7, 'CONDICIONES DE PAGO Y RESERVA', [
+      `El servicio se aparta formalmente con una separacion fija de $1,000.00 MXN para bloqueo de fecha en agenda. El saldo restante de $${balanceDue.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN debera ser liquidado a mas tardar 10 dias naturales antes del evento. Las separaciones y anticipos no son reembolsables en caso de cancelacion por parte de La Contratante.`
     ]);
 
-    renderClause(8, 'AUTORIZACIÓN DE USO DE IMAGEN', [
-      'La Contratante autoriza a Viva La Bride utilizar fotografías y videos tomados del montaje con fines de difusión en redes sociales y portafolio.'
+    renderClause(8, 'POLITICA DE REPROGRAMACION Y CANCELACION', [
+      'En caso de cambio de fecha del evento con al menos 30 dias naturales de anticipacion, la fecha podra reprogramarse sujeta a disponibilidad de agenda del atelier sin penalizacion adicional.'
     ]);
 
-    renderClause(9, 'RELACIÓN CON COTIZACIÓN', [
-      'El presente contrato se encuentra directamente vinculado a la cotización identificada mediante el folio relacionado. La aceptación y/o realización de anticipo implica aceptación total de los presentes términos.'
+    renderClause(9, 'DIFUSION Y DERECHOS DE IMAGEN', [
+      'La Contratante autoriza a Viva la Bride a capturar y compartir material fotografico y audiovisual del montaje del stand para fines de promocion y portafolio profesional.'
     ]);
   }
 
-  // SIGNATURE SECTION
-  const sigY = pageHeight - 34;
-  const sigColWidth = 65;
+  // 6. Formal Signatures Block at bottom of Page 3 (y = pageHeight - 44)
+  const sigY = pageHeight - 42;
+  const sigColW = 68;
+
+  // Digital Signature Image if available
+  if (quote.signature_data) {
+    try {
+      doc.addImage(quote.signature_data, 'PNG', margin + 10, sigY - 18, 48, 16);
+    } catch (e) {
+      console.warn('Could not render digital signature image:', e);
+    }
+  }
 
   doc.setDrawColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.setLineWidth(0.4);
+  doc.setLineWidth(0.35);
 
-  // Line left: Contratante
-  doc.line(margin + 5, sigY, margin + 5 + sigColWidth, sigY);
+  // Line Left: La Contratante
+  doc.line(margin + 5, sigY, margin + 5 + sigColW, sigY);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text(quote.client_name, margin + 5 + (sigColWidth / 2), sigY + 4.5, { align: 'center' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text('La Contratante', margin + 5 + (sigColWidth / 2), sigY + 8.5, { align: 'center' });
+  doc.text(clientFullName, margin + 5 + (sigColW / 2), sigY + 4.5, { align: 'center' });
 
-  // Line right: Prestadora de Servicios
-  const sigRightX = pageWidth - margin - 5 - sigColWidth;
-  doc.line(sigRightX, sigY, sigRightX + sigColWidth, sigY);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.2);
+  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+  doc.text('La Contratante / Aceptacion Digital', margin + 5 + (sigColW / 2), sigY + 8.5, { align: 'center' });
+
+  // Line Right: La Prestadora de Servicios
+  const sigRightX = pageWidth - margin - 5 - sigColW;
+  doc.line(sigRightX, sigY, sigRightX + sigColW, sigY);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
   doc.setTextColor(COLOR_PRIMARY_ROSE[0], COLOR_PRIMARY_ROSE[1], COLOR_PRIMARY_ROSE[2]);
-  doc.text('VIVA LA BRIDE', sigRightX + (sigColWidth / 2), sigY + 4.5, { align: 'center' });
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text('La Prestadora de Servicios', sigRightX + (sigColWidth / 2), sigY + 8.5, { align: 'center' });
+  doc.text('VIVA LA BRIDE', sigRightX + (sigColW / 2), sigY + 4.5, { align: 'center' });
 
-  // Page 3 Footer
-  drawVlbFooter(doc, pageWidth, pageHeight, 'PÁGINA 2/2');
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.2);
+  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
+  doc.text('La Prestadora de Servicios', sigRightX + (sigColW / 2), sigY + 8.5, { align: 'center' });
+
+  // ========================================================
+  // DYNAMIC FOOTERS FOR ALL PAGES
+  // ========================================================
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    drawVlbFooter(doc, i, totalPages);
+  }
 
   // Build Blob & File
-  const cleanName = (quote.client_name || 'Novia').replace(/\s+/g, '_');
+  const cleanName = (quote.client_name || 'Novia').trim().replace(/[\s/\\?%*:|"<>]+/g, '_');
   const fileName = `Cotizacion_Contrato_${folioNumber}_${cleanName}_VLB.pdf`;
 
   const blob = doc.output('blob');

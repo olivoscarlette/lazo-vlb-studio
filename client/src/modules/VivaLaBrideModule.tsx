@@ -220,21 +220,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     setTimeout(() => setFeedback(null), 4000);
   };
 
-  const handleCopyProposalLink = async (quoteId: string) => {
-    let url = `${window.location.origin}/vlb/propuesta/${quoteId}`;
-    try {
-      showToast('Generando enlace corto...');
-      const res = await apiFetch(`/api/vlb/quotes/public/${quoteId}/shorten`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.short_url) {
-          url = data.short_url;
-        }
-      }
-    } catch (e) {
-      console.warn('Could not shorten link:', e);
-    }
-
+  const handleCopyProposalLink = (quoteId: string) => {
+    const url = `${window.location.origin}/vlb/propuesta/${quoteId}`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
       showToast(`¡Liga copiada al portapapeles! (${url})`);
@@ -702,16 +689,38 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   };
 
   const handleSendQuoteWhatsApp = async (quote: VlbQuote | null, items?: VlbQuoteItem[]) => {
-    const isCurrent = !quote;
-    const clientName = isCurrent ? quoteForm.client_name : quote.client_name;
-    const partnerName = isCurrent ? quoteForm.partner_name : quote.partner_name;
-    const phone = isCurrent ? quoteForm.client_phone : quote.client_phone;
-    const eventDate = isCurrent ? formatDateMX(quoteForm.event_date) : formatDateMX(quote.event_date);
-    const eventVenue = isCurrent ? quoteForm.event_venue : quote.event_venue;
-    const total = isCurrent ? quoteTotal : quote.total;
-    const downPayment = isCurrent ? quoteDownPayment : quote.down_payment_amount;
-    const balance = isCurrent ? quoteBalanceDue : quote.balance_due;
-    const folio = isCurrent ? 'Propuesta Editorial' : quote.quote_number;
+    let targetQuote = quote;
+    let activeItems = items;
+
+    // Si viene de una cotización guardada y no tenemos los artículos, cargarlos de la API
+    if (quote?.id && (!activeItems || activeItems.length === 0)) {
+      try {
+        const res = await apiFetch(`/api/vlb/quotes/${quote.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          targetQuote = data.quote;
+          activeItems = data.items;
+        }
+      } catch (e) {
+        console.warn('Error fetching quote items for whatsapp:', e);
+      }
+    }
+
+    const isCurrent = !targetQuote;
+    activeItems = activeItems || (isCurrent ? quoteItems : []);
+
+    const clientName = isCurrent ? quoteForm.client_name : targetQuote!.client_name;
+    const partnerName = isCurrent ? quoteForm.partner_name : targetQuote!.partner_name;
+    const phone = isCurrent ? quoteForm.client_phone : targetQuote!.client_phone;
+    const eventDate = isCurrent ? formatDateMX(quoteForm.event_date) : formatDateMX(targetQuote!.event_date);
+    const eventVenue = isCurrent ? quoteForm.event_venue : targetQuote!.event_venue;
+    const total = isCurrent ? quoteTotal : targetQuote!.total;
+
+    // Regla estricta de Stands ($1,000 separación) vs Papelería (50% anticipo)
+    const hasStands = activeItems.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT') || (targetQuote?.quote_number?.startsWith('SV-') ?? false);
+    const downPayment = hasStands ? Math.min(1000, total) : Math.round(total * 0.5);
+    const balance = Math.max(0, total - downPayment);
+    const folio = isCurrent ? 'Propuesta Editorial' : targetQuote!.quote_number;
 
     if (!phone || !phone.trim()) {
       showToast('Por favor captura el WhatsApp de la clienta en el formulario.', 'error');
@@ -719,71 +728,60 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     }
 
     const couple = [clientName, partnerName].filter(Boolean).join(' & ');
-    const activeItems = isCurrent ? quoteItems : (items || []);
-    const itemsList = activeItems.map(i => `• ${i.pricing_type === 'PER_PIECE' ? `${i.quantity}x ` : ''}${i.item_name}`).join('\n');
 
     // Construir el objeto de cotización completo para el PDF
-    const targetQuote: VlbQuote = quote || {
+    const finalQuote: VlbQuote = targetQuote || {
       id: 'preview_' + Date.now(),
-      quote_number: (activeItems.some(i => i.category === 'STANDS_EXPERIENCIAS') ? 'SV' : 'PS') + '-' + new Date().getFullYear().toString().slice(-2) + '-' + (4100 + quotes.length + 1),
+      quote_number: (hasStands ? 'SV' : 'PS') + '-' + new Date().getFullYear().toString().slice(-2) + '-' + (4100 + quotes.length + 1),
       client_name: clientName || 'Novia',
       partner_name: partnerName,
-      client_email: isCurrent ? quoteForm.client_email : quote.client_email,
+      client_email: isCurrent ? quoteForm.client_email : targetQuote!.client_email,
       client_phone: phone,
-      event_date: isCurrent ? quoteForm.event_date : quote.event_date,
+      event_date: isCurrent ? quoteForm.event_date : targetQuote!.event_date,
       event_venue: eventVenue,
       status: 'BORRADOR',
-      subtotal: isCurrent ? quoteSubtotal : quote.subtotal,
-      discount: isCurrent ? quoteDiscountAmount : quote.discount,
+      subtotal: isCurrent ? quoteSubtotal : targetQuote!.subtotal,
+      discount: isCurrent ? quoteDiscountAmount : targetQuote!.discount,
       total: total,
-      down_payment_pct: isCurrent ? (quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50) : quote.down_payment_pct,
+      down_payment_pct: hasStands ? (total > 0 ? Math.round((downPayment / total) * 100) : 50) : 50,
       down_payment_amount: downPayment,
       balance_due: balance,
-      valid_until: isCurrent ? quoteForm.valid_until : quote.valid_until,
+      valid_until: isCurrent ? quoteForm.valid_until : targetQuote!.valid_until,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    // Generar el archivo PDF en memoria (sin forzar descarga aún)
-    const { file, fileName, doc } = buildVlbQuotePdf(targetQuote, activeItems, { autoDownload: false });
+    // Generar el archivo PDF en memoria
+    const { file, fileName, doc } = buildVlbQuotePdf(finalQuote, activeItems, { autoDownload: false });
 
     // Subir el PDF al servidor para link directo si la cotización ya existe en base de datos
     let pdfDirectUrl = '';
-    if (quote?.id) {
+    if (finalQuote?.id && !finalQuote.id.startsWith('preview_')) {
       try {
         const formData = new FormData();
         formData.append('file', file, fileName);
-        await apiFetch(`/api/vlb/quotes/public/${quote.id}/pdf`, {
+        await apiFetch(`/api/vlb/quotes/public/${finalQuote.id}/pdf`, {
           method: 'POST',
           body: formData
         });
-        pdfDirectUrl = `${window.location.origin}/api/vlb/quotes/public/${quote.id}/${encodeURIComponent(fileName)}`;
+        pdfDirectUrl = `${window.location.origin}/api/vlb/quotes/public/${finalQuote.id}/${encodeURIComponent(fileName)}`;
       } catch (e) {
         console.warn('PDF upload warning:', e);
       }
     }
 
-    let proposalUrl = quote ? `${window.location.origin}/vlb/propuesta/${quote.id}` : '';
-    if (quote?.id) {
-      try {
-        const shortRes = await apiFetch(`/api/vlb/quotes/public/${quote.id}/shorten`);
-        if (shortRes.ok) {
-          const sData = await shortRes.json();
-          if (sData.short_url) proposalUrl = sData.short_url;
-        }
-      } catch (e) {
-        console.warn('Could not shorten proposal url:', e);
-      }
-    }
+    const proposalUrl = (finalQuote?.id && !finalQuote.id.startsWith('preview_'))
+      ? `${window.location.origin}/vlb/propuesta/${finalQuote.id}`
+      : '';
 
     const directPdfText = pdfDirectUrl ? `\n📎 *Descargar archivo PDF oficial:* ${pdfDirectUrl}` : '';
     const proposalLinkText = proposalUrl ? `\n✍️ *Revisar propuesta y firmar en línea:* ${proposalUrl}` : '';
 
-    const paymentConditionText = isServiceQuote
+    const paymentConditionText = hasStands
       ? '• *Stands & Servicios:* Separación fija de $1,000 MXN; el saldo se liquida 10 días antes del evento.'
       : '• *Papelería Social:* 50% de anticipo; el saldo se liquida al entregar el pedido o programar envío.';
 
-    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te comparto tu *Cotización Oficial en PDF* de *Viva la Bride* (*${folio}*):\n\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${isServiceQuote ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${directPdfText}${proposalLinkText}\n\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
+    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te comparto tu *Cotización Oficial en PDF* de *Viva la Bride* (*${folio}*):\n\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${hasStands ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${directPdfText}${proposalLinkText}\n\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
 
     // 1. INTENTO DE ENVÍO DIRECTO DEL ARCHIVO PDF VÍA WEB SHARE (Móviles & Mac Safari)
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
