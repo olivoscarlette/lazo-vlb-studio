@@ -584,7 +584,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
             Viva la Bride · Atelier de Papelería Social & Experiencias de Bienvenida
           </p>
           <p className="text-[10px] text-[#7D6F6B]/60">
-            Guadalajara, Jalisco · Contacto: +52 33 1290 8472
+            Contacto: 56 6140 6247
           </p>
         </div>
 
