@@ -6,6 +6,8 @@ import { TOP_WAVES_BASE64, BOTTOM_RIGHT_WAVES_BASE64, VLB_MONOGRAM_BASE64 } from
 // Colors exact to Viva la Bride Canva branding
 const COLOR_CANVA_PINK = [222, 121, 148]; // #DE7994 (Titles & Accents)
 const COLOR_CANVA_BAR = [255, 174, 192];  // #FFAEC0 (Table Header Bar)
+const COLOR_PRIMARY_ROSE = [222, 121, 148]; // #DE7994 (Legacy Alias for contract pages)
+const COLOR_BORDER = [248, 215, 225];       // #F8D7E1 (Legacy Alias for borders)
 const COLOR_DARK_TEXT = [45, 40, 42];      // #2D282A
 const COLOR_MUTED_LABEL = [165, 145, 150]; // #A59196
 const COLOR_MUTED_TEXT = [100, 95, 95];    // #645F5F
