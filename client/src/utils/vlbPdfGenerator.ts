@@ -105,6 +105,13 @@ export function buildVlbQuotePdf(
     ? `${quote.client_name} & ${quote.partner_name}`
     : quote.client_name || 'Novia';
 
+  // Digital Signature Metadata
+  const isSigned = Boolean(quote.signature_data);
+  const signDateFormatted = quote.signed_at
+    ? new Date(quote.signed_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' })
+    : todayFormatted;
+  const signerDisplayName = quote.signed_by_name || clientFullName;
+
   // ========================================================
   // PÁGINA 1: COTIZACIÓN EDITORIAL OFICIAL (CANVA BRANDING)
   // ========================================================
