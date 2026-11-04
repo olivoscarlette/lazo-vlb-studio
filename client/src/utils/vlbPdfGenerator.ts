@@ -69,46 +69,37 @@ export async function buildVlbQuotePdf(
   // PÁGINA 1: SOBREESCRIBIR CAMPOS DINÁMICOS EN CANVA PDF
   // ========================================================
 
-  // 1. Folio
-  whiteout(50.4, 672.6, 130, 15);
-  page.drawText('folio: ', { x: 50.4, y: 673, size: 9, font: fontRegular, color: pinkColor });
-  page.drawText(folioNumber, { x: 76, y: 673, size: 9, font: fontBold, color: darkColor });
+  // 1. Folio [FOLIO] (mantiene 'FOLIO:' original de Canva)
+  whiteout(84, 668, 70, 16);
+  page.drawText(folioNumber, { x: 86, y: 672.5, size: 8.5, font: fontBold, color: darkColor });
 
-  // 2. Fecha
-  whiteout(50.4, 654.4, 180, 15);
-  page.drawText('fecha: ', { x: 50.4, y: 654.8, size: 9, font: fontRegular, color: pinkColor });
-  page.drawText(todayFormatted, { x: 80, y: 654.8, size: 9, font: fontRegular, color: darkColor });
+  // 2. Fecha [FECHA] (mantiene 'FECHA:' original de Canva)
+  whiteout(90, 650, 150, 16);
+  page.drawText(todayFormatted, { x: 92, y: 654.5, size: 8.5, font: fontRegular, color: darkColor });
 
-  // 3. Cliente
-  whiteout(51.0, 622.8, 175, 15);
-  page.drawText('cliente: ', { x: 51.0, y: 623, size: 9, font: fontRegular, color: pinkColor });
-  page.drawText(clientFullName.toUpperCase(), { x: 87, y: 623, size: 9, font: fontBold, color: darkColor });
+  // 3. Cliente [CLIENTE] (mantiene 'CLIENTE:' original de Canva)
+  whiteout(96, 618, 138, 16);
+  page.drawText(clientFullName.toUpperCase(), { x: 98, y: 622.5, size: 8.5, font: fontBold, color: darkColor });
 
-  // 4. Teléfono
-  whiteout(233.3, 622.8, 160, 15);
-  page.drawText('teléfono: ', { x: 233.3, y: 623, size: 9, font: fontRegular, color: pinkColor });
-  page.drawText(quote.client_phone || 'Sin contacto', { x: 275, y: 623, size: 9, font: fontRegular, color: darkColor });
+  // 4. Teléfono [TELEFONO] (mantiene 'TELÉFONO:' original de Canva)
+  whiteout(282, 618, 115, 16);
+  page.drawText(quote.client_phone || 'Sin contacto', { x: 285, y: 622.5, size: 8.5, font: fontRegular, color: darkColor });
 
-  // 5. Fecha evento
-  whiteout(50.4, 597.7, 220, 15);
-  page.drawText('fecha evento: ', { x: 50.4, y: 598, size: 9, font: fontRegular, color: pinkColor });
-  page.drawText((quote.event_date || 'Por definir').toUpperCase(), { x: 115, y: 598, size: 9, font: fontRegular, color: darkColor });
+  // 5. Fecha evento [FECHA EVENTO] (mantiene 'FECHA EVENTO:' original de Canva)
+  whiteout(132, 593, 140, 16);
+  page.drawText((quote.event_date || 'Por definir').toUpperCase(), { x: 135, y: 597.5, size: 8.5, font: fontRegular, color: darkColor });
 
-  // 6. Venue
-  whiteout(285.7, 597.7, 120, 15);
-  page.drawText('venue: ', { x: 285.7, y: 598, size: 9, font: fontRegular, color: pinkColor });
+  // 6. Venue [VUENUE] (mantiene 'VENUE:' original de Canva)
+  whiteout(322, 593, 88, 16);
   const venueStr = (quote.event_venue || 'Por definir').toUpperCase();
-  page.drawText(venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 322, y: 598, size: 9, font: fontRegular, color: darkColor });
+  page.drawText(venueStr.length > 18 ? venueStr.substring(0, 16) + '...' : venueStr, { x: 325, y: 597.5, size: 8, font: fontRegular, color: darkColor });
 
-  // 7. Hora inicio / Entrega
-  whiteout(413.3, 597.7, 140, 15);
-  if (isService) {
-    page.drawText('hora inicio: ', { x: 413.3, y: 598, size: 9, font: fontRegular, color: pinkColor });
-    page.drawText((quote.ceremony_time || quote.service_time || 'Por definir').toUpperCase(), { x: 465, y: 598, size: 9, font: fontRegular, color: darkColor });
-  } else {
-    page.drawText('entrega: ', { x: 413.3, y: 598, size: 9, font: fontRegular, color: pinkColor });
-    page.drawText((quote.delivery_date || 'Estimada').toUpperCase(), { x: 455, y: 598, size: 9, font: fontRegular, color: darkColor });
-  }
+  // 7. Hora inicio [HORA INICIO] (mantiene 'HORA INICIO:' original de Canva)
+  whiteout(482, 593, 80, 16);
+  const timeStr = isService
+    ? (quote.ceremony_time || quote.service_time || 'Por definir').toUpperCase()
+    : (quote.delivery_date || 'Estimada').toUpperCase();
+  page.drawText(timeStr, { x: 485, y: 597.5, size: 8.5, font: fontRegular, color: darkColor });
 
   // 8. Service Items Row
   const displayItems = (items && items.length > 0) ? items : [
@@ -130,31 +121,31 @@ export async function buildVlbQuotePdf(
   ];
 
   // White out the placeholder service row
-  whiteout(60, 480, 490, 50);
+  whiteout(50, 505, 495, 25);
 
-  let currentItemY = 514;
+  let currentItemY = 512;
   displayItems.forEach((item, idx) => {
     if (idx > 2) return; // fits up to 3 items cleanly
     const itemTotal = `$${Number(item.total_price || item.unit_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-    page.drawText(item.item_name, { x: 66.2, y: currentItemY, size: 9, font: fontBold, color: darkColor });
+    page.drawText(item.item_name, { x: 62, y: currentItemY, size: 8.5, font: fontBold, color: darkColor });
     
     // Description truncated to fit
     const descText = item.description || '';
-    const cleanDesc = descText.length > 75 ? descText.substring(0, 72) + '...' : descText;
-    page.drawText(cleanDesc, { x: 180, y: currentItemY, size: 8, font: fontRegular, color: mutedColor });
+    const cleanDesc = descText.length > 60 ? descText.substring(0, 58) + '...' : descText;
+    page.drawText(cleanDesc, { x: 235, y: currentItemY, size: 8, font: fontRegular, color: mutedColor });
     
-    page.drawText(itemTotal, { x: 490, y: currentItemY, size: 9, font: fontBold, color: darkColor });
+    page.drawText(itemTotal, { x: 475, y: currentItemY, size: 8.5, font: fontBold, color: darkColor });
     currentItemY -= 16;
   });
 
-  // 9. Total
-  whiteout(465, 382, 85, 24);
+  // 9. Total (mantiene 'TOTAL' original de Canva y sobreescribe '(TOTAL)')
+  whiteout(468, 380, 77, 25);
   const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-  page.drawText(totalFormatted, { x: 480, y: 387.1, size: 12, font: fontBold, color: darkColor });
+  page.drawText(totalFormatted, { x: 475, y: 387, size: 11, font: fontBold, color: darkColor });
 
   // 10. Concepto en Forma de Pago
   whiteout(105, 180, 260, 15);
-  page.drawText(`| [${quote.client_name || 'Nombre clienta'}] [${quote.event_date || 'Fecha evento'}]`, { x: 105.1, y: 184.5, size: 9, font: fontRegular, color: darkColor });
+  page.drawText(`| [${quote.client_name || 'Nombre clienta'}] [${quote.event_date || 'Fecha evento'}]`, { x: 105.1, y: 184.5, size: 8.5, font: fontRegular, color: darkColor });
 
   // ========================================================
   // PÁGINA 2: CONTRATO DIGITAL VINCULANTE & VALIDEZ LEGAL
