@@ -233,9 +233,9 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
   const isLiquidated = totalPaid >= totalCalculated && totalCalculated > 0;
   const isSigned = Boolean(signSuccess || quote?.signature_data);
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!quote) return;
-    generateVlbQuotePdf({
+    await generateVlbQuotePdf({
       ...quote,
       down_payment_amount: downPaymentRequired,
       total_paid: totalPaid,

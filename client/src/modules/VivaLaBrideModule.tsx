@@ -557,7 +557,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     }
   };
 
-  const handleExportPdfCurrent = () => {
+  const handleExportPdfCurrent = async () => {
     if (!quoteForm.client_name.trim()) {
       showToast('Ingresa el nombre de la clienta para generar el PDF.', 'error');
       return;
@@ -591,7 +591,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       updated_at: new Date().toISOString()
     };
 
-    generateVlbQuotePdf(mockQuote, quoteItems);
+    await generateVlbQuotePdf(mockQuote, quoteItems);
     showToast('¡PDF Editorial descargado con éxito!');
   };
 
@@ -624,7 +624,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       const isService = targetQuote.quote_number?.startsWith('SV-') || targetItems.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT');
       const downPaymentRequired = isService ? Math.min(1000, targetQuote.total) : Math.round(targetQuote.total * 0.5);
 
-      generateVlbQuotePdf({
+      await generateVlbQuotePdf({
         ...targetQuote,
         down_payment_amount: downPaymentRequired
       }, targetItems);
@@ -786,7 +786,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     };
 
     // Generar el archivo PDF en memoria
-    const { file, fileName, doc } = buildVlbQuotePdf(finalQuote, activeItems, { autoDownload: false });
+    const { file, fileName } = await buildVlbQuotePdf(finalQuote, activeItems, { autoDownload: false });
 
     // Subir el PDF al servidor para link directo si la cotización ya existe en base de datos
     let pdfDirectUrl = '';
