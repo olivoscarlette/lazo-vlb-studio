@@ -218,6 +218,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
   // Regla estricta: uno u otro (Servicios = $1,000 | Papelería = 50%)
   const isServiceProposal = Boolean(
     quote?.quote_number?.startsWith('SV-') ||
+    quote?.down_payment_amount === 1000 ||
     hasServicios ||
     items.some(i => i.pricing_type === 'FIXED_EVENT')
   );

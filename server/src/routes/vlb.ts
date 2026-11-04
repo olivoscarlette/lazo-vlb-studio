@@ -437,12 +437,43 @@ router.delete('/catalog/:id', (req, res) => {
 // 2. QUOTES ROUTES (Cotizador Rápido)
 // ==========================================
 
+// Helper to generate sequential general folios for Viva la Bride (Format: VLB-YY-MMCC, e.g. VLB-26-1101)
+export function generateNextVlbQuoteNumber(): string {
+  const now = new Date();
+  const yearShort = now.getFullYear().toString().slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const monthPrefix = `VLB-${yearShort}-${month}`; // e.g. "VLB-26-11"
+
+  const rows = db.prepare(`
+    SELECT quote_number FROM vlb_quotes 
+    WHERE quote_number LIKE ?
+  `).all(`${monthPrefix}%`) as { quote_number: string }[];
+
+  let maxConsecutive = 0;
+  for (const row of rows) {
+    if (!row.quote_number) continue;
+    // Expected format: VLB-26-1101, VLB-26-1102...
+    const match = row.quote_number.match(/^VLB-\d{2}-\d{2}(\d{2,})$/);
+    if (match && match[1]) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > maxConsecutive) {
+        maxConsecutive = num;
+      }
+    }
+  }
+
+  const nextConsecutive = maxConsecutive + 1;
+  const consecutiveFormatted = String(nextConsecutive).padStart(2, '0');
+  return `${monthPrefix}${consecutiveFormatted}`;
+}
+
 // GET /api/vlb/quotes - List quotes
 router.get('/quotes', (req, res) => {
   try {
     const quotes = db.prepare(`
       SELECT q.*,
-        (SELECT COUNT(*) FROM vlb_quote_items WHERE quote_id = q.id) as items_count
+        (SELECT COUNT(*) FROM vlb_quote_items WHERE quote_id = q.id) as items_count,
+        EXISTS(SELECT 1 FROM vlb_quote_items WHERE quote_id = q.id AND (category = 'STANDS_EXPERIENCIAS' OR pricing_type = 'FIXED_EVENT')) as has_services
       FROM vlb_quotes q
       ORDER BY q.created_at DESC
     `).all();
@@ -527,12 +558,8 @@ router.post('/quotes', (req, res) => {
 
     const id = 'quote_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     
-    // Generate official Viva la Bride quote number (PS-26-XXXX for Papelería Social, SV-26-XXXX for Stands)
-    const currentYearShort = new Date().getFullYear().toString().slice(-2);
-    const hasStands = Array.isArray(items) && items.some((i: any) => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT');
-    const prefix = hasStands ? 'SV' : 'PS';
-    const randCode = Math.floor(1000 + Math.random() * 9000);
-    const quote_number = req.body.quote_number || `${prefix}-${currentYearShort}-${randCode}`;
+    // Generate official Viva la Bride unified quote number (Opción A: VLB-YY-MMCC, e.g. VLB-26-1101)
+    const quote_number = req.body.quote_number?.trim() || generateNextVlbQuoteNumber();
 
     // Calculate subtotal from items
     let subtotal = 0;

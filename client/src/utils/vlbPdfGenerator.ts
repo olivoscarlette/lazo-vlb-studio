@@ -74,17 +74,17 @@ export function buildVlbQuotePdf(
   // Determine proposal category
   const isService = (items && items.length > 0)
     ? items.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT')
-    : (quote.quote_number?.startsWith('SV-') ?? false);
+    : (quote.quote_number?.startsWith('SV-') || quote.down_payment_amount === 1000);
 
   const serviceTypeTitle = isService ? 'BEER STAND' : 'PAPELERÍA SOCIAL';
 
-  // Format Folio
+  // Format Folio (unified VLB standard format: VLB-YY-MMCC)
   let folioNumber = quote.quote_number;
-  if (!folioNumber || (!folioNumber.startsWith('PS-') && !folioNumber.startsWith('SV-'))) {
-    const yearShort = new Date().getFullYear().toString().slice(-2);
-    const randCode = Math.floor(1000 + Math.random() * 9000);
-    const prefix = isService ? 'SV' : 'PS';
-    folioNumber = `${prefix}-${yearShort}-${randCode}`;
+  if (!folioNumber || folioNumber === 'current_preview' || folioNumber === 'preview') {
+    const now = new Date();
+    const yearShort = now.getFullYear().toString().slice(-2);
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    folioNumber = `VLB-${yearShort}-${month}01`;
   }
 
   // Format Dates

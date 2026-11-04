@@ -567,9 +567,12 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       return;
     }
 
+    const now = new Date();
+    const yearShort = now.getFullYear().toString().slice(-2);
+    const month = String(now.getMonth() + 1).padStart(2, '0');
     const mockQuote: VlbQuote = {
       id: 'current_preview',
-      quote_number: (quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS') ? 'SV' : 'PS') + '-' + new Date().getFullYear().toString().slice(-2) + '-' + (4100 + quotes.length + 1),
+      quote_number: `VLB-${yearShort}-${month}01`,
       client_name: quoteForm.client_name,
       partner_name: quoteForm.partner_name,
       client_email: quoteForm.client_email,
@@ -756,10 +759,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
     const couple = [clientName, partnerName].filter(Boolean).join(' & ');
 
+    const now = new Date();
+    const yearShort = now.getFullYear().toString().slice(-2);
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+
     // Construir el objeto de cotización completo para el PDF
     const finalQuote: VlbQuote = targetQuote || {
       id: 'preview_' + Date.now(),
-      quote_number: (hasStands ? 'SV' : 'PS') + '-' + new Date().getFullYear().toString().slice(-2) + '-' + (4100 + quotes.length + 1),
+      quote_number: `VLB-${yearShort}-${month}01`,
       client_name: clientName || 'Novia',
       partner_name: partnerName,
       client_email: isCurrent ? quoteForm.client_email : targetQuote!.client_email,
@@ -1625,7 +1632,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   </thead>
                   <tbody className="divide-y divide-[#F7F3EE]">
                     {quotes.map(q => {
-                      const isService = q.quote_number?.startsWith('SV-');
+                      const isService = Boolean((q as any).has_services) || q.quote_number?.startsWith('SV-') || q.down_payment_amount === 1000;
                       const downPayment = isService ? Math.min(1000, q.total) : (q.total * 0.5);
                       return (
                         <tr key={q.id} className="hover:bg-[#FCFAF7] transition">
