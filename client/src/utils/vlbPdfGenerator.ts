@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_LOGO_BASE64 } from './vlbLogoBase64';
-import { TOP_WAVES_BASE64, BOTTOM_RIGHT_WAVES_BASE64, VLB_MONOGRAM_BASE64 } from './vlbDesignAssets';
+import { CANVA_TEMPLATE_BASE64 } from './vlbDesignAssets';
 
 // Colors exact to Viva la Bride Canva branding
 const COLOR_CANVA_PINK = [222, 121, 148]; // #DE7994 (Titles & Accents)
@@ -113,99 +113,49 @@ export function buildVlbQuotePdf(
   const signerDisplayName = quote.signed_by_name || clientFullName;
 
   // ========================================================
-  // PÁGINA 1: COTIZACIÓN EDITORIAL OFICIAL (CANVA BRANDING)
+  // PÁGINA 1: COTIZACIÓN EDITORIAL OFICIAL (CANVA BRANDING 1:1)
   // ========================================================
   
-  // 1. Top Decorative Waves Header across full width
+  // 1. Draw 100% faithful Canva template background (exact fonts, top waves, bottom waves, logo, footer, etc.)
   try {
-    doc.addImage(TOP_WAVES_BASE64, "PNG", 0, 0, pageWidth, 36);
+    doc.addImage(CANVA_TEMPLATE_BASE64, "PNG", 0, 0, pageWidth, pageHeight);
   } catch (e) {
-    console.warn("Could not render top waves:", e);
+    console.warn("Could not render Canva template background:", e);
   }
 
-  // 2. Title: COTIZACIÓN
-  let y = 46;
-  doc.setFont("times", "normal");
-  doc.setFontSize(22);
-  doc.setTextColor(COLOR_CANVA_PINK[0], COLOR_CANVA_PINK[1], COLOR_CANVA_PINK[2]);
-  doc.text("COTIZACIÓN", margin, y);
-
-  // 3. Folio y Fecha de emisión
-  y += 9;
-  doc.setFont("helvetica", "normal");
+  // 2. Dynamic Text Overlay at exact Canva coordinates
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(8.5);
-  doc.setTextColor(COLOR_MUTED_LABEL[0], COLOR_MUTED_LABEL[1], COLOR_MUTED_LABEL[2]);
-  doc.text("FOLIO: ", margin, y);
+  doc.setTextColor(50, 45, 45);
+
+  // Folio
+  doc.text(folioNumber, 32, 60.5);
+
+  // Fecha
+  doc.setFont("helvetica", "normal");
+  doc.text(todayFormatted.toUpperCase(), 32, 67.0);
+
+  // Cliente
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text(folioNumber, margin + 12, y);
+  doc.text(clientFullName.toUpperCase(), 35, 78.5);
 
-  y += 5;
+  // Teléfono
   doc.setFont("helvetica", "normal");
-  doc.setTextColor(COLOR_MUTED_LABEL[0], COLOR_MUTED_LABEL[1], COLOR_MUTED_LABEL[2]);
-  doc.text("FECHA: ", margin, y);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text(todayFormatted.toUpperCase(), margin + 13, y);
+  doc.text(quote.client_phone || "Sin contacto", 108, 78.5);
 
-  // 4. Bloque Metadatos Cliente y Evento (2 Filas)
-  y += 8;
-  // Fila 1: Cliente y Teléfono
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(COLOR_MUTED_LABEL[0], COLOR_MUTED_LABEL[1], COLOR_MUTED_LABEL[2]);
-  doc.text("CLIENTE: ", margin, y);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text(clientFullName.toUpperCase(), margin + 16, y);
+  // Fecha Evento
+  doc.text((quote.event_date || "Por definir").toUpperCase(), 48, 87.2);
 
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(COLOR_MUTED_LABEL[0], COLOR_MUTED_LABEL[1], COLOR_MUTED_LABEL[2]);
-  doc.text("TELÉFONO: ", margin + 95, y);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text(quote.client_phone || "Sin contacto", margin + 116, y);
+  // Venue
+  const venueStr = (quote.event_venue || "Por definir").toUpperCase();
+  doc.text(venueStr.length > 22 ? venueStr.substring(0, 20) + "..." : venueStr, 115, 87.2);
 
-  // Fila 2: Fecha Evento, Venue y Hora Inicio / Entrega
-  y += 5.5;
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(COLOR_MUTED_LABEL[0], COLOR_MUTED_LABEL[1], COLOR_MUTED_LABEL[2]);
-  doc.text("FECHA EVENTO: ", margin, y);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text((quote.event_date || "Por definir").toUpperCase(), margin + 26, y);
-
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(COLOR_MUTED_LABEL[0], COLOR_MUTED_LABEL[1], COLOR_MUTED_LABEL[2]);
-  doc.text("VENUE: ", margin + 80, y);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  const venueText = (quote.event_venue || "Por definir").toUpperCase();
-  doc.text(venueText.length > 20 ? venueText.substring(0, 18) + "..." : venueText, margin + 95, y);
-
+  // Hora Inicio / Fecha Entrega
   if (isService) {
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(COLOR_MUTED_LABEL[0], COLOR_MUTED_LABEL[1], COLOR_MUTED_LABEL[2]);
-    doc.text("HORA INICIO: ", margin + 138, y);
-    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-    doc.text((quote.ceremony_time || quote.service_time || "Por definir").toUpperCase(), margin + 160, y);
+    doc.text((quote.ceremony_time || quote.service_time || "Por definir").toUpperCase(), 175, 87.2);
   } else {
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(COLOR_MUTED_LABEL[0], COLOR_MUTED_LABEL[1], COLOR_MUTED_LABEL[2]);
-    doc.text("ENTREGA: ", margin + 138, y);
-    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-    doc.text((quote.delivery_date || "Estimada").toUpperCase(), margin + 155, y);
+    doc.text((quote.delivery_date || "Estimada").toUpperCase(), 175, 87.2);
   }
-
-  // 5. Tabla de Inversión con Barra Rosa Oficial
-  y += 10;
-  const tableHeaderHeight = 8;
-  doc.setFillColor(COLOR_CANVA_BAR[0], COLOR_CANVA_BAR[1], COLOR_CANVA_BAR[2]);
-  doc.rect(margin, y, contentWidth, tableHeaderHeight, "F");
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(255, 255, 255);
-  doc.text("SERVICIO", margin + 6, y + 5.5);
-  doc.text("DESCRIPCIÓN", margin + 65, y + 5.5);
-  doc.text("TOTAL", pageWidth - margin - 6, y + 5.5, { align: "right" });
-
-  y += tableHeaderHeight + 5;
 
   // Items Safeguard
   const displayItems = (items && items.length > 0) ? items : [
@@ -226,149 +176,44 @@ export function buildVlbQuotePdf(
     } as VlbQuoteItem
   ];
 
-  // Renglones de la tabla
-  displayItems.forEach((item) => {
-    // Servicio
+  // Items under pink table bar
+  let itemY = 108;
+  displayItems.forEach((item, idx) => {
+    if (idx > 2) return; // fits up to 3 items comfortably in table area
+    
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8.5);
-    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-    const nameLines = doc.splitTextToSize(item.item_name, 55);
-    doc.text(nameLines, margin + 6, y);
+    doc.setTextColor(50, 45, 45);
+    const nameLines = doc.splitTextToSize(item.item_name, 48);
+    doc.text(nameLines, 23.3, itemY);
 
-    // Descripción multilínea
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.setTextColor(COLOR_MUTED_TEXT[0], COLOR_MUTED_TEXT[1], COLOR_MUTED_TEXT[2]);
-    const descLines = doc.splitTextToSize(item.description || "", 85);
-    doc.text(descLines, margin + 65, y);
+    doc.setTextColor(90, 85, 85);
+    const descLines = doc.splitTextToSize(item.description || "", 75);
+    doc.text(descLines, 76, itemY);
 
-    // Costo total
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8.5);
-    doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-    const itemTotalFormatted = "$" + Number(item.total_price || item.unit_price || 0).toLocaleString("es-MX", { minimumFractionDigits: 2 });
-    doc.text(itemTotalFormatted, pageWidth - margin - 6, y, { align: "right" });
+    doc.setTextColor(50, 45, 45);
+    const itemTotal = "$" + Number(item.total_price || item.unit_price || 0).toLocaleString("es-MX", { minimumFractionDigits: 2 });
+    doc.text(itemTotal, 192, itemY, { align: "right" });
 
-    const rowHeight = Math.max(nameLines.length * 4.2, descLines.length * 3.8, 7) + 4;
-    y += rowHeight;
-
-    // Línea divisoria muy fina entre conceptos
-    doc.setDrawColor(COLOR_LINE_PINK[0], COLOR_LINE_PINK[1], COLOR_LINE_PINK[2]);
-    doc.setLineWidth(0.3);
-    doc.line(margin, y - 2, pageWidth - margin, y - 2);
+    const rowH = Math.max(nameLines.length * 4, descLines.length * 3.5, 7) + 3;
+    itemY += rowH;
   });
 
-  // 6. Renglón de TOTAL con líneas superior e inferior
-  y += 2;
-  doc.setDrawColor(COLOR_LINE_PINK[0], COLOR_LINE_PINK[1], COLOR_LINE_PINK[2]);
-  doc.setLineWidth(0.4);
-  doc.line(margin, y, pageWidth - margin, y);
-
-  y += 6;
+  // Total Amount
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10.5);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text("TOTAL", margin + 65, y);
+  doc.setTextColor(50, 45, 45);
+  doc.text("$" + total.toLocaleString("es-MX", { minimumFractionDigits: 2 }), 192, 159, { align: "right" });
 
-  doc.setFontSize(10.5);
-  doc.text("$" + total.toLocaleString("es-MX", { minimumFractionDigits: 2 }), pageWidth - margin - 6, y, { align: "right" });
-
-  y += 3;
-  doc.line(margin, y, pageWidth - margin, y);
-
-  // 7. Sección de POLÍTICAS
-  y += 11;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.setTextColor(COLOR_CANVA_PINK[0], COLOR_CANVA_PINK[1], COLOR_CANVA_PINK[2]);
-  doc.text("POLÍTICAS", margin, y);
-
-  y += 5.5;
+  // Concepto en Forma de Pago
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-
-  if (isService) {
-    doc.text("• Separación fija de 1,000 MXN para reservar y bloquear fecha de evento.", margin, y);
-    y += 4.5;
-    doc.text("• El saldo se liquida 10 días antes del evento.", margin, y);
-    y += 4.5;
-    doc.text("• Los anticipos y separaciones no son reembolsables.", margin, y);
-  } else {
-    doc.text("• Anticipo del 50% para reservar e iniciar el proceso de producción.", margin, y);
-    y += 4.5;
-    doc.text("• El saldo se liquida previo al envío o entrega de las piezas.", margin, y);
-    y += 4.5;
-    doc.text("• Los anticipos y separaciones no son reembolsables.", margin, y);
-  }
-
-  // 8. Bloque FORMA DE PAGO
-  y += 7.5;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.setTextColor(COLOR_MUTED_LABEL[0], COLOR_MUTED_LABEL[1], COLOR_MUTED_LABEL[2]);
-  doc.text("FORMA DE PAGO", margin, y);
-
-  y += 4.5;
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(COLOR_DARK_TEXT[0], COLOR_DARK_TEXT[1], COLOR_DARK_TEXT[2]);
-  doc.text("Beneficiario | ", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text("Scarlette Olivo", margin + 20, y);
-
-  y += 4.2;
-  doc.setFont("helvetica", "bold");
-  doc.text("Banco | ", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text("BBVA", margin + 13, y);
-
-  y += 4.2;
-  doc.setFont("helvetica", "bold");
-  doc.text("Clabe | ", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text("012 180 01519982172 1", margin + 12, y);
-
-  y += 4.2;
-  doc.setFont("helvetica", "bold");
-  doc.text("Concepto | ", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text("[" + (quote.client_name || "Nombre clienta") + "] [" + (quote.event_date || "Fecha evento") + "]", margin + 17, y);
-
-  // 9. Ondas decorativas en la esquina inferior derecha
-  try {
-    const bottomWavesW = 55;
-    const bottomWavesH = 65;
-    doc.addImage(
-      BOTTOM_RIGHT_WAVES_BASE64,
-      "PNG",
-      pageWidth - bottomWavesW,
-      pageHeight - bottomWavesH,
-      bottomWavesW,
-      bottomWavesH
-    );
-  } catch (e) {
-    console.warn("Could not render bottom right waves:", e);
-  }
-
-  // 10. Monograma oficial vb abajo a la izquierda
-  try {
-    const monogramW = 14;
-    const monogramH = 17;
-    doc.addImage(
-      VLB_MONOGRAM_BASE64,
-      "PNG",
-      margin,
-      pageHeight - 34,
-      monogramW,
-      monogramH
-    );
-  } catch (e) {
-    console.warn("Could not render monogram logo:", e);
-  }
-
-  // 11. Footer con Redes Sociales y Aviso Legal
-  drawVlbFooter(doc, pageWidth, pageHeight, "PÁGINA 1/2");
+  doc.setTextColor(60, 55, 55);
+  doc.text("[" + (quote.client_name || "Nombre clienta") + "] [" + (quote.event_date || "Fecha evento") + "]", 37, 232.5);
 
   // ========================================================
   // PÁGINA 2: CONTRATO DE PRESTACIÓN DE SERVICIOS (PARTE 1)
