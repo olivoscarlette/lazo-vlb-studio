@@ -40,8 +40,8 @@ router.get('/quotes/public/:token', (req, res) => {
     const { token } = req.params;
     const quote = db.prepare(`
       SELECT * FROM vlb_quotes
-      WHERE id = ? OR public_token = ?
-    `).get(token, token) as any;
+      WHERE id = ? OR public_token = ? OR quote_number = ?
+    `).get(token, token, token) as any;
 
     if (!quote) {
       return res.status(404).json({ error: 'Propuesta no encontrada o enlace expirado.' });
@@ -453,22 +453,52 @@ router.get('/quotes', (req, res) => {
   }
 });
 
-// GET /api/vlb/quotes/:id - Get single quote with full items
+// GET /api/vlb/quotes/:id - Get single quote with full items & payments
 router.get('/quotes/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const quote = db.prepare('SELECT * FROM vlb_quotes WHERE id = ?').get(id) as any;
+    const quote = db.prepare(`
+      SELECT * FROM vlb_quotes
+      WHERE id = ? OR quote_number = ? OR public_token = ?
+    `).get(id, id, id) as any;
+
     if (!quote) {
       return res.status(404).json({ error: 'Cotización no encontrada.' });
     }
 
     const items = db.prepare(`
       SELECT * FROM vlb_quote_items
-      WHERE quote_id = ?
+      WHERE quote_id = ? OR quote_id = ?
       ORDER BY sort_order ASC, created_at ASC
-    `).all(id);
+    `).all(quote.id, id);
 
-    res.json({ quote, items });
+    // Buscar si ya tiene pedido asociado en el CRM con abonos / pagos registrados
+    const order = db.prepare(`
+      SELECT * FROM vlb_orders WHERE quote_id = ? OR quote_number = ? ORDER BY created_at DESC LIMIT 1
+    `).get(quote.id, quote.quote_number) as any;
+
+    let payments: any[] = [];
+    if (order) {
+      payments = db.prepare(`
+        SELECT * FROM vlb_payments WHERE order_id = ? ORDER BY payment_date DESC, created_at DESC
+      `).all(order.id);
+    }
+
+    const totalPaid = order ? (Number(order.total_paid) || 0) : (Number(quote.total_paid) || 0);
+    const balancePending = order
+      ? (order.balance_pending !== undefined ? Number(order.balance_pending) : Math.max(0, quote.total - totalPaid))
+      : Math.max(0, quote.total - totalPaid);
+
+    res.json({
+      quote: {
+        ...quote,
+        total_paid: totalPaid,
+        balance_due: totalPaid > 0 ? balancePending : quote.balance_due
+      },
+      items,
+      order: order || null,
+      payments
+    });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al consultar cotización.' });
   }

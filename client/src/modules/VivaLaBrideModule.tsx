@@ -594,13 +594,40 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
   const handleExportSavedQuotePdf = async (quote: VlbQuote) => {
     try {
-      const res = await apiFetch(`/api/vlb/quotes/${quote.id}`);
-      if (!res.ok) throw new Error('Error al cargar cotización');
-      const data = await res.json();
-      generateVlbQuotePdf(data.quote, data.items);
+      let targetQuote = quote;
+      let targetItems: VlbQuoteItem[] = [];
+
+      try {
+        const quoteKey = quote.id || quote.quote_number;
+        const res = await apiFetch(`/api/vlb/quotes/${quoteKey}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.quote) targetQuote = { ...quote, ...data.quote };
+          if (data.items && Array.isArray(data.items)) targetItems = data.items;
+        } else {
+          // Intentar ruta pública sin requerir token en caso de fallo
+          const pubRes = await fetch(`/api/vlb/quotes/public/${quoteKey}`);
+          if (pubRes.ok) {
+            const pubData = await pubRes.json();
+            if (pubData.quote) targetQuote = { ...quote, ...pubData.quote };
+            if (pubData.items && Array.isArray(pubData.items)) targetItems = pubData.items;
+          }
+        }
+      } catch (fetchErr) {
+        console.warn('Could not fetch remote quote details, generating with local quote data:', fetchErr);
+      }
+
+      // Regla de negocio estricta: Stands = $1,000 fijo, Papelería = 50%
+      const isService = targetQuote.quote_number?.startsWith('SV-') || targetItems.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT');
+      const downPaymentRequired = isService ? Math.min(1000, targetQuote.total) : Math.round(targetQuote.total * 0.5);
+
+      generateVlbQuotePdf({
+        ...targetQuote,
+        down_payment_amount: downPaymentRequired
+      }, targetItems);
       showToast(`Cotización ${quote.quote_number} exportada a PDF.`);
     } catch (err: any) {
-      showToast(err.message, 'error');
+      showToast(err.message || 'Error al exportar cotización', 'error');
     }
   };
 
