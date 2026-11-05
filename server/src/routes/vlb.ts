@@ -452,16 +452,18 @@ router.put('/catalog/:id', (req, res) => {
         updated_at = ?
       WHERE id = ?
     `).run(
-      category,
-      subcategory,
-      name ? name.trim() : null,
-      description,
-      pricing_type,
-      base_price !== undefined ? Number(base_price) : null,
-      min_pieces !== undefined ? Number(min_pieces) : null,
-      typeof specs_json === 'object' ? JSON.stringify(specs_json) : specs_json,
-      image_url,
-      is_active !== undefined ? Number(is_active) : null,
+      category ?? null,
+      subcategory ?? null,
+      name !== undefined && name !== null ? name.trim() : null,
+      description ?? null,
+      pricing_type ?? null,
+      base_price !== undefined && base_price !== null && base_price !== '' ? Number(base_price) : null,
+      min_pieces !== undefined && min_pieces !== null && min_pieces !== '' ? Number(min_pieces) : null,
+      specs_json !== undefined && specs_json !== null
+        ? (typeof specs_json === 'object' ? JSON.stringify(specs_json) : String(specs_json))
+        : null,
+      image_url ?? null,
+      is_active !== undefined && is_active !== null ? Number(is_active) : null,
       now,
       id
     );
@@ -793,20 +795,20 @@ router.put('/quotes/:id', (req, res) => {
       WHERE id = ?
     `).run(
       client_name ? client_name.trim() : null,
-      partner_name,
-      client_email,
-      client_phone,
-      event_date,
-      event_venue,
-      status,
+      partner_name ?? null,
+      client_email ?? null,
+      client_phone ?? null,
+      event_date ?? null,
+      event_venue ?? null,
+      status ?? null,
       subtotal,
       discountAmount,
       total,
       pct,
       down_payment_amount,
       balance_due,
-      notes,
-      valid_until,
+      notes ?? null,
+      valid_until ?? null,
       now,
       id
     );
@@ -1570,21 +1572,21 @@ router.put('/orders/:id', (req, res) => {
       WHERE id = ?
     `).run(
       client_name ? client_name.trim() : null,
-      partner_name,
-      client_email,
-      client_phone,
-      event_date,
-      event_venue,
+      partner_name ?? null,
+      client_email ?? null,
+      client_phone ?? null,
+      event_date ?? null,
+      event_venue ?? null,
       total,
       downPayment,
       balancePending,
       updatedPaymentStatus,
-      production_status,
-      vobo_design_deadline,
-      physical_delivery_date,
-      stand_setup_date,
-      stand_setup_time,
-      notes,
+      production_status ?? null,
+      vobo_design_deadline ?? null,
+      physical_delivery_date ?? null,
+      stand_setup_date ?? null,
+      stand_setup_time ?? null,
+      notes ?? null,
       now,
       id
     );
@@ -1827,7 +1829,7 @@ router.put('/documents/:id/vobo', (req, res) => {
         vobo_approved_at = ?,
         vobo_notes = COALESCE(?, vobo_notes)
       WHERE id = ?
-    `).run(vobo_status, approvedAt, vobo_notes, id);
+    `).run(vobo_status, approvedAt, vobo_notes ?? null, id);
 
     // If approved, update order's production_status to EN_PRODUCCION if currently in review
     if (vobo_status === 'APROBADO') {
