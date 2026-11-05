@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Sparkles,
   FileText,
@@ -34,7 +34,10 @@ import {
   Tag,
   Truck,
   Link,
-  Copy
+  Copy,
+  Loader2,
+  Camera,
+  Image as ImageIcon
 } from 'lucide-react';
 import {
   VlbCatalogItem,
@@ -126,6 +129,11 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     min_pieces: 50,
     image_url: ''
   });
+
+  const [uploadingCatalogImage, setUploadingCatalogImage] = useState(false);
+  const [catalogImageError, setCatalogImageError] = useState<string | null>(null);
+  const [showManualImageUrl, setShowManualImageUrl] = useState(false);
+  const catalogImageInputRef = useRef<HTMLInputElement>(null);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState({
@@ -438,6 +446,54 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       loadData();
     } catch (err: any) {
       showToast(err.message, 'error');
+    }
+  };
+
+  const handleUploadCatalogImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setCatalogImageError('Por favor selecciona un archivo de imagen válido (JPG, PNG, WEBP, etc.)');
+      return;
+    }
+
+    if (file.size > 20 * 1024 * 1024) {
+      setCatalogImageError('La imagen excede el límite de 20MB.');
+      return;
+    }
+
+    setUploadingCatalogImage(true);
+    setCatalogImageError(null);
+
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+
+      const res = await fetch('/api/vlb/catalog/upload-image', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        body: fd
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Error al subir la imagen');
+      }
+
+      setCatalogForm(prev => ({
+        ...prev,
+        image_url: data.imageUrl
+      }));
+      showToast('Foto cargada exitosamente.');
+    } catch (err: any) {
+      setCatalogImageError(err.message || 'Error al subir la imagen');
+      showToast(err.message || 'Error al subir la imagen', 'error');
+    } finally {
+      setUploadingCatalogImage(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -2021,6 +2077,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               <button
                 onClick={() => {
                   setEditingCatalogItem(null);
+                  setCatalogImageError(null);
+                  setShowManualImageUrl(false);
                   setCatalogForm({
                     category: 'PAPELERIA',
                     subcategory: 'Invitaciones Finas',
@@ -2111,6 +2169,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     <button
                       onClick={() => {
                         setEditingCatalogItem(item);
+                        setCatalogImageError(null);
+                        setShowManualImageUrl(Boolean(item.image_url && !item.image_url.startsWith('/uploads')));
                         setCatalogForm({
                           category: item.category,
                           subcategory: item.subcategory,
@@ -3452,16 +3512,145 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               </div>
 
               <div>
-                <label className="block font-semibold text-[#7D6F6B] uppercase mb-1">
-                  URL de Imagen Inspo
+                <label className="block font-semibold text-[#7D6F6B] uppercase mb-1.5 flex items-center justify-between">
+                  <span>Foto del Artículo / Imagen Inspo</span>
+                  {catalogForm.image_url && (
+                    <span className="text-[10px] text-[#6E8C70] font-normal flex items-center gap-1">
+                      <Check className="w-3 h-3" /> Foto asignada
+                    </span>
+                  )}
                 </label>
+
+                {/* Hidden File Input para seleccionar desde la laptop */}
                 <input
-                  type="url"
-                  placeholder="https://..."
-                  value={catalogForm.image_url}
-                  onChange={e => setCatalogForm({ ...catalogForm, image_url: e.target.value })}
-                  className="w-full px-3.5 py-2 bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                  type="file"
+                  ref={catalogImageInputRef}
+                  onChange={handleUploadCatalogImage}
+                  accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                  className="hidden"
                 />
+
+                {catalogForm.image_url ? (
+                  /* Vista previa de la foto actual */
+                  <div className="p-3 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center gap-3.5">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-[#EAE3DA] shrink-0 relative group">
+                      <img
+                        src={catalogForm.image_url}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <p className="text-xs font-semibold text-[#332A28] truncate">
+                        Imagen cargada
+                      </p>
+                      <p className="text-[11px] text-[#7D6F6B] truncate">
+                        {catalogForm.image_url.startsWith('/uploads') ? 'Subida desde tu laptop' : catalogForm.image_url}
+                      </p>
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => catalogImageInputRef.current?.click()}
+                          disabled={uploadingCatalogImage}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#9C665C] bg-[#F7EDEB] hover:bg-[#F2E1DD] rounded-xl transition cursor-pointer"
+                        >
+                          {uploadingCatalogImage ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              <span>Subiendo...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-3 h-3" />
+                              <span>Cambiar foto</span>
+                            </>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCatalogForm({ ...catalogForm, image_url: '' })}
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F6ECE8] rounded-xl transition cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          <span>Quitar</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Botón / Dropzone para subir desde la laptop */
+                  <div
+                    onClick={() => catalogImageInputRef.current?.click()}
+                    className={`border-2 border-dashed rounded-2xl p-5 text-center transition cursor-pointer flex flex-col items-center justify-center gap-2 ${
+                      uploadingCatalogImage
+                        ? 'border-[#B88A82] bg-[#FAF5F2]'
+                        : 'border-[#EAE3DA] bg-[#FCFAF7] hover:bg-[#FAF6F2] hover:border-[#B88A82]'
+                    }`}
+                  >
+                    {uploadingCatalogImage ? (
+                      <>
+                        <Loader2 className="w-7 h-7 text-[#9C665C] animate-spin" />
+                        <span className="text-xs font-semibold text-[#9C665C]">Subiendo foto desde tu laptop...</span>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-11 h-11 rounded-2xl bg-[#F7EDEB] text-[#9C665C] flex items-center justify-center">
+                          <Upload className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[#332A28]">
+                            Haz clic aquí para subir una foto desde tu laptop
+                          </p>
+                          <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                            Formatos JPG, PNG, WEBP o GIF (hasta 20MB)
+                          </p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {catalogImageError && (
+                  <p className="text-xs text-[#70443D] mt-1 flex items-center gap-1 font-semibold">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>{catalogImageError}</span>
+                  </p>
+                )}
+
+                {/* Opción secundaria: URL web externa */}
+                <div className="mt-2 text-right">
+                  {!showManualImageUrl && !catalogForm.image_url ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowManualImageUrl(true)}
+                      className="text-[11px] text-[#7D6F6B] hover:text-[#9C665C] underline cursor-pointer"
+                    >
+                      O ingresar enlace web (URL externa)
+                    </button>
+                  ) : showManualImageUrl || (!catalogForm.image_url.startsWith('/uploads') && catalogForm.image_url) ? (
+                    <div className="text-left space-y-1 mt-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] uppercase font-bold text-[#7D6F6B]">
+                          URL externa de imagen
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowManualImageUrl(false)}
+                          className="text-[10px] text-[#7D6F6B] hover:underline cursor-pointer"
+                        >
+                          Ocultar campo URL
+                        </button>
+                      </div>
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        value={catalogForm.image_url}
+                        onChange={e => setCatalogForm({ ...catalogForm, image_url: e.target.value })}
+                        className="w-full px-3.5 py-1.5 bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-xs text-[#332A28]"
+                      />
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <div className="pt-2 flex justify-between items-center">

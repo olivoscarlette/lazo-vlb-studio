@@ -30,6 +30,31 @@ const upload = multer({
   limits: { fileSize: 25 * 1024 * 1024 } // 25MB limit for large editorial proofs & contracts
 });
 
+const catalogImageStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, VLB_UPLOADS_DIR);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const uniqueSuffix = 'vlb_inspo_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+const uploadCatalogImage = multer({
+  storage: catalogImageStorage,
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|webp|gif|avif/i;
+    const extname = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowed.test(file.mimetype) || file.mimetype.startsWith('image/');
+    if (extname || mimetype) {
+      return cb(null, true);
+    }
+    cb(new Error('Solo se permiten archivos de imagen (JPG, PNG, WEBP, GIF).'));
+  }
+});
+
 // ==========================================
 // 0. PUBLIC PROPOSAL & DIGITAL SIGNATURE ROUTES (Sin Login para Novios)
 // ==========================================
@@ -285,6 +310,32 @@ router.use((req, res, next) => {
 // ==========================================
 // 1. CATALOG ROUTES (Artículos y Precios)
 // ==========================================
+
+// POST /api/vlb/catalog/upload-image - Subir imagen de catálogo desde la laptop
+router.post('/catalog/upload-image', authenticateToken, (req, res, next) => {
+  uploadCatalogImage.single('image')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message || 'Error al subir la imagen.' });
+    }
+    next();
+  });
+}, (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No se recibió ningún archivo de imagen.' });
+    }
+
+    const imageUrl = `/uploads/vlb/${req.file.filename}`;
+    return res.json({
+      success: true,
+      imageUrl,
+      filename: req.file.filename,
+      originalName: req.file.originalname
+    });
+  } catch (err: any) {
+    return res.status(500).json({ error: err.message || 'Error del servidor al procesar la imagen.' });
+  }
+});
 
 // GET /api/vlb/catalog - List all catalog items
 router.get('/catalog', (req, res) => {
