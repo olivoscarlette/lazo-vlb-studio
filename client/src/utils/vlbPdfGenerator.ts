@@ -1,6 +1,75 @@
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, PDFPage } from 'pdf-lib';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_CANVA_PDF_BASE64 } from './vlbCanvaPdfBase64';
+
+/**
+ * Sanitizes string for pdf-lib standard fonts (WinAnsi/Helvetica).
+ * Strips bidi control chars (\u202A-\u202E, \u200E, \u200F, \u200B, \uFEFF),
+ * converts typographic quotes/dashes/bullets to standard characters,
+ * preserves Spanish accented characters (á, é, í, ó, ú, ñ, etc.),
+ * and removes emojis/unsupported symbols that cause WinAnsi encode crashes.
+ */
+export function cleanWinAnsi(str: string | null | undefined): string {
+  if (!str) return '';
+  let text = String(str);
+
+  // 1. Strip bidirectional & zero-width & non-printable controls
+  // (\u202A-\u202E: LRE/RLE/PDF/LRO/RLO, \u200B-\u200F, \uFEFF BOM, ASCII controls)
+  text = text.replace(/[\u200B-\u200F\u202A-\u202E\uFEFF\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
+
+  // 2. Normalize smart punctuation and symbols
+  text = text
+    .replace(/[“”«»]/g, '"')
+    .replace(/[‘’`]/g, "'")
+    .replace(/[–—―]/g, '-')
+    .replace(/…/g, '...')
+    .replace(/[•·⋅]/g, '-')
+    .replace(/[\r\n\t]/g, ' ');
+
+  // 3. Keep standard ASCII and Latin-1 supplement (including Spanish accents á, é, í, ó, ú, ñ, Á, É, Í, Ó, Ú, Ñ, ü, Ü, ¿, ¡, etc.)
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const code = char.charCodeAt(0);
+
+    // ASCII printable
+    if (code >= 0x20 && code <= 0x7E) {
+      result += char;
+      continue;
+    }
+
+    // Latin-1 Supplement (á, é, í, ó, ú, ñ, Á, É, Í, Ó, Ú, Ñ, ü, Ü, ¿, ¡, etc.)
+    if (code >= 0xA0 && code <= 0xFF) {
+      result += char;
+      continue;
+    }
+
+    // Specific Windows-1252 supported chars
+    if (
+      code === 0x20AC || // €
+      code === 0x0160 || // Š
+      code === 0x0161 || // š
+      code === 0x017D || // Ž
+      code === 0x017E || // ž
+      code === 0x0152 || // Œ
+      code === 0x0153 || // œ
+      code === 0x0178    // Ÿ
+    ) {
+      result += char;
+      continue;
+    }
+
+    // Try decomposing diacritics
+    const normalized = char.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    if (normalized.length > 0 && normalized.charCodeAt(0) >= 0x20 && normalized.charCodeAt(0) <= 0x7E) {
+      result += normalized;
+    } else {
+      result += ' ';
+    }
+  }
+
+  return result.replace(/\s+/g, ' ').trim();
+}
 
 export async function buildVlbQuotePdf(
   quote: VlbQuote,
@@ -37,6 +106,27 @@ export async function buildVlbQuotePdf(
     });
   };
 
+  // Safe draw helper that guarantees text is clean and never throws WinAnsi encoding errors
+  const safeDraw = (
+    targetPage: PDFPage,
+    text: string | null | undefined,
+    drawOptions: Parameters<PDFPage['drawText']>[1]
+  ) => {
+    const cleaned = cleanWinAnsi(text);
+    if (!cleaned) return;
+    try {
+      targetPage.drawText(cleaned, drawOptions);
+    } catch {
+      // Ultimate fallback: pure printable ASCII
+      const asciiOnly = (text || '').replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
+      if (asciiOnly) {
+        try {
+          targetPage.drawText(asciiOnly, drawOptions);
+        } catch {}
+      }
+    }
+  };
+
   // Determine proposal category
   const isService = (items && items.length > 0)
     ? items.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT')
@@ -71,35 +161,35 @@ export async function buildVlbQuotePdf(
 
   // 1. Folio [FOLIO] (mantiene 'FOLIO:' original de Canva)
   whiteout(84, 668, 70, 16);
-  page.drawText(folioNumber, { x: 86, y: 672.5, size: 8.5, font: fontBold, color: darkColor });
+  safeDraw(page, folioNumber, { x: 86, y: 672.5, size: 8.5, font: fontBold, color: darkColor });
 
   // 2. Fecha [FECHA] (mantiene 'FECHA:' original de Canva)
   whiteout(90, 650, 150, 16);
-  page.drawText(todayFormatted, { x: 92, y: 654.5, size: 8.5, font: fontRegular, color: darkColor });
+  safeDraw(page, todayFormatted, { x: 92, y: 654.5, size: 8.5, font: fontRegular, color: darkColor });
 
   // 3. Cliente [CLIENTE] (mantiene 'CLIENTE:' original de Canva)
   whiteout(96, 618, 138, 16);
-  page.drawText(clientFullName.toUpperCase(), { x: 98, y: 622.5, size: 8.5, font: fontBold, color: darkColor });
+  safeDraw(page, clientFullName.toUpperCase(), { x: 98, y: 622.5, size: 8.5, font: fontBold, color: darkColor });
 
   // 4. Teléfono [TELEFONO] (mantiene 'TELÉFONO:' original de Canva)
   whiteout(282, 618, 115, 16);
-  page.drawText(quote.client_phone || 'Sin contacto', { x: 285, y: 622.5, size: 8.5, font: fontRegular, color: darkColor });
+  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 285, y: 622.5, size: 8.5, font: fontRegular, color: darkColor });
 
   // 5. Fecha evento [FECHA EVENTO] (mantiene 'FECHA EVENTO:' original de Canva)
   whiteout(132, 593, 140, 16);
-  page.drawText((quote.event_date || 'Por definir').toUpperCase(), { x: 135, y: 597.5, size: 8.5, font: fontRegular, color: darkColor });
+  safeDraw(page, (quote.event_date || 'Por definir').toUpperCase(), { x: 135, y: 597.5, size: 8.5, font: fontRegular, color: darkColor });
 
   // 6. Venue [VUENUE] (mantiene 'VENUE:' original de Canva)
   whiteout(322, 593, 88, 16);
   const venueStr = (quote.event_venue || 'Por definir').toUpperCase();
-  page.drawText(venueStr.length > 18 ? venueStr.substring(0, 16) + '...' : venueStr, { x: 325, y: 597.5, size: 8, font: fontRegular, color: darkColor });
+  safeDraw(page, venueStr.length > 18 ? venueStr.substring(0, 16) + '...' : venueStr, { x: 325, y: 597.5, size: 8, font: fontRegular, color: darkColor });
 
   // 7. Hora inicio [HORA INICIO] (mantiene 'HORA INICIO:' original de Canva)
   whiteout(482, 593, 80, 16);
   const timeStr = isService
     ? (quote.ceremony_time || quote.service_time || 'Por definir').toUpperCase()
     : (quote.delivery_date || 'Estimada').toUpperCase();
-  page.drawText(timeStr, { x: 485, y: 597.5, size: 8.5, font: fontRegular, color: darkColor });
+  safeDraw(page, timeStr, { x: 485, y: 597.5, size: 8.5, font: fontRegular, color: darkColor });
 
   // 8. Service Items Row
   const displayItems = (items && items.length > 0) ? items : [
@@ -127,35 +217,35 @@ export async function buildVlbQuotePdf(
   displayItems.forEach((item, idx) => {
     if (idx > 2) return; // fits up to 3 items cleanly
     const itemTotal = `$${Number(item.total_price || item.unit_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-    page.drawText(item.item_name, { x: 62, y: currentItemY, size: 8.5, font: fontBold, color: darkColor });
+    safeDraw(page, item.item_name, { x: 62, y: currentItemY, size: 8.5, font: fontBold, color: darkColor });
     
     // Description truncated to fit
     const descText = item.description || '';
     const cleanDesc = descText.length > 60 ? descText.substring(0, 58) + '...' : descText;
-    page.drawText(cleanDesc, { x: 235, y: currentItemY, size: 8, font: fontRegular, color: mutedColor });
+    safeDraw(page, cleanDesc, { x: 235, y: currentItemY, size: 8, font: fontRegular, color: mutedColor });
     
-    page.drawText(itemTotal, { x: 475, y: currentItemY, size: 8.5, font: fontBold, color: darkColor });
+    safeDraw(page, itemTotal, { x: 475, y: currentItemY, size: 8.5, font: fontBold, color: darkColor });
     currentItemY -= 16;
   });
 
   // 9. Total (mantiene 'TOTAL' original de Canva y sobreescribe '(TOTAL)')
   whiteout(468, 380, 77, 25);
   const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-  page.drawText(totalFormatted, { x: 475, y: 387, size: 11, font: fontBold, color: darkColor });
+  safeDraw(page, totalFormatted, { x: 475, y: 387, size: 11, font: fontBold, color: darkColor });
 
   // 10. Concepto en Forma de Pago
   whiteout(105, 180, 260, 15);
-  page.drawText(`| [${quote.client_name || 'Nombre clienta'}] [${quote.event_date || 'Fecha evento'}]`, { x: 105.1, y: 184.5, size: 8.5, font: fontRegular, color: darkColor });
+  safeDraw(page, `| [${quote.client_name || 'Nombre clienta'}] [${quote.event_date || 'Fecha evento'}]`, { x: 105.1, y: 184.5, size: 8.5, font: fontRegular, color: darkColor });
 
   // ========================================================
   // PÁGINA 2: CONTRATO DIGITAL VINCULANTE & VALIDEZ LEGAL
   // ========================================================
   const page2 = pdfDoc.addPage([595.5, 842.25]);
   
-  page2.drawText('CONTRATO DE PRESTACIÓN DE SERVICIOS', { x: 135, y: 795, size: 12, font: fontBold, color: darkColor });
-  page2.drawText(`VIVA LA BRIDE · FOLIO ${folioNumber}`, { x: 215, y: 778, size: 9, font: fontBold, color: pinkColor });
+  safeDraw(page2, 'CONTRATO DE PRESTACION DE SERVICIOS', { x: 135, y: 795, size: 12, font: fontBold, color: darkColor });
+  safeDraw(page2, `VIVA LA BRIDE - FOLIO ${folioNumber}`, { x: 215, y: 778, size: 9, font: fontBold, color: pinkColor });
 
-  page2.drawText(`Entre “La Contratante” ${clientFullName} y Viva la Bride, conforme a la cotización relacionada.`, { x: 80, y: 755, size: 8.5, font: fontRegular, color: mutedColor });
+  safeDraw(page2, `Entre "La Contratante" ${clientFullName} y Viva la Bride, conforme a la cotizacion relacionada.`, { x: 80, y: 755, size: 8.5, font: fontRegular, color: mutedColor });
 
   const clauses = isService ? [
     { title: '1. OBJETO DEL CONTRATO', text: 'La Prestadora de Servicios se compromete a proporcionar el servicio de Beer Stand / Servicios solicitado conforme a lo establecido en la cotización relacionada.' },
@@ -173,31 +263,31 @@ export async function buildVlbQuotePdf(
 
   let cY = 720;
   for (const cl of clauses) {
-    page2.drawText(cl.title, { x: 50, y: cY, size: 9, font: fontBold, color: pinkColor });
+    safeDraw(page2, cl.title, { x: 50, y: cY, size: 9, font: fontBold, color: pinkColor });
     cY -= 14;
-    page2.drawText(cl.text, { x: 50, y: cY, size: 8.5, font: fontRegular, color: darkColor });
+    safeDraw(page2, cl.text, { x: 50, y: cY, size: 8.5, font: fontRegular, color: darkColor });
     cY -= 24;
   }
 
   // Signature lines
   const sigY = 220;
   page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.5, color: darkColor });
-  page2.drawText(clientFullName, { x: 80, y: sigY - 14, size: 9, font: fontBold, color: pinkColor });
-  page2.drawText('La Contratante', { x: 125, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
+  safeDraw(page2, clientFullName, { x: 80, y: sigY - 14, size: 9, font: fontBold, color: pinkColor });
+  safeDraw(page2, 'La Contratante', { x: 125, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
 
   page2.drawLine({ start: { x: 355, y: sigY }, end: { x: 535, y: sigY }, thickness: 0.5, color: darkColor });
-  page2.drawText('VIVA LA BRIDE', { x: 410, y: sigY - 14, size: 9, font: fontBold, color: pinkColor });
-  page2.drawText('La Prestadora de Servicios', { x: 395, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
+  safeDraw(page2, 'VIVA LA BRIDE', { x: 410, y: sigY - 14, size: 9, font: fontBold, color: pinkColor });
+  safeDraw(page2, 'La Prestadora de Servicios', { x: 395, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
 
   // Digital Signature notice
   const isSigned = Boolean(quote.signature_data);
   if (isSigned) {
-    page2.drawText('FIRMADO DIGITALMENTE Y VINCULANTE', { x: 195, y: 150, size: 8, font: fontBold, color: rgb(30 / 255, 140 / 255, 60 / 255) });
+    safeDraw(page2, 'FIRMADO DIGITALMENTE Y VINCULANTE', { x: 195, y: 150, size: 8, font: fontBold, color: rgb(30 / 255, 140 / 255, 60 / 255) });
   }
 
   // Save PDF Bytes
   const pdfBytes = await pdfDoc.save();
-  const cleanName = (quote.client_name || 'Novia').trim().replace(/[\s/\\?%*:|"<>]+/g, '_');
+  const cleanName = cleanWinAnsi(quote.client_name || 'Novia').replace(/[\s/\\?%*:|"<>]+/g, '_');
   const fileName = `Cotizacion_${folioNumber}_${cleanName}_VLB.pdf`;
 
   const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });

@@ -906,7 +906,18 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
     // 2. EN ESCRITORIO / NAVEGADORES SIN WEB SHARE DE ARCHIVOS:
     // Descarga el PDF automáticamente y abre WhatsApp Web para arrastrar o enviar con el link directo
-    doc.save(fileName);
+    try {
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.warn('Direct file download error:', e);
+    }
     showToast(`📄 Se descargó "${fileName}". Arrástralo a WhatsApp Web para enviarlo como documento.`);
     openWhatsAppMessage(phone, msg);
   };
