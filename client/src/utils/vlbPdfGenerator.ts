@@ -160,8 +160,8 @@ export async function buildVlbQuotePdf(
     fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   }
 
-  // Rich charcoal black matching bank details exactly (#1F1F1F)
-  const textColor = rgb(34 / 255, 34 / 255, 34 / 255);
+  // Pure black text (#000000)
+  const textColor = rgb(0, 0, 0);
   const white = rgb(1, 1, 1);
 
   // Safe draw helper that guarantees text is clean and never throws WinAnsi encoding errors
