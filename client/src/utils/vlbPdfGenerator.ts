@@ -335,10 +335,70 @@ export async function buildVlbQuotePdf(
     color: textColor
   });
 
-  // Save PDF Bytes (Solo 1 página de cotización, sin contrato adjunto)
+  // ========================================================
+  // PÁGINA 2: CONTRATO DIGITAL (SOLO CUANDO SE CONVIERTE EN CLIENTE)
+  // ========================================================
+  const shouldIncludeContract = Boolean(
+    options?.includeContract !== undefined
+      ? options.includeContract
+      : (quote.status === 'CONVERTIDA' || quote.status === 'APROBADA' || Boolean(quote.signature_data))
+  );
+
+  if (shouldIncludeContract) {
+    const page2 = pdfDoc.addPage([595.5, 842.25]);
+    const pinkAccent = rgb(215 / 255, 54 / 255, 98 / 255); // #D73662
+    const darkColor = textColor;
+    const mutedColor = rgb(100 / 255, 95 / 255, 95 / 255);
+
+    safeDraw(page2, 'CONTRATO DE PRESTACION DE SERVICIOS', { x: 135, y: 795, size: 12, font: fontBold, color: darkColor });
+    safeDraw(page2, `VIVA LA BRIDE - FOLIO ${folioNumber}`, { x: 215, y: 778, size: 9, font: fontBold, color: pinkAccent });
+
+    safeDraw(page2, `Entre "La Contratante" ${clientFullName} y Viva la Bride, conforme a la cotizacion relacionada.`, { x: 80, y: 755, size: 8.5, font: fontRegular, color: mutedColor });
+
+    const clauses = isService ? [
+      { title: '1. OBJETO DEL CONTRATO', text: 'La Prestadora de Servicios se compromete a proporcionar el servicio de Beer Stand / Servicios solicitado conforme a lo establecido en la cotización relacionada.' },
+      { title: '2. DURACIÓN Y OPERACIÓN', text: 'El servicio está diseñado con horario y montaje previo al inicio del evento. El consumo y operación se realiza conforme al paquete contratado.' },
+      { title: '3. CONSUMO RESPONSABLE', text: 'Servicio destinado exclusivamente a mayores de edad. La prestadora promueve el consumo responsable durante el evento.' },
+      { title: '4. RESERVACIÓN Y PAGOS', text: `El servicio se reserva mediante separación fija de $${(quote.down_payment_amount || 1000).toLocaleString('es-MX')} MXN. El saldo total se liquida a más tardar 10 días naturales antes del evento. Anticipos no reembolsables.` },
+      { title: '5. VALIDEZ VINCULANTE', text: 'La aceptación digital o pago de separación implica conformidad total con este contrato y condiciones generales de Viva la Bride.' }
+    ] : [
+      { title: '1. OBJETO DEL CONTRATO', text: 'La Prestadora de Servicios se compromete a diseñar y producir la papelería social solicitada conforme a la cotización oficial emitida.' },
+      { title: '2. REVISIONES Y DISEÑO', text: 'Incluye hasta 3 rondas de ajustes de diseño antes de pasar a impresión final y acabados artesanales.' },
+      { title: '3. ANTICIPOS Y LIQUIDACIÓN', text: 'Anticipo del 50% para inicio de diseño y producción. El saldo se liquida previo al envío o entrega de las piezas.' },
+      { title: '4. TIEMPOS DE PRODUCCIÓN', text: 'Los tiempos de entrega oscilan entre 7 y 15 días hábiles a partir de la aprobación de pruebas digitales y pago de anticipo.' },
+      { title: '5. ACEPTACIÓN DIGITAL', text: 'La confirmación del pedido y pago implica aceptación plena de términos y especificaciones aprobadas.' }
+    ];
+
+    let cY = 720;
+    for (const cl of clauses) {
+      safeDraw(page2, cl.title, { x: 50, y: cY, size: 9, font: fontBold, color: pinkAccent });
+      cY -= 14;
+      safeDraw(page2, cl.text, { x: 50, y: cY, size: 8.5, font: fontRegular, color: darkColor });
+      cY -= 24;
+    }
+
+    // Signature lines
+    const sigY = 220;
+    page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.5, color: darkColor });
+    safeDraw(page2, clientFullName, { x: 80, y: sigY - 14, size: 9, font: fontBold, color: pinkAccent });
+    safeDraw(page2, 'La Contratante', { x: 125, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
+
+    page2.drawLine({ start: { x: 355, y: sigY }, end: { x: 535, y: sigY }, thickness: 0.5, color: darkColor });
+    safeDraw(page2, 'VIVA LA BRIDE', { x: 410, y: sigY - 14, size: 9, font: fontBold, color: pinkAccent });
+    safeDraw(page2, 'La Prestadora de Servicios', { x: 395, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
+
+    // Digital Signature notice
+    const isSigned = Boolean(quote.signature_data);
+    if (isSigned) {
+      safeDraw(page2, 'FIRMADO DIGITALMENTE Y VINCULANTE', { x: 195, y: 150, size: 8, font: fontBold, color: rgb(30 / 255, 140 / 255, 60 / 255) });
+    }
+  }
+
+  // Save PDF Bytes
   const pdfBytes = await pdfDoc.save();
   const cleanName = cleanWinAnsi(quote.client_name || 'Novia').replace(/[\s/\\?%*:|"<>]+/g, '_');
-  const fileName = `Cotizacion_${folioNumber}_${cleanName}_VLB.pdf`;
+  const docPrefix = shouldIncludeContract ? 'Contrato_y_Cotizacion' : 'Cotizacion';
+  const fileName = `${docPrefix}_${folioNumber}_${cleanName}_VLB.pdf`;
 
   const blob = new Blob([pdfBytes as any], { type: 'application/pdf' });
   const file = new File([blob], fileName, { type: 'application/pdf' });
@@ -358,6 +418,10 @@ export async function buildVlbQuotePdf(
   return { blob, file, fileName, pdfDoc };
 }
 
-export async function generateVlbQuotePdf(quote: VlbQuote, items: VlbQuoteItem[]) {
-  return await buildVlbQuotePdf(quote, items, { autoDownload: true });
+export async function generateVlbQuotePdf(
+  quote: VlbQuote,
+  items: VlbQuoteItem[],
+  options?: { autoDownload?: boolean; includeContract?: boolean }
+) {
+  return await buildVlbQuotePdf(quote, items, { autoDownload: true, ...options });
 }

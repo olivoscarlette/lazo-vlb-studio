@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   FileText, Download, CheckCircle2, AlertCircle, Heart,
-  Sparkles, Calendar, MapPin, Tag, ShieldCheck, PenTool, RotateCcw
+  Sparkles, Calendar, MapPin, Tag, ShieldCheck, PenTool, RotateCcw, Clock
 } from 'lucide-react';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { generateVlbQuotePdf } from '../utils/vlbPdfGenerator';
@@ -283,18 +283,17 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
         <div className="bg-[#FFFFFF] p-6 sm:p-8 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#F7F3EE] pb-5">
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-serif text-2xl sm:text-3xl font-bold text-[#222222] tracking-tight">
-                  Viva la Bride
-                </span>
+              <div className="flex items-center space-x-3">
+                <img
+                  src="/vlb-logo.png"
+                  alt="Viva la Bride"
+                  className="h-8 sm:h-9 object-contain"
+                />
                 <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-[#F8E4E9] text-[#C83460] text-[10px] font-bold uppercase tracking-wider">
                   <Sparkles className="w-3 h-3 text-[#C83460]" />
                   <span>Atelier & Experiencias</span>
                 </span>
               </div>
-              <p className="text-xs text-[#7D6F6B] mt-0.5">
-                Propuesta Editorial de Papelería Social & Stands de Bienvenida
-              </p>
             </div>
 
             <div className="flex items-center space-x-2 self-start sm:self-auto">
@@ -314,7 +313,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               <button
                 onClick={handleDownloadPdf}
                 className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-[#222222] hover:bg-[#333333] text-white cursor-pointer transition shadow-2xs"
-                title="Descargar Contrato en PDF"
+                title="Descargar Cotización en PDF"
               >
                 <Download className="w-3.5 h-3.5 text-[#F8E4E9]" />
                 <span>PDF</span>
@@ -323,12 +322,12 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
           </div>
 
           {/* DATOS DE LA CELEBRACIÓN */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
             <div className="bg-[#FCFAF7] p-3.5 rounded-2xl border border-[#EAE3DA]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#7D6F6B] block">
                 Pareja / Novios
               </span>
-              <span className="font-serif font-bold text-base text-[#222222] block mt-0.5">
+              <span className="font-serif font-bold text-base text-[#222222] block mt-0.5 truncate">
                 {quote.client_name} {quote.partner_name ? `& ${quote.partner_name}` : ''}
               </span>
             </div>
@@ -338,8 +337,8 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                 Fecha del Gran Día
               </span>
               <span className="font-bold text-sm text-[#C83460] flex items-center space-x-1.5 mt-0.5">
-                <Calendar className="w-3.5 h-3.5" />
-                <span>{formatDateMX(quote.event_date)}</span>
+                <Calendar className="w-3.5 h-3.5 shrink-0" />
+                <span className="truncate">{formatDateMX(quote.event_date)}</span>
               </span>
             </div>
 
@@ -350,6 +349,16 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               <span className="font-semibold text-xs text-[#222222] flex items-center space-x-1.5 mt-0.5 truncate">
                 <MapPin className="w-3.5 h-3.5 text-[#B88A82] shrink-0" />
                 <span className="truncate">{quote.event_venue || 'Por definir'}</span>
+              </span>
+            </div>
+
+            <div className="bg-[#FCFAF7] p-3.5 rounded-2xl border border-[#EAE3DA]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#7D6F6B] block">
+                Horario
+              </span>
+              <span className="font-semibold text-xs text-[#222222] flex items-center space-x-1.5 mt-0.5 truncate">
+                <Clock className="w-3.5 h-3.5 text-[#B88A82] shrink-0" />
+                <span className="truncate">{quote.ceremony_time || quote.service_time || 'Por definir'}</span>
               </span>
             </div>
           </div>
@@ -364,9 +373,6 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                 Artículos & Experiencias Seleccionadas
               </h3>
             </div>
-            <span className="text-xs text-[#7D6F6B]">
-              {items.length} {items.length === 1 ? 'partida' : 'partidas'}
-            </span>
           </div>
 
           <div className="divide-y divide-[#F7F3EE]">
@@ -390,11 +396,11 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                       {it.description}
                     </p>
                   )}
-                  <div className="text-[11px] text-[#7D6F6B]">
-                    {it.pricing_type === 'PER_PIECE'
-                      ? `${it.quantity} piezas a $${it.unit_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })} c/u`
-                      : 'Tarifa completa por evento'}
-                  </div>
+                  {it.pricing_type === 'PER_PIECE' && (
+                    <div className="text-[11px] text-[#7D6F6B]">
+                      {it.quantity} piezas a ${it.unit_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })} c/u
+                    </div>
+                  )}
                 </div>
 
                 <div className="text-right shrink-0">
@@ -542,17 +548,6 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                 )}
               </div>
             </div>
-          </div>
-
-          {/* DESCARGAR PDF */}
-          <div className="pt-2">
-            <button
-              onClick={handleDownloadPdf}
-              className="w-full py-3.5 px-4 bg-[#FFFFFF] hover:bg-[#FAF6F2] text-[#222222] border border-[#EAE3DA] rounded-2xl text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer shadow-xs"
-            >
-              <Download className="w-4 h-4 text-[#C83460]" />
-              <span>{isSigned ? 'Descargar Contrato Digital Firmado (PDF Oficial)' : 'Descargar Contrato Digital & Propuesta (PDF)'}</span>
-            </button>
           </div>
         </div>
 
