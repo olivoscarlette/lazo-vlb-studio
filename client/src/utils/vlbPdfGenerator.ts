@@ -217,9 +217,9 @@ export async function buildVlbQuotePdf(
   // 8. TABLE ITEMS (Limpieza del área de filas para evitar cualquier empalme)
   page.drawRectangle({
     x: 48,
-    y: 430,
+    y: 420,
     width: 500,
-    height: 85,
+    height: 97,
     color: white,
   });
 
