@@ -95,6 +95,29 @@ function formatSpanishDate(dateStr?: string | null): string {
 }
 
 /**
+ * Formats date into numeric DDMMYY format for bank payment concept (e.g. "120327")
+ */
+function formatConceptDate(dateStr?: string | null): string {
+  if (!dateStr || !dateStr.trim()) return '';
+  const clean = dateStr.trim();
+  const parts = clean.split('T')[0].split(' ')[0].split('-');
+  if (parts.length === 3 && parts[0].length === 4) {
+    const year = parts[0].slice(-2);
+    const month = String(parseInt(parts[1], 10)).padStart(2, '0');
+    const day = String(parseInt(parts[2], 10)).padStart(2, '0');
+    return `${day}${month}${year}`;
+  }
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = String(d.getFullYear()).slice(-2);
+    return `${day}${month}${year}`;
+  }
+  return clean.replace(/\D/g, '').slice(0, 6);
+}
+
+/**
  * Splits text into lines that fit within maxWidth based on the font and size.
  */
 function wrapText(text: string, maxWidth: number, font: any, fontSize: number): string[] {
@@ -301,8 +324,10 @@ export async function buildVlbQuotePdf(
   safeDraw(page, totalFormatted, { x: 475, y: 391, size: 11.5, font: fontBold, color: textColor });
 
   // 10. CONCEPTO EN FORMA DE PAGO (Concepto | ya viene impreso)
-  const eventDateShort = quote.event_date ? formatSpanishDate(quote.event_date) : 'Fecha evento';
-  safeDraw(page, `[${quote.client_name || 'Nombre clienta'}] [${eventDateShort}]`, {
+  const clientNameClean = (quote.client_name || 'Cliente').trim();
+  const conceptDate = formatConceptDate(quote.event_date);
+  const conceptoText = conceptDate ? `${clientNameClean} ${conceptDate}` : clientNameClean;
+  safeDraw(page, conceptoText, {
     x: 110,
     y: 184,
     size: 8.5,
