@@ -1,6 +1,8 @@
 import { PDFDocument, rgb, StandardFonts, PDFPage } from 'pdf-lib';
+import fontkit from '@pdf-lib/fontkit';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_CANVA_PDF_BASE64 } from './vlbCanvaPdfBase64';
+import { VLB_OUTFIT_FONT_BASE64 } from './vlbOutfitFontBase64';
 
 /**
  * Sanitizes string for pdf-lib standard fonts (WinAnsi).
@@ -108,13 +110,31 @@ export async function buildVlbQuotePdf(
   const pdfDoc = await PDFDocument.load(bytes);
   const page = pdfDoc.getPages()[0];
 
-  // Clean geometric typography matching Canva's Glacial Indifference body font
-  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  // Register fontkit to enable contemporary geometric sans (Outfit)
+  pdfDoc.registerFontkit(fontkit);
+
+  let fontRegular: any;
+  let fontBold: any;
+
+  try {
+    const fontBinaryString = atob(VLB_OUTFIT_FONT_BASE64);
+    const fontBytes = new Uint8Array(fontBinaryString.length);
+    for (let i = 0; i < fontBinaryString.length; i++) {
+      fontBytes[i] = fontBinaryString.charCodeAt(i);
+    }
+    const embeddedOutfit = await pdfDoc.embedFont(fontBytes);
+    fontRegular = embeddedOutfit;
+    fontBold = embeddedOutfit;
+  } catch (err) {
+    console.warn('Fallback to standard fonts:', err);
+    fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  }
 
   // Quiet Luxury palette (warm dark espresso for primary text, warm muted taupe for secondary)
-  const darkEspresso = rgb(51 / 255, 42 / 255, 40 / 255); // #332A28
+  const darkEspresso = rgb(44 / 255, 34 / 255, 32 / 255); // #2C2220
   const mutedTaupe = rgb(125 / 255, 111 / 255, 107 / 255); // #7D6F6B
+  const white = rgb(1, 1, 1);
 
   // Safe draw helper that guarantees text is clean and never throws WinAnsi encoding errors
   const safeDraw = (
@@ -194,7 +214,15 @@ export async function buildVlbQuotePdf(
     : (quote.delivery_date ? formatSpanishDate(quote.delivery_date) : 'Estimada');
   safeDraw(page, timeStr, { x: 126, y: 572.5, size: 8.5, font: fontRegular, color: darkEspresso });
 
-  // 8. TABLE ITEMS (El área de filas está 100% limpia sin placeholders)
+  // 8. TABLE ITEMS (Limpieza del área de filas para evitar cualquier empalme)
+  page.drawRectangle({
+    x: 48,
+    y: 430,
+    width: 500,
+    height: 85,
+    color: white,
+  });
+
   const displayItems = (items && items.length > 0) ? items : [
     {
       id: 'fallback_item',
