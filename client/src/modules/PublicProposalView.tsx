@@ -282,21 +282,15 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
         {/* TOP BRANDING BAR */}
         <div className="bg-[#FFFFFF] p-6 sm:p-8 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4 relative overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#F7F3EE] pb-5">
-            <div>
-              <div className="flex items-center space-x-3">
-                <img
-                  src="/vlb-logo.png"
-                  alt="Viva la Bride"
-                  className="h-8 sm:h-9 object-contain"
-                />
-                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-[#F8E4E9] text-[#C83460] text-[10px] font-bold uppercase tracking-wider">
-                  <Sparkles className="w-3 h-3 text-[#C83460]" />
-                  <span>Atelier & Experiencias</span>
-                </span>
-              </div>
+            <div className="flex items-center">
+              <img
+                src="/vlb-logo-pink.png"
+                alt="Viva la Bride"
+                className="h-7 sm:h-8 w-auto object-contain"
+              />
             </div>
 
-            <div className="flex items-center space-x-2 self-start sm:self-auto">
+            <div className="flex items-center flex-wrap gap-2 self-start sm:self-auto">
               <span className="text-xs font-mono font-bold text-[#C83460] bg-[#FAF6F2] px-3 py-1 rounded-full border border-[#EAE3DA]">
                 {formatFolio(quote.quote_number)}
               </span>
@@ -382,13 +376,6 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                   <div className="flex items-center space-x-2">
                     <span className="font-serif font-bold text-base text-[#222222]">
                       {it.item_name}
-                    </span>
-                    <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                      it.category === 'PAPELERIA'
-                        ? 'bg-[#F7EDEB] text-[#70443D]'
-                        : 'bg-[#EBF2EB] text-[#384C3A]'
-                    }`}>
-                      {it.category === 'PAPELERIA' ? 'Papelería social' : 'Stand bienvenida'}
                     </span>
                   </div>
                   {it.description && (
