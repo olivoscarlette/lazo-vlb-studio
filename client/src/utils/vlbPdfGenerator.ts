@@ -94,6 +94,35 @@ function formatSpanishDate(dateStr?: string | null): string {
   return clean;
 }
 
+/**
+ * Splits text into lines that fit within maxWidth based on the font and size.
+ */
+function wrapText(text: string, maxWidth: number, font: any, fontSize: number): string[] {
+  if (!text) return [];
+  const words = text.split(/\s+/);
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    let width = 0;
+    try {
+      width = font.widthOfTextAtSize(testLine, fontSize);
+    } catch {
+      width = testLine.length * (fontSize * 0.55);
+    }
+
+    if (width <= maxWidth) {
+      currentLine = testLine;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
 export async function buildVlbQuotePdf(
   quote: VlbQuote,
   items: VlbQuoteItem[],
@@ -131,9 +160,8 @@ export async function buildVlbQuotePdf(
     fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
   }
 
-  // Quiet Luxury palette (warm dark espresso for primary text, warm muted taupe for secondary)
-  const darkEspresso = rgb(44 / 255, 34 / 255, 32 / 255); // #2C2220
-  const mutedTaupe = rgb(125 / 255, 111 / 255, 107 / 255); // #7D6F6B
+  // Rich charcoal black matching bank details exactly (#1F1F1F)
+  const textColor = rgb(34 / 255, 34 / 255, 34 / 255);
   const white = rgb(1, 1, 1);
 
   // Safe draw helper that guarantees text is clean and never throws WinAnsi encoding errors
@@ -190,36 +218,36 @@ export async function buildVlbQuotePdf(
   // ========================================================
 
   // 1. FOLIO (FOLIO: original termina en x=88, baseline y=673)
-  safeDraw(page, folioNumber, { x: 92, y: 673, size: 8.5, font: fontBold, color: darkEspresso });
+  safeDraw(page, folioNumber, { x: 92, y: 673, size: 8.5, font: fontBold, color: textColor });
 
   // 2. FECHA (FECHA: original termina en x=92, baseline y=654.5)
-  safeDraw(page, todayFormatted, { x: 94, y: 654.5, size: 8.5, font: fontRegular, color: darkEspresso });
+  safeDraw(page, todayFormatted, { x: 94, y: 654.5, size: 8.5, font: fontRegular, color: textColor });
 
   // 3. CLIENTE (CLIENTE: original termina en x=103, baseline y=623)
-  safeDraw(page, clientFullName, { x: 104, y: 623, size: 9, font: fontBold, color: darkEspresso });
+  safeDraw(page, clientFullName, { x: 104, y: 623, size: 9, font: fontBold, color: textColor });
 
   // 4. TELÉFONO (TELÉFONO: original termina en x=285, baseline y=623)
-  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 290, y: 623, size: 8.5, font: fontRegular, color: darkEspresso });
+  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 290, y: 623, size: 8.5, font: fontRegular, color: textColor });
 
   // 5. FECHA EVENTO (FECHA EVENTO: original termina en x=135, baseline y=597.5)
-  safeDraw(page, formatSpanishDate(quote.event_date), { x: 139, y: 597.5, size: 8.5, font: fontRegular, color: darkEspresso });
+  safeDraw(page, formatSpanishDate(quote.event_date), { x: 139, y: 597.5, size: 8.5, font: fontRegular, color: textColor });
 
   // 6. VENUE (VENUE: original termina en x=408, baseline y=597.5)
   const venueStr = quote.event_venue || 'Por definir';
-  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 412, y: 597.5, size: 8.5, font: fontRegular, color: darkEspresso });
+  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 412, y: 597.5, size: 8.5, font: fontRegular, color: textColor });
 
   // 7. HORA INICIO (HORA INICIO: original termina en x=122, baseline y=572.5)
   const timeStr = isService
     ? (quote.ceremony_time || quote.service_time || 'Por definir')
     : (quote.delivery_date ? formatSpanishDate(quote.delivery_date) : 'Estimada');
-  safeDraw(page, timeStr, { x: 126, y: 572.5, size: 8.5, font: fontRegular, color: darkEspresso });
+  safeDraw(page, timeStr, { x: 126, y: 572.5, size: 8.5, font: fontRegular, color: textColor });
 
   // 8. TABLE ITEMS (Limpieza del área de filas para evitar cualquier empalme)
   page.drawRectangle({
     x: 48,
-    y: 420,
+    y: 410,
     width: 500,
-    height: 97,
+    height: 105,
     color: white,
   });
 
@@ -241,24 +269,36 @@ export async function buildVlbQuotePdf(
     } as VlbQuoteItem
   ];
 
-  let curY = 498;
+  let curY = 502;
+  const maxDescWidth = 225;
+
   displayItems.forEach((item, idx) => {
-    if (idx > 2) return; // Se ajusta perfectamente hasta 3 servicios sin invadir líneas
+    if (idx > 3) return; // Se ajusta limpiamente
     const itemTotal = `$${Number(item.total_price || item.unit_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-    safeDraw(page, item.item_name, { x: 62, y: curY, size: 8.5, font: fontBold, color: darkEspresso });
-    
-    // Description with elegant truncation
+
+    // Service name (con soporte de wrap para nombres largos)
+    const nameLines = wrapText(item.item_name, 160, fontBold, 8.5);
+    nameLines.forEach((nl, lIdx) => {
+      safeDraw(page, nl, { x: 62, y: curY - (lIdx * 10), size: 8.5, font: fontBold, color: textColor });
+    });
+
+    // Descripción completa sin truncar (con salto de línea dinámico)
     const descText = item.description || '';
-    const cleanDesc = descText.length > 55 ? descText.substring(0, 53) + '...' : descText;
-    safeDraw(page, cleanDesc, { x: 235, y: curY, size: 8, font: fontRegular, color: mutedTaupe });
-    
-    safeDraw(page, itemTotal, { x: 475, y: curY, size: 8.5, font: fontBold, color: darkEspresso });
-    curY -= 22;
+    const descLines = wrapText(descText, maxDescWidth, fontRegular, 7.8);
+    descLines.forEach((dl, lIdx) => {
+      safeDraw(page, dl, { x: 235, y: curY - (lIdx * 9.5), size: 7.8, font: fontRegular, color: textColor });
+    });
+
+    // Total de la fila alineado con la primera línea
+    safeDraw(page, itemTotal, { x: 475, y: curY, size: 8.5, font: fontBold, color: textColor });
+
+    const rowLines = Math.max(nameLines.length, descLines.length);
+    curY -= Math.max(18, rowLines * 9.5 + 7);
   });
 
   // 9. TOTAL
   const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-  safeDraw(page, totalFormatted, { x: 475, y: 391, size: 11.5, font: fontBold, color: darkEspresso });
+  safeDraw(page, totalFormatted, { x: 475, y: 391, size: 11.5, font: fontBold, color: textColor });
 
   // 10. CONCEPTO EN FORMA DE PAGO (Concepto | ya viene impreso)
   const eventDateShort = quote.event_date ? formatSpanishDate(quote.event_date) : 'Fecha evento';
@@ -267,7 +307,7 @@ export async function buildVlbQuotePdf(
     y: 184,
     size: 8.5,
     font: fontRegular,
-    color: darkEspresso
+    color: textColor
   });
 
   // Save PDF Bytes (Solo 1 página de cotización, sin contrato adjunto)
