@@ -2,7 +2,7 @@ import { PDFDocument, rgb, StandardFonts, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_CANVA_PDF_BASE64 } from './vlbCanvaPdfBase64';
-import { VLB_OUTFIT_FONT_BASE64 } from './vlbOutfitFontBase64';
+import { VLB_MONT_LIGHT_BASE64, VLB_MONT_HEAVY_BASE64 } from './vlbMontFontBase64';
 
 /**
  * Sanitizes string for pdf-lib standard fonts (WinAnsi).
@@ -162,21 +162,26 @@ export async function buildVlbQuotePdf(
   const pdfDoc = await PDFDocument.load(bytes);
   const page = pdfDoc.getPages()[0];
 
-  // Register fontkit to enable contemporary geometric sans (Outfit)
+  // Register fontkit to enable Mont geometric sans font (Mont ExtraLight & Mont Heavy)
   pdfDoc.registerFontkit(fontkit);
 
   let fontRegular: any;
   let fontBold: any;
 
   try {
-    const fontBinaryString = atob(VLB_OUTFIT_FONT_BASE64);
-    const fontBytes = new Uint8Array(fontBinaryString.length);
-    for (let i = 0; i < fontBinaryString.length; i++) {
-      fontBytes[i] = fontBinaryString.charCodeAt(i);
+    const lightBinaryString = atob(VLB_MONT_LIGHT_BASE64);
+    const lightBytes = new Uint8Array(lightBinaryString.length);
+    for (let i = 0; i < lightBinaryString.length; i++) {
+      lightBytes[i] = lightBinaryString.charCodeAt(i);
     }
-    const embeddedOutfit = await pdfDoc.embedFont(fontBytes);
-    fontRegular = embeddedOutfit;
-    fontBold = embeddedOutfit;
+    fontRegular = await pdfDoc.embedFont(lightBytes);
+
+    const heavyBinaryString = atob(VLB_MONT_HEAVY_BASE64);
+    const heavyBytes = new Uint8Array(heavyBinaryString.length);
+    for (let i = 0; i < heavyBinaryString.length; i++) {
+      heavyBytes[i] = heavyBinaryString.charCodeAt(i);
+    }
+    fontBold = await pdfDoc.embedFont(heavyBytes);
   } catch (err) {
     console.warn('Fallback to standard fonts:', err);
     fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -328,7 +333,7 @@ export async function buildVlbQuotePdf(
   const conceptDate = formatConceptDate(quote.event_date);
   const conceptoText = conceptDate ? `${clientNameClean} ${conceptDate}` : clientNameClean;
   safeDraw(page, conceptoText, {
-    x: 108,
+    x: 110,
     y: 184,
     size: 9.2,
     font: fontRegular,
