@@ -3,7 +3,7 @@ import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_CANVA_PDF_BASE64 } from './vlbCanvaPdfBase64';
 
 /**
- * Sanitizes string for pdf-lib standard fonts (WinAnsi/Helvetica).
+ * Sanitizes string for pdf-lib standard fonts (WinAnsi/TimesRoman).
  * Strips bidi control chars (\u202A-\u202E, \u200E, \u200F, \u200B, \uFEFF),
  * converts typographic quotes/dashes/bullets to standard characters,
  * preserves Spanish accented characters (á, é, í, ó, ú, ñ, etc.),
@@ -14,7 +14,6 @@ export function cleanWinAnsi(str: string | null | undefined): string {
   let text = String(str);
 
   // 1. Strip bidirectional & zero-width & non-printable controls
-  // (\u202A-\u202E: LRE/RLE/PDF/LRO/RLO, \u200B-\u200F, \uFEFF BOM, ASCII controls)
   text = text.replace(/[\u200B-\u200F\u202A-\u202E\uFEFF\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/g, '');
 
   // 2. Normalize smart punctuation and symbols
@@ -26,7 +25,7 @@ export function cleanWinAnsi(str: string | null | undefined): string {
     .replace(/[•·⋅]/g, '-')
     .replace(/[\r\n\t]/g, ' ');
 
-  // 3. Keep standard ASCII and Latin-1 supplement (including Spanish accents á, é, í, ó, ú, ñ, Á, É, Í, Ó, Ú, Ñ, ü, Ü, ¿, ¡, etc.)
+  // 3. Keep standard ASCII and Latin-1 supplement (including Spanish accents á, é, í, ó, ú, ñ, etc.)
   let result = '';
   for (let i = 0; i < text.length; i++) {
     const char = text[i];
@@ -71,6 +70,28 @@ export function cleanWinAnsi(str: string | null | undefined): string {
   return result.replace(/\s+/g, ' ').trim();
 }
 
+/**
+ * Formats date into elegant Spanish format (e.g. "12 de Marzo de 2027")
+ */
+function formatSpanishDate(dateStr?: string | null): string {
+  if (!dateStr || !dateStr.trim()) return 'Por definir';
+  const clean = dateStr.trim();
+  const parts = clean.split('T')[0].split(' ')[0].split('-');
+  if (parts.length === 3 && parts[0].length === 4) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const day = parseInt(parts[2], 10);
+    const months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    if (month >= 0 && month < 12 && !isNaN(day)) {
+      return `${day} de ${months[month]} de ${year}`;
+    }
+  }
+  return clean;
+}
+
 export async function buildVlbQuotePdf(
   quote: VlbQuote,
   items: VlbQuoteItem[],
@@ -87,22 +108,23 @@ export async function buildVlbQuotePdf(
   const pdfDoc = await PDFDocument.load(bytes);
   const page = pdfDoc.getPages()[0];
 
-  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  // Editorial luxury typography (TimesRoman matches the high-end serif design of Canva)
+  const fontSerif = await pdfDoc.embedFont(StandardFonts.TimesRoman);
+  const fontSerifBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
 
-  const pinkColor = rgb(222 / 255, 121 / 255, 148 / 255);
-  const darkColor = rgb(45 / 255, 40 / 255, 42 / 255);
-  const mutedColor = rgb(90 / 255, 85 / 255, 85 / 255);
-  const whiteColor = rgb(1, 1, 1);
+  // Quiet Luxury palette (warm dark espresso for text, warm muted taupe for secondary)
+  const darkEspresso = rgb(51 / 255, 42 / 255, 40 / 255); // #332A28
+  const mutedTaupe = rgb(125 / 255, 111 / 255, 107 / 255); // #7D6F6B
+  const white = rgb(1, 1, 1);
 
-  // Helper to cover placeholder
+  // Helper to cover placeholders cleanly without clipping template labels
   const whiteout = (x: number, y: number, w: number, h: number) => {
     page.drawRectangle({
-      x: x - 1,
-      y: y - 2,
-      width: w + 2,
-      height: h + 3,
-      color: whiteColor,
+      x,
+      y,
+      width: w,
+      height: h,
+      color: white,
     });
   };
 
@@ -117,7 +139,6 @@ export async function buildVlbQuotePdf(
     try {
       targetPage.drawText(cleaned, drawOptions);
     } catch {
-      // Ultimate fallback: pure printable ASCII
       const asciiOnly = (text || '').replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
       if (asciiOnly) {
         try {
@@ -141,14 +162,14 @@ export async function buildVlbQuotePdf(
     folioNumber = `VLB-${yearShort}-${month}01`;
   }
 
-  // Today Date
+  // Today Date formatted in Spanish
   const todayFormatted = new Date().toLocaleDateString('es-MX', {
     day: 'numeric',
     month: 'long',
     year: 'numeric'
-  }).toUpperCase();
+  });
 
-  // Client Name
+  // Client Name in Title Case / Elegant format
   const clientFullName = quote.partner_name
     ? `${quote.client_name} & ${quote.partner_name}`
     : quote.client_name || 'Novia';
@@ -159,39 +180,41 @@ export async function buildVlbQuotePdf(
   // PÁGINA 1: SOBREESCRIBIR CAMPOS DINÁMICOS EN CANVA PDF
   // ========================================================
 
-  // 1. Folio [FOLIO] (mantiene 'FOLIO:' original de Canva)
-  whiteout(84, 668, 70, 16);
-  safeDraw(page, folioNumber, { x: 86, y: 672.5, size: 8.5, font: fontBold, color: darkColor });
+  // 1. FOLIO (FOLIO: label is at x=50.4..89; placeholder [FOLIO] is covered cleanly)
+  whiteout(90, 668, 120, 15);
+  safeDraw(page, folioNumber, { x: 92, y: 671, size: 9, font: fontSerifBold, color: darkEspresso });
 
-  // 2. Fecha [FECHA] (mantiene 'FECHA:' original de Canva)
-  whiteout(90, 650, 150, 16);
-  safeDraw(page, todayFormatted, { x: 92, y: 654.5, size: 8.5, font: fontRegular, color: darkColor });
+  // 2. FECHA (FECHA: label is at x=50.4..92; placeholder [FECHA] is covered cleanly)
+  whiteout(94, 650, 160, 15);
+  safeDraw(page, todayFormatted, { x: 96, y: 653, size: 9, font: fontSerif, color: darkEspresso });
 
-  // 3. Cliente [CLIENTE] (mantiene 'CLIENTE:' original de Canva)
-  whiteout(96, 618, 138, 16);
-  safeDraw(page, clientFullName.toUpperCase(), { x: 98, y: 622.5, size: 8.5, font: fontBold, color: darkColor });
+  // 3. CLIENTE (CLIENTE: label is at x=51.0..103; placeholder [CLIENTE] is covered cleanly)
+  whiteout(105, 618, 125, 15);
+  safeDraw(page, clientFullName, { x: 107, y: 621, size: 9, font: fontSerifBold, color: darkEspresso });
 
-  // 4. Teléfono [TELEFONO] (mantiene 'TELÉFONO:' original de Canva)
-  whiteout(282, 618, 115, 16);
-  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 285, y: 622.5, size: 8.5, font: fontRegular, color: darkColor });
+  // 4. TELÉFONO (TELÉFONO: label is at x=233..292; placeholder [TELÉFONO] starts at 295)
+  whiteout(295, 618, 115, 15);
+  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 297, y: 621, size: 9, font: fontSerif, color: darkEspresso });
 
-  // 5. Fecha evento [FECHA EVENTO] (mantiene 'FECHA EVENTO:' original de Canva)
-  whiteout(132, 593, 140, 16);
-  safeDraw(page, (quote.event_date || 'Por definir').toUpperCase(), { x: 135, y: 597.5, size: 8.5, font: fontRegular, color: darkColor });
+  // 5. FECHA EVENTO (FECHA EVENTO: label is at x=50.4..139; placeholder [FECHA EVENTO] starts at 142)
+  whiteout(142, 593, 140, 15);
+  safeDraw(page, formatSpanishDate(quote.event_date), { x: 144, y: 596, size: 9, font: fontSerif, color: darkEspresso });
 
-  // 6. Venue [VUENUE] (mantiene 'VENUE:' original de Canva)
-  whiteout(322, 593, 88, 16);
-  const venueStr = (quote.event_venue || 'Por definir').toUpperCase();
-  safeDraw(page, venueStr.length > 18 ? venueStr.substring(0, 16) + '...' : venueStr, { x: 325, y: 597.5, size: 8, font: fontRegular, color: darkColor });
+  // 6. VENUE (VENUE: label is at x=368..412; placeholder [VENUE] starts at 414)
+  whiteout(414, 593, 130, 15);
+  const venueStr = quote.event_venue || 'Por definir';
+  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 416, y: 596, size: 9, font: fontSerif, color: darkEspresso });
 
-  // 7. Hora inicio [HORA INICIO] (mantiene 'HORA INICIO:' original de Canva)
-  whiteout(482, 593, 80, 16);
+  // 7. HORA INICIO (HORA INICIO: label is at x=50.4..128; placeholder [HORA INICIO] starts at 130)
+  whiteout(130, 568, 100, 15);
   const timeStr = isService
-    ? (quote.ceremony_time || quote.service_time || 'Por definir').toUpperCase()
-    : (quote.delivery_date || 'Estimada').toUpperCase();
-  safeDraw(page, timeStr, { x: 485, y: 597.5, size: 8.5, font: fontRegular, color: darkColor });
+    ? (quote.ceremony_time || quote.service_time || 'Por definir')
+    : (quote.delivery_date ? formatSpanishDate(quote.delivery_date) : 'Estimada');
+  safeDraw(page, timeStr, { x: 132, y: 571, size: 9, font: fontSerif, color: darkEspresso });
 
-  // 8. Service Items Row
+  // 8. TABLE ITEMS (Header is at y=520..554. Cleanly whiteout table rows area)
+  whiteout(48, 420, 500, 97);
+
   const displayItems = (items && items.length > 0) ? items : [
     {
       id: 'fallback_item',
@@ -210,82 +233,38 @@ export async function buildVlbQuotePdf(
     } as VlbQuoteItem
   ];
 
-  // White out the placeholder service row
-  whiteout(50, 505, 495, 25);
-
-  let currentItemY = 512;
+  let curY = 498;
   displayItems.forEach((item, idx) => {
     if (idx > 2) return; // fits up to 3 items cleanly
     const itemTotal = `$${Number(item.total_price || item.unit_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-    safeDraw(page, item.item_name, { x: 62, y: currentItemY, size: 8.5, font: fontBold, color: darkColor });
+    safeDraw(page, item.item_name, { x: 62, y: curY, size: 8.5, font: fontSerifBold, color: darkEspresso });
     
-    // Description truncated to fit
+    // Description with elegant truncation
     const descText = item.description || '';
-    const cleanDesc = descText.length > 60 ? descText.substring(0, 58) + '...' : descText;
-    safeDraw(page, cleanDesc, { x: 235, y: currentItemY, size: 8, font: fontRegular, color: mutedColor });
+    const cleanDesc = descText.length > 55 ? descText.substring(0, 53) + '...' : descText;
+    safeDraw(page, cleanDesc, { x: 235, y: curY, size: 8, font: fontSerif, color: mutedTaupe });
     
-    safeDraw(page, itemTotal, { x: 475, y: currentItemY, size: 8.5, font: fontBold, color: darkColor });
-    currentItemY -= 16;
+    safeDraw(page, itemTotal, { x: 475, y: curY, size: 8.5, font: fontSerifBold, color: darkEspresso });
+    curY -= 22;
   });
 
-  // 9. Total (mantiene 'TOTAL' original de Canva y sobreescribe '(TOTAL)')
-  whiteout(468, 380, 77, 25);
+  // 9. TOTAL
+  whiteout(450, 385, 95, 22);
   const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-  safeDraw(page, totalFormatted, { x: 475, y: 387, size: 11, font: fontBold, color: darkColor });
+  safeDraw(page, totalFormatted, { x: 475, y: 390, size: 12, font: fontSerifBold, color: darkEspresso });
 
-  // 10. Concepto en Forma de Pago
-  whiteout(105, 180, 260, 15);
-  safeDraw(page, `| [${quote.client_name || 'Nombre clienta'}] [${quote.event_date || 'Fecha evento'}]`, { x: 105.1, y: 184.5, size: 8.5, font: fontRegular, color: darkColor });
+  // 10. CONCEPTO EN FORMA DE PAGO
+  whiteout(110, 178, 250, 15);
+  const eventDateShort = quote.event_date ? formatSpanishDate(quote.event_date) : 'Fecha evento';
+  safeDraw(page, `[${quote.client_name || 'Nombre clienta'}] [${eventDateShort}]`, {
+    x: 112,
+    y: 181,
+    size: 8.5,
+    font: fontSerif,
+    color: darkEspresso
+  });
 
-  // ========================================================
-  // PÁGINA 2: CONTRATO DIGITAL VINCULANTE & VALIDEZ LEGAL
-  // ========================================================
-  const page2 = pdfDoc.addPage([595.5, 842.25]);
-  
-  safeDraw(page2, 'CONTRATO DE PRESTACION DE SERVICIOS', { x: 135, y: 795, size: 12, font: fontBold, color: darkColor });
-  safeDraw(page2, `VIVA LA BRIDE - FOLIO ${folioNumber}`, { x: 215, y: 778, size: 9, font: fontBold, color: pinkColor });
-
-  safeDraw(page2, `Entre "La Contratante" ${clientFullName} y Viva la Bride, conforme a la cotizacion relacionada.`, { x: 80, y: 755, size: 8.5, font: fontRegular, color: mutedColor });
-
-  const clauses = isService ? [
-    { title: '1. OBJETO DEL CONTRATO', text: 'La Prestadora de Servicios se compromete a proporcionar el servicio de Beer Stand / Servicios solicitado conforme a lo establecido en la cotización relacionada.' },
-    { title: '2. DURACIÓN Y OPERACIÓN', text: 'El Beer Stand está diseñado como estación de autoservicio asistido para cóctel de bienvenida con duración de 1.5 horas. El montaje se realiza previo al inicio.' },
-    { title: '3. CONSUMO RESPONSABLE', text: 'Servicio destinado exclusivamente a mayores de edad. La prestadora promueve el consumo responsable durante el evento.' },
-    { title: '4. RESERVACIÓN Y PAGOS', text: 'El servicio se reserva mediante separación fija de $1,000 MXN. El saldo total se liquida a más tardar 10 días naturales antes del evento. Anticipos no reembolsables.' },
-    { title: '5. VALIDEZ VINCULANTE', text: 'La aceptación digital o pago de separación implica conformidad total con este contrato y condiciones generales de Viva la Bride.' }
-  ] : [
-    { title: '1. OBJETO DEL CONTRATO', text: 'La Prestadora de Servicios se compromete a diseñar y producir la papelería social solicitada conforme a la cotización oficial emitida.' },
-    { title: '2. REVISIONES Y DISEÑO', text: 'Incluye hasta 3 rondas de ajustes de diseño antes de pasar a impresión final y acabados artesanales.' },
-    { title: '3. ANTICIPOS Y LIQUIDACIÓN', text: 'Anticipo del 50% para inicio de diseño y producción. El saldo se liquida previo al envío o entrega de las piezas.' },
-    { title: '4. TIEMPOS DE PRODUCCIÓN', text: 'Los tiempos de entrega oscilan entre 7 y 15 días hábiles a partir de la aprobación de pruebas digitales y pago de anticipo.' },
-    { title: '5. ACEPTACIÓN DIGITAL', text: 'La confirmación del pedido y pago implica aceptación plena de términos y especificaciones aprobadas.' }
-  ];
-
-  let cY = 720;
-  for (const cl of clauses) {
-    safeDraw(page2, cl.title, { x: 50, y: cY, size: 9, font: fontBold, color: pinkColor });
-    cY -= 14;
-    safeDraw(page2, cl.text, { x: 50, y: cY, size: 8.5, font: fontRegular, color: darkColor });
-    cY -= 24;
-  }
-
-  // Signature lines
-  const sigY = 220;
-  page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.5, color: darkColor });
-  safeDraw(page2, clientFullName, { x: 80, y: sigY - 14, size: 9, font: fontBold, color: pinkColor });
-  safeDraw(page2, 'La Contratante', { x: 125, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
-
-  page2.drawLine({ start: { x: 355, y: sigY }, end: { x: 535, y: sigY }, thickness: 0.5, color: darkColor });
-  safeDraw(page2, 'VIVA LA BRIDE', { x: 410, y: sigY - 14, size: 9, font: fontBold, color: pinkColor });
-  safeDraw(page2, 'La Prestadora de Servicios', { x: 395, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
-
-  // Digital Signature notice
-  const isSigned = Boolean(quote.signature_data);
-  if (isSigned) {
-    safeDraw(page2, 'FIRMADO DIGITALMENTE Y VINCULANTE', { x: 195, y: 150, size: 8, font: fontBold, color: rgb(30 / 255, 140 / 255, 60 / 255) });
-  }
-
-  // Save PDF Bytes
+  // Save PDF Bytes (Solo 1 página de cotización, sin contrato adjunto)
   const pdfBytes = await pdfDoc.save();
   const cleanName = cleanWinAnsi(quote.client_name || 'Novia').replace(/[\s/\\?%*:|"<>]+/g, '_');
   const fileName = `Cotizacion_${folioNumber}_${cleanName}_VLB.pdf`;
