@@ -37,7 +37,10 @@ import {
   Copy,
   Loader2,
   Camera,
-  Image as ImageIcon
+  Image as ImageIcon,
+  ZoomIn,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import {
   VlbCatalogItem,
@@ -133,6 +136,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const [uploadingCatalogImage, setUploadingCatalogImage] = useState(false);
   const [catalogImageError, setCatalogImageError] = useState<string | null>(null);
   const [showManualImageUrl, setShowManualImageUrl] = useState(false);
+  const [viewingPhotoItem, setViewingPhotoItem] = useState<VlbCatalogItem | null>(null);
+  const [catalogImageFit, setCatalogImageFit] = useState<'contain' | 'cover'>('contain');
   const catalogImageInputRef = useRef<HTMLInputElement>(null);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -222,6 +227,16 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   useEffect(() => {
     loadData();
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && viewingPhotoItem) {
+        setViewingPhotoItem(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [viewingPhotoItem]);
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setFeedback({ type, text });
@@ -2063,6 +2078,34 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
             </div>
 
             <div className="flex items-center space-x-2">
+              {/* Selector de modo de visualización en tarjetas */}
+              <div className="hidden sm:inline-flex items-center bg-[#F4ECE6] p-0.5 rounded-xl text-[11px] font-medium text-[#7D6F6B]">
+                <button
+                  type="button"
+                  onClick={() => setCatalogImageFit('contain')}
+                  className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                    catalogImageFit === 'contain'
+                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs font-semibold'
+                      : 'hover:text-[#332A28]'
+                  }`}
+                  title="Mostrar foto completa sin recortar en las tarjetas"
+                >
+                  Foto completa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCatalogImageFit('cover')}
+                  className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
+                    catalogImageFit === 'cover'
+                      ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs font-semibold'
+                      : 'hover:text-[#332A28]'
+                  }`}
+                  title="Llenar recuadro"
+                >
+                  Llenar
+                </button>
+              </div>
+
               <div className="relative">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
                 <input
@@ -2108,20 +2151,44 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               >
                 <div>
                   {/* Photo or Editorial Placeholder */}
-                  <div className="h-44 w-full bg-[#FCFAF7] overflow-hidden relative">
+                  <div className="h-52 sm:h-56 w-full bg-[#FAF6F2] overflow-hidden relative group/photo">
                     {item.image_url ? (
-                      <img
-                        src={item.image_url}
-                        alt={item.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      />
+                      <div
+                        onClick={() => setViewingPhotoItem(item)}
+                        className="w-full h-full relative cursor-zoom-in"
+                        title="Haz clic para ver la foto completa"
+                      >
+                        {/* Fondo difuminado cálido para ambientación cuando la foto no llena todo el espacio */}
+                        {catalogImageFit === 'contain' && (
+                          <div
+                            className="absolute inset-0 bg-cover bg-center filter blur-xl opacity-25 scale-110 pointer-events-none"
+                            style={{ backgroundImage: `url(${item.image_url})` }}
+                          />
+                        )}
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          className={`relative z-10 w-full h-full transition duration-300 ${
+                            catalogImageFit === 'contain'
+                              ? 'object-contain p-2.5 group-hover/photo:scale-[1.03]'
+                              : 'object-cover group-hover/photo:scale-105'
+                          }`}
+                        />
+                        {/* Hover Overlay Badge */}
+                        <div className="absolute inset-0 z-20 bg-[#1F1917]/15 opacity-0 group-hover/photo:opacity-100 transition-opacity duration-200 flex items-center justify-center pointer-events-none">
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1F1917]/80 backdrop-blur-md text-[#FFFFFF] text-[11px] font-medium rounded-full shadow-lg border border-white/10">
+                            <ZoomIn className="w-3.5 h-3.5 text-[#F2C5BD]" />
+                            <span>Ver foto completa</span>
+                          </span>
+                        </div>
+                      </div>
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#FAF6F2] to-[#F6ECE8]">
                         <Package className="w-12 h-12 text-[#B88A82] opacity-40" />
                       </div>
                     )}
                     <span
-                      className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-xs ${
+                      className={`absolute top-3 left-3 z-30 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-xs pointer-events-none ${
                         item.category === 'PAPELERIA'
                           ? 'bg-[#FFFFFF]/90 text-[#70443D]'
                           : 'bg-[#332A28]/90 text-[#FFFFFF]'
@@ -3393,6 +3460,123 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* ======================================================== */}
+      {/* MODAL / LIGHTBOX: VISOR EDITORIAL DE FOTO COMPLETA       */}
+      {/* ======================================================== */}
+      {viewingPhotoItem && (
+        <div
+          onClick={() => setViewingPhotoItem(null)}
+          className="fixed inset-0 z-50 bg-[#140F0E]/90 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200"
+        >
+          {/* Header Bar */}
+          <div
+            onClick={e => e.stopPropagation()}
+            className="w-full max-w-5xl mx-auto flex items-center justify-between py-2 text-white"
+          >
+            <div className="flex items-center space-x-3 min-w-0">
+              <span className="shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-white/15 backdrop-blur-md text-[#F4ECE6] border border-white/10">
+                {viewingPhotoItem.subcategory || (viewingPhotoItem.category === 'PAPELERIA' ? 'Papelería Social' : 'Stands & Experiencias')}
+              </span>
+              <h3 className="font-serif text-lg sm:text-xl font-medium text-white truncate">
+                {viewingPhotoItem.name}
+              </h3>
+            </div>
+
+            <div className="flex items-center space-x-2 shrink-0">
+              {viewingPhotoItem.image_url && (
+                <a
+                  href={viewingPhotoItem.image_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                  title="Abrir imagen en pestaña nueva"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={() => setViewingPhotoItem(null)}
+                className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
+                title="Cerrar visor (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Main Photo Center */}
+          <div
+            onClick={e => e.stopPropagation()}
+            className="flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0"
+          >
+            <div className="relative max-h-[76vh] max-w-full flex items-center justify-center">
+              <img
+                src={viewingPhotoItem.image_url}
+                alt={viewingPhotoItem.name}
+                className="max-h-[76vh] max-w-[92vw] sm:max-w-4xl object-contain rounded-2xl shadow-2xl border border-white/10 select-none animate-in zoom-in-95 duration-200"
+              />
+            </div>
+          </div>
+
+          {/* Footer Bar */}
+          <div
+            onClick={e => e.stopPropagation()}
+            className="w-full max-w-xl mx-auto bg-white/10 backdrop-blur-lg border border-white/15 rounded-2xl px-5 py-3 flex items-center justify-between text-white shadow-xl"
+          >
+            <div>
+              <p className="text-[10px] text-white/70 uppercase tracking-wider">Precio Base</p>
+              <p className="font-serif text-lg font-bold text-white">
+                ${viewingPhotoItem.base_price.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                <span className="text-xs font-normal text-white/70 font-sans">
+                  {viewingPhotoItem.pricing_type === 'PER_PIECE' ? ' / pza' : ' / evento'}
+                </span>
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const it = viewingPhotoItem;
+                  setViewingPhotoItem(null);
+                  setEditingCatalogItem(it);
+                  setCatalogImageError(null);
+                  setShowManualImageUrl(Boolean(it.image_url && !it.image_url.startsWith('/uploads')));
+                  setCatalogForm({
+                    category: it.category,
+                    subcategory: it.subcategory,
+                    name: it.name,
+                    description: it.description,
+                    pricing_type: it.pricing_type,
+                    base_price: it.base_price,
+                    min_pieces: it.min_pieces || 1,
+                    image_url: it.image_url || ''
+                  });
+                  setShowCatalogModal(true);
+                }}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-medium rounded-xl transition cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Editar</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const it = viewingPhotoItem;
+                  setViewingPhotoItem(null);
+                  handleAddItemToQuote(it);
+                }}
+                className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-[#9C665C] hover:bg-[#8A574E] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Cotizar</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
       {/* MODAL: CREAR / EDITAR ARTÍCULO EN CATÁLOGO               */}
       {/* ======================================================== */}
       {showCatalogModal && (
@@ -3533,12 +3717,37 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 {catalogForm.image_url ? (
                   /* Vista previa de la foto actual */
                   <div className="p-3 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center gap-3.5">
-                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-[#EAE3DA] shrink-0 relative group">
+                    <div
+                      onClick={() => {
+                        if (catalogForm.image_url) {
+                          setViewingPhotoItem({
+                            id: 'preview',
+                            category: catalogForm.category,
+                            subcategory: catalogForm.subcategory,
+                            name: catalogForm.name || 'Vista Previa de Foto',
+                            description: catalogForm.description || '',
+                            pricing_type: catalogForm.pricing_type,
+                            base_price: catalogForm.base_price || 0,
+                            min_pieces: catalogForm.min_pieces || 1,
+                            specs_json: '{}',
+                            image_url: catalogForm.image_url,
+                            is_active: 1,
+                            created_at: '',
+                            updated_at: ''
+                          });
+                        }
+                      }}
+                      className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-[#EAE3DA] shrink-0 relative group cursor-pointer"
+                      title="Ver foto en tamaño completo"
+                    >
                       <img
                         src={catalogForm.image_url}
                         alt="Preview"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-contain p-1"
                       />
+                      <div className="absolute inset-0 bg-[#1F1917]/25 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                        <ZoomIn className="w-4 h-4 text-white" />
+                      </div>
                     </div>
                     <div className="flex-1 min-w-0 space-y-1.5">
                       <p className="text-xs font-semibold text-[#332A28] truncate">
