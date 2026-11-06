@@ -218,29 +218,29 @@ export async function buildVlbQuotePdf(
   // ========================================================
 
   // 1. FOLIO (FOLIO: original termina en x=88, baseline y=673)
-  safeDraw(page, folioNumber, { x: 92, y: 673, size: 8.5, font: fontBold, color: textColor });
+  safeDraw(page, folioNumber, { x: 92, y: 673, size: 9.0, font: fontBold, color: textColor });
 
   // 2. FECHA (FECHA: original termina en x=92, baseline y=654.5)
-  safeDraw(page, todayFormatted, { x: 94, y: 654.5, size: 8.5, font: fontRegular, color: textColor });
+  safeDraw(page, todayFormatted, { x: 94, y: 654.5, size: 9.0, font: fontRegular, color: textColor });
 
   // 3. CLIENTE (CLIENTE: original termina en x=103, baseline y=623)
-  safeDraw(page, clientFullName, { x: 104, y: 623, size: 9, font: fontBold, color: textColor });
+  safeDraw(page, clientFullName, { x: 104, y: 623, size: 9.0, font: fontBold, color: textColor });
 
   // 4. TELÉFONO (TELÉFONO: original termina en x=285, baseline y=623)
-  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 290, y: 623, size: 8.5, font: fontRegular, color: textColor });
+  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 290, y: 623, size: 9.0, font: fontRegular, color: textColor });
 
   // 5. FECHA EVENTO (FECHA EVENTO: original termina en x=135, baseline y=597.5)
-  safeDraw(page, formatSpanishDate(quote.event_date), { x: 139, y: 597.5, size: 8.5, font: fontRegular, color: textColor });
+  safeDraw(page, formatSpanishDate(quote.event_date), { x: 139, y: 597.5, size: 9.0, font: fontRegular, color: textColor });
 
   // 6. VENUE (VENUE: original termina en x=408, baseline y=597.5)
   const venueStr = quote.event_venue || 'Por definir';
-  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 412, y: 597.5, size: 8.5, font: fontRegular, color: textColor });
+  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 412, y: 597.5, size: 9.0, font: fontRegular, color: textColor });
 
   // 7. HORA INICIO (HORA INICIO: original termina en x=122, baseline y=572.5)
   const timeStr = isService
     ? (quote.ceremony_time || quote.service_time || 'Por definir')
     : (quote.delivery_date ? formatSpanishDate(quote.delivery_date) : 'Estimada');
-  safeDraw(page, timeStr, { x: 126, y: 572.5, size: 8.5, font: fontRegular, color: textColor });
+  safeDraw(page, timeStr, { x: 126, y: 572.5, size: 9.0, font: fontRegular, color: textColor });
 
   // 8. TABLE ITEMS (Limpieza del área de filas para evitar cualquier empalme)
   page.drawRectangle({
@@ -276,24 +276,24 @@ export async function buildVlbQuotePdf(
     if (idx > 3) return; // Se ajusta limpiamente
     const itemTotal = `$${Number(item.total_price || item.unit_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
 
-    // Service name (con soporte de wrap para nombres largos)
-    const nameLines = wrapText(item.item_name, 160, fontBold, 8.5);
+    // Service name (con soporte de wrap para nombres largos, tamaño parejo 9.0)
+    const nameLines = wrapText(item.item_name, 160, fontBold, 9.0);
     nameLines.forEach((nl, lIdx) => {
-      safeDraw(page, nl, { x: 62, y: curY - (lIdx * 10), size: 8.5, font: fontBold, color: textColor });
+      safeDraw(page, nl, { x: 62, y: curY - (lIdx * 10.5), size: 9.0, font: fontBold, color: textColor });
     });
 
-    // Descripción completa sin truncar (con salto de línea dinámico)
+    // Descripción completa sin truncar (tamaño parejo 8.3)
     const descText = item.description || '';
-    const descLines = wrapText(descText, maxDescWidth, fontRegular, 7.8);
+    const descLines = wrapText(descText, maxDescWidth, fontRegular, 8.3);
     descLines.forEach((dl, lIdx) => {
-      safeDraw(page, dl, { x: 235, y: curY - (lIdx * 9.5), size: 7.8, font: fontRegular, color: textColor });
+      safeDraw(page, dl, { x: 235, y: curY - (lIdx * 10), size: 8.3, font: fontRegular, color: textColor });
     });
 
     // Total de la fila alineado con la primera línea
-    safeDraw(page, itemTotal, { x: 475, y: curY, size: 8.5, font: fontBold, color: textColor });
+    safeDraw(page, itemTotal, { x: 475, y: curY, size: 9.0, font: fontBold, color: textColor });
 
     const rowLines = Math.max(nameLines.length, descLines.length);
-    curY -= Math.max(18, rowLines * 9.5 + 7);
+    curY -= Math.max(20, rowLines * 10 + 7);
   });
 
   // 9. TOTAL
