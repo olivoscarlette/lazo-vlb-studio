@@ -3,7 +3,7 @@ import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_CANVA_PDF_BASE64 } from './vlbCanvaPdfBase64';
 
 /**
- * Sanitizes string for pdf-lib standard fonts (WinAnsi/TimesRoman).
+ * Sanitizes string for pdf-lib standard fonts (WinAnsi).
  * Strips bidi control chars (\u202A-\u202E, \u200E, \u200F, \u200B, \uFEFF),
  * converts typographic quotes/dashes/bullets to standard characters,
  * preserves Spanish accented characters (á, é, í, ó, ú, ñ, etc.),
@@ -97,7 +97,7 @@ export async function buildVlbQuotePdf(
   items: VlbQuoteItem[],
   options?: { autoDownload?: boolean }
 ): Promise<{ blob: Blob; file: File; fileName: string; pdfDoc: PDFDocument }> {
-  // 1. Decode raw Canva PDF bytes
+  // 1. Decode raw Canva PDF bytes (the template is pre-cleaned with zero placeholder brackets)
   const binaryString = atob(VLB_CANVA_PDF_BASE64);
   const bytes = new Uint8Array(binaryString.length);
   for (let i = 0; i < binaryString.length; i++) {
@@ -108,25 +108,13 @@ export async function buildVlbQuotePdf(
   const pdfDoc = await PDFDocument.load(bytes);
   const page = pdfDoc.getPages()[0];
 
-  // Editorial luxury typography (TimesRoman matches the high-end serif design of Canva)
-  const fontSerif = await pdfDoc.embedFont(StandardFonts.TimesRoman);
-  const fontSerifBold = await pdfDoc.embedFont(StandardFonts.TimesRomanBold);
+  // Clean geometric typography matching Canva's Glacial Indifference body font
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-  // Quiet Luxury palette (warm dark espresso for text, warm muted taupe for secondary)
+  // Quiet Luxury palette (warm dark espresso for primary text, warm muted taupe for secondary)
   const darkEspresso = rgb(51 / 255, 42 / 255, 40 / 255); // #332A28
   const mutedTaupe = rgb(125 / 255, 111 / 255, 107 / 255); // #7D6F6B
-  const white = rgb(1, 1, 1);
-
-  // Helper to cover placeholders cleanly without clipping template labels
-  const whiteout = (x: number, y: number, w: number, h: number) => {
-    page.drawRectangle({
-      x,
-      y,
-      width: w,
-      height: h,
-      color: white,
-    });
-  };
 
   // Safe draw helper that guarantees text is clean and never throws WinAnsi encoding errors
   const safeDraw = (
@@ -177,44 +165,36 @@ export async function buildVlbQuotePdf(
   const total = Number(quote.total) || 0;
 
   // ========================================================
-  // PÁGINA 1: SOBREESCRIBIR CAMPOS DINÁMICOS EN CANVA PDF
+  // PÁGINA 1: DIBUJAR VALORES EXACTOS EN EL ESPACIO LIMPIO
+  // (Sin cuadros blancos encima de las etiquetas rosas)
   // ========================================================
 
-  // 1. FOLIO (FOLIO: label is at x=50.4..89; placeholder [FOLIO] is covered cleanly)
-  whiteout(90, 668, 120, 15);
-  safeDraw(page, folioNumber, { x: 92, y: 671, size: 9, font: fontSerifBold, color: darkEspresso });
+  // 1. FOLIO (FOLIO: original termina en x=88, baseline y=673)
+  safeDraw(page, folioNumber, { x: 92, y: 673, size: 8.5, font: fontBold, color: darkEspresso });
 
-  // 2. FECHA (FECHA: label is at x=50.4..92; placeholder [FECHA] is covered cleanly)
-  whiteout(94, 650, 160, 15);
-  safeDraw(page, todayFormatted, { x: 96, y: 653, size: 9, font: fontSerif, color: darkEspresso });
+  // 2. FECHA (FECHA: original termina en x=92, baseline y=654.5)
+  safeDraw(page, todayFormatted, { x: 94, y: 654.5, size: 8.5, font: fontRegular, color: darkEspresso });
 
-  // 3. CLIENTE (CLIENTE: label is at x=51.0..103; placeholder [CLIENTE] is covered cleanly)
-  whiteout(105, 618, 125, 15);
-  safeDraw(page, clientFullName, { x: 107, y: 621, size: 9, font: fontSerifBold, color: darkEspresso });
+  // 3. CLIENTE (CLIENTE: original termina en x=103, baseline y=623)
+  safeDraw(page, clientFullName, { x: 104, y: 623, size: 9, font: fontBold, color: darkEspresso });
 
-  // 4. TELÉFONO (TELÉFONO: label is at x=233..292; placeholder [TELÉFONO] starts at 295)
-  whiteout(295, 618, 115, 15);
-  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 297, y: 621, size: 9, font: fontSerif, color: darkEspresso });
+  // 4. TELÉFONO (TELÉFONO: original termina en x=285, baseline y=623)
+  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 290, y: 623, size: 8.5, font: fontRegular, color: darkEspresso });
 
-  // 5. FECHA EVENTO (FECHA EVENTO: label is at x=50.4..139; placeholder [FECHA EVENTO] starts at 142)
-  whiteout(142, 593, 140, 15);
-  safeDraw(page, formatSpanishDate(quote.event_date), { x: 144, y: 596, size: 9, font: fontSerif, color: darkEspresso });
+  // 5. FECHA EVENTO (FECHA EVENTO: original termina en x=135, baseline y=597.5)
+  safeDraw(page, formatSpanishDate(quote.event_date), { x: 139, y: 597.5, size: 8.5, font: fontRegular, color: darkEspresso });
 
-  // 6. VENUE (VENUE: label is at x=368..412; placeholder [VENUE] starts at 414)
-  whiteout(414, 593, 130, 15);
+  // 6. VENUE (VENUE: original termina en x=408, baseline y=597.5)
   const venueStr = quote.event_venue || 'Por definir';
-  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 416, y: 596, size: 9, font: fontSerif, color: darkEspresso });
+  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 412, y: 597.5, size: 8.5, font: fontRegular, color: darkEspresso });
 
-  // 7. HORA INICIO (HORA INICIO: label is at x=50.4..128; placeholder [HORA INICIO] starts at 130)
-  whiteout(130, 568, 100, 15);
+  // 7. HORA INICIO (HORA INICIO: original termina en x=122, baseline y=572.5)
   const timeStr = isService
     ? (quote.ceremony_time || quote.service_time || 'Por definir')
     : (quote.delivery_date ? formatSpanishDate(quote.delivery_date) : 'Estimada');
-  safeDraw(page, timeStr, { x: 132, y: 571, size: 9, font: fontSerif, color: darkEspresso });
+  safeDraw(page, timeStr, { x: 126, y: 572.5, size: 8.5, font: fontRegular, color: darkEspresso });
 
-  // 8. TABLE ITEMS (Header is at y=520..554. Cleanly whiteout table rows area)
-  whiteout(48, 420, 500, 97);
-
+  // 8. TABLE ITEMS (El área de filas está 100% limpia sin placeholders)
   const displayItems = (items && items.length > 0) ? items : [
     {
       id: 'fallback_item',
@@ -235,32 +215,30 @@ export async function buildVlbQuotePdf(
 
   let curY = 498;
   displayItems.forEach((item, idx) => {
-    if (idx > 2) return; // fits up to 3 items cleanly
+    if (idx > 2) return; // Se ajusta perfectamente hasta 3 servicios sin invadir líneas
     const itemTotal = `$${Number(item.total_price || item.unit_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-    safeDraw(page, item.item_name, { x: 62, y: curY, size: 8.5, font: fontSerifBold, color: darkEspresso });
+    safeDraw(page, item.item_name, { x: 62, y: curY, size: 8.5, font: fontBold, color: darkEspresso });
     
     // Description with elegant truncation
     const descText = item.description || '';
     const cleanDesc = descText.length > 55 ? descText.substring(0, 53) + '...' : descText;
-    safeDraw(page, cleanDesc, { x: 235, y: curY, size: 8, font: fontSerif, color: mutedTaupe });
+    safeDraw(page, cleanDesc, { x: 235, y: curY, size: 8, font: fontRegular, color: mutedTaupe });
     
-    safeDraw(page, itemTotal, { x: 475, y: curY, size: 8.5, font: fontSerifBold, color: darkEspresso });
+    safeDraw(page, itemTotal, { x: 475, y: curY, size: 8.5, font: fontBold, color: darkEspresso });
     curY -= 22;
   });
 
   // 9. TOTAL
-  whiteout(450, 385, 95, 22);
   const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-  safeDraw(page, totalFormatted, { x: 475, y: 390, size: 12, font: fontSerifBold, color: darkEspresso });
+  safeDraw(page, totalFormatted, { x: 475, y: 391, size: 11.5, font: fontBold, color: darkEspresso });
 
-  // 10. CONCEPTO EN FORMA DE PAGO
-  whiteout(110, 178, 250, 15);
+  // 10. CONCEPTO EN FORMA DE PAGO (Concepto | ya viene impreso)
   const eventDateShort = quote.event_date ? formatSpanishDate(quote.event_date) : 'Fecha evento';
   safeDraw(page, `[${quote.client_name || 'Nombre clienta'}] [${eventDateShort}]`, {
-    x: 112,
-    y: 181,
+    x: 110,
+    y: 184,
     size: 8.5,
-    font: fontSerif,
+    font: fontRegular,
     color: darkEspresso
   });
 
