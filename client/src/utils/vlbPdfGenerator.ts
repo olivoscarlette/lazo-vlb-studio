@@ -2,7 +2,7 @@ import { PDFDocument, rgb, StandardFonts, PDFPage } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_CANVA_PDF_BASE64 } from './vlbCanvaPdfBase64';
-import { VLB_MONT_LIGHT_BASE64, VLB_MONT_HEAVY_BASE64 } from './vlbMontFontBase64';
+import { VLB_MONT_LIGHT_BASE64 } from './vlbMontFontBase64';
 
 /**
  * Sanitizes string for pdf-lib standard fonts (WinAnsi).
@@ -162,7 +162,7 @@ export async function buildVlbQuotePdf(
   const pdfDoc = await PDFDocument.load(bytes);
   const page = pdfDoc.getPages()[0];
 
-  // Register fontkit to enable Mont geometric sans font (Mont ExtraLight & Mont Heavy)
+  // Register fontkit to enable Mont geometric sans font (Mont ExtraLight throughout, sin negritas)
   pdfDoc.registerFontkit(fontkit);
 
   let fontRegular: any;
@@ -175,17 +175,12 @@ export async function buildVlbQuotePdf(
       lightBytes[i] = lightBinaryString.charCodeAt(i);
     }
     fontRegular = await pdfDoc.embedFont(lightBytes);
-
-    const heavyBinaryString = atob(VLB_MONT_HEAVY_BASE64);
-    const heavyBytes = new Uint8Array(heavyBinaryString.length);
-    for (let i = 0; i < heavyBinaryString.length; i++) {
-      heavyBytes[i] = heavyBinaryString.charCodeAt(i);
-    }
-    fontBold = await pdfDoc.embedFont(heavyBytes);
+    // Sin negritas pesadas: usamos la estética fina y elegante de Mont ExtraLight en todo el documento
+    fontBold = fontRegular;
   } catch (err) {
     console.warn('Fallback to standard fonts:', err);
     fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    fontBold = fontRegular;
   }
 
   // Pure black text (#000000)
