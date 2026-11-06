@@ -1,8 +1,6 @@
 import { PDFDocument, rgb, StandardFonts, PDFPage } from 'pdf-lib';
-import fontkit from '@pdf-lib/fontkit';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_CANVA_PDF_BASE64 } from './vlbCanvaPdfBase64';
-import { VLB_OUTFIT_FONT_BASE64 } from './vlbOutfitFontBase64';
 
 /**
  * Sanitizes string for pdf-lib standard fonts (WinAnsi).
@@ -162,26 +160,9 @@ export async function buildVlbQuotePdf(
   const pdfDoc = await PDFDocument.load(bytes);
   const page = pdfDoc.getPages()[0];
 
-  // Register fontkit to enable contemporary geometric sans (Outfit)
-  pdfDoc.registerFontkit(fontkit);
-
-  let fontRegular: any;
-  let fontBold: any;
-
-  try {
-    const fontBinaryString = atob(VLB_OUTFIT_FONT_BASE64);
-    const fontBytes = new Uint8Array(fontBinaryString.length);
-    for (let i = 0; i < fontBinaryString.length; i++) {
-      fontBytes[i] = fontBinaryString.charCodeAt(i);
-    }
-    const embeddedOutfit = await pdfDoc.embedFont(fontBytes);
-    fontRegular = embeddedOutfit;
-    fontBold = embeddedOutfit;
-  } catch (err) {
-    console.warn('Fallback to standard fonts:', err);
-    fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  }
+  // Crisp typography with standard geometric sans fonts matching Canva
+  const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+  const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
   // Pure black text (#000000)
   const textColor = rgb(0, 0, 0);

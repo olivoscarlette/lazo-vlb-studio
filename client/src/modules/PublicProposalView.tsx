@@ -284,9 +284,9 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#F7F3EE] pb-5">
             <div className="flex items-center">
               <img
-                src="/vlb-logo-pink.png"
+                src="/vlb-monogram-pink.png"
                 alt="Viva la Bride"
-                className="h-7 sm:h-8 w-auto object-contain"
+                className="h-10 sm:h-12 w-auto object-contain"
               />
             </div>
 
