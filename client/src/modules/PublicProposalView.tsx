@@ -704,28 +704,53 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                 </p>
               </div>
 
-              {quote.signature_data && (
-                <div className="py-2 max-w-xs mx-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2 max-w-lg mx-auto text-left">
+                {/* Firma Contratante */}
+                <div className="p-3.5 bg-white rounded-xl border border-[#BCE8CB] flex flex-col items-center text-center">
                   <span className="text-[10px] text-[#7D6F6B] uppercase font-bold block mb-1">
-                    Firma Registrada en el Contrato:
+                    Firma de la Contratante
                   </span>
-                  <img
-                    src={quote.signature_data}
-                    alt="Firma Digital"
-                    className="max-h-24 mx-auto border border-[#BCE8CB] rounded-xl bg-[#FFFFFF] p-2"
-                  />
-                  {quote.signed_by_name && (
-                    <span className="text-xs font-bold text-[#384C3A] block mt-1">
-                      {quote.signed_by_name}
-                    </span>
+                  {quote.signature_data ? (
+                    <img
+                      src={quote.signature_data}
+                      alt="Firma Digital"
+                      className="max-h-20 max-w-full my-1 object-contain"
+                    />
+                  ) : (
+                    <span className="text-xs text-[#7D6F6B] italic my-4">Registrada digitalmente</span>
                   )}
+                  <span className="text-xs font-bold text-[#384C3A] block mt-1">
+                    {quote.signed_by_name || quote.client_name}
+                  </span>
+                  <span className="text-[10px] text-[#7D6F6B] block">Contratante</span>
                   {quote.signed_at && (
-                    <span className="text-[11px] text-[#7D6F6B] block">
+                    <span className="text-[10px] text-[#7D6F6B] block mt-0.5">
                       {formatDateMX(quote.signed_at)}
                     </span>
                   )}
                 </div>
-              )}
+
+                {/* Firma Prestadora */}
+                <div className="p-3.5 bg-white rounded-xl border border-[#BCE8CB] flex flex-col items-center text-center">
+                  <span className="text-[10px] text-[#7D6F6B] uppercase font-bold block mb-1">
+                    Firma Prestadora de Servicios
+                  </span>
+                  <img
+                    src="/vlb-scarlette-signature.png"
+                    alt="Firma Scarlette Olivo"
+                    className="max-h-20 max-w-full my-1 object-contain"
+                  />
+                  <span className="text-xs font-bold text-[#C83460] block mt-1">
+                    Scarlette Olivo
+                  </span>
+                  <span className="text-[10px] text-[#222222] font-semibold block">
+                    Representante de Viva la Bride
+                  </span>
+                  <span className="text-[10px] text-[#7D6F6B] block mt-0.5">
+                    Viva la Bride Atelier
+                  </span>
+                </div>
+              </div>
 
               <div className="pt-2">
                 <button

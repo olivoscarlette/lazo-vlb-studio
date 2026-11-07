@@ -4,6 +4,7 @@ import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_CANVA_PDF_BASE64 } from './vlbCanvaPdfBase64';
 import { VLB_MONT_LIGHT_BASE64 } from './vlbMontFontBase64';
 import { VLB_MONOGRAM_PINK_BASE64 } from './vlbMonogramPinkBase64';
+import { VLB_SCARLETTE_SIGNATURE_BASE64 } from './vlbScarletteSignatureBase64';
 
 /**
  * Sanitizes string for pdf-lib standard fonts (WinAnsi).
@@ -39,6 +40,26 @@ function base64ToUint8Array(base64: string): Uint8Array {
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes;
+}
+
+// Safe draw helper that guarantees text is clean and never throws WinAnsi encoding errors
+export function safeDraw(
+  targetPage: PDFPage,
+  text: string | null | undefined,
+  drawOptions: Parameters<PDFPage['drawText']>[1]
+) {
+  const cleaned = cleanWinAnsi(text);
+  if (!cleaned) return;
+  try {
+    targetPage.drawText(cleaned, drawOptions);
+  } catch {
+    const asciiOnly = (text || '').replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (asciiOnly) {
+      try {
+        targetPage.drawText(asciiOnly, drawOptions);
+      } catch {}
+    }
+  }
 }
 
 // Dibuja una línea de texto con justificación perfecta de margen a margen
@@ -380,26 +401,6 @@ export async function buildVlbQuotePdf(
   const textColor = rgb(0, 0, 0);
   const white = rgb(1, 1, 1);
 
-  // Safe draw helper that guarantees text is clean and never throws WinAnsi encoding errors
-  const safeDraw = (
-    targetPage: PDFPage,
-    text: string | null | undefined,
-    drawOptions: Parameters<PDFPage['drawText']>[1]
-  ) => {
-    const cleaned = cleanWinAnsi(text);
-    if (!cleaned) return;
-    try {
-      targetPage.drawText(cleaned, drawOptions);
-    } catch {
-      const asciiOnly = (text || '').replace(/[^\x20-\x7E]/g, ' ').replace(/\s+/g, ' ').trim();
-      if (asciiOnly) {
-        try {
-          targetPage.drawText(asciiOnly, drawOptions);
-        } catch {}
-      }
-    }
-  };
-
   // Determine proposal category
   const isService = (items && items.length > 0)
     ? items.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT')
@@ -704,9 +705,26 @@ export async function buildVlbQuotePdf(
 
     // Firma Prestadora Viva la Bride (Derecha)
     page2.drawLine({ start: { x: 355, y: sigY }, end: { x: 535, y: sigY }, thickness: 0.6, color: darkColor });
-    safeDraw(page2, 'Scarlette Olivo', { x: 415, y: sigY + 8, size: 9.8, font: fontBold, color: pinkAccent });
-    safeDraw(page2, 'VIVA LA BRIDE', { x: 415, y: sigY - 14, size: 8.5, font: fontBold, color: darkColor });
-    safeDraw(page2, 'La Prestadora de Servicios', { x: 395, y: sigY - 26, size: 7.8, font: fontRegular, color: mutedColor });
+
+    // Incrustar firma gráfica real de Scarlette Olivo
+    try {
+      const scarletteSigBytes = base64ToUint8Array(VLB_SCARLETTE_SIGNATURE_BASE64);
+      const scarletteSigImg = await pdfDoc.embedPng(scarletteSigBytes);
+      const sigWidth = 75;
+      const sigHeight = (61 / 94) * sigWidth; // ~48.6 pt
+      page2.drawImage(scarletteSigImg, {
+        x: 407,
+        y: sigY - 2, // Montada sobre la línea de firma manuscrita real
+        width: sigWidth,
+        height: sigHeight
+      });
+    } catch (sigErr) {
+      console.warn('No se pudo incrustar firma de Scarlette:', sigErr);
+    }
+
+    safeDraw(page2, 'Scarlette Olivo', { x: 414, y: sigY - 14, size: 8.5, font: fontBold, color: pinkAccent });
+    safeDraw(page2, 'Representante de Viva la Bride', { x: 382, y: sigY - 26, size: 7.6, font: fontBold, color: darkColor });
+    safeDraw(page2, 'La Prestadora de Servicios', { x: 395, y: sigY - 37, size: 6.8, font: fontRegular, color: mutedColor });
 
     // 7. Pie de Página Elegante (Redes Sociales y WhatsApp)
     page2.drawLine({
