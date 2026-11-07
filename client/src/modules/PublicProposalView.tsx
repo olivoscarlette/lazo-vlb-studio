@@ -352,7 +352,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               </span>
               <span className="font-semibold text-xs text-[#222222] flex items-center space-x-1.5 mt-0.5 truncate">
                 <Clock className="w-3.5 h-3.5 text-[#B88A82] shrink-0" />
-                <span className="truncate">{quote.ceremony_time || quote.service_time || 'Por definir'}</span>
+                <span className="truncate">{quote.event_time || quote.ceremony_time || quote.service_time || 'Por definir'}</span>
               </span>
             </div>
           </div>

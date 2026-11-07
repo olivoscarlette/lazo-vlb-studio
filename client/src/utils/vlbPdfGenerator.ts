@@ -260,9 +260,7 @@ export async function buildVlbQuotePdf(
   safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 412, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
 
   // 7. HORA INICIO (HORA INICIO: original termina en x=122, baseline y=572.5)
-  const timeStr = isService
-    ? (quote.ceremony_time || quote.service_time || 'Por definir')
-    : (quote.delivery_date ? formatSpanishDate(quote.delivery_date) : 'Estimada');
+  const timeStr = quote.event_time || quote.ceremony_time || quote.service_time || 'Por definir';
   safeDraw(page, timeStr, { x: 126, y: 572.5, size: 9.6, font: fontRegular, color: textColor });
 
   // 8. TABLE ITEMS (Limpieza del área de filas para evitar cualquier empalme)

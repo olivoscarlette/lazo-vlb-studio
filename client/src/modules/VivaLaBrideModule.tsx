@@ -102,12 +102,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     client_email: '',
     client_phone: '',
     event_date: '',
+    event_time: '',
     event_venue: '',
     discount: 0,
     down_payment_pct: 50,
     notes: '',
     valid_until: ''
   });
+  const [customPaymentMode, setCustomPaymentMode] = useState<'AUTO' | 'FIXED_1000' | 'PERCENT_50'>('AUTO');
   const [quoteItems, setQuoteItems] = useState<VlbQuoteItem[]>([]);
 
   // Modals
@@ -569,21 +571,38 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const quoteDiscountAmount = (quoteSubtotal * (Number(quoteDiscountPct) || 0)) / 100;
   const quoteTotal = Math.max(0, quoteSubtotal - quoteDiscountAmount);
 
-  // Reglas de negocio Viva la Bride: Selección 100% Automática
+  // Cálculo dinámico del Folio oficial acordado: VLB-AÑO-MESNUMEROCONSECUTIVO (e.g. VLB-26-1101)
+  const now = new Date();
+  const yearShort = now.getFullYear().toString().slice(-2);
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const monthPrefix = `VLB-${yearShort}-${month}`;
+  const currentMonthQuotes = quotes.filter(q => q.quote_number?.startsWith(monthPrefix));
+  let maxConsecutive = 0;
+  for (const q of currentMonthQuotes) {
+    const match = q.quote_number?.match(/^VLB-\d{2}-\d{2}(\d{2,})$/);
+    if (match && match[1]) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num > maxConsecutive) maxConsecutive = num;
+    }
+  }
+  const currentPreviewFolio = `${monthPrefix}${String(maxConsecutive + 1).padStart(2, '0')}`;
+
+  // Reglas de negocio Viva la Bride: Selección Inteligente con opción de alternar
   // - Si la propuesta incluye algún Servicio o Stand: separación fija de $1,000 (saldo se liquida 10 días antes del evento).
   // - Si es únicamente Papelería Social: anticipo del 50% (saldo se liquida al entregar o programar envío).
   const stationeryItems = quoteItems.filter(i => i.category === 'PAPELERIA');
   const servicesItems = quoteItems.filter(i => i.category === 'STANDS_EXPERIENCIAS' || i.category === 'SERVICIOS_DIGITALES');
-  const hasStationery = stationeryItems.length > 0;
-  const hasServices = servicesItems.length > 0;
+  const autoHasServices = servicesItems.length > 0 || quoteItems.some(i => i.pricing_type === 'FIXED_EVENT');
 
-  const isServiceQuote = hasServices;
+  const isServiceQuote = customPaymentMode === 'AUTO'
+    ? autoHasServices
+    : (customPaymentMode === 'FIXED_1000');
 
   let quoteDownPayment = 0;
   if (isServiceQuote) {
     quoteDownPayment = Math.min(1000, quoteTotal);
   } else {
-    quoteDownPayment = quoteTotal * 0.5;
+    quoteDownPayment = Math.round(quoteTotal * 0.5);
   }
   const quoteBalanceDue = Math.max(0, quoteTotal - quoteDownPayment);
 
@@ -607,6 +626,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...quoteForm,
+          quote_number: currentPreviewFolio,
           discount: quoteDiscountAmount,
           down_payment_pct: quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50,
           down_payment_amount: quoteDownPayment,
@@ -638,17 +658,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       return;
     }
 
-    const now = new Date();
-    const yearShort = now.getFullYear().toString().slice(-2);
-    const month = String(now.getMonth() + 1).padStart(2, '0');
     const mockQuote: VlbQuote = {
       id: 'current_preview',
-      quote_number: `VLB-${yearShort}-${month}01`,
+      quote_number: currentPreviewFolio,
       client_name: quoteForm.client_name,
       partner_name: quoteForm.partner_name,
       client_email: quoteForm.client_email,
       client_phone: quoteForm.client_phone,
       event_date: quoteForm.event_date,
+      event_time: quoteForm.event_time,
       event_venue: quoteForm.event_venue,
       status: 'BORRADOR',
       subtotal: quoteSubtotal,
@@ -821,7 +839,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const hasStands = activeItems.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT') || (targetQuote?.quote_number?.startsWith('SV-') ?? false);
     const downPayment = hasStands ? Math.min(1000, total) : Math.round(total * 0.5);
     const balance = Math.max(0, total - downPayment);
-    const folio = isCurrent ? 'Propuesta Editorial' : targetQuote!.quote_number;
+    const folio = isCurrent ? currentPreviewFolio : targetQuote!.quote_number;
 
     if (!phone || !phone.trim()) {
       showToast('Por favor captura el WhatsApp de la clienta en el formulario.', 'error');
@@ -830,19 +848,16 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
     const couple = [clientName, partnerName].filter(Boolean).join(' & ');
 
-    const now = new Date();
-    const yearShort = now.getFullYear().toString().slice(-2);
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-
     // Construir el objeto de cotización completo para el PDF
     const finalQuote: VlbQuote = targetQuote || {
       id: 'preview_' + Date.now(),
-      quote_number: `VLB-${yearShort}-${month}01`,
+      quote_number: currentPreviewFolio,
       client_name: clientName || 'Novia',
       partner_name: partnerName,
       client_email: isCurrent ? quoteForm.client_email : targetQuote!.client_email,
       client_phone: phone,
       event_date: isCurrent ? quoteForm.event_date : targetQuote!.event_date,
+      event_time: isCurrent ? quoteForm.event_time : targetQuote!.event_time,
       event_venue: eventVenue,
       status: 'BORRADOR',
       subtotal: isCurrent ? quoteSubtotal : targetQuote!.subtotal,
@@ -886,7 +901,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       ? '• *Stands & Servicios:* Separación fija de $1,000 MXN; el saldo se liquida 10 días antes del evento.'
       : '• *Papelería Social:* 50% de anticipo; el saldo se liquida al entregar el pedido o programar envío.';
 
-    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te comparto tu *Cotización Oficial en PDF* de *Viva la Bride* (*${folio}*):\n\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${hasStands ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${directPdfText}${proposalLinkText}\n\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
+    const eventTime = (isCurrent ? quoteForm.event_time : targetQuote!.event_time) || 'Por definir';
+
+    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te comparto tu *Cotización Oficial en PDF* de *Viva la Bride* (*${folio}*):\n\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n⏰ *Horario:* ${eventTime}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${hasStands ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${directPdfText}${proposalLinkText}\n\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
 
     // 1. INTENTO DE ENVÍO DIRECTO DEL ARCHIVO PDF VÍA WEB SHARE (Móviles & Mac Safari)
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1261,14 +1278,23 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       {/* Header Editorial Exclusivo Viva la Bride - Versión Compacta y Elegante */}
       <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-2xl px-5 py-3 shadow-2xs relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
-          <div className="flex items-center space-x-2">
-            <h1 className="font-serif text-xl sm:text-2xl text-[#332A28] font-bold tracking-tight">
-              Viva la Bride
-            </h1>
-            <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-[#EFE2DF] text-[#70443D] text-[10px] font-semibold uppercase tracking-wider">
-              <Sparkles className="w-3 h-3 text-[#B88A82]" />
-              <span>Atelier & Experiencias</span>
-            </span>
+          <div className="flex items-center space-x-3">
+            <img
+              src="/vlb-monogram-pink.png"
+              alt="Viva la Bride"
+              className="h-10 w-auto object-contain"
+            />
+            <div>
+              <div className="flex items-center space-x-2">
+                <h1 className="font-serif text-xl sm:text-2xl text-[#332A28] font-bold tracking-tight">
+                  Viva la Bride
+                </h1>
+                <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-[#EFE2DF] text-[#70443D] text-[10px] font-semibold uppercase tracking-wider">
+                  <Sparkles className="w-3 h-3 text-[#B88A82]" />
+                  <span>Atelier & Experiencias</span>
+                </span>
+              </div>
+            </div>
           </div>
 
           {/* Quick Tab Switcher Compacto */}
@@ -1354,8 +1380,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       Datos de la Pareja & Evento
                     </h2>
                   </div>
-                  <span className="text-xs font-semibold text-[#C83460] bg-[#F8E4E9] px-2.5 py-1 rounded-full">
-                    Folio: {(quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS') ? 'SV' : 'PS')}-{new Date().getFullYear().toString().slice(-2)}-{4100 + quotes.length + 1}
+                  <span className="text-xs font-bold text-[#C83460] bg-[#F8E4E9] px-3 py-1 rounded-full font-mono border border-[#F0D5DD]">
+                    Folio: {currentPreviewFolio}
                   </span>
                 </div>
 
@@ -1422,6 +1448,18 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-1">
+                      Horario del Evento / Montaje
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej. 4:00 PM o Por definir"
+                      value={quoteForm.event_time}
+                      onChange={e => setQuoteForm({ ...quoteForm, event_time: e.target.value })}
+                      className="w-full px-3.5 py-2.5 text-sm bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-1">
                       Sede / Venue
                     </label>
                     <input
@@ -1446,7 +1484,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   </div>
                   <button
                     onClick={() => setActiveTab('catalog')}
-                    className="inline-flex items-center space-x-1.5 text-xs font-semibold text-[#9C665C] hover:text-[#70443D] bg-[#FAF6F2] hover:bg-[#F6ECE8] px-3 py-1.5 rounded-full border border-[#EAE3DA] transition cursor-pointer"
+                    className="inline-flex items-center space-x-1.5 text-xs font-semibold text-[#9C665C] hover:text-[#70443D] bg-[#FAF6F2] hover:bg-[#F6ECE8] px-3.5 py-1.5 rounded-full border border-[#EAE3DA] transition cursor-pointer"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>Explorar y Agregar del Catálogo</span>
@@ -1460,15 +1498,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       Aún no has añadido artículos a esta propuesta
                     </p>
                     <p className="text-xs text-[#7D6F6B] mt-1 max-w-md mx-auto">
-                      Puedes agregar invitaciones de algodón, menús en foil, welcome drinks o audio guestbook directamente desde el catálogo.
+                      Utiliza el botón <strong>"Explorar y Agregar del Catálogo"</strong> para añadir papelería social, stands de bienvenida, memorial walls o audio guestbook.
                     </p>
-                    <button
-                      onClick={() => setActiveTab('catalog')}
-                      className="mt-4 inline-flex items-center space-x-2 px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Ver Catálogo Viva la Bride</span>
-                    </button>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -1555,9 +1586,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       Desglose Financiero
                     </h3>
                   </div>
-                  <span className="text-[11px] font-bold text-[#9C665C] bg-[#FAF6F2] px-2.5 py-1 rounded-full border border-[#EAE3DA]">
-                    {isServiceQuote ? 'Separación $1,000' : 'Anticipo 50%'}
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCustomPaymentMode(m => m === 'FIXED_1000' ? 'PERCENT_50' : 'FIXED_1000')}
+                    className="text-[11px] font-bold text-[#9C665C] bg-[#FAF6F2] hover:bg-[#F6ECE8] px-2.5 py-1 rounded-full border border-[#EAE3DA] transition cursor-pointer flex items-center space-x-1"
+                    title="Haz clic para alternar entre Separación Fija de $1,000 y Anticipo 50%"
+                  >
+                    <span>{isServiceQuote ? 'Separación $1,000' : 'Anticipo 50%'}</span>
+                    <span className="text-[9px] text-[#B88A82]">⇄</span>
+                  </button>
                 </div>
 
                 <div className="space-y-3 text-sm">
@@ -1622,7 +1659,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 <div className="space-y-2.5 pt-2">
                   <button
                     onClick={handleExportPdfCurrent}
-                    className="w-full py-3.5 px-4 bg-[#332A28] hover:bg-[#58352F] text-[#FFFFFF] text-xs font-bold uppercase tracking-widest rounded-2xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer"
+                    disabled={quoteItems.length === 0}
+                    className={`w-full py-3.5 px-4 bg-[#332A28] hover:bg-[#58352F] text-[#FFFFFF] text-xs font-bold uppercase tracking-widest rounded-2xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer ${
+                      quoteItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                   >
                     <Download className="w-4 h-4 text-[#CCDACC]" />
                     <span>Exportar PDF Editorial</span>
@@ -1630,51 +1670,63 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
                   <button
                     onClick={() => handleSendQuoteWhatsApp(null)}
-                    className="w-full py-3 px-4 bg-[#25D366] hover:bg-[#20BA5A] text-[#FFFFFF] text-xs font-bold uppercase tracking-wider rounded-2xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer"
+                    disabled={quoteItems.length === 0}
+                    className={`w-full py-3 px-4 bg-[#25D366] hover:bg-[#20BA5A] text-[#FFFFFF] text-xs font-bold uppercase tracking-wider rounded-2xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer ${
+                      quoteItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
                     title="Enviar resumen de cotización prellenado al WhatsApp de la novia"
                   >
                     <MessageSquare className="w-4 h-4" />
                     <span>Enviar Cotización por WhatsApp</span>
                   </button>
 
-                  <button
-                    onClick={() => handleSaveQuote('BORRADOR')}
-                    className="w-full py-2.5 px-4 bg-[#FFFFFF] hover:bg-[#FCFAF7] text-[#70443D] border border-[#EAE3DA] text-xs font-bold uppercase tracking-wider rounded-2xl transition flex items-center justify-center space-x-2 cursor-pointer"
-                  >
-                    <FileCheck className="w-4 h-4 text-[#B88A82]" />
-                    <span>Guardar Cotización</span>
-                  </button>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      onClick={() => handleSaveQuote('BORRADOR')}
+                      className="w-full py-2.5 px-3 bg-[#FFFFFF] hover:bg-[#FCFAF7] text-[#70443D] border border-[#EAE3DA] text-xs font-bold uppercase tracking-wider rounded-2xl transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                    >
+                      <FileCheck className="w-3.5 h-3.5 text-[#B88A82]" />
+                      <span>Guardar</span>
+                    </button>
 
-                  <button
-                    onClick={async () => {
-                      if (!quoteForm.client_name.trim()) {
-                        showToast('Ingresa el nombre de la novia primero.', 'error');
-                        return;
-                      }
-                      if (quoteItems.length === 0) {
-                        showToast('Agrega al menos una partida a la cotización.', 'error');
-                        return;
-                      }
-                      // Save and convert
-                      try {
-                        const res = await apiFetch('/api/vlb/quotes', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ ...quoteForm, items: quoteItems })
-                        });
-                        const data = await res.json();
-                        if (data.quote?.id) {
-                          await handleConvertQuoteToOrder(data.quote.id);
+                    <button
+                      onClick={async () => {
+                        if (!quoteForm.client_name.trim()) {
+                          showToast('Ingresa el nombre de la novia primero.', 'error');
+                          return;
                         }
-                      } catch (e: any) {
-                        showToast(e.message, 'error');
-                      }
-                    }}
-                    className="w-full py-2.5 px-4 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold uppercase tracking-wider rounded-2xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer"
-                  >
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Convertir a Pedido en CRM</span>
-                  </button>
+                        if (quoteItems.length === 0) {
+                          showToast('Agrega al menos una partida a la cotización.', 'error');
+                          return;
+                        }
+                        try {
+                          const res = await apiFetch('/api/vlb/quotes', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              ...quoteForm,
+                              quote_number: currentPreviewFolio,
+                              discount: quoteDiscountAmount,
+                              down_payment_pct: quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50,
+                              down_payment_amount: quoteDownPayment,
+                              balance_due: quoteBalanceDue,
+                              items: quoteItems
+                            })
+                          });
+                          const data = await res.json();
+                          if (data.quote?.id) {
+                            await handleConvertQuoteToOrder(data.quote.id);
+                          }
+                        } catch (e: any) {
+                          showToast(e.message, 'error');
+                        }
+                      }}
+                      className="w-full py-2.5 px-3 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold uppercase tracking-wider rounded-2xl shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Convertir</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1700,7 +1752,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               </p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full min-w-[920px] text-left text-xs">
                   <thead>
                     <tr className="border-b border-[#EFE8E1] text-[#7D6F6B] uppercase tracking-wider font-semibold">
                       <th className="py-3 px-3">Folio</th>
@@ -1709,7 +1761,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       <th className="py-3 px-3">Total</th>
                       <th className="py-3 px-3">Anticipo / Separación</th>
                       <th className="py-3 px-3">Estatus</th>
-                      <th className="py-3 px-3 text-right">Acciones</th>
+                      <th className="py-3 px-3 text-right pr-4">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#F7F3EE]">
@@ -1756,7 +1808,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             {q.status}
                           </span>
                         </td>
-                        <td className="py-3.5 px-3 text-right space-x-2">
+                        <td className="py-3.5 px-3 text-right whitespace-nowrap pr-4 space-x-1.5">
                           <button
                             onClick={() => handleCopyProposalLink(q.id)}
                             className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#9C665C] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"

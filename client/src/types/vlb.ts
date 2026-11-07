@@ -42,6 +42,7 @@ export interface VlbQuote {
   client_email?: string | null;
   client_phone?: string | null;
   event_date?: string | null;
+  event_time?: string | null;
   event_venue?: string | null;
   status: VlbQuoteStatus;
   subtotal: number;

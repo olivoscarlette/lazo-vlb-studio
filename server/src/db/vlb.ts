@@ -160,6 +160,9 @@ export function initVlbDatabase() {
   try {
     db.prepare("ALTER TABLE vlb_quotes ADD COLUMN payment_status TEXT DEFAULT 'ANTICIPO_PENDIENTE'").run();
   } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_quotes ADD COLUMN event_time TEXT').run();
+  } catch {}
 
   // Corregir cotizaciones de servicios históricas para que el anticipo sea exactamente MIN(1000, total)
   try {

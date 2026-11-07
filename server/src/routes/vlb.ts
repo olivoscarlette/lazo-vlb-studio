@@ -597,6 +597,7 @@ router.post('/quotes', (req, res) => {
       client_email,
       client_phone,
       event_date,
+      event_time,
       event_venue,
       discount = 0,
       down_payment_pct = 50,
@@ -649,9 +650,9 @@ router.post('/quotes', (req, res) => {
     db.prepare(`
       INSERT INTO vlb_quotes (
         id, quote_number, client_name, partner_name, client_email, client_phone,
-        event_date, event_venue, status, subtotal, discount, total,
+        event_date, event_time, event_venue, status, subtotal, discount, total,
         down_payment_pct, down_payment_amount, balance_due, notes, valid_until, created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       quote_number,
@@ -660,6 +661,7 @@ router.post('/quotes', (req, res) => {
       client_email ? client_email.trim() : null,
       client_phone ? client_phone.trim() : null,
       event_date || null,
+      event_time ? event_time.trim() : null,
       event_venue || null,
       'BORRADOR',
       subtotal,
