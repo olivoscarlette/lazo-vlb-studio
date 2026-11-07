@@ -49,7 +49,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
       if (data.quote?.client_name) {
         setSignerName(data.quote.client_name);
       }
-      if (data.quote?.status === 'APROBADA' || data.quote?.status === 'CONVERTIDA') {
+      if (data.quote?.signature_data) {
         setSignSuccess(true);
       }
     } catch (err: any) {
@@ -313,7 +313,11 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               {isSigned ? (
                 <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold bg-[#CCDACC] text-[#384C3A]">
                   <CheckCircle2 className="w-3.5 h-3.5 text-[#384C3A]" />
-                  <span>Aceptada & Firmada</span>
+                  <span>Contrato Firmado Digitalmente</span>
+                </span>
+              ) : totalPaid > 0 ? (
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]">
+                  Separación Acreditada · Pendiente de Firma
                 </span>
               ) : (
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#F8E4E9] text-[#C83460]">
