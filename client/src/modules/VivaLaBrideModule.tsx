@@ -939,7 +939,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     openWhatsAppMessage(phone, msg);
   };
 
-  const handleSendOrderWhatsApp = (order: VlbOrder, type: 'anticipo' | 'vobo' | 'saldo' | 'general') => {
+  const handleSendOrderWhatsApp = (order: VlbOrder, type: 'anticipo' | 'vobo' | 'saldo' | 'contrato' | 'general') => {
     if (!order.client_phone) {
       showToast('Este pedido no tiene número de teléfono registrado.', 'error');
       return;
@@ -947,7 +947,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     let text = '';
     const folioStr = formatOrderFolio(order.order_number);
     const eventDateStr = formatDateMX(order.event_date);
-    if (type === 'anticipo') {
+    if (type === 'contrato') {
+      const proposalLink = `${window.location.origin}/vlb/propuesta/${order.quote_id || order.id}`;
+      text = `¡Hola ${order.client_name}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\n¡Tu anticipo / separación para tu evento del ${eventDateStr} ha sido acreditado con éxito! 🎉💍\n\nTe comparto tu *Liga Oficial de Contrato y Pagos en Vivo*:\n🔗 ${proposalLink}\n\nEn este enlace podrás:\n1. Revisar tu contrato formal y condiciones de tu servicio.\n2. Asentar tu firma digital formal.\n3. Monitorear tu estado de cuenta con cada abono registrado.\n\n¡Quedo a tus órdenes para cualquier duda! 🤍`;
+    } else if (type === 'anticipo') {
       text = `¡Hola ${order.client_name}! ✨ Te saluda Scarlette de *Viva la Bride*.\n\nQueremos confirmar tu proyecto con folio *${folioStr}* para su gran día. 💍\n\nPara apartar formalmente tu fecha en el taller de imprenta y asegurar el mobiliario, te recordamos que el anticipo es del 50%:\n💳 *Anticipo Requerido:* $${(order.total_amount * 0.5).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN.\n\nEn cuanto realices tu transferencia, por favor envíanos tu comprobante por aquí para agendar tu primera muestra personalizada. ¡Muchas gracias! 🌸`;
     } else if (type === 'vobo') {
       text = `¡Hola ${order.client_name}! 💌 Te saluda Scarlette de *Viva la Bride*.\n\n¡El diseño de tu papelería / proyecto *${folioStr}* está listo para revisión!\nPor favor confírmanos tu VoBo (Visto Bueno) de ortografía, fechas y nombres para proceder al taller de impresión y sellado en lacre. ✨\n\n¡Quedamos atentas a tus comentarios!`;
@@ -2782,11 +2785,26 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 </div>
                 <div className="flex flex-wrap gap-2 pt-1">
                   <button
+                    onClick={() => handleSendOrderWhatsApp(selectedOrder, 'contrato')}
+                    className="px-3 py-1.5 rounded-xl bg-[#1EBE5D] hover:bg-[#18A14E] text-[#FFFFFF] text-xs font-bold shadow-2xs transition cursor-pointer flex items-center space-x-1"
+                    title="Enviar a la novia su link con el contrato oficial y su estado de cuenta en vivo"
+                  >
+                    <span>📑 Enviar Liga de Contrato & Pagos</span>
+                  </button>
+                  <button
+                    onClick={() => handleCopyProposalLink(selectedOrder.quote_id || selectedOrder.id)}
+                    className="px-2.5 py-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA] text-xs font-semibold shadow-2xs transition cursor-pointer flex items-center space-x-1"
+                    title="Copiar liga del cliente"
+                  >
+                    <Link className="w-3.5 h-3.5 text-[#9C665C]" />
+                    <span>Copiar Liga</span>
+                  </button>
+                  <button
                     onClick={() => handleSendOrderWhatsApp(selectedOrder, 'anticipo')}
                     className="px-3 py-1.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F0FDF4] text-[#1EBE5D] border border-[#BCE8CB] text-xs font-semibold shadow-2xs transition cursor-pointer"
                     title="Enviar recordatorio formal de anticipo 50% con desglose"
                   >
-                    💳 Recordar Anticipo (50%)
+                    💳 Recordar Anticipo
                   </button>
                   <button
                     onClick={() => handleSendOrderWhatsApp(selectedOrder, 'vobo')}

@@ -11,6 +11,116 @@ import { VLB_MONT_LIGHT_BASE64 } from './vlbMontFontBase64';
  * preserves Spanish accented characters (á, é, í, ó, ú, ñ, etc.),
  * and removes emojis/unsupported symbols that cause WinAnsi encode crashes.
  */
+// Helper para dividir párrafos largos en líneas de texto respetando palabras
+function wrapPdfText(text: string, maxCharsPerLine: number = 96): string[] {
+  const words = text.split(' ');
+  const lines: string[] = [];
+  let currentLine = '';
+
+  for (const word of words) {
+    if ((currentLine + (currentLine ? ' ' : '') + word).length <= maxCharsPerLine) {
+      currentLine = currentLine + (currentLine ? ' ' : '') + word;
+    } else {
+      if (currentLine) lines.push(currentLine);
+      currentLine = word;
+    }
+  }
+  if (currentLine) lines.push(currentLine);
+  return lines;
+}
+
+// Convertidor base64 a Uint8Array para incrustar firmas digitales PNG en el PDF
+function base64ToUint8Array(base64: string): Uint8Array {
+  const raw = base64.replace(/^data:image\/\w+;base64,/, '');
+  const binary = atob(raw);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+// Generador modular de cláusulas legales unificadas de Viva la Bride
+export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folioNumber: string) {
+  const hasDrinks = items.some(i => {
+    const name = (i.item_name || '').toLowerCase();
+    return name.includes('beer') || name.includes('cerveza') || name.includes('mimosa') || name.includes('drink') || name.includes('coctel') || name.includes('cóctel') || name.includes('barra');
+  });
+
+  const hasStandsOrWalls = items.some(i => {
+    const name = (i.item_name || '').toLowerCase();
+    return i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT' || name.includes('wall') || name.includes('mampara') || name.includes('muro') || name.includes('stand') || name.includes('back');
+  });
+
+  const hasMemorial = items.some(i => {
+    const name = (i.item_name || '').toLowerCase();
+    return name.includes('memorial') || name.includes('foto') || name.includes('velas');
+  });
+
+  const hasPapeleria = items.some(i => i.category === 'PAPELERIA');
+  const isService = hasStandsOrWalls || hasDrinks || quote.quote_number?.startsWith('SV-') || quote.down_payment_amount === 1000;
+
+  const clauses: { title: string; text: string }[] = [];
+  let num = 1;
+
+  clauses.push({
+    title: `${num++}. OBJETO DEL CONTRATO Y RELACION CON COTIZACION`,
+    text: `La Prestadora de Servicios se compromete a suministrar los servicios y/o elaborar las piezas descritas en la cotizacion oficial con folio ${folioNumber}. Ambas partes reconocen expresamente las partidas, cantidades y especificaciones acordadas.`
+  });
+
+  if (hasStandsOrWalls || hasDrinks) {
+    clauses.push({
+      title: `${num++}. MONTAJE, SEGURIDAD Y ACCESOS`,
+      text: `El montaje se realizara 40 a 60 minutos previos al inicio del evento por personal de Viva la Bride. En espacios abiertos o al aire libre el mobiliario debera colocarse junto a un muro o estructura firme para su anclaje. Accesos por escaleras, plantas altas o maniobras especiales causaran cargo adicional notificado previamente. La prestadora podra negar el montaje si las condiciones representan riesgo.`
+    });
+
+    clauses.push({
+      title: `${num++}. CUIDADO DEL MOBILIARIO Y EQUIPO`,
+      text: `La Contratante es responsable por cualquier dano, rotura, perdida o robo total o parcial del mobiliario, mamparas, cristaleria o equipo proporcionado, comprometiendose a cubrir el costo de reposicion o reparacion correspondiente dentro de los 3 dias naturales posteriores al evento.`
+    });
+  }
+
+  if (hasDrinks) {
+    clauses.push({
+      title: `${num++}. ESTACION DE BEBIDAS Y CONSUMO RESPONSABLE`,
+      text: `Estacion de autoservicio asistido para coctel de bienvenida (~1h 30m). No constituye barra libre ni servicio ilimitado. Destinado exclusivamente a mayores de edad promoviendo consumo responsable. La bebida remanente al terminar el tiempo se entrega al coordinador del evento; si el insumo se termina antes, se retira el mobiliario y concluye el servicio.`
+    });
+  }
+
+  if (hasMemorial) {
+    clauses.push({
+      title: `${num++}. PERSONALIZACION Y MEMORIAL WALL`,
+      text: `La Contratante entregara las fotografias digitales con al menos 7 dias naturales de anticipacion y confirmara frases antes de la produccion del vinil. Una vez autorizados los textos, disenos y fotografias finales, cualquier modificacion posterior generara costos adicionales.`
+    });
+  }
+
+  if (hasPapeleria) {
+    clauses.push({
+      title: `${num++}. PROCESO DE DISENO Y PAPELERIA SOCIAL`,
+      text: `Incluye hasta 3 rondas de ajustes de diseno antes de aprobacion final. Tiempos de entrega de 7 a 15 dias habiles a partir de VoBo y anticipo. Los tonos pueden presentar ligeras variaciones derivadas de pantallas, acabados artesanales y procesos de imprenta. Viva la Bride no es responsable por demoras de paqueterias externas.`
+    });
+  }
+
+  if (isService) {
+    clauses.push({
+      title: `${num++}. PAGOS, LIQUIDACION Y CANCELACIONES`,
+      text: `Separacion fija de $1,000 MXN para reservar fecha. La liquidacion total debe realizarse a mas tardar 15 dias naturales antes del evento. Anticipos no reembolsables. En caso de cancelacion por La Contratante, podra reagendarse dentro de los siguientes 30 dias naturales sujeto a disponibilidad y siempre que el servicio este totalmente liquidado.`
+    });
+  } else {
+    clauses.push({
+      title: `${num++}. PAGOS, LIQUIDACION Y CANCELACIONES`,
+      text: `Anticipo del 50% para inicio de diseno y produccion. La liquidacion total debera realizarse previo a la entrega o programacion de envio. Anticipos no reembolsables. En caso de cancelacion por La Contratante, no se realizara reembolso y el cliente cubrira los costos de insumos generados hasta el momento.`
+    });
+  }
+
+  clauses.push({
+    title: `${num++}. AUTORIZACION DE IMAGEN Y VALIDEZ LEGAL`,
+    text: `La Contratante autoriza el uso de fotografias y videos del montaje y ambientacion con fines de portafolio y redes sociales respetando la privacidad. La realizacion del anticipo o firma digital ratifica la total conformidad y validez vinculante del presente contrato.`
+  });
+
+  return { clauses, isService, hasDrinks, hasStandsOrWalls, hasMemorial, hasPapeleria };
+}
+
 export function cleanWinAnsi(str: string | null | undefined): string {
   if (!str) return '';
   let text = String(str);
@@ -321,6 +431,25 @@ export async function buildVlbQuotePdf(
   const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
   safeDraw(page, totalFormatted, { x: 475, y: 391, size: 12.0, font: fontBold, color: textColor });
 
+  // Sello de anticipo / abonos en página 1 si existen pagos registrados
+  const totalNum = Number(total) || 0;
+  const totalPaidNum = Number(quote.total_paid) || 0;
+  const balanceNum = quote.balance_due !== undefined ? Number(quote.balance_due) : Math.max(0, totalNum - totalPaidNum);
+  const isLiquidated = totalPaidNum >= totalNum && totalNum > 0;
+
+  if (totalPaidNum > 0) {
+    const stampText = isLiquidated
+      ? 'TOTALMENTE LIQUIDADO (100%)'
+      : `ANTICIPO ACREDITADO: -$${totalPaidNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })}  |  SALDO: $${balanceNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+    safeDraw(page, stampText, {
+      x: 235,
+      y: 375,
+      size: 7.8,
+      font: fontBold,
+      color: isLiquidated ? rgb(30 / 255, 140 / 255, 60 / 255) : rgb(200 / 255, 52 / 255, 96 / 255)
+    });
+  }
+
   // 10. CONCEPTO EN FORMA DE PAGO (Concepto | ya viene impreso)
   const clientNameClean = (quote.client_name || 'Cliente').trim();
   const conceptDate = formatConceptDate(quote.event_date);
@@ -334,61 +463,124 @@ export async function buildVlbQuotePdf(
   });
 
   // ========================================================
-  // PÁGINA 2: CONTRATO DIGITAL (SOLO CUANDO SE CONVIERTE EN CLIENTE)
+  // PÁGINA 2: CONTRATO DIGITAL (SOLO CUANDO SE CONVIERTE EN CLIENTE O ABONA)
   // ========================================================
   const shouldIncludeContract = Boolean(
     options?.includeContract !== undefined
       ? options.includeContract
-      : (quote.status === 'CONVERTIDA' || quote.status === 'APROBADA' || Boolean(quote.signature_data))
+      : (quote.status === 'CONVERTIDA' || quote.status === 'APROBADA' || Boolean(quote.signature_data) || (Number(quote.total_paid) || 0) > 0)
   );
 
   if (shouldIncludeContract) {
     const page2 = pdfDoc.addPage([595.5, 842.25]);
     const pinkAccent = rgb(215 / 255, 54 / 255, 98 / 255); // #D73662
     const darkColor = textColor;
-    const mutedColor = rgb(100 / 255, 95 / 255, 95 / 255);
+    const mutedColor = rgb(110 / 255, 100 / 255, 100 / 255);
 
-    safeDraw(page2, 'CONTRATO DE PRESTACION DE SERVICIOS', { x: 135, y: 795, size: 12, font: fontBold, color: darkColor });
-    safeDraw(page2, `VIVA LA BRIDE - FOLIO ${folioNumber}`, { x: 215, y: 778, size: 9, font: fontBold, color: pinkAccent });
+    safeDraw(page2, 'CONTRATO DE PRESTACION DE SERVICIOS PARA EVENTOS', { x: 95, y: 808, size: 11, font: fontBold, color: darkColor });
+    safeDraw(page2, `VIVA LA BRIDE  ·  FOLIO ${folioNumber}`, { x: 210, y: 795, size: 8.5, font: fontBold, color: pinkAccent });
 
-    safeDraw(page2, `Entre "La Contratante" ${clientFullName} y Viva la Bride, conforme a la cotizacion relacionada.`, { x: 80, y: 755, size: 8.5, font: fontRegular, color: mutedColor });
+    const venueClean = cleanWinAnsi(quote.event_venue || 'Por definir');
+    const timeClean = cleanWinAnsi(quote.event_time || quote.ceremony_time || quote.service_time || 'Por definir');
+    const dateClean = formatConceptDate(quote.event_date) || 'Por definir';
 
-    const clauses = isService ? [
-      { title: '1. OBJETO DEL CONTRATO', text: 'La Prestadora de Servicios se compromete a proporcionar el servicio de Beer Stand / Servicios solicitado conforme a lo establecido en la cotización relacionada.' },
-      { title: '2. DURACIÓN Y OPERACIÓN', text: 'El servicio está diseñado con horario y montaje previo al inicio del evento. El consumo y operación se realiza conforme al paquete contratado.' },
-      { title: '3. CONSUMO RESPONSABLE', text: 'Servicio destinado exclusivamente a mayores de edad. La prestadora promueve el consumo responsable durante el evento.' },
-      { title: '4. RESERVACIÓN Y PAGOS', text: `El servicio se reserva mediante separación fija de $${(quote.down_payment_amount || 1000).toLocaleString('es-MX')} MXN. El saldo total se liquida a más tardar 10 días naturales antes del evento. Anticipos no reembolsables.` },
-      { title: '5. VALIDEZ VINCULANTE', text: 'La aceptación digital o pago de separación implica conformidad total con este contrato y condiciones generales de Viva la Bride.' }
-    ] : [
-      { title: '1. OBJETO DEL CONTRATO', text: 'La Prestadora de Servicios se compromete a diseñar y producir la papelería social solicitada conforme a la cotización oficial emitida.' },
-      { title: '2. REVISIONES Y DISEÑO', text: 'Incluye hasta 3 rondas de ajustes de diseño antes de pasar a impresión final y acabados artesanales.' },
-      { title: '3. ANTICIPOS Y LIQUIDACIÓN', text: 'Anticipo del 50% para inicio de diseño y producción. El saldo se liquida previo al envío o entrega de las piezas.' },
-      { title: '4. TIEMPOS DE PRODUCCIÓN', text: 'Los tiempos de entrega oscilan entre 7 y 15 días hábiles a partir de la aprobación de pruebas digitales y pago de anticipo.' },
-      { title: '5. ACEPTACIÓN DIGITAL', text: 'La confirmación del pedido y pago implica aceptación plena de términos y especificaciones aprobadas.' }
-    ];
+    safeDraw(page2, `Contratante: ${clientFullName}   |   Fecha: ${dateClean}   |   Horario: ${timeClean}   |   Sede: ${venueClean}`, {
+      x: 50,
+      y: 778,
+      size: 7.5,
+      font: fontRegular,
+      color: mutedColor
+    });
 
-    let cY = 720;
+    // Estado Financiero en Vivo Box
+    const paidNum = Number(quote.total_paid) || 0;
+    const statusLabel = isLiquidated ? '100% LIQUIDADO' : (paidNum > 0 ? 'SEPARACION ACREDITADA' : 'PENDIENTE DE SEPARACION');
+
+    page2.drawRectangle({
+      x: 45,
+      y: 746,
+      width: 505,
+      height: 24,
+      color: rgb(252 / 255, 250 / 255, 247 / 255),
+      borderColor: rgb(234 / 255, 227 / 255, 218 / 255),
+      borderWidth: 0.8
+    });
+
+    safeDraw(page2, `ESTADO DE CUENTA: ${statusLabel}`, {
+      x: 55,
+      y: 753,
+      size: 7.8,
+      font: fontBold,
+      color: isLiquidated ? rgb(30 / 255, 140 / 255, 60 / 255) : pinkAccent
+    });
+
+    const finText = `Total: $${totalNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN   |   Abonado: $${paidNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN   |   Saldo: $${balanceNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`;
+    safeDraw(page2, finText, {
+      x: 235,
+      y: 753,
+      size: 7.5,
+      font: fontRegular,
+      color: darkColor
+    });
+
+    // Cláusulas Dinámicas Modulares
+    const { clauses } = getContractClauses(items, quote, folioNumber);
+
+    let cY = 730;
     for (const cl of clauses) {
-      safeDraw(page2, cl.title, { x: 50, y: cY, size: 9, font: fontBold, color: pinkAccent });
-      cY -= 14;
-      safeDraw(page2, cl.text, { x: 50, y: cY, size: 8.5, font: fontRegular, color: darkColor });
-      cY -= 24;
+      safeDraw(page2, cl.title, { x: 45, y: cY, size: 7.8, font: fontBold, color: pinkAccent });
+      cY -= 10.5;
+
+      const lines = wrapPdfText(cl.text, 102);
+      for (const line of lines) {
+        safeDraw(page2, line, { x: 45, y: cY, size: 7.2, font: fontRegular, color: darkColor });
+        cY -= 9.5;
+      }
+      cY -= 4;
     }
 
-    // Signature lines
-    const sigY = 220;
-    page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.5, color: darkColor });
-    safeDraw(page2, clientFullName, { x: 80, y: sigY - 14, size: 9, font: fontBold, color: pinkAccent });
-    safeDraw(page2, 'La Contratante', { x: 125, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
+    // Líneas de Firma
+    const sigY = Math.min(cY - 15, 185);
 
-    page2.drawLine({ start: { x: 355, y: sigY }, end: { x: 535, y: sigY }, thickness: 0.5, color: darkColor });
-    safeDraw(page2, 'VIVA LA BRIDE', { x: 410, y: sigY - 14, size: 9, font: fontBold, color: pinkAccent });
-    safeDraw(page2, 'La Prestadora de Servicios', { x: 395, y: sigY - 26, size: 8, font: fontRegular, color: darkColor });
+    // Firma Contratante (Izquierda)
+    page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.6, color: darkColor });
+    safeDraw(page2, clientFullName, { x: 75, y: sigY - 12, size: 8.5, font: fontBold, color: pinkAccent });
+    safeDraw(page2, 'La Contratante', { x: 120, y: sigY - 22, size: 7.5, font: fontRegular, color: mutedColor });
 
-    // Digital Signature notice
-    const isSigned = Boolean(quote.signature_data);
-    if (isSigned) {
-      safeDraw(page2, 'FIRMADO DIGITALMENTE Y VINCULANTE', { x: 195, y: 150, size: 8, font: fontBold, color: rgb(30 / 255, 140 / 255, 60 / 255) });
+    // Si tiene firma digital PNG, dibujarla sobre la línea
+    if (quote.signature_data && typeof quote.signature_data === 'string' && quote.signature_data.includes('base64,')) {
+      try {
+        const pngBytes = base64ToUint8Array(quote.signature_data);
+        const pngImg = await pdfDoc.embedPng(pngBytes);
+        const pngDims = pngImg.scale(0.3);
+        page2.drawImage(pngImg, {
+          x: 75,
+          y: sigY + 4,
+          width: Math.min(130, pngDims.width),
+          height: Math.min(44, pngDims.height)
+        });
+      } catch (pngErr) {
+        console.warn('No se pudo incrustar firma PNG:', pngErr);
+      }
+    }
+
+    // Firma Prestadora Viva la Bride (Derecha)
+    page2.drawLine({ start: { x: 355, y: sigY }, end: { x: 535, y: sigY }, thickness: 0.6, color: darkColor });
+    safeDraw(page2, 'Scarlette Olivo', { x: 415, y: sigY + 8, size: 9.5, font: fontBold, color: pinkAccent });
+    safeDraw(page2, 'VIVA LA BRIDE ATELIER', { x: 395, y: sigY - 12, size: 8.5, font: fontBold, color: darkColor });
+    safeDraw(page2, 'La Prestadora de Servicios', { x: 395, y: sigY - 22, size: 7.5, font: fontRegular, color: mutedColor });
+
+    // Sello de Firma Digital
+    if (quote.signature_data || quote.status === 'APROBADA') {
+      const signDate = quote.signed_at ? formatConceptDate(quote.signed_at) : dateClean;
+      const signer = quote.signed_by_name || clientFullName;
+      safeDraw(page2, `ACEPTADO Y FIRMADO DIGITALMENTE POR: ${cleanWinAnsi(signer).toUpperCase()} (${signDate})`, {
+        x: 110,
+        y: sigY - 38,
+        size: 7.0,
+        font: fontBold,
+        color: rgb(30 / 255, 140 / 255, 60 / 255)
+      });
     }
   }
 

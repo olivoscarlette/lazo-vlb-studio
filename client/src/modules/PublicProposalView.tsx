@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   FileText, Download, CheckCircle2, AlertCircle, Heart,
-  Sparkles, Calendar, MapPin, Tag, ShieldCheck, PenTool, RotateCcw, Clock
+  Sparkles, Calendar, MapPin, Tag, ShieldCheck, PenTool, RotateCcw, Clock,
+  CreditCard, MessageSquare
 } from 'lucide-react';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
-import { generateVlbQuotePdf } from '../utils/vlbPdfGenerator';
+import { generateVlbQuotePdf, getContractClauses } from '../utils/vlbPdfGenerator';
 
 interface PublicProposalViewProps {
   token: string;
@@ -232,6 +233,21 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
   const balancePending = totalPaid > 0 ? remainingAfterPaid : Math.max(0, totalCalculated - downPaymentRequired);
   const isLiquidated = totalPaid >= totalCalculated && totalCalculated > 0;
   const isSigned = Boolean(signSuccess || quote?.signature_data);
+
+  const formatConceptDateNumeric = (dateStr?: string | null): string => {
+    if (!dateStr) return '';
+    const clean = dateStr.trim().split('T')[0].split(' ')[0].split('-');
+    if (clean.length === 3) {
+      const [y, m, d] = clean;
+      return `${d.padStart(2, '0')}${m.padStart(2, '0')}${y.slice(-2)}`;
+    }
+    return '';
+  };
+
+  const conceptDateNum = formatConceptDateNumeric(quote?.event_date);
+  const isContractUnlocked = totalPaid > 0 || isSigned || quote?.status === 'CONVERTIDA' || quote?.status === 'APROBADA';
+  const { clauses: contractClauses } = quote ? getContractClauses(items, quote, formatFolio(quote.quote_number)) : { clauses: [] };
+  const [showClausesPreview, setShowClausesPreview] = useState(false);
 
   const handleDownloadPdf = async () => {
     if (!quote) return;
@@ -536,6 +552,129 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ======================================================== */}
+        {/* DATOS BANCARIOS PARA SEPARACIÓN (SI AÚN NO HA ABONADO)  */}
+        {/* ======================================================== */}
+        {totalPaid === 0 && !isSigned && (
+          <div className="bg-gradient-to-br from-[#FAF6F2] via-[#FBF4F3] to-[#F6ECE8] p-6 sm:p-8 rounded-3xl border border-[#EAD2D0] shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#EAE3DA] gap-2">
+              <div className="flex items-center space-x-2">
+                <CreditCard className="w-5 h-5 text-[#C83460]" />
+                <h3 className="font-serif text-lg font-bold text-[#70443D]">
+                  Datos Bancarios para Separar tu Fecha
+                </h3>
+              </div>
+              <span className="text-xs font-bold text-[#C83460] bg-[#F8E4E9] px-3 py-1 rounded-full border border-[#F0D5DD] self-start sm:self-auto">
+                {isServiceProposal ? 'Separación Fija de $1,000 MXN' : 'Anticipo Requerido del 50%'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+              <div className="bg-[#FFFFFF]/90 backdrop-blur-xs p-3.5 rounded-2xl border border-[#EAE3DA]">
+                <span className="text-[10px] text-[#7D6F6B] uppercase font-bold tracking-wider block">Beneficiario</span>
+                <span className="text-sm font-bold text-[#222222] mt-0.5 block">Scarlette Olivo</span>
+              </div>
+              <div className="bg-[#FFFFFF]/90 backdrop-blur-xs p-3.5 rounded-2xl border border-[#EAE3DA]">
+                <span className="text-[10px] text-[#7D6F6B] uppercase font-bold tracking-wider block">Banco</span>
+                <span className="text-sm font-bold text-[#222222] mt-0.5 block">BBVA</span>
+              </div>
+              <div className="bg-[#FFFFFF]/90 backdrop-blur-xs p-3.5 rounded-2xl border border-[#EAE3DA] sm:col-span-2">
+                <span className="text-[10px] text-[#7D6F6B] uppercase font-bold tracking-wider block">Cuenta CLABE (SPEI)</span>
+                <span className="text-base font-mono font-bold text-[#C83460] select-all tracking-wider mt-0.5 block">
+                  012 180 01519982172 1
+                </span>
+              </div>
+              <div className="bg-[#FFFFFF]/90 backdrop-blur-xs p-3.5 rounded-2xl border border-[#EAE3DA] sm:col-span-2">
+                <span className="text-[10px] text-[#7D6F6B] uppercase font-bold tracking-wider block">Concepto de Transferencia Sugerido</span>
+                <span className="text-xs font-semibold text-[#222222] select-all mt-0.5 block">
+                  {quote.client_name} {conceptDateNum}
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-[#EAE3DA]/80">
+              <p className="text-xs text-[#7D6F6B] leading-relaxed">
+                ✨ <strong>Paso siguiente:</strong> Realiza tu transferencia y envía el comprobante. En cuanto se registre, se desbloqueará de inmediato tu <strong>Contrato Digital Oficial y Módulo de Firma</strong>.
+              </p>
+              <a
+                href={`https://wa.me/525661406247?text=${encodeURIComponent(`¡Hola Scarlette! ✨ Te comparto mi comprobante de anticipo para la cotización ${formatFolio(quote.quote_number)} a nombre de ${quote.client_name}.`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="shrink-0 inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20BA5A] text-[#FFFFFF] text-xs font-bold transition shadow-2xs cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>Enviar Comprobante por WhatsApp</span>
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* ======================================================== */}
+        {/* CONTRATO MAESTRO DINÁMICO & CLÁUSULAS LEGALES            */}
+        {/* ======================================================== */}
+        <div className="bg-[#FFFFFF] p-6 sm:p-8 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[#F7F3EE] gap-2">
+            <div className="flex items-center space-x-2">
+              <FileText className="w-5 h-5 text-[#C83460]" />
+              <h3 className="font-serif text-lg font-bold text-[#222222]">
+                Contrato de Prestación de Servicios
+              </h3>
+            </div>
+            {isContractUnlocked ? (
+              <span className="text-xs font-bold text-[#384C3A] bg-[#CCDACC] px-3 py-1 rounded-full border border-[#B8CEB8]">
+                {totalPaid > 0 ? '✓ Separación Acreditada · Contrato Activo' : '✓ Contrato Desbloqueado'}
+              </span>
+            ) : (
+              <span className="text-xs font-semibold text-[#7D6F6B] bg-[#F7F3EE] px-3 py-1 rounded-full">
+                Se activa al registrar anticipo
+              </span>
+            )}
+          </div>
+
+          <p className="text-xs text-[#7D6F6B] leading-relaxed">
+            Contrato celebrado entre <strong>{quote.client_name} {quote.partner_name ? `& ${quote.partner_name}` : ''}</strong> ("La Contratante") y <strong>Viva la Bride</strong> ("La Prestadora de Servicios"), correspondiente a las partidas y especificaciones del folio <strong>{formatFolio(quote.quote_number)}</strong>.
+          </p>
+
+          {/* Mostrar cláusulas si está desbloqueado o si la novia pide ver el borrador */}
+          {isContractUnlocked || showClausesPreview ? (
+            <div className="space-y-3 pt-1">
+              <div className="p-3.5 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] flex items-center justify-between text-xs text-[#70443D]">
+                <span className="font-bold">Estatus del Contrato:</span>
+                <span className="font-semibold">
+                  {isLiquidated ? '100% Liquidado' : (totalPaid > 0 ? `Anticipo Acreditado ($${totalPaid.toLocaleString('es-MX')})` : 'Pendiente de Separación')}
+                </span>
+              </div>
+
+              <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                {contractClauses.map((cl, cIdx) => (
+                  <div key={cIdx} className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-1">
+                    <h4 className="text-xs font-bold text-[#C83460] uppercase tracking-wider">
+                      {cl.title}
+                    </h4>
+                    <p className="text-xs text-[#332A28] leading-relaxed">
+                      {cl.text}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-dashed border-[#EAE3DA] text-center space-y-3">
+              <Sparkles className="w-6 h-6 text-[#B88A82] mx-auto opacity-70" />
+              <p className="text-xs text-[#7D6F6B] max-w-md mx-auto leading-relaxed">
+                El texto legal oficial y el módulo de firma digital se activan en cuanto se registre tu anticipo de separación.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowClausesPreview(true)}
+                className="text-xs font-bold text-[#C83460] hover:underline cursor-pointer"
+              >
+                Revisar borrador de cláusulas y condiciones generales →
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ======================================================== */}
