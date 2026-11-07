@@ -1,4 +1,4 @@
-import { PDFDocument, rgb, StandardFonts, PDFPage } from 'pdf-lib';
+import { PDFDocument, rgb, StandardFonts, PDFPage, PDFFont, RGB } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
 import { VLB_CANVA_PDF_BASE64 } from './vlbCanvaPdfBase64';
@@ -39,6 +39,88 @@ function base64ToUint8Array(base64: string): Uint8Array {
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes;
+}
+
+// Dibuja una línea de texto con justificación perfecta de margen a margen
+function drawJustifiedLine(
+  page: PDFPage,
+  words: string[],
+  startX: number,
+  y: number,
+  targetWidth: number,
+  fontSize: number,
+  font: PDFFont,
+  color: RGB
+) {
+  if (words.length <= 1) {
+    safeDraw(page, words.join(' '), { x: startX, y, size: fontSize, font, color });
+    return;
+  }
+  const totalWordsWidth = words.reduce((acc, w) => acc + font.widthOfTextAtSize(w, fontSize), 0);
+  const totalSpacing = targetWidth - totalWordsWidth;
+  const spacePerWord = totalSpacing / (words.length - 1);
+
+  let curX = startX;
+  for (let i = 0; i < words.length; i++) {
+    const word = words[i];
+    safeDraw(page, word, { x: curX, y, size: fontSize, font, color });
+    curX += font.widthOfTextAtSize(word, fontSize) + spacePerWord;
+  }
+}
+
+// Envuelve y dibuja un párrafo completo con justificación editorial en ambos márgenes
+function drawJustifiedParagraph(
+  page: PDFPage,
+  text: string,
+  startX: number,
+  startY: number,
+  targetWidth: number,
+  fontSize: number,
+  lineHeight: number,
+  font: PDFFont,
+  color: RGB
+): number {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[][] = [];
+  let currentLine: string[] = [];
+  let currentLineWidth = 0;
+  const singleSpaceWidth = font.widthOfTextAtSize(' ', fontSize);
+
+  for (const word of words) {
+    const wordWidth = font.widthOfTextAtSize(word, fontSize);
+    const widthWithWord = currentLine.length === 0 
+      ? wordWidth 
+      : currentLineWidth + singleSpaceWidth + wordWidth;
+
+    if (widthWithWord <= targetWidth) {
+      currentLine.push(word);
+      currentLineWidth = widthWithWord;
+    } else {
+      if (currentLine.length > 0) {
+        lines.push(currentLine);
+      }
+      currentLine = [word];
+      currentLineWidth = wordWidth;
+    }
+  }
+  if (currentLine.length > 0) {
+    lines.push(currentLine);
+  }
+
+  let y = startY;
+  for (let idx = 0; idx < lines.length; idx++) {
+    const lineWords = lines[idx];
+    const isLastLine = idx === lines.length - 1;
+
+    if (isLastLine || lineWords.length <= 1) {
+      safeDraw(page, lineWords.join(' '), { x: startX, y, size: fontSize, font, color });
+    } else {
+      drawJustifiedLine(page, lineWords, startX, y, targetWidth, fontSize, font, color);
+    }
+    y -= lineHeight;
+  }
+
+  return y;
 }
 
 // Generador modular de cláusulas legales unificadas de Viva la Bride
@@ -577,22 +659,19 @@ export async function buildVlbQuotePdf(
       color: darkColor
     });
 
-    // 5. Cláusulas Legales en Ancho Completo
+    // 5. Cláusulas Legales con Justificación Editorial
     let cY = 634;
+    const targetWidth = 505; // Margen a margen (550 - 45)
     for (const cl of clauses) {
       safeDraw(page2, cl.title, { x: 45, y: cY, size: 8.5, font: fontBold, color: pinkAccent });
       cY -= 12.0;
 
-      const lines = wrapPdfText(cl.text, 98);
-      for (const line of lines) {
-        safeDraw(page2, line, { x: 45, y: cY, size: 8.0, font: fontRegular, color: darkColor });
-        cY -= 11.2;
-      }
-      cY -= 7.0;
+      cY = drawJustifiedParagraph(page2, cl.text, 45, cY, targetWidth, 8.2, 11.8, fontRegular, darkColor);
+      cY -= 9.0;
     }
 
     // 6. Líneas de Firma
-    const sigY = Math.max(cY - 14, 140);
+    const sigY = 155;
 
     // Firma Contratante (Izquierda)
     page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.6, color: darkColor });

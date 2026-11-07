@@ -657,7 +657,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                     <h4 className="text-xs font-bold text-[#C83460] uppercase tracking-wider">
                       {cl.title}
                     </h4>
-                    <p className="text-xs text-[#332A28] leading-relaxed">
+                    <p className="text-xs text-[#332A28] leading-relaxed text-justify">
                       {cl.text}
                     </p>
                   </div>
