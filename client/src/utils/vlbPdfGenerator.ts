@@ -575,8 +575,7 @@ export async function buildVlbQuotePdf(
       console.warn('Could not embed monogram logo:', err);
     }
 
-    safeDraw(page2, 'VIVA LA BRIDE', { x: 45, y: 750, size: 8.5, font: fontBold, color: darkColor });
-    safeDraw(page2, 'Momentos unicos, detalles inolvidables.', { x: 45, y: 740, size: 6.8, font: fontRegular, color: mutedColor });
+    safeDraw(page2, 'VIVA LA BRIDE', { x: 45, y: 748, size: 8.5, font: fontBold, color: darkColor });
 
     // 2. Card Superior Derecha (Datos del Evento y Folio con bordes redondeados)
     const venueClean = cleanWinAnsi(quote.event_venue || 'Por definir');
