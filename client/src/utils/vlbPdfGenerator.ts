@@ -208,7 +208,7 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
   if (isService) {
     clauses.push({
       title: `${num++}. PAGOS, LIQUIDACION Y CANCELACIONES`,
-      text: `Separacion fija de $1,000 MXN para reservar fecha. La liquidacion total debe realizarse a mas tardar 15 dias naturales antes del evento. Anticipos no reembolsables. En caso de cancelacion por La Contratante, podra reagendarse dentro de los siguientes 30 dias naturales sujeto a disponibilidad y siempre que el servicio este totalmente liquidado.`
+      text: `Separacion fija de $1,000 MXN para reservar fecha. La liquidacion total debe realizarse a mas tardar 10 dias naturales antes del evento. Anticipos no reembolsables. En caso de cancelacion por La Contratante, podra reagendarse dentro de los siguientes 30 dias naturales sujeto a disponibilidad y siempre que el servicio este totalmente liquidado.`
     });
   } else {
     clauses.push({
@@ -615,95 +615,86 @@ export async function buildVlbQuotePdf(
     else if (hasStandsOrWalls && hasPapeleria) serviceTitle = 'PAPELERIA SOCIAL & STANDS DE BIENVENIDA';
     else if (hasStandsOrWalls) serviceTitle = 'STANDS DE BIENVENIDA & EXPERIENCIAS';
 
-    safeDraw(page2, 'CONTRATO DE PRESTACION DE SERVICIOS', { x: 170, y: 715, size: 11.5, font: fontBold, color: pinkAccent });
-    safeDraw(page2, serviceTitle, { x: 185, y: 701, size: 8.8, font: fontBold, color: darkColor });
-    safeDraw(page2, 'Entre "La Contratante" y Viva la Bride, en adelante "Prestadora de Servicios".', { x: 135, y: 689, size: 7.5, font: fontRegular, color: mutedColor });
+    const drawPageCentered = (text: string, y: number, size: number, font: PDFFont, color: RGB) => {
+      const clean = cleanWinAnsi(text);
+      const w = font.widthOfTextAtSize(clean, size);
+      safeDraw(page2, clean, { x: (595.5 - w) / 2, y, size, font, color });
+    };
+
+    drawPageCentered('CONTRATO DE PRESTACION DE SERVICIOS', 710, 11.5, fontBold, pinkAccent);
+    drawPageCentered(serviceTitle, 696, 9.0, fontBold, darkColor);
+    drawPageCentered('Entre "La Contratante" y Viva la Bride, en adelante "Prestadora de Servicios".', 684, 7.5, fontRegular, mutedColor);
 
     // Línea divisoria elegante
     page2.drawLine({
-      start: { x: 45, y: 681 },
-      end: { x: 550, y: 681 },
+      start: { x: 45, y: 676 },
+      end: { x: 550, y: 676 },
       thickness: 0.6,
       color: rgb(240 / 255, 213 / 255, 221 / 255)
     });
 
-    // 4. Estado de Cuenta / Pagos en Vivo (Box bien espaciado, sin encimarse)
-    const paidNum = Number(quote.total_paid) || 0;
     const isSignedReal = Boolean(quote.signature_data && typeof quote.signature_data === 'string' && quote.signature_data.startsWith('data:image/'));
-    const statusLabel = isLiquidated ? '100% LIQUIDADO' : (paidNum > 0 ? 'SEPARACION ACREDITADA' : 'PENDIENTE DE SEPARACION');
 
-    page2.drawRectangle({
-      x: 45,
-      y: 652,
-      width: 505,
-      height: 22,
-      color: rgb(250 / 255, 246 / 255, 242 / 255),
-      borderColor: rgb(234 / 255, 227 / 255, 218 / 255),
-      borderWidth: 0.8
-    });
-
-    safeDraw(page2, `ESTADO: ${statusLabel}`, {
-      x: 55,
-      y: 658,
-      size: 7.5,
-      font: fontBold,
-      color: isLiquidated ? rgb(30 / 255, 140 / 255, 60 / 255) : pinkAccent
-    });
-
-    const finText = `Total Contratado: $${totalNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN   -   Abonado: $${paidNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN   -   Saldo: $${balanceNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`;
-    safeDraw(page2, finText, {
-      x: 215,
-      y: 658,
-      size: 7.2,
-      font: fontRegular,
-      color: darkColor
-    });
-
-    // 5. Cláusulas Legales con Justificación Editorial
-    let cY = 634;
+    // 4. Cláusulas Legales con Justificación Editorial
+    let cY = 658;
     const targetWidth = 505; // Margen a margen (550 - 45)
     for (const cl of clauses) {
       safeDraw(page2, cl.title, { x: 45, y: cY, size: 8.5, font: fontBold, color: pinkAccent });
       cY -= 12.0;
 
-      cY = drawJustifiedParagraph(page2, cl.text, 45, cY, targetWidth, 8.2, 11.8, fontRegular, darkColor);
-      cY -= 9.0;
+      cY = drawJustifiedParagraph(page2, cl.text, 45, cY, targetWidth, 8.2, 12.0, fontRegular, darkColor);
+      cY -= 10.0;
     }
 
-    // 6. Líneas de Firma
-    const sigY = 155;
+    // 5. Líneas de Firma
+    const sigY = 160;
 
-    // Firma Contratante (Izquierda)
+    // Firma Contratante (Izquierda) - Centrada respecto a su línea (60 a 240, centro = 150)
     page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.6, color: darkColor });
-    safeDraw(page2, clientFullName, { x: 65, y: sigY - 14, size: 8.5, font: fontBold, color: pinkAccent });
-    safeDraw(page2, 'Contratante', { x: 125, y: sigY - 26, size: 7.8, font: fontRegular, color: darkColor });
-    safeDraw(page2, isSignedReal ? '✓ Firmado digitalmente en liga web' : '(Pendiente de firma digital en liga)', {
-      x: 70,
-      y: sigY - 37,
-      size: 6.8,
-      font: fontRegular,
-      color: isSignedReal ? rgb(30 / 255, 140 / 255, 60 / 255) : mutedColor
-    });
 
-    // Si tiene firma digital PNG real, dibujarla sobre la línea
+    const drawLeftSigCentered = (text: string, y: number, size: number, font: PDFFont, color: RGB) => {
+      const clean = cleanWinAnsi(text);
+      const w = font.widthOfTextAtSize(clean, size);
+      safeDraw(page2, clean, { x: 150 - (w / 2), y, size, font, color });
+    };
+
+    drawLeftSigCentered(clientFullName, sigY - 14, 8.5, fontBold, pinkAccent);
+    drawLeftSigCentered('Contratante', sigY - 26, 7.8, fontRegular, darkColor);
+    drawLeftSigCentered(
+      isSignedReal ? '✓ Firmado digitalmente en liga web' : '(Pendiente de firma digital en liga)',
+      sigY - 37,
+      6.8,
+      fontRegular,
+      isSignedReal ? rgb(30 / 255, 140 / 255, 60 / 255) : mutedColor
+    );
+
+    // Si tiene firma digital PNG real, centrarla sobre la línea
     if (isSignedReal) {
       try {
         const pngBytes = base64ToUint8Array(quote.signature_data!);
         const pngImg = await pdfDoc.embedPng(pngBytes);
         const pngDims = pngImg.scale(0.3);
+        const targetW = Math.min(130, pngDims.width);
+        const targetH = Math.min(42, pngDims.height);
         page2.drawImage(pngImg, {
-          x: 75,
+          x: 150 - (targetW / 2),
           y: sigY + 4,
-          width: Math.min(130, pngDims.width),
-          height: Math.min(42, pngDims.height)
+          width: targetW,
+          height: targetH
         });
       } catch (pngErr) {
         console.warn('No se pudo incrustar firma PNG:', pngErr);
       }
     }
 
-    // Firma Prestadora Viva la Bride (Derecha)
+    // Firma Prestadora Viva la Bride (Derecha) - Centrada respecto a su línea (355 a 535, centro = 445)
     page2.drawLine({ start: { x: 355, y: sigY }, end: { x: 535, y: sigY }, thickness: 0.6, color: darkColor });
+
+    const drawRightSigCentered = (text: string, y: number, size: number, font: PDFFont, color: RGB) => {
+      const clean = cleanWinAnsi(text);
+      const w = font.widthOfTextAtSize(clean, size);
+      safeDraw(page2, clean, { x: 445 - (w / 2), y, size, font, color });
+    };
 
     // Incrustar firma gráfica real de Scarlette Olivo
     try {
@@ -712,7 +703,7 @@ export async function buildVlbQuotePdf(
       const sigWidth = 75;
       const sigHeight = (61 / 94) * sigWidth; // ~48.6 pt
       page2.drawImage(scarletteSigImg, {
-        x: 407,
+        x: 445 - (sigWidth / 2),
         y: sigY - 2, // Montada sobre la línea de firma manuscrita real
         width: sigWidth,
         height: sigHeight
@@ -721,24 +712,18 @@ export async function buildVlbQuotePdf(
       console.warn('No se pudo incrustar firma de Scarlette:', sigErr);
     }
 
-    safeDraw(page2, 'Scarlette Olivo', { x: 414, y: sigY - 14, size: 8.5, font: fontBold, color: pinkAccent });
-    safeDraw(page2, 'Representante de Viva la Bride', { x: 382, y: sigY - 26, size: 7.6, font: fontBold, color: darkColor });
-    safeDraw(page2, 'La Prestadora de Servicios', { x: 395, y: sigY - 37, size: 6.8, font: fontRegular, color: mutedColor });
+    drawRightSigCentered('Scarlette Olivo', sigY - 14, 8.5, fontBold, pinkAccent);
+    drawRightSigCentered('Representante de Viva la Bride', sigY - 26, 7.6, fontBold, darkColor);
+    drawRightSigCentered('La Prestadora de Servicios', sigY - 37, 6.8, fontRegular, mutedColor);
 
-    // 7. Pie de Página Elegante (Redes Sociales y WhatsApp)
+    // 6. Pie de Página Elegante (Redes Sociales y WhatsApp) - Centrado y limpio
     page2.drawLine({
       start: { x: 45, y: 40 },
       end: { x: 550, y: 40 },
       thickness: 0.5,
       color: rgb(240 / 255, 213 / 255, 221 / 255)
     });
-    safeDraw(page2, '@vivalabride.mx     -     WhatsApp: 56 6140 6247     -     @vivalabride.mx     -     PAGINA 2 DE 2', {
-      x: 120,
-      y: 28,
-      size: 7.2,
-      font: fontRegular,
-      color: mutedColor
-    });
+    drawPageCentered('@vivalabride.mx   -   WhatsApp: 56 6140 6247', 28, 7.2, fontRegular, mutedColor);
   }
 
   // Save PDF Bytes
