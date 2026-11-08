@@ -166,32 +166,44 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
 
   const clauses: { title: string; text: string }[] = [
     {
-      title: '1. OBJETO DEL CONTRATO Y RELACION CON COTIZACION',
-      text: `La Prestadora de Servicios se compromete a suministrar los servicios o elaborar las piezas descritas en la cotizacion oficial con folio ${folioNumber}. Ambas partes reconocen expresamente las partidas, cantidades, alcances y especificaciones acordadas en dicha propuesta.`
+      title: '1. OBJETO DEL CONTRATO',
+      text: `La Prestadora de Servicios se compromete a suministrar los servicios o elaborar las piezas descritas en la cotizacion oficial con folio relacionado ${folioNumber}. Ambas partes reconocen expresamente las partidas, cantidades, alcances y especificaciones acordadas.`
     },
     {
-      title: '2. MONTAJE, SEGURIDAD Y ACCESOS',
-      text: 'El montaje se realizara 40 a 60 minutos previos al inicio del evento por personal de Viva la Bride. En espacios abiertos o al aire libre, el mobiliario debera colocarse junto a un muro o estructura firme para su anclaje y estabilidad. Accesos por escaleras, plantas altas, maniobras especiales o rampas extensas causaran cargo adicional notificado previamente. La prestadora podra negar el montaje si las condiciones del espacio representan riesgo para los asistentes o el equipo.'
+      title: '2. ALCANCE Y LIMITES DEL SERVICIO',
+      text: 'El servicio incluye exclusivamente el mobiliario, insumos y disenos contratados. La logistica general y control de asistentes corre por cuenta de La Contratante. El retiro de vasos o botellas fuera del stand corresponde al recinto. El servicio no iniciara antes de la hora pactada.'
     },
     {
-      title: '3. CUIDADO DEL MOBILIARIO, EQUIPO Y RESPONSABILIDAD',
-      text: 'La Contratante es responsable por cualquier dano, rotura, perdida o robo total o parcial del mobiliario, mamparas, insertos, cristaleria, velas o equipo proporcionado durante el evento, comprometiendose a cubrir el costo total de reposicion o reparacion correspondiente dentro de los 3 dias naturales posteriores al evento.'
+      title: '3. MONTAJE, OPERACION Y CONDICIONES DE SEGURIDAD',
+      text: 'El montaje se realizara 40 a 60 minutos previos al evento por personal de Viva la Bride. En espacios abiertos o al aire libre el mobiliario debera colocarse pegado o proximo a un muro o estructura firme para evitar caidas. Viva la Bride podra negar el montaje si las condiciones representan riesgo.'
     },
     {
-      title: '4. CONSUMO RESPONSABLE DE ALCOHOL Y ESTACION DE BEBIDAS',
-      text: 'Viva la Bride promueve el consumo responsable de bebidas alcoholicas. Las estaciones de bebidas (Beer Stand, Mimosa Wall o barras) estan destinadas exclusivamente a mayores de edad bajo la modalidad de autoservicio asistido durante el coctel de bienvenida con duracion aproximada de 1h 30m. No constituye barra libre ni servicio ilimitado. La Prestadora de Servicios no se hace responsable por consumo excesivo, indebido o incidentes derivados. Si las bebidas contratadas se terminan antes del horario pactado el servicio concluye; el insumo remanente al finalizar el tiempo se entrega formalmente al coordinador del evento.'
+      title: '4. CONSUMO RESPONSABLE DE ALCOHOL',
+      text: 'Viva la Bride promueve el consumo responsable. El servicio de estaciones de bebidas (Beer Stand, Mimosa Wall o barras) esta destinado exclusivamente a mayores de edad. La prestadora no se hace responsable por consumo excesivo o incidentes derivados durante o despues del evento.'
     },
     {
-      title: '5. PROCESO DE DISENO, PERSONALIZACION Y PAPELERIA',
-      text: 'La Contratante entregara fotografias y textos con al menos 7 dias naturales de anticipacion. En papeleria y personalizacion se incluyen hasta 3 rondas de ajustes de diseno previas a VoBo final. Modificaciones posteriores generaran cargos adicionales. Tonos e impresiones pueden presentar ligeras variaciones inherentes a pantallas y acabados artesanales. Viva la Bride no es responsable por demoras de paqueterias externas ni por errores derivados de datos incorrectos provistos por el cliente.'
+      title: '5. TIEMPOS DE SERVICIO Y ENTREGA DE REMANENTE',
+      text: 'El servicio se presta como coctel de bienvenida con duracion aproximada de 1h 30m y no constituye barra libre ni consumo ilimitado. Si la bebida se termina antes, el servicio concluye sin reposicion obligatoria; la bebida remanente al finalizar el tiempo se entrega al coordinador del evento.'
     },
     {
-      title: '6. PAGOS, LIQUIDACION Y CANCELACIONES',
-      text: 'Separacion fija de $1,000 MXN para reservar fecha en servicios de stands (o 50 por ciento en papeleria social). La liquidacion total debe realizarse a mas tardar 10 dias naturales antes del evento. Anticipos no reembolsables. En caso de cancelacion por La Contratante, podra reagendarse dentro de los siguientes 30 dias naturales sujeto a disponibilidad y siempre que el servicio este totalmente liquidado.'
+      title: '6. CUIDADO DEL MOBILIARIO Y EQUIPO',
+      text: 'La Contratante es responsable por cualquier dano, rotura, perdida o robo total o parcial del mobiliario, mamparas, cristaleria o equipo proporcionado, comprometiendose a cubrir el costo total de reposicion o reparacion correspondiente dentro de los 3 dias naturales posteriores al evento.'
     },
     {
-      title: '7. AUTORIZACION DE IMAGEN Y VALIDEZ LEGAL',
-      text: 'La Contratante autoriza el uso de fotografias y videos del montaje, ambientacion y decoracion con fines de portafolio y redes sociales respetando la privacidad. La aceptacion de la cotizacion, la realizacion del anticipo o la firma digital en la plataforma ratifica la total conformidad y validez vinculante del presente contrato.'
+      title: '7. CARGOS ADICIONALES POR ACCESOS O MANIOBRAS',
+      text: 'Montajes en plantas altas, accesos mediante escaleras, rampas extensas o maniobras especiales que impliquen esfuerzo logistico extraordinario causaran un cargo adicional informado previamente a La Contratante antes del evento para su liquidacion.'
+    },
+    {
+      title: '8. PERSONALIZACION, MATERIAL Y TIEMPOS DE DISENO',
+      text: 'La Contratante entregara fotografias y textos con al menos 7 dias naturales de anticipacion. Se incluyen hasta 3 rondas de ajustes de diseno previas a VoBo final. Tonos y acabados pueden presentar ligeras variaciones derivadas de pantallas, imprenta o procesos artesanales.'
+    },
+    {
+      title: '9. PAGOS, LIQUIDACION Y REAGENDACION',
+      text: 'Separacion de $1,000 MXN para reservar fecha (o 50 por ciento en papeleria). La liquidacion total debera realizarse a mas tardar 10 dias naturales antes del evento. Anticipos no reembolsables. En caso de cancelacion podra reagendarse dentro de los siguientes 30 dias naturales sujeto a disponibilidad y liquidacion total.'
+    },
+    {
+      title: '10. AUTORIZACION DE IMAGEN Y VALIDEZ LEGAL',
+      text: 'La Contratante autoriza el uso de fotografias y videos del montaje y ambientacion con fines de portafolio y redes sociales respetando la privacidad. La realizacion del anticipo o firma digital ratifica la total conformidad y validez vinculante del presente contrato.'
     }
   ];
 
@@ -608,19 +620,19 @@ export async function buildVlbQuotePdf(
 
     const isSignedReal = Boolean(quote.signature_data && typeof quote.signature_data === 'string' && quote.signature_data.startsWith('data:image/'));
 
-    // 4. Cláusulas Legales con Justificación Editorial (Cobertura Total y Sólida)
-    let cY = 660;
+    // 4. Cláusulas Legales con Justificación Editorial (10 Puntos Originales Completos)
+    let cY = 673;
     const targetWidth = 505; // Margen a margen (550 - 45)
     for (const cl of clauses) {
-      safeDraw(page2, cl.title, { x: 45, y: cY, size: 8.0, font: fontBold, color: pinkAccent });
-      cY -= 11.0;
+      safeDraw(page2, cl.title, { x: 45, y: cY, size: 7.5, font: fontBold, color: pinkAccent });
+      cY -= 9.8;
 
-      cY = drawJustifiedParagraph(page2, cl.text, 45, cY, targetWidth, 7.6, 10.4, fontRegular, darkColor);
-      cY -= 7.5;
+      cY = drawJustifiedParagraph(page2, cl.text, 45, cY, targetWidth, 7.0, 9.4, fontRegular, darkColor);
+      cY -= 5.5;
     }
 
     // 5. Líneas de Firma
-    const sigY = 165;
+    const sigY = 150;
 
     // Firma Contratante (Izquierda) - Centrada respecto a su línea (60 a 240, centro = 150)
     page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.6, color: darkColor });
