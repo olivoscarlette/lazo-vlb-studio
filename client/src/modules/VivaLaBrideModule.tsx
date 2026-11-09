@@ -632,7 +632,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         body: JSON.stringify({
           ...quoteForm,
           event_time: standardizeEventTime(quoteForm.event_time),
-          quote_number: editingQuoteFolio || currentPreviewFolio,
+          quote_number: editingQuoteFolio || undefined,
           discount: quoteDiscountAmount,
           down_payment_pct: quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50,
           down_payment_amount: quoteDownPayment,
@@ -647,7 +647,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       }
 
       const data = await res.json();
-      showToast(editingQuoteId ? `Cotización ${editingQuoteFolio} actualizada con éxito.` : `Cotización ${data.quote?.quote_number || currentPreviewFolio} generada con éxito.`);
+      const savedFolio = editingQuoteFolio || data.quote?.quote_number || 'guardada';
+      showToast(editingQuoteId ? `Cotización ${savedFolio} actualizada con éxito.` : `Cotización ${savedFolio} generada con éxito.`);
       setEditingQuoteId(null);
       setEditingQuoteFolio(null);
       loadData();
@@ -1811,13 +1812,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                           return;
                         }
                         try {
-                          const res = await apiFetch('/api/vlb/quotes', {
-                            method: 'POST',
+                          const endpoint = editingQuoteId ? `/api/vlb/quotes/${editingQuoteId}` : '/api/vlb/quotes';
+                          const method = editingQuoteId ? 'PUT' : 'POST';
+                          const res = await apiFetch(endpoint, {
+                            method,
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                               ...quoteForm,
                               event_time: standardizeEventTime(quoteForm.event_time),
-                              quote_number: currentPreviewFolio,
+                              quote_number: editingQuoteFolio || undefined,
                               discount: quoteDiscountAmount,
                               down_payment_pct: quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50,
                               down_payment_amount: quoteDownPayment,
@@ -1826,8 +1829,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             })
                           });
                           const data = await res.json();
-                          if (data.quote?.id) {
-                            await handleConvertQuoteToOrder(data.quote.id);
+                          const targetId = editingQuoteId || data.quote?.id;
+                          if (targetId) {
+                            await handleConvertQuoteToOrder(targetId);
                           }
                         } catch (e: any) {
                           showToast(e.message, 'error');

@@ -515,9 +515,16 @@ export function generateNextVlbQuoteNumber(): string {
     }
   }
 
-  const nextConsecutive = maxConsecutive + 1;
-  const consecutiveFormatted = String(nextConsecutive).padStart(2, '0');
-  return `${monthPrefix}${consecutiveFormatted}`;
+  let nextConsecutive = maxConsecutive + 1;
+  let candidate = `${monthPrefix}${String(nextConsecutive).padStart(2, '0')}`;
+  
+  // Guarantee absolute uniqueness in database
+  while (db.prepare('SELECT 1 FROM vlb_quotes WHERE quote_number = ?').get(candidate)) {
+    nextConsecutive++;
+    candidate = `${monthPrefix}${String(nextConsecutive).padStart(2, '0')}`;
+  }
+
+  return candidate;
 }
 
 // GET /api/vlb/quotes - List quotes
@@ -612,8 +619,16 @@ router.post('/quotes', (req, res) => {
 
     const id = 'quote_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     
-    // Generate official Viva la Bride unified quote number (Opción A: VLB-YY-MMCC, e.g. VLB-26-1101)
-    const quote_number = req.body.quote_number?.trim() || generateNextVlbQuoteNumber();
+    // Generate official Viva la Bride unified quote number (guaranteeing uniqueness)
+    let quote_number = req.body.quote_number?.trim();
+    if (quote_number) {
+      const exists = db.prepare('SELECT 1 FROM vlb_quotes WHERE quote_number = ?').get(quote_number);
+      if (exists) {
+        quote_number = generateNextVlbQuoteNumber();
+      }
+    } else {
+      quote_number = generateNextVlbQuoteNumber();
+    }
 
     // Calculate subtotal from items
     let subtotal = 0;
