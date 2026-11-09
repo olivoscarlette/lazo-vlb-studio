@@ -54,6 +54,7 @@ import {
   VlbTask
 } from '../types/vlb';
 import { generateVlbQuotePdf, buildVlbQuotePdf, standardizeEventTime, time12To24, time24To12 } from '../utils/vlbPdfGenerator';
+import { VlbTimePicker } from '../components/VlbTimePicker';
 
 interface VivaLaBrideModuleProps {
   onBackToLazo?: () => void;
@@ -1558,15 +1559,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                         </button>
                       )}
                     </div>
-                    <input
-                      type="time"
-                      step="600"
-                      value={time12To24(quoteForm.event_time)}
-                      onChange={e => {
-                        const val = e.target.value;
-                        setQuoteForm({ ...quoteForm, event_time: val ? time24To12(val) : 'Por definir' });
-                      }}
-                      className="w-full px-3.5 py-2.5 text-sm bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                    <VlbTimePicker
+                      value={quoteForm.event_time}
+                      onChange={val => setQuoteForm({ ...quoteForm, event_time: val })}
+                      placeholder="Ej. 04:00 PM o Por definir"
                     />
                   </div>
                   <div className="sm:col-span-2">
@@ -3632,11 +3628,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   <label className="block font-semibold text-[#7D6F6B] uppercase mb-1">
                     Hora de Montaje
                   </label>
-                  <input
-                    type="time"
+                  <VlbTimePicker
                     value={datesForm.stand_setup_time}
-                    onChange={e => setDatesForm({ ...datesForm, stand_setup_time: e.target.value })}
-                    className="w-full px-3.5 py-2 bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                    onChange={val => setDatesForm({ ...datesForm, stand_setup_time: val })}
                   />
                 </div>
               </div>
