@@ -761,25 +761,6 @@ export async function buildVlbQuotePdf(
   const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
   safeDraw(page, totalFormatted, { x: 475, y: 391, size: 12.0, font: fontBold, color: textColor });
 
-  // Sello de anticipo / abonos en página 1 si existen pagos registrados
-  const totalNum = Number(total) || 0;
-  const totalPaidNum = Number(quote.total_paid) || 0;
-  const balanceNum = quote.balance_due !== undefined ? Number(quote.balance_due) : Math.max(0, totalNum - totalPaidNum);
-  const isLiquidated = totalPaidNum >= totalNum && totalNum > 0;
-
-  if (totalPaidNum > 0) {
-    const stampText = isLiquidated
-      ? 'TOTALMENTE LIQUIDADO (100%)'
-      : `ANTICIPO ACREDITADO: -$${totalPaidNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })}  |  SALDO: $${balanceNum.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-    safeDraw(page, stampText, {
-      x: 235,
-      y: 375,
-      size: 7.8,
-      font: fontBold,
-      color: isLiquidated ? rgb(30 / 255, 140 / 255, 60 / 255) : rgb(200 / 255, 52 / 255, 96 / 255)
-    });
-  }
-
   // 10. CONCEPTO EN FORMA DE PAGO (Concepto | ya viene impreso)
   const clientNameClean = (quote.client_name || 'Cliente').trim();
   const conceptDate = formatConceptDate(quote.event_date);

@@ -603,7 +603,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                 ✨ <strong>Paso siguiente:</strong> Realiza tu transferencia y envía el comprobante. En cuanto se registre, se desbloqueará de inmediato tu <strong>Contrato Digital Oficial y Módulo de Firma</strong>.
               </p>
               <a
-                href={`https://wa.me/525661406247?text=${encodeURIComponent(`¡Hola Scarlette! Te comparto mi comprobante de anticipo para la cotización ${formatFolio(quote.quote_number)} a nombre de ${quote.client_name}.`)}`}
+                href={`https://wa.me/525661406247?text=${encodeURIComponent(`¡Hola Vivi! Te comparto mi comprobante de anticipo para la cotización ${formatFolio(quote.quote_number)} a nombre de ${quote.client_name}.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20BA5A] text-[#FFFFFF] text-xs font-bold transition shadow-2xs cursor-pointer"
