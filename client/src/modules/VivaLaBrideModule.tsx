@@ -111,6 +111,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   });
   const [customPaymentMode, setCustomPaymentMode] = useState<'AUTO' | 'FIXED_1000' | 'PERCENT_50'>('AUTO');
   const [quoteItems, setQuoteItems] = useState<VlbQuoteItem[]>([]);
+  const [editingQuoteId, setEditingQuoteId] = useState<string | null>(null);
+  const [editingQuoteFolio, setEditingQuoteFolio] = useState<string | null>(null);
 
   // Modals
   const [showCatalogModal, setShowCatalogModal] = useState(false);
@@ -621,13 +623,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     }
 
     try {
-      const res = await apiFetch('/api/vlb/quotes', {
-        method: 'POST',
+      const endpoint = editingQuoteId ? `/api/vlb/quotes/${editingQuoteId}` : '/api/vlb/quotes';
+      const method = editingQuoteId ? 'PUT' : 'POST';
+      const res = await apiFetch(endpoint, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...quoteForm,
           event_time: standardizeEventTime(quoteForm.event_time),
-          quote_number: currentPreviewFolio,
+          quote_number: editingQuoteFolio || currentPreviewFolio,
           discount: quoteDiscountAmount,
           down_payment_pct: quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50,
           down_payment_amount: quoteDownPayment,
@@ -642,11 +646,68 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       }
 
       const data = await res.json();
-      showToast(`Cotización ${data.quote.quote_number} generada con éxito.`);
+      showToast(editingQuoteId ? `Cotización ${editingQuoteFolio} actualizada con éxito.` : `Cotización ${data.quote?.quote_number || currentPreviewFolio} generada con éxito.`);
+      setEditingQuoteId(null);
+      setEditingQuoteFolio(null);
       loadData();
     } catch (err: any) {
       showToast(err.message, 'error');
     }
+  };
+
+  const handleEditQuote = async (q: VlbQuote) => {
+    try {
+      const res = await apiFetch(`/api/vlb/quotes/${q.id}`);
+      if (!res.ok) {
+        throw new Error('Error al cargar datos de la cotización.');
+      }
+      const data = await res.json();
+      const quoteData: VlbQuote = data.quote || q;
+      const quoteItemsData: VlbQuoteItem[] = data.items || [];
+
+      setEditingQuoteId(quoteData.id);
+      setEditingQuoteFolio(quoteData.quote_number);
+
+      setQuoteForm({
+        client_name: quoteData.client_name || '',
+        partner_name: quoteData.partner_name || '',
+        client_email: quoteData.client_email || '',
+        client_phone: quoteData.client_phone || '',
+        event_date: quoteData.event_date || '',
+        event_time: quoteData.event_time || '',
+        event_venue: quoteData.event_venue || '',
+        discount: Number(quoteData.discount) || 0,
+        down_payment_pct: Number(quoteData.down_payment_pct) || 50,
+        notes: quoteData.notes || '',
+        valid_until: quoteData.valid_until || ''
+      });
+
+      setQuoteItems(quoteItemsData);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showToast(`Cargada cotización ${quoteData.quote_number} para edición.`);
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const handleCancelEditQuote = () => {
+    setEditingQuoteId(null);
+    setEditingQuoteFolio(null);
+    setQuoteForm({
+      client_name: '',
+      partner_name: '',
+      client_email: '',
+      client_phone: '',
+      event_date: '',
+      event_time: '',
+      event_venue: '',
+      discount: 0,
+      down_payment_pct: 50,
+      notes: '',
+      valid_until: ''
+    });
+    setQuoteItems([]);
+    showToast('Edición cancelada.');
   };
 
   const handleExportPdfCurrent = async () => {
@@ -1375,6 +1436,33 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left 2 Cols: Formulario de la Pareja y Lista de Artículos */}
             <div className="lg:col-span-2 space-y-6">
+              {/* Banner de Modo Edición */}
+              {editingQuoteId && (
+                <div className="p-4 rounded-2xl bg-[#FFF6F8] border border-[#F5C2CD] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-full bg-[#E84E6D]/15 flex items-center justify-center text-[#E84E6D] shrink-0">
+                      <Edit3 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-bold text-[#E84E6D] uppercase tracking-wider block">
+                        Modo Edición Activo · {editingQuoteFolio}
+                      </span>
+                      <p className="text-xs text-[#332A28]">
+                        Puedes agregar o quitar artículos, cambiar cantidades, fecha o datos. Al finalizar haz clic en <strong>Actualizar Cotización</strong>.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleCancelEditQuote}
+                    className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-white hover:bg-[#FDF2F4] border border-[#EAE3DA] text-[#70443D] text-xs font-semibold transition cursor-pointer self-start sm:self-center shrink-0 shadow-2xs"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>Cancelar Edición</span>
+                  </button>
+                </div>
+              )}
+
               {/* Datos de la Pareja / Evento */}
               <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
@@ -1385,7 +1473,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </h2>
                   </div>
                   <span className="text-xs font-bold text-[#C83460] bg-[#F8E4E9] px-3 py-1 rounded-full font-mono border border-[#F0D5DD]">
-                    Folio: {currentPreviewFolio}
+                    Folio: {editingQuoteFolio || currentPreviewFolio}
                   </span>
                 </div>
 
@@ -1706,10 +1794,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
                       onClick={() => handleSaveQuote('BORRADOR')}
-                      className="w-full py-2.5 px-3 bg-[#FFFFFF] hover:bg-[#FCFAF7] text-[#70443D] border border-[#EAE3DA] text-xs font-bold uppercase tracking-wider rounded-2xl transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                      className={`w-full py-2.5 px-3 border text-xs font-bold uppercase tracking-wider rounded-2xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                        editingQuoteId
+                          ? 'bg-[#E84E6D] hover:bg-[#D43B5B] text-[#FFFFFF] border-[#E84E6D] shadow-xs'
+                          : 'bg-[#FFFFFF] hover:bg-[#FCFAF7] text-[#70443D] border-[#EAE3DA]'
+                      }`}
                     >
-                      <FileCheck className="w-3.5 h-3.5 text-[#B88A82]" />
-                      <span>Guardar</span>
+                      <FileCheck className="w-3.5 h-3.5" />
+                      <span>{editingQuoteId ? 'Actualizar' : 'Guardar'}</span>
                     </button>
 
                     <button
@@ -1833,6 +1925,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                           </span>
                         </td>
                         <td className="py-3.5 px-3 text-right whitespace-nowrap pr-4 space-x-1.5">
+                          <button
+                            onClick={() => handleEditQuote(q)}
+                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FFF6F8] hover:bg-[#FEEBF0] text-[#E84E6D] border border-[#F5C2CD] font-semibold text-[11px] cursor-pointer"
+                            title="Editar cotización (agregar/quitar artículos, cambiar precios o datos)"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Editar</span>
+                          </button>
                           <button
                             onClick={() => handleCopyProposalLink(q.id)}
                             className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#9C665C] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"
