@@ -175,7 +175,7 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
     clauses = [
       {
         title: '1. OBJETO DEL CONTRATO',
-        text: `La Prestadora de Servicios se compromete a brindar el servicio de estaciones de bebidas contratadas conforme a las partidas, cantidades y especificaciones de la cotizacion oficial con folio ${folioNumber}.`
+        text: `La Prestadora de Servicios se compromete a brindar el servicio de estaciones de bebidas contratadas conforme a los servicios, cantidades y especificaciones de la cotizacion oficial con folio ${folioNumber}.`
       },
       {
         title: '2. ALCANCE Y LIMITES DEL SERVICIO',
@@ -219,7 +219,7 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
     clauses = [
       {
         title: '1. OBJETO DEL CONTRATO',
-        text: `La Prestadora de Servicios se compromete a suministrar la estructura decorativa y ambientacion descrita en la cotizacion oficial con folio ${folioNumber}. Ambas partes reconocen expresamente las partidas y cantidades acordadas.`
+        text: `La Prestadora de Servicios se compromete a suministrar la estructura decorativa y ambientacion descrita en la cotizacion oficial con folio ${folioNumber}. Ambas partes reconocen expresamente los servicios y cantidades acordadas.`
       },
       {
         title: '2. ALCANCE DEL SERVICIO',
@@ -312,7 +312,7 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
       },
       {
         title: '2. ALCANCE Y LIMITES DEL SERVICIO',
-        text: 'El servicio comprende exclusivamente las partidas detalladas en la propuesta comercial. La organizacion y logistica general de invitados corre por cuenta del recinto o La Contratante.'
+        text: 'El servicio comprende exclusivamente los conceptos detallados en la propuesta comercial. La organizacion y logistica general de invitados corre por cuenta del recinto o La Contratante.'
       },
       {
         title: '3. MONTAJE, OPERACION Y SEGURIDAD',

@@ -638,7 +638,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
           </div>
 
           <p className="text-xs text-[#7D6F6B] leading-relaxed">
-            Contrato celebrado entre <strong>{quote.client_name} {quote.partner_name ? `& ${quote.partner_name}` : ''}</strong> ("La Contratante") y <strong>Viva la Bride</strong> ("La Prestadora de Servicios"), correspondiente a las partidas y especificaciones del folio <strong>{formatFolio(quote.quote_number)}</strong>.
+            Contrato celebrado entre <strong>{quote.client_name} {quote.partner_name ? `& ${quote.partner_name}` : ''}</strong> ("La Contratante") y <strong>Viva la Bride</strong> ("La Prestadora de Servicios"), correspondiente a los servicios y especificaciones del folio <strong>{formatFolio(quote.quote_number)}</strong>.
           </p>
 
           {/* Mostrar cláusulas si está desbloqueado o si la novia pide ver el borrador */}
@@ -761,14 +761,14 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                   <span>Descargar Contrato Oficial Firmado en PDF</span>
                 </button>
                 <p className="text-[11px] text-[#7D6F6B] mt-2">
-                  El PDF generado incluye todas tus partidas vigentes y tu firma digital estampada.
+                  El PDF generado incluye todos los conceptos contratados y tu firma digital estampada.
                 </p>
               </div>
             </div>
           ) : (
             <form onSubmit={handleSubmitSignature} className="space-y-4">
               <p className="text-xs text-[#7D6F6B] leading-relaxed">
-                Al firmar en este recuadro confirmas la aceptación de las partidas, montos y políticas de pago estipuladas. Tu firma quedará encriptada y archivada como comprobante digital de aceptación.
+                Al firmar en este recuadro confirmas la aceptación de los conceptos, montos y políticas de pago estipuladas. Tu firma quedará encriptada y archivada como comprobante digital de aceptación.
               </p>
 
               {signError && (
