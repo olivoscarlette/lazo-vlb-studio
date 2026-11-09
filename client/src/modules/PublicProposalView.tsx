@@ -256,7 +256,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
       down_payment_amount: downPaymentRequired,
       total_paid: totalPaid,
       balance_due: totalPaid > 0 ? remainingAfterPaid : (totalCalculated - downPaymentRequired)
-    }, items);
+    }, items, { includeContract: true });
   };
 
   if (loading) {
@@ -600,7 +600,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
 
             <div className="pt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-t border-[#EAE3DA]/80">
               <p className="text-xs text-[#7D6F6B] leading-relaxed">
-                ✨ <strong>Paso siguiente:</strong> Realiza tu transferencia y envía el comprobante. En cuanto se registre, se desbloqueará de inmediato tu <strong>Contrato Digital Oficial y Módulo de Firma</strong>.
+                ✨ <strong>Paso siguiente:</strong> Revisa las cláusulas del contrato abajo, asienta tu firma digital y realiza tu transferencia de anticipo para formalizar tu fecha.
               </p>
               <a
                 href={`https://wa.me/525661406247?text=${encodeURIComponent(`¡Hola Vivi! Te comparto mi comprobante de anticipo para la cotización ${formatFolio(quote.quote_number)} a nombre de ${quote.client_name}.`)}`}
@@ -626,13 +626,17 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                 Contrato de Prestación de Servicios
               </h3>
             </div>
-            {isContractUnlocked ? (
+            {isSigned ? (
               <span className="text-xs font-bold text-[#384C3A] bg-[#CCDACC] px-3 py-1 rounded-full border border-[#B8CEB8]">
-                {totalPaid > 0 ? '✓ Separación Acreditada · Contrato Activo' : '✓ Contrato Desbloqueado'}
+                ✓ Firmado Digitalmente
+              </span>
+            ) : totalPaid > 0 ? (
+              <span className="text-xs font-bold text-[#384C3A] bg-[#CCDACC] px-3 py-1 rounded-full border border-[#B8CEB8]">
+                ✓ Anticipo Acreditado · Pendiente de Firma
               </span>
             ) : (
-              <span className="text-xs font-semibold text-[#7D6F6B] bg-[#F7F3EE] px-3 py-1 rounded-full">
-                Se activa al registrar anticipo
+              <span className="text-xs font-semibold text-[#70443D] bg-[#FBF4F3] px-3 py-1 rounded-full border border-[#EAD2D0]">
+                Lectura Previa a la Firma
               </span>
             )}
           </div>
@@ -641,37 +645,33 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
             Contrato celebrado entre <strong>{quote.client_name} {quote.partner_name ? `& ${quote.partner_name}` : ''}</strong> ("La Contratante") y <strong>Viva la Bride</strong> ("La Prestadora de Servicios"), correspondiente a los servicios y especificaciones del folio <strong>{formatFolio(quote.quote_number)}</strong>.
           </p>
 
-          {/* Mostrar cláusulas únicamente cuando está desbloqueado (anticipo registrado) */}
-          {isContractUnlocked ? (
-            <div className="space-y-3 pt-1">
-              <div className="p-3.5 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] flex items-center justify-between text-xs text-[#70443D]">
-                <span className="font-bold">Estatus del Contrato:</span>
-                <span className="font-semibold">
-                  {isLiquidated ? '100% Liquidado' : (totalPaid > 0 ? `Anticipo Acreditado ($${totalPaid.toLocaleString('es-MX')})` : 'Pendiente de Separación')}
-                </span>
-              </div>
+          <div className="space-y-3 pt-1">
+            <div className="p-3.5 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] flex items-center justify-between text-xs text-[#70443D]">
+              <span className="font-bold">Estatus del Contrato:</span>
+              <span className="font-semibold">
+                {isSigned
+                  ? 'Firmado Digitalmente'
+                  : isLiquidated
+                  ? '100% Liquidado'
+                  : totalPaid > 0
+                  ? `Anticipo Acreditado ($${totalPaid.toLocaleString('es-MX')})`
+                  : 'Listo para Revisión y Firma'}
+              </span>
+            </div>
 
-              <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-                {contractClauses.map((cl, cIdx) => (
-                  <div key={cIdx} className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-1">
-                    <h4 className="text-xs font-bold text-[#C83460] uppercase tracking-wider">
-                      {cl.title}
-                    </h4>
-                    <p className="text-xs text-[#332A28] leading-relaxed text-justify">
-                      {cl.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+              {contractClauses.map((cl, cIdx) => (
+                <div key={cIdx} className="p-4 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] space-y-1">
+                  <h4 className="text-xs font-bold text-[#C83460] uppercase tracking-wider">
+                    {cl.title}
+                  </h4>
+                  <p className="text-xs text-[#332A28] leading-relaxed text-justify">
+                    {cl.text}
+                  </p>
+                </div>
+              ))}
             </div>
-          ) : (
-            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-dashed border-[#EAE3DA] text-center space-y-2">
-              <Sparkles className="w-6 h-6 text-[#B88A82] mx-auto opacity-70" />
-              <p className="text-xs text-[#7D6F6B] max-w-md mx-auto leading-relaxed">
-                El texto legal oficial y el módulo de firma digital se activan en cuanto se registre tu anticipo de separación.
-              </p>
-            </div>
-          )}
+          </div>
         </div>
 
         {/* ======================================================== */}

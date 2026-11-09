@@ -787,12 +787,12 @@ export async function buildVlbQuotePdf(
   });
 
   // ========================================================
-  // PÁGINA 2: CONTRATO DIGITAL (SOLO CUANDO SE CONVIERTE EN CLIENTE O ABONA)
+  // PÁGINA 2: CONTRATO DIGITAL (INCLUIDO POR DEFECTO PARA LECTURA Y FIRMA)
   // ========================================================
   const shouldIncludeContract = Boolean(
     options?.includeContract !== undefined
       ? options.includeContract
-      : (quote.status === 'CONVERTIDA' || quote.status === 'APROBADA' || Boolean(quote.signature_data) || (Number(quote.total_paid) || 0) > 0)
+      : true
   );
 
   if (shouldIncludeContract) {
