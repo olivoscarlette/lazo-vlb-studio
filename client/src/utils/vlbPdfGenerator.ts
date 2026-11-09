@@ -175,43 +175,43 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
     clauses = [
       {
         title: '1. OBJETO DEL CONTRATO',
-        text: `La Prestadora de Servicios se compromete a brindar el servicio de estaciones de bebidas contratadas conforme a los servicios, cantidades y especificaciones de la cotizacion oficial con folio ${folioNumber}.`
+        text: `La Prestadora de Servicios se compromete a brindar el servicio de estaciones de bebidas contratadas conforme a los servicios, cantidades y especificaciones de la cotización oficial con folio ${folioNumber}.`
       },
       {
-        title: '2. ALCANCE Y LIMITES DEL SERVICIO',
-        text: 'El servicio incluye stand decorativo, insumos pactados, copas o vasos e insertos de servicio. La logistica de invitados y recoleccion de vasos fuera del stand corresponde al recinto o meseros. El servicio no iniciara antes de la hora pactada.'
+        title: '2. ALCANCE Y LÍMITES DEL SERVICIO',
+        text: 'El servicio incluye stand decorativo, insumos pactados, copas o vasos e insertos de servicio. La logística de invitados y recolección de vasos fuera del stand corresponde al recinto o meseros. El servicio no iniciará antes de la hora pactada.'
       },
       {
-        title: '3. MONTAJE, OPERACION Y CONDICIONES DE SEGURIDAD',
-        text: 'El montaje se realizara 40 a 60 minutos previos al evento por personal de Viva la Bride. En espacios abiertos el stand debera colocarse pegado a un muro o estructura firme para evitar caidas. La prestadora podra negar el montaje si las condiciones representan riesgo.'
+        title: '3. MONTAJE, OPERACIÓN Y CONDICIONES DE SEGURIDAD',
+        text: 'El montaje se realizará 40 a 60 minutos previos al evento por personal de Viva la Bride. En espacios abiertos el stand deberá colocarse pegado a un muro o estructura firme para evitar caídas. La prestadora podrá negar el montaje si las condiciones representan riesgo.'
       },
       {
         title: '4. CONSUMO RESPONSABLE DE ALCOHOL',
-        text: 'Viva la Bride promueve el consumo responsable. El servicio esta destinado exclusivamente a mayores de edad. La Prestadora de Servicios no se hace responsable por consumo excesivo o incidentes derivados durante o despues del evento.'
+        text: 'Viva la Bride promueve el consumo responsable. El servicio está destinado exclusivamente a mayores de edad. La Prestadora de Servicios no se hace responsable por consumo excesivo o incidentes derivados durante o después del evento.'
       },
       {
         title: '5. TIEMPOS DE SERVICIO Y ENTREGA DE REMANENTE',
-        text: 'Servicio de coctel de bienvenida con duracion aprox. de 1h 30m; no constituye barra libre ni consumo ilimitado. Si la bebida concluye antes, el servicio finaliza sin reposicion obligatoria; el insumo remanente al terminar el tiempo pactado se entrega formalmente al coordinador del evento.'
+        text: 'Servicio de cóctel de bienvenida con duración aprox. de 1h 30m; no constituye barra libre ni consumo ilimitado. Si la bebida concluye antes, el servicio finaliza sin reposición obligatoria; el insumo remanente al terminar el tiempo pactado se entrega formalmente al coordinador del evento.'
       },
       {
-        title: '6. CUIDADO DEL MOBILIARIO Y CRISTALERIA',
-        text: 'La Contratante es responsable por cualquier dano, rotura, perdida o robo total o parcial de mamparas, cristaleria o equipo proporcionado, comprometiendose a cubrir el costo total de reposicion o reparacion correspondiente dentro de los 3 dias naturales posteriores al evento.'
+        title: '6. CUIDADO DEL MOBILIARIO Y CRISTALERÍA',
+        text: 'La Contratante es responsable por cualquier daño, rotura, pérdida o robo total o parcial de mamparas, cristalería o equipo proporcionado, comprometiéndose a cubrir el costo total de reposición o reparación correspondiente dentro de los 3 días naturales posteriores al evento.'
       },
       {
         title: '7. CARGOS ADICIONALES POR ACCESOS O MANIOBRAS',
-        text: 'Montajes en plantas altas, accesos mediante escaleras, rampas extensas o maniobras especiales que impliquen esfuerzo logistico extraordinario causaran un cargo adicional informado a La Contratante previamente al evento para su liquidacion.'
+        text: 'Montajes en plantas altas, accesos mediante escaleras, rampas extensas o maniobras especiales que impliquen esfuerzo logístico extraordinario causarán un cargo adicional informado a La Contratante previamente al evento para su liquidación.'
       },
       {
-        title: '8. PAGOS Y LIQUIDACION',
-        text: 'Separacion fija de $1,000 MXN para reservar fecha. La liquidacion total debera realizarse a mas tardar 10 dias naturales antes del evento. Anticipos no reembolsables.'
+        title: '8. PAGOS Y LIQUIDACIÓN',
+        text: 'Separación fija de $1,000 MXN para reservar fecha. La liquidación total deberá realizarse a más tardar 10 días naturales antes del evento. Anticipos no reembolsables.'
       },
       {
-        title: '9. CANCELACIONES Y REAGENDACION',
-        text: 'En caso de cancelacion por La Contratante no se realizara reembolso. El servicio podra reagendarse dentro de los siguientes 30 dias naturales sujeto a disponibilidad de Viva la Bride y siempre que el servicio este totalmente liquidado.'
+        title: '9. CANCELACIONES Y REAGENDACIÓN',
+        text: 'En caso de cancelación por La Contratante no se realizará reembolso. El servicio podrá reagendarse dentro de los siguientes 30 días naturales sujeto a disponibilidad de Viva la Bride y siempre que el servicio esté totalmente liquidado.'
       },
       {
-        title: '10. AUTORIZACION DE IMAGEN Y VALIDEZ LEGAL',
-        text: 'La Contratante autoriza el uso de fotografias y videos del montaje con fines de portafolio y redes sociales respetando la privacidad. La realizacion del anticipo o firma digital ratifica la total conformidad y validez vinculante del presente contrato.'
+        title: '10. AUTORIZACIÓN DE IMAGEN Y VALIDEZ LEGAL',
+        text: 'La Contratante autoriza el uso de fotografías y videos del montaje con fines de portafolio y redes sociales respetando la privacidad. La realización del anticipo o firma digital ratifica la total conformidad y validez vinculante del presente contrato.'
       }
     ];
   } else if (isDecorativoOnly) {
@@ -219,87 +219,87 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
     clauses = [
       {
         title: '1. OBJETO DEL CONTRATO',
-        text: `La Prestadora de Servicios se compromete a suministrar la estructura decorativa y ambientacion descrita en la cotizacion oficial con folio ${folioNumber}. Ambas partes reconocen expresamente los servicios y cantidades acordadas.`
+        text: `La Prestadora de Servicios se compromete a suministrar la estructura decorativa y ambientación descrita en la cotización oficial con folio ${folioNumber}. Ambas partes reconocen expresamente los servicios y cantidades acordadas.`
       },
       {
         title: '2. ALCANCE DEL SERVICIO',
-        text: 'El servicio incluye mampara decorativa, renta de portarretratos, velas (reales o LED segun venue), frase en vinil personalizado y montaje y desmontaje el mismo dia del evento conforme a la cotizacion correspondiente.'
+        text: 'El servicio incluye mampara decorativa, renta de portarretratos, velas (reales o LED según venue), frase en vinil personalizado y montaje y desmontaje el mismo día del evento conforme a la cotización correspondiente.'
       },
       {
         title: '3. RESPONSABILIDAD DE LA CONTRATANTE',
-        text: 'La Contratante entregara las fotografias digitales con al menos 7 dias naturales de anticipacion y confirmara frases de vinil. Asimismo debera asegurar un espacio adecuado, firme y nivelado para la instalacion del mobiliario.'
+        text: 'La Contratante entregará las fotografías digitales con al menos 7 días naturales de anticipación y confirmará frases de vinil. Asimismo deberá asegurar un espacio adecuado, firme y nivelado para la instalación del mobiliario.'
       },
       {
         title: '4. MONTAJE Y CONDICIONES DE SEGURIDAD',
-        text: 'El montaje sera realizado por personal de Viva la Bride 40 a 60 minutos previos al evento en superficie estable. Viva la Bride podra negar el montaje cuando las condiciones representen riesgo para los asistentes o el mobiliario.'
+        text: 'El montaje será realizado por personal de Viva la Bride 40 a 60 minutos previos al evento en superficie estable. Viva la Bride podrá negar el montaje cuando las condiciones representen riesgo para los asistentes o el mobiliario.'
       },
       {
         title: '5. CUIDADO DEL MOBILIARIO, EQUIPO Y ACCESORIOS',
-        text: 'La Contratante es responsable por cualquier dano, rotura, perdida o robo de mamparas, portarretratos, cristaleria, velas o accesorios, comprometiendose a cubrir su costo de reposicion dentro de los 3 dias naturales posteriores al evento.'
+        text: 'La Contratante es responsable por cualquier daño, rotura, pérdida o robo de mamparas, portarretratos, cristalería, velas o accesorios, comprometiéndose a cubrir su costo de reposición dentro de los 3 días naturales posteriores al evento.'
       },
       {
-        title: '6. PERSONALIZACION Y VOBO FINAL',
-        text: 'Viva la Bride elaborara el Memorial Wall con base en los datos y fotos provistos por el cliente. Una vez otorgado el visto bueno (VoBo) final para corte de vinil e impresion, cualquier cambio posterior generara costos adicionales.'
+        title: '6. PERSONALIZACIÓN Y VOBO FINAL',
+        text: 'Viva la Bride elaborará el Memorial Wall con base en los datos y fotos provistos por el cliente. Una vez otorgado el visto bueno (VoBo) final para corte de vinil e impresión, cualquier cambio posterior generará costos adicionales.'
       },
       {
         title: '7. CARGOS ADICIONALES POR ACCESOS O MANIOBRAS',
-        text: 'Montajes en plantas altas, accesos mediante escaleras, rampas extensas o maniobras especiales que impliquen esfuerzo extraordinario causaran un cargo adicional notificado antes del evento para su liquidacion.'
+        text: 'Montajes en plantas altas, accesos mediante escaleras, rampas extensas o maniobras especiales que impliquen esfuerzo extraordinario causarán un cargo adicional notificado antes del evento para su liquidación.'
       },
       {
-        title: '8. PAGOS Y LIQUIDACION',
-        text: 'Separacion fija de $1,000 MXN para reservar fecha. La liquidacion total debera realizarse a mas tardar 10 dias naturales antes del evento. Anticipos no reembolsables.'
+        title: '8. PAGOS Y LIQUIDACIÓN',
+        text: 'Separación fija de $1,000 MXN para reservar fecha. La liquidación total deberá realizarse a más tardar 10 días naturales antes del evento. Anticipos no reembolsables.'
       },
       {
-        title: '9. CANCELACIONES Y REAGENDACION',
-        text: 'En caso de cancelacion por parte de La Contratante no habra reembolso de anticipos. El servicio podra reagendarse dentro de los siguientes 30 dias naturales sujeto a disponibilidad y liquidacion total.'
+        title: '9. CANCELACIONES Y REAGENDACIÓN',
+        text: 'En caso de cancelación por parte de La Contratante no habrá reembolso de anticipos. El servicio podrá reagendarse dentro de los siguientes 30 días naturales sujeto a disponibilidad y liquidación total.'
       },
       {
-        title: '10. AUTORIZACION DE IMAGEN Y VALIDEZ LEGAL',
-        text: 'La Contratante autoriza utilizar fotos y videos del montaje con fines de portafolio y redes sociales respetando en todo momento el caracter conmemorativo y privacidad. El anticipo o firma digital ratifica la validez legal del presente contrato.'
+        title: '10. AUTORIZACIÓN DE IMAGEN Y VALIDEZ LEGAL',
+        text: 'La Contratante autoriza utilizar fotos y videos del montaje con fines de portafolio y redes sociales respetando en todo momento el carácter conmemorativo y privacidad. El anticipo o firma digital ratifica la validez legal del presente contrato.'
       }
     ];
   } else if (isPapeleriaOnly) {
-    serviceTitle = 'PAPELERIA SOCIAL & DISENO ATELIER';
+    serviceTitle = 'PAPELERÍA SOCIAL & DISEÑO ATELIER';
     clauses = [
       {
         title: '1. OBJETO DEL CONTRATO',
-        text: `La Prestadora de Servicios se compromete a disenar y elaborar la papeleria social solicitada por La Contratante conforme a lo detallado en la cotizacion oficial con folio ${folioNumber}.`
+        text: `La Prestadora de Servicios se compromete a diseñar y elaborar la papelería social solicitada por La Contratante conforme a lo detallado en la cotización oficial con folio ${folioNumber}.`
       },
       {
         title: '2. ALCANCE DEL SERVICIO',
-        text: 'El servicio incluye las piezas impresas o digitales estipuladas en la cotizacion (invitaciones, menus, numeros de mesa, place cards o papeleria personalizada) segun acabados y cantidades acordadas.'
+        text: 'El servicio incluye las piezas impresas o digitales estipuladas en la cotización (invitaciones, menús, números de mesa, place cards o papelería personalizada) según acabados y cantidades acordadas.'
       },
       {
-        title: '3. PROCESO DE DISENO E INFORMACION',
-        text: 'La Contratante proporcionara oportunamente nombres, fechas, textos y especificaciones completas. Viva la Bride no sera responsable por errores ortograficos o datos incorrectos autorizados por el cliente.'
+        title: '3. PROCESO DE DISEÑO E INFORMACIÓN',
+        text: 'La Contratante proporcionará oportunamente nombres, fechas, textos y especificaciones completas. Viva la Bride no será responsable por errores ortográficos o datos incorrectos autorizados por el cliente.'
       },
       {
         title: '4. CAMBIOS Y MODIFICACIONES',
-        text: 'El servicio incluye hasta 3 rondas de ajustes de diseno dentro del paquete contratado. Modificaciones posteriores a la aprobacion final (VoBo) generaran costos extraordinarios y podran diferir tiempos de entrega.'
+        text: 'El servicio incluye hasta 3 rondas de ajustes de diseño dentro del paquete contratado. Modificaciones posteriores a la aprobación final (VoBo) generarán costos extraordinarios y podrán diferir tiempos de entrega.'
       },
       {
-        title: '5. IMPRESION, TONOS Y ACABADOS ARTESANALES',
-        text: 'Los tonos, texturas y acabados pueden presentar ligeras variaciones derivadas de imprenta, iluminacion y procesos artesanales. Viva la Bride no garantiza coincidencia exacta identica a pantallas digitales.'
+        title: '5. IMPRESIÓN, TONOS Y ACABADOS ARTESANALES',
+        text: 'Los tonos, texturas y acabados pueden presentar ligeras variaciones derivadas de imprenta, iluminación y procesos artesanales. Viva la Bride no garantiza coincidencia exacta idéntica a pantallas digitales.'
       },
       {
-        title: '6. TIEMPOS DE PRODUCCION Y ENTREGA',
-        text: 'Tiempos de entrega de 7 a 15 dias habiles a partir del anticipo, recepcion completa de datos y VoBo final de diseno. Retrasos en la aprobacion por parte de La Contratante modificaran la fecha de entrega original.'
+        title: '6. TIEMPOS DE PRODUCCIÓN Y ENTREGA',
+        text: 'Tiempos de entrega de 7 a 15 días hábiles a partir del anticipo, recepción completa de datos y VoBo final de diseño. Retrasos en la aprobación por parte de La Contratante modificarán la fecha de entrega original.'
       },
       {
         title: '7. PAGOS Y CONDICIONES FINANCIERAS',
-        text: 'El proyecto se inicia mediante anticipo del 50 por ciento del total cotizado para inicio de diseno e insumos. La liquidacion total debera realizarse previo a la entrega fisica o programacion del envio.'
+        text: 'El proyecto se inicia mediante anticipo del 50 por ciento del total cotizado para inicio de diseño e insumos. La liquidación total deberá realizarse previo a la entrega física o programación del envío.'
       },
       {
-        title: '8. ENVIOS Y PAQUETERIAS',
-        text: 'En proyectos con envio foraneo o mensajeria, Viva la Bride no se responsabiliza por demoras o incidencias imputables a empresas de paqueteria externas. El cliente debera validar su direccion con anticipacion.'
+        title: '8. ENVÍOS Y PAQUETERÍAS',
+        text: 'En proyectos con envío foráneo o mensajería, Viva la Bride no se responsabiliza por demoras o incidencias imputables a empresas de paquetería externas. El cliente deberá validar su dirección con anticipación.'
       },
       {
         title: '9. CANCELACIONES',
-        text: 'En caso de cancelacion por parte de La Contratante no se realizara reembolso de anticipos. Si el proyecto se encuentra en produccion, el cliente cubrira los costos de insumos y trabajo generados al momento.'
+        text: 'En caso de cancelación por parte de La Contratante no se realizará reembolso de anticipos. Si el proyecto se encuentra en producción, el cliente cubrirá los costos de insumos y trabajo generados al momento.'
       },
       {
-        title: '10. AUTORIZACION DE IMAGEN Y VALIDEZ LEGAL',
-        text: 'La Contratante autoriza a Viva la Bride utilizar fotos y videos de las piezas elaboradas con fines de portafolio y difusion en redes sociales. El anticipo o firma digital ratifica la validez vinculante del presente contrato.'
+        title: '10. AUTORIZACIÓN DE IMAGEN Y VALIDEZ LEGAL',
+        text: 'La Contratante autoriza a Viva la Bride utilizar fotos y videos de las piezas elaboradas con fines de portafolio y difusión en redes sociales. El anticipo o firma digital ratifica la validez vinculante del presente contrato.'
       }
     ];
   } else {
@@ -308,43 +308,43 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
     clauses = [
       {
         title: '1. OBJETO DEL CONTRATO',
-        text: `La Prestadora de Servicios se compromete a brindar los servicios y elaborar las piezas acordadas conforme a la cotizacion oficial con folio ${folioNumber}.`
+        text: `La Prestadora de Servicios se compromete a brindar los servicios y elaborar las piezas acordadas conforme a la cotización oficial con folio ${folioNumber}.`
       },
       {
-        title: '2. ALCANCE Y LIMITES DEL SERVICIO',
-        text: 'El servicio comprende exclusivamente los conceptos detallados en la propuesta comercial. La organizacion y logistica general de invitados corre por cuenta del recinto o La Contratante.'
+        title: '2. ALCANCE Y LÍMITES DEL SERVICIO',
+        text: 'El servicio comprende exclusivamente los conceptos detallados en la propuesta comercial. La organización y logística general de invitados corre por cuenta del recinto o La Contratante.'
       },
       {
-        title: '3. MONTAJE, OPERACION Y SEGURIDAD',
-        text: 'El montaje se realizara 40 a 60 minutos previos al evento por personal de Viva la Bride. En exteriores el mobiliario se anclara proximo a muros o estructuras firmes para evitar caidas.'
+        title: '3. MONTAJE, OPERACIÓN Y SEGURIDAD',
+        text: 'El montaje se realizará 40 a 60 minutos previos al evento por personal de Viva la Bride. En exteriores el mobiliario se anclará próximo a muros o estructuras firmes para evitar caídas.'
       },
       {
         title: '4. CONSUMO RESPONSABLE DE ALCOHOL',
-        text: 'Viva la Bride promueve el consumo responsable exclusivamente para mayores de edad. Si se incluyen bebidas, el servicio opera como coctel de bienvenida (aprox. 1h 30m) sin constituir barra libre.'
+        text: 'Viva la Bride promueve el consumo responsable exclusivamente para mayores de edad. Si se incluyen bebidas, el servicio opera como cóctel de bienvenida (aprox. 1h 30m) sin constituir barra libre.'
       },
       {
         title: '5. CUIDADO DEL MOBILIARIO Y EQUIPO',
-        text: 'La Contratante respondera por cualquier rotura, dano, extravio o robo de mamparas, cristaleria o mobiliario, cubriendo la reposicion en no mas de 3 dias naturales posteriores al evento.'
+        text: 'La Contratante responderá por cualquier rotura, daño, extravío o robo de mamparas, cristalería o mobiliario, cubriendo la reposición en no más de 3 días naturales posteriores al evento.'
       },
       {
         title: '6. CARGOS ADICIONALES POR ACCESOS',
-        text: 'Accesos por escaleras, plantas altas o maniobras que requieran esfuerzo extraordinario causaran un costo adicional notificado previamente a La Contratante para su liquidacion.'
+        text: 'Accesos por escaleras, plantas altas o maniobras que requieran esfuerzo extraordinario causarán un costo adicional notificado previamente a La Contratante para su liquidación.'
       },
       {
-        title: '7. PROCESO DE DISENO, FOTOS Y VOBO',
-        text: 'Fotografias y frases se entregan con 7 dias de anticipacion. En papeleria incluye hasta 3 rondas de ajustes previas a VoBo. Los tonos pueden presentar ligeras variaciones inherentes de imprenta.'
+        title: '7. PROCESO DE DISEÑO, FOTOS Y VOBO',
+        text: 'Fotografías y frases se entregan con 7 días de anticipación. En papelería incluye hasta 3 rondas de ajustes previas a VoBo. Los tonos pueden presentar ligeras variaciones inherentes de imprenta.'
       },
       {
         title: '8. PAGOS Y CONDICIONES FINANCIERAS',
-        text: 'Separacion fija de $1,000 MXN para reservar stands (o 50 por ciento en papeleria). La liquidacion total debera realizarse a mas tardar 10 dias naturales antes del evento (o previo a entrega).'
+        text: 'Separación fija de $1,000 MXN para reservar stands (o 50 por ciento en papelería). La liquidación total deberá realizarse a más tardar 10 días naturales antes del evento (o previo a entrega).'
       },
       {
-        title: '9. CANCELACIONES Y REAGENDACION',
-        text: 'Anticipos no reembolsables. En servicios de stands podra reagendarse dentro de los siguientes 30 dias naturales sujeto a disponibilidad y liquidacion total.'
+        title: '9. CANCELACIONES Y REAGENDACIÓN',
+        text: 'Anticipos no reembolsables. En servicios de stands podrá reagendarse dentro de los siguientes 30 días naturales sujeto a disponibilidad y liquidación total.'
       },
       {
-        title: '10. AUTORIZACION DE IMAGEN Y VALIDEZ LEGAL',
-        text: 'La Contratante autoriza el uso de fotografias y videos del montaje con fines de portafolio y redes sociales respetando la privacidad. El anticipo o firma digital ratifica la validez de este contrato.'
+        title: '10. AUTORIZACIÓN DE IMAGEN Y VALIDEZ LEGAL',
+        text: 'La Contratante autoriza el uso de fotografías y videos del montaje con fines de portafolio y redes sociales respetando la privacidad. El anticipo o firma digital ratifica la validez de este contrato.'
       }
     ];
   }
@@ -599,7 +599,7 @@ function wrapText(text: string, maxWidth: number, font: any, fontSize: number): 
 export async function buildVlbQuotePdf(
   quote: VlbQuote,
   items: VlbQuoteItem[],
-  options?: { autoDownload?: boolean }
+  options?: { autoDownload?: boolean; includeContract?: boolean }
 ): Promise<{ blob: Blob; file: File; fileName: string; pdfDoc: PDFDocument }> {
   // 1. Decode raw Canva PDF bytes (the template is pre-cleaned with zero placeholder brackets)
   const binaryString = atob(VLB_CANVA_PDF_BASE64);
@@ -691,7 +691,7 @@ export async function buildVlbQuotePdf(
   safeDraw(page, 'CLIENTE:', { x: 50.4, y: 623, size: 9.6, font: fontBold, color: pinkLabel });
   safeDraw(page, clientFullName, { x: 104, y: 623, size: 9.6, font: fontBold, color: textColor });
 
-  safeDraw(page, 'TELEFONO:', { x: 265, y: 623, size: 9.6, font: fontBold, color: pinkLabel });
+  safeDraw(page, 'TELÉFONO:', { x: 265, y: 623, size: 9.6, font: fontBold, color: pinkLabel });
   safeDraw(page, quote.client_phone || 'Sin contacto', { x: 330, y: 623, size: 9.6, font: fontRegular, color: textColor });
 
   // Renglón 3: FECHA EVENTO y VENUE
@@ -832,8 +832,8 @@ export async function buildVlbQuotePdf(
       borderWidth: 0.8
     });
 
-    safeDraw(page2, 'Folio cotizacion:', { x: 245, y: 794, size: 7.2, font: fontRegular, color: mutedColor });
-    safeDraw(page2, folioNumber, { x: 315, y: 794, size: 8.0, font: fontBold, color: pinkAccent });
+    safeDraw(page2, 'Folio cotización:', { x: 245, y: 794, size: 7.2, font: fontRegular, color: mutedColor });
+    safeDraw(page2, folioNumber, { x: 318, y: 794, size: 8.0, font: fontBold, color: pinkAccent });
     safeDraw(page2, 'Fecha evento:', { x: 405, y: 794, size: 7.2, font: fontRegular, color: mutedColor });
     safeDraw(page2, dateClean, { x: 465, y: 794, size: 7.5, font: fontBold, color: darkColor });
 
@@ -854,7 +854,7 @@ export async function buildVlbQuotePdf(
       safeDraw(page2, clean, { x: (595.5 - w) / 2, y, size, font, color });
     };
 
-    drawPageCentered('CONTRATO DE PRESTACION DE SERVICIOS', 710, 11.5, fontBold, pinkAccent);
+    drawPageCentered('CONTRATO DE PRESTACIÓN DE SERVICIOS', 710, 11.5, fontBold, pinkAccent);
     drawPageCentered(serviceTitle, 696, 9.0, fontBold, darkColor);
     drawPageCentered('Entre "La Contratante" y Viva la Bride, en adelante "Prestadora de Servicios".', 684, 7.5, fontRegular, mutedColor);
 
@@ -880,7 +880,7 @@ export async function buildVlbQuotePdf(
     }
 
     // 5. Líneas de Firma Proporcionales (Ubicadas de forma armónica tras las cláusulas)
-    const sigY = Math.min(235, Math.max(145, cY - 40));
+    const sigY = Math.max(130, cY - 45);
 
     // Firma Contratante (Izquierda) - Centrada respecto a su línea (60 a 240, centro = 150)
     page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.6, color: darkColor });
@@ -946,43 +946,10 @@ export async function buildVlbQuotePdf(
     }
 
     drawRightSigCentered('Scarlette Olivo', sigY - 14, 8.5, fontBold, pinkAccent);
-    drawRightSigCentered('Representante de Viva la Bride', sigY - 26, 7.6, fontBold, darkColor);
+    drawRightSigCentered('Representante de Viva la Bride', sigY - 26, 7.8, fontBold, darkColor);
     drawRightSigCentered('La Prestadora de Servicios', sigY - 37, 6.8, fontRegular, mutedColor);
 
-    // 6. Tarjeta Editorial de Validez Legal & Cumplimiento (Elimina cualquier vacío)
-    page2.drawRectangle({
-      x: 45,
-      y: 65,
-      width: 505,
-      height: 48,
-      color: rgb(254 / 255, 252 / 255, 250 / 255),
-      borderColor: rgb(240 / 255, 222 / 255, 228 / 255),
-      borderWidth: 0.6
-    });
-
-    safeDraw(page2, 'VALIDEZ JURIDICA & CONSENTIMIENTO DIGITAL', {
-      x: 58,
-      y: 99,
-      size: 6.8,
-      font: fontBold,
-      color: pinkAccent
-    });
-    safeDraw(page2, 'Este documento formaliza la reserva del servicio estipulado. Conforme a los articulos 89 al 95 del Codigo de Comercio,', {
-      x: 58,
-      y: 88,
-      size: 6.5,
-      font: fontRegular,
-      color: mutedColor
-    });
-    safeDraw(page2, 'la firma electronica y/o el anticipo de separacion acreditan la aceptacion plena e irrevocable de todas las clausulas.', {
-      x: 58,
-      y: 77,
-      size: 6.5,
-      font: fontRegular,
-      color: mutedColor
-    });
-
-    // 7. Pie de Página Elegante (Redes Sociales y WhatsApp) - Centrado y limpio
+    // 6. Pie de Página Elegante (Redes Sociales y WhatsApp) - Centrado y limpio
     page2.drawLine({
       start: { x: 45, y: 45 },
       end: { x: 550, y: 45 },
