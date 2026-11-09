@@ -769,8 +769,17 @@ export async function buildVlbQuotePdf(
   const clientNameClean = (quote.client_name || 'Cliente').trim();
   const conceptDate = formatConceptDate(quote.event_date);
   const conceptoText = conceptDate ? `${clientNameClean} ${conceptDate}` : clientNameClean;
-  safeDraw(page, `| ${conceptoText}`, {
-    x: 111.0,
+
+  // Dibujar la barra vertical como vector exacto para evitar el glifo con marca de agua 'DEMO' de la fuente Mont
+  page.drawLine({
+    start: { x: 111.0, y: 184.8 },
+    end: { x: 111.0, y: 194.2 },
+    thickness: 0.6,
+    color: textColor
+  });
+
+  safeDraw(page, conceptoText, {
+    x: 115.5,
     y: 185.2,
     size: 9.2,
     font: fontRegular,
