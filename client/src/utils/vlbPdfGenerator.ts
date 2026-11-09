@@ -667,8 +667,18 @@ export async function buildVlbQuotePdf(
 
   // ========================================================
   // PÁGINA 1: DIBUJAR VALORES EXACTOS EN EL ESPACIO LIMPIO
-  // (Sin cuadros blancos encima de las etiquetas rosas)
   // ========================================================
+
+  // Limpiar corchetes / placeholders del template Canva
+  page.drawRectangle({ x: 88, y: 668, width: 140, height: 14, color: white });
+  page.drawRectangle({ x: 92, y: 650, width: 140, height: 14, color: white });
+  page.drawRectangle({ x: 100, y: 618, width: 130, height: 14, color: white });
+  page.drawRectangle({ x: 285, y: 618, width: 120, height: 14, color: white });
+  page.drawRectangle({ x: 132, y: 593, width: 200, height: 14, color: white });
+  page.drawRectangle({ x: 408, y: 593, width: 140, height: 14, color: white });
+  page.drawRectangle({ x: 120, y: 567, width: 140, height: 14, color: white });
+  page.drawRectangle({ x: 460, y: 382, width: 85, height: 18, color: white });
+  page.drawRectangle({ x: 108, y: 178, width: 300, height: 16, color: white });
 
   // 1. FOLIO (FOLIO: original termina en x=88, baseline y=673)
   safeDraw(page, folioNumber, { x: 92, y: 673, size: 9.6, font: fontBold, color: textColor });

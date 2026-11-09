@@ -1472,6 +1472,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     </div>
                     <input
                       type="time"
+                      step="600"
                       value={time12To24(quoteForm.event_time)}
                       onChange={e => {
                         const val = e.target.value;

@@ -603,7 +603,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
                 ✨ <strong>Paso siguiente:</strong> Realiza tu transferencia y envía el comprobante. En cuanto se registre, se desbloqueará de inmediato tu <strong>Contrato Digital Oficial y Módulo de Firma</strong>.
               </p>
               <a
-                href={`https://wa.me/525661406247?text=${encodeURIComponent(`¡Hola Scarlette! ✨ Te comparto mi comprobante de anticipo para la cotización ${formatFolio(quote.quote_number)} a nombre de ${quote.client_name}.`)}`}
+                href={`https://wa.me/525661406247?text=${encodeURIComponent(`¡Hola Scarlette! Te comparto mi comprobante de anticipo para la cotización ${formatFolio(quote.quote_number)} a nombre de ${quote.client_name}.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="shrink-0 inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20BA5A] text-[#FFFFFF] text-xs font-bold transition shadow-2xs cursor-pointer"
@@ -641,8 +641,8 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
             Contrato celebrado entre <strong>{quote.client_name} {quote.partner_name ? `& ${quote.partner_name}` : ''}</strong> ("La Contratante") y <strong>Viva la Bride</strong> ("La Prestadora de Servicios"), correspondiente a los servicios y especificaciones del folio <strong>{formatFolio(quote.quote_number)}</strong>.
           </p>
 
-          {/* Mostrar cláusulas si está desbloqueado o si la novia pide ver el borrador */}
-          {isContractUnlocked || showClausesPreview ? (
+          {/* Mostrar cláusulas únicamente cuando está desbloqueado (anticipo registrado) */}
+          {isContractUnlocked ? (
             <div className="space-y-3 pt-1">
               <div className="p-3.5 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] flex items-center justify-between text-xs text-[#70443D]">
                 <span className="font-bold">Estatus del Contrato:</span>
@@ -665,18 +665,11 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               </div>
             </div>
           ) : (
-            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-dashed border-[#EAE3DA] text-center space-y-3">
+            <div className="p-5 rounded-2xl bg-[#FCFAF7] border border-dashed border-[#EAE3DA] text-center space-y-2">
               <Sparkles className="w-6 h-6 text-[#B88A82] mx-auto opacity-70" />
               <p className="text-xs text-[#7D6F6B] max-w-md mx-auto leading-relaxed">
                 El texto legal oficial y el módulo de firma digital se activan en cuanto se registre tu anticipo de separación.
               </p>
-              <button
-                type="button"
-                onClick={() => setShowClausesPreview(true)}
-                className="text-xs font-bold text-[#C83460] hover:underline cursor-pointer"
-              >
-                Revisar borrador de cláusulas y condiciones generales →
-              </button>
             </div>
           )}
         </div>
