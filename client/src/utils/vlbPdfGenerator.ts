@@ -397,6 +397,58 @@ export function standardizeEventTime(val: string | null | undefined): string {
   return clean;
 }
 
+export function time12To24(val: string | null | undefined): string {
+  if (!val || typeof val !== 'string' || !val.trim() || /^por\s*def/i.test(val.trim())) return '';
+  const clean = val.trim();
+
+  // Already 24h HH:mm
+  const m24 = clean.match(/^(\d{1,2}):(\d{2})$/);
+  if (m24) {
+    let h = parseInt(m24[1], 10);
+    const m = m24[2];
+    if (h >= 13 && h <= 23) return `${String(h).padStart(2, '0')}:${m}`;
+    if (h === 12) return `12:${m}`;
+    if (h === 0) return `00:${m}`;
+    if (h >= 1 && h <= 9) return `${String(h + 12).padStart(2, '0')}:${m}`;
+    if (h >= 10 && h <= 11) return `${String(h).padStart(2, '0')}:${m}`;
+  }
+
+  // 12h format e.g. "4:00 PM", "4pm", "11:30 am"
+  const m12 = clean.match(/^(\d{1,2})(?::(\d{2}))?\s*([aApP][mM])?$/);
+  if (m12) {
+    let h = parseInt(m12[1], 10);
+    const m = m12[2] || '00';
+    let ampm = (m12[3] || '').toUpperCase();
+    if (!ampm) {
+      if (h >= 1 && h <= 9) ampm = 'PM';
+      else if (h === 12) ampm = 'PM';
+      else if (h >= 13 && h <= 23) {
+        return `${String(h).padStart(2, '0')}:${m}`;
+      } else {
+        ampm = 'AM';
+      }
+    }
+    if (ampm === 'PM' && h < 12) h += 12;
+    if (ampm === 'AM' && h === 12) h = 0;
+    return `${String(h).padStart(2, '0')}:${m}`;
+  }
+
+  return '';
+}
+
+export function time24To12(val: string | null | undefined): string {
+  if (!val || typeof val !== 'string' || !val.trim() || /^por\s*def/i.test(val.trim())) return 'Por definir';
+  const clean = val.trim();
+  const match = clean.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return clean;
+  let h = parseInt(match[1], 10);
+  const m = match[2];
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${h}:${m} ${ampm}`;
+}
+
 export const VLB_STANDARD_TIME_CHIPS = [
   'Por definir',
   '1:00 PM',
