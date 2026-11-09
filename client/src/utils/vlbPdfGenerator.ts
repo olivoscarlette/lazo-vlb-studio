@@ -678,7 +678,7 @@ export async function buildVlbQuotePdf(
   page.drawRectangle({ x: 48, y: 591, width: 500, height: 16, color: white });
   page.drawRectangle({ x: 48, y: 566, width: 350, height: 16, color: white });
   page.drawRectangle({ x: 460, y: 382, width: 85, height: 18, color: white });
-  page.drawRectangle({ x: 105, y: 178, width: 350, height: 16, color: white });
+  page.drawRectangle({ x: 109.2, y: 179.5, width: 340, height: 17.0, color: white });
 
   // Renglón 1: FOLIO y FECHA
   safeDraw(page, 'FOLIO:', { x: 50.4, y: 673, size: 9.6, font: fontBold, color: pinkLabel });
@@ -765,13 +765,13 @@ export async function buildVlbQuotePdf(
   const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
   safeDraw(page, totalFormatted, { x: 475, y: 391, size: 12.0, font: fontBold, color: textColor });
 
-  // 10. CONCEPTO EN FORMA DE PAGO (Concepto | ya viene impreso)
+  // 10. CONCEPTO EN FORMA DE PAGO
   const clientNameClean = (quote.client_name || 'Cliente').trim();
   const conceptDate = formatConceptDate(quote.event_date);
   const conceptoText = conceptDate ? `${clientNameClean} ${conceptDate}` : clientNameClean;
-  safeDraw(page, conceptoText, {
-    x: 110,
-    y: 184,
+  safeDraw(page, `| ${conceptoText}`, {
+    x: 111.0,
+    y: 185.2,
     size: 9.2,
     font: fontRegular,
     color: textColor
