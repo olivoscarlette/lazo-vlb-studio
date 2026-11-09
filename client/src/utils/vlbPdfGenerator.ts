@@ -669,39 +669,43 @@ export async function buildVlbQuotePdf(
   // PÁGINA 1: DIBUJAR VALORES EXACTOS EN EL ESPACIO LIMPIO
   // ========================================================
 
-  // Limpiar corchetes / placeholders del template Canva
-  page.drawRectangle({ x: 88, y: 668, width: 140, height: 14, color: white });
-  page.drawRectangle({ x: 92, y: 650, width: 140, height: 14, color: white });
-  page.drawRectangle({ x: 100, y: 618, width: 130, height: 14, color: white });
-  page.drawRectangle({ x: 285, y: 618, width: 120, height: 14, color: white });
-  page.drawRectangle({ x: 132, y: 593, width: 200, height: 14, color: white });
-  page.drawRectangle({ x: 408, y: 593, width: 140, height: 14, color: white });
-  page.drawRectangle({ x: 120, y: 567, width: 140, height: 14, color: white });
-  page.drawRectangle({ x: 460, y: 382, width: 85, height: 18, color: white });
-  page.drawRectangle({ x: 108, y: 178, width: 300, height: 16, color: white });
+  const pinkLabel = rgb(215 / 255, 54 / 255, 98 / 255); // #D73662 Rosa Oficial Canva
 
-  // 1. FOLIO (FOLIO: original termina en x=88, baseline y=673)
+  // 1. Limpieza total de los 4 renglones de metadatos (elimina corchetes [, |, y glifos corruptos de Canva)
+  page.drawRectangle({ x: 48, y: 666, width: 300, height: 16, color: white });
+  page.drawRectangle({ x: 48, y: 648, width: 350, height: 16, color: white });
+  page.drawRectangle({ x: 48, y: 616, width: 500, height: 16, color: white });
+  page.drawRectangle({ x: 48, y: 591, width: 500, height: 16, color: white });
+  page.drawRectangle({ x: 48, y: 566, width: 350, height: 16, color: white });
+  page.drawRectangle({ x: 460, y: 382, width: 85, height: 18, color: white });
+  page.drawRectangle({ x: 105, y: 178, width: 350, height: 16, color: white });
+
+  // Renglón 1: FOLIO y FECHA
+  safeDraw(page, 'FOLIO:', { x: 50.4, y: 673, size: 9.6, font: fontBold, color: pinkLabel });
   safeDraw(page, folioNumber, { x: 92, y: 673, size: 9.6, font: fontBold, color: textColor });
 
-  // 2. FECHA (FECHA: original termina en x=92, baseline y=654.5)
+  safeDraw(page, 'FECHA:', { x: 50.4, y: 654.5, size: 9.6, font: fontBold, color: pinkLabel });
   safeDraw(page, todayFormatted, { x: 94, y: 654.5, size: 9.6, font: fontRegular, color: textColor });
 
-  // 3. CLIENTE (CLIENTE: original termina en x=103, baseline y=623)
+  // Renglón 2: CLIENTE y TELÉFONO
+  safeDraw(page, 'CLIENTE:', { x: 50.4, y: 623, size: 9.6, font: fontBold, color: pinkLabel });
   safeDraw(page, clientFullName, { x: 104, y: 623, size: 9.6, font: fontBold, color: textColor });
 
-  // 4. TELÉFONO (TELÉFONO: original termina en x=285, baseline y=623)
-  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 290, y: 623, size: 9.6, font: fontRegular, color: textColor });
+  safeDraw(page, 'TELEFONO:', { x: 265, y: 623, size: 9.6, font: fontBold, color: pinkLabel });
+  safeDraw(page, quote.client_phone || 'Sin contacto', { x: 330, y: 623, size: 9.6, font: fontRegular, color: textColor });
 
-  // 5. FECHA EVENTO (FECHA EVENTO: original termina en x=135, baseline y=597.5)
-  safeDraw(page, formatSpanishDate(quote.event_date), { x: 139, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
+  // Renglón 3: FECHA EVENTO y VENUE
+  safeDraw(page, 'FECHA EVENTO:', { x: 50.4, y: 597.5, size: 9.6, font: fontBold, color: pinkLabel });
+  safeDraw(page, formatSpanishDate(quote.event_date), { x: 142, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
 
-  // 6. VENUE (VENUE: original termina en x=408, baseline y=597.5)
+  safeDraw(page, 'VENUE:', { x: 370, y: 597.5, size: 9.6, font: fontBold, color: pinkLabel });
   const venueStr = quote.event_venue || 'Por definir';
-  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 412, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
+  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 418, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
 
-  // 7. HORA INICIO (HORA INICIO: original termina en x=122, baseline y=572.5)
+  // Renglón 4: HORA INICIO
+  safeDraw(page, 'HORA INICIO:', { x: 50.4, y: 572.5, size: 9.6, font: fontBold, color: pinkLabel });
   const timeStr = standardizeEventTime(quote.event_time || quote.ceremony_time || quote.service_time);
-  safeDraw(page, timeStr, { x: 126, y: 572.5, size: 9.6, font: fontRegular, color: textColor });
+  safeDraw(page, timeStr, { x: 124, y: 572.5, size: 9.6, font: fontRegular, color: textColor });
 
   // 8. TABLE ITEMS (Limpieza del área de filas para evitar cualquier empalme)
   page.drawRectangle({
@@ -855,19 +859,19 @@ export async function buildVlbQuotePdf(
 
     const isSignedReal = Boolean(quote.signature_data && typeof quote.signature_data === 'string' && quote.signature_data.startsWith('data:image/'));
 
-    // 4. Cláusulas Legales con Justificación Editorial (10 Puntos Originales Completos)
-    let cY = 673;
+    // 4. Cláusulas Legales con Justificación Editorial (Inicia en cY = 658 para no chocar con la línea en 676)
+    let cY = 658;
     const targetWidth = 505; // Margen a margen (550 - 45)
     for (const cl of clauses) {
-      safeDraw(page2, cl.title, { x: 45, y: cY, size: 7.5, font: fontBold, color: pinkAccent });
-      cY -= 9.8;
+      safeDraw(page2, cl.title, { x: 45, y: cY, size: 7.8, font: fontBold, color: pinkAccent });
+      cY -= 10.2;
 
-      cY = drawJustifiedParagraph(page2, cl.text, 45, cY, targetWidth, 7.0, 9.4, fontRegular, darkColor);
-      cY -= 5.5;
+      cY = drawJustifiedParagraph(page2, cl.text, 45, cY, targetWidth, 7.3, 10.3, fontRegular, darkColor);
+      cY -= 7.0;
     }
 
-    // 5. Líneas de Firma
-    const sigY = 150;
+    // 5. Líneas de Firma Proporcionales (Ubicadas de forma armónica tras las cláusulas)
+    const sigY = Math.min(235, Math.max(145, cY - 40));
 
     // Firma Contratante (Izquierda) - Centrada respecto a su línea (60 a 240, centro = 150)
     page2.drawLine({ start: { x: 60, y: sigY }, end: { x: 240, y: sigY }, thickness: 0.6, color: darkColor });
@@ -936,14 +940,47 @@ export async function buildVlbQuotePdf(
     drawRightSigCentered('Representante de Viva la Bride', sigY - 26, 7.6, fontBold, darkColor);
     drawRightSigCentered('La Prestadora de Servicios', sigY - 37, 6.8, fontRegular, mutedColor);
 
-    // 6. Pie de Página Elegante (Redes Sociales y WhatsApp) - Centrado y limpio
+    // 6. Tarjeta Editorial de Validez Legal & Cumplimiento (Elimina cualquier vacío)
+    page2.drawRectangle({
+      x: 45,
+      y: 65,
+      width: 505,
+      height: 48,
+      color: rgb(254 / 255, 252 / 255, 250 / 255),
+      borderColor: rgb(240 / 255, 222 / 255, 228 / 255),
+      borderWidth: 0.6
+    });
+
+    safeDraw(page2, 'VALIDEZ JURIDICA & CONSENTIMIENTO DIGITAL', {
+      x: 58,
+      y: 99,
+      size: 6.8,
+      font: fontBold,
+      color: pinkAccent
+    });
+    safeDraw(page2, 'Este documento formaliza la reserva del servicio estipulado. Conforme a los articulos 89 al 95 del Codigo de Comercio,', {
+      x: 58,
+      y: 88,
+      size: 6.5,
+      font: fontRegular,
+      color: mutedColor
+    });
+    safeDraw(page2, 'la firma electronica y/o el anticipo de separacion acreditan la aceptacion plena e irrevocable de todas las clausulas.', {
+      x: 58,
+      y: 77,
+      size: 6.5,
+      font: fontRegular,
+      color: mutedColor
+    });
+
+    // 7. Pie de Página Elegante (Redes Sociales y WhatsApp) - Centrado y limpio
     page2.drawLine({
-      start: { x: 45, y: 40 },
-      end: { x: 550, y: 40 },
+      start: { x: 45, y: 45 },
+      end: { x: 550, y: 45 },
       thickness: 0.5,
       color: rgb(240 / 255, 213 / 255, 221 / 255)
     });
-    drawPageCentered('@vivalabride.mx   -   WhatsApp: 56 6140 6247', 28, 7.2, fontRegular, mutedColor);
+    drawPageCentered('@vivalabride.mx   -   WhatsApp: 56 6140 6247', 30, 7.2, fontRegular, mutedColor);
   }
 
   // Save PDF Bytes
