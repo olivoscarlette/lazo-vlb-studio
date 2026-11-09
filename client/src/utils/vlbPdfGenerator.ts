@@ -353,6 +353,62 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
   return { clauses, isService, serviceTitle, hasDrinks, hasStandsOrWalls, hasMemorial, hasPapeleria };
 }
 
+export function standardizeEventTime(val: string | null | undefined): string {
+  if (!val || !val.trim()) return 'Por definir';
+  const clean = val.trim();
+  if (/^por\s*def/i.test(clean)) return 'Por definir';
+
+  // 1. Matches 24-hour time HH:mm (e.g. "16:00", "09:30", "14:15")
+  const match24 = clean.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    let hour = parseInt(match24[1], 10);
+    const minute = match24[2];
+    if (hour >= 13 && hour <= 23) {
+      return `${hour - 12}:${minute} PM`;
+    }
+    if (hour === 12) return `12:${minute} PM`;
+    if (hour === 0) return `12:${minute} AM`;
+    if (hour >= 1 && hour <= 9) return `${hour}:${minute} PM`;
+    if (hour >= 10 && hour <= 11) return `${hour}:${minute} AM`;
+  }
+
+  // 2. Matches 12-hour time with or without minutes & AM/PM (e.g. "4:00 PM", "4pm", "04:30 pm", "4 pm", "4")
+  const match12 = clean.match(/^(\d{1,2})(?::(\d{2}))?\s*([aApP][mM])?$/);
+  if (match12) {
+    let hour = parseInt(match12[1], 10);
+    const minute = match12[2] || '00';
+    let ampm = (match12[3] || '').toUpperCase();
+    if (!ampm) {
+      if (hour >= 13 && hour <= 23) {
+        hour = hour % 12;
+        ampm = 'PM';
+      } else if (hour >= 1 && hour <= 9) {
+        ampm = 'PM';
+      } else if (hour === 12) {
+        ampm = 'PM';
+      } else {
+        ampm = 'AM';
+      }
+    }
+    if (hour === 0) hour = 12;
+    return `${hour}:${minute} ${ampm}`;
+  }
+
+  return clean;
+}
+
+export const VLB_STANDARD_TIME_CHIPS = [
+  'Por definir',
+  '1:00 PM',
+  '2:00 PM',
+  '3:00 PM',
+  '4:00 PM',
+  '5:00 PM',
+  '6:00 PM',
+  '7:00 PM',
+  '8:00 PM'
+] as const;
+
 export function cleanWinAnsi(str: string | null | undefined): string {
   if (!str) return '';
   let text = String(str);
@@ -582,7 +638,7 @@ export async function buildVlbQuotePdf(
   safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 412, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
 
   // 7. HORA INICIO (HORA INICIO: original termina en x=122, baseline y=572.5)
-  const timeStr = quote.event_time || quote.ceremony_time || quote.service_time || 'Por definir';
+  const timeStr = standardizeEventTime(quote.event_time || quote.ceremony_time || quote.service_time);
   safeDraw(page, timeStr, { x: 126, y: 572.5, size: 9.6, font: fontRegular, color: textColor });
 
   // 8. TABLE ITEMS (Limpieza del área de filas para evitar cualquier empalme)
@@ -707,7 +763,7 @@ export async function buildVlbQuotePdf(
 
     // 2. Card Superior Derecha (Datos del Evento y Folio con bordes redondeados)
     const venueClean = cleanWinAnsi(quote.event_venue || 'Por definir');
-    const timeClean = cleanWinAnsi(quote.event_time || quote.ceremony_time || quote.service_time || 'Por definir');
+    const timeClean = cleanWinAnsi(standardizeEventTime(quote.event_time || quote.ceremony_time || quote.service_time));
     const dateClean = formatConceptDate(quote.event_date) || 'Por definir';
 
     page2.drawRectangle({

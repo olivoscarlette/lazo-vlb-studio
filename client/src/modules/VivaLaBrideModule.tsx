@@ -53,7 +53,7 @@ import {
   VlbDocument,
   VlbTask
 } from '../types/vlb';
-import { generateVlbQuotePdf, buildVlbQuotePdf } from '../utils/vlbPdfGenerator';
+import { generateVlbQuotePdf, buildVlbQuotePdf, standardizeEventTime, VLB_STANDARD_TIME_CHIPS } from '../utils/vlbPdfGenerator';
 
 interface VivaLaBrideModuleProps {
   onBackToLazo?: () => void;
@@ -626,6 +626,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...quoteForm,
+          event_time: standardizeEventTime(quoteForm.event_time),
           quote_number: currentPreviewFolio,
           discount: quoteDiscountAmount,
           down_payment_pct: quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50,
@@ -666,7 +667,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       client_email: quoteForm.client_email,
       client_phone: quoteForm.client_phone,
       event_date: quoteForm.event_date,
-      event_time: quoteForm.event_time,
+      event_time: standardizeEventTime(quoteForm.event_time),
       event_venue: quoteForm.event_venue,
       status: 'BORRADOR',
       subtotal: quoteSubtotal,
@@ -857,7 +858,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       client_email: isCurrent ? quoteForm.client_email : targetQuote!.client_email,
       client_phone: phone,
       event_date: isCurrent ? quoteForm.event_date : targetQuote!.event_date,
-      event_time: isCurrent ? quoteForm.event_time : targetQuote!.event_time,
+      event_time: standardizeEventTime(isCurrent ? quoteForm.event_time : targetQuote!.event_time),
       event_venue: eventVenue,
       status: 'BORRADOR',
       subtotal: isCurrent ? quoteSubtotal : targetQuote!.subtotal,
@@ -901,7 +902,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       ? '• *Stands & Servicios:* Separación fija de $1,000 MXN; el saldo se liquida 10 días antes del evento.'
       : '• *Papelería Social:* 50% de anticipo; el saldo se liquida al entregar el pedido o programar envío.';
 
-    const eventTime = (isCurrent ? quoteForm.event_time : targetQuote!.event_time) || 'Por definir';
+    const eventTime = standardizeEventTime(isCurrent ? quoteForm.event_time : targetQuote!.event_time);
 
     const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te comparto tu *Cotización Oficial en PDF* de *Viva la Bride* (*${folio}*):\n\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n⏰ *Horario:* ${eventTime}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${hasStands ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${directPdfText}${proposalLinkText}\n\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
 
@@ -1449,17 +1450,73 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       className="w-full px-3.5 py-2.5 text-sm bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-1">
-                      Horario del Evento / Montaje
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ej. 4:00 PM o Por definir"
-                      value={quoteForm.event_time}
-                      onChange={e => setQuoteForm({ ...quoteForm, event_time: e.target.value })}
-                      className="w-full px-3.5 py-2.5 text-sm bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
-                    />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider">
+                        Horario del Evento / Montaje
+                      </label>
+                      {quoteForm.event_time && quoteForm.event_time !== 'Por definir' && (
+                        <span className="text-[10px] font-bold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                          {standardizeEventTime(quoteForm.event_time)}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="relative">
+                      <Clock className="w-4 h-4 text-[#B88A82] absolute left-3.5 top-3 pointer-events-none" />
+                      <input
+                        type="text"
+                        placeholder="Ej. 4:00 PM o Por definir"
+                        value={quoteForm.event_time}
+                        onChange={e => setQuoteForm({ ...quoteForm, event_time: e.target.value })}
+                        onBlur={e => {
+                          if (e.target.value.trim()) {
+                            setQuoteForm({ ...quoteForm, event_time: standardizeEventTime(e.target.value) });
+                          }
+                        }}
+                        className="w-full pl-10 pr-20 py-2.5 text-sm bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] font-medium transition"
+                      />
+                      <label
+                        className="absolute right-2 top-2 px-2.5 py-1 text-[11px] font-semibold text-[#9C665C] hover:text-[#70443D] bg-[#FAF6F2] hover:bg-[#F6ECE8] border border-[#EAE3DA] rounded-lg cursor-pointer transition flex items-center space-x-1"
+                        title="Seleccionar hora exacta personalizada"
+                      >
+                        <Clock className="w-3 h-3 text-[#B88A82]" />
+                        <span>Otro</span>
+                        <input
+                          type="time"
+                          className="sr-only"
+                          onChange={e => {
+                            if (e.target.value) {
+                              setQuoteForm({ ...quoteForm, event_time: standardizeEventTime(e.target.value) });
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+
+                    {/* Chips inteligentes con formato uniforme */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                      {VLB_STANDARD_TIME_CHIPS.map(chip => {
+                        const standardCurrent = standardizeEventTime(quoteForm.event_time);
+                        const isSelected = standardCurrent === chip ||
+                          (!quoteForm.event_time && chip === 'Por definir');
+
+                        return (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() => setQuoteForm({ ...quoteForm, event_time: chip })}
+                            className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer border ${
+                              isSelected
+                                ? 'bg-[#9C665C] text-[#FFFFFF] border-[#9C665C] shadow-xs scale-102 ring-1 ring-[#9C665C]'
+                                : 'bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#7D6F6B] hover:text-[#332A28] border-[#EAE3DA]'
+                            }`}
+                          >
+                            {chip}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-1">
@@ -1708,6 +1765,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                               ...quoteForm,
+                              event_time: standardizeEventTime(quoteForm.event_time),
                               quote_number: currentPreviewFolio,
                               discount: quoteDiscountAmount,
                               down_payment_pct: quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50,

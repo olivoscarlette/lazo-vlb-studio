@@ -5,7 +5,7 @@ import {
   CreditCard, MessageSquare
 } from 'lucide-react';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
-import { generateVlbQuotePdf, getContractClauses } from '../utils/vlbPdfGenerator';
+import { generateVlbQuotePdf, getContractClauses, standardizeEventTime } from '../utils/vlbPdfGenerator';
 
 interface PublicProposalViewProps {
   token: string;
@@ -372,7 +372,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               </span>
               <span className="font-semibold text-xs text-[#222222] flex items-center space-x-1.5 mt-0.5 truncate">
                 <Clock className="w-3.5 h-3.5 text-[#B88A82] shrink-0" />
-                <span className="truncate">{quote.event_time || quote.ceremony_time || quote.service_time || 'Por definir'}</span>
+                <span className="truncate">{standardizeEventTime(quote.event_time || quote.ceremony_time || quote.service_time)}</span>
               </span>
             </div>
           </div>
