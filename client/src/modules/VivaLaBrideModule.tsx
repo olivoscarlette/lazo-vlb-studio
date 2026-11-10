@@ -144,7 +144,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     image_url: string;
   }>({
     category: 'PAPELERIA',
-    subcategory: 'Invitaciones Finas',
+    subcategory: 'Invitaciones',
     name: '',
     description: '',
     pricing_type: 'PER_PIECE',
@@ -2308,7 +2308,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     : 'bg-[#FFFFFF] text-[#7D6F6B] border border-[#EAE3DA]'
                 }`}
               >
-                Papelería Social Finas
+                Papelería Social
               </button>
               <button
                 onClick={() => setCatalogCategoryFilter('STANDS_EXPERIENCIAS')}
@@ -2369,7 +2369,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   setShowManualImageUrl(false);
                   setCatalogForm({
                     category: 'PAPELERIA',
-                    subcategory: 'Invitaciones Finas',
+                    subcategory: 'Invitaciones',
                     name: '',
                     description: '',
                     pricing_type: 'PER_PIECE',
@@ -3126,7 +3126,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             {it.item_name}
                           </div>
                           <div className="text-[11px] text-[#7D6F6B]">
-                            {it.category === 'PAPELERIA' ? 'Papelería Fina' : 'Stand / Servicio'} · {it.pricing_type === 'PER_PIECE' ? `${it.quantity} piezas a $${it.unit_price.toLocaleString('es-MX')} c/u` : 'Tarifa por evento'}
+                            {it.category === 'PAPELERIA' ? 'Papelería Social' : 'Stand / Servicio'} · {it.pricing_type === 'PER_PIECE' ? `${it.quantity} piezas a $${it.unit_price.toLocaleString('es-MX')} c/u` : 'Tarifa por evento'}
                           </div>
                         </div>
                         <span className="font-bold text-[#332A28] text-sm">

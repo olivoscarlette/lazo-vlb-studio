@@ -203,6 +203,11 @@ export function initVlbDatabase() {
   try {
     db.prepare("UPDATE vlb_orders SET order_number = 'VLB-' || SUBSTR(order_number, -3) WHERE order_number LIKE 'ORD-VLB-%'").run();
   } catch {}
+  try {
+    db.prepare("UPDATE vlb_catalog SET subcategory = 'Invitaciones' WHERE subcategory LIKE '%Invitaciones Finas%'").run();
+    db.prepare("UPDATE vlb_catalog SET subcategory = TRIM(REPLACE(subcategory, 'Finas', '')) WHERE subcategory LIKE '%Finas%'").run();
+    db.prepare("UPDATE vlb_catalog SET subcategory = TRIM(REPLACE(subcategory, 'finas', '')) WHERE subcategory LIKE '%finas%'").run();
+  } catch {}
 
   // Seed default master task templates if empty
   const templateCount = db.prepare('SELECT COUNT(*) as count FROM vlb_task_templates').get() as { count: number };
@@ -242,7 +247,7 @@ export function initVlbDatabase() {
       {
         id: 'cat_pap_01',
         category: 'PAPELERIA',
-        subcategory: 'Invitaciones Finas',
+        subcategory: 'Invitaciones',
         name: 'Invitación de Boda en Algodón Artesanal & Lacre de Cera',
         description: 'Papel 100% algodón de 300g con bordes rasgados a mano. Incluye caligrafía artística personalizada para nombres de los novios, sobre en lino o algodón forrado con papel vegetal translúcido, y sello de cera botánico con lacre flexible importado.',
         pricing_type: 'PER_PIECE',
@@ -528,7 +533,7 @@ export function initVlbDatabase() {
       'application/pdf',
       245000,
       'APROBADO',
-      'Contrato de prestación de servicios de papelería fina y renta de stands firmado por ambas partes.',
+      'Contrato de prestación de servicios de papelería social y renta de stands firmado por ambas partes.',
       'Valeria Lozano (VLB Director)',
       now
     );
