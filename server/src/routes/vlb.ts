@@ -2,6 +2,8 @@ import { Router } from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+// @ts-ignore
+import convert from 'heic-convert';
 import { db } from '../db/index.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -335,17 +337,44 @@ router.post('/catalog/upload-image', authenticateToken, (req, res, next) => {
     }
     next();
   });
-}, (req, res) => {
+}, async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No se recibió ningún archivo de imagen.' });
     }
 
-    const imageUrl = `/uploads/vlb/${req.file.filename}`;
+    let finalFilename = req.file.filename;
+    const filePath = req.file.path;
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const isHeic = ext === '.heic' || ext === '.heif' || (req.file.mimetype && req.file.mimetype.includes('heic'));
+
+    if (isHeic) {
+      try {
+        const inputBuffer = fs.readFileSync(filePath);
+        const outputBuffer = await convert({
+          buffer: inputBuffer,
+          format: 'JPEG',
+          quality: 0.88
+        });
+
+        const jpgFilename = path.parse(req.file.filename).name + '.jpg';
+        const jpgPath = path.join(path.dirname(filePath), jpgFilename);
+        fs.writeFileSync(jpgPath, Buffer.from(outputBuffer));
+
+        if (jpgPath !== filePath) {
+          try { fs.unlinkSync(filePath); } catch {}
+        }
+        finalFilename = jpgFilename;
+      } catch (convErr) {
+        console.warn('Error convirtiendo HEIC en servidor:', convErr);
+      }
+    }
+
+    const imageUrl = `/uploads/vlb/${finalFilename}`;
     return res.json({
       success: true,
       imageUrl,
-      filename: req.file.filename,
+      filename: finalFilename,
       originalName: req.file.originalname
     });
   } catch (err: any) {
@@ -671,7 +700,7 @@ router.post('/quotes', (req, res) => {
     const discountAmount = Math.max(0, Number(discount) || 0);
     const total = Math.max(0, subtotal - discountAmount);
     // Regla estricta: Servicios / Stands es Separación de $1,000 MXN. Papelería es 50%
-    const isService = quote_number.startsWith('SV-') || (processedItems.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT'));
+    const isService = quote_number.startsWith('SV-') || (processedItems.some((i: any) => i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT'));
     const down_payment_amount = isService ? Math.min(1000, total) : (total * 0.5);
     const balance_due = Math.max(0, total - down_payment_amount);
     const pct = total > 0 ? (isService ? Math.round((down_payment_amount / total) * 100) : 50) : 50;

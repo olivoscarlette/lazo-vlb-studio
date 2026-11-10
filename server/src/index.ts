@@ -3,6 +3,8 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import fs from 'fs';
+// @ts-ignore
+import convert from 'heic-convert';
 import { fileURLToPath } from 'url';
 import { initDatabase } from './db/index.js';
 
@@ -139,6 +141,36 @@ const floorplansDir = path.resolve(uploadsDir, 'floorplans');
 if (!fs.existsSync(floorplansDir)) {
   fs.mkdirSync(floorplansDir, { recursive: true });
 }
+
+// Interceptar archivos HEIC/HEIF de iPhone y servirlos convertidos automáticamente a JPEG
+app.get('/uploads/*', async (req, res, next) => {
+  const reqPath = (req.params as any)[0] || '';
+  if (reqPath.toLowerCase().endsWith('.heic') || reqPath.toLowerCase().endsWith('.heif')) {
+    const filePath = path.join(uploadsDir, reqPath);
+    const jpgPath = filePath.replace(/\.(heic|heif)$/i, '.jpg');
+
+    if (fs.existsSync(jpgPath)) {
+      return res.type('image/jpeg').sendFile(jpgPath);
+    }
+
+    if (fs.existsSync(filePath)) {
+      try {
+        const inputBuffer = fs.readFileSync(filePath);
+        const outputBuffer = await convert({
+          buffer: inputBuffer,
+          format: 'JPEG',
+          quality: 0.88
+        });
+        fs.writeFileSync(jpgPath, Buffer.from(outputBuffer));
+        return res.type('image/jpeg').sendFile(jpgPath);
+      } catch (err) {
+        console.error('Error auto-converting requested HEIC file:', err);
+      }
+    }
+  }
+  next();
+});
+
 app.use('/uploads', express.static(uploadsDir));
 
 // Serve static client build if it exists

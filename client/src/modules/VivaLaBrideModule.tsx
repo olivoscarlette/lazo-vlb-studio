@@ -3853,12 +3853,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
             </div>
           </div>
 
-          {/* Main Photo Center */}
+          {/* Main Photo Center - clic en espacio en blanco cierra el visor */}
           <div
-            onClick={e => e.stopPropagation()}
-            className="flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0"
+            onClick={() => setViewingPhotoItem(null)}
+            className="flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0 cursor-pointer"
           >
-            <div className="relative max-h-[76vh] max-w-full flex items-center justify-center">
+            <div
+              onClick={e => e.stopPropagation()}
+              className="relative max-h-[76vh] max-w-full flex items-center justify-center cursor-default"
+            >
               <img
                 src={viewingPhotoItem.image_url}
                 alt={viewingPhotoItem.name}
