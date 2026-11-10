@@ -169,6 +169,22 @@ router.post('/quotes/public/:token/sign', (req, res) => {
       } catch {}
     }
 
+    // Insertar notificación del sistema para alertar en pantalla a coordinadoras y admin
+    try {
+      const notifId = 'notif_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      db.prepare(`
+        INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at)
+        VALUES (?, NULL, NULL, ?, ?, 0, '/vlb', ?)
+      `).run(
+        notifId,
+        '¡Contrato Firmado! 💍',
+        `${signer_name.trim()} acaba de firmar formalmente la cotización ${quote.quote_number || 'VLB'}.`,
+        now
+      );
+    } catch (notifErr) {
+      console.warn('Could not insert contract notification:', notifErr);
+    }
+
     res.json({
       success: true,
       message: 'Propuesta aceptada y firmada exitosamente.',

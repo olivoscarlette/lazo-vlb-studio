@@ -1,11 +1,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
-  Bell, LogOut, ChevronDown, Building2,
+  Bell, BellRing, LogOut, ChevronDown, Building2,
   CheckCircle2, ShieldCheck, Menu, PanelLeft, Calendar, Heart, Sparkles
 } from 'lucide-react';
 import { UserRole } from '../types';
 import { UserProfileModal } from './UserProfileModal';
+import {
+  getBrowserNotificationPermission,
+  requestBrowserNotificationPermission,
+  sendBrowserNotification
+} from '../utils/browserNotifications';
 
 interface NavbarProps {
   onToggleSidebar?: () => void;
@@ -32,6 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
   const [showWeddingMenu, setShowWeddingMenu] = useState(false);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [browserPermission, setBrowserPermission] = useState<'granted' | 'denied' | 'default' | 'unsupported'>(getBrowserNotificationPermission());
 
   if (!user) return null;
 
@@ -255,6 +261,64 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                       </span>
                     )}
                   </div>
+
+                  {/* Banner de Activación de Notificaciones de Escritorio (Web Push) */}
+                  {browserPermission === 'default' && (
+                    <div className="mx-3 my-2 p-3 bg-gradient-to-r from-[#FAF6F2] to-[#FBF4F3] border border-[#EAD2D0] rounded-xl flex items-center justify-between gap-2 shadow-2xs">
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <div className="p-2 bg-[#C83460]/10 text-[#C83460] rounded-lg shrink-0">
+                          <BellRing className="w-4 h-4 text-[#C83460]" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-xs font-bold text-[#332A28] truncate">
+                            Alertas en tu pantalla
+                          </div>
+                          <div className="text-[10px] text-[#7D6F6B] leading-tight">
+                            Recibe avisos al firmar contratos o confirmar invitados
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const perm = await requestBrowserNotificationPermission();
+                          setBrowserPermission(perm);
+                        }}
+                        className="px-2.5 py-1.5 bg-[#C83460] hover:bg-[#a6264d] text-white text-[11px] font-bold rounded-lg transition shadow-2xs shrink-0 cursor-pointer"
+                      >
+                        Activar
+                      </button>
+                    </div>
+                  )}
+
+                  {browserPermission === 'granted' && (
+                    <div className="px-4 py-1.5 bg-[#F0FDF4] border-b border-[#DCFCE7] flex items-center justify-between text-[11px] text-[#166534]">
+                      <span className="flex items-center gap-1 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse" />
+                        Alertas de escritorio activas
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sendBrowserNotification('¡Prueba de Notificación Lazo Studio! ✨', {
+                            body: 'Tus alertas en pantalla están funcionando al 100%. Te avisaremos aquí en tiempo real.',
+                            tag: 'lazo-test-notif'
+                          });
+                        }}
+                        className="text-[10px] font-semibold text-[#C83460] hover:underline cursor-pointer"
+                      >
+                        Probar alerta
+                      </button>
+                    </div>
+                  )}
+
+                  {browserPermission === 'denied' && (
+                    <div className="px-4 py-1.5 bg-[#FFFBEB] border-b border-[#FEF3C7] text-[10px] text-[#92400E]">
+                      ⚠️ Notificaciones bloqueadas en tu navegador. Puedes habilitarlas en el candado de la barra de direcciones.
+                    </div>
+                  )}
                   <div className="max-h-72 overflow-y-auto divide-y divide-[#F7F3EE]">
                     {notifications.length === 0 ? (
                       <div className="p-5 text-center text-sm text-[#7D6F6B]">

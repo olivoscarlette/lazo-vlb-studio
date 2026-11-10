@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { User, Wedding, NotificationItem, UserRole } from '../types';
 import { WorkspaceTab } from '../components/Sidebar';
+import { sendBrowserNotification } from '../utils/browserNotifications';
 
 export interface AppRoute {
   type: 'wedding' | 'dashboard';
@@ -279,6 +280,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const knownNotifIdsRef = useRef<Set<string>>(new Set());
+  const isInitialNotifFetchRef = useRef<boolean>(true);
+
   const fetchNotifications = async () => {
     if (!token) return;
     try {
@@ -287,12 +291,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data.notifications || []);
+        const incoming: NotificationItem[] = data.notifications || [];
+        setNotifications(incoming);
+
+        // Disparar notificación nativa de navegador para nuevas alertas
+        if (!isInitialNotifFetchRef.current) {
+          incoming.forEach(n => {
+            if (!n.read && !knownNotifIdsRef.current.has(n.id)) {
+              sendBrowserNotification(n.title, {
+                body: n.message,
+                link: n.link,
+                tag: n.id
+              });
+            }
+          });
+        }
+
+        // Registrar IDs conocidos
+        incoming.forEach(n => knownNotifIdsRef.current.add(n.id));
+        isInitialNotifFetchRef.current = false;
       }
     } catch (err) {
       console.error('Error fetching notifications:', err);
     }
   };
+
+  // Sondeo periódico en segundo plano para recibir alertas nativas de escritorio (cada 20s)
+  useEffect(() => {
+    if (!token) return;
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [token]);
 
   // Browser Back / Forward button handler (popstate event)
   useEffect(() => {

@@ -68,6 +68,25 @@ async function sendFinalEventCardAndInvitation(guest: any, weddingId: string, ph
     previewUrl: true
   });
 
+  // Notificación en pantalla a coordinadoras y novios
+  try {
+    const notifId = 'notif_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+    const now = new Date().toISOString();
+    db.prepare(`
+      INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at)
+      VALUES (?, ?, NULL, ?, ?, 0, ?, ?)
+    `).run(
+      notifId,
+      weddingId,
+      '¡Confirmación RSVP! 🎉',
+      `${guest.first_name} ${guest.last_name || ''} confirmó ${places} ${places === 1 ? 'pase' : 'pases'} para ${coupleNames}.`,
+      `/boda/${weddingId}/invitados`,
+      now
+    );
+  } catch (notifErr) {
+    console.warn('Could not insert rsvp notification:', notifErr);
+  }
+
   // If PDF invitation is configured, send the PDF document directly to WhatsApp
   if (wedding.invitation_type === 'PDF' && wedding.invitation_pdf_url) {
     const appUrl = process.env.APP_URL || 'https://lazo-vlb.up.railway.app';
