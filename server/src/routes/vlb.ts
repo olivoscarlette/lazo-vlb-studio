@@ -45,13 +45,13 @@ const uploadCatalogImage = multer({
   storage: catalogImageStorage,
   limits: { fileSize: 20 * 1024 * 1024 }, // 20MB limit
   fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|webp|gif|avif/i;
+    const allowed = /jpeg|jpg|png|webp|gif|avif|heic|heif/i;
     const extname = allowed.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowed.test(file.mimetype) || file.mimetype.startsWith('image/');
+    const mimetype = allowed.test(file.mimetype) || file.mimetype.startsWith('image/') || file.mimetype === 'application/octet-stream';
     if (extname || mimetype) {
       return cb(null, true);
     }
-    cb(new Error('Solo se permiten archivos de imagen (JPG, PNG, WEBP, GIF).'));
+    cb(new Error('Solo se permiten archivos de imagen (JPG, PNG, WEBP, GIF, HEIC).'));
   }
 });
 

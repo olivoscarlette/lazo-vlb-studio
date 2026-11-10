@@ -5,6 +5,7 @@ import {
   X, Camera, Lock, User as UserIcon, Phone, Mail,
   Check, AlertCircle, Eye, EyeOff, ShieldCheck, Trash2
 } from 'lucide-react';
+import { convertHeicToJpeg } from '../utils/heicConverter';
 
 interface UserProfileModalProps {
   isOpen: boolean;
@@ -60,13 +61,15 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ isOpen, onCl
 
   if (!isOpen || !user) return null;
 
-  // Compress & crop image to 300x300 for sharp, lightweight avatar
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Compress & crop image to 300x300 for sharp, lightweight avatar (con soporte HEIC para iPhone)
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
+
+    const file = await convertHeicToJpeg(rawFile);
 
     if (!file.type.startsWith('image/')) {
-      setError('Por favor selecciona un archivo de imagen válido (PNG, JPG, WebP).');
+      setError('Por favor selecciona un archivo de imagen válido (PNG, JPG, WebP, HEIC).');
       return;
     }
 

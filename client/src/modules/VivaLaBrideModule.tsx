@@ -55,6 +55,7 @@ import {
 } from '../types/vlb';
 import { generateVlbQuotePdf, buildVlbQuotePdf, standardizeEventTime, time12To24, time24To12 } from '../utils/vlbPdfGenerator';
 import { VlbTimePicker } from '../components/VlbTimePicker';
+import { convertHeicToJpeg } from '../utils/heicConverter';
 
 interface VivaLaBrideModuleProps {
   onBackToLazo?: () => void;
@@ -519,23 +520,28 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   };
 
   const handleUploadCatalogImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      setCatalogImageError('Por favor selecciona un archivo de imagen válido (JPG, PNG, WEBP, etc.)');
-      return;
-    }
-
-    if (file.size > 20 * 1024 * 1024) {
-      setCatalogImageError('La imagen excede el límite de 20MB.');
-      return;
-    }
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
 
     setUploadingCatalogImage(true);
     setCatalogImageError(null);
 
     try {
+      // Si la foto fue tomada con iPhone (.heic/.heif), convertirla automáticamente a JPEG de alta fidelidad
+      const file = await convertHeicToJpeg(rawFile);
+
+      if (!file.type.startsWith('image/') && !file.name.match(/\.(jpg|jpeg|png|webp|gif|avif|heic|heif)$/i)) {
+        setCatalogImageError('Por favor selecciona un archivo de imagen válido (JPG, PNG, WEBP, HEIC, etc.)');
+        setUploadingCatalogImage(false);
+        return;
+      }
+
+      if (file.size > 25 * 1024 * 1024) {
+        setCatalogImageError('La imagen excede el límite de 25MB.');
+        setUploadingCatalogImage(false);
+        return;
+      }
+
       const fd = new FormData();
       fd.append('image', file);
 
@@ -556,7 +562,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         ...prev,
         image_url: data.imageUrl
       }));
-      showToast('Foto cargada exitosamente.');
+      showToast(rawFile.name.toLowerCase().endsWith('.heic') ? 'Foto de iPhone (HEIC) optimizada y cargada con éxito ✨' : 'Foto cargada exitosamente.');
     } catch (err: any) {
       setCatalogImageError(err.message || 'Error al subir la imagen');
       showToast(err.message || 'Error al subir la imagen', 'error');
@@ -1279,8 +1285,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     if (!selectedOrder || !selectedFile) return;
 
     try {
+      const fileToSend = await convertHeicToJpeg(selectedFile);
       const formData = new FormData();
-      formData.append('file', selectedFile);
+      formData.append('file', fileToSend);
       formData.append('category', docUploadCategory);
       formData.append('notes', docUploadNotes);
 
@@ -3672,7 +3679,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 <input
                   type="file"
                   required
-                  accept=".pdf,.png,.jpg,.jpeg"
+                  accept=".pdf,.png,.jpg,.jpeg,.webp,.heic,.heif"
                   onChange={e => setSelectedFile(e.target.files?.[0] || null)}
                   className="w-full text-xs text-[#7D6F6B] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-[#9C665C] file:text-[#FFFFFF] hover:file:bg-[#8A574E] cursor-pointer"
                 />
@@ -4047,12 +4054,12 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   )}
                 </label>
 
-                {/* Hidden File Input para seleccionar desde la laptop */}
+                {/* Hidden File Input para seleccionar desde la laptop o iPhone */}
                 <input
                   type="file"
                   ref={catalogImageInputRef}
                   onChange={handleUploadCatalogImage}
-                  accept="image/png,image/jpeg,image/jpg,image/webp,image/gif"
+                  accept="image/*,.heic,.heif,image/heic,image/heif"
                   className="hidden"
                 />
 
