@@ -101,10 +101,26 @@ export function sendBrowserNotification(
       playNotificationChime();
     }
 
+    const iconUrl = typeof window !== 'undefined'
+      ? `${window.location.origin}/pwa-192x192.png`
+      : undefined;
+
+    // Disparar evento para banner visual flotante dentro de LAZO
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lazo-inapp-notification', {
+        detail: {
+          title,
+          body: options?.body,
+          link: options?.link,
+          tag: options?.tag
+        }
+      }));
+    }
+
     const notif = new Notification(title, {
       body: options?.body,
-      icon: '/pwa-192x192.png',
-      badge: '/pwa-192x192.png',
+      icon: iconUrl,
+      badge: iconUrl,
       tag: options?.tag,
       renotify: Boolean(options?.tag)
     });

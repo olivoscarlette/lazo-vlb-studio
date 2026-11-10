@@ -23,7 +23,7 @@ import { CalendarioModule } from './modules/CalendarioModule';
 import { VivaLaBrideModule } from './modules/VivaLaBrideModule';
 import { PublicProposalView } from './modules/PublicProposalView';
 import {
-  Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff, Sparkles
+  Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff, Sparkles, BellRing, X
 } from 'lucide-react';
 
 const LoginView: React.FC = () => {
@@ -627,6 +627,26 @@ const AppContent: React.FC = () => {
     return true;
   });
 
+  const [activeToast, setActiveToast] = useState<{ title: string; body?: string; link?: string; tag?: string } | null>(null);
+
+  useEffect(() => {
+    let timer: any;
+    const handleInAppNotif = (e: any) => {
+      const detail = e.detail;
+      setActiveToast(detail);
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        setActiveToast(null);
+      }, 7000);
+    };
+
+    window.addEventListener('lazo-inapp-notification', handleInAppNotif);
+    return () => {
+      window.removeEventListener('lazo-inapp-notification', handleInAppNotif);
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
   const handleToggleSidebar = () => {
     setSidebarOpen(prev => {
       const next = !prev;
@@ -674,31 +694,67 @@ const AppContent: React.FC = () => {
     return <LoginView />;
   }
 
-  // Active Global Platform Switch: STRICTLY EXCLUSIVE TO ADMINISTRADOR
-  if (user?.role === 'ADMINISTRADOR' && activeModule === 'vlb') {
-    return (
-      <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
-        <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
-        <div className="flex-1 bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-          <VivaLaBrideModule onBackToLazo={() => {
-            setActiveModule('lazo');
-            setCurrentWedding(null);
-            setGeneralDashboardTab('weddings');
-          }} />
-        </div>
-      </div>
-    );
-  }
-
-  if (user.role !== 'NOVIOS' && !currentWedding) {
-    return <GeneralDashboard />;
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
-      <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
-      <MainWorkspace sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-    </div>
+    <>
+      {user?.role === 'ADMINISTRADOR' && activeModule === 'vlb' ? (
+        <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
+          <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
+          <div className="flex-1 bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+            <VivaLaBrideModule onBackToLazo={() => {
+              setActiveModule('lazo');
+              setCurrentWedding(null);
+              setGeneralDashboardTab('weddings');
+            }} />
+          </div>
+        </div>
+      ) : user.role !== 'NOVIOS' && !currentWedding ? (
+        <GeneralDashboard />
+      ) : (
+        <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
+          <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
+          <MainWorkspace sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        </div>
+      )}
+
+      {/* Luxury In-App Floating Toast Notification */}
+      {activeToast && (
+        <div className="fixed top-5 right-5 z-[9999] max-w-sm w-full bg-[#FFFFFF] border border-[#EAD2D0] rounded-2xl shadow-2xl p-4 animate-in slide-in-from-top-3 duration-300 pointer-events-auto">
+          <div className="flex items-start justify-between gap-3">
+            <div className="p-2.5 bg-[#C83460]/10 text-[#C83460] rounded-xl shrink-0 mt-0.5">
+              <BellRing className="w-5 h-5 text-[#C83460] animate-pulse" />
+            </div>
+            <div
+              className="flex-1 min-w-0 cursor-pointer"
+              onClick={() => {
+                if (activeToast.link) {
+                  window.location.href = activeToast.link;
+                }
+                setActiveToast(null);
+              }}
+            >
+              <div className="font-serif text-sm font-bold text-[#332A28]">
+                {activeToast.title}
+              </div>
+              <div className="text-xs text-[#7D6F6B] mt-1 leading-snug line-clamp-3">
+                {activeToast.body}
+              </div>
+              {activeToast.link && (
+                <div className="text-[11px] font-semibold text-[#C83460] mt-2 flex items-center gap-1 hover:underline">
+                  Ver detalles en LAZO ➔
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setActiveToast(null)}
+              className="text-[#7D6F6B] hover:text-[#332A28] p-1 rounded-full cursor-pointer shrink-0"
+              title="Cerrar"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
