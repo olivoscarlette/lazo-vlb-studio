@@ -6,7 +6,7 @@ import {
   Plus, Calendar, MapPin, Users2, ArrowRight, Sparkles,
   Building2, Search, AlertCircle, Shield, Settings,
   Database, History, Download, Upload, Trash2, CheckCircle2, Edit3,
-  FileSpreadsheet, RefreshCw, Save, X, MessageSquare, Bell, LogOut,
+  FileSpreadsheet, RefreshCw, Save, X, MessageSquare, Bell, BellRing, LogOut,
   FileText, LayoutGrid, PanelLeftClose, PanelLeft, ChevronDown,
   Users, Phone, Mail, ExternalLink, Laptop, Heart, ArrowUpRight, UserCheck
 } from 'lucide-react';
@@ -14,6 +14,11 @@ import { WhatsAppHubModule } from './WhatsAppHubModule';
 import { CalendarioModule } from './CalendarioModule';
 import { UserProfileModal } from '../components/UserProfileModal';
 import { VivaLaBrideModule } from './VivaLaBrideModule';
+import {
+  getBrowserNotificationPermission,
+  requestBrowserNotificationPermission,
+  sendBrowserNotification
+} from '../utils/browserNotifications';
 
 export const GeneralDashboard: React.FC = () => {
   const { user, token, setCurrentWedding, logout, notifications, refreshNotifications, generalDashboardTab, setGeneralDashboardTab, activeModule, setActiveModule } = useAuth();
@@ -21,6 +26,13 @@ export const GeneralDashboard: React.FC = () => {
   const setActiveTab = (t: string) => setGeneralDashboardTab(t);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [browserPermission, setBrowserPermission] = useState<'granted' | 'denied' | 'default' | 'unsupported'>(getBrowserNotificationPermission());
+
+  useEffect(() => {
+    if (showNotifMenu) {
+      setBrowserPermission(getBrowserNotificationPermission());
+    }
+  }, [showNotifMenu]);
 
   // Collapsable sidebar state (persisted)
   const [sidebarOpen, setSidebarOpen] = useState(() => {
@@ -1533,6 +1545,64 @@ export const GeneralDashboard: React.FC = () => {
                       </span>
                     )}
                   </div>
+
+                  {/* Banner de Activación de Notificaciones de Escritorio (Web Push) */}
+                  {browserPermission === 'default' && (
+                    <div className="mx-3 my-2 p-2.5 bg-gradient-to-r from-[#FAF6F2] to-[#FBF4F3] border border-[#EAD2D0] rounded-xl flex items-center justify-between gap-2 shadow-2xs">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <div className="p-1.5 bg-[#C83460]/10 text-[#C83460] rounded-lg shrink-0">
+                          <BellRing className="w-3.5 h-3.5 text-[#C83460]" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[11px] font-bold text-[#332A28] truncate">
+                            Alertas en tu pantalla
+                          </div>
+                          <div className="text-[9px] text-[#7D6F6B] leading-tight">
+                            Avisos al firmar o confirmar
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const perm = await requestBrowserNotificationPermission();
+                          setBrowserPermission(perm);
+                        }}
+                        className="px-2 py-1 bg-[#C83460] hover:bg-[#a6264d] text-white text-[10px] font-bold rounded-lg transition shadow-2xs shrink-0 cursor-pointer"
+                      >
+                        Activar
+                      </button>
+                    </div>
+                  )}
+
+                  {browserPermission === 'granted' && (
+                    <div className="px-3 py-1.5 bg-[#F0FDF4] border-b border-[#DCFCE7] flex items-center justify-between text-[10px] text-[#166534]">
+                      <span className="flex items-center gap-1 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse" />
+                        Alertas activas
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          sendBrowserNotification('¡Prueba de Notificación Lazo Studio! ✨', {
+                            body: 'Tus alertas en pantalla están funcionando al 100%. Te avisaremos aquí en tiempo real.',
+                            tag: 'lazo-test-notif'
+                          });
+                        }}
+                        className="font-semibold text-[#C83460] hover:underline cursor-pointer"
+                      >
+                        Probar alerta
+                      </button>
+                    </div>
+                  )}
+
+                  {browserPermission === 'denied' && (
+                    <div className="px-3 py-1.5 bg-[#FFFBEB] border-b border-[#FEF3C7] text-[10px] text-[#92400E]">
+                      ⚠️ Notificaciones bloqueadas en navegador. Habilítalas en el candado 🔒.
+                    </div>
+                  )}
                   <div className="max-h-72 overflow-y-auto divide-y divide-[#F2ECE7]">
                     {notifications.length === 0 ? (
                       <div className="p-4 text-center text-xs text-[#7D6F6B]">
@@ -1674,6 +1744,22 @@ export const GeneralDashboard: React.FC = () => {
                     <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#6E8C70] border-2 border-[#FAF7F5]" title="En línea" />
                   </div>
 
+                  {/* Botón rápido en barra superior para activar alertas de escritorio */}
+                  {browserPermission === 'default' && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const perm = await requestBrowserNotificationPermission();
+                        setBrowserPermission(perm);
+                      }}
+                      className="hidden md:inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-[#FBEFF2] hover:bg-[#F7E2E7] text-[#C83460] border border-[#F2D2DA] transition shadow-2xs cursor-pointer"
+                      title="Activar notificaciones de escritorio en tu pantalla"
+                    >
+                      <BellRing className="w-3.5 h-3.5 text-[#C83460] animate-bounce" />
+                      <span>Activar Notificaciones</span>
+                    </button>
+                  )}
+
                   {/* Campana de Notificaciones Escritorio */}
                   <div className="relative">
                     <button
@@ -1697,6 +1783,64 @@ export const GeneralDashboard: React.FC = () => {
                             </span>
                           )}
                         </div>
+
+                        {/* Banner de Activación de Notificaciones de Escritorio (Web Push) */}
+                        {browserPermission === 'default' && (
+                          <div className="mx-3 my-2 p-3 bg-gradient-to-r from-[#FAF6F2] to-[#FBF4F3] border border-[#EAD2D0] rounded-xl flex items-center justify-between gap-2 shadow-2xs">
+                            <div className="flex items-center space-x-2.5 min-w-0">
+                              <div className="p-2 bg-[#C83460]/10 text-[#C83460] rounded-lg shrink-0">
+                                <BellRing className="w-4 h-4 text-[#C83460]" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-xs font-bold text-[#332A28] truncate">
+                                  Alertas en tu pantalla
+                                </div>
+                                <div className="text-[10px] text-[#7D6F6B] leading-tight">
+                                  Recibe avisos al firmar contratos o confirmar invitados
+                                </div>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                const perm = await requestBrowserNotificationPermission();
+                                setBrowserPermission(perm);
+                              }}
+                              className="px-2.5 py-1.5 bg-[#C83460] hover:bg-[#a6264d] text-white text-[11px] font-bold rounded-lg transition shadow-2xs shrink-0 cursor-pointer"
+                            >
+                              Activar
+                            </button>
+                          </div>
+                        )}
+
+                        {browserPermission === 'granted' && (
+                          <div className="px-4 py-1.5 bg-[#F0FDF4] border-b border-[#DCFCE7] flex items-center justify-between text-[11px] text-[#166534]">
+                            <span className="flex items-center gap-1 font-medium">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#16A34A] animate-pulse" />
+                              Alertas de escritorio activas
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                sendBrowserNotification('¡Prueba de Notificación Lazo Studio! ✨', {
+                                  body: 'Tus alertas en pantalla están funcionando al 100%. Te avisaremos aquí en tiempo real.',
+                                  tag: 'lazo-test-notif'
+                                });
+                              }}
+                              className="text-[10px] font-semibold text-[#C83460] hover:underline cursor-pointer"
+                            >
+                              Probar alerta
+                            </button>
+                          </div>
+                        )}
+
+                        {browserPermission === 'denied' && (
+                          <div className="px-4 py-1.5 bg-[#FFFBEB] border-b border-[#FEF3C7] text-[10px] text-[#92400E]">
+                            ⚠️ Notificaciones bloqueadas en tu navegador. Puedes habilitarlas en el candado 🔒 de la barra de direcciones.
+                          </div>
+                        )}
                         <div className="max-h-72 overflow-y-auto divide-y divide-[#F2ECE7]">
                           {notifications.length === 0 ? (
                             <div className="p-5 text-center text-sm text-[#7D6F6B]">

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   Bell, BellRing, LogOut, ChevronDown, Building2,
@@ -38,6 +38,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [browserPermission, setBrowserPermission] = useState<'granted' | 'denied' | 'default' | 'unsupported'>(getBrowserNotificationPermission());
+
+  useEffect(() => {
+    if (showNotifMenu) {
+      setBrowserPermission(getBrowserNotificationPermission());
+    }
+  }, [showNotifMenu]);
 
   if (!user) return null;
 
