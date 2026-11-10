@@ -716,7 +716,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     try {
       const res = await apiFetch(`/api/vlb/quotes/${q.id}`);
       if (!res.ok) {
-        throw new Error('Error al cargar datos de la cotización.');
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.error || 'Error al cargar datos de la cotización.');
       }
       const data = await res.json();
       const quoteData: VlbQuote = data.quote || q;

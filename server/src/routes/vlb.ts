@@ -610,8 +610,8 @@ router.get('/quotes/:id', (req, res) => {
 
     // Buscar si ya tiene pedido asociado en el CRM con abonos / pagos registrados
     const order = db.prepare(`
-      SELECT * FROM vlb_orders WHERE quote_id = ? OR quote_number = ? ORDER BY created_at DESC LIMIT 1
-    `).get(quote.id, quote.quote_number) as any;
+      SELECT * FROM vlb_orders WHERE quote_id = ? ORDER BY created_at DESC LIMIT 1
+    `).get(quote.id) as any;
 
     let payments: any[] = [];
     if (order) {

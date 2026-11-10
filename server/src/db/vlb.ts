@@ -137,6 +137,9 @@ export function initVlbDatabase() {
     db.prepare('ALTER TABLE vlb_orders ADD COLUMN packing_list_json TEXT').run();
   } catch {}
   try {
+    db.prepare('ALTER TABLE vlb_orders ADD COLUMN quote_number TEXT').run();
+  } catch {}
+  try {
     db.prepare('ALTER TABLE vlb_quotes ADD COLUMN public_token TEXT').run();
   } catch {}
   try {
