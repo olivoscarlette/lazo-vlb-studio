@@ -3870,9 +3870,9 @@ export const GeneralDashboard: React.FC = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">Protección de Información</span>
-                <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">Copia de Seguridad de LAZO</h3>
+                <h3 className="font-serif text-xl font-bold text-stone-900 mt-0.5">Copia de Seguridad Integral (LAZO + Viva la Bride)</h3>
                 <p className="text-xs text-stone-500 mt-1">
-                  Descarga a tu computadora una copia de seguridad de todas tus bodas, invitados, mesas y pagos por tranquilidad, o carga una copia anterior si algún día lo necesitas.
+                  Descarga a tu computadora un respaldo completo de toda tu plataforma: bodas, invitados, mesas, pagos y presupuesto, así como tus cotizaciones, proyectos, documentos y catálogo de Viva la Bride.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-3">

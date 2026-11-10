@@ -1354,15 +1354,17 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     }
   };
 
-  // Filtered Catalog Items
-  const filteredCatalog = catalogItems.filter(item => {
-    const matchesCat = catalogCategoryFilter === 'ALL' || item.category === catalogCategoryFilter;
-    const matchesSearch = !catalogSearch.trim() ||
-      item.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
-      item.subcategory.toLowerCase().includes(catalogSearch.toLowerCase()) ||
-      item.description.toLowerCase().includes(catalogSearch.toLowerCase());
-    return matchesCat && matchesSearch;
-  });
+  // Filtered and Alphabetically Sorted Catalog Items by Product Name
+  const filteredCatalog = catalogItems
+    .filter(item => {
+      const matchesCat = catalogCategoryFilter === 'ALL' || item.category === catalogCategoryFilter;
+      const matchesSearch = !catalogSearch.trim() ||
+        item.name.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+        item.subcategory.toLowerCase().includes(catalogSearch.toLowerCase()) ||
+        item.description.toLowerCase().includes(catalogSearch.toLowerCase());
+      return matchesCat && matchesSearch;
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
 
   // Filtered Orders
   const filteredOrders = orders.filter(o => {

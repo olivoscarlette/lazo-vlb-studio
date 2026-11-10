@@ -400,7 +400,7 @@ router.get('/catalog', (req, res) => {
       params.push(term, term, term);
     }
 
-    query += ' ORDER BY category ASC, subcategory ASC, name ASC';
+    query += ' ORDER BY name COLLATE NOCASE ASC';
     const items = db.prepare(query).all(...params);
     res.json({ items });
   } catch (err: any) {

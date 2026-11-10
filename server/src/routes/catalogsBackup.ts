@@ -458,26 +458,35 @@ router.post('/catalogs/templates/import', authenticateToken, requireRole(['ADMIN
   });
 });
 
-// Admin Backup & Recovery Tool
+// Admin Backup & Recovery Tool (LAZO Planning + VIVA LA BRIDE Studio)
 function generateBackupPayload(userName: string) {
   const tables = [
     'users', 'weddings', 'wedding_assignments', 'tables', 'layout_elements',
     'layout_versions', 'guests', 'vendors', 'payments', 'civil_ceremony',
     'religious_ceremony', 'meetings', 'timeline_events', 'tasks',
-    'documents', 'audit_logs', 'notifications', 'catalogs'
+    'documents', 'audit_logs', 'notifications', 'catalogs',
+    // Colecciones de Viva la Bride (Catálogo, Cotizaciones, Pedidos, Documentos, etc.)
+    'vlb_catalog', 'vlb_quotes', 'vlb_quote_items', 'vlb_orders',
+    'vlb_payments', 'vlb_documents', 'vlb_tasks', 'vlb_task_templates',
+    'vlb_packing_items'
   ];
 
   const dump: Record<string, any[]> = {};
   for (const t of tables) {
-    dump[t] = db.prepare(`SELECT * FROM ${t}`).all();
+    try {
+      dump[t] = db.prepare(`SELECT * FROM ${t}`).all();
+    } catch {
+      dump[t] = [];
+    }
   }
 
   const backupMeta = {
-    app: 'LAZO - VLB Studio · Planning',
-    version: '1.0.0',
+    app: 'LAZO & VIVA LA BRIDE STUDIO · Respaldo Integral Completo',
+    version: '2.0.0',
     timestamp: new Date().toISOString(),
     created_by: userName,
-    total_records: Object.values(dump).reduce((acc, rows) => acc + rows.length, 0)
+    total_records: Object.values(dump).reduce((acc, rows) => acc + rows.length, 0),
+    modules: ['LAZO_PLANNING', 'VIVA_LA_BRIDE']
   };
 
   return {
@@ -546,7 +555,11 @@ router.post('/admin/restore', authenticateToken, requireRole(['ADMINISTRADOR']),
     'catalogs', 'users', 'weddings', 'wedding_assignments', 'tables', 'layout_elements',
     'layout_versions', 'guests', 'vendors', 'payments', 'civil_ceremony',
     'religious_ceremony', 'meetings', 'timeline_events', 'tasks',
-    'documents', 'audit_logs', 'notifications'
+    'documents', 'audit_logs', 'notifications',
+    // Viva la Bride Studio
+    'vlb_catalog', 'vlb_quotes', 'vlb_quote_items', 'vlb_orders',
+    'vlb_payments', 'vlb_documents', 'vlb_tasks', 'vlb_task_templates',
+    'vlb_packing_items'
   ];
 
   try {
