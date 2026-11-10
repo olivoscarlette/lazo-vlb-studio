@@ -158,6 +158,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const [showManualImageUrl, setShowManualImageUrl] = useState(false);
   const [viewingPhotoItem, setViewingPhotoItem] = useState<VlbCatalogItem | null>(null);
   const [catalogImageFit, setCatalogImageFit] = useState<'contain' | 'cover'>('contain');
+  const [isDraggingCatalogImage, setIsDraggingCatalogImage] = useState(false);
   const catalogImageInputRef = useRef<HTMLInputElement>(null);
 
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -519,8 +520,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     }
   };
 
-  const handleUploadCatalogImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rawFile = e.target.files?.[0];
+  const processCatalogImageFile = async (rawFile: File) => {
     if (!rawFile) return;
 
     setUploadingCatalogImage(true);
@@ -531,7 +531,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       const file = await convertHeicToJpeg(rawFile);
 
       if (!file.type.startsWith('image/') && !file.name.match(/\.(jpg|jpeg|png|webp|gif|avif|heic|heif)$/i)) {
-        setCatalogImageError('Por favor selecciona un archivo de imagen válido (JPG, PNG, WEBP, HEIC, etc.)');
+        setCatalogImageError('Por favor selecciona o arrastra un archivo de imagen válido (JPG, PNG, WEBP, HEIC, etc.)');
         setUploadingCatalogImage(false);
         return;
       }
@@ -568,8 +568,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       showToast(err.message || 'Error al subir la imagen', 'error');
     } finally {
       setUploadingCatalogImage(false);
-      if (e.target) e.target.value = '';
     }
+  };
+
+  const handleUploadCatalogImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawFile = e.target.files?.[0];
+    if (rawFile) {
+      await processCatalogImageFile(rawFile);
+    }
+    if (e.target) e.target.value = '';
   };
 
   const handleAddItemToQuote = (item: VlbCatalogItem) => {
@@ -4069,110 +4076,158 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   className="hidden"
                 />
 
-                {catalogForm.image_url ? (
-                  /* Vista previa de la foto actual */
-                  <div className="p-3 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center gap-3.5">
+                {/* Contenedor Dropzone con soporte de Arrastrar y Soltar */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingCatalogImage(true);
+                  }}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingCatalogImage(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingCatalogImage(false);
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingCatalogImage(false);
+                    const droppedFile = e.dataTransfer.files?.[0];
+                    if (droppedFile) {
+                      await processCatalogImageFile(droppedFile);
+                    }
+                  }}
+                >
+                  {catalogForm.image_url ? (
+                    /* Vista previa de la foto actual (también permite arrastrar una nueva encima) */
+                    <div className={`p-3 bg-[#FCFAF7] rounded-2xl border transition flex items-center gap-3.5 ${
+                      isDraggingCatalogImage
+                        ? 'border-[#9C665C] bg-[#F7EDEB] ring-2 ring-[#9C665C]/30'
+                        : 'border-[#EAE3DA]'
+                    }`}>
+                      <div
+                        onClick={() => {
+                          if (catalogForm.image_url) {
+                            setViewingPhotoItem({
+                              id: 'preview',
+                              category: catalogForm.category,
+                              subcategory: catalogForm.subcategory,
+                              name: catalogForm.name || 'Vista Previa de Foto',
+                              description: catalogForm.description || '',
+                              pricing_type: catalogForm.pricing_type,
+                              base_price: catalogForm.base_price || 0,
+                              min_pieces: catalogForm.min_pieces || 1,
+                              specs_json: '{}',
+                              image_url: catalogForm.image_url,
+                              is_active: 1,
+                              created_at: '',
+                              updated_at: ''
+                            });
+                          }
+                        }}
+                        className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-[#EAE3DA] shrink-0 relative group cursor-pointer"
+                        title="Ver foto en tamaño completo"
+                      >
+                        <img
+                          src={catalogForm.image_url}
+                          alt="Preview"
+                          className="w-full h-full object-contain p-1"
+                        />
+                        <div className="absolute inset-0 bg-[#1F1917]/25 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                          <ZoomIn className="w-4 h-4 text-white" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <p className="text-xs font-semibold text-[#332A28] truncate">
+                          {isDraggingCatalogImage ? '¡Suelta la nueva imagen para reemplazarla!' : 'Imagen cargada'}
+                        </p>
+                        <p className="text-[11px] text-[#7D6F6B] truncate">
+                          {isDraggingCatalogImage ? 'Reemplazará la foto actual' : catalogForm.image_url.startsWith('/uploads') ? 'Subida desde tu dispositivo' : catalogForm.image_url}
+                        </p>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => catalogImageInputRef.current?.click()}
+                            disabled={uploadingCatalogImage}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#9C665C] bg-[#F7EDEB] hover:bg-[#F2E1DD] rounded-xl transition cursor-pointer"
+                          >
+                            {uploadingCatalogImage ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                <span>Subiendo...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="w-3 h-3" />
+                                <span>Cambiar o arrastrar foto</span>
+                              </>
+                            )}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setCatalogForm({ ...catalogForm, image_url: '' })}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F6ECE8] rounded-xl transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>Quitar</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Botón / Dropzone para arrastrar o hacer clic */
                     <div
-                      onClick={() => {
-                        if (catalogForm.image_url) {
-                          setViewingPhotoItem({
-                            id: 'preview',
-                            category: catalogForm.category,
-                            subcategory: catalogForm.subcategory,
-                            name: catalogForm.name || 'Vista Previa de Foto',
-                            description: catalogForm.description || '',
-                            pricing_type: catalogForm.pricing_type,
-                            base_price: catalogForm.base_price || 0,
-                            min_pieces: catalogForm.min_pieces || 1,
-                            specs_json: '{}',
-                            image_url: catalogForm.image_url,
-                            is_active: 1,
-                            created_at: '',
-                            updated_at: ''
-                          });
-                        }
-                      }}
-                      className="w-20 h-20 rounded-xl overflow-hidden bg-white border border-[#EAE3DA] shrink-0 relative group cursor-pointer"
-                      title="Ver foto en tamaño completo"
+                      onClick={() => catalogImageInputRef.current?.click()}
+                      className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
+                        isDraggingCatalogImage
+                          ? 'border-[#9C665C] bg-[#F7EDEB] ring-4 ring-[#9C665C]/20 scale-[1.01]'
+                          : uploadingCatalogImage
+                          ? 'border-[#B88A82] bg-[#FAF5F2]'
+                          : 'border-[#EAE3DA] bg-[#FCFAF7] hover:bg-[#FAF6F2] hover:border-[#B88A82]'
+                      }`}
                     >
-                      <img
-                        src={catalogForm.image_url}
-                        alt="Preview"
-                        className="w-full h-full object-contain p-1"
-                      />
-                      <div className="absolute inset-0 bg-[#1F1917]/25 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-                        <ZoomIn className="w-4 h-4 text-white" />
-                      </div>
+                      {uploadingCatalogImage ? (
+                        <>
+                          <Loader2 className="w-7 h-7 text-[#9C665C] animate-spin" />
+                          <span className="text-xs font-semibold text-[#9C665C]">Optimizando y subiendo foto...</span>
+                        </>
+                      ) : isDraggingCatalogImage ? (
+                        <>
+                          <div className="w-12 h-12 rounded-2xl bg-[#9C665C] text-[#FFFFFF] flex items-center justify-center animate-bounce shadow-md">
+                            <Upload className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-[#9C665C]">
+                              ¡Suelta tu imagen aquí!
+                            </p>
+                            <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                              Se cargará automáticamente
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-11 h-11 rounded-2xl bg-[#F7EDEB] text-[#9C665C] flex items-center justify-center">
+                            <Upload className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-[#332A28]">
+                              Arrastra una foto aquí o haz clic para seleccionarla
+                            </p>
+                            <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                              Formatos JPG, PNG, WEBP, HEIC o GIF (hasta 25MB)
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <p className="text-xs font-semibold text-[#332A28] truncate">
-                        Imagen cargada
-                      </p>
-                      <p className="text-[11px] text-[#7D6F6B] truncate">
-                        {catalogForm.image_url.startsWith('/uploads') ? 'Subida desde tu laptop' : catalogForm.image_url}
-                      </p>
-                      <div className="flex items-center gap-2 pt-0.5">
-                        <button
-                          type="button"
-                          onClick={() => catalogImageInputRef.current?.click()}
-                          disabled={uploadingCatalogImage}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#9C665C] bg-[#F7EDEB] hover:bg-[#F2E1DD] rounded-xl transition cursor-pointer"
-                        >
-                          {uploadingCatalogImage ? (
-                            <>
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              <span>Subiendo...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Upload className="w-3 h-3" />
-                              <span>Cambiar foto</span>
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setCatalogForm({ ...catalogForm, image_url: '' })}
-                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F6ECE8] rounded-xl transition cursor-pointer"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span>Quitar</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  /* Botón / Dropzone para subir desde la laptop */
-                  <div
-                    onClick={() => catalogImageInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-2xl p-5 text-center transition cursor-pointer flex flex-col items-center justify-center gap-2 ${
-                      uploadingCatalogImage
-                        ? 'border-[#B88A82] bg-[#FAF5F2]'
-                        : 'border-[#EAE3DA] bg-[#FCFAF7] hover:bg-[#FAF6F2] hover:border-[#B88A82]'
-                    }`}
-                  >
-                    {uploadingCatalogImage ? (
-                      <>
-                        <Loader2 className="w-7 h-7 text-[#9C665C] animate-spin" />
-                        <span className="text-xs font-semibold text-[#9C665C]">Subiendo foto desde tu laptop...</span>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-11 h-11 rounded-2xl bg-[#F7EDEB] text-[#9C665C] flex items-center justify-center">
-                          <Upload className="w-5 h-5" />
-                        </div>
-                        <div>
-                          <p className="text-xs font-bold text-[#332A28]">
-                            Haz clic aquí para subir una foto desde tu laptop
-                          </p>
-                          <p className="text-[11px] text-[#7D6F6B] mt-0.5">
-                            Formatos JPG, PNG, WEBP o GIF (hasta 20MB)
-                          </p>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {catalogImageError && (
                   <p className="text-xs text-[#70443D] mt-1 flex items-center gap-1 font-semibold">
