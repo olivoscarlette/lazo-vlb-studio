@@ -143,8 +143,8 @@ if (!fs.existsSync(floorplansDir)) {
 }
 
 // Interceptar archivos HEIC/HEIF de iPhone y servirlos convertidos automáticamente a JPEG
-app.get('/uploads/*', async (req, res, next) => {
-  const reqPath = (req.params as any)[0] || '';
+app.use('/uploads', async (req, res, next) => {
+  const reqPath = decodeURIComponent(req.path || '');
   if (reqPath.toLowerCase().endsWith('.heic') || reqPath.toLowerCase().endsWith('.heif')) {
     const filePath = path.join(uploadsDir, reqPath);
     const jpgPath = filePath.replace(/\.(heic|heif)$/i, '.jpg');
