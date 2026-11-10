@@ -364,6 +364,12 @@ export function initDatabase() {
   }
 
   try {
+    db.exec('ALTER TABLE notifications ADD COLUMN creator_id TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
     db.exec("ALTER TABLE religious_ceremony ADD COLUMN requirements_status TEXT DEFAULT '[]';");
   } catch {
     // Column already exists

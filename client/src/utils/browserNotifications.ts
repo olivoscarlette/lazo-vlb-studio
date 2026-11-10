@@ -103,8 +103,8 @@ export function sendBrowserNotification(
 
     const notif = new Notification(title, {
       body: options?.body,
-      icon: '/favicon.ico',
-      badge: '/favicon.ico',
+      icon: '/pwa-192x192.png',
+      badge: '/pwa-192x192.png',
       tag: options?.tag,
       renotify: Boolean(options?.tag)
     });

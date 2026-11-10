@@ -298,6 +298,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (!isInitialNotifFetchRef.current) {
           incoming.forEach(n => {
             if (!n.read && !knownNotifIdsRef.current.has(n.id)) {
+              if ((n as any).creator_id && user && (n as any).creator_id === user.id) {
+                return;
+              }
               sendBrowserNotification(n.title, {
                 body: n.message,
                 link: n.link,
@@ -316,12 +319,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Sondeo periódico en segundo plano para recibir alertas nativas de escritorio (cada 20s)
+  // Sondeo periódico en segundo plano para recibir alertas nativas de escritorio (cada 10s)
   useEffect(() => {
     if (!token) return;
     const interval = setInterval(() => {
       fetchNotifications();
-    }, 20000);
+    }, 10000);
     return () => clearInterval(interval);
   }, [token]);
 

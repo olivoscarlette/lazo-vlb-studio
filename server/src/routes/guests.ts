@@ -399,6 +399,25 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
 
   logAudit(weddingId, user.id, user.name, 'ACTUALIZAR_INVITADO', 'GUEST', guestId, `Actualización de ${newFirstName} ${newLastName} (Prioridad: ${newPriority}, Estatus: ${newStatus}, Mesa: ${newTableId || 'Ninguna'})`);
 
+  if (newStatus !== guest.status) {
+    const notifId = 'notif_' + Date.now();
+    const wedding = db.prepare('SELECT name FROM weddings WHERE id = ?').get(weddingId) as any;
+    const weddingName = wedding?.name ? ` en "${wedding.name}"` : '';
+    try {
+      db.prepare(`
+        INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at, creator_id)
+        VALUES (?, ?, NULL, ?, ?, 0, ?, ?, ?)
+      `).run(
+        notifId, weddingId,
+        'Actualización de RSVP',
+        `${user.name} actualizó la asistencia de ${newFirstName} ${newLastName} a: "${newStatus}" (${newConfirmedPlaces} pase(s))${weddingName}.`,
+        `/weddings/${weddingId}/invitados`,
+        now,
+        user.id
+      );
+    } catch {}
+  }
+
   return res.json({
     message: 'Invitado actualizado correctamente.',
     guest: {

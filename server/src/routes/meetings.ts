@@ -8,7 +8,7 @@ const router = Router();
 router.get('/:weddingId/meetings', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
 
-  const wedding = db.prepare('SELECT package_type FROM weddings WHERE id = ?').get(weddingId) as any;
+  const wedding = db.prepare('SELECT name, package_type FROM weddings WHERE id = ?').get(weddingId) as any;
   const packageType = wedding?.package_type || 'Integral';
   const isVirtual = packageType.toLowerCase().includes('virtual') || packageType.toLowerCase().includes('autónomo');
 
@@ -76,7 +76,7 @@ router.post('/:weddingId/meetings', authenticateToken, requireWeddingAccess, (re
   const user = req.user!;
   const { title, date, time, participants, notes, meet_url, force_conflict } = req.body;
 
-  const wedding = db.prepare('SELECT package_type FROM weddings WHERE id = ?').get(weddingId) as any;
+  const wedding = db.prepare('SELECT name, package_type FROM weddings WHERE id = ?').get(weddingId) as any;
   const packageType = wedding?.package_type || '';
   const isVirtual = packageType.toLowerCase().includes('virtual') || packageType.toLowerCase().includes('autónomo');
 
@@ -145,18 +145,33 @@ router.post('/:weddingId/meetings', authenticateToken, requireWeddingAccess, (re
     user.name, now, now
   );
 
-  // If requested by Novios, notify team
+  // Generar notificación para el equipo y novios
+  const notifId = 'notif_' + Date.now();
+  const weddingName = wedding?.name ? ` en "${wedding.name}"` : '';
+
   if (user.role === 'NOVIOS') {
-    const notifId = 'notif_' + Date.now();
     db.prepare(`
-      INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at)
-      VALUES (?, ?, NULL, ?, ?, 0, ?, ?)
+      INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at, creator_id)
+      VALUES (?, ?, NULL, ?, ?, 0, ?, ?, ?)
     `).run(
       notifId, weddingId,
       'Nueva Solicitud de Reunión',
-      `Los novios han solicitado una reunión: "${title}" para el ${date} a las ${time}. Se requieren 2 aceptaciones del equipo para confirmarla.`,
+      `Los novios (${user.name}) han solicitado una reunión: "${title.trim()}" para el ${date} a las ${time} hrs${weddingName}.`,
       `/weddings/${weddingId}/meetings`,
-      now
+      now,
+      user.id
+    );
+  } else {
+    db.prepare(`
+      INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at, creator_id)
+      VALUES (?, ?, NULL, ?, ?, 0, ?, ?, ?)
+    `).run(
+      notifId, weddingId,
+      'Nueva Reunión Agendada',
+      `${user.name} agendó una nueva reunión: "${title.trim()}" para el ${date} a las ${time} hrs${weddingName}.`,
+      `/weddings/${weddingId}/meetings`,
+      now,
+      user.id
     );
   }
 
@@ -216,27 +231,29 @@ router.put('/:weddingId/meetings/:meetingId', authenticateToken, requireWeddingA
       finalStatus = 'PROGRAMADA';
       const notifId = 'notif_' + Date.now();
       db.prepare(`
-        INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at)
-        VALUES (?, ?, NULL, ?, ?, 0, ?, ?)
+        INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at, creator_id)
+        VALUES (?, ?, NULL, ?, ?, 0, ?, ?, ?)
       `).run(
         notifId, weddingId,
         'Horario de Reunión Confirmado (2/2)',
         `La reunión "${meeting.title}" ha sido aceptada y confirmada con 2 aprobaciones de planeación (${acceptedList.map((a: any) => a.userName).join(', ')}).`,
         `/weddings/${weddingId}/meetings`,
-        now
+        now,
+        user.id
       );
     } else {
       // 1 approval recorded, waiting for second
       const notifId = 'notif_' + Date.now();
       db.prepare(`
-        INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at)
-        VALUES (?, ?, NULL, ?, ?, 0, ?, ?)
+        INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at, creator_id)
+        VALUES (?, ?, NULL, ?, ?, 0, ?, ?, ?)
       `).run(
         notifId, weddingId,
         'Aceptación de Horario (1/2)',
         `${user.name} ha aceptado el horario de la reunión "${meeting.title}". Se requiere 1 aprobación adicional para programarla oficialmente.`,
         `/weddings/${weddingId}/meetings`,
-        now
+        now,
+        user.id
       );
     }
   }
@@ -247,14 +264,15 @@ router.put('/:weddingId/meetings/:meetingId', authenticateToken, requireWeddingA
     acceptedList = []; // reset acceptances for new proposal
     const notifId = 'notif_' + Date.now();
     db.prepare(`
-      INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at)
-      VALUES (?, ?, NULL, ?, ?, 0, ?, ?)
+      INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at, creator_id)
+      VALUES (?, ?, NULL, ?, ?, 0, ?, ?, ?)
     `).run(
       notifId, weddingId,
       'Opciones de Horario Alternativo',
       `El equipo VLB propuso 2 opciones de horario para la reunión "${meeting.title}". Por favor selecciona tu preferida.`,
       `/weddings/${weddingId}/meetings`,
-      now
+      now,
+      user.id
     );
   }
 
@@ -294,6 +312,32 @@ router.put('/:weddingId/meetings/:meetingId', authenticateToken, requireWeddingA
     meetingId,
     weddingId
   );
+
+  // Notificar al equipo si se actualizaron detalles de la reunión
+  if (action !== 'ACCEPT_HORARIO' && (!proposed_slots || !proposed_slots.length)) {
+    const notifId = 'notif_' + Date.now();
+    const wedding = db.prepare('SELECT name FROM weddings WHERE id = ?').get(weddingId) as any;
+    const weddingName = wedding?.name ? ` en "${wedding.name}"` : '';
+
+    let modSummary = `${user.name} actualizó los detalles de la reunión "${meeting.title}"${weddingName}.`;
+    if (finalDate !== meeting.date || finalTime !== meeting.time) {
+      modSummary = `Cambio de horario: "${meeting.title}" reagendada al ${finalDate} a las ${finalTime} hrs por ${user.name}${weddingName}.`;
+    } else if (finalStatus !== meeting.status) {
+      modSummary = `Estatus de reunión: "${meeting.title}" cambió a "${finalStatus}" por ${user.name}${weddingName}.`;
+    }
+
+    db.prepare(`
+      INSERT INTO notifications (id, wedding_id, user_id, title, message, read, link, created_at, creator_id)
+      VALUES (?, ?, NULL, ?, ?, 0, ?, ?, ?)
+    `).run(
+      notifId, weddingId,
+      'Reunión Modificada',
+      modSummary,
+      `/weddings/${weddingId}/meetings`,
+      now,
+      user.id
+    );
+  }
 
   logAudit(weddingId, user.id, user.name, 'ACTUALIZAR_REUNION', 'MEETING', meetingId, `Actualización de reunión ${meeting.title} (${finalStatus})`);
 
