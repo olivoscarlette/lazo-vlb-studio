@@ -82,6 +82,20 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const [newTemplateTime, setNewTemplateTime] = useState<string>('');
   const [newTemplateNotes, setNewTemplateNotes] = useState<string>('');
 
+  // Editing state for Task Templates
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [editingTemplateForm, setEditingTemplateForm] = useState<{
+    title: string;
+    days_before_event: number;
+    default_time: string;
+    notes: string;
+  }>({
+    title: '',
+    days_before_event: 7,
+    default_time: '',
+    notes: ''
+  });
+
   // Loading & Feedback
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -298,6 +312,41 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       showToast('Actividad agregada a la plantilla maestra.');
       setNewTemplateTitle('');
       setNewTemplateNotes('');
+      loadTaskTemplates();
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    }
+  };
+
+  const startEditTemplate = (t: any) => {
+    setEditingTemplateId(t.id);
+    setEditingTemplateForm({
+      title: t.title,
+      days_before_event: Number(t.days_before_event) || 0,
+      default_time: t.default_time || '',
+      notes: t.notes || ''
+    });
+  };
+
+  const handleSaveEditTemplate = async (id: string) => {
+    if (!editingTemplateForm.title.trim()) {
+      showToast('Ingresa el título de la actividad.', 'error');
+      return;
+    }
+    try {
+      const res = await apiFetch(`/api/vlb/task-templates/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editingTemplateForm.title.trim(),
+          days_before_event: editingTemplateForm.days_before_event,
+          default_time: editingTemplateForm.default_time,
+          notes: editingTemplateForm.notes.trim()
+        })
+      });
+      if (!res.ok) throw new Error('Error al actualizar actividad maestra.');
+      showToast('Actividad maestra actualizada con éxito.');
+      setEditingTemplateId(null);
       loadTaskTemplates();
     } catch (err: any) {
       showToast(err.message, 'error');
@@ -2743,40 +2792,133 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               {taskTemplates
                 .filter(t => t.category === templateFilterCategory)
                 .map((t, idx) => (
-                  <div
-                    key={t.id}
-                    className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0 flex-1">
-                      <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="font-bold text-[#332A28] text-sm block">
-                          {t.title}
-                        </span>
-                        {t.notes && (
-                          <span className="text-[11px] text-[#7D6F6B] block">
-                            {t.notes}
-                          </span>
-                        )}
+                  editingTemplateId === t.id ? (
+                    <div
+                      key={t.id}
+                      className="p-4 bg-[#FFFFFF] rounded-2xl border-2 border-[#9C665C] shadow-sm space-y-3"
+                    >
+                      <div className="flex items-center justify-between text-xs font-bold text-[#9C665C]">
+                        <span>Editar Actividad Maestra #{idx + 1}</span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingTemplateId(null)}
+                          className="text-[#7D6F6B] hover:text-[#332A28] p-1 cursor-pointer"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div className="sm:col-span-2">
+                          <label className="text-[10px] font-bold text-[#7D6F6B] block mb-1">
+                            Título de la actividad *
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={editingTemplateForm.title}
+                            onChange={e => setEditingTemplateForm({ ...editingTemplateForm, title: e.target.value })}
+                            className="w-full px-3 py-2 text-xs bg-[#FAF7F5] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] focus:bg-[#FFFFFF]"
+                            placeholder="Nombre de la actividad..."
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-bold text-[#7D6F6B] block mb-1">
+                            Días antes & Hora sugerida
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              min={0}
+                              value={editingTemplateForm.days_before_event}
+                              onChange={e => setEditingTemplateForm({ ...editingTemplateForm, days_before_event: parseInt(e.target.value, 10) || 0 })}
+                              className="w-full px-3 py-2 text-xs bg-[#FAF7F5] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                              placeholder="Días"
+                            />
+                            <input
+                              type="time"
+                              value={editingTemplateForm.default_time}
+                              onChange={e => setEditingTemplateForm({ ...editingTemplateForm, default_time: e.target.value })}
+                              className="w-28 px-2 py-2 text-xs bg-[#FAF7F5] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-bold text-[#7D6F6B] block mb-1">
+                          Notas u observaciones
+                        </label>
+                        <input
+                          type="text"
+                          value={editingTemplateForm.notes}
+                          onChange={e => setEditingTemplateForm({ ...editingTemplateForm, notes: e.target.value })}
+                          className="w-full px-3 py-2 text-xs bg-[#FAF7F5] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] focus:bg-[#FFFFFF]"
+                          placeholder="Notas opcionales..."
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-end space-x-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditingTemplateId(null)}
+                          className="px-3 py-1.5 rounded-xl border border-[#EAE3DA] text-[#7D6F6B] hover:bg-[#FAF7F5] text-xs font-semibold transition cursor-pointer"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveEditTemplate(t.id)}
+                          className="px-4 py-1.5 rounded-xl bg-[#9C665C] hover:bg-[#854E45] text-white text-xs font-bold transition shadow-xs cursor-pointer flex items-center space-x-1"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Guardar Cambios</span>
+                        </button>
                       </div>
                     </div>
+                  ) : (
+                    <div
+                      key={t.id}
+                      className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] flex items-center justify-between gap-3 text-xs hover:border-[#DACFC3] transition"
+                    >
+                      <div className="flex items-center space-x-3 min-w-0 flex-1">
+                        <span className="w-6 h-6 rounded-full bg-[#FFFFFF] border border-[#EAE3DA] font-bold text-[#9C665C] flex items-center justify-center shrink-0 text-xs">
+                          {idx + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <span className="font-bold text-[#332A28] text-sm block">
+                            {t.title}
+                          </span>
+                          {t.notes && (
+                            <span className="text-[11px] text-[#7D6F6B] block">
+                              {t.notes}
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                    <div className="flex items-center space-x-2 shrink-0">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
-                        {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
-                        {t.default_time ? ` (${t.default_time})` : ''}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteMasterTemplate(t.id)}
-                        className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
-                        title="Eliminar de la plantilla maestra"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center space-x-2 shrink-0">
+                        <span className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] text-[#9C665C] border border-[#EAE3DA] font-bold text-xs">
+                          {t.days_before_event === 0 ? 'Día del Evento' : `${t.days_before_event} días antes`}
+                          {t.default_time ? ` (${t.default_time})` : ''}
+                        </span>
+                        <button
+                          onClick={() => startEditTemplate(t)}
+                          className="p-1.5 text-[#7D6F6B] hover:text-[#9C665C] hover:bg-[#FAF6F2] rounded-lg transition cursor-pointer"
+                          title="Editar actividad maestra"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMasterTemplate(t.id)}
+                          className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                          title="Eliminar de la plantilla maestra"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )
                 ))}
             </div>
 

@@ -1420,6 +1420,34 @@ router.put('/task-templates', (req, res) => {
   }
 });
 
+// PUT /api/vlb/task-templates/:id - Actualizar una actividad maestra
+router.put('/task-templates/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, days_before_event, default_time, notes, category } = req.body;
+    const existing = db.prepare('SELECT * FROM vlb_task_templates WHERE id = ?').get(id) as any;
+    if (!existing) {
+      return res.status(404).json({ error: 'Actividad maestra no encontrada.' });
+    }
+    const finalTitle = title !== undefined ? title.trim() : existing.title;
+    const finalDays = days_before_event !== undefined ? (Number(days_before_event) || 0) : existing.days_before_event;
+    const finalTime = default_time !== undefined ? default_time : existing.default_time;
+    const finalNotes = notes !== undefined ? notes.trim() : existing.notes;
+    const finalCat = category !== undefined ? category : existing.category;
+
+    db.prepare(`
+      UPDATE vlb_task_templates
+      SET title = ?, days_before_event = ?, default_time = ?, notes = ?, category = ?
+      WHERE id = ?
+    `).run(finalTitle, finalDays, finalTime, finalNotes, finalCat, id);
+
+    const template = db.prepare('SELECT * FROM vlb_task_templates WHERE id = ?').get(id);
+    res.json({ template, message: 'Actividad maestra actualizada.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/vlb/task-templates/:id - Eliminar actividad maestra
 router.delete('/task-templates/:id', (req, res) => {
   try {
