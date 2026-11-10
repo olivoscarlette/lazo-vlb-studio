@@ -84,10 +84,73 @@ export const InvitadosModule: React.FC = () => {
   const [chatError, setChatError] = useState<string | null>(null);
   const [loadingChat, setLoadingChat] = useState(false);
 
-  // Permiso para WhatsApp: Administradores, Coordinadores o Bodas con Add-on RSVP WhatsApp activo
-  const canSendWhatsApp = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR' || Boolean(currentWedding?.has_whatsapp_rsvp);
+  // Roles y Permisos de Envío RSVP
+  const isCoordinator = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR';
+  const isNovios = user?.role === 'NOVIOS';
+  const isVirtual = !currentWedding?.package_type || currentWedding.package_type.toLowerCase().includes('virtual') || currentWedding.package_type.toLowerCase().includes('autónomo');
+  const allowNoviosSend = currentWedding?.allow_novios_rsvp !== undefined && currentWedding?.allow_novios_rsvp !== null
+    ? Boolean(currentWedding.allow_novios_rsvp)
+    : isVirtual;
+
+  // Envíos oficiales vía API Cloud de Viva la Bride (Exclusivo Coordinadoras con add-on activo)
+  const canSendOfficialWhatsApp = isCoordinator && Boolean(currentWedding?.has_whatsapp_rsvp);
+
+  // Envíos de novios desde su WhatsApp personal (uno por uno en Planner Virtual o si está expresamente permitido)
+  const canNoviosSendPersonal = isNovios && allowNoviosSend;
+
+  // Si la boda es con coordinación contratada y los novios no tienen permiso de enviar (coordinadora a cargo)
+  const isCoordinationManagedForNovios = isNovios && !allowNoviosSend;
+
+  // Mostrar columna de RSVP en la tabla
+  const canShowWhatsappColumn = canSendOfficialWhatsApp || canNoviosSendPersonal || isCoordinationManagedForNovios;
+  const canSendWhatsApp = canSendOfficialWhatsApp;
+
   const isSendingBlocked = Boolean(currentWedding?.whatsapp_sending_blocked);
   const [togglingLock, setTogglingLock] = useState(false);
+
+  // Enviar invitación desde el WhatsApp Personal de los Novios (Planner Virtual)
+  const handleSendPersonalWhatsapp = async (guest: Guest) => {
+    if (!guest.phone || guest.phone.replace(/[\s\-\(\)\+]/g, '').length < 10) {
+      alert('Este invitado no tiene un teléfono válido registrado.');
+      return;
+    }
+
+    let cleanPhone = guest.phone.replace(/[\s\-\(\)\+]/g, '');
+    if (cleanPhone.length === 10) {
+      cleanPhone = `52${cleanPhone}`;
+    }
+
+    const coupleNames = currentWedding
+      ? (currentWedding.partner_1_name && currentWedding.partner_2_name
+          ? `${currentWedding.partner_1_name} & ${currentWedding.partner_2_name}`
+          : currentWedding.name)
+      : 'Nosotros';
+
+    const totalSeats = 1 + (guest.companion_count || 0);
+    const seatsText = totalSeats === 1 ? '1 pase personal' : `${totalSeats} pases`;
+
+    let invitationLinkText = '';
+    if (currentWedding?.invitation_type === 'PDF' && currentWedding?.invitation_pdf_url) {
+      invitationLinkText = `\n📄 Puedes ver tu invitación digital aquí: ${window.location.origin}${currentWedding.invitation_pdf_url}`;
+    } else if (currentWedding?.invitation_url) {
+      invitationLinkText = `\n💌 Puedes ver nuestra invitación aquí: ${currentWedding.invitation_url}`;
+    }
+
+    const messageText = `¡Hola ${guest.first_name}! ✨ Te compartimos con mucha ilusión nuestra invitación formal para nuestra boda (${coupleNames}). 💍\n\nHemos reservado con mucho cariño ${seatsText} para ti.${invitationLinkText}\n\nPor favor ayúdanos confirmando tu asistencia respondiéndonos por este medio. ¡Esperamos celebrar contigo este gran día! 🤍`;
+
+    const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(messageText)}`;
+    window.open(waUrl, '_blank');
+
+    try {
+      await fetch(`/api/weddings/${currentWedding!.id}/guests/${guest.id}/mark-sent-personal`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setGuests(prev => prev.map(g => g.id === guest.id ? { ...g, whatsapp_status: 'ENVIADO', last_whatsapp_sent_at: new Date().toISOString() } : g));
+    } catch (e) {
+      console.warn('Could not mark personal send in background:', e);
+    }
+  };
 
   // Vaciar lista de invitados (Exclusivo Administrador)
   const [showDeleteAllModal, setShowDeleteAllModal] = useState(false);
@@ -1231,8 +1294,8 @@ export const InvitadosModule: React.FC = () => {
             </button>
           )}
 
-          {/* Botón de Envío Masivo WhatsApp */}
-          {canSendWhatsApp && (
+          {/* Botón de Envío Masivo WhatsApp Oficial (Exclusivo Coordinadoras) */}
+          {canSendOfficialWhatsApp && (
             <button
               onClick={handleSendBulkWhatsapp}
               disabled={bulkSendingWhatsapp || isSendingBlocked}
@@ -1258,8 +1321,30 @@ export const InvitadosModule: React.FC = () => {
             </button>
           )}
 
-          {/* Botón enviar invitación para Planner Virtual / Novios Externos (Modo Deshabilitado/Upgrade a Lazo Studio) */}
-          {!canSendWhatsApp && (
+          {/* Estado Informativo para Novios con Coordinación Contratada */}
+          {isCoordinationManagedForNovios && (
+            <div
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#FAF8F5] text-[#7D6F6B] text-xs font-semibold rounded-xl border border-[#EFE8E1]"
+              title="Tu coordinadora de Viva la Bride gestiona el envío oficial de confirmaciones de tu evento"
+            >
+              <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>RSVP gestionado por tu Coordinadora</span>
+            </div>
+          )}
+
+          {/* Estado Informativo para Novios en Planner Virtual (Envíos personales) */}
+          {canNoviosSendPersonal && (
+            <div
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F0FDF4] text-[#166534] text-xs font-semibold rounded-xl border border-[#BBF7D0]"
+              title="Envía tus invitaciones uno por uno desde tu WhatsApp personal con el botón verde de cada invitado"
+            >
+              <MessageSquare className="w-3.5 h-3.5 text-[#16A34A]" />
+              <span>Envíos desde tu WhatsApp Personal</span>
+            </div>
+          )}
+
+          {/* Botón de información/upgrade para cuentas sin servicio RSVP */}
+          {!canSendOfficialWhatsApp && !canNoviosSendPersonal && !isCoordinationManagedForNovios && (
             <button
               type="button"
               onClick={() => setShowLazoInvitationUpgradeModal(true)}
@@ -1562,8 +1647,10 @@ export const InvitadosModule: React.FC = () => {
                 <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">
                   {isCivilDifferentDay && eventTarget === 'civil' ? 'ESTATUS CIVIL' : 'ESTATUS'}
                 </th>
-                {canSendWhatsApp && (
-                  <th className="py-3.5 px-4 text-center whitespace-nowrap">RSVP WHATSAPP</th>
+                {canShowWhatsappColumn && (
+                  <th className="py-3.5 px-4 text-center whitespace-nowrap">
+                    {isCoordinationManagedForNovios ? 'RSVP COORDINACIÓN' : 'RSVP WHATSAPP'}
+                  </th>
                 )}
                 <th className="py-3.5 px-4 whitespace-nowrap">MESA</th>
                 <th className="py-3.5 px-4 whitespace-nowrap">OBSERVACIONES</th>
@@ -1572,13 +1659,13 @@ export const InvitadosModule: React.FC = () => {
             <tbody className="divide-y divide-[#EFEAE2]">
               {loading ? (
                 <tr>
-                  <td colSpan={canSendWhatsApp ? 7 : 6} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#786C68]">
                     Cargando invitados...
                   </td>
                 </tr>
               ) : guests.length === 0 ? (
                 <tr>
-                  <td colSpan={canSendWhatsApp ? 7 : 6} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#786C68]">
                     No se encontraron invitados con los filtros actuales.
                   </td>
                 </tr>
@@ -1690,60 +1777,109 @@ export const InvitadosModule: React.FC = () => {
                       </div>
                     </td>
 
-                    {/* RSVP WhatsApp Action & Status — Only visible for ADMINISTRADOR & COORDINADOR */}
-                    {canSendWhatsApp && (
+                    {/* RSVP WhatsApp Action & Status */}
+                    {canShowWhatsappColumn && (
                       <td className="py-3 px-4 text-center whitespace-nowrap">
-                        {sendingWhatsappIds[guest.id] ? (
-                          <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-[#A86B60] bg-[#F7EDEB] rounded-lg border border-[#ECD9D5]">
-                            <Loader2 className="w-3 h-3 animate-spin text-[#C48B81]" />
-                            <span>Enviando...</span>
-                          </span>
-                        ) : guest.whatsapp_status === 'ENVIADO' ? (
-                          <div className="inline-flex items-center space-x-1.5">
-                            <button
-                              type="button"
-                              onClick={() => handleOpenGuestChat(guest)}
-                              className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-[#A86B60] bg-[#F7EDEB] rounded-lg border border-[#ECD9D5] hover:bg-[#EEDAD6] transition shadow-2xs cursor-pointer"
-                              title="Abrir conversación para chatear y responderle al invitado"
-                            >
-                              <MessageSquare className="w-3 h-3 text-[#C48B81]" />
-                              <span>Conversación</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleSendSingleWhatsapp(guest)}
-                              className="p-1 text-stone-400 hover:text-emerald-700 transition cursor-pointer"
-                              title={`Reenviar plantilla RSVP inicial (Último envío: ${guest.last_whatsapp_sent_at ? new Date(guest.last_whatsapp_sent_at).toLocaleDateString() : 'hoy'})`}
-                            >
+                        {isCoordinationManagedForNovios ? (
+                          // MODO NOVIOS CON COORDINACIÓN: Solo lectura informativa, sin disparadores
+                          guest.whatsapp_status === 'ENVIADO' ? (
+                            <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 rounded-lg border border-emerald-200" title={`Enviado por tu coordinadora ${guest.last_whatsapp_sent_at ? `el ${new Date(guest.last_whatsapp_sent_at).toLocaleDateString()}` : ''}`}>
                               <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              <span>Enviado por Coordinación</span>
+                            </span>
+                          ) : guest.whatsapp_status === 'ERROR' ? (
+                            <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-amber-800 bg-amber-50 rounded-lg border border-amber-200" title="Pendiente de revisión por tu coordinadora">
+                              <AlertCircle className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Revisión por Coordinadora</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-medium text-stone-500 bg-stone-100 rounded-lg border border-stone-200" title="Tu coordinadora se encarga de este envío oficial">
+                              <Lock className="w-3 h-3 text-stone-400" />
+                              <span>A cargo de Coordinadora</span>
+                            </span>
+                          )
+                        ) : canNoviosSendPersonal ? (
+                          // MODO NOVIOS EN PLANNER VIRTUAL: Envío directo desde su WhatsApp Personal
+                          guest.whatsapp_status === 'ENVIADO' ? (
+                            <div className="inline-flex items-center space-x-1.5">
+                              <span className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 rounded-lg border border-emerald-200">
+                                <Check className="w-3 h-3 text-emerald-600" />
+                                <span>Enviado</span>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleSendPersonalWhatsapp(guest)}
+                                className="p-1 text-[#786C68] hover:text-[#25D366] transition cursor-pointer"
+                                title={`Reenviar desde tu WhatsApp personal (Último envío: ${guest.last_whatsapp_sent_at ? new Date(guest.last_whatsapp_sent_at).toLocaleDateString() : 'hoy'})`}
+                              >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSendPersonalWhatsapp(guest)}
+                              className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-white bg-[#25D366] hover:bg-[#1EBE5D] rounded-lg transition shadow-2xs cursor-pointer"
+                              title="Abrir tu WhatsApp personal para enviar la invitación"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5 text-white" />
+                              <span>Enviar WhatsApp</span>
                             </button>
-                          </div>
-                        ) : guest.whatsapp_status === 'ERROR' ? (
-                          <button
-                            onClick={() => handleSendSingleWhatsapp(guest)}
-                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition"
-                            title="Reintentar envío"
-                          >
-                            <AlertCircle className="w-3 h-3 text-rose-600" />
-                            <span>Reintentar</span>
-                          </button>
-                        ) : isSendingBlocked ? (
-                          <span
-                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-stone-500 bg-stone-100 rounded-lg border border-stone-200 cursor-not-allowed"
-                            title="Envíos bloqueados (Modo Seguro activo)"
-                          >
-                            <Lock className="w-3 h-3 text-stone-400" />
-                            <span>Bloqueado</span>
-                          </span>
+                          )
                         ) : (
-                          <button
-                            onClick={() => handleSendSingleWhatsapp(guest)}
-                            className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-white bg-[#C48B81] hover:bg-[#A86B60] rounded-lg transition shadow-2xs"
-                            title="Enviar plantilla oficial de WhatsApp RSVP"
-                          >
-                            <Send className="w-3 h-3 text-white" />
-                            <span>Enviar RSVP</span>
-                          </button>
+                          // MODO COORDINADORAS (ADMIN / COORDINADOR): Envíos oficiales vía Cloud API
+                          sendingWhatsappIds[guest.id] ? (
+                            <span className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-[#A86B60] bg-[#F7EDEB] rounded-lg border border-[#ECD9D5]">
+                              <Loader2 className="w-3 h-3 animate-spin text-[#C48B81]" />
+                              <span>Enviando...</span>
+                            </span>
+                          ) : guest.whatsapp_status === 'ENVIADO' ? (
+                            <div className="inline-flex items-center space-x-1.5">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenGuestChat(guest)}
+                                className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-semibold text-[#A86B60] bg-[#F7EDEB] rounded-lg border border-[#ECD9D5] hover:bg-[#EEDAD6] transition shadow-2xs cursor-pointer"
+                                title="Abrir conversación para chatear y responderle al invitado"
+                              >
+                                <MessageSquare className="w-3 h-3 text-[#C48B81]" />
+                                <span>Conversación</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSendSingleWhatsapp(guest)}
+                                className="p-1 text-stone-400 hover:text-emerald-700 transition cursor-pointer"
+                                title={`Reenviar plantilla RSVP inicial (Último envío: ${guest.last_whatsapp_sent_at ? new Date(guest.last_whatsapp_sent_at).toLocaleDateString() : 'hoy'})`}
+                              >
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              </button>
+                            </div>
+                          ) : guest.whatsapp_status === 'ERROR' ? (
+                            <button
+                              onClick={() => handleSendSingleWhatsapp(guest)}
+                              className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-rose-800 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition"
+                              title="Reintentar envío"
+                            >
+                              <AlertCircle className="w-3 h-3 text-rose-600" />
+                              <span>Reintentar</span>
+                            </button>
+                          ) : isSendingBlocked ? (
+                            <span
+                              className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-stone-500 bg-stone-100 rounded-lg border border-stone-200 cursor-not-allowed"
+                              title="Envíos bloqueados (Modo Seguro activo)"
+                            >
+                              <Lock className="w-3 h-3 text-stone-400" />
+                              <span>Bloqueado</span>
+                            </span>
+                          ) : (
+                            <button
+                              onClick={() => handleSendSingleWhatsapp(guest)}
+                              className="inline-flex items-center space-x-1.5 px-2.5 py-1 text-[11px] font-semibold text-white bg-[#C48B81] hover:bg-[#A86B60] rounded-lg transition shadow-2xs"
+                              title="Enviar plantilla oficial de WhatsApp RSVP"
+                            >
+                              <Send className="w-3 h-3 text-white" />
+                              <span>Enviar RSVP</span>
+                            </button>
+                          )
                         )}
                       </td>
                     )}

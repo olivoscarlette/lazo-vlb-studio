@@ -63,6 +63,7 @@ export interface Wedding {
   has_whatsapp_rsvp?: number | boolean;
   has_layout_2d?: number | boolean;
   whatsapp_sending_blocked?: number | boolean;
+  allow_novios_rsvp?: number | boolean | null;
   updated_at?: string;
   team?: WeddingTeamMember[];
   stats?: WeddingStats;

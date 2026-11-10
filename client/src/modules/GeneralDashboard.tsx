@@ -167,6 +167,7 @@ export const GeneralDashboard: React.FC = () => {
     package_type: 'Integral',
     has_whatsapp_rsvp: false,
     has_layout_2d: false,
+    allow_novios_rsvp: null as boolean | null,
     notes: '',
     checklist_option: 'full' as 'full' | 'empty'
   });
@@ -189,6 +190,7 @@ export const GeneralDashboard: React.FC = () => {
     package_type: 'Integral',
     has_whatsapp_rsvp: false,
     has_layout_2d: false,
+    allow_novios_rsvp: null as boolean | null,
     status: 'PLANNING',
     notes: ''
   });
@@ -233,6 +235,7 @@ export const GeneralDashboard: React.FC = () => {
       package_type: w.package_type || 'Integral',
       has_whatsapp_rsvp: Boolean(w.has_whatsapp_rsvp),
       has_layout_2d: Boolean(w.has_layout_2d),
+      allow_novios_rsvp: w.allow_novios_rsvp !== undefined && w.allow_novios_rsvp !== null ? Boolean(w.allow_novios_rsvp) : null,
       status: w.status || 'PLANNING',
       notes: w.notes || ''
     });
@@ -4446,6 +4449,28 @@ export const GeneralDashboard: React.FC = () => {
                         className="mt-1 h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
                       />
                     </label>
+
+                    {/* Control de Envío RSVP para Novios */}
+                    <div className="sm:col-span-2 mt-1 p-2.5 rounded-xl border border-[#EFE8E1] bg-white">
+                      <div className="flex items-center justify-between">
+                        <div className="min-w-0 pr-3">
+                          <span className="text-xs font-semibold text-[#2B2826] block">
+                            Permitir a los novios enviar RSVP por WhatsApp
+                          </span>
+                          <span className="text-[10px] text-[#7D6F6B] leading-tight block mt-0.5">
+                            {formData.package_type === 'Planner Virtual'
+                              ? '✓ Activo: Los novios envían las invitaciones desde su WhatsApp personal (uno por uno).'
+                              : '🔒 Apagado recomendado para Coordinación: Solo la coordinadora envía y gestiona las confirmaciones.'}
+                          </span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={formData.allow_novios_rsvp !== null ? formData.allow_novios_rsvp : formData.package_type === 'Planner Virtual'}
+                          onChange={e => setFormData({ ...formData, allow_novios_rsvp: e.target.checked })}
+                          className="h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4832,6 +4857,28 @@ export const GeneralDashboard: React.FC = () => {
                           className="mt-1 h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
                         />
                       </label>
+
+                      {/* Control de Envío RSVP para Novios */}
+                      <div className="sm:col-span-2 mt-1 p-2.5 rounded-xl border border-[#EFE8E1] bg-white">
+                        <div className="flex items-center justify-between">
+                          <div className="min-w-0 pr-3">
+                            <span className="text-xs font-semibold text-[#2B2826] block">
+                              Permitir a los novios enviar RSVP por WhatsApp
+                            </span>
+                            <span className="text-[10px] text-[#7D6F6B] leading-tight block mt-0.5">
+                              {editFormData.package_type === 'Planner Virtual'
+                                ? '✓ Activo: Los novios envían las invitaciones desde su WhatsApp personal (uno por uno).'
+                                : '🔒 Apagado recomendado para Coordinación: Solo la coordinadora envía y gestiona las confirmaciones.'}
+                            </span>
+                          </div>
+                          <input
+                            type="checkbox"
+                            checked={editFormData.allow_novios_rsvp !== null ? editFormData.allow_novios_rsvp : editFormData.package_type === 'Planner Virtual'}
+                            onChange={e => setEditFormData({ ...editFormData, allow_novios_rsvp: e.target.checked })}
+                            className="h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

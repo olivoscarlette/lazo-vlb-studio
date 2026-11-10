@@ -716,8 +716,15 @@ router.post('/:weddingId/guests/:guestId/send-whatsapp', authenticateToken, requ
     if (wedding?.whatsapp_sending_blocked) {
       return res.status(403).json({ error: 'Los envíos de WhatsApp están bloqueados para esta boda (Modo Seguro activo). Desbloquea los envíos antes de enviar mensajes.' });
     }
-    if (req.user?.role === 'NOVIOS' && !wedding?.has_whatsapp_rsvp) {
-      return res.status(403).json({ error: 'El servicio de WhatsApp RSVP no está activo para esta boda. Contacta a tu coordinadora para activarlo.' });
+    if (req.user?.role === 'NOVIOS') {
+      const isVirtual = !wedding?.package_type || wedding.package_type.toLowerCase().includes('virtual') || wedding.package_type.toLowerCase().includes('autónomo');
+      const canNovios = wedding?.allow_novios_rsvp !== undefined && wedding?.allow_novios_rsvp !== null ? Boolean(wedding.allow_novios_rsvp) : isVirtual;
+      if (!canNovios) {
+        return res.status(403).json({ error: 'El envío de confirmaciones RSVP está a cargo de tu coordinadora de Viva la Bride.' });
+      }
+      if (!wedding?.has_whatsapp_rsvp) {
+        return res.status(403).json({ error: 'El servicio de WhatsApp RSVP oficial no está activo para esta boda.' });
+      }
     }
 
     const guest = db.prepare('SELECT * FROM guests WHERE id = ? AND wedding_id = ?').get(guestId, weddingId) as any;
@@ -795,8 +802,15 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
     if (wedding?.whatsapp_sending_blocked) {
       return res.status(403).json({ error: 'Los envíos de WhatsApp están bloqueados para esta boda (Modo Seguro activo). Desbloquea los envíos antes de enviar mensajes.' });
     }
-    if (req.user?.role === 'NOVIOS' && !wedding?.has_whatsapp_rsvp) {
-      return res.status(403).json({ error: 'El servicio de WhatsApp RSVP no está activo para esta boda. Contacta a tu coordinadora para activarlo.' });
+    if (req.user?.role === 'NOVIOS') {
+      const isVirtual = !wedding?.package_type || wedding.package_type.toLowerCase().includes('virtual') || wedding.package_type.toLowerCase().includes('autónomo');
+      const canNovios = wedding?.allow_novios_rsvp !== undefined && wedding?.allow_novios_rsvp !== null ? Boolean(wedding.allow_novios_rsvp) : isVirtual;
+      if (!canNovios) {
+        return res.status(403).json({ error: 'El envío de confirmaciones RSVP está a cargo de tu coordinadora de Viva la Bride.' });
+      }
+      if (!wedding?.has_whatsapp_rsvp) {
+        return res.status(403).json({ error: 'El servicio de WhatsApp RSVP oficial no está activo para esta boda.' });
+      }
     }
     let guestsToProcess: any[] = [];
     if (Array.isArray(guestIds) && guestIds.length > 0) {
@@ -869,6 +883,31 @@ router.post('/:weddingId/guests/send-whatsapp-bulk', authenticateToken, requireW
     });
   } catch (err: any) {
     return res.status(500).json({ error: 'Error del servidor en envío masivo: ' + err.message });
+  }
+});
+
+// POST /api/weddings/:weddingId/guests/:guestId/mark-sent-personal
+// Registra que la novia/novios abrieron y enviaron el WhatsApp personal a este invitado
+router.post('/:weddingId/guests/:guestId/mark-sent-personal', authenticateToken, requireWeddingAccess, async (req, res) => {
+  const { weddingId, guestId } = req.params;
+  try {
+    const guest = db.prepare('SELECT id, whatsapp_status FROM guests WHERE id = ? AND wedding_id = ?').get(guestId, weddingId) as any;
+    if (!guest) {
+      return res.status(404).json({ error: 'Invitado no encontrado.' });
+    }
+    const now = new Date().toISOString();
+    db.prepare(`
+      UPDATE guests
+      SET whatsapp_status = 'ENVIADO',
+          last_whatsapp_sent_at = ?,
+          rsvp_step = CASE WHEN rsvp_step = 'NONE' OR rsvp_step IS NULL THEN 'INVITATION_SENT' ELSE rsvp_step END,
+          updated_at = ?
+      WHERE id = ? AND wedding_id = ?
+    `).run(now, now, guestId, weddingId);
+
+    return res.json({ success: true, whatsapp_status: 'ENVIADO', last_whatsapp_sent_at: now });
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Error al actualizar estatus de envío personal: ' + err.message });
   }
 });
 
