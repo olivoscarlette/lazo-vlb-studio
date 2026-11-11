@@ -4783,9 +4783,9 @@ export const GeneralDashboard: React.FC = () => {
                             Permitir a los novios enviar RSVP por WhatsApp
                           </span>
                           <span className="text-[10px] text-[#7D6F6B] leading-tight block mt-0.5">
-                            {formData.package_type === 'Planner Virtual'
-                              ? '✓ Activo: Los novios envían las invitaciones desde su WhatsApp personal (uno por uno).'
-                              : '🔒 Apagado recomendado para Coordinación: Solo la coordinadora envía y gestiona las confirmaciones.'}
+                            {(formData.allow_novios_rsvp !== null ? formData.allow_novios_rsvp : formData.package_type === 'Planner Virtual')
+                              ? '✓ Novios autorizados: Los novios pueden ver botones y enviar mensajes desde su panel.'
+                              : '🔒 Exclusivo Coordinación & Admin: Solo la coordinadora y administradores envían y gestionan las confirmaciones (Recomendado).'}
                           </span>
                         </div>
                         <input
@@ -5191,9 +5191,9 @@ export const GeneralDashboard: React.FC = () => {
                               Permitir a los novios enviar RSVP por WhatsApp
                             </span>
                             <span className="text-[10px] text-[#7D6F6B] leading-tight block mt-0.5">
-                              {editFormData.package_type === 'Planner Virtual'
-                                ? '✓ Activo: Los novios envían las invitaciones desde su WhatsApp personal (uno por uno).'
-                                : '🔒 Apagado recomendado para Coordinación: Solo la coordinadora envía y gestiona las confirmaciones.'}
+                              {(editFormData.allow_novios_rsvp !== null ? editFormData.allow_novios_rsvp : editFormData.package_type === 'Planner Virtual')
+                                ? '✓ Novios autorizados: Los novios pueden ver botones y enviar mensajes desde su panel.'
+                                : '🔒 Exclusivo Coordinación & Admin: Solo la coordinadora y administradores envían y gestionan las confirmaciones (Recomendado).'}
                             </span>
                           </div>
                           <input
