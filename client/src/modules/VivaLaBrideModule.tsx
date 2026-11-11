@@ -55,7 +55,7 @@ import {
 } from '../types/vlb';
 import { generateVlbQuotePdf, buildVlbQuotePdf, standardizeEventTime, time12To24, time24To12 } from '../utils/vlbPdfGenerator';
 import { VlbTimePicker } from '../components/VlbTimePicker';
-import { convertHeicToJpeg } from '../utils/heicConverter';
+import { convertHeicToJpeg, optimizeImageFile } from '../utils/heicConverter';
 
 interface VivaLaBrideModuleProps {
   onBackToLazo?: () => void;
@@ -132,6 +132,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
   // Modals
   const [showCatalogModal, setShowCatalogModal] = useState(false);
+  const [savingCatalogItem, setSavingCatalogItem] = useState(false);
   const [editingCatalogItem, setEditingCatalogItem] = useState<VlbCatalogItem | null>(null);
   const [catalogForm, setCatalogForm] = useState<{
     category: VlbCategory;
@@ -207,8 +208,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   };
 
   // Load Initial Data
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = async (showFullSpinner = false) => {
+    if (showFullSpinner) setLoading(true);
     try {
       const [catRes, quotesRes, ordersRes, tplRes] = await Promise.all([
         apiFetch('/api/vlb/catalog'),
@@ -241,12 +242,12 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     } catch (err: any) {
       console.error('Error loading VLB data:', err);
     } finally {
-      setLoading(false);
+      if (showFullSpinner) setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(true);
   }, []);
 
   useEffect(() => {
@@ -484,6 +485,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   // ----------------------------------------
   const handleSaveCatalogItem = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (savingCatalogItem || uploadingCatalogImage) return;
+
+    setSavingCatalogItem(true);
     try {
       const url = editingCatalogItem ? `/api/vlb/catalog/${editingCatalogItem.id}` : '/api/vlb/catalog';
       const method = editingCatalogItem ? 'PUT' : 'POST';
@@ -502,9 +506,11 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       showToast(editingCatalogItem ? 'Artículo actualizado con éxito.' : 'Artículo añadido al catálogo.');
       setShowCatalogModal(false);
       setEditingCatalogItem(null);
-      loadData();
+      loadData(false);
     } catch (err: any) {
       showToast(err.message, 'error');
+    } finally {
+      setSavingCatalogItem(false);
     }
   };
 
@@ -514,7 +520,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       const res = await apiFetch(`/api/vlb/catalog/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Error al eliminar artículo.');
       showToast('Artículo eliminado.');
-      loadData();
+      loadData(false);
     } catch (err: any) {
       showToast(err.message, 'error');
     }
@@ -527,8 +533,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     setCatalogImageError(null);
 
     try {
-      // Si la foto fue tomada con iPhone (.heic/.heif), convertirla automáticamente a JPEG de alta fidelidad
-      const file = await convertHeicToJpeg(rawFile);
+      // Optimizar imagen: convertir HEIC si aplica y comprimir a dimensiones ligeras web
+      const file = await optimizeImageFile(rawFile);
 
       if (!file.type.startsWith('image/') && !file.name.match(/\.(jpg|jpeg|png|webp|gif|avif|heic|heif)$/i)) {
         setCatalogImageError('Por favor selecciona o arrastra un archivo de imagen válido (JPG, PNG, WEBP, HEIC, etc.)');
@@ -562,7 +568,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         ...prev,
         image_url: data.imageUrl
       }));
-      showToast(rawFile.name.toLowerCase().endsWith('.heic') ? 'Foto de iPhone (HEIC) optimizada y cargada con éxito ✨' : 'Foto cargada exitosamente.');
+      showToast('Foto cargada y optimizada exitosamente ✨');
     } catch (err: any) {
       setCatalogImageError(err.message || 'Error al subir la imagen');
       showToast(err.message || 'Error al subir la imagen', 'error');
@@ -4287,15 +4293,24 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   <button
                     type="button"
                     onClick={() => setShowCatalogModal(false)}
-                    className="px-4 py-2 text-xs font-semibold text-[#7D6F6B]"
+                    disabled={savingCatalogItem}
+                    className="px-4 py-2 text-xs font-semibold text-[#7D6F6B] disabled:opacity-50"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl shadow-xs transition"
+                    disabled={savingCatalogItem || uploadingCatalogImage}
+                    className="px-5 py-2.5 bg-[#9C665C] hover:bg-[#8A574E] text-[#FFFFFF] text-xs font-bold rounded-xl shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
-                    Guardar
+                    {savingCatalogItem ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Guardando...
+                      </>
+                    ) : (
+                      'Guardar'
+                    )}
                   </button>
                 </div>
               </div>
