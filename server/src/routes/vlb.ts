@@ -653,6 +653,7 @@ router.post('/quotes', (req, res) => {
       event_venue,
       discount = 0,
       down_payment_pct = 50,
+      contract_type = 'AUTO',
       notes,
       valid_until,
       items = []
@@ -711,8 +712,8 @@ router.post('/quotes', (req, res) => {
       INSERT INTO vlb_quotes (
         id, quote_number, client_name, partner_name, client_email, client_phone,
         event_date, event_time, event_venue, status, subtotal, discount, total,
-        down_payment_pct, down_payment_amount, balance_due, notes, valid_until, created_by, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        down_payment_pct, down_payment_amount, balance_due, contract_type, notes, valid_until, created_by, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       quote_number,
@@ -730,6 +731,7 @@ router.post('/quotes', (req, res) => {
       pct,
       down_payment_amount,
       balance_due,
+      contract_type || 'AUTO',
       notes || null,
       valid_until || null,
       created_by,
@@ -788,6 +790,7 @@ router.put('/quotes/:id', (req, res) => {
       status,
       discount = 0,
       down_payment_pct = 50,
+      contract_type,
       notes,
       valid_until,
       items
@@ -853,6 +856,7 @@ router.put('/quotes/:id', (req, res) => {
         down_payment_pct = ?,
         down_payment_amount = ?,
         balance_due = ?,
+        contract_type = COALESCE(?, contract_type),
         notes = COALESCE(?, notes),
         valid_until = COALESCE(?, valid_until),
         updated_at = ?
@@ -872,6 +876,7 @@ router.put('/quotes/:id', (req, res) => {
       pct,
       down_payment_amount,
       balance_due,
+      contract_type ?? null,
       notes ?? null,
       valid_until ?? null,
       now,

@@ -166,6 +166,9 @@ export function initVlbDatabase() {
   try {
     db.prepare('ALTER TABLE vlb_quotes ADD COLUMN event_time TEXT').run();
   } catch {}
+  try {
+    db.prepare("ALTER TABLE vlb_quotes ADD COLUMN contract_type TEXT DEFAULT 'AUTO'").run();
+  } catch {}
 
   // Corregir cotizaciones de servicios históricas para que el anticipo sea exactamente MIN(1000, total)
   try {

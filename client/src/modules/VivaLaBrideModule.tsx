@@ -53,7 +53,7 @@ import {
   VlbDocument,
   VlbTask
 } from '../types/vlb';
-import { generateVlbQuotePdf, buildVlbQuotePdf, standardizeEventTime, time12To24, time24To12 } from '../utils/vlbPdfGenerator';
+import { generateVlbQuotePdf, buildVlbQuotePdf, standardizeEventTime, time12To24, time24To12, VlbContractType, detectContractType } from '../utils/vlbPdfGenerator';
 import { VlbTimePicker } from '../components/VlbTimePicker';
 import { convertHeicToJpeg, optimizeImageFile } from '../utils/heicConverter';
 
@@ -65,6 +65,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   // Navigation Tabs: 'quotes' | 'orders' | 'packing' | 'templates' | 'catalog'
   const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog' | 'packing' | 'templates'>('quotes');
   const [quoteDiscountPct, setQuoteDiscountPct] = useState<number>(0);
+  const [selectedContractType, setSelectedContractType] = useState<VlbContractType>('AUTO');
 
   // Packing Checklist State (Día del Evento / Packing al Auto)
   const [selectedPackingOrderId, setSelectedPackingOrderId] = useState<string>('');
@@ -677,6 +678,20 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   }
   const quoteBalanceDue = Math.max(0, quoteTotal - quoteDownPayment);
 
+  const detectedContract = useMemo(() => {
+    return detectContractType(quoteItems, { quote_number: currentPreviewFolio } as any);
+  }, [quoteItems, currentPreviewFolio]);
+
+  const contractDisplayNames: Record<string, string> = {
+    AUTO: 'Automático',
+    SNACKS: 'Snacks, Favores & Cajas',
+    STANDS: 'Stands Decorativos & Ambientación',
+    MEMORIAL: 'Memorial Wall Conmemorativo',
+    DRINKS: 'Beer & Mimosa Stands',
+    PAPELERIA: 'Papelería Social Atelier',
+    COMBO: 'Atelier & Experiencias (Mixto)'
+  };
+
   const handleSaveQuote = async (status: 'BORRADOR' | 'ENVIADA' = 'BORRADOR') => {
     if (!quoteForm.client_name.trim()) {
       showToast('Por favor ingresa el nombre de la clienta o pareja.', 'error');
@@ -702,6 +717,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
           event_time: standardizeEventTime(quoteForm.event_time),
           quote_number: editingQuoteFolio || undefined,
           discount: quoteDiscountAmount,
+          contract_type: selectedContractType,
           down_payment_pct: quoteTotal > 0 ? Math.round((quoteDownPayment / quoteTotal) * 100) : 50,
           down_payment_amount: quoteDownPayment,
           balance_due: quoteBalanceDue,
@@ -754,6 +770,22 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       });
 
       setQuoteItems(quoteItemsData);
+
+      const qSub = Number(quoteData.subtotal) || quoteItemsData.reduce((acc, i) => acc + (i.total_price || 0), 0);
+      const qDisc = Number(quoteData.discount) || (qSub > Number(quoteData.total) ? qSub - Number(quoteData.total) : 0);
+      if (qSub > 0 && qDisc > 0) {
+        const pct = Math.round((qDisc / qSub) * 1000) / 10;
+        setQuoteDiscountPct(pct);
+      } else {
+        setQuoteDiscountPct(0);
+      }
+
+      if ((quoteData as any).contract_type) {
+        setSelectedContractType((quoteData as any).contract_type);
+      } else {
+        setSelectedContractType('AUTO');
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
       showToast(`Cargada cotización ${quoteData.quote_number} para edición.`);
     } catch (err: any) {
@@ -764,6 +796,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const handleCancelEditQuote = () => {
     setEditingQuoteId(null);
     setEditingQuoteFolio(null);
+    setQuoteDiscountPct(0);
+    setSelectedContractType('AUTO');
     setQuoteForm({
       client_name: '',
       partner_name: '',
@@ -803,7 +837,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       event_venue: quoteForm.event_venue,
       status: 'BORRADOR',
       subtotal: quoteSubtotal,
-      discount: Number(quoteForm.discount) || 0,
+      discount: quoteDiscountAmount,
       total: quoteTotal,
       down_payment_pct: Number(quoteForm.down_payment_pct) || 50,
       down_payment_amount: quoteDownPayment,
@@ -813,7 +847,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       updated_at: new Date().toISOString()
     };
 
-    await generateVlbQuotePdf(mockQuote, quoteItems);
+    const effectiveContract = selectedContractType === 'AUTO' ? detectedContract : selectedContractType;
+    await generateVlbQuotePdf(mockQuote, quoteItems, { contractType: effectiveContract });
     showToast('¡PDF Editorial descargado con éxito!');
   };
 
@@ -849,7 +884,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       await generateVlbQuotePdf({
         ...targetQuote,
         down_payment_amount: downPaymentRequired
-      }, targetItems);
+      }, targetItems, {
+        contractType: (targetQuote as any).contract_type
+      });
       showToast(`Cotización ${quote.quote_number} exportada a PDF.`);
     } catch (err: any) {
       showToast(err.message || 'Error al exportar cotización', 'error');
@@ -1005,7 +1042,13 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     };
 
     // Generar el archivo PDF en memoria
-    const { file, fileName } = await buildVlbQuotePdf(finalQuote, activeItems, { autoDownload: false });
+    const effectiveContract = isCurrent
+      ? (selectedContractType === 'AUTO' ? detectedContract : selectedContractType)
+      : (targetQuote as any)?.contract_type;
+    const { file, fileName } = await buildVlbQuotePdf(finalQuote, activeItems, {
+      autoDownload: false,
+      contractType: effectiveContract
+    });
 
     // Subir el PDF al servidor para link directo si la cotización ya existe en base de datos
     let pdfDirectUrl = '';
@@ -1798,6 +1841,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     />
                   </div>
 
+                  {quoteDiscountAmount > 0 && (
+                    <div className="flex justify-between items-center text-xs text-[#9C665C] bg-[#FAF6F2] px-3 py-2 rounded-xl border border-[#EAE3DA]">
+                      <span className="font-medium">Monto descontado ({quoteDiscountPct}%):</span>
+                      <span className="font-bold">
+                        -${quoteDiscountAmount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  )}
+
                   <div className="pt-3 border-t border-[#F7F3EE] flex justify-between items-baseline">
                     <span className="font-serif font-bold text-[#332A28] text-base">
                       Total Contratado:
@@ -1832,6 +1884,31 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                         </p>
                       )}
                     </div>
+                  </div>
+
+                  {/* Selector / Indicador de Modelo de Contrato */}
+                  <div className="pt-2 border-t border-[#F7F3EE] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-bold text-[#7D6F6B] uppercase tracking-wider">
+                        Contrato Digital (Pág. 2):
+                      </label>
+                      <span className="text-[10px] text-[#9C665C] font-semibold">
+                        {contractDisplayNames[selectedContractType === 'AUTO' ? detectedContract : selectedContractType]}
+                      </span>
+                    </div>
+                    <select
+                      value={selectedContractType}
+                      onChange={e => setSelectedContractType(e.target.value as any)}
+                      className="w-full px-2.5 py-1.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:ring-1 focus:ring-[#9C665C] cursor-pointer"
+                    >
+                      <option value="AUTO">✨ Automático según artículos ({contractDisplayNames[detectedContract]})</option>
+                      <option value="SNACKS">🍿 Snacks, Favores & Cajas de Agradecimiento</option>
+                      <option value="STANDS">🖼️ Stands Decorativos, Backdrops & Seating Charts</option>
+                      <option value="MEMORIAL">🕯️ Memorial Wall & Homenaje Conmemorativo</option>
+                      <option value="DRINKS">🥂 Beer & Mimosa Stands / Barras de Bebida</option>
+                      <option value="PAPELERIA">💌 Papelería Social & Diseño Atelier</option>
+                      <option value="COMBO">✨ Atelier & Experiencias de Bienvenida (Mixto)</option>
+                    </select>
                   </div>
                 </div>
 

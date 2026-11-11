@@ -144,33 +144,175 @@ function drawJustifiedParagraph(
   return y;
 }
 
+export type VlbContractType = 'AUTO' | 'SNACKS' | 'STANDS' | 'MEMORIAL' | 'DRINKS' | 'PAPELERIA' | 'COMBO';
+
+export function isSnackItem(i: VlbQuoteItem): boolean {
+  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  return (
+    text.includes('snack') ||
+    text.includes('botana') ||
+    text.includes('caja chica') ||
+    text.includes('caja grande') ||
+    text.includes('cajita') ||
+    text.includes('dulce') ||
+    text.includes('postre') ||
+    text.includes('munchies') ||
+    text.includes('favor') ||
+    text.includes('souvenir') ||
+    text.includes('galleta') ||
+    text.includes('kit anticruda') ||
+    text.includes('palomita') ||
+    text.includes('bocadillo') ||
+    text.includes('agradecimiento')
+  );
+}
+
+export function isMemorialItem(i: VlbQuoteItem): boolean {
+  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  return (
+    text.includes('memorial') ||
+    text.includes('conmemorativo') ||
+    text.includes('muro de recuerdo') ||
+    text.includes('muro memorial') ||
+    text.includes('rincón de la memoria') ||
+    text.includes('rincon de la memoria')
+  );
+}
+
+export function isDrinksItem(i: VlbQuoteItem): boolean {
+  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  return (
+    text.includes('beer') ||
+    text.includes('cerveza') ||
+    text.includes('mimosa') ||
+    text.includes('champagne') ||
+    text.includes('welcome drink') ||
+    text.includes('barra de bebida') ||
+    text.includes('coctel') ||
+    text.includes('cóctel') ||
+    text.includes('carreta de shot') ||
+    text.includes('shots')
+  );
+}
+
+export function isStandOrDecorItem(i: VlbQuoteItem): boolean {
+  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  return (
+    text.includes('backdrop') ||
+    text.includes('seating chart') ||
+    text.includes('espejo') ||
+    text.includes('mampara') ||
+    text.includes('muro') ||
+    text.includes('arco') ||
+    text.includes('guestbook') ||
+    text.includes('audio guestbook') ||
+    text.includes('stand') ||
+    text.includes('estructura')
+  );
+}
+
+export function isPapeleriaItem(i: VlbQuoteItem): boolean {
+  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  return (
+    i.category === 'PAPELERIA' ||
+    text.includes('invita') ||
+    text.includes('menú') ||
+    text.includes('menu') ||
+    text.includes('misal') ||
+    text.includes('voto') ||
+    text.includes('place card') ||
+    text.includes('lotería') ||
+    text.includes('loteria') ||
+    text.includes('número de mesa') ||
+    text.includes('numero de mesa') ||
+    text.includes('save the date')
+  );
+}
+
+export function detectContractType(items: VlbQuoteItem[], quote?: VlbQuote): 'SNACKS' | 'MEMORIAL' | 'STANDS' | 'DRINKS' | 'PAPELERIA' | 'COMBO' {
+  if (!items || items.length === 0) {
+    if (quote?.quote_number?.startsWith('PS-')) return 'PAPELERIA';
+    return 'STANDS';
+  }
+
+  const hasSnacks = items.some(isSnackItem);
+  const hasMemorial = items.some(isMemorialItem);
+  const hasDrinks = items.some(isDrinksItem);
+  const hasStands = items.some(isStandOrDecorItem);
+  const hasPapeleria = items.some(isPapeleriaItem);
+
+  const matchedCategories = [hasSnacks, hasMemorial, hasDrinks, hasStands, hasPapeleria].filter(Boolean).length;
+  if (matchedCategories > 1) {
+    return 'COMBO';
+  }
+
+  if (hasSnacks) return 'SNACKS';
+  if (hasMemorial) return 'MEMORIAL';
+  if (hasDrinks) return 'DRINKS';
+  if (hasStands) return 'STANDS';
+  if (hasPapeleria) return 'PAPELERIA';
+
+  if (items.every(i => i.category === 'PAPELERIA')) return 'PAPELERIA';
+  return 'COMBO';
+}
+
 // Generador modular de cláusulas legales unificadas de Viva la Bride
-export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folioNumber: string) {
-  const hasDrinks = items.some(i => {
-    const name = (i.item_name || '').toLowerCase();
-    return name.includes('beer') || name.includes('cerveza') || name.includes('mimosa') || name.includes('drink') || name.includes('coctel') || name.includes('cóctel') || name.includes('barra');
-  });
-
-  const hasMemorial = items.some(i => {
-    const name = (i.item_name || '').toLowerCase();
-    return name.includes('memorial') || name.includes('foto') || name.includes('velas');
-  });
-
-  const hasStandsOrWalls = items.some(i => {
-    const name = (i.item_name || '').toLowerCase();
-    return i.category === 'STANDS_EXPERIENCIAS' || i.pricing_type === 'FIXED_EVENT' || name.includes('wall') || name.includes('mampara') || name.includes('muro') || name.includes('stand') || name.includes('back');
-  });
-
-  const hasPapeleria = items.some(i => i.category === 'PAPELERIA' || (i.item_name || '').toLowerCase().includes('invita') || (i.item_name || '').toLowerCase().includes('menú') || (i.item_name || '').toLowerCase().includes('menu') || (i.item_name || '').toLowerCase().includes('papeler') || (i.item_name || '').toLowerCase().includes('place card') || (i.item_name || '').toLowerCase().includes('número'));
-
-  const isPapeleriaOnly = (hasPapeleria || quote.quote_number?.startsWith('PS-')) && !hasDrinks && !hasStandsOrWalls && !hasMemorial;
-  const isDrinksOnly = hasDrinks && !hasMemorial && !hasPapeleria;
-  const isDecorativoOnly = (hasMemorial || (hasStandsOrWalls && !hasDrinks)) && !hasPapeleria && !hasDrinks;
+export function getContractClauses(
+  items: VlbQuoteItem[],
+  quote: VlbQuote,
+  folioNumber: string,
+  contractTypeOverride?: string
+) {
+  const effectiveType: string = (contractTypeOverride && contractTypeOverride !== 'AUTO')
+    ? contractTypeOverride
+    : ((quote as any).contract_type && (quote as any).contract_type !== 'AUTO'
+        ? (quote as any).contract_type
+        : detectContractType(items, quote));
 
   let serviceTitle = 'ATELIER & EXPERIENCIAS DE BIENVENIDA';
   let clauses: { title: string; text: string }[] = [];
 
-  if (isDrinksOnly) {
+  if (effectiveType === 'SNACKS') {
+    serviceTitle = 'SNACKS, FAVORES & EXPERIENCIAS DE BIENVENIDA';
+    clauses = [
+      {
+        title: '1. OBJETO DEL CONTRATO',
+        text: `La Prestadora de Servicios se compromete a elaborar, personalizar y suministrar las piezas de snacks, cajitas de agradecimiento, botanas o favores descritos en la cotización oficial con folio ${folioNumber}.`
+      },
+      {
+        title: '2. ALCANCE Y EMPAQUE PERSONALIZADO',
+        text: 'El servicio comprende la preparación con insumos de primera calidad, porciones pactadas, empaque individual de las piezas, colocación de listón y tags o etiquetas personalizadas conforme al diseño acordado.'
+      },
+      {
+        title: '3. CALIDAD E INSUMOS ALIMENTARIOS',
+        text: 'Viva la Bride garantiza que todos los insumos, botanas y confitería son frescos y manipulados con higiene. La Contratante es responsable de consultar con sus invitados sobre alergias o intolerancias alimentarias previas al evento.'
+      },
+      {
+        title: '4. PERSONALIZACIÓN Y VISTO BUENO (VoBo)',
+        text: 'Viva la Bride diseñará las etiquetas, tags de agradecimiento y selección de colores conforme a la paleta del evento. Una vez otorgado el VoBo final para impresión de tags, cualquier cambio extemporáneo generará costos adicionales.'
+      },
+      {
+        title: '5. CONSERVACIÓN Y CONDICIONES DEL RECINTO',
+        text: 'Los productos deberán resguardarse en un espacio fresco, seco, techado y lejos del sol directo dentro del salón o recinto del evento para preservar su consistencia, sabor y presentación óptima.'
+      },
+      {
+        title: '6. ENTREGA Y PUNTUALIDAD',
+        text: 'La entrega física o montaje de las cajas y snacks se realizará puntualmente en la fecha, horario y sede estipulados en la cotización oficial. La recepción deberá ser confirmada por La Contratante o su coordinador designado.'
+      },
+      {
+        title: '7. PAGOS Y CONDICIONES FINANCIERAS',
+        text: 'Separación fija de $1,000 MXN para reservar fecha en agenda. La liquidación total deberá realizarse a más tardar 10 días naturales antes del evento para adquisición de insumos y producción. Anticipos no reembolsables.'
+      },
+      {
+        title: '8. CANCELACIONES Y REAGENDACIÓN',
+        text: 'En caso de cancelación por parte de La Contratante no habrá reembolso de anticipos ni de insumos ya adquiridos. El servicio podrá reagendarse dentro de los siguientes 30 días naturales sujeto a disponibilidad y liquidación total.'
+      },
+      {
+        title: '9. AUTORIZACIÓN DE IMAGEN Y VALIDEZ LEGAL',
+        text: 'La Contratante autoriza el uso de fotografías del empaque y montaje con fines de portafolio y redes sociales respetando la privacidad. El anticipo o firma digital ratifica la total conformidad y validez vinculante del presente contrato.'
+      }
+    ];
+  } else if (effectiveType === 'DRINKS') {
     serviceTitle = 'BEER & MIMOSA STANDS';
     clauses = [
       {
@@ -214,16 +356,16 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
         text: 'La Contratante autoriza el uso de fotografías y videos del montaje con fines de portafolio y redes sociales respetando la privacidad. La realización del anticipo o firma digital ratifica la total conformidad y validez vinculante del presente contrato.'
       }
     ];
-  } else if (isDecorativoOnly) {
-    serviceTitle = 'MEMORIAL WALL & STANDS DECORATIVOS';
+  } else if (effectiveType === 'MEMORIAL') {
+    serviceTitle = 'MEMORIAL WALL & HOMENAJE CONMEMORATIVO';
     clauses = [
       {
         title: '1. OBJETO DEL CONTRATO',
-        text: `La Prestadora de Servicios se compromete a suministrar la estructura decorativa y ambientación descrita en la cotización oficial con folio ${folioNumber}. Ambas partes reconocen expresamente los servicios y cantidades acordadas.`
+        text: `La Prestadora de Servicios se compromete a suministrar la estructura de Memorial Wall y ambientación conmemorativa descrita en la cotización oficial con folio ${folioNumber}. Ambas partes reconocen expresamente los servicios acordados.`
       },
       {
         title: '2. ALCANCE DEL SERVICIO',
-        text: 'El servicio incluye mampara decorativa, renta de portarretratos, velas (reales o LED según venue), frase en vinil personalizado y montaje y desmontaje el mismo día del evento conforme a la cotización correspondiente.'
+        text: 'El servicio incluye mampara conmemorativa, renta de portarretratos, velas (reales o LED según venue), frase en vinil personalizado y montaje y desmontaje el mismo día del evento conforme a la cotización correspondiente.'
       },
       {
         title: '3. RESPONSABILIDAD DE LA CONTRATANTE',
@@ -258,7 +400,51 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
         text: 'La Contratante autoriza utilizar fotos y videos del montaje con fines de portafolio y redes sociales respetando en todo momento el carácter conmemorativo y privacidad. El anticipo o firma digital ratifica la validez legal del presente contrato.'
       }
     ];
-  } else if (isPapeleriaOnly) {
+  } else if (effectiveType === 'STANDS') {
+    serviceTitle = 'STANDS DECORATIVOS & AMBIENTACIÓN';
+    clauses = [
+      {
+        title: '1. OBJETO DEL CONTRATO',
+        text: `La Prestadora de Servicios se compromete a suministrar la estructura decorativa, backdrop, mobiliario en renta o seating chart descrito en la cotización oficial con folio ${folioNumber}.`
+      },
+      {
+        title: '2. ALCANCE DEL SERVICIO Y MONTAJE',
+        text: 'El servicio incluye renta de mobiliario o mamparas, personalización gráfica acordada (corte de vinil, caligrafía o papelería de seating chart), y montaje y desmontaje el mismo día del evento conforme a lo contratado.'
+      },
+      {
+        title: '3. RESPONSABILIDAD DE LA CONTRATANTE',
+        text: 'La Contratante entregará la información requerida (listado de mesas, nombres, frases o diseño) con al menos 7 días naturales de anticipación y otorgará VoBo final. Asimismo deberá asegurar un espacio adecuado, firme y nivelado.'
+      },
+      {
+        title: '4. MONTAJE Y CONDICIONES DE SEGURIDAD',
+        text: 'El montaje será realizado por personal de Viva la Bride 40 a 60 minutos previos al evento en superficie estable. En exteriores las estructuras deberán instalarse contiguas a muros o respaldos firmes. Viva la Bride podrá negar el montaje ante riesgo por viento o inestabilidad.'
+      },
+      {
+        title: '5. CUIDADO DEL MOBILIARIO Y ESTRUCTURAS',
+        text: 'La Contratante es responsable por cualquier daño, rotura, rayadura, pérdida o robo de mamparas, marcos, espejos, estructuras o accesorios en renta, comprometiéndose a cubrir su costo de reposición dentro de los 3 días posteriores al evento.'
+      },
+      {
+        title: '6. PERSONALIZACIÓN Y VOBO FINAL',
+        text: 'Viva la Bride elaborará la propuesta gráfica con base en los datos provistos. Una vez otorgado el VoBo final para corte de vinil o impresión, cualquier modificación posterior generará costos adicionales.'
+      },
+      {
+        title: '7. CARGOS ADICIONALES POR ACCESOS O MANIOBRAS',
+        text: 'Montajes en plantas altas, accesos mediante escaleras, rampas extensas o maniobras especiales que impliquen esfuerzo extraordinario causarán un cargo adicional notificado antes del evento para su liquidación.'
+      },
+      {
+        title: '8. PAGOS Y LIQUIDACIÓN',
+        text: 'Separación fija de $1,000 MXN para reservar fecha. La liquidación total deberá realizarse a más tardar 10 días naturales antes del evento. Anticipos no reembolsables.'
+      },
+      {
+        title: '9. CANCELACIONES Y REAGENDACIÓN',
+        text: 'En caso de cancelación por parte de La Contratante no habrá reembolso de anticipos. El servicio podrá reagendarse dentro de los siguientes 30 días naturales sujeto a disponibilidad y liquidación total.'
+      },
+      {
+        title: '10. AUTORIZACIÓN DE IMAGEN Y VALIDEZ LEGAL',
+        text: 'La Contratante autoriza utilizar fotos y videos del montaje con fines de portafolio y redes sociales respetando la privacidad. El anticipo o firma digital ratifica la validez vinculante del presente contrato.'
+      }
+    ];
+  } else if (effectiveType === 'PAPELERIA') {
     serviceTitle = 'PAPELERÍA SOCIAL & DISEÑO ATELIER';
     clauses = [
       {
@@ -349,8 +535,8 @@ export function getContractClauses(items: VlbQuoteItem[], quote: VlbQuote, folio
     ];
   }
 
-  const isService = !isPapeleriaOnly;
-  return { clauses, isService, serviceTitle, hasDrinks, hasStandsOrWalls, hasMemorial, hasPapeleria };
+  const isService = effectiveType !== 'PAPELERIA';
+  return { clauses, isService, serviceTitle, effectiveType };
 }
 
 export function standardizeEventTime(val: string | null | undefined): string {
@@ -599,7 +785,7 @@ function wrapText(text: string, maxWidth: number, font: any, fontSize: number): 
 export async function buildVlbQuotePdf(
   quote: VlbQuote,
   items: VlbQuoteItem[],
-  options?: { autoDownload?: boolean; includeContract?: boolean }
+  options?: { autoDownload?: boolean; includeContract?: boolean; contractType?: string }
 ): Promise<{ blob: Blob; file: File; fileName: string; pdfDoc: PDFDocument }> {
   // 1. Decode raw Canva PDF bytes (the template is pre-cleaned with zero placeholder brackets)
   const binaryString = atob(VLB_CANVA_PDF_BASE64);
@@ -663,7 +849,15 @@ export async function buildVlbQuotePdf(
     ? `${quote.client_name} & ${quote.partner_name}`
     : quote.client_name || 'Novia';
 
-  const total = Number(quote.total) || 0;
+  const subtotal = Number(quote.subtotal) > 0
+    ? Number(quote.subtotal)
+    : items.reduce((acc, curr) => acc + Number(curr.total_price || curr.unit_price || 0), 0);
+
+  const total = Number(quote.total) > 0 ? Number(quote.total) : subtotal;
+  let discount = Number(quote.discount) || 0;
+  if (discount === 0 && subtotal > total) {
+    discount = Math.round((subtotal - total) * 100) / 100;
+  }
 
   // ========================================================
   // PÁGINA 1: DIBUJAR VALORES EXACTOS EN EL ESPACIO LIMPIO
@@ -761,9 +955,48 @@ export async function buildVlbQuotePdf(
     curY -= Math.max(20, rowLines * 10.5 + 7);
   });
 
-  // 9. TOTAL
-  const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
-  safeDraw(page, totalFormatted, { x: 475, y: 391, size: 12.0, font: fontBold, color: textColor });
+  // 9. TOTAL & DESGLOSE FINANCIERO (SUBTOTAL, DESCUENTO Y TOTAL)
+  if (discount > 0) {
+    // Si hay descuento, cubrimos el área de total para presentar el desglose exacto
+    page.drawRectangle({
+      x: 310,
+      y: 358,
+      width: 240,
+      height: 60,
+      color: white
+    });
+
+    const subtotalFormatted = `$${subtotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+    const discountFormatted = `-$${discount.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+    const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+
+    const discountPct = subtotal > 0 ? Math.round((discount / subtotal) * 100) : 0;
+    const discountLabel = discountPct > 0 ? `DESCUENTO (${discountPct}%):` : 'DESCUENTO:';
+
+    // Renglón 1: Subtotal
+    safeDraw(page, 'SUBTOTAL:', { x: 382, y: 404, size: 8.8, font: fontRegular, color: rgb(110 / 255, 100 / 255, 100 / 255) });
+    safeDraw(page, subtotalFormatted, { x: 475, y: 404, size: 9.2, font: fontRegular, color: textColor });
+
+    // Renglón 2: Descuento en rosa oficial
+    safeDraw(page, discountLabel, { x: 382, y: 390, size: 8.8, font: fontBold, color: pinkLabel });
+    safeDraw(page, discountFormatted, { x: 475, y: 390, size: 9.2, font: fontBold, color: pinkLabel });
+
+    // Línea divisoria sutil
+    page.drawLine({
+      start: { x: 380, y: 383 },
+      end: { x: 545, y: 383 },
+      thickness: 0.6,
+      color: rgb(238 / 255, 205 / 255, 215 / 255)
+    });
+
+    // Renglón 3: Total Final en grande y negrita
+    safeDraw(page, 'TOTAL:', { x: 382, y: 368, size: 11.5, font: fontBold, color: textColor });
+    safeDraw(page, totalFormatted, { x: 475, y: 368, size: 12.0, font: fontBold, color: textColor });
+  } else {
+    // Si no hay descuento, dibuja el total estándar sobre la plantilla de Canva
+    const totalFormatted = `$${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
+    safeDraw(page, totalFormatted, { x: 475, y: 391, size: 12.0, font: fontBold, color: textColor });
+  }
 
   // 10. CONCEPTO EN FORMA DE PAGO
   const clientNameClean = (quote.client_name || 'Cliente').trim();
@@ -846,7 +1079,7 @@ export async function buildVlbQuotePdf(
     safeDraw(page2, timeClean, { x: 460, y: 762, size: 7.5, font: fontBold, color: pinkAccent });
 
     // 3. Título Principal Centrado y Subtítulo
-    const { clauses, serviceTitle } = getContractClauses(items, quote, folioNumber);
+    const { clauses, serviceTitle } = getContractClauses(items, quote, folioNumber, options?.contractType);
 
     const drawPageCentered = (text: string, y: number, size: number, font: PDFFont, color: RGB) => {
       const clean = cleanWinAnsi(text);
@@ -986,7 +1219,7 @@ export async function buildVlbQuotePdf(
 export async function generateVlbQuotePdf(
   quote: VlbQuote,
   items: VlbQuoteItem[],
-  options?: { autoDownload?: boolean; includeContract?: boolean }
+  options?: { autoDownload?: boolean; includeContract?: boolean; contractType?: string }
 ) {
   return await buildVlbQuotePdf(quote, items, { autoDownload: true, ...options });
 }
