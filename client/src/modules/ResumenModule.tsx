@@ -1140,6 +1140,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                     <option value="PLANNING">PLANNING (En planeación)</option>
                     <option value="UPCOMING">UPCOMING (Próxima)</option>
                     <option value="COMPLETED">COMPLETED (Realizada)</option>
+                    <option value="CANCELLED">CANCELLED (Cancelada)</option>
                     <option value="ARCHIVED">ARCHIVED (Archivada)</option>
                   </select>
                 </div>

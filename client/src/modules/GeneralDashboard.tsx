@@ -8,7 +8,7 @@ import {
   Database, History, Download, Upload, Trash2, CheckCircle2, Edit3,
   FileSpreadsheet, RefreshCw, Save, X, MessageSquare, Bell, BellRing, LogOut,
   FileText, LayoutGrid, PanelLeftClose, PanelLeft, ChevronDown,
-  Users, Phone, Mail, ExternalLink, Laptop, Heart, ArrowUpRight, UserCheck
+  Users, Phone, Mail, ExternalLink, Laptop, Heart, ArrowUpRight, UserCheck, Archive
 } from 'lucide-react';
 import { WhatsAppHubModule } from './WhatsAppHubModule';
 import { CalendarioModule } from './CalendarioModule';
@@ -69,7 +69,7 @@ export const GeneralDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'BODAS' | 'DESPEDIDAS' | 'BABY_SHOWER' | 'OTROS'>('ALL');
-  const [serviceTierFilter, setServiceTierFilter] = useState<'ALL' | 'COORDINACION' | 'VIRTUAL'>('ALL');
+  const [serviceTierFilter, setServiceTierFilter] = useState<'ALL' | 'COORDINACION' | 'VIRTUAL' | 'ARCHIVED'>('ALL');
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -1278,7 +1278,27 @@ export const GeneralDashboard: React.FC = () => {
       (w.package_type.toLowerCase().includes('virtual') || w.package_type.toLowerCase().includes('autónomo'))
     );
 
-  const filteredWeddings = weddings.filter(w => {
+  const isArchivedWedding = (w: Wedding) =>
+    w.status === 'ARCHIVED' || w.status === 'CANCELLED';
+
+  const activeWeddings = weddings.filter(w => !isArchivedWedding(w));
+  const archivedWeddings = weddings.filter(w => isArchivedWedding(w));
+
+  const countVirtual = activeWeddings.filter(isVirtualWedding).length;
+  const countCoordination = activeWeddings.filter(w => !isVirtualWedding(w)).length;
+  const countArchived = archivedWeddings.length;
+
+  const countBodas = activeWeddings.filter(w => !w.event_type || w.event_type.toLowerCase().includes('boda')).length;
+  const countDespedidas = activeWeddings.filter(w => w.event_type?.toLowerCase().includes('despedida')).length;
+  const countBabyShowers = activeWeddings.filter(w => w.event_type?.toLowerCase().includes('baby')).length;
+  const countOtros = activeWeddings.filter(w => {
+    const t = (w.event_type || '').toLowerCase();
+    return t && !t.includes('boda') && !t.includes('despedida') && !t.includes('baby');
+  }).length;
+
+  const baseWeddings = serviceTierFilter === 'ARCHIVED' ? archivedWeddings : activeWeddings;
+
+  const filteredWeddings = baseWeddings.filter(w => {
     const q = search.trim().toLowerCase();
     const matchesSearch =
       !q ||
@@ -1312,16 +1332,27 @@ export const GeneralDashboard: React.FC = () => {
     return matchesSearch && matchesCategory && matchesServiceTier;
   });
 
-  const countVirtual = weddings.filter(isVirtualWedding).length;
-  const countCoordination = weddings.filter(w => !isVirtualWedding(w)).length;
-
-  const countBodas = weddings.filter(w => !w.event_type || w.event_type.toLowerCase().includes('boda')).length;
-  const countDespedidas = weddings.filter(w => w.event_type?.toLowerCase().includes('despedida')).length;
-  const countBabyShowers = weddings.filter(w => w.event_type?.toLowerCase().includes('baby')).length;
-  const countOtros = weddings.filter(w => {
-    const t = (w.event_type || '').toLowerCase();
-    return t && !t.includes('boda') && !t.includes('despedida') && !t.includes('baby');
-  }).length;
+  const handleReactivateWedding = async (e: React.MouseEvent, w: Wedding) => {
+    e.stopPropagation();
+    if (!confirm(`¿Deseas reactivar el evento "${w.name}" y moverlo a la lista de eventos activos?`)) return;
+    try {
+      const res = await fetch(`/api/weddings/${w.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ status: 'PLANNING' })
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Error al reactivar evento.');
+      }
+      await fetchWeddings();
+    } catch (err: any) {
+      alert(err.message || 'Error al reactivar evento.');
+    }
+  };
 
   const getCategoryLabel = () => {
     switch (categoryFilter) {
@@ -1334,7 +1365,7 @@ export const GeneralDashboard: React.FC = () => {
       case 'OTROS':
         return { label: 'Otros Eventos', count: countOtros };
       default:
-        return { label: 'Todos los eventos', count: weddings.length };
+        return { label: 'Todos los eventos', count: activeWeddings.length };
     }
   };
 
@@ -1669,7 +1700,7 @@ export const GeneralDashboard: React.FC = () => {
                   </h1>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5] shrink-0">
                     <span className="w-2 h-2 rounded-full bg-[#C48B81]"></span>
-                    {weddings.length} {weddings.length === 1 ? 'evento activo' : 'eventos activos'}
+                    {activeWeddings.length} {activeWeddings.length === 1 ? 'evento activo' : 'eventos activos'}
                   </span>
                 </div>
                 <p className="text-xs text-[#7D6F6B] mt-1 sm:mt-1.5 leading-relaxed">
@@ -2031,7 +2062,7 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Píldoras de Segmentación: Coordinación VLB vs Planner Virtual */}
+            {/* Píldoras de Segmentación: Coordinación VLB vs Planner Virtual vs Archivados */}
             <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-8 pb-1">
               <div className="inline-flex p-1 bg-[#FAF7F5] border border-[#EFE8E1] rounded-2xl shadow-2xs">
                 <button
@@ -2043,7 +2074,7 @@ export const GeneralDashboard: React.FC = () => {
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  <span>Todos ({weddings.length})</span>
+                  <span>Todos ({activeWeddings.length})</span>
                 </button>
                 <button
                   type="button"
@@ -2077,11 +2108,25 @@ export const GeneralDashboard: React.FC = () => {
                     {countVirtual}
                   </span>
                 </button>
+                {countArchived > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setServiceTierFilter('ARCHIVED')}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none flex items-center gap-1.5 ${
+                      serviceTierFilter === 'ARCHIVED'
+                        ? 'bg-[#8F8178] text-white shadow-2xs'
+                        : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                    }`}
+                  >
+                    <Archive className="w-3.5 h-3.5" />
+                    <span>Archivados ({countArchived})</span>
+                  </button>
+                )}
               </div>
 
               {/* Conteo Informativo Rápido */}
               <span className="text-xs text-[#7D6F6B] hidden sm:inline-block">
-                Mostrando <strong className="text-[#2B2826]">{filteredWeddings.length}</strong> de {weddings.length} eventos
+                Mostrando <strong className="text-[#2B2826]">{filteredWeddings.length}</strong> de {serviceTierFilter === 'ARCHIVED' ? archivedWeddings.length : activeWeddings.length} eventos
               </span>
             </div>
 
@@ -2408,6 +2453,142 @@ export const GeneralDashboard: React.FC = () => {
                                 >
                                   <span>Abrir Boda</span>
                                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 3. SECCIÓN: EVENTOS ARCHIVADOS Y CANCELADOS */}
+                {serviceTierFilter === 'ARCHIVED' && (
+                  <div>
+                    {/* Encabezado de Sección */}
+                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-3 mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-2xl bg-[#F0ECE9] text-[#7D6F6B] flex items-center justify-center font-bold text-base shadow-2xs border border-[#E0D8D0]">
+                          <Archive className="w-4 h-4 text-[#7D6F6B]" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826] tracking-tight">
+                              Eventos Archivados y Cancelados
+                            </h3>
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B] bg-[#F0ECE9] px-2.5 py-0.5 rounded-full border border-[#E0D8D0]">
+                              Histórico
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                            Eventos cancelados o concluidos retirados del flujo de planeación activo
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {filteredWeddings.length === 0 ? (
+                      <div className="bg-[#FFFFFF] rounded-3xl p-12 text-center border border-dashed border-[#EFE8E1]">
+                        <p className="text-[#7D6F6B] text-sm">No hay eventos archivados o cancelados que coincidan con la búsqueda.</p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredWeddings.map(w => {
+                          const isCancelled = w.status === 'CANCELLED';
+                          const venueName = w.reception_venue || w.ceremony_venue || 'Sede no especificada';
+
+                          return (
+                            <div
+                              key={w.id}
+                              onClick={() => setCurrentWedding(w)}
+                              className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] opacity-90 hover:opacity-100 transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#D1C7BD]"
+                            >
+                              <div>
+                                <div className="flex items-start justify-between gap-2 mb-4">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-1.5 mb-2">
+                                      {isCancelled ? (
+                                        <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#9B1C1C] bg-[#FDE8E8] px-2.5 py-0.5 rounded-full border border-[#F8B4B4]">
+                                          Cancelado
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-stone-600 bg-stone-100 px-2.5 py-0.5 rounded-full border border-stone-200">
+                                          Archivado
+                                        </span>
+                                      )}
+                                      <span className="inline-flex items-center text-[10px] uppercase font-semibold text-[#7D6F6B] bg-[#FAF7F5] px-2 py-0.5 rounded-full border border-[#EFE8E1]">
+                                        {w.package_type || w.event_type || 'Evento'}
+                                      </span>
+                                    </div>
+                                    <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2] text-[#2B2826]">
+                                      {renderCoupleNames(w)}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center space-x-1 shrink-0">
+                                    {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleOpenEditModal(e, w)}
+                                        className="p-1.5 text-stone-400 hover:text-[#A86B60] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                                        title="Editar estado o notas del evento"
+                                      >
+                                        <Edit3 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                    {user?.role === 'ADMINISTRADOR' && (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => handleDeleteWedding(e, w)}
+                                        className="p-1.5 text-stone-300 hover:text-rose-600 hover:bg-[#FBF4F3] rounded-lg transition cursor-pointer"
+                                        title="Eliminar permanentemente este evento"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <div className="space-y-1.5 mb-4 text-xs text-[#7D6F6B]">
+                                  <div className="flex items-center space-x-1.5">
+                                    <Calendar className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                                    <span>Fecha: {w.wedding_date || 'Sin fecha'}</span>
+                                  </div>
+                                  <div className="flex items-center space-x-1.5 truncate">
+                                    <MapPin className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                                    <span className="truncate">{venueName}</span>
+                                  </div>
+                                </div>
+
+                                {w.notes && (
+                                  <p className="text-xs text-[#7D6F6B] italic bg-[#FAF7F5] p-2.5 rounded-xl border border-[#EFE8E1] mb-4 line-clamp-2">
+                                    "{w.notes}"
+                                  </p>
+                                )}
+                              </div>
+
+                              <div className="flex items-center justify-between pt-3 border-t border-[#F5EFE9]">
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleReactivateWedding(e, w)}
+                                  className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#A86B60] bg-[#FAF3F0] hover:bg-[#F7EDEB] border border-[#ECD9D5] transition cursor-pointer"
+                                  title="Reactivar y mover a eventos activos"
+                                >
+                                  <RefreshCw className="w-3 h-3" />
+                                  <span>Reactivar evento</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setCurrentWedding(w);
+                                  }}
+                                  className="inline-flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#2B2826] bg-[#FFFFFF] hover:bg-[#FAF7F5] border border-[#EFE8E1] transition shadow-2xs group-hover:border-[#7D6F6B] cursor-pointer"
+                                >
+                                  <span>Abrir Evento</span>
+                                  <ArrowRight className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             </div>
@@ -5037,6 +5218,7 @@ export const GeneralDashboard: React.FC = () => {
                     <option value="PLANNING">En Planeación</option>
                     <option value="UPCOMING">Próximo</option>
                     <option value="COMPLETED">Completado</option>
+                    <option value="CANCELLED">Cancelado</option>
                     <option value="ARCHIVED">Archivado</option>
                   </select>
                 </div>

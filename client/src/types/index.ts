@@ -49,7 +49,7 @@ export interface Wedding {
   ceremony_venue?: string;
   reception_venue?: string;
   estimated_guests: number;
-  status: 'PLANNING' | 'UPCOMING' | 'COMPLETED' | 'ARCHIVED';
+  status: 'PLANNING' | 'UPCOMING' | 'COMPLETED' | 'ARCHIVED' | 'CANCELLED';
   notes?: string;
   package_type: string;
   event_type?: string;

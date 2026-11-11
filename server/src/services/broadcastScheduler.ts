@@ -569,7 +569,7 @@ Al llegar a la recepción, el equipo de coordinación de Viva la Bride estará l
                reminder_7days_enabled, reminder_7days_time, reminder_7days_status,
                dayof_seating_enabled, dayof_seating_time, dayof_seating_status
         FROM weddings
-        WHERE status != 'ARCHIVED'
+        WHERE status NOT IN ('ARCHIVED', 'CANCELLED')
       `).all() as any[];
 
       for (const w of weddings) {
