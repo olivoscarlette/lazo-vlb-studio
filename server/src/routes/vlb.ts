@@ -910,8 +910,282 @@ router.put('/quotes/:id', (req, res) => {
       id
     );
 
-    const updatedQuote = db.prepare('SELECT * FROM vlb_quotes WHERE id = ?').get(id);
-    const updatedItems = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ? ORDER BY sort_order ASC').all(id);
+    const updatedQuote = db.prepare('SELECT * FROM vlb_quotes WHERE id = ?').get(id) as any;
+    const updatedItems = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ? ORDER BY sort_order ASC').all(id) as any[];
+
+    // Sincronizar automáticamente cualquier pedido asociado en CRM Parejas (vlb_orders)
+    const existingOrders = db.prepare(`
+      SELECT * FROM vlb_orders 
+      WHERE quote_id = ? OR (quote_number IS NOT NULL AND quote_number = ?)
+    `).all(id, updatedQuote.quote_number || id) as any[];
+
+    const finalClientName = (client_name && client_name.trim()) || updatedQuote.client_name;
+    const finalPartnerName = partner_name !== undefined ? (partner_name ? partner_name.trim() : null) : updatedQuote.partner_name;
+    const finalClientEmail = client_email !== undefined ? (client_email ? client_email.trim() : null) : updatedQuote.client_email;
+    const finalClientPhone = client_phone !== undefined ? (client_phone ? client_phone.trim() : null) : updatedQuote.client_phone;
+    const finalEventDate = event_date || updatedQuote.event_date;
+    const finalEventVenue = event_venue !== undefined ? (event_venue ? event_venue.trim() : null) : updatedQuote.event_venue;
+
+    const hasPap = updatedItems.some((i: any) => i.category === 'PAPELERIA');
+    const hasStands = updatedItems.some((i: any) => i.category === 'STANDS_EXPERIENCIAS');
+    const finalServiceType = (hasPap && hasStands) ? 'MIXTO' : hasStands ? 'STANDS_EXPERIENCIAS' : 'PAPELERIA';
+    const itemsJson = JSON.stringify(updatedItems);
+
+    let standsTotal = 0;
+    let stationeryTotal = 0;
+    for (const it of updatedItems) {
+      const lineTotal = Number(it.total_price) || ((Number(it.unit_price) || 0) * (Number(it.quantity) || 1));
+      if (it.category === 'PAPELERIA') {
+        stationeryTotal += lineTotal;
+      } else {
+        standsTotal += lineTotal;
+      }
+    }
+    const clientFullName = finalPartnerName ? `${finalClientName} & ${finalPartnerName}` : finalClientName;
+
+    const evtTime = finalEventDate ? new Date(finalEventDate).getTime() : Date.now();
+    const voboDeadline = new Date(evtTime - 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const deliveryDate = new Date(evtTime - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const setupDate = finalEventDate;
+
+    for (const ord of existingOrders) {
+      const currentPaid = Number(ord.total_paid) || 0;
+      const newBalancePending = Math.max(0, total - currentPaid);
+      const newPaymentStatus = (currentPaid >= total && total > 0)
+        ? 'LIQUIDADO'
+        : (currentPaid > 0 ? 'ANTICIPO_PAGADO' : 'ANTICIPO_PENDIENTE');
+
+      // Actualizar tareas si existen según la nueva fecha
+      let orderTasks: any[] = [];
+      try {
+        if (ord.tasks_json) orderTasks = JSON.parse(ord.tasks_json);
+      } catch {}
+
+      if (Array.isArray(orderTasks) && orderTasks.length > 0) {
+        for (const t of orderTasks) {
+          if (t.category === 'PAPELERIA') {
+            if (t.title?.includes('VoBo') || t.title?.includes('Aprobación')) {
+              t.due_date = voboDeadline;
+            } else if (t.title?.includes('Taller') || t.title?.includes('Imprenta')) {
+              t.due_date = new Date(evtTime - 14 * 86400000).toISOString().split('T')[0];
+            } else if (t.title?.includes('Entrega')) {
+              t.due_date = deliveryDate;
+            }
+          } else if (t.category === 'SERVICIO') {
+            if (t.title?.includes('insumos') || t.title?.includes('bebidas')) {
+              t.due_date = new Date(evtTime - 7 * 86400000).toISOString().split('T')[0];
+            } else if (t.title?.includes('vinil')) {
+              t.due_date = new Date(evtTime - 4 * 86400000).toISOString().split('T')[0];
+            } else if (t.title?.includes('Audio')) {
+              t.due_date = new Date(evtTime - 2 * 86400000).toISOString().split('T')[0];
+            } else if (t.title?.includes('Montaje')) {
+              t.due_date = setupDate;
+            }
+          }
+        }
+      }
+
+      db.prepare(`
+        UPDATE vlb_orders SET
+          client_name = ?,
+          partner_name = ?,
+          client_email = ?,
+          client_phone = ?,
+          event_date = ?,
+          event_venue = ?,
+          total_amount = ?,
+          down_payment_required = ?,
+          balance_pending = ?,
+          payment_status = ?,
+          service_type = ?,
+          items_json = ?,
+          vobo_design_deadline = ?,
+          physical_delivery_date = ?,
+          stand_setup_date = ?,
+          tasks_json = ?,
+          quote_number = ?,
+          updated_at = ?
+        WHERE id = ?
+      `).run(
+        finalClientName,
+        finalPartnerName,
+        finalClientEmail,
+        finalClientPhone,
+        finalEventDate,
+        finalEventVenue,
+        total,
+        down_payment_amount,
+        newBalancePending,
+        newPaymentStatus,
+        finalServiceType,
+        itemsJson,
+        voboDeadline,
+        deliveryDate,
+        setupDate,
+        orderTasks.length > 0 ? JSON.stringify(orderTasks) : ord.tasks_json,
+        updatedQuote.quote_number || null,
+        now,
+        ord.id
+      );
+
+      // Sincronizar nómina & liquidación de evento en vlb_event_settlements
+      const existingSettlement = db.prepare('SELECT id FROM vlb_event_settlements WHERE order_id = ? OR quote_id = ?').get(ord.id, id);
+      if (existingSettlement) {
+        db.prepare(`
+          UPDATE vlb_event_settlements SET
+            event_name = ?,
+            event_date = ?,
+            venue = ?,
+            service_amount = ?,
+            stands_amount = ?,
+            stationery_amount = ?,
+            updated_at = ?
+          WHERE order_id = ? OR quote_id = ?
+        `).run(
+          clientFullName,
+          finalEventDate,
+          finalEventVenue || 'Por definir',
+          total,
+          standsTotal,
+          stationeryTotal,
+          now,
+          ord.id,
+          id
+        );
+      } else {
+        const setId = 'set_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        try {
+          db.prepare(`
+            INSERT INTO vlb_event_settlements (
+              id, order_id, quote_id, event_name, event_date, venue, service_amount,
+              stands_amount, stationery_amount, freight_charged, extra_services,
+              supplies_expense, supplies_services_expense, supplies_stationery_expense, supplies_breakdown_json,
+              car_provider, stationery_provider, stationery_labor_payout,
+              staff_scarlette, staff_victoria, external_staff_count, external_staff_names, status, notes, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(
+            setId,
+            ord.id,
+            id,
+            clientFullName,
+            finalEventDate,
+            finalEventVenue || 'Por definir',
+            total,
+            standsTotal,
+            stationeryTotal,
+            0, 0, 0, 0, 0, null,
+            'NINGUNA_EXTERNO',
+            finalServiceType === 'STANDS_EXPERIENCIAS' ? 'NINGUNA' : 'SCARLETTE',
+            0, 0, 0, 0, null, 'PENDIENTE', `Pedido ${ord.order_number}`, now, now
+          );
+        } catch {}
+      }
+    }
+
+    // Si la cotización ya estaba marcada como CONVERTIDA y no tenía orden creada, crearla
+    if (updatedQuote.status === 'CONVERTIDA' && existingOrders.length === 0) {
+      const order_number = generateNextVlbOrderNumber();
+      const orderId = 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      
+      const initialTasks: any[] = [];
+      if (hasPap) {
+        initialTasks.push({
+          id: 't_vobo_' + Date.now() + '_1',
+          title: 'Aprobación de Diseño Digital (VoBo)',
+          due_date: voboDeadline,
+          completed: false,
+          category: 'PAPELERIA',
+          notes: 'Fecha límite previa a entrar a imprenta'
+        });
+        initialTasks.push({
+          id: 't_taller_' + Date.now() + '_2',
+          title: 'Entrada a Taller / Imprenta & Caligrafía',
+          due_date: new Date(evtTime - 14 * 86400000).toISOString().split('T')[0],
+          completed: false,
+          category: 'PAPELERIA',
+          notes: 'Impresión en algodón, rasgado a mano y lacrado'
+        });
+        initialTasks.push({
+          id: 't_entrega_' + Date.now() + '_3',
+          title: 'Entrega Física de Papelería',
+          due_date: deliveryDate,
+          completed: false,
+          category: 'PAPELERIA',
+          notes: 'En atelier o envío a domicilio'
+        });
+      }
+      if (hasStands) {
+        initialTasks.push({
+          id: 't_insumos_' + Date.now() + '_4',
+          title: 'Compra de bebidas e insumos',
+          due_date: new Date(evtTime - 7 * 86400000).toISOString().split('T')[0],
+          completed: false,
+          category: 'SERVICIO',
+          notes: 'Licores, jarabes, botánicos o cristalería'
+        });
+        initialTasks.push({
+          id: 't_vinil_' + Date.now() + '_5',
+          title: 'Armado e impresión de vinil personalizado',
+          due_date: new Date(evtTime - 4 * 86400000).toISOString().split('T')[0],
+          completed: false,
+          category: 'SERVICIO',
+          notes: 'Barras, letreros de bienvenida o copas'
+        });
+        initialTasks.push({
+          id: 't_audio_' + Date.now() + '_6',
+          title: 'Pruebas técnicas de Audio Guestbook / saludo',
+          due_date: new Date(evtTime - 2 * 86400000).toISOString().split('T')[0],
+          completed: false,
+          category: 'SERVICIO',
+          notes: 'Grabación del saludo de los novios y prueba de carga'
+        });
+        initialTasks.push({
+          id: 't_montaje_' + Date.now() + '_7',
+          title: 'Montaje de Stands en el Venue',
+          due_date: setupDate,
+          due_time: '14:00',
+          completed: false,
+          category: 'SERVICIO',
+          notes: 'Welcome Drinks, Audio Guestbook, Seating'
+        });
+      }
+
+      db.prepare(`
+        INSERT INTO vlb_orders (
+          id, order_number, quote_id, client_name, partner_name, client_email, client_phone,
+          event_date, event_venue, total_amount, down_payment_required, total_paid, balance_pending,
+          payment_status, production_status, vobo_design_deadline, physical_delivery_date,
+          stand_setup_date, stand_setup_time, notes, service_type, tasks_json, items_json, quote_number, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        orderId,
+        order_number,
+        id,
+        finalClientName,
+        finalPartnerName,
+        finalClientEmail,
+        finalClientPhone,
+        finalEventDate,
+        finalEventVenue,
+        total,
+        down_payment_amount,
+        0,
+        total,
+        'ANTICIPO_PENDIENTE',
+        'DISENO_EN_PROCESO',
+        voboDeadline,
+        deliveryDate,
+        setupDate,
+        '14:00',
+        `Convertido desde cotización ${updatedQuote.quote_number}.`,
+        finalServiceType,
+        JSON.stringify(initialTasks),
+        itemsJson,
+        updatedQuote.quote_number || null,
+        now,
+        now
+      );
+    }
 
     res.json({ quote: updatedQuote, items: updatedItems });
   } catch (err: any) {
@@ -950,11 +1224,7 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
       return res.status(404).json({ error: 'Cotización no encontrada.' });
     }
 
-    const order_number = generateNextVlbOrderNumber();
-
-    const orderId = 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     const now = new Date().toISOString();
-
     const quoteItems = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ? ORDER BY sort_order ASC').all(id) as any[];
     const hasPapeleria = quoteItems.some(i => i.category === 'PAPELERIA');
     const hasStands = quoteItems.some(i => i.category === 'STANDS_EXPERIENCIAS');
@@ -975,6 +1245,58 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
       const delivery = new Date(evtTime - 5 * 24 * 60 * 60 * 1000);
       deliveryDate = delivery.toISOString().split('T')[0];
     }
+
+    const existingOrder = db.prepare('SELECT * FROM vlb_orders WHERE quote_id = ?').get(id) as any;
+    if (existingOrder) {
+      // Sincronizar el pedido existente en lugar de duplicarlo
+      const currentPaid = Number(existingOrder.total_paid) || 0;
+      const newBalancePending = Math.max(0, quote.total - currentPaid);
+      const newPaymentStatus = (currentPaid >= quote.total && quote.total > 0)
+        ? 'LIQUIDADO'
+        : (currentPaid > 0 ? 'ANTICIPO_PAGADO' : 'ANTICIPO_PENDIENTE');
+
+      db.prepare(`
+        UPDATE vlb_orders SET
+          client_name = ?,
+          partner_name = ?,
+          client_email = ?,
+          client_phone = ?,
+          event_date = ?,
+          event_venue = ?,
+          total_amount = ?,
+          down_payment_required = ?,
+          balance_pending = ?,
+          payment_status = ?,
+          service_type = ?,
+          items_json = ?,
+          quote_number = ?,
+          updated_at = ?
+        WHERE id = ?
+      `).run(
+        quote.client_name,
+        quote.partner_name,
+        quote.client_email,
+        quote.client_phone,
+        quote.event_date || existingOrder.event_date,
+        quote.event_venue,
+        quote.total,
+        quote.down_payment_amount,
+        newBalancePending,
+        newPaymentStatus,
+        service_type,
+        JSON.stringify(quoteItems),
+        quote.quote_number || null,
+        now,
+        existingOrder.id
+      );
+
+      db.prepare("UPDATE vlb_quotes SET status = 'CONVERTIDA', updated_at = ? WHERE id = ?").run(now, id);
+      const order = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(existingOrder.id);
+      return res.status(200).json({ order, message: `Proyecto ${existingOrder.order_number} sincronizado con éxito en CRM Parejas.` });
+    }
+
+    const order_number = generateNextVlbOrderNumber();
+    const orderId = 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
 
     // Dynamic initial tasks based on service type
     const initialTasks: any[] = [];
@@ -1046,8 +1368,8 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
         id, order_number, quote_id, client_name, partner_name, client_email, client_phone,
         event_date, event_venue, total_amount, down_payment_required, total_paid, balance_pending,
         payment_status, production_status, vobo_design_deadline, physical_delivery_date,
-        stand_setup_date, stand_setup_time, notes, service_type, tasks_json, items_json, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        stand_setup_date, stand_setup_time, notes, service_type, tasks_json, items_json, quote_number, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       orderId,
       order_number,
@@ -1072,6 +1394,7 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
       service_type,
       JSON.stringify(initialTasks),
       JSON.stringify(quoteItems),
+      quote.quote_number || null,
       now,
       now
     );
@@ -1835,6 +2158,32 @@ router.put('/orders/:id', (req, res) => {
       now,
       id
     );
+
+    // Sincronizar cambios básicos de vuelta a vlb_quotes si tiene cotización asociada
+    if (existing.quote_id) {
+      try {
+        db.prepare(`
+          UPDATE vlb_quotes SET
+            client_name = COALESCE(?, client_name),
+            partner_name = COALESCE(?, partner_name),
+            client_email = COALESCE(?, client_email),
+            client_phone = COALESCE(?, client_phone),
+            event_date = COALESCE(?, event_date),
+            event_venue = COALESCE(?, event_venue),
+            updated_at = ?
+          WHERE id = ?
+        `).run(
+          client_name ? client_name.trim() : null,
+          partner_name ?? null,
+          client_email ?? null,
+          client_phone ?? null,
+          event_date ?? null,
+          event_venue ?? null,
+          now,
+          existing.quote_id
+        );
+      } catch {}
+    }
 
     const updated = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(id);
     res.json({ order: updated });

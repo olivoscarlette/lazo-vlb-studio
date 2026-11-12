@@ -3517,17 +3517,37 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       Artículos & Servicios Contratados
                     </h4>
                   </div>
-                  <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                      selectedOrder.service_type === 'PAPELERIA'
-                        ? 'bg-[#F7EDEB] text-[#70443D] border border-[#ECD9D5]'
-                        : selectedOrder.service_type === 'STANDS_EXPERIENCIAS'
-                        ? 'bg-[#EBF2EB] text-[#384C3A] border border-[#D3E0D3]'
-                        : 'bg-[#F3EDE6] text-[#58352F] border border-[#E0D4CE]'
-                    }`}
-                  >
-                    {getServiceLabel(selectedOrder.service_type)}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    {selectedOrder.quote_id && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const q = quotes.find(quote => quote.id === selectedOrder.quote_id);
+                          if (q) {
+                            setSelectedOrder(null);
+                            setActiveTab('quotes');
+                            handleEditQuote(q);
+                          }
+                        }}
+                        className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl bg-[#FAF6F2] hover:bg-[#F3EDE6] border border-[#EAE3DA] text-[#9C665C] text-xs font-semibold transition cursor-pointer"
+                        title="Modificar artículos, cantidades o precios en el cotizador"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Editar en Cotizador</span>
+                      </button>
+                    )}
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        selectedOrder.service_type === 'PAPELERIA'
+                          ? 'bg-[#F7EDEB] text-[#70443D] border border-[#ECD9D5]'
+                          : selectedOrder.service_type === 'STANDS_EXPERIENCIAS'
+                          ? 'bg-[#EBF2EB] text-[#384C3A] border border-[#D3E0D3]'
+                          : 'bg-[#F3EDE6] text-[#58352F] border border-[#E0D4CE]'
+                      }`}
+                    >
+                      {getServiceLabel(selectedOrder.service_type)}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="divide-y divide-[#EFE8E1] bg-[#FFFFFF] rounded-2xl border border-[#EAE3DA] overflow-hidden">
