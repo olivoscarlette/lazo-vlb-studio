@@ -47,16 +47,6 @@ interface VlbFinanceModuleProps {
 
 export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack }) => {
   // ----------------------------------------
-  // SEGURIDAD & ACCESO PRIVADO (PIN LOCK)
-  // ----------------------------------------
-  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
-    return sessionStorage.getItem('vlb_finances_unlocked') === 'true';
-  });
-  const [pinInput, setPinInput] = useState<string>('');
-  const [pinError, setPinError] = useState<string | null>(null);
-  const [pinVerifying, setPinVerifying] = useState<boolean>(false);
-
-  // ----------------------------------------
   // ESTADOS PRINCIPALES DE DATOS
   // ----------------------------------------
   const [settlements, setSettlements] = useState<VlbEventSettlement[]>([]);
@@ -86,8 +76,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     freight_rate: 500,
     stationery_rate: 200,
     company_fund_pct: 60,
-    partners_profit_pct: 40,
-    new_pin: ''
+    partners_profit_pct: 40
   });
 
   // Formulario de Evento (Edición / Creación)
@@ -116,7 +105,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   // ----------------------------------------
   // CARGA DE DATOS DESDE EL SERVIDOR
   // ----------------------------------------
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const token = typeof window !== 'undefined'
+    ? (localStorage.getItem('lazo_token') || localStorage.getItem('token') || sessionStorage.getItem('token'))
+    : null;
 
   const apiFetch = async (url: string, options: RequestInit = {}) => {
     const res = await fetch(url, {
@@ -143,8 +134,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
           freight_rate: setData.settings.freight_rate,
           stationery_rate: setData.settings.stationery_rate,
           company_fund_pct: setData.settings.company_fund_pct,
-          partners_profit_pct: setData.settings.partners_profit_pct,
-          new_pin: ''
+          partners_profit_pct: setData.settings.partners_profit_pct
         });
       }
 
@@ -163,53 +153,8 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   };
 
   useEffect(() => {
-    if (isUnlocked) {
-      loadData();
-    }
-  }, [isUnlocked]);
-
-  // ----------------------------------------
-  // MANEJO DE DESBLOQUEO POR PIN
-  // ----------------------------------------
-  const handleVerifyPin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!pinInput.trim()) {
-      setPinError('Ingresa el PIN de seguridad.');
-      return;
-    }
-
-    setPinVerifying(true);
-    setPinError(null);
-
-    try {
-      const res = await apiFetch('/api/vlb/finance/verify-pin', {
-        method: 'POST',
-        body: JSON.stringify({ pin: pinInput.trim() })
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'PIN incorrecto.');
-      }
-
-      sessionStorage.setItem('vlb_finances_unlocked', 'true');
-      setIsUnlocked(true);
-      setPinInput('');
-      showToast('Acceso confidencial concedido.');
-    } catch (err: any) {
-      setPinError(err.message || 'PIN de seguridad incorrecto.');
-    } finally {
-      setPinVerifying(false);
-    }
-  };
-
-  const handleLockView = () => {
-    sessionStorage.removeItem('vlb_finances_unlocked');
-    setIsUnlocked(false);
-    setPinInput('');
-    setPinError(null);
-    showToast('Módulo financiero bloqueado correctamente.');
-  };
+    loadData();
+  }, []);
 
   // ----------------------------------------
   // OPERACIONES CRUD DE LIQUIDACIÓN
@@ -411,76 +356,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   };
 
   // ----------------------------------------
-  // PANTALLA 1: BLOQUEO POR PIN (CONFIDENCIAL)
-  // ----------------------------------------
-  if (!isUnlocked) {
-    return (
-      <div className="min-h-[70vh] flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md bg-[#FFFFFF] p-8 rounded-3xl border border-[#EAE3DA] shadow-xl text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
-          <div className="w-16 h-16 mx-auto rounded-2xl bg-[#FFF6F8] border border-[#F5C2CD] flex items-center justify-center text-[#E84E6D] shadow-xs">
-            <Lock className="w-8 h-8" />
-          </div>
-
-          <div className="space-y-2">
-            <span className="text-[10px] font-bold text-[#E84E6D] uppercase tracking-widest bg-[#FFF6F8] px-3 py-1 rounded-full border border-[#F5C2CD]">
-              Confidencial · Dirección General
-            </span>
-            <h2 className="font-serif text-2xl font-bold text-[#332A28]">
-              Nómina & Reparto de Utilidades
-            </h2>
-            <p className="text-xs text-[#7D6F6B] leading-relaxed">
-              Este submódulo contiene el cálculo privado de sueldos, fletes, gastos de insumos y reparto de utilidades por evento. Ingresa tu PIN de seguridad para continuar.
-            </p>
-          </div>
-
-          <form onSubmit={handleVerifyPin} className="space-y-4">
-            <div>
-              <input
-                type="password"
-                maxLength={8}
-                autoFocus
-                placeholder="Ingresa PIN (ej. 2711)"
-                value={pinInput}
-                onChange={e => setPinInput(e.target.value)}
-                className="w-full text-center text-2xl tracking-[0.4em] font-mono py-3.5 px-4 bg-[#FCFAF7] border-2 border-[#EAE3DA] focus:border-[#E84E6D] rounded-2xl text-[#332A28] focus:outline-none transition"
-              />
-              {pinError && (
-                <div className="mt-2 text-xs font-semibold text-[#E84E6D] flex items-center justify-center space-x-1">
-                  <AlertCircle className="w-3.5 h-3.5" />
-                  <span>{pinError}</span>
-                </div>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={pinVerifying || !pinInput.trim()}
-              className="w-full py-3.5 px-4 bg-[#332A28] hover:bg-[#58352F] text-[#FFFFFF] text-xs font-bold uppercase tracking-widest rounded-2xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
-            >
-              <KeyRound className="w-4 h-4 text-[#CCDACC]" />
-              <span>{pinVerifying ? 'Verificando...' : 'Desbloquear Submódulo'}</span>
-            </button>
-          </form>
-
-          <div className="pt-2 border-t border-[#F7F3EE] flex items-center justify-between text-xs text-[#7D6F6B]">
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="hover:text-[#332A28] transition underline cursor-pointer"
-              >
-                Volver al Cotizador
-              </button>
-            )}
-            <span className="text-[11px] text-[#A69995]">PIN Maestro Predeterminado: 2711</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ----------------------------------------
-  // PANTALLA 2: SUBMÓDULO DESBLOQUEADO
+  // VISTA PRINCIPAL (SOLO ADMINISTRADORES)
   // ----------------------------------------
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -560,14 +436,13 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
             <span>Tarifas</span>
           </button>
 
-          <button
-            onClick={handleLockView}
-            className="px-3 py-2 rounded-xl bg-[#FFF6F8] hover:bg-[#FEEBF0] text-[#E84E6D] border border-[#F5C2CD] text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs"
-            title="Bloquear vista financiera privada"
+          <div
+            className="px-3 py-2 rounded-xl bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA] text-xs font-bold flex items-center space-x-1.5 shadow-2xs"
+            title="Módulo visible exclusivamente para usuarios con rol de Administrador"
           >
-            <Lock className="w-3.5 h-3.5" />
-            <span>Bloquear</span>
-          </button>
+            <ShieldCheck className="w-3.5 h-3.5 text-[#1EBE5D]" />
+            <span>Exclusivo Admin</span>
+          </div>
         </div>
       </div>
 
@@ -1525,23 +1400,6 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 <p className="text-[11px] text-[#7D6F6B]">
                   * La bolsa de utilidades se distribuye equitativamente 50% y 50% entre Scarlette y Victoria.
                 </p>
-              </div>
-
-              <div className="p-3.5 bg-[#FFF6F8] rounded-2xl border border-[#F5C2CD] space-y-2">
-                <span className="font-bold text-[#E84E6D] uppercase tracking-wider block">
-                  Seguridad & Cambio de PIN Privado
-                </span>
-                <input
-                  type="password"
-                  maxLength={8}
-                  placeholder="Nuevo PIN de 4 dígitos (dejar en blanco para mantener)"
-                  value={settingsForm.new_pin}
-                  onChange={e => setSettingsForm({ ...settingsForm, new_pin: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-white border border-[#F5C2CD] rounded-xl text-[#332A28] font-mono"
-                />
-                <span className="text-[10px] text-[#7D6F6B] block">
-                  PIN actual activo. Si deseas cambiarlo, ingresa aquí tu nueva clave confidencial.
-                </span>
               </div>
 
               <div className="pt-3 border-t border-[#F7F3EE] flex justify-end space-x-2">

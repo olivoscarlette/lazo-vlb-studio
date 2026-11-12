@@ -1573,16 +1573,13 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 onClick={() => setActiveTab('finances')}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                   activeTab === 'finances'
-                    ? 'bg-[#4A3B32] text-[#FFFFFF] shadow-2xs'
-                    : 'text-[#4A3B32] hover:bg-[#F4EFEB] bg-[#FAF6F2] border border-[#E8DEC8]'
+                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                    : 'text-[#7D6F6B] hover:text-[#332A28]'
                 }`}
-                title="Módulo Privado de Nómina, Gastos y Reparto de Utilidades (Protegido por PIN)"
+                title="Módulo de Nómina, Gastos y Reparto de Utilidades (Exclusivo Administradores)"
               >
-                <Coins className="w-3.5 h-3.5 text-[#C5A880]" />
-                <span className="font-bold">Nómina & Reparto</span>
-                <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#DFD7CE] text-[#4A3B32] font-mono font-bold">
-                  🔒 PIN
-                </span>
+                <Coins className="w-3.5 h-3.5" />
+                <span>Nómina & Reparto</span>
               </button>
             )}
           </div>
