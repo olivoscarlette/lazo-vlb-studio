@@ -88,16 +88,25 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   // Modo de servicio en formulario: 'STANDS' | 'PAPELERIA' | 'MIXTO'
   const [modalServiceMode, setModalServiceMode] = useState<'STANDS' | 'PAPELERIA' | 'MIXTO'>('MIXTO');
 
-  // Cerrar popup de calculadora con tecla Escape
+  // Cierre Inteligente: Cerrar cualquier modal activo con tecla Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && showWorkshopCostCalc) {
-        setShowWorkshopCostCalc(false);
+      if (e.key === 'Escape') {
+        if (showWorkshopCostCalc) {
+          setShowWorkshopCostCalc(false);
+        } else if (editModalSettlement) {
+          setEditModalSettlement(null);
+          setIsNewEventModal(false);
+        } else if (detailModalSettlement) {
+          setDetailModalSettlement(null);
+        } else if (showSettingsModal) {
+          setShowSettingsModal(false);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showWorkshopCostCalc]);
+  }, [showWorkshopCostCalc, editModalSettlement, detailModalSettlement, showSettingsModal]);
 
   // Formulario de Ajustes
   const [settingsForm, setSettingsForm] = useState({
@@ -808,23 +817,23 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       {/* TARJETAS DE LIQUIDACIÓN A SOCIAS & STAFF */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Scarlette */}
-        <div className="bg-[#FFFFFF] p-5 rounded-3xl border-2 border-[#F5C2CD] shadow-xs space-y-2 relative overflow-hidden">
+        <div className="bg-[#FFFFFF] p-5 rounded-3xl border-2 border-[#EAE3DA] shadow-xs space-y-2 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#E84E6D] uppercase tracking-wider">Liquidación Total</span>
+            <span className="text-xs font-bold text-[#70443D] uppercase tracking-wider">Liquidación Total</span>
             <div className="flex items-center space-x-1 text-[10px]">
-              <span className="font-bold text-[#E84E6D] bg-[#FFF6F8] px-2 py-0.5 rounded-full border border-[#F5C2CD]">
+              <span className="font-bold text-[#70443D] bg-[#FCFAF7] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
                 Por pagar: {fmt(globalKpis.pendingScarlette)}
               </span>
             </div>
           </div>
           <h3 className="font-serif text-lg font-bold text-[#332A28]">Scarlette Olivo</h3>
-          <div className="text-2xl font-bold font-serif text-[#E84E6D]">
+          <div className="text-2xl font-bold font-serif text-[#70443D]">
             {fmt(globalKpis.totalScarlette)}
           </div>
-          <div className="space-y-1 text-[11px] pt-1.5 border-t border-[#F5C2CD]/50">
+          <div className="space-y-1 text-[11px] pt-1.5 border-t border-[#EAE3DA]">
             <div className="flex justify-between text-[#7D6F6B]">
               <span>• Reparto Utilidades (20% neto):</span>
-              <span className="font-bold text-[#E84E6D]">{fmt(globalKpis.totalScarletteProfit)}</span>
+              <span className="font-bold text-[#70443D]">{fmt(globalKpis.totalScarletteProfit)}</span>
             </div>
             <div className="flex justify-between text-[#7D6F6B]">
               <span>• Turnos, Carro & Taller:</span>
@@ -985,7 +994,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 <th className="py-3 px-3 text-right">Ganancia Neta</th>
                 <th className="py-3 px-3 text-right font-bold text-[#9C665C]">60% VLB</th>
                 <th className="py-3 px-3 text-right font-bold text-[#70443D]">Pago Victoria</th>
-                <th className="py-3 px-3 text-right font-bold text-[#E84E6D]">Pago Scarlette</th>
+                <th className="py-3 px-3 text-right font-bold text-[#70443D]">Pago Scarlette</th>
                 <th className="py-3 px-3 text-center">Acciones</th>
               </tr>
             </thead>
@@ -1507,12 +1516,19 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
         const calc = calculateEventSettlement(item, settings);
 
         return (
-          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setDetailModalSettlement(null);
+              }
+            }}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          >
             <div className="bg-[#FFFFFF] w-full max-w-2xl rounded-3xl border border-[#EAE3DA] shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
                 <div className="space-y-0.5">
                   <div className="flex items-center space-x-2">
-                    <span className="text-[10px] font-bold text-[#E84E6D] bg-[#FFF6F8] px-2.5 py-0.5 rounded-full border border-[#F5C2CD] uppercase">
+                    <span className="text-[10px] font-bold text-[#70443D] bg-[#FAF6F2] px-2.5 py-0.5 rounded-full border border-[#EAE3DA] uppercase">
                       Desglose de Liquidación
                     </span>
                     <span className="text-xs text-[#7D6F6B] font-mono">
@@ -1553,12 +1569,12 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                   <span className="text-[10px] text-[#7D6F6B]">Insumos + Fletes + Staff</span>
                 </div>
 
-                <div className="bg-[#FFF6F8] p-3.5 rounded-2xl border border-[#F5C2CD]">
-                  <span className="text-[10px] font-bold uppercase text-[#E84E6D] block">Ganancia Neta Real</span>
-                  <span className="text-lg font-bold font-serif text-[#E84E6D] block mt-0.5">
+                <div className="bg-[#FAF6F2] p-3.5 rounded-2xl border border-[#EAE3DA]">
+                  <span className="text-[10px] font-bold uppercase text-[#70443D] block">Ganancia Neta Real</span>
+                  <span className="text-lg font-bold font-serif text-[#70443D] block mt-0.5">
                     {fmt(calc.netProfit)}
                   </span>
-                  <span className="text-[10px] text-[#E84E6D]">100% base de reparto</span>
+                  <span className="text-[10px] text-[#7D6F6B]">100% base de reparto</span>
                 </div>
               </div>
 
@@ -1598,16 +1614,16 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Scarlette */}
-                  <div className="p-4 rounded-2xl bg-[#FFFDFD] border-2 border-[#F5C2CD] space-y-2 text-xs">
-                    <div className="flex items-center justify-between pb-1.5 border-b border-[#F5C2CD]/50">
-                      <span className="font-bold text-sm text-[#E84E6D]">Scarlette Olivo</span>
+                  <div className="p-4 rounded-2xl bg-[#FCFAF7] border-2 border-[#EAE3DA] space-y-2 text-xs">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-[#EAE3DA]">
+                      <span className="font-bold text-sm text-[#70443D]">Scarlette Olivo</span>
                       <button
                         type="button"
                         onClick={() => handleTogglePayout(item.id, 'scarlette')}
                         className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition flex items-center space-x-1 cursor-pointer ${
                           item.paid_scarlette
                             ? 'bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]'
-                            : 'bg-[#FFF6F8] text-[#E84E6D] border border-[#F5C2CD] hover:bg-[#FFE8ED]'
+                            : 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA] hover:bg-[#F3ECE4]'
                         }`}
                         title="Clic para cambiar estado de pago"
                       >
@@ -1632,12 +1648,12 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                           {fmt(calc.scarletteStationeryPayout)}
                         </span>
                       </div>
-                      <div className="flex justify-between text-[#E84E6D]">
+                      <div className="flex justify-between text-[#70443D]">
                         <span>• Reparto Utilidad (20% neto):</span>
                         <span className="font-bold">{fmt(calc.scarletteProfitShare)}</span>
                       </div>
                     </div>
-                    <div className="pt-2 border-t border-[#F5C2CD] flex justify-between items-center text-sm font-bold text-[#E84E6D]">
+                    <div className="pt-2 border-t border-[#EAE3DA] flex justify-between items-center text-sm font-bold text-[#70443D]">
                       <span>TOTAL A PAGAR:</span>
                       <span className="text-base font-serif">{fmt(calc.scarletteTotalPayout)}</span>
                     </div>
@@ -1762,7 +1778,15 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       {/* MODAL 2: FORMULARIO DE EVENTO (NUEVO / EDITAR) */}
       {/* ---------------------------------------------------- */}
       {(isNewEventModal || editModalSettlement) && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsNewEventModal(false);
+              setEditModalSettlement(null);
+            }
+          }}
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
           <div className="bg-[#FFFFFF] w-full max-w-xl rounded-3xl border border-[#EAE3DA] shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
               <div>
@@ -2275,11 +2299,18 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       {/* MODAL 3: AJUSTES DE TARIFAS OPERATIVAS & SEGURIDAD */}
       {/* ---------------------------------------------------- */}
       {showSettingsModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowSettingsModal(false);
+            }
+          }}
+          className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
           <div className="bg-[#FFFFFF] w-full max-w-lg rounded-3xl border border-[#EAE3DA] shadow-2xl p-6 sm:p-8 space-y-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
               <div>
-                <span className="text-[10px] font-bold text-[#E84E6D] uppercase tracking-wider">
+                <span className="text-[10px] font-bold text-[#70443D] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA] uppercase tracking-wider">
                   Parámetros Globales
                 </span>
                 <h3 className="font-serif text-xl font-bold text-[#332A28]">

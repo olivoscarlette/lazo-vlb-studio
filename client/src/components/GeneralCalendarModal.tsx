@@ -309,8 +309,32 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
     return true;
   });
 
+  // Cierre Inteligente: tecla Escape para modales internos o el calendario general
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showGoogleSyncModal) {
+          setShowGoogleSyncModal(false);
+        } else if (showAddModal) {
+          setShowAddModal(false);
+        } else {
+          onClose();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose, showAddModal, showGoogleSyncModal]);
+
   return createPortal(
-    <div className="fixed inset-0 z-50 bg-[#2B2826]/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 bg-[#2B2826]/50 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-150"
+    >
       <div className="bg-[#FFFFFF] w-full max-w-6xl h-[92vh] max-h-[880px] rounded-3xl border border-[#EFE8E1] shadow-2xl flex flex-col overflow-hidden">
         
         {/* Top Header */}
@@ -620,7 +644,14 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
 
         {/* Modal: Agendar / Editar Evento */}
         {showAddModal && (
-          <div className="fixed inset-0 z-60 bg-[#2B2826]/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowAddModal(false);
+              }
+            }}
+            className="fixed inset-0 z-60 bg-[#2B2826]/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          >
             <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EFE8E1] space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-[#EFE8E1]">
                 <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
@@ -826,7 +857,14 @@ export const GeneralCalendarModal: React.FC<GeneralCalendarModalProps> = ({
 
         {/* Modal: Vincular con Google Calendar */}
         {showGoogleSyncModal && (
-          <div className="fixed inset-0 z-60 bg-[#2B2826]/55 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowGoogleSyncModal(false);
+              }
+            }}
+            className="fixed inset-0 z-60 bg-[#2B2826]/55 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          >
             <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-[#EFE8E1] space-y-5">
               <div className="flex items-center justify-between pb-3 border-b border-[#EFE8E1]">
                 <div className="flex items-center space-x-2.5">

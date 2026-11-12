@@ -258,15 +258,35 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     loadData(true);
   }, []);
 
+  // Cierre Inteligente: Cerrar cualquier modal o drawer activo al presionar Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && viewingPhotoItem) {
-        setViewingPhotoItem(null);
+      if (e.key === 'Escape') {
+        if (viewingPhotoItem) {
+          setViewingPhotoItem(null);
+        } else if (showPaymentModal) {
+          setShowPaymentModal(false);
+        } else if (showDocUploadModal) {
+          setShowDocUploadModal(false);
+        } else if (showDatesEditModal) {
+          setShowDatesEditModal(false);
+        } else if (showCatalogModal) {
+          setShowCatalogModal(false);
+        } else if (selectedOrder) {
+          setSelectedOrder(null);
+        }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [viewingPhotoItem]);
+  }, [
+    viewingPhotoItem,
+    showPaymentModal,
+    showDocUploadModal,
+    showDatesEditModal,
+    showCatalogModal,
+    selectedOrder
+  ]);
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setFeedback({ type, text });
@@ -3716,7 +3736,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       {/* MODAL: REGISTRAR PAGO SPEI / ANTICIPO                    */}
       {/* ======================================================== */}
       {showPaymentModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowPaymentModal(false);
+            }
+          }}
+          className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
           <div className="bg-[#FFFFFF] w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
               <div className="flex items-center space-x-2">
@@ -3832,7 +3859,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       {/* MODAL: SUBIR DOCUMENTO A LA BÓVEDA                       */}
       {/* ======================================================== */}
       {showDocUploadModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDocUploadModal(false);
+            }
+          }}
+          className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
           <div className="bg-[#FFFFFF] w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
               <div className="flex items-center space-x-2">
@@ -3917,7 +3951,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       {/* MODAL: EDITAR FECHAS LOGÍSTICAS                          */}
       {/* ======================================================== */}
       {showDatesEditModal && selectedOrder && (
-        <div className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowDatesEditModal(false);
+            }
+          }}
+          className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
           <div className="bg-[#FFFFFF] w-full max-w-md rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
               <div className="flex items-center space-x-2">
@@ -4126,7 +4167,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       {/* MODAL: CREAR / EDITAR ARTÍCULO EN CATÁLOGO               */}
       {/* ======================================================== */}
       {showCatalogModal && (
-        <div className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowCatalogModal(false);
+            }
+          }}
+          className="fixed inset-0 z-50 bg-[#332A28]/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+        >
           <div className="bg-[#FFFFFF] w-full max-w-lg rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
               <div className="flex items-center space-x-2">
