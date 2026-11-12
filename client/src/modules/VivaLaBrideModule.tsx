@@ -121,6 +121,16 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
   // Modal de Registro Rápido de Evento / Compra Directa desde CRM Parejas
   const [showNewOrderModal, setShowNewOrderModal] = useState<boolean>(false);
+  const [directOrderItems, setDirectOrderItems] = useState<{
+    id: string;
+    catalog_id?: string;
+    item_name: string;
+    category: 'STANDS_EXPERIENCIAS' | 'PAPELERIA';
+    pricing_type?: 'FIXED_EVENT' | 'PER_PIECE';
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+  }[]>([]);
   const [newOrderForm, setNewOrderForm] = useState({
     client_name: '',
     partner_name: '',
@@ -1292,8 +1302,97 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   };
 
   // ----------------------------------------
-  // CRM ORDERS & DOCUMENTS
+  // CRM ORDERS & DIRECT EVENT REGISTRATION
   // ----------------------------------------
+  const addCatalogItemToDirectOrder = (item: VlbCatalogItem) => {
+    const existingIndex = directOrderItems.findIndex(i => i.catalog_id === item.id);
+    if (existingIndex >= 0) {
+      const updated = [...directOrderItems];
+      updated[existingIndex].quantity += 1;
+      updated[existingIndex].total_price = updated[existingIndex].quantity * updated[existingIndex].unit_price;
+      setDirectOrderItems(updated);
+      showToast(`Cantidad incrementada para "${item.name}".`);
+    } else {
+      const initialQty = item.pricing_type === 'FIXED_EVENT' ? 1 : Math.max(1, item.min_pieces || 1);
+      const newItem = {
+        id: 'dir_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
+        catalog_id: item.id,
+        category: item.category,
+        item_name: item.name,
+        pricing_type: item.pricing_type,
+        quantity: initialQty,
+        unit_price: item.base_price,
+        total_price: initialQty * item.base_price
+      };
+      setDirectOrderItems([...directOrderItems, newItem]);
+      showToast(`"${item.name}" agregado a los servicios.`);
+    }
+  };
+
+  const addPresetDirectItem = (
+    name: string,
+    category: 'STANDS_EXPERIENCIAS' | 'PAPELERIA',
+    price: number,
+    qty = 1,
+    pricingType: 'FIXED_EVENT' | 'PER_PIECE' = 'FIXED_EVENT'
+  ) => {
+    const newItem = {
+      id: 'dir_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
+      item_name: name,
+      category,
+      pricing_type: pricingType,
+      quantity: qty,
+      unit_price: price,
+      total_price: qty * price
+    };
+    setDirectOrderItems([...directOrderItems, newItem]);
+    showToast(`"${name}" agregado.`);
+  };
+
+  const updateDirectItemQty = (index: number, newQty: number) => {
+    const updated = [...directOrderItems];
+    const qty = Math.max(1, newQty);
+    updated[index].quantity = qty;
+    updated[index].total_price = qty * updated[index].unit_price;
+    setDirectOrderItems(updated);
+  };
+
+  const updateDirectItemPrice = (index: number, newPrice: number) => {
+    const updated = [...directOrderItems];
+    const price = Math.max(0, newPrice);
+    updated[index].unit_price = price;
+    updated[index].total_price = updated[index].quantity * price;
+    setDirectOrderItems(updated);
+  };
+
+  const updateDirectItemName = (index: number, newName: string) => {
+    const updated = [...directOrderItems];
+    updated[index].item_name = newName;
+    setDirectOrderItems(updated);
+  };
+
+  const updateDirectItemCategory = (index: number, newCat: 'STANDS_EXPERIENCIAS' | 'PAPELERIA') => {
+    const updated = [...directOrderItems];
+    updated[index].category = newCat;
+    setDirectOrderItems(updated);
+  };
+
+  const removeDirectItem = (index: number) => {
+    setDirectOrderItems(directOrderItems.filter((_, i) => i !== index));
+  };
+
+  const directStandsTotal = directOrderItems
+    .filter(i => i.category === 'STANDS_EXPERIENCIAS')
+    .reduce((acc, i) => acc + (Number(i.total_price) || 0), 0);
+  const directStationeryTotal = directOrderItems
+    .filter(i => i.category === 'PAPELERIA')
+    .reduce((acc, i) => acc + (Number(i.total_price) || 0), 0);
+  const directItemsTotal = directStandsTotal + directStationeryTotal;
+  const effectiveDirectTotal = directOrderItems.length > 0 ? directItemsTotal : (newOrderForm.total_amount || 0);
+  const effectiveDownPayment = directOrderItems.length > 0
+    ? Math.round(directItemsTotal * 0.5 * 100) / 100
+    : (newOrderForm.down_payment_required || Math.round(effectiveDirectTotal * 0.5 * 100) / 100);
+
   const handleCreateDirectOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newOrderForm.client_name.trim()) {
@@ -1305,12 +1404,33 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       return;
     }
 
+    const standsSum = directStandsTotal;
+    const stationerySum = directStationeryTotal;
+    const finalTotal = effectiveDirectTotal;
+
+    let finalServiceType = newOrderForm.service_type;
+    if (directOrderItems.length > 0) {
+      if (standsSum > 0 && stationerySum > 0) finalServiceType = 'MIXTO';
+      else if (standsSum > 0) finalServiceType = 'STANDS';
+      else if (stationerySum > 0) finalServiceType = 'PAPELERIA';
+    }
+
+    const payload = {
+      ...newOrderForm,
+      service_type: finalServiceType,
+      total_amount: finalTotal,
+      down_payment_required: effectiveDownPayment,
+      stands_amount: standsSum,
+      stationery_amount: stationerySum,
+      items: directOrderItems
+    };
+
     try {
       setLoading(true);
       const res = await apiFetch('/api/vlb/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newOrderForm)
+        body: JSON.stringify(payload)
       });
       if (!res.ok) {
         const err = await res.json();
@@ -1318,6 +1438,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       }
       showToast('¡Evento registrado exitosamente! Sincronizado en Nómina & Reparto ✨', 'success');
       setShowNewOrderModal(false);
+      setDirectOrderItems([]);
       setNewOrderForm({
         client_name: '',
         partner_name: '',
@@ -4637,7 +4758,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
           }}
           className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150"
         >
-          <div className="bg-[#FFFFFF] w-full max-w-2xl rounded-3xl border border-[#EAE3DA] shadow-2xl p-5 sm:p-7 space-y-4 max-h-[92vh] overflow-y-auto">
+          <div className="bg-[#FFFFFF] w-full max-w-3xl rounded-3xl border border-[#EAE3DA] shadow-2xl p-5 sm:p-7 space-y-4 max-h-[92vh] overflow-y-auto">
             {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
               <div className="flex items-center space-x-2.5">
@@ -4745,7 +4866,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                         type="button"
                         onClick={() => setNewOrderForm({ ...newOrderForm, service_type: 'MIXTO' })}
                         className={`py-2 px-1 text-center font-bold rounded-xl transition cursor-pointer ${
-                          newOrderForm.service_type === 'MIXTO'
+                          (directOrderItems.length > 0
+                            ? (directStandsTotal > 0 && directStationeryTotal > 0 ? 'MIXTO' : directStandsTotal > 0 ? 'STANDS' : 'PAPELERIA')
+                            : newOrderForm.service_type) === 'MIXTO'
                             ? 'bg-[#70443D] text-white shadow-xs'
                             : 'bg-white border border-[#EAE3DA] text-[#7D6F6B]'
                         }`}
@@ -4756,7 +4879,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                         type="button"
                         onClick={() => setNewOrderForm({ ...newOrderForm, service_type: 'STANDS' })}
                         className={`py-2 px-1 text-center font-bold rounded-xl transition cursor-pointer ${
-                          newOrderForm.service_type === 'STANDS'
+                          (directOrderItems.length > 0
+                            ? (directStandsTotal > 0 && directStationeryTotal > 0 ? 'MIXTO' : directStandsTotal > 0 ? 'STANDS' : 'PAPELERIA')
+                            : newOrderForm.service_type) === 'STANDS'
                             ? 'bg-[#70443D] text-white shadow-xs'
                             : 'bg-white border border-[#EAE3DA] text-[#7D6F6B]'
                         }`}
@@ -4767,8 +4892,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                         type="button"
                         onClick={() => setNewOrderForm({ ...newOrderForm, service_type: 'PAPELERIA' })}
                         className={`py-2 px-1 text-center font-bold rounded-xl transition cursor-pointer ${
-                          newOrderForm.service_type === 'PAPELERIA'
-                            ? 'bg-[#E84E6D] text-white shadow-xs'
+                          (directOrderItems.length > 0
+                            ? (directStandsTotal > 0 && directStationeryTotal > 0 ? 'MIXTO' : directStandsTotal > 0 ? 'STANDS' : 'PAPELERIA')
+                            : newOrderForm.service_type) === 'PAPELERIA'
+                            ? 'bg-[#70443D] text-white shadow-xs'
                             : 'bg-white border border-[#EAE3DA] text-[#7D6F6B]'
                         }`}
                       >
@@ -4779,63 +4906,309 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 </div>
               </div>
 
-              {/* 2. Montos & Cobros */}
+              {/* 2. Servicios y Productos Contratados (Cotizador Rápido) */}
               <div className="p-3.5 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] space-y-3">
-                <span className="font-bold text-[#70443D] uppercase tracking-wider block">
-                  2. Montos Contratados & Anticipo
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Total Contratado ($ MXN) *
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step="any"
-                      required
-                      placeholder="0.00"
-                      value={newOrderForm.total_amount || ''}
-                      onChange={e => {
-                        const tot = parseFloat(e.target.value) || 0;
-                        setNewOrderForm({
-                          ...newOrderForm,
-                          total_amount: tot,
-                          down_payment_required: Math.round(tot * 0.5 * 100) / 100
-                        });
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono font-bold text-sm"
-                    />
+                    <span className="font-bold text-[#70443D] uppercase tracking-wider block">
+                      2. Servicios & Productos Contratados (Cotizador)
+                    </span>
+                    <p className="text-[11px] text-[#7D6F6B]">
+                      Agrega los servicios tal como en una cotización para registrar partidas exactas y nómina automática.
+                    </p>
+                  </div>
+                  {directOrderItems.length > 0 && (
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-[#FAF0ED] text-[#70443D] border border-[#EFE2DF] shrink-0 self-start sm:self-center">
+                      {directOrderItems.length} {directOrderItems.length === 1 ? 'concepto' : 'conceptos'}
+                    </span>
+                  )}
+                </div>
+
+                {/* Selector desde el Catálogo de VLB y Servicios Personalizados */}
+                <div className="space-y-2 pt-1">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="flex-1 relative">
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const item = catalogItems.find(c => c.id === e.target.value);
+                          if (item) {
+                            addCatalogItemToDirectOrder(item);
+                          }
+                          e.target.value = '';
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-medium text-xs cursor-pointer shadow-2xs"
+                      >
+                        <option value="">➕ Seleccionar del Catálogo de VLB...</option>
+                        <optgroup label="🍸 Stands & Experiencias">
+                          {catalogItems
+                            .filter(c => c.category === 'STANDS_EXPERIENCIAS')
+                            .map(c => (
+                              <option key={c.id} value={c.id}>
+                                🍸 {c.name} — ${c.base_price.toLocaleString('es-MX')}
+                              </option>
+                            ))}
+                        </optgroup>
+                        <optgroup label="💌 Papelería Social Atelier">
+                          {catalogItems
+                            .filter(c => c.category === 'PAPELERIA')
+                            .map(c => (
+                              <option key={c.id} value={c.id}>
+                                💌 {c.name} — ${c.base_price.toLocaleString('es-MX')}{c.pricing_type === 'PER_PIECE' ? '/pza' : ''}
+                              </option>
+                            ))}
+                        </optgroup>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => addPresetDirectItem('Stand / Barra Personalizada', 'STANDS_EXPERIENCIAS', 0, 1, 'FIXED_EVENT')}
+                        className="px-2.5 py-2 rounded-xl bg-white border border-[#CCDACC] text-[#2D5A27] hover:bg-[#F2F7F2] font-semibold text-[11px] transition cursor-pointer flex items-center space-x-1"
+                        title="Agregar un stand o barra personalizada"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>+ Stand</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addPresetDirectItem('Papelería Personalizada', 'PAPELERIA', 0, 1, 'PER_PIECE')}
+                        className="px-2.5 py-2 rounded-xl bg-white border border-[#F5C2CB] text-[#70443D] hover:bg-[#FAF0ED] font-semibold text-[11px] transition cursor-pointer flex items-center space-x-1"
+                        title="Agregar papelería personalizada"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>+ Papelería</span>
+                      </button>
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Anticipo 50% Requerido ($ MXN)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step="any"
-                      placeholder="0.00"
-                      value={newOrderForm.down_payment_required || ''}
-                      onChange={e => setNewOrderForm({ ...newOrderForm, down_payment_required: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
-                    />
+                  {/* Atajos Rápidos de 1-Clic */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                    <span className="text-[10px] font-semibold text-[#7D6F6B] uppercase tracking-wider mr-1">
+                      Atajos Rápidos:
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => addPresetDirectItem('Stand Beer Bar', 'STANDS_EXPERIENCIAS', 5500, 1, 'FIXED_EVENT')}
+                      className="px-2 py-1 bg-white hover:bg-[#F2F7F2] text-[#2D5A27] border border-[#CCDACC] rounded-lg text-[10px] font-medium transition cursor-pointer"
+                    >
+                      + 🍸 Beer Bar ($5,500)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addPresetDirectItem('Stand Carajillos Bar', 'STANDS_EXPERIENCIAS', 2770, 1, 'FIXED_EVENT')}
+                      className="px-2 py-1 bg-white hover:bg-[#F2F7F2] text-[#2D5A27] border border-[#CCDACC] rounded-lg text-[10px] font-medium transition cursor-pointer"
+                    >
+                      + 🍸 Carajillos ($2,770)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addPresetDirectItem('Stand Audio Guestbook', 'STANDS_EXPERIENCIAS', 2500, 1, 'FIXED_EVENT')}
+                      className="px-2 py-1 bg-white hover:bg-[#F2F7F2] text-[#2D5A27] border border-[#CCDACC] rounded-lg text-[10px] font-medium transition cursor-pointer"
+                    >
+                      + 🍸 Audio Guestbook ($2,500)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addPresetDirectItem('Menús de Mesa Impresos', 'PAPELERIA', 45, 50, 'PER_PIECE')}
+                      className="px-2 py-1 bg-white hover:bg-[#FAF0ED] text-[#70443D] border border-[#EFE2DF] rounded-lg text-[10px] font-medium transition cursor-pointer"
+                    >
+                      + 💌 Menús 50 pzas ($45 c/u)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => addPresetDirectItem('Números de Mesa / Capitanes', 'PAPELERIA', 85, 12, 'PER_PIECE')}
+                      className="px-2 py-1 bg-white hover:bg-[#FAF0ED] text-[#70443D] border border-[#EFE2DF] rounded-lg text-[10px] font-medium transition cursor-pointer"
+                    >
+                      + 💌 Números de Mesa ($85 c/u)
+                    </button>
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#EAE3DA]">
-                  <label className="flex items-center space-x-2.5 cursor-pointer p-2 rounded-xl bg-white border border-[#EAE3DA]">
-                    <input
-                      type="checkbox"
-                      checked={newOrderForm.down_payment_covered}
-                      onChange={e => setNewOrderForm({ ...newOrderForm, down_payment_covered: e.target.checked })}
-                      className="w-4 h-4 accent-[#1EBE5D] rounded"
-                    />
-                    <span className="font-semibold text-[#332A28]">
-                      ¿El anticipo del 50% ya fue cubierto y transferido por la pareja?
-                    </span>
-                  </label>
+                {/* Lista de Partidas Agregadas o Estado Vacío */}
+                {directOrderItems.length === 0 ? (
+                  <div className="p-4 rounded-xl border border-dashed border-[#EAE3DA] bg-white text-center space-y-2">
+                    <div className="w-8 h-8 rounded-full bg-[#FAF6F2] text-[#70443D] flex items-center justify-center mx-auto text-sm">
+                      📝
+                    </div>
+                    <p className="text-xs font-semibold text-[#332A28]">
+                      Aún no has agregado partidas a este pedido
+                    </p>
+                    <p className="text-[11px] text-[#7D6F6B] max-w-md mx-auto">
+                      Usa el selector del catálogo o los atajos rápidos de arriba para añadir los conceptos como una cotización. O si prefieres, ingresa un monto total manual a continuación:
+                    </p>
+                    <div className="pt-2 max-w-xs mx-auto">
+                      <label className="block text-[11px] font-semibold text-[#7D6F6B] mb-1 text-left">
+                        Total Contratado Manual ($ MXN):
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        placeholder="0.00"
+                        value={newOrderForm.total_amount || ''}
+                        onChange={e => {
+                          const tot = parseFloat(e.target.value) || 0;
+                          setNewOrderForm({
+                            ...newOrderForm,
+                            total_amount: tot,
+                            down_payment_required: Math.round(tot * 0.5 * 100) / 100
+                          });
+                        }}
+                        className="w-full px-3 py-1.5 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono font-bold text-center"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                    {directOrderItems.map((item, idx) => (
+                      <div
+                        key={item.id || idx}
+                        className="p-2.5 rounded-xl bg-white border border-[#EAE3DA] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 hover:border-[#DDD2C4] transition"
+                      >
+                        {/* Tipo de partida y Nombre editable */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateDirectItemCategory(
+                                  idx,
+                                  item.category === 'STANDS_EXPERIENCIAS' ? 'PAPELERIA' : 'STANDS_EXPERIENCIAS'
+                                )
+                              }
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider cursor-pointer transition ${
+                                item.category === 'PAPELERIA'
+                                  ? 'bg-[#FAF0ED] text-[#70443D] border border-[#EFE2DF]'
+                                  : 'bg-[#E8F0E8] text-[#2D5A27] border border-[#CCDACC]'
+                              }`}
+                              title="Haz clic para cambiar entre Stand y Papelería"
+                            >
+                              {item.category === 'PAPELERIA' ? '💌 Papelería' : '🍸 Stand'}
+                            </button>
+                            <span className="text-[10px] text-[#7D6F6B]">
+                              {item.category === 'PAPELERIA' ? 'Aplica 20% atelier' : 'Genera nómina de turno/insumos'}
+                            </span>
+                          </div>
+                          <input
+                            type="text"
+                            value={item.item_name}
+                            onChange={e => updateDirectItemName(idx, e.target.value)}
+                            placeholder="Nombre del servicio / concepto..."
+                            className="w-full px-2 py-1 text-xs font-semibold bg-[#FAF6F2] border border-transparent hover:border-[#EAE3DA] focus:border-[#70443D] rounded-lg text-[#332A28]"
+                          />
+                        </div>
+
+                        {/* Cantidad, Precio Unitario, Subtotal y Eliminar */}
+                        <div className="flex items-center justify-between sm:justify-end space-x-2.5 shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-[#F7F3EE]">
+                          {/* Cantidad */}
+                          <div className="flex items-center space-x-1">
+                            <button
+                              type="button"
+                              onClick={() => updateDirectItemQty(idx, Math.max(1, item.quantity - 1))}
+                              className="w-6 h-6 rounded-md bg-[#FAF6F2] hover:bg-[#EAE3DA] text-[#332A28] font-bold flex items-center justify-center cursor-pointer text-xs"
+                            >
+                              -
+                            </button>
+                            <input
+                              type="number"
+                              min={1}
+                              value={item.quantity}
+                              onChange={e => updateDirectItemQty(idx, parseInt(e.target.value) || 1)}
+                              className="w-12 px-1 py-1 text-xs text-center font-bold bg-[#FAF6F2] border border-[#EAE3DA] rounded-lg text-[#332A28]"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => updateDirectItemQty(idx, item.quantity + 1)}
+                              className="w-6 h-6 rounded-md bg-[#FAF6F2] hover:bg-[#EAE3DA] text-[#332A28] font-bold flex items-center justify-center cursor-pointer text-xs"
+                            >
+                              +
+                            </button>
+                          </div>
+
+                          {/* Precio Unitario */}
+                          <div className="flex items-center space-x-1">
+                            <span className="text-[11px] text-[#7D6F6B]">$</span>
+                            <input
+                              type="number"
+                              min={0}
+                              step="any"
+                              value={item.unit_price}
+                              onChange={e => updateDirectItemPrice(idx, parseFloat(e.target.value) || 0)}
+                              className="w-20 px-1.5 py-1 text-xs text-right font-mono font-semibold bg-[#FAF6F2] border border-[#EAE3DA] rounded-lg text-[#332A28]"
+                              title="Precio Unitario"
+                            />
+                          </div>
+
+                          {/* Total Partida */}
+                          <div className="text-right min-w-[80px]">
+                            <div className="text-xs font-bold font-mono text-[#332A28]">
+                              ${(item.total_price || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                            </div>
+                            <div className="text-[9px] text-[#7D6F6B]">subtotal</div>
+                          </div>
+
+                          {/* Eliminar */}
+                          <button
+                            type="button"
+                            onClick={() => removeDirectItem(idx)}
+                            className="p-1.5 text-[#7D6F6B] hover:text-[#70443D] hover:bg-[#FAF0ED] rounded-lg transition cursor-pointer"
+                            title="Eliminar partida"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Resumen Financiero Calculado */}
+                <div className="p-3 bg-white rounded-xl border border-[#EAE3DA] space-y-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    <div className="p-2 rounded-lg bg-[#FCFAF7] border border-[#F2ECE5]">
+                      <span className="text-[10px] text-[#7D6F6B] block">🍸 Total Stands:</span>
+                      <span className="text-xs font-bold text-[#2D5A27] font-mono">
+                        ${directStandsTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-[#FCFAF7] border border-[#F2ECE5]">
+                      <span className="text-[10px] text-[#7D6F6B] block">💌 Total Papelería:</span>
+                      <span className="text-xs font-bold text-[#70443D] font-mono">
+                        ${directStationeryTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-[#FCFAF7] border border-[#F2ECE5]">
+                      <span className="text-[10px] text-[#70443D] font-bold block">TOTAL CONTRATADO:</span>
+                      <span className="text-sm font-bold text-[#332A28] font-mono">
+                        ${effectiveDirectTotal.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+
+                    <div className="p-2 rounded-lg bg-[#FAF0ED] border border-[#EFE2DF]">
+                      <span className="text-[10px] text-[#70443D] font-bold block">ANTICIPO 50%:</span>
+                      <span className="text-sm font-bold text-[#70443D] font-mono">
+                        ${effectiveDownPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-[#F2ECE5]">
+                    <label className="flex items-center space-x-2.5 cursor-pointer p-2 rounded-xl hover:bg-[#FAF6F2] transition border border-transparent hover:border-[#EAE3DA]">
+                      <input
+                        type="checkbox"
+                        checked={newOrderForm.down_payment_covered}
+                        onChange={e => setNewOrderForm({ ...newOrderForm, down_payment_covered: e.target.checked })}
+                        className="w-4 h-4 accent-[#1EBE5D] rounded cursor-pointer"
+                      />
+                      <span className="font-semibold text-[#332A28] text-xs">
+                        ¿El anticipo del 50% (${effectiveDownPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })}) ya fue cubierto y transferido por la pareja?
+                      </span>
+                    </label>
+                  </div>
                 </div>
               </div>
 

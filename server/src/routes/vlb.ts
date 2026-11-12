@@ -1548,7 +1548,8 @@ router.post('/orders', (req, res) => {
       total_amount = 0,
       down_payment_required,
       down_payment_covered = false,
-      service_type = 'MIXTO',
+      service_type,
+      items = [],
       stands_amount,
       stationery_amount,
       supplies_expense = 0,
@@ -1570,8 +1571,35 @@ router.post('/orders', (req, res) => {
     const nextSeq = String(countRow.count + 1).padStart(3, '0');
     const order_number = `VLB-${nextSeq}`;
 
+    // Calcular montos a partir de los conceptos contratados
+    let standsSum = Number(stands_amount) || 0;
+    let stationerySum = Number(stationery_amount) || 0;
+
+    if (Array.isArray(items) && items.length > 0) {
+      standsSum = 0;
+      stationerySum = 0;
+      for (const it of items) {
+        const lineTotal = Number(it.total_price) || ((Number(it.quantity) || 1) * (Number(it.unit_price) || 0));
+        if (it.category === 'PAPELERIA') {
+          stationerySum += lineTotal;
+        } else {
+          standsSum += lineTotal;
+        }
+      }
+    }
+
+    const itemsTotal = standsSum + stationerySum;
+    const total = itemsTotal > 0 ? itemsTotal : (Number(total_amount) || 0);
+
+    let finalServiceType = service_type;
+    if (!finalServiceType || finalServiceType === 'MIXTO') {
+      if (standsSum > 0 && stationerySum > 0) finalServiceType = 'MIXTO';
+      else if (standsSum > 0) finalServiceType = 'STANDS_EXPERIENCIAS';
+      else if (stationerySum > 0) finalServiceType = 'PAPELERIA';
+      else finalServiceType = 'MIXTO';
+    }
+
     const id = 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-    const total = Number(total_amount) || 0;
     const downPayment = down_payment_required !== undefined ? Number(down_payment_required) : (total * 0.5);
     const initialPaid = down_payment_covered ? downPayment : 0;
     const balancePending = Math.max(0, total - initialPaid);
@@ -1580,13 +1608,15 @@ router.post('/orders', (req, res) => {
       : (initialPaid > 0 ? 'ANTICIPO_PAGADO' : 'ANTICIPO_PENDIENTE');
     const now = new Date().toISOString();
 
+    const itemsJson = Array.isArray(items) && items.length > 0 ? JSON.stringify(items) : null;
+
     db.prepare(`
       INSERT INTO vlb_orders (
         id, order_number, client_name, partner_name, client_email, client_phone,
         event_date, event_venue, total_amount, down_payment_required, total_paid, balance_pending,
-        payment_status, production_status, vobo_design_deadline, physical_delivery_date,
+        payment_status, production_status, service_type, items_json, vobo_design_deadline, physical_delivery_date,
         stand_setup_date, stand_setup_time, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       order_number,
@@ -1602,6 +1632,8 @@ router.post('/orders', (req, res) => {
       balancePending,
       initialStatus,
       'DISENO_EN_PROCESO',
+      finalServiceType,
+      itemsJson,
       vobo_design_deadline || null,
       physical_delivery_date || null,
       stand_setup_date || event_date,
@@ -1635,21 +1667,19 @@ router.post('/orders', (req, res) => {
     const setId = 'set_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const clientFullName = partner_name ? `${client_name.trim()} & ${partner_name.trim()}` : client_name.trim();
 
-    let calcStands = stands_amount !== undefined ? Number(stands_amount) : 0;
-    let calcStationery = stationery_amount !== undefined ? Number(stationery_amount) : 0;
+    let calcStands = standsSum;
+    let calcStationery = stationerySum;
     if (calcStands === 0 && calcStationery === 0) {
-      if (service_type === 'PAPELERIA') {
+      if (finalServiceType === 'PAPELERIA') {
         calcStationery = total;
-      } else if (service_type === 'STANDS') {
-        calcStands = total;
       } else {
         calcStands = total;
       }
     }
 
     const supExpense = Number(supplies_expense) || 0;
-    const supServ = service_type === 'PAPELERIA' ? 0 : supExpense;
-    const supStat = service_type === 'PAPELERIA' ? supExpense : 0;
+    const supServ = finalServiceType === 'PAPELERIA' ? 0 : supExpense;
+    const supStat = finalServiceType === 'PAPELERIA' ? supExpense : 0;
 
     try {
       db.prepare(`
@@ -1677,7 +1707,7 @@ router.post('/orders', (req, res) => {
         supStat,
         null,
         car_provider || 'NINGUNA_EXTERNO',
-        service_type === 'STANDS' ? 'NINGUNA' : 'SCARLETTE',
+        finalServiceType === 'STANDS_EXPERIENCIAS' ? 'NINGUNA' : 'SCARLETTE',
         0,
         0,
         0,
