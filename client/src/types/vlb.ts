@@ -146,3 +146,64 @@ export interface VlbDocument {
   uploaded_by?: string;
   created_at: string;
 }
+
+export type VlbCarProvider = 'SCARLETTE' | 'VICTORIA' | 'NINGUNA_EXTERNO';
+export type VlbStationeryProvider = 'SCARLETTE' | 'VICTORIA' | 'NINGUNA';
+
+export interface VlbEventSettlement {
+  id: string;
+  order_id?: string | null;
+  quote_id?: string | null;
+  order_number?: string | null;
+  order_payment_status?: string | null;
+  order_total_paid?: number;
+  event_name: string;
+  event_date: string;
+  venue?: string | null;
+  service_amount: number;
+  freight_charged: number;
+  extra_services: number;
+  supplies_expense: number;
+  car_provider: VlbCarProvider;
+  stationery_provider: VlbStationeryProvider;
+  staff_scarlette: boolean;
+  staff_victoria: boolean;
+  external_staff_count: number;
+  status: 'PENDIENTE' | 'LIQUIDADO';
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VlbFinanceSettings {
+  id: string;
+  staff_rate: number;
+  freight_rate: number;
+  stationery_rate: number;
+  company_fund_pct: number;
+  partners_profit_pct: number;
+  has_pin: boolean;
+  updated_at: string;
+}
+
+export interface VlbSettlementCalculation {
+  totalRevenue: number;
+  suppliesExpense: number;
+  freightPayout: number;
+  freightBeneficiary: VlbCarProvider;
+  stationeryPayout: number;
+  stationeryBeneficiary: VlbStationeryProvider;
+  externalStaffCount: number;
+  externalStaffPayout: number;
+  scarletteShiftPayout: number;
+  victoriaShiftPayout: number;
+  totalExpenses: number;
+  netProfit: number;
+  companyFundAmount: number;
+  partnersProfitPool: number;
+  scarletteProfitShare: number;
+  victoriaProfitShare: number;
+  scarletteTotalPayout: number;
+  victoriaTotalPayout: number;
+  externalTotalPayout: number;
+}

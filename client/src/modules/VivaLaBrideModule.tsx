@@ -42,8 +42,11 @@ import {
   ZoomIn,
   Maximize2,
   Minimize2,
-  RotateCcw
+  RotateCcw,
+  Coins
 } from 'lucide-react';
+import { User } from '../types';
+import { VlbFinanceModule } from './VlbFinanceModule';
 import {
   VlbCatalogItem,
   VlbCategory,
@@ -61,11 +64,12 @@ import { convertHeicToJpeg, optimizeImageFile } from '../utils/heicConverter';
 
 interface VivaLaBrideModuleProps {
   onBackToLazo?: () => void;
+  user?: User;
 }
 
-export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLazo }) => {
-  // Navigation Tabs: 'quotes' | 'orders' | 'packing' | 'templates' | 'catalog'
-  const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog' | 'packing' | 'templates'>('quotes');
+export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLazo, user }) => {
+  // Navigation Tabs: 'quotes' | 'orders' | 'packing' | 'templates' | 'catalog' | 'finances'
+  const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog' | 'packing' | 'templates' | 'finances'>('quotes');
   const [quoteDiscountPct, setQuoteDiscountPct] = useState<number>(0);
   const [selectedContractType, setSelectedContractType] = useState<VlbContractType>('AUTO');
   const [pdfMenuQuoteId, setPdfMenuQuoteId] = useState<string | null>(null);
@@ -1564,6 +1568,23 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               <Package className="w-3.5 h-3.5" />
               <span>Catálogo</span>
             </button>
+            {(!user || user.role === 'ADMINISTRADOR') && (
+              <button
+                onClick={() => setActiveTab('finances')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  activeTab === 'finances'
+                    ? 'bg-[#4A3B32] text-[#FFFFFF] shadow-2xs'
+                    : 'text-[#4A3B32] hover:bg-[#F4EFEB] bg-[#FAF6F2] border border-[#E8DEC8]'
+                }`}
+                title="Módulo Privado de Nómina, Gastos y Reparto de Utilidades (Protegido por PIN)"
+              >
+                <Coins className="w-3.5 h-3.5 text-[#C5A880]" />
+                <span className="font-bold">Nómina & Reparto</span>
+                <span className="text-[9px] px-1.5 py-0.2 rounded-md bg-[#DFD7CE] text-[#4A3B32] font-mono font-bold">
+                  🔒 PIN
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -3152,6 +3173,16 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
             </form>
           </div>
         </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 6: NÓMINA, GASTOS & REPARTO DE UTILIDADES (PRIVADO)  */}
+      {/* ======================================================== */}
+      {activeTab === 'finances' && (
+        <VlbFinanceModule
+          user={user}
+          onBack={() => setActiveTab('quotes')}
+        />
       )}
 
       {/* ======================================================== */}

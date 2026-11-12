@@ -490,11 +490,14 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
   if (user?.role === 'ADMINISTRADOR' && activeModule === 'vlb') {
     return (
       <div className="min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-        <VivaLaBrideModule onBackToLazo={() => {
-          setActiveModule('lazo');
-          setCurrentWedding(null);
-          setGeneralDashboardTab('weddings');
-        }} />
+        <VivaLaBrideModule
+          user={user}
+          onBackToLazo={() => {
+            setActiveModule('lazo');
+            setCurrentWedding(null);
+            setGeneralDashboardTab('weddings');
+          }}
+        />
       </div>
     );
   }
@@ -700,11 +703,14 @@ const AppContent: React.FC = () => {
         <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
           <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
           <div className="flex-1 bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
-            <VivaLaBrideModule onBackToLazo={() => {
-              setActiveModule('lazo');
-              setCurrentWedding(null);
-              setGeneralDashboardTab('weddings');
-            }} />
+            <VivaLaBrideModule
+              user={user}
+              onBackToLazo={() => {
+                setActiveModule('lazo');
+                setCurrentWedding(null);
+                setGeneralDashboardTab('weddings');
+              }}
+            />
           </div>
         </div>
       ) : user.role !== 'NOVIOS' && !currentWedding ? (

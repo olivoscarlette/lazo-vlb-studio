@@ -1994,4 +1994,385 @@ router.delete('/documents/:id', (req, res) => {
   }
 });
 
+// ========================================================
+// SUBMÓDULO FINANCIERO PRIVADO (NÓMINA, GASTOS & REPARTO)
+// ACCESO EXCLUSIVO: ADMINISTRADOR (SCARLETTE) CON PIN
+// ========================================================
+
+// Middleware de verificación estricta de Super Admin
+const requireAdmin = (req: any, res: any, next: any) => {
+  if (!req.user || req.user.role !== 'ADMINISTRADOR') {
+    return res.status(403).json({ error: 'Acceso estrictamente reservado para la Dirección (Administrador).' });
+  }
+  next();
+};
+
+// GET /api/vlb/finance/settings - Consultar tarifas operativas y porcentajes de reparto
+router.get('/finance/settings', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    let settings = db.prepare('SELECT * FROM vlb_finance_settings WHERE id = ?').get('default') as any;
+    if (!settings) {
+      const now = new Date().toISOString();
+      db.prepare(`
+        INSERT INTO vlb_finance_settings (id, staff_rate, freight_rate, stationery_rate, company_fund_pct, partners_profit_pct, pin_code, updated_at)
+        VALUES ('default', 450, 500, 200, 60, 40, '2711', ?)
+      `).run(now);
+      settings = db.prepare('SELECT * FROM vlb_finance_settings WHERE id = ?').get('default') as any;
+    }
+
+    const { pin_code, ...publicSettings } = settings;
+    res.json({
+      settings: {
+        ...publicSettings,
+        has_pin: Boolean(pin_code)
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al obtener configuración financiera.' });
+  }
+});
+
+// PUT /api/vlb/finance/settings - Modificar tarifas fijas o cambiar PIN de acceso
+router.put('/finance/settings', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const {
+      staff_rate,
+      freight_rate,
+      stationery_rate,
+      company_fund_pct,
+      partners_profit_pct,
+      new_pin
+    } = req.body;
+
+    const current = db.prepare('SELECT * FROM vlb_finance_settings WHERE id = ?').get('default') as any;
+    const staffRate = Number(staff_rate) >= 0 ? Number(staff_rate) : (current?.staff_rate ?? 450);
+    const freightRate = Number(freight_rate) >= 0 ? Number(freight_rate) : (current?.freight_rate ?? 500);
+    const stationeryRate = Number(stationery_rate) >= 0 ? Number(stationery_rate) : (current?.stationery_rate ?? 200);
+    const fundPct = Number(company_fund_pct) >= 0 ? Number(company_fund_pct) : (current?.company_fund_pct ?? 60);
+    const profitPct = Number(partners_profit_pct) >= 0 ? Number(partners_profit_pct) : (current?.partners_profit_pct ?? 40);
+    const pin = (typeof new_pin === 'string' && new_pin.trim().length >= 4) ? new_pin.trim() : (current?.pin_code || '2711');
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      UPDATE vlb_finance_settings
+      SET staff_rate = ?, freight_rate = ?, stationery_rate = ?, company_fund_pct = ?, partners_profit_pct = ?, pin_code = ?, updated_at = ?
+      WHERE id = 'default'
+    `).run(staffRate, freightRate, stationeryRate, fundPct, profitPct, pin, now);
+
+    res.json({
+      message: 'Tarifas y configuración financiera actualizadas exitosamente.',
+      settings: {
+        id: 'default',
+        staff_rate: staffRate,
+        freight_rate: freightRate,
+        stationery_rate: stationeryRate,
+        company_fund_pct: fundPct,
+        partners_profit_pct: profitPct,
+        has_pin: true,
+        updated_at: now
+      }
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al actualizar configuración.' });
+  }
+});
+
+// POST /api/vlb/finance/verify-pin - Validar PIN de seguridad privada
+router.post('/finance/verify-pin', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { pin } = req.body;
+    const settings = db.prepare('SELECT pin_code FROM vlb_finance_settings WHERE id = ?').get('default') as any;
+    const validPin = settings?.pin_code || '2711';
+    const isValid = String(pin).trim() === String(validPin).trim();
+
+    if (!isValid) {
+      return res.status(401).json({ valid: false, error: 'PIN de seguridad incorrecto.' });
+    }
+
+    res.json({ valid: true, message: 'Acceso autorizado al submódulo financiero.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al validar PIN.' });
+  }
+});
+
+// GET /api/vlb/finance/settlements - Listar liquidaciones de eventos con sincronización automática de pedidos
+router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    // Sincronizar automáticamente pedidos de vlb_orders que no tengan liquidación creada
+    const unSyncedOrders = db.prepare(`
+      SELECT o.* 
+      FROM vlb_orders o 
+      WHERE o.id NOT IN (SELECT order_id FROM vlb_event_settlements WHERE order_id IS NOT NULL)
+    `).all() as any[];
+
+    if (unSyncedOrders.length > 0) {
+      const now = new Date().toISOString();
+      const insertStmt = db.prepare(`
+        INSERT INTO vlb_event_settlements (
+          id, order_id, quote_id, event_name, event_date, venue, service_amount,
+          freight_charged, extra_services, supplies_expense, car_provider, stationery_provider,
+          staff_scarlette, staff_victoria, external_staff_count, status, notes, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      for (const o of unSyncedOrders) {
+        const clientName = o.partner_name ? `${o.client_name} & ${o.partner_name}` : o.client_name;
+        const setId = 'set_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        insertStmt.run(
+          setId,
+          o.id,
+          o.quote_id || null,
+          clientName,
+          o.event_date || now.split('T')[0],
+          o.event_venue || 'Por definir',
+          Number(o.total_amount) || 0,
+          0,
+          0,
+          0,
+          'NINGUNA_EXTERNO',
+          'NINGUNA',
+          0,
+          0,
+          0,
+          'PENDIENTE',
+          `Pedido ${o.order_number || 'VLB'}`,
+          now,
+          now
+        );
+      }
+    }
+
+    const settlements = db.prepare(`
+      SELECT s.*, o.order_number, o.payment_status as order_payment_status, o.total_paid as order_total_paid
+      FROM vlb_event_settlements s
+      LEFT JOIN vlb_orders o ON o.id = s.order_id
+      ORDER BY s.event_date DESC, s.created_at DESC
+    `).all() as any[];
+
+    // Convertir booleanos de SQLite (0 y 1) a booleanos nativos de JS
+    const formatted = settlements.map(s => ({
+      ...s,
+      staff_scarlette: Boolean(s.staff_scarlette),
+      staff_victoria: Boolean(s.staff_victoria),
+      service_amount: Number(s.service_amount) || 0,
+      freight_charged: Number(s.freight_charged) || 0,
+      extra_services: Number(s.extra_services) || 0,
+      supplies_expense: Number(s.supplies_expense) || 0,
+      external_staff_count: Number(s.external_staff_count) || 0
+    }));
+
+    res.json({ settlements: formatted });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al obtener liquidaciones de eventos.' });
+  }
+});
+
+// POST /api/vlb/finance/settlements - Registrar manualmente un evento o liquidación extraordinaria
+router.post('/finance/settlements', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const {
+      event_name,
+      event_date,
+      venue,
+      service_amount,
+      freight_charged,
+      extra_services,
+      supplies_expense,
+      car_provider,
+      stationery_provider,
+      staff_scarlette,
+      staff_victoria,
+      external_staff_count,
+      status,
+      notes,
+      order_id
+    } = req.body;
+
+    if (!event_name || !event_name.trim()) {
+      return res.status(400).json({ error: 'El nombre del evento es requerido.' });
+    }
+    if (!event_date || !event_date.trim()) {
+      return res.status(400).json({ error: 'La fecha del evento es requerida.' });
+    }
+
+    const id = 'set_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      INSERT INTO vlb_event_settlements (
+        id, order_id, quote_id, event_name, event_date, venue, service_amount,
+        freight_charged, extra_services, supplies_expense, car_provider, stationery_provider,
+        staff_scarlette, staff_victoria, external_staff_count, status, notes, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      id,
+      order_id || null,
+      null,
+      event_name.trim(),
+      event_date.trim(),
+      venue ? venue.trim() : '',
+      Number(service_amount) || 0,
+      Number(freight_charged) || 0,
+      Number(extra_services) || 0,
+      Number(supplies_expense) || 0,
+      car_provider || 'NINGUNA_EXTERNO',
+      stationery_provider || 'NINGUNA',
+      staff_scarlette ? 1 : 0,
+      staff_victoria ? 1 : 0,
+      Number(external_staff_count) || 0,
+      status || 'PENDIENTE',
+      notes || null,
+      now,
+      now
+    );
+
+    const created = db.prepare('SELECT * FROM vlb_event_settlements WHERE id = ?').get(id) as any;
+    res.status(201).json({
+      settlement: {
+        ...created,
+        staff_scarlette: Boolean(created.staff_scarlette),
+        staff_victoria: Boolean(created.staff_victoria)
+      },
+      message: 'Liquidación de evento registrada exitosamente.'
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al crear liquidación.' });
+  }
+});
+
+// PUT /api/vlb/finance/settlements/:id - Actualizar datos operativos, insumos, asistencia o fletes de un evento
+router.put('/finance/settlements/:id', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      event_name,
+      event_date,
+      venue,
+      service_amount,
+      freight_charged,
+      extra_services,
+      supplies_expense,
+      car_provider,
+      stationery_provider,
+      staff_scarlette,
+      staff_victoria,
+      external_staff_count,
+      status,
+      notes
+    } = req.body;
+
+    const existing = db.prepare('SELECT id FROM vlb_event_settlements WHERE id = ?').get(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Registro de liquidación no encontrado.' });
+    }
+
+    const now = new Date().toISOString();
+
+    db.prepare(`
+      UPDATE vlb_event_settlements
+      SET event_name = ?, event_date = ?, venue = ?, service_amount = ?, freight_charged = ?,
+          extra_services = ?, supplies_expense = ?, car_provider = ?, stationery_provider = ?,
+          staff_scarlette = ?, staff_victoria = ?, external_staff_count = ?, status = ?, notes = ?, updated_at = ?
+      WHERE id = ?
+    `).run(
+      event_name.trim(),
+      event_date.trim(),
+      venue || '',
+      Number(service_amount) || 0,
+      Number(freight_charged) || 0,
+      Number(extra_services) || 0,
+      Number(supplies_expense) || 0,
+      car_provider || 'NINGUNA_EXTERNO',
+      stationery_provider || 'NINGUNA',
+      staff_scarlette ? 1 : 0,
+      staff_victoria ? 1 : 0,
+      Number(external_staff_count) || 0,
+      status || 'PENDIENTE',
+      notes || null,
+      now,
+      id
+    );
+
+    const updated = db.prepare('SELECT * FROM vlb_event_settlements WHERE id = ?').get(id) as any;
+    res.json({
+      settlement: {
+        ...updated,
+        staff_scarlette: Boolean(updated.staff_scarlette),
+        staff_victoria: Boolean(updated.staff_victoria)
+      },
+      message: 'Liquidación actualizada correctamente.'
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al actualizar liquidación.' });
+  }
+});
+
+// DELETE /api/vlb/finance/settlements/:id - Eliminar liquidación
+router.delete('/finance/settlements/:id', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = db.prepare('SELECT id FROM vlb_event_settlements WHERE id = ?').get(id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Registro de liquidación no encontrado.' });
+    }
+
+    db.prepare('DELETE FROM vlb_event_settlements WHERE id = ?').run(id);
+    res.json({ message: 'Liquidación eliminada correctamente.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al eliminar liquidación.' });
+  }
+});
+
+// POST /api/vlb/finance/sync-orders - Forzar sincronización manual de pedidos
+router.post('/finance/sync-orders', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const unSyncedOrders = db.prepare(`
+      SELECT o.* 
+      FROM vlb_orders o 
+      WHERE o.id NOT IN (SELECT order_id FROM vlb_event_settlements WHERE order_id IS NOT NULL)
+    `).all() as any[];
+
+    let importedCount = 0;
+    const now = new Date().toISOString();
+    const insertStmt = db.prepare(`
+      INSERT INTO vlb_event_settlements (
+        id, order_id, quote_id, event_name, event_date, venue, service_amount,
+        freight_charged, extra_services, supplies_expense, car_provider, stationery_provider,
+        staff_scarlette, staff_victoria, external_staff_count, status, notes, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const o of unSyncedOrders) {
+      const clientName = o.partner_name ? `${o.client_name} & ${o.partner_name}` : o.client_name;
+      const setId = 'set_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+      insertStmt.run(
+        setId,
+        o.id,
+        o.quote_id || null,
+        clientName,
+        o.event_date || now.split('T')[0],
+        o.event_venue || 'Por definir',
+        Number(o.total_amount) || 0,
+        0,
+        0,
+        0,
+        'NINGUNA_EXTERNO',
+        'NINGUNA',
+        0,
+        0,
+        0,
+        'PENDIENTE',
+        `Pedido ${o.order_number || 'VLB'}`,
+        now,
+        now
+      );
+      importedCount++;
+    }
+
+    res.json({ message: `Sincronización completa. ${importedCount} nuevo(s) evento(s) vinculado(s).`, importedCount });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error en sincronización.' });
+  }
+});
+
 export default router;

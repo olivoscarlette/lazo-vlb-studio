@@ -121,7 +121,51 @@ export function initVlbDatabase() {
       sort_order INTEGER DEFAULT 0,
       created_at TEXT NOT NULL
     );
+
+    -- Módulo Financiero Privado (Nómina, Gastos Operativos y Reparto de Utilidades)
+    CREATE TABLE IF NOT EXISTS vlb_finance_settings (
+      id TEXT PRIMARY KEY DEFAULT 'default',
+      staff_rate REAL DEFAULT 450,
+      freight_rate REAL DEFAULT 500,
+      stationery_rate REAL DEFAULT 200,
+      company_fund_pct REAL DEFAULT 60,
+      partners_profit_pct REAL DEFAULT 40,
+      pin_code TEXT DEFAULT '2711',
+      updated_at TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS vlb_event_settlements (
+      id TEXT PRIMARY KEY,
+      order_id TEXT,
+      quote_id TEXT,
+      event_name TEXT NOT NULL,
+      event_date TEXT NOT NULL,
+      venue TEXT,
+      service_amount REAL NOT NULL DEFAULT 0,
+      freight_charged REAL NOT NULL DEFAULT 0,
+      extra_services REAL NOT NULL DEFAULT 0,
+      supplies_expense REAL NOT NULL DEFAULT 0,
+      car_provider TEXT NOT NULL DEFAULT 'NINGUNA_EXTERNO', -- 'SCARLETTE' | 'VICTORIA' | 'NINGUNA_EXTERNO'
+      stationery_provider TEXT NOT NULL DEFAULT 'NINGUNA', -- 'SCARLETTE' | 'VICTORIA' | 'NINGUNA'
+      staff_scarlette INTEGER NOT NULL DEFAULT 0,
+      staff_victoria INTEGER NOT NULL DEFAULT 0,
+      external_staff_count INTEGER NOT NULL DEFAULT 0,
+      status TEXT DEFAULT 'PENDIENTE', -- 'PENDIENTE' | 'LIQUIDADO'
+      notes TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
+
+  try {
+    const existingSettings = db.prepare('SELECT id FROM vlb_finance_settings WHERE id = ?').get('default');
+    if (!existingSettings) {
+      db.prepare(`
+        INSERT INTO vlb_finance_settings (id, staff_rate, freight_rate, stationery_rate, company_fund_pct, partners_profit_pct, pin_code, updated_at)
+        VALUES ('default', 450, 500, 200, 60, 40, '2711', datetime('now'))
+      `).run();
+    }
+  } catch {}
 
   // Migrations for dynamic tasks and service type
   try {
