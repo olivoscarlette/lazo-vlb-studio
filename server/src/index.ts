@@ -6,7 +6,7 @@ import fs from 'fs';
 // @ts-ignore
 import convert from 'heic-convert';
 import { fileURLToPath } from 'url';
-import { initDatabase } from './db/index.js';
+import { initDatabase, db } from './db/index.js';
 
 import authRouter from './routes/auth.js';
 import weddingsRouter from './routes/weddings.js';
@@ -178,13 +178,118 @@ const clientDistPath = fs.existsSync(path.resolve(process.cwd(), 'client/dist'))
   ? path.resolve(process.cwd(), 'client/dist')
   : path.resolve(process.cwd(), 'dist-client');
 
+function escapeHtml(str: string): string {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}
+
 if (fs.existsSync(clientDistPath)) {
   app.use(express.static(clientDistPath));
+
   app.use((req, res, next) => {
-    if (req.method === 'GET' && !req.path.startsWith('/api')) {
-      return res.sendFile(path.join(clientDistPath, 'index.html'));
+    if (req.method !== 'GET' || req.path.startsWith('/api')) {
+      return next();
     }
-    next();
+
+    const indexPath = path.join(clientDistPath, 'index.html');
+    if (!fs.existsSync(indexPath)) {
+      return next();
+    }
+
+    // Comprobar si se está consultando una propuesta pública de Viva la Bride
+    let proposalKey = '';
+    if (req.path.startsWith('/vlb/propuesta/')) {
+      proposalKey = req.path.replace('/vlb/propuesta/', '').split('/')[0].trim();
+    } else if (req.path.startsWith('/p/')) {
+      proposalKey = req.path.replace('/p/', '').split('/')[0].trim();
+    } else if (req.query.propuesta && typeof req.query.propuesta === 'string') {
+      proposalKey = req.query.propuesta.trim();
+    }
+
+    if (proposalKey) {
+      try {
+        const quote = db.prepare(`
+          SELECT q.* 
+          FROM vlb_quotes q 
+          WHERE q.id = ? OR q.quote_number = ? OR q.public_token = ?
+        `).get(proposalKey, proposalKey, proposalKey) as any;
+
+        if (quote) {
+          const items = db.prepare(`
+            SELECT qi.*, c.image_url as catalog_image_url
+            FROM vlb_quote_items qi
+            LEFT JOIN vlb_catalog c ON c.id = qi.catalog_id
+            WHERE qi.quote_id = ?
+            ORDER BY qi.sort_order ASC
+          `).all(quote.id) as any[];
+
+          const clientName = quote.partner_name
+            ? `${quote.client_name} & ${quote.partner_name}`
+            : (quote.client_name || 'Novia');
+
+          const itemsList = items.map(i => i.item_name).filter(Boolean);
+          const itemsSummary = itemsList.length > 0
+            ? itemsList.slice(0, 2).join(' + ') + (itemsList.length > 2 ? ` (+${itemsList.length - 2} más)` : '')
+            : 'Cotización Oficial';
+
+          let eventDateFormatted = '';
+          if (quote.event_date) {
+            try {
+              const [y, m, d] = quote.event_date.split('-');
+              const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+              eventDateFormatted = `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
+            } catch {}
+          }
+
+          const totalFormatted = `$${Number(quote.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`;
+
+          const title = `🌸 Cotización Viva la Bride • ${clientName}`;
+          const description = `✨ ${itemsSummary}${eventDateFormatted ? ` • ${eventDateFormatted}` : ''}${quote.event_venue ? ` • ${quote.event_venue}` : ''} • Total: ${totalFormatted}. Haz clic para revisar tu propuesta personalizada y apartar tu fecha en línea.`;
+
+          // Foto del artículo (si existe en catálogo) o logo por defecto
+          let ogImageUrl = '/lazo-logo.png';
+          const itemWithImage = items.find(i => i.catalog_image_url);
+          if (itemWithImage?.catalog_image_url) {
+            ogImageUrl = itemWithImage.catalog_image_url;
+          }
+
+          const host = req.get('host') || 'www.lazostudio.mx';
+          const proto = (req.headers['x-forwarded-proto'] as string) || (req.secure ? 'https' : 'https');
+          const absoluteUrl = `${proto}://${host}${req.originalUrl}`;
+          const absoluteImageUrl = ogImageUrl.startsWith('http') ? ogImageUrl : `${proto}://${host}${ogImageUrl}`;
+
+          let html = fs.readFileSync(indexPath, 'utf8');
+          html = html.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(title)}</title>`);
+
+          const metaTags = `
+    <!-- OpenGraph / WhatsApp / Redes Sociales Dinámico -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="${escapeHtml(title)}" />
+    <meta property="og:description" content="${escapeHtml(description)}" />
+    <meta property="og:image" content="${escapeHtml(absoluteImageUrl)}" />
+    <meta property="og:image:secure_url" content="${escapeHtml(absoluteImageUrl)}" />
+    <meta property="og:url" content="${escapeHtml(absoluteUrl)}" />
+    <meta property="og:site_name" content="Viva la Bride — Atelier & Experiencias" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${escapeHtml(title)}" />
+    <meta name="twitter:description" content="${escapeHtml(description)}" />
+    <meta name="twitter:image" content="${escapeHtml(absoluteImageUrl)}" />
+`;
+          html = html.replace('</head>', `${metaTags}\n  </head>`);
+          res.setHeader('Content-Type', 'text/html; charset=utf-8');
+          return res.send(html);
+        }
+      } catch (err) {
+        console.warn('[OpenGraph Proposal Warning]:', err);
+      }
+    }
+
+    return res.sendFile(indexPath);
   });
 }
 

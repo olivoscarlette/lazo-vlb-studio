@@ -18,6 +18,7 @@ import {
   Edit3,
   ExternalLink,
   ChevronRight,
+  ChevronDown,
   ArrowRight,
   Upload,
   Eye,
@@ -66,6 +67,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog' | 'packing' | 'templates'>('quotes');
   const [quoteDiscountPct, setQuoteDiscountPct] = useState<number>(0);
   const [selectedContractType, setSelectedContractType] = useState<VlbContractType>('AUTO');
+  const [includeContractInPdf, setIncludeContractInPdf] = useState<boolean>(false);
+  const [pdfMenuQuoteId, setPdfMenuQuoteId] = useState<string | null>(null);
 
   // Packing Checklist State (Día del Evento / Packing al Auto)
   const [selectedPackingOrderId, setSelectedPackingOrderId] = useState<string>('');
@@ -848,11 +851,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     };
 
     const effectiveContract = selectedContractType === 'AUTO' ? detectedContract : selectedContractType;
-    await generateVlbQuotePdf(mockQuote, quoteItems, { contractType: effectiveContract });
-    showToast('¡PDF Editorial descargado con éxito!');
+    await generateVlbQuotePdf(mockQuote, quoteItems, {
+      contractType: effectiveContract,
+      includeContract: includeContractInPdf
+    });
+    showToast(includeContractInPdf ? '¡Cotización con Contrato descargada!' : '¡Cotización descargada (1 pág)!');
   };
 
-  const handleExportSavedQuotePdf = async (quote: VlbQuote) => {
+  const handleExportSavedQuotePdf = async (quote: VlbQuote, includeContract = true) => {
     try {
       let targetQuote = quote;
       let targetItems: VlbQuoteItem[] = [];
@@ -885,9 +891,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         ...targetQuote,
         down_payment_amount: downPaymentRequired
       }, targetItems, {
-        contractType: (targetQuote as any).contract_type
+        contractType: (targetQuote as any).contract_type,
+        includeContract
       });
-      showToast(`Cotización ${quote.quote_number} exportada a PDF.`);
+      showToast(`Cotización ${quote.quote_number} exportada (${includeContract ? 'con contrato' : 'solo cotización'}).`);
     } catch (err: any) {
       showToast(err.message || 'Error al exportar cotización', 'error');
     }
@@ -1912,6 +1919,40 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   </div>
                 </div>
 
+                {/* Formato de Descarga PDF (1 pág vs 2 págs) */}
+                <div className="bg-[#FAF6F2] p-2.5 rounded-2xl border border-[#EAE3DA] space-y-1.5">
+                  <div className="flex items-center justify-between text-[11px] font-bold text-[#7D6F6B]">
+                    <span>Páginas del PDF:</span>
+                    <span className="text-[#9C665C]">
+                      {includeContractInPdf ? '2 Págs (Con Contrato)' : '1 Pág (Solo Cotización)'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 p-1 bg-[#FFFFFF] rounded-xl border border-[#EAE3DA]">
+                    <button
+                      type="button"
+                      onClick={() => setIncludeContractInPdf(false)}
+                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition text-center cursor-pointer ${
+                        !includeContractInPdf
+                          ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
+                          : 'text-[#7D6F6B] hover:text-[#332A28]'
+                      }`}
+                    >
+                      📄 Solo Cotización
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIncludeContractInPdf(true)}
+                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition text-center cursor-pointer ${
+                        includeContractInPdf
+                          ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
+                          : 'text-[#7D6F6B] hover:text-[#332A28]'
+                      }`}
+                    >
+                      📑 + Contrato
+                    </button>
+                  </div>
+                </div>
+
                 {/* Acciones Principales */}
                 <div className="space-y-2.5 pt-2">
                   <button
@@ -1922,7 +1963,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     }`}
                   >
                     <Download className="w-4 h-4 text-[#CCDACC]" />
-                    <span>Exportar PDF Editorial</span>
+                    <span>
+                      {includeContractInPdf ? 'Descargar Cotización + Contrato' : 'Descargar Solo Cotización (1 pág)'}
+                    </span>
                   </button>
 
                   <button
@@ -2098,14 +2141,48 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                             <MessageSquare className="w-3.5 h-3.5" />
                             <span>WhatsApp</span>
                           </button>
-                          <button
-                            onClick={() => handleExportSavedQuotePdf(q)}
-                            className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"
-                            title="Descargar PDF"
-                          >
-                            <Download className="w-3.5 h-3.5" />
-                            <span>PDF</span>
-                          </button>
+                          <div className="relative inline-block text-left">
+                            <button
+                              onClick={() => setPdfMenuQuoteId(pdfMenuQuoteId === q.id ? null : q.id)}
+                              className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] border border-[#EAE3DA] font-semibold text-[11px] cursor-pointer"
+                              title="Opciones de descarga de PDF"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                              <span>PDF</span>
+                              <ChevronDown className="w-3 h-3 text-[#B88A82]" />
+                            </button>
+
+                            {pdfMenuQuoteId === q.id && (
+                              <div className="absolute right-0 mt-1 w-56 rounded-2xl bg-[#FFFFFF] shadow-lg border border-[#EAE3DA] p-1.5 z-50 text-xs space-y-1">
+                                <button
+                                  onClick={() => {
+                                    setPdfMenuQuoteId(null);
+                                    handleExportSavedQuotePdf(q, false);
+                                  }}
+                                  className="w-full text-left p-2 rounded-xl text-[#332A28] hover:bg-[#FAF6F2] flex items-center space-x-2 transition cursor-pointer"
+                                >
+                                  <span className="text-base">📄</span>
+                                  <div>
+                                    <div className="font-bold text-[#332A28]">Solo Cotización (1 pág)</div>
+                                    <div className="text-[10px] text-[#7D6F6B]">Ideal para precio inicial</div>
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setPdfMenuQuoteId(null);
+                                    handleExportSavedQuotePdf(q, true);
+                                  }}
+                                  className="w-full text-left p-2 rounded-xl text-[#332A28] hover:bg-[#FAF6F2] flex items-center space-x-2 transition cursor-pointer border-t border-[#F7F3EE]"
+                                >
+                                  <span className="text-base">📑</span>
+                                  <div>
+                                    <div className="font-bold text-[#9C665C]">+ Contrato (2 págs)</div>
+                                    <div className="text-[10px] text-[#7D6F6B]">Para apartado y cierre</div>
+                                  </div>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                           {q.status !== 'CONVERTIDA' && (
                             <button
                               onClick={() => handleConvertQuoteToOrder(q.id)}
