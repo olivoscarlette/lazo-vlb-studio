@@ -119,6 +119,26 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const [orderPayments, setOrderPayments] = useState<VlbPayment[]>([]);
   const [orderDocs, setOrderDocs] = useState<VlbDocument[]>([]);
 
+  // Modal de Registro Rápido de Evento / Compra Directa desde CRM Parejas
+  const [showNewOrderModal, setShowNewOrderModal] = useState<boolean>(false);
+  const [newOrderForm, setNewOrderForm] = useState({
+    client_name: '',
+    partner_name: '',
+    client_phone: '',
+    client_email: '',
+    event_date: new Date().toISOString().split('T')[0],
+    event_venue: '',
+    service_type: 'MIXTO' as 'PAPELERIA' | 'STANDS' | 'MIXTO',
+    total_amount: 0,
+    down_payment_required: 0,
+    down_payment_covered: false,
+    supplies_expense: 0,
+    car_provider: 'NINGUNA_EXTERNO',
+    external_staff_count: 0,
+    external_staff_names: '',
+    notes: ''
+  });
+
   // Quote Builder State
   const [quoteForm, setQuoteForm] = useState({
     client_name: '',
@@ -264,6 +284,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       if (e.key === 'Escape') {
         if (viewingPhotoItem) {
           setViewingPhotoItem(null);
+        } else if (showNewOrderModal) {
+          setShowNewOrderModal(false);
         } else if (showPaymentModal) {
           setShowPaymentModal(false);
         } else if (showDocUploadModal) {
@@ -281,6 +303,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
     viewingPhotoItem,
+    showNewOrderModal,
     showPaymentModal,
     showDocUploadModal,
     showDatesEditModal,
@@ -1271,6 +1294,55 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   // ----------------------------------------
   // CRM ORDERS & DOCUMENTS
   // ----------------------------------------
+  const handleCreateDirectOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOrderForm.client_name.trim()) {
+      showToast('El nombre de la clienta es requerido.', 'error');
+      return;
+    }
+    if (!newOrderForm.event_date) {
+      showToast('La fecha del evento es requerida.', 'error');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await apiFetch('/api/vlb/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newOrderForm)
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Error al registrar pedido.');
+      }
+      showToast('¡Evento registrado exitosamente! Sincronizado en Nómina & Reparto ✨', 'success');
+      setShowNewOrderModal(false);
+      setNewOrderForm({
+        client_name: '',
+        partner_name: '',
+        client_phone: '',
+        client_email: '',
+        event_date: new Date().toISOString().split('T')[0],
+        event_venue: '',
+        service_type: 'MIXTO',
+        total_amount: 0,
+        down_payment_required: 0,
+        down_payment_covered: false,
+        supplies_expense: 0,
+        car_provider: 'NINGUNA_EXTERNO',
+        external_staff_count: 0,
+        external_staff_names: '',
+        notes: ''
+      });
+      await loadData();
+    } catch (err: any) {
+      showToast(err.message || 'Error al registrar pedido.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOpenOrderDetail = async (order: VlbOrder) => {
     const tasks = getOrderTasks(order);
     setSelectedOrder({ ...order, tasks });
@@ -2309,7 +2381,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
             <div className="flex items-center space-x-2">
               <button
-                onClick={loadData}
+                type="button"
+                onClick={() => setShowNewOrderModal(true)}
+                className="flex items-center space-x-1.5 px-4 py-2.5 rounded-2xl bg-[#70443D] hover:bg-[#58352F] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Registrar Evento / Compra</span>
+              </button>
+              <button
+                onClick={() => loadData()}
                 className="p-2.5 rounded-xl bg-[#FFFFFF] border border-[#EAE3DA] text-[#7D6F6B] hover:text-[#332A28] transition cursor-pointer"
                 title="Actualizar datos"
               >
@@ -4539,6 +4619,323 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                     )}
                   </button>
                 </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* MODAL: REGISTRAR NUEVO EVENTO / COMPRA DIRECTA EN CRM   */}
+      {/* ======================================================== */}
+      {showNewOrderModal && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowNewOrderModal(false);
+            }
+          }}
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-150"
+        >
+          <div className="bg-[#FFFFFF] w-full max-w-2xl rounded-3xl border border-[#EAE3DA] shadow-2xl p-5 sm:p-7 space-y-4 max-h-[92vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#F7F3EE]">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-[#FCFAF7] text-[#70443D] flex items-center justify-center text-lg border border-[#EAE3DA]">
+                  💍
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                    Registrar Evento / Compra Directa
+                  </h3>
+                  <p className="text-xs text-[#7D6F6B]">
+                    Guarda el evento en CRM Parejas y sincroniza su liquidación automáticamente en Nómina & Reparto.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowNewOrderModal(false)}
+                className="p-2 rounded-xl text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2] transition cursor-pointer"
+                title="Cerrar (Esc o clic afuera)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDirectOrder} className="space-y-4 text-xs">
+              {/* 1. Datos Principales */}
+              <div className="p-3.5 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] space-y-3">
+                <span className="font-bold text-[#70443D] uppercase tracking-wider block">
+                  1. Datos del Cliente & Evento
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Nombre de la Novia / Clienta *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Valeria López"
+                      value={newOrderForm.client_name}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, client_name: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Nombre de la Pareja / Novio (Opcional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Santiago Ramos"
+                      value={newOrderForm.partner_name}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, partner_name: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Fecha del Evento *
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={newOrderForm.event_date}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, event_date: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Sede / Venue
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Hacienda San Carlos"
+                      value={newOrderForm.event_venue}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, event_venue: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      WhatsApp / Teléfono
+                    </label>
+                    <input
+                      type="tel"
+                      placeholder="Ej. 33 1234 5678"
+                      value={newOrderForm.client_phone}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, client_phone: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Tipo de Servicio
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5 pt-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setNewOrderForm({ ...newOrderForm, service_type: 'MIXTO' })}
+                        className={`py-2 px-1 text-center font-bold rounded-xl transition cursor-pointer ${
+                          newOrderForm.service_type === 'MIXTO'
+                            ? 'bg-[#70443D] text-white shadow-xs'
+                            : 'bg-white border border-[#EAE3DA] text-[#7D6F6B]'
+                        }`}
+                      >
+                        🍸💌 Mixto
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewOrderForm({ ...newOrderForm, service_type: 'STANDS' })}
+                        className={`py-2 px-1 text-center font-bold rounded-xl transition cursor-pointer ${
+                          newOrderForm.service_type === 'STANDS'
+                            ? 'bg-[#70443D] text-white shadow-xs'
+                            : 'bg-white border border-[#EAE3DA] text-[#7D6F6B]'
+                        }`}
+                      >
+                        🍸 Stands
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNewOrderForm({ ...newOrderForm, service_type: 'PAPELERIA' })}
+                        className={`py-2 px-1 text-center font-bold rounded-xl transition cursor-pointer ${
+                          newOrderForm.service_type === 'PAPELERIA'
+                            ? 'bg-[#E84E6D] text-white shadow-xs'
+                            : 'bg-white border border-[#EAE3DA] text-[#7D6F6B]'
+                        }`}
+                      >
+                        💌 Papelería
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Montos & Cobros */}
+              <div className="p-3.5 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] space-y-3">
+                <span className="font-bold text-[#70443D] uppercase tracking-wider block">
+                  2. Montos Contratados & Anticipo
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Total Contratado ($ MXN) *
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      required
+                      placeholder="0.00"
+                      value={newOrderForm.total_amount || ''}
+                      onChange={e => {
+                        const tot = parseFloat(e.target.value) || 0;
+                        setNewOrderForm({
+                          ...newOrderForm,
+                          total_amount: tot,
+                          down_payment_required: Math.round(tot * 0.5 * 100) / 100
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono font-bold text-sm"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Anticipo 50% Requerido ($ MXN)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      placeholder="0.00"
+                      value={newOrderForm.down_payment_required || ''}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, down_payment_required: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-[#EAE3DA]">
+                  <label className="flex items-center space-x-2.5 cursor-pointer p-2 rounded-xl bg-white border border-[#EAE3DA]">
+                    <input
+                      type="checkbox"
+                      checked={newOrderForm.down_payment_covered}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, down_payment_covered: e.target.checked })}
+                      className="w-4 h-4 accent-[#1EBE5D] rounded"
+                    />
+                    <span className="font-semibold text-[#332A28]">
+                      ¿El anticipo del 50% ya fue cubierto y transferido por la pareja?
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* 3. Operación y Nómina Inicial */}
+              <div className="p-3.5 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] space-y-3">
+                <span className="font-bold text-[#70443D] uppercase tracking-wider block">
+                  3. Datos Operativos & Nómina Inicial (Opcional)
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Insumos Estimados ($ MXN)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      placeholder="0.00"
+                      value={newOrderForm.supplies_expense || ''}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, supplies_expense: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      ¿Quién llevará carro?
+                    </label>
+                    <select
+                      value={newOrderForm.car_provider}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, car_provider: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] cursor-pointer"
+                    >
+                      <option value="NINGUNA_EXTERNO">Ninguna / Flete Externo ($0)</option>
+                      <option value="SCARLETTE">🚗 Solo Scarlette ($500)</option>
+                      <option value="VICTORIA">🚗 Solo Victoria ($500)</option>
+                      <option value="AMBAS_COMPLETO">🚗🚗 Ambas llevaron carro ($500 c/u)</option>
+                      <option value="AMBAS_DIVIDIDO">🚗🚗 Ambas llevaron carro (50/50)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Staff Externo de Apoyo
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step={1}
+                      placeholder="0 personas"
+                      value={newOrderForm.external_staff_count || ''}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, external_staff_count: parseInt(e.target.value, 10) || 0 })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Nombres del Staff (a quién se le paga)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Mariana López, Carlos Pérez"
+                      value={newOrderForm.external_staff_names}
+                      onChange={e => setNewOrderForm({ ...newOrderForm, external_staff_names: e.target.value })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block font-semibold text-[#7D6F6B] mb-1">
+                    Notas y Artículos Contratados
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Artículos solicitados, requerimientos especiales o notas..."
+                    value={newOrderForm.notes}
+                    onChange={e => setNewOrderForm({ ...newOrderForm, notes: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] text-xs resize-none"
+                  />
+                </div>
+              </div>
+
+              {/* Botones Acción */}
+              <div className="pt-2 border-t border-[#F7F3EE] flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewOrderModal(false)}
+                  className="px-4 py-2.5 rounded-xl border border-[#EAE3DA] text-[#7D6F6B] hover:text-[#332A28] font-semibold cursor-pointer"
+                >
+                  Cancelar (Esc)
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="px-5 py-2.5 rounded-xl bg-[#70443D] hover:bg-[#58352F] text-white font-bold shadow-xs transition cursor-pointer flex items-center space-x-1.5"
+                >
+                  <span>{loading ? 'Guardando...' : '✨ Registrar Pedido y Nómina'}</span>
+                </button>
               </div>
             </form>
           </div>

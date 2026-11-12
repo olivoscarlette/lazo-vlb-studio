@@ -70,9 +70,29 @@ export function calculateEventSettlement(
 
   // 4. Pago Flete / Carro
   const freightRate = settings.freight_rate ?? 500;
-  const freightPayout = event.car_provider !== 'NINGUNA_EXTERNO'
-    ? (freightCharged > 0 ? freightCharged : freightRate)
-    : 0;
+  const baseFreight = freightCharged > 0 ? freightCharged : freightRate;
+
+  let freightPayout = 0;
+  let scarletteFreight = 0;
+  let victoriaFreight = 0;
+
+  if (event.car_provider === 'SCARLETTE') {
+    freightPayout = baseFreight;
+    scarletteFreight = baseFreight;
+  } else if (event.car_provider === 'VICTORIA') {
+    freightPayout = baseFreight;
+    victoriaFreight = baseFreight;
+  } else if (event.car_provider === 'AMBAS_COMPLETO') {
+    // Ambas llevaron carro: cada una recibe tarifa completa de flete ($500 c/u = $1,000 total)
+    scarletteFreight = freightRate;
+    victoriaFreight = freightRate;
+    freightPayout = scarletteFreight + victoriaFreight;
+  } else if (event.car_provider === 'AMBAS_DIVIDIDO') {
+    // Ambas llevaron carro: se divide el flete al 50/50 (ej. $250 c/u de una bolsa de $500)
+    freightPayout = baseFreight;
+    scarletteFreight = Math.round((baseFreight / 2) * 100) / 100;
+    victoriaFreight = Math.round((baseFreight - scarletteFreight) * 100) / 100;
+  }
 
   // 5. Staff Externo & Turnos Socias
   const staffRate = settings.staff_rate ?? 450;
@@ -123,12 +143,8 @@ export function calculateEventSettlement(
     externalStationery = stationeryPayout;
   }
 
-  const scarletteFreight = event.car_provider === 'SCARLETTE' ? freightPayout : 0;
   const scarletteTotalPayout = scarletteShiftPayout + scarletteFreight + scarletteStationery + scarletteProfitShare;
-
-  const victoriaFreight = event.car_provider === 'VICTORIA' ? freightPayout : 0;
   const victoriaTotalPayout = victoriaShiftPayout + victoriaFreight + victoriaStationery + victoriaProfitShare;
-
   const externalTotalPayout = externalStaffPayout + externalStationery;
 
   return {
@@ -142,6 +158,8 @@ export function calculateEventSettlement(
     suggestedStationeryLabor,
     freightPayout,
     freightBeneficiary: event.car_provider,
+    scarletteFreightPayout: scarletteFreight,
+    victoriaFreightPayout: victoriaFreight,
     stationeryPayout,
     stationeryBeneficiary: event.stationery_provider,
     scarletteStationeryPayout: scarletteStationery,

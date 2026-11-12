@@ -1547,6 +1547,14 @@ router.post('/orders', (req, res) => {
       event_venue,
       total_amount = 0,
       down_payment_required,
+      down_payment_covered = false,
+      service_type = 'MIXTO',
+      stands_amount,
+      stationery_amount,
+      supplies_expense = 0,
+      car_provider = 'NINGUNA_EXTERNO',
+      external_staff_count = 0,
+      external_staff_names,
       vobo_design_deadline,
       physical_delivery_date,
       stand_setup_date,
@@ -1565,6 +1573,11 @@ router.post('/orders', (req, res) => {
     const id = 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     const total = Number(total_amount) || 0;
     const downPayment = down_payment_required !== undefined ? Number(down_payment_required) : (total * 0.5);
+    const initialPaid = down_payment_covered ? downPayment : 0;
+    const balancePending = Math.max(0, total - initialPaid);
+    const initialStatus = initialPaid >= total && total > 0
+      ? 'LIQUIDADO'
+      : (initialPaid > 0 ? 'ANTICIPO_PAGADO' : 'ANTICIPO_PENDIENTE');
     const now = new Date().toISOString();
 
     db.prepare(`
@@ -1585,9 +1598,9 @@ router.post('/orders', (req, res) => {
       event_venue || null,
       total,
       downPayment,
-      0,
-      total,
-      'ANTICIPO_PENDIENTE',
+      initialPaid,
+      balancePending,
+      initialStatus,
       'DISENO_EN_PROCESO',
       vobo_design_deadline || null,
       physical_delivery_date || null,
@@ -1598,8 +1611,89 @@ router.post('/orders', (req, res) => {
       now
     );
 
+    // Si el anticipo ya fue cubierto, registrar pago en vlb_payments
+    if (initialPaid > 0) {
+      const paymentId = 'pay_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      db.prepare(`
+        INSERT INTO vlb_payments (
+          id, order_id, amount, payment_type, payment_method, payment_date, reference_num, notes, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        paymentId,
+        id,
+        initialPaid,
+        'ANTICIPO_50',
+        'SPEI',
+        now.split('T')[0],
+        'Anticipo inicial al registrar evento',
+        'Registro inicial desde CRM Parejas',
+        now
+      );
+    }
+
+    // Vincular y registrar inmediatamente la liquidación en vlb_event_settlements para nómina y reparto
+    const setId = 'set_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+    const clientFullName = partner_name ? `${client_name.trim()} & ${partner_name.trim()}` : client_name.trim();
+
+    let calcStands = stands_amount !== undefined ? Number(stands_amount) : 0;
+    let calcStationery = stationery_amount !== undefined ? Number(stationery_amount) : 0;
+    if (calcStands === 0 && calcStationery === 0) {
+      if (service_type === 'PAPELERIA') {
+        calcStationery = total;
+      } else if (service_type === 'STANDS') {
+        calcStands = total;
+      } else {
+        calcStands = total;
+      }
+    }
+
+    const supExpense = Number(supplies_expense) || 0;
+    const supServ = service_type === 'PAPELERIA' ? 0 : supExpense;
+    const supStat = service_type === 'PAPELERIA' ? supExpense : 0;
+
+    try {
+      db.prepare(`
+        INSERT INTO vlb_event_settlements (
+          id, order_id, quote_id, event_name, event_date, venue, service_amount,
+          stands_amount, stationery_amount, freight_charged, extra_services,
+          supplies_expense, supplies_services_expense, supplies_stationery_expense, supplies_breakdown_json,
+          car_provider, stationery_provider, stationery_labor_payout,
+          staff_scarlette, staff_victoria, external_staff_count, external_staff_names, status, notes, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        setId,
+        id,
+        null,
+        clientFullName,
+        event_date,
+        event_venue || 'Por definir',
+        total,
+        calcStands,
+        calcStationery,
+        0,
+        0,
+        supExpense,
+        supServ,
+        supStat,
+        null,
+        car_provider || 'NINGUNA_EXTERNO',
+        service_type === 'STANDS' ? 'NINGUNA' : 'SCARLETTE',
+        0,
+        0,
+        0,
+        Number(external_staff_count) || 0,
+        external_staff_names ? external_staff_names.trim() : null,
+        'PENDIENTE',
+        notes || `Pedido ${order_number}`,
+        now,
+        now
+      );
+    } catch (settleErr) {
+      console.error('Error al sincronizar liquidación automática al crear orden:', settleErr);
+    }
+
     const order = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(id);
-    res.status(201).json({ order });
+    res.status(201).json({ order, settlement_id: setId });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al crear proyecto.' });
   }
@@ -2156,10 +2250,10 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
         INSERT INTO vlb_event_settlements (
           id, order_id, quote_id, event_name, event_date, venue, service_amount,
           stands_amount, stationery_amount, freight_charged, extra_services,
-          supplies_expense, supplies_services_expense, supplies_stationery_expense,
+          supplies_expense, supplies_services_expense, supplies_stationery_expense, supplies_breakdown_json,
           car_provider, stationery_provider, stationery_labor_payout,
-          staff_scarlette, staff_victoria, external_staff_count, status, notes, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          staff_scarlette, staff_victoria, external_staff_count, external_staff_names, status, notes, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       for (const o of unSyncedOrders) {
@@ -2181,12 +2275,14 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
           0,
           0,
           0,
+          null,
           'NINGUNA_EXTERNO',
           'NINGUNA',
           0,
           0,
           0,
           0,
+          null,
           'PENDIENTE',
           `Pedido ${o.order_number || 'VLB'}`,
           now,
@@ -2269,12 +2365,14 @@ router.post('/finance/settlements', authenticateToken, requireAdmin, (req, res) 
       supplies_expense,
       supplies_services_expense,
       supplies_stationery_expense,
+      supplies_breakdown_json,
       car_provider,
       stationery_provider,
       stationery_labor_payout,
       staff_scarlette,
       staff_victoria,
       external_staff_count,
+      external_staff_names,
       status,
       notes,
       order_id
@@ -2302,10 +2400,10 @@ router.post('/finance/settlements', authenticateToken, requireAdmin, (req, res) 
       INSERT INTO vlb_event_settlements (
         id, order_id, quote_id, event_name, event_date, venue, service_amount,
         stands_amount, stationery_amount, freight_charged, extra_services,
-        supplies_expense, supplies_services_expense, supplies_stationery_expense,
+        supplies_expense, supplies_services_expense, supplies_stationery_expense, supplies_breakdown_json,
         car_provider, stationery_provider, stationery_labor_payout,
-        staff_scarlette, staff_victoria, external_staff_count, status, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        staff_scarlette, staff_victoria, external_staff_count, external_staff_names, status, notes, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       order_id || null,
@@ -2321,12 +2419,14 @@ router.post('/finance/settlements', authenticateToken, requireAdmin, (req, res) 
       supTot,
       supServ,
       supStat,
+      supplies_breakdown_json || null,
       car_provider || 'NINGUNA_EXTERNO',
       stationery_provider || 'NINGUNA',
       Number(stationery_labor_payout) || 0,
       staff_scarlette ? 1 : 0,
       staff_victoria ? 1 : 0,
       Number(external_staff_count) || 0,
+      external_staff_names ? external_staff_names.trim() : null,
       status || 'PENDIENTE',
       notes || null,
       now,
@@ -2366,12 +2466,14 @@ router.put('/finance/settlements/:id', authenticateToken, requireAdmin, (req, re
       supplies_expense,
       supplies_services_expense,
       supplies_stationery_expense,
+      supplies_breakdown_json,
       car_provider,
       stationery_provider,
       stationery_labor_payout,
       staff_scarlette,
       staff_victoria,
       external_staff_count,
+      external_staff_names,
       status,
       notes
     } = req.body;
@@ -2395,9 +2497,9 @@ router.put('/finance/settlements/:id', authenticateToken, requireAdmin, (req, re
       UPDATE vlb_event_settlements
       SET event_name = ?, event_date = ?, venue = ?, service_amount = ?,
           stands_amount = ?, stationery_amount = ?, freight_charged = ?,
-          extra_services = ?, supplies_expense = ?, supplies_services_expense = ?, supplies_stationery_expense = ?,
+          extra_services = ?, supplies_expense = ?, supplies_services_expense = ?, supplies_stationery_expense = ?, supplies_breakdown_json = ?,
           car_provider = ?, stationery_provider = ?, stationery_labor_payout = ?,
-          staff_scarlette = ?, staff_victoria = ?, external_staff_count = ?, status = ?, notes = ?, updated_at = ?
+          staff_scarlette = ?, staff_victoria = ?, external_staff_count = ?, external_staff_names = ?, status = ?, notes = ?, updated_at = ?
       WHERE id = ?
     `).run(
       event_name.trim(),
@@ -2411,12 +2513,14 @@ router.put('/finance/settlements/:id', authenticateToken, requireAdmin, (req, re
       supTot,
       supServ,
       supStat,
+      supplies_breakdown_json || null,
       car_provider || 'NINGUNA_EXTERNO',
       stationery_provider || 'NINGUNA',
       Number(stationery_labor_payout) || 0,
       staff_scarlette ? 1 : 0,
       staff_victoria ? 1 : 0,
       Number(external_staff_count) || 0,
+      external_staff_names ? external_staff_names.trim() : null,
       status || 'PENDIENTE',
       notes || null,
       now,

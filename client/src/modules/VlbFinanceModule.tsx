@@ -86,6 +86,10 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     { id: '3', name: 'Fotos estilo Polaroid (firmas)', pieces: 40, unitCost: 4.80 }
   ]);
 
+  // Popup Calculadora y Desglose de Gastos de Barra & Stands
+  const [showStandsExpenseCalc, setShowStandsExpenseCalc] = useState<boolean>(false);
+  const [standsExpenseItems, setStandsExpenseItems] = useState<Array<{ id: string; name: string; amount: number }>>([]);
+
   // Modo de servicio en formulario: 'STANDS' | 'PAPELERIA' | 'MIXTO'
   const [modalServiceMode, setModalServiceMode] = useState<'STANDS' | 'PAPELERIA' | 'MIXTO'>('MIXTO');
 
@@ -93,7 +97,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (showWorkshopCostCalc) {
+        if (showStandsExpenseCalc) {
+          setShowStandsExpenseCalc(false);
+        } else if (showWorkshopCostCalc) {
           setShowWorkshopCostCalc(false);
         } else if (editModalSettlement) {
           setEditModalSettlement(null);
@@ -107,7 +113,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showWorkshopCostCalc, editModalSettlement, detailModalSettlement, showSettingsModal]);
+  }, [showStandsExpenseCalc, showWorkshopCostCalc, editModalSettlement, detailModalSettlement, showSettingsModal]);
 
   // Formulario de Ajustes
   const [settingsForm, setSettingsForm] = useState({
@@ -132,12 +138,14 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     supplies_expense: 0,
     supplies_services_expense: 0,
     supplies_stationery_expense: 0,
+    supplies_breakdown_json: '',
     car_provider: 'NINGUNA_EXTERNO',
     stationery_provider: 'NINGUNA',
     stationery_labor_payout: 0,
     staff_scarlette: false,
     staff_victoria: false,
     external_staff_count: 0,
+    external_staff_names: '',
     status: 'PENDIENTE',
     notes: ''
   });
@@ -158,6 +166,26 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       setModalServiceMode('MIXTO');
     }
 
+    // Inicializar desglose de gastos de barra si existe
+    if (item.supplies_breakdown_json) {
+      try {
+        const parsed = JSON.parse(item.supplies_breakdown_json);
+        if (Array.isArray(parsed)) {
+          setStandsExpenseItems(parsed);
+        } else {
+          setStandsExpenseItems([]);
+        }
+      } catch {
+        setStandsExpenseItems([]);
+      }
+    } else if (supServ > 0) {
+      setStandsExpenseItems([
+        { id: 'item_init', name: 'Insumos y consumibles de barra', amount: supServ }
+      ]);
+    } else {
+      setStandsExpenseItems([]);
+    }
+
     setEventForm({
       event_name: item.event_name,
       event_date: item.event_date,
@@ -170,12 +198,14 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       supplies_expense: item.supplies_expense || (supServ + supStat),
       supplies_services_expense: supServ,
       supplies_stationery_expense: supStat,
+      supplies_breakdown_json: item.supplies_breakdown_json || '',
       car_provider: item.car_provider || 'NINGUNA_EXTERNO',
       stationery_provider: item.stationery_provider || 'NINGUNA',
       stationery_labor_payout: item.stationery_labor_payout ?? 0,
       staff_scarlette: Boolean(item.staff_scarlette),
       staff_victoria: Boolean(item.staff_victoria),
       external_staff_count: item.external_staff_count || 0,
+      external_staff_names: item.external_staff_names || '',
       status: item.status || 'PENDIENTE',
       notes: item.notes || ''
     });
@@ -185,6 +215,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     setIsNewEventModal(true);
     setEditModalSettlement(null);
     setModalServiceMode('MIXTO');
+    setStandsExpenseItems([]);
     setEventForm({
       event_name: '',
       event_date: new Date().toISOString().split('T')[0],
@@ -197,12 +228,14 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       supplies_expense: 0,
       supplies_services_expense: 0,
       supplies_stationery_expense: 0,
+      supplies_breakdown_json: '',
       car_provider: 'NINGUNA_EXTERNO',
       stationery_provider: 'NINGUNA',
       stationery_labor_payout: 0,
       staff_scarlette: false,
       staff_victoria: false,
       external_staff_count: 0,
+      external_staff_names: '',
       status: 'PENDIENTE',
       notes: ''
     });
@@ -548,9 +581,12 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       if (calc.scarletteTotalPayout > 0) {
         const concepts: string[] = [];
         if (calc.scarletteShiftPayout > 0) concepts.push(`Turno Staff ($${calc.scarletteShiftPayout})`);
-        if (item.car_provider === 'SCARLETTE' && calc.freightPayout > 0) concepts.push(`Flete / Carro ($${calc.freightPayout})`);
+        if (calc.scarletteFreightPayout > 0) {
+          concepts.push(`Flete / Carro ($${calc.scarletteFreightPayout})${item.car_provider === 'AMBAS_COMPLETO' ? ' (Ambas tarifa completa)' : item.car_provider === 'AMBAS_DIVIDIDO' ? ' (Ambas dividido 50/50)' : ''}`);
+        }
         if (calc.scarletteStationeryPayout > 0) concepts.push(`Taller Papelería ($${calc.scarletteStationeryPayout})`);
         if (calc.scarletteProfitShare > 0) concepts.push(`Utilidad Socia 20% ($${calc.scarletteProfitShare})`);
+        if (item.notes) concepts.push(`Nota: ${item.notes}`);
 
         list.push({
           id: `${item.id}_scarlette`,
@@ -574,9 +610,12 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       if (calc.victoriaTotalPayout > 0) {
         const concepts: string[] = [];
         if (calc.victoriaShiftPayout > 0) concepts.push(`Turno Staff ($${calc.victoriaShiftPayout})`);
-        if (item.car_provider === 'VICTORIA' && calc.freightPayout > 0) concepts.push(`Flete / Carro ($${calc.freightPayout})`);
+        if (calc.victoriaFreightPayout > 0) {
+          concepts.push(`Flete / Carro ($${calc.victoriaFreightPayout})${item.car_provider === 'AMBAS_COMPLETO' ? ' (Ambas tarifa completa)' : item.car_provider === 'AMBAS_DIVIDIDO' ? ' (Ambas dividido 50/50)' : ''}`);
+        }
         if (calc.victoriaStationeryPayout > 0) concepts.push(`Taller Papelería ($${calc.victoriaStationeryPayout})`);
         if (calc.victoriaProfitShare > 0) concepts.push(`Utilidad Socia 20% ($${calc.victoriaProfitShare})`);
+        if (item.notes) concepts.push(`Nota: ${item.notes}`);
 
         list.push({
           id: `${item.id}_victoria`,
@@ -598,6 +637,17 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
 
       // Staff Externo
       if (calc.externalTotalPayout > 0) {
+        const staffTitle = item.external_staff_names 
+          ? `Staff: ${item.external_staff_names}`
+          : `Staff Externo (${calc.externalStaffCount} pers.)`;
+        const staffConcepts = [`${calc.externalStaffCount} turno(s) de apoyo ($${settings.staff_rate} c/u)`];
+        if (item.external_staff_names) {
+          staffConcepts.push(`Personal: ${item.external_staff_names}`);
+        }
+        if (item.notes) {
+          staffConcepts.push(`Nota: ${item.notes}`);
+        }
+
         list.push({
           id: `${item.id}_external`,
           settlementId: item.id,
@@ -605,11 +655,11 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
           eventDate: item.event_date,
           venue: item.venue || '',
           target: 'external',
-          beneficiaryName: `Staff Externo (${calc.externalStaffCount} pers.)`,
+          beneficiaryName: staffTitle,
           amount: calc.externalTotalPayout,
           isPaid: Boolean(item.paid_external),
           paidAt: item.paid_external_at,
-          concepts: [`${calc.externalStaffCount} turno(s) de apoyo`],
+          concepts: staffConcepts,
           profitShare: 0,
           operationalAmount: calc.externalTotalPayout,
           settlementItem: item
@@ -618,7 +668,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     });
 
     return list;
-  }, [settlementsWithCalc]);
+  }, [settlementsWithCalc, settings.staff_rate]);
 
   const filteredDisbursements = useMemo(() => {
     return payrollDisbursements.filter(d => {
@@ -634,7 +684,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
         return (
           d.eventName.toLowerCase().includes(q) ||
           d.beneficiaryName.toLowerCase().includes(q) ||
-          d.venue.toLowerCase().includes(q)
+          d.venue.toLowerCase().includes(q) ||
+          (d.settlementItem.notes && d.settlementItem.notes.toLowerCase().includes(q)) ||
+          (d.settlementItem.external_staff_names && d.settlementItem.external_staff_names.toLowerCase().includes(q))
         );
       }
       return true;
@@ -657,20 +709,31 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   };
 
   const copyWhatsAppSummary = (item: VlbEventSettlement, calc: ReturnType<typeof calculateEventSettlement>) => {
+    let breakdownText = '';
+    if (item.supplies_breakdown_json) {
+      try {
+        const parsed = JSON.parse(item.supplies_breakdown_json);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          breakdownText = `   • Desglose Insumos Barra:\n` + parsed.map((it: any) => `     - ${it.name}: ${fmt(it.amount)}`).join('\n') + '\n';
+        }
+      } catch {}
+    }
+
     const text = `🌸 *LIQUIDACIÓN OPERATIVA VIVA LA BRIDE*\n💍 *Evento:* ${item.event_name}\n📅 *Fecha:* ${item.event_date}${item.venue ? ` · ${item.venue}` : ''}\n\n` +
       `💳 *Ingreso Total:* ${fmt(calc.totalRevenue)}\n` +
       `   • Stands & Servicios: ${fmt(calc.standsAmount)}\n` +
       `   • Papelería Social: ${fmt(calc.stationeryAmount)}\n` +
-      (item.freight_charged > 0 ? `   • Flete: ${fmt(item.freight_charged)}\n` : '') +
+      (item.freight_charged > 0 ? `   • Flete Cobrado: ${fmt(item.freight_charged)}\n` : '') +
       (item.extra_services > 0 ? `   • Extras: ${fmt(item.extra_services)}\n` : '') +
       `\n📦 *Insumos Directos:* ${fmt(calc.suppliesExpense)}\n` +
       `   • Insumos Stands / Bar: ${fmt(calc.suppliesServicesExpense)}\n` +
+      breakdownText +
       `   • Insumos Papelería: ${fmt(calc.suppliesStationeryExpense)}\n` +
       (calc.stationeryAmount > 0 ? `   ✨ Margen Operativo Papelería: ${fmt(calc.stationeryNetMargin)}\n` : '') +
       `\n🛠️ *Operación & Mano de Obra:*\n` +
       `   • Elaboración Papelería: ${fmt(calc.stationeryPayout)} (${calc.stationeryBeneficiary === 'AMBAS' ? 'Ambas 50/50' : calc.stationeryBeneficiary})\n` +
-      `   • Flete / Carro: ${fmt(calc.freightPayout)} (${calc.freightBeneficiary})\n` +
-      `   • Staff Externo (${calc.externalStaffCount}p): ${fmt(calc.externalStaffPayout)}\n` +
+      `   • Flete / Carro: ${fmt(calc.freightPayout)} (${calc.freightBeneficiary === 'AMBAS_COMPLETO' ? 'Ambas completo' : calc.freightBeneficiary === 'AMBAS_DIVIDIDO' ? 'Ambas dividido 50/50' : calc.freightBeneficiary})\n` +
+      `   • Staff Externo (${calc.externalStaffCount}p${item.external_staff_names ? ` - ${item.external_staff_names}` : ''}): ${fmt(calc.externalStaffPayout)}\n` +
       `   • Turno Scarlette: ${fmt(calc.scarletteShiftPayout)}\n` +
       `   • Turno Victoria: ${fmt(calc.victoriaShiftPayout)}\n` +
       `---------------------------\n` +
@@ -679,10 +742,11 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       `🏛️ *Fondo Empresa (60%):* ${fmt(calc.companyFundAmount)}\n` +
       `🤝 *Bolsa Utilidades (40%):* ${fmt(calc.partnersProfitPool)}\n\n` +
       `💰 *PAGO FINAL SCARLETTE:* ${fmt(calc.scarletteTotalPayout)}\n` +
-      `   (Turno: ${fmt(calc.scarletteShiftPayout)} + Carro: ${fmt(item.car_provider === 'SCARLETTE' ? calc.freightPayout : 0)} + Papel: ${fmt(calc.scarletteStationeryPayout)} + Utilidad 50%: ${fmt(calc.scarletteProfitShare)})\n\n` +
+      `   (Turno: ${fmt(calc.scarletteShiftPayout)} + Carro: ${fmt(calc.scarletteFreightPayout)} + Papel: ${fmt(calc.scarletteStationeryPayout)} + Utilidad 50%: ${fmt(calc.scarletteProfitShare)})\n\n` +
       `💰 *PAGO FINAL VICTORIA:* ${fmt(calc.victoriaTotalPayout)}\n` +
-      `   (Turno: ${fmt(calc.victoriaShiftPayout)} + Carro: ${fmt(item.car_provider === 'VICTORIA' ? calc.freightPayout : 0)} + Papel: ${fmt(calc.victoriaStationeryPayout)} + Utilidad 50%: ${fmt(calc.victoriaProfitShare)})\n\n` +
-      `💼 *PAGO STAFF / MAQUILA EXTERNA:* ${fmt(calc.externalTotalPayout)}`;
+      `   (Turno: ${fmt(calc.victoriaShiftPayout)} + Carro: ${fmt(calc.victoriaFreightPayout)} + Papel: ${fmt(calc.victoriaStationeryPayout)} + Utilidad 50%: ${fmt(calc.victoriaProfitShare)})\n\n` +
+      `💼 *PAGO STAFF / MAQUILA EXTERNA:* ${fmt(calc.externalTotalPayout)}${item.external_staff_names ? ` (${item.external_staff_names})` : ''}` +
+      (item.notes ? `\n\n📝 *Notas:* ${item.notes}` : '');
 
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
@@ -1054,6 +1118,11 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                           </span>
                         )}
                       </div>
+                      {item.notes && (
+                        <div className="text-[10px] text-[#7D6F6B] italic truncate max-w-[190px]" title={item.notes}>
+                          📝 {item.notes}
+                        </div>
+                      )}
                     </td>
 
                     {/* Ingreso Venta */}
@@ -1088,9 +1157,19 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                               ? 'bg-[#FFF6F8] text-[#E84E6D] border border-[#F5C2CD]'
                               : item.car_provider === 'VICTORIA'
                               ? 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                              : (item.car_provider === 'AMBAS_COMPLETO' || item.car_provider === 'AMBAS_DIVIDIDO')
+                              ? 'bg-[#F2EDFF] text-[#6E42C1] border border-[#D5C2F5]'
                               : 'bg-gray-100 text-gray-700'
                           }`}>
-                            {item.car_provider === 'SCARLETTE' ? 'Scarlette' : item.car_provider === 'VICTORIA' ? 'Victoria' : 'Externo'}
+                            {item.car_provider === 'SCARLETTE'
+                              ? 'Scarlette'
+                              : item.car_provider === 'VICTORIA'
+                              ? 'Victoria'
+                              : item.car_provider === 'AMBAS_COMPLETO'
+                              ? 'Ambas ($500 c/u)'
+                              : item.car_provider === 'AMBAS_DIVIDIDO'
+                              ? 'Ambas (50/50)'
+                              : 'Externo'}
                           </span>
                           <div className="text-[10px] text-[#7D6F6B] font-mono">{fmt(calc.freightPayout)}</div>
                         </div>
@@ -1147,6 +1226,11 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                           </span>
                         )}
                       </div>
+                      {item.external_staff_names && (
+                        <div className="text-[9px] text-[#7D6F6B] truncate max-w-[120px] mx-auto font-medium" title={item.external_staff_names}>
+                          {item.external_staff_names}
+                        </div>
+                      )}
                       {item.external_staff_count > 0 && (
                         <div>
                           <button
@@ -1188,9 +1272,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                       <div className="text-[10px] text-[#70443D]/80 font-sans font-medium">
                         Utilidad: {fmt(calc.victoriaProfitShare)}
                       </div>
-                      {(calc.victoriaShiftPayout > 0 || (item.car_provider === 'VICTORIA' && calc.freightPayout > 0) || calc.victoriaStationeryPayout > 0) && (
+                      {(calc.victoriaShiftPayout > 0 || calc.victoriaFreightPayout > 0 || calc.victoriaStationeryPayout > 0) && (
                         <div className="text-[9px] text-[#7D6F6B] font-sans">
-                          +Op: {fmt(calc.victoriaShiftPayout + (item.car_provider === 'VICTORIA' ? calc.freightPayout : 0) + calc.victoriaStationeryPayout)}
+                          +Op: {fmt(calc.victoriaShiftPayout + calc.victoriaFreightPayout + calc.victoriaStationeryPayout)}
                         </div>
                       )}
                       <div>
@@ -1220,9 +1304,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                       <div className="text-[10px] text-[#E84E6D]/80 font-sans font-medium">
                         Utilidad: {fmt(calc.scarletteProfitShare)}
                       </div>
-                      {(calc.scarletteShiftPayout > 0 || (item.car_provider === 'SCARLETTE' && calc.freightPayout > 0) || calc.scarletteStationeryPayout > 0) && (
+                      {(calc.scarletteShiftPayout > 0 || calc.scarletteFreightPayout > 0 || calc.scarletteStationeryPayout > 0) && (
                         <div className="text-[9px] text-[#7D6F6B] font-sans">
-                          +Op: {fmt(calc.scarletteShiftPayout + (item.car_provider === 'SCARLETTE' ? calc.freightPayout : 0) + calc.scarletteStationeryPayout)}
+                          +Op: {fmt(calc.scarletteShiftPayout + calc.scarletteFreightPayout + calc.scarletteStationeryPayout)}
                         </div>
                       )}
                       <div>
@@ -1649,9 +1733,17 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                         <span className="font-semibold text-[#332A28]">{fmt(calc.scarletteShiftPayout)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>• Flete / Carro ({item.car_provider === 'SCARLETTE' ? 'Llevó carro' : 'No'}):</span>
+                        <span>• Flete / Carro ({
+                          item.car_provider === 'SCARLETTE' 
+                            ? 'Llevó carro (tarifa completa)' 
+                            : item.car_provider === 'AMBAS_COMPLETO'
+                            ? 'Ambas (tarifa completa c/u)'
+                            : item.car_provider === 'AMBAS_DIVIDIDO'
+                            ? 'Ambas (flete 50/50)'
+                            : 'No'
+                        }):</span>
                         <span className="font-semibold text-[#332A28]">
-                          {fmt(item.car_provider === 'SCARLETTE' ? calc.freightPayout : 0)}
+                          {fmt(calc.scarletteFreightPayout)}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -1695,9 +1787,17 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                         <span className="font-semibold text-[#332A28]">{fmt(calc.victoriaShiftPayout)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>• Flete / Carro ({item.car_provider === 'VICTORIA' ? 'Llevó carro' : 'No'}):</span>
+                        <span>• Flete / Carro ({
+                          item.car_provider === 'VICTORIA' 
+                            ? 'Llevó carro (tarifa completa)' 
+                            : item.car_provider === 'AMBAS_COMPLETO'
+                            ? 'Ambas (tarifa completa c/u)'
+                            : item.car_provider === 'AMBAS_DIVIDIDO'
+                            ? 'Ambas (flete 50/50)'
+                            : 'No'
+                        }):</span>
                         <span className="font-semibold text-[#332A28]">
-                          {fmt(item.car_provider === 'VICTORIA' ? calc.freightPayout : 0)}
+                          {fmt(calc.victoriaFreightPayout)}
                         </span>
                       </div>
                       <div className="flex justify-between">
@@ -1727,6 +1827,11 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                     <div>
                       <div className="font-bold text-[#332A28]">Staff Externo ({calc.externalStaffCount} turnos):</div>
                       <div className="text-[11px] text-[#7D6F6B]">${settings.staff_rate} MXN c/u</div>
+                      {item.external_staff_names && (
+                        <div className="text-[11px] text-[#70443D] font-medium mt-1">
+                          👤 Personal: <strong>{item.external_staff_names}</strong>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center space-x-2">
                       <div className="font-bold font-serif text-sm text-[#332A28]">
@@ -1760,6 +1865,42 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                     </div>
                   </div>
                 </div>
+
+                {/* DESGLOSE DETALLADO DE INSUMOS DE BARRA SI EXISTE */}
+                {item.supplies_breakdown_json && (() => {
+                  try {
+                    const items = JSON.parse(item.supplies_breakdown_json);
+                    if (Array.isArray(items) && items.length > 0) {
+                      return (
+                        <div className="p-4 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] space-y-2 text-xs">
+                          <span className="text-[11px] font-bold text-[#70443D] uppercase tracking-wider block">
+                            📋 Desglose de Insumos y Gastos de Barra & Stands
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                            {items.map((it: any, idx: number) => (
+                              <div key={idx} className="flex justify-between items-center bg-white px-3 py-2 rounded-xl border border-[#EAE3DA]">
+                                <span className="font-medium text-[#332A28]">{it.name}</span>
+                                <span className="font-mono font-bold text-[#70443D]">{fmt(it.amount)}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                  } catch {}
+                  return null;
+                })()}
+
+                {/* NOTAS Y OBSERVACIONES DEL EVENTO */}
+                {item.notes && (
+                  <div className="p-4 bg-[#FFFBF7] rounded-2xl border border-[#F3E5D8] text-xs space-y-1">
+                    <span className="font-bold text-[#70443D] flex items-center space-x-1.5">
+                      <span>📝</span>
+                      <span>Notas y Observaciones:</span>
+                    </span>
+                    <p className="text-[#332A28] whitespace-pre-wrap leading-relaxed">{item.notes}</p>
+                  </div>
+                )}
               </div>
 
               {/* FOOTER MODAL */}
@@ -2090,9 +2231,34 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {modalServiceMode !== 'PAPELERIA' && (
                     <div>
-                      <label className="block font-semibold text-[#7D6F6B] mb-1">
-                        Insumos Stands & Evento ($)
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-semibold text-[#7D6F6B]">
+                          Insumos Stands & Evento ($)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (eventForm.supplies_breakdown_json) {
+                              try {
+                                const parsed = JSON.parse(eventForm.supplies_breakdown_json);
+                                if (Array.isArray(parsed) && parsed.length > 0) {
+                                  setStandsExpenseItems(parsed);
+                                }
+                              } catch {}
+                            }
+                            setShowStandsExpenseCalc(true);
+                          }}
+                          className="inline-flex items-center space-x-1.5 text-[11px] font-bold text-[#70443D] hover:text-[#58352F] bg-[#FAF6F2] hover:bg-[#F4ECE4] px-2.5 py-1 rounded-lg border border-[#EAE3DA] transition cursor-pointer"
+                        >
+                          <span>🧮</span>
+                          <span>Desglose de Gastos Barra</span>
+                          {standsExpenseItems.length > 0 && (
+                            <span className="ml-1 px-1.5 py-0.2 bg-[#70443D] text-white text-[9px] rounded-full">
+                              {standsExpenseItems.length}
+                            </span>
+                          )}
+                        </button>
+                      </div>
                       <input
                         type="number"
                         min={0}
@@ -2109,7 +2275,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                         }}
                         className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
                       />
-                      <span className="text-[10px] text-[#7D6F6B]">Consumibles del bar y stands</span>
+                      <span className="text-[10px] text-[#7D6F6B]">
+                        Consumibles del bar y stands {standsExpenseItems.length > 0 ? `(${standsExpenseItems.length} conceptos guardados)` : ''}
+                      </span>
                     </div>
                   )}
 
@@ -2179,9 +2347,11 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                         onChange={e => setEventForm({ ...eventForm, car_provider: e.target.value as VlbCarProvider })}
                         className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] cursor-pointer"
                       >
-                        <option value="NINGUNA_EXTERNO">Ninguna / Externo ($0)</option>
-                        <option value="SCARLETTE">🚗 Scarlette (${eventForm.freight_charged && eventForm.freight_charged > 0 ? eventForm.freight_charged : settings.freight_rate} MXN)</option>
-                        <option value="VICTORIA">🚗 Victoria (${eventForm.freight_charged && eventForm.freight_charged > 0 ? eventForm.freight_charged : settings.freight_rate} MXN)</option>
+                        <option value="NINGUNA_EXTERNO">Ninguna / Flete Externo ($0)</option>
+                        <option value="SCARLETTE">🚗 Solo Scarlette ({fmt(eventForm.freight_charged && eventForm.freight_charged > 0 ? eventForm.freight_charged : settings.freight_rate)})</option>
+                        <option value="VICTORIA">🚗 Solo Victoria ({fmt(eventForm.freight_charged && eventForm.freight_charged > 0 ? eventForm.freight_charged : settings.freight_rate)})</option>
+                        <option value="AMBAS_COMPLETO">🚗🚗 Ambas llevaron carro (Cada una cobra flete completo: {fmt(settings.freight_rate)} c/u = {fmt(settings.freight_rate * 2)} total)</option>
+                        <option value="AMBAS_DIVIDIDO">🚗🚗 Ambas llevaron carro (Dividir flete 50/50: {fmt((eventForm.freight_charged && eventForm.freight_charged > 0 ? eventForm.freight_charged : settings.freight_rate) / 2)} c/u)</option>
                       </select>
                     </div>
                   )}
@@ -2262,19 +2432,38 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                   })()}
 
                   {modalServiceMode !== 'PAPELERIA' && (
-                    <div>
-                      <label className="block font-semibold text-[#7D6F6B] mb-1">
-                        Cantidad de Staff Externo
-                      </label>
-                      <input
-                        type="number"
-                        min={0}
-                        step={1}
-                        placeholder="0 personas"
-                        value={eventForm.external_staff_count || ''}
-                        onChange={e => setEventForm({ ...eventForm, external_staff_count: parseInt(e.target.value, 10) || 0 })}
-                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                      />
+                    <div className="sm:col-span-2 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block font-semibold text-[#7D6F6B] mb-1">
+                            Cantidad de Staff Externo
+                          </label>
+                          <input
+                            type="number"
+                            min={0}
+                            step={1}
+                            placeholder="0 personas"
+                            value={eventForm.external_staff_count || ''}
+                            onChange={e => setEventForm({ ...eventForm, external_staff_count: parseInt(e.target.value, 10) || 0 })}
+                            className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                          />
+                        </div>
+                        <div>
+                          <label className="block font-semibold text-[#7D6F6B] mb-1">
+                            Nombres del Staff (a quién se le paga)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Ej. Mariana López, Carlos Pérez..."
+                            value={eventForm.external_staff_names || ''}
+                            onChange={e => setEventForm({ ...eventForm, external_staff_names: e.target.value })}
+                            className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                          />
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-[#7D6F6B] block">
+                        * Especifica los nombres para saber con claridad a quién dispersar en Control de Nómina.
+                      </span>
                     </div>
                   )}
                 </div>
@@ -2308,6 +2497,20 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                     </div>
                   </div>
                 )}
+
+                {/* NOTAS Y OBSERVACIONES */}
+                <div className="pt-2 border-t border-[#EAE3DA]">
+                  <label className="block font-semibold text-[#7D6F6B] mb-1">
+                    Notas y Observaciones del Evento / Nómina
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="Detalles sobre insumos, acuerdos especiales, adelantos en efectivo, etc."
+                    value={eventForm.notes || ''}
+                    onChange={e => setEventForm({ ...eventForm, notes: e.target.value })}
+                    className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] text-xs resize-none"
+                  />
+                </div>
 
                 {/* ESTADO */}
                 <div className="pt-2 border-t border-[#EAE3DA]">
@@ -2779,6 +2982,269 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                       className="px-5 py-2.5 bg-[#70443D] hover:bg-[#5C3731] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer flex items-center space-x-1.5"
                     >
                       <span>✨ Guardar y Aplicar</span>
+                      <span className="font-mono">({fmt(roundedTotal)})</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------------------------------- */}
+      {/* MODAL 5: POPUP CALCULADORA DE GASTOS DE BARRA & STANDS */}
+      {/* ---------------------------------------------------- */}
+      {showStandsExpenseCalc && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowStandsExpenseCalc(false);
+            }
+          }}
+          className="fixed inset-0 z-[60] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fadeIn"
+        >
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-[#EAE3DA] max-h-[92vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-[#EAE3DA]">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-[#FCFAF7] text-[#70443D] flex items-center justify-center text-lg border border-[#EAE3DA] shrink-0">
+                  🧊
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                    Calculadora & Desglose de Insumos de Barra
+                  </h3>
+                  <p className="text-xs text-[#7D6F6B]">
+                    Selecciona y suma cada consumible para este evento (hielo, vasos, cerveza, desechables, fruta...)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowStandsExpenseCalc(false)}
+                className="w-8 h-8 rounded-full bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#7D6F6B] hover:text-[#332A28] flex items-center justify-center text-sm transition cursor-pointer"
+                title="Cerrar (Esc o clic afuera)"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Contenido Scrolleable */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+              {/* Presets rápidos */}
+              <div>
+                <span className="text-[11px] font-bold text-[#7D6F6B] uppercase tracking-wider block mb-2">
+                  + Agregar Consumible de Barra al Evento:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStandsExpenseItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Hielo (bolsas)', amount: 150.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 🧊 Hielo ($150)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStandsExpenseItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Vasos (desechables o acrílico)', amount: 200.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 🥛 Vasos ($200)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStandsExpenseItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Cerveza y Bebidas', amount: 600.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 🍺 Cerveza / Bebidas ($600)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStandsExpenseItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Frutas, Cítricos y Garnituras', amount: 120.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 🍋 Frutas & Cítricos ($120)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStandsExpenseItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Servilletas, Popotes y Desechables', amount: 90.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 📦 Desechables ($90)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStandsExpenseItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Flores y Deco de Barra', amount: 250.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 🌸 Flores / Deco ($250)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStandsExpenseItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Otro insumo de barra', amount: 100.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-white hover:bg-stone-50 text-[#70443D] border border-dashed border-[#70443D] rounded-xl text-xs font-bold transition cursor-pointer"
+                  >
+                    + ✨ Personalizado
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabla de Insumos */}
+              <div className="bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] overflow-hidden">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#FAF6F2] border-b border-[#EAE3DA] text-[10px] font-bold uppercase text-[#7D6F6B]">
+                      <th className="py-2.5 px-3">Insumo / Concepto</th>
+                      <th className="py-2.5 px-3 text-right w-36">Costo ($ MXN)</th>
+                      <th className="py-2.5 px-2 text-center w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F5EFEB]">
+                    {standsExpenseItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={3} className="py-8 text-center text-xs text-[#A69995]">
+                          No hay consumibles agregados. Haz clic en los botones de arriba (+ Hielo, + Vasos, + Cerveza...) para desglosar los gastos.
+                        </td>
+                      </tr>
+                    ) : (
+                      standsExpenseItems.map((item, idx) => (
+                        <tr key={item.id || idx} className="hover:bg-white transition">
+                          <td className="py-2 px-3">
+                            <input
+                              type="text"
+                              value={item.name}
+                              onChange={e => {
+                                const updated = [...standsExpenseItems];
+                                updated[idx].name = e.target.value;
+                                setStandsExpenseItems(updated);
+                              }}
+                              className="w-full px-2.5 py-1 bg-white border border-[#EAE3DA] focus:border-[#70443D] rounded-lg text-xs font-semibold text-[#332A28]"
+                              placeholder="Ej. Hielo 5 bolsas..."
+                            />
+                          </td>
+                          <td className="py-2 px-3 text-right">
+                            <div className="flex items-center justify-end space-x-1">
+                              <span className="text-[11px] text-[#7D6F6B] font-mono">$</span>
+                              <input
+                                type="number"
+                                min={0}
+                                step="any"
+                                value={item.amount}
+                                onChange={e => {
+                                  const updated = [...standsExpenseItems];
+                                  updated[idx].amount = parseFloat(e.target.value) || 0;
+                                  setStandsExpenseItems(updated);
+                                }}
+                                className="w-24 px-2 py-1 text-right bg-white border border-[#EAE3DA] focus:border-[#70443D] rounded-lg text-xs font-mono font-bold text-[#332A28]"
+                              />
+                            </div>
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setStandsExpenseItems(prev => prev.filter((_, i) => i !== idx));
+                              }}
+                              className="w-6 h-6 rounded-full hover:bg-rose-50 text-stone-400 hover:text-rose-600 flex items-center justify-center text-xs transition cursor-pointer"
+                              title="Eliminar fila"
+                            >
+                              ✕
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Guía informativa de consumibles de barra */}
+              <div className="p-3 bg-[#FCFAF7] rounded-xl border border-[#EAE3DA] text-[11px] text-[#7D6F6B] space-y-1">
+                <span className="font-bold text-[#70443D] block">💡 Referencia típica de compras para barra:</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[10px]">
+                  <span>• <strong>Hielo:</strong> 3 a 5 bolsas por barra/stand ≈ $120 - $180</span>
+                  <span>• <strong>Vasos:</strong> 150 a 200 piezas desechables premium o acrílico ≈ $180 - $250</span>
+                  <span>• <strong>Frutas & Garnituras:</strong> Limón, menta, hierbabuena, naranjas ≈ $100 - $150</span>
+                  <span>• <strong>Cervezas / Refrescos:</strong> Latas, mixers o botellas para coctelería ≈ $400 - $800</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer con Suma y Botones */}
+            {(() => {
+              const totalSum = standsExpenseItems.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+              const roundedTotal = Math.round(totalSum * 100) / 100;
+
+              return (
+                <div className="pt-3 border-t border-[#EAE3DA] flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="text-center sm:text-left">
+                    <span className="text-xs text-[#7D6F6B]">
+                      Desglose: <strong>{standsExpenseItems.length} insumos de barra</strong>
+                    </span>
+                    <div className="text-base font-bold text-[#70443D] font-mono">
+                      Gasto Total Barra: {fmt(roundedTotal)}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowStandsExpenseCalc(false)}
+                      className="px-4 py-2 text-xs font-semibold text-[#7D6F6B] hover:bg-[#FAF6F2] rounded-xl transition cursor-pointer"
+                    >
+                      Cancelar (Esc)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curStat = Number(eventForm.supplies_stationery_expense) || 0;
+                        setEventForm({
+                          ...eventForm,
+                          supplies_services_expense: roundedTotal,
+                          supplies_expense: roundedTotal + curStat,
+                          supplies_breakdown_json: JSON.stringify(standsExpenseItems)
+                        });
+                        setShowStandsExpenseCalc(false);
+                        showToast(`Insumos de barra actualizados: ${fmt(roundedTotal)} ✨`);
+                      }}
+                      className="px-5 py-2.5 bg-[#332A28] hover:bg-[#58352F] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer flex items-center space-x-1.5"
+                    >
+                      <span>✨ Guardar e Insertar Total</span>
                       <span className="font-mono">({fmt(roundedTotal)})</span>
                     </button>
                   </div>

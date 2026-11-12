@@ -147,7 +147,7 @@ export interface VlbDocument {
   created_at: string;
 }
 
-export type VlbCarProvider = 'SCARLETTE' | 'VICTORIA' | 'NINGUNA_EXTERNO';
+export type VlbCarProvider = 'SCARLETTE' | 'VICTORIA' | 'AMBAS_COMPLETO' | 'AMBAS_DIVIDIDO' | 'NINGUNA_EXTERNO';
 export type VlbStationeryProvider = 'SCARLETTE' | 'VICTORIA' | 'AMBAS' | 'NINGUNA' | 'EXTERNO';
 
 export interface VlbEventSettlement {
@@ -168,12 +168,14 @@ export interface VlbEventSettlement {
   supplies_expense: number; // Total histórico / combinado
   supplies_services_expense?: number; // Insumos Stands/Bar (hielo, vasos, cerveza)
   supplies_stationery_expense?: number; // Insumos Papelería (papel, impresión, listón, sellos)
+  supplies_breakdown_json?: string | null; // Desglose JSON de gastos de stands/bar e insumos
   car_provider: VlbCarProvider;
   stationery_provider: VlbStationeryProvider;
   stationery_labor_payout?: number; // Pago asignado por elaboración/corte de papelería
   staff_scarlette: boolean;
   staff_victoria: boolean;
   external_staff_count: number;
+  external_staff_names?: string | null;
   status: 'PENDIENTE' | 'LIQUIDADO';
   paid_scarlette?: boolean | number;
   paid_victoria?: boolean | number;
@@ -209,6 +211,8 @@ export interface VlbSettlementCalculation {
   suggestedStationeryLabor: number;
   freightPayout: number;
   freightBeneficiary: VlbCarProvider;
+  scarletteFreightPayout: number;
+  victoriaFreightPayout: number;
   stationeryPayout: number;
   stationeryBeneficiary: VlbStationeryProvider;
   scarletteStationeryPayout: number;

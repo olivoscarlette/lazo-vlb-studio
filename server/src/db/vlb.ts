@@ -211,6 +211,12 @@ export function initVlbDatabase() {
   try {
     db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN paid_external_at TEXT').run();
   } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN supplies_breakdown_json TEXT').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN external_staff_names TEXT').run();
+  } catch {}
 
   // Migrations for dynamic tasks and service type
   try {
