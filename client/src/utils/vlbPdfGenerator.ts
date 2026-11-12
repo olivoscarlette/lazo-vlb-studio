@@ -147,7 +147,7 @@ function drawJustifiedParagraph(
 export type VlbContractType = 'AUTO' | 'SNACKS' | 'STANDS' | 'MEMORIAL' | 'DRINKS' | 'PAPELERIA' | 'COMBO';
 
 export function isSnackItem(i: VlbQuoteItem): boolean {
-  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  const text = `${i.item_name || ''} ${i.description || ''} ${(i as any).subcategory || ''}`.toLowerCase();
   return (
     text.includes('snack') ||
     text.includes('botana') ||
@@ -168,7 +168,7 @@ export function isSnackItem(i: VlbQuoteItem): boolean {
 }
 
 export function isMemorialItem(i: VlbQuoteItem): boolean {
-  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  const text = `${i.item_name || ''} ${i.description || ''} ${(i as any).subcategory || ''}`.toLowerCase();
   return (
     text.includes('memorial') ||
     text.includes('conmemorativo') ||
@@ -180,7 +180,7 @@ export function isMemorialItem(i: VlbQuoteItem): boolean {
 }
 
 export function isDrinksItem(i: VlbQuoteItem): boolean {
-  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  const text = `${i.item_name || ''} ${i.description || ''} ${(i as any).subcategory || ''}`.toLowerCase();
   return (
     text.includes('beer') ||
     text.includes('cerveza') ||
@@ -196,7 +196,7 @@ export function isDrinksItem(i: VlbQuoteItem): boolean {
 }
 
 export function isStandOrDecorItem(i: VlbQuoteItem): boolean {
-  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  const text = `${i.item_name || ''} ${i.description || ''} ${(i as any).subcategory || ''}`.toLowerCase();
   return (
     text.includes('backdrop') ||
     text.includes('seating chart') ||
@@ -212,7 +212,7 @@ export function isStandOrDecorItem(i: VlbQuoteItem): boolean {
 }
 
 export function isPapeleriaItem(i: VlbQuoteItem): boolean {
-  const text = `${i.item_name || ''} ${i.description || ''} ${i.subcategory || ''}`.toLowerCase();
+  const text = `${i.item_name || ''} ${i.description || ''} ${(i as any).subcategory || ''}`.toLowerCase();
   return (
     i.category === 'PAPELERIA' ||
     text.includes('invita') ||
