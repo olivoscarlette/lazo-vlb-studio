@@ -76,6 +76,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   const [isNewEventModal, setIsNewEventModal] = useState<boolean>(false);
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [copiedBreakdownId, setCopiedBreakdownId] = useState<string | null>(null);
+  const [availableWeddings, setAvailableWeddings] = useState<Array<{ id: string; couple_name?: string; bride_name?: string; groom_name?: string; wedding_date?: string; venue?: string }>>([]);
 
   // Popup Calculadora de Insumos de Taller Multi-Producto (Menús, Capitanes, Fotos...)
   const [showWorkshopCostCalc, setShowWorkshopCostCalc] = useState<boolean>(false);
@@ -255,6 +256,17 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
         const stlData = await stlRes.json();
         setSettlements(stlData.settlements || []);
       }
+
+      // 3. Cargar Bodas de Lazo Studio para autocompletado opcional de eventos
+      try {
+        const wedRes = await apiFetch('/api/weddings');
+        if (wedRes.ok) {
+          const wedData = await wedRes.json();
+          if (Array.isArray(wedData)) {
+            setAvailableWeddings(wedData);
+          }
+        }
+      } catch {}
     } catch (err: any) {
       console.error('Error al cargar datos financieros:', err);
       showToast('Error al conectar con el servidor financiero.', 'error');
@@ -1810,6 +1822,48 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
 
             <form onSubmit={handleSaveEvent} className="space-y-4 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {isNewEventModal && availableWeddings.length > 0 && (
+                  <div className="sm:col-span-2 p-3 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-[#70443D] text-[11px] flex items-center space-x-1.5">
+                        <span>💍</span>
+                        <span>¿Es una boda registrada en el sistema de Lazo?</span>
+                      </span>
+                      <span className="text-[10px] text-[#7D6F6B]">Autocompletar</span>
+                    </div>
+                    <select
+                      onChange={(e) => {
+                        const wedId = e.target.value;
+                        if (!wedId) return;
+                        const w = availableWeddings.find(x => x.id === wedId);
+                        if (w) {
+                          const couple = w.couple_name || (w.bride_name && w.groom_name ? `${w.bride_name} & ${w.groom_name}` : w.bride_name || 'Boda');
+                          setEventForm(prev => ({
+                            ...prev,
+                            event_name: couple,
+                            event_date: w.wedding_date || prev.event_date,
+                            venue: w.venue || prev.venue || ''
+                          }));
+                        }
+                      }}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-xs text-[#332A28] cursor-pointer"
+                    >
+                      <option value="">Selecciona una boda para autocompletar nombre, fecha y sede...</option>
+                      {availableWeddings.map(w => {
+                        const name = w.couple_name || (w.bride_name && w.groom_name ? `${w.bride_name} & ${w.groom_name}` : w.bride_name || 'Boda');
+                        return (
+                          <option key={w.id} value={w.id}>
+                            {name} ({w.wedding_date || 'Sin fecha'}) {w.venue ? `· ${w.venue}` : ''}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <p className="text-[10px] text-[#7D6F6B]">
+                      * O escribe directamente abajo los datos de cualquier evento o contrato previo.
+                    </p>
+                  </div>
+                )}
+
                 <div className="sm:col-span-2">
                   <label className="block font-semibold text-[#7D6F6B] mb-1">
                     Nombre del Evento / Clienta *
