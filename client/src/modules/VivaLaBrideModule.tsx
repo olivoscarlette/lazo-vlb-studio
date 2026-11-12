@@ -67,7 +67,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog' | 'packing' | 'templates'>('quotes');
   const [quoteDiscountPct, setQuoteDiscountPct] = useState<number>(0);
   const [selectedContractType, setSelectedContractType] = useState<VlbContractType>('AUTO');
-  const [includeContractInPdf, setIncludeContractInPdf] = useState<boolean>(false);
   const [pdfMenuQuoteId, setPdfMenuQuoteId] = useState<string | null>(null);
 
   // Packing Checklist State (Día del Evento / Packing al Auto)
@@ -823,7 +822,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     showToast('Edición cancelada.');
   };
 
-  const handleExportPdfCurrent = async () => {
+  const handleExportPdfCurrent = async (includeContract = true) => {
     if (!quoteForm.client_name.trim()) {
       showToast('Ingresa el nombre de la clienta para generar el PDF.', 'error');
       return;
@@ -858,9 +857,9 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const effectiveContract = selectedContractType === 'AUTO' ? detectedContract : selectedContractType;
     await generateVlbQuotePdf(mockQuote, quoteItems, {
       contractType: effectiveContract,
-      includeContract: includeContractInPdf
+      includeContract
     });
-    showToast(includeContractInPdf ? '¡Cotización con Contrato descargada!' : '¡Cotización descargada (1 pág)!');
+    showToast(includeContract ? '¡Cotización con Contrato descargada!' : '¡Cotización descargada (1 pág)!');
   };
 
   const handleExportSavedQuotePdf = async (quote: VlbQuote, includeContract = true) => {
@@ -1934,53 +1933,17 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   </div>
                 </div>
 
-                {/* Formato de Descarga PDF (1 pág vs 2 págs) */}
-                <div className="bg-[#FAF6F2] p-2.5 rounded-2xl border border-[#EAE3DA] space-y-1.5">
-                  <div className="flex items-center justify-between text-[11px] font-bold text-[#7D6F6B]">
-                    <span>Páginas del PDF:</span>
-                    <span className="text-[#9C665C]">
-                      {includeContractInPdf ? '2 Págs (Con Contrato)' : '1 Pág (Solo Cotización)'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1 p-1 bg-[#FFFFFF] rounded-xl border border-[#EAE3DA]">
-                    <button
-                      type="button"
-                      onClick={() => setIncludeContractInPdf(false)}
-                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition text-center cursor-pointer ${
-                        !includeContractInPdf
-                          ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
-                          : 'text-[#7D6F6B] hover:text-[#332A28]'
-                      }`}
-                    >
-                      📄 Solo Cotización
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setIncludeContractInPdf(true)}
-                      className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition text-center cursor-pointer ${
-                        includeContractInPdf
-                          ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
-                          : 'text-[#7D6F6B] hover:text-[#332A28]'
-                      }`}
-                    >
-                      📑 + Contrato
-                    </button>
-                  </div>
-                </div>
-
                 {/* Acciones Principales */}
                 <div className="space-y-2.5 pt-2">
                   <button
-                    onClick={handleExportPdfCurrent}
+                    onClick={() => handleExportPdfCurrent(true)}
                     disabled={quoteItems.length === 0}
                     className={`w-full py-3.5 px-4 bg-[#332A28] hover:bg-[#58352F] text-[#FFFFFF] text-xs font-bold uppercase tracking-widest rounded-2xl shadow-xs transition flex items-center justify-center space-x-2 cursor-pointer ${
                       quoteItems.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                   >
                     <Download className="w-4 h-4 text-[#CCDACC]" />
-                    <span>
-                      {includeContractInPdf ? 'Descargar Cotización + Contrato' : 'Descargar Solo Cotización (1 pág)'}
-                    </span>
+                    <span>Descargar PDF Oficial</span>
                   </button>
 
                   <button
