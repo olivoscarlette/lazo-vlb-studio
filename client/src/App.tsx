@@ -486,8 +486,10 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     });
   };
 
-  // If in Viva la Bride Studio mode (STRICTLY EXCLUSIVE TO ADMINISTRADOR)
-  if (user?.role === 'ADMINISTRADOR' && activeModule === 'vlb') {
+  const hasVlbAccess = user?.role === 'ADMINISTRADOR' || Boolean(user?.vlb_access);
+
+  // If in Viva la Bride Studio mode
+  if (hasVlbAccess && activeModule === 'vlb') {
     return (
       <div className="min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
         <VivaLaBrideModule
@@ -699,7 +701,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      {user?.role === 'ADMINISTRADOR' && activeModule === 'vlb' ? (
+      {(user?.role === 'ADMINISTRADOR' || Boolean(user?.vlb_access)) && activeModule === 'vlb' ? (
         <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
           <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
           <div className="flex-1 bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">

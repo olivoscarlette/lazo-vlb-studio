@@ -68,7 +68,8 @@ router.post('/login', (req, res) => {
     email: user.email,
     role: user.role,
     phone: user.phone,
-    wedding_id: user.wedding_id
+    wedding_id: user.wedding_id,
+    vlb_access: user.role === 'ADMINISTRADOR' ? 1 : (user.vlb_access ? 1 : 0)
   };
 
   const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
@@ -103,7 +104,8 @@ router.get('/quick-access', (req, res) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
-        wedding_id: user.wedding_id
+        wedding_id: user.wedding_id,
+        vlb_access: 1
       };
       const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '30d' });
       res.cookie('token', token, {
@@ -294,8 +296,11 @@ router.get('/me', authenticateToken, (req, res) => {
     return res.status(401).json({ error: 'No autenticado.' });
   }
 
-  const dbUser = db.prepare('SELECT id, name, email, role, phone, wedding_id, avatar_url FROM users WHERE id = ?').get(req.user.id) as any;
-  const userData = dbUser || req.user;
+  const dbUser = db.prepare('SELECT id, name, email, role, phone, wedding_id, avatar_url, salutation, vlb_access FROM users WHERE id = ?').get(req.user.id) as any;
+  const userData = dbUser ? {
+    ...dbUser,
+    vlb_access: dbUser.role === 'ADMINISTRADOR' ? 1 : (dbUser.vlb_access ? 1 : 0)
+  } : req.user;
 
   let assignedWeddings: any[] = [];
   if (req.user.role === 'ADMINISTRADOR') {
@@ -387,11 +392,12 @@ router.put('/profile', authenticateToken, (req, res) => {
 
 // Admin: List all users (including assigned weddings for team members)
 router.get('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
-  const users = db.prepare('SELECT id, name, email, role, phone, wedding_id, avatar_url, salutation, created_at FROM users ORDER BY name ASC').all() as any[];
+  const users = db.prepare('SELECT id, name, email, role, phone, wedding_id, avatar_url, salutation, vlb_access, created_at FROM users ORDER BY name ASC').all() as any[];
   const assignments = db.prepare('SELECT user_id, wedding_id, assigned_role FROM wedding_assignments').all() as any[];
 
   const enriched = users.map(u => ({
     ...u,
+    vlb_access: u.role === 'ADMINISTRADOR' ? 1 : (u.vlb_access ? 1 : 0),
     assigned_wedding_ids: assignments.filter(a => a.user_id === u.id).map(a => a.wedding_id),
     assignments: assignments.filter(a => a.user_id === u.id)
   }));
@@ -401,7 +407,7 @@ router.get('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, re
 
 // Admin: Create User
 router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
-  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role, avatar_url, send_welcome_email = true, salutation } = req.body;
+  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role, avatar_url, send_welcome_email = true, salutation, vlb_access } = req.body;
   if (!name || !email || !password || !role) {
     return res.status(400).json({ error: 'Nombre, email, contraseña y rol son requeridos.' });
   }
@@ -414,11 +420,12 @@ router.post('/users', authenticateToken, requireRole(['ADMINISTRADOR']), (req, r
   const id = 'usr_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
   const hash = bcrypt.hashSync(password, 10);
   const now = new Date().toISOString();
+  const vlbAccessVal = role === 'ADMINISTRADOR' || Boolean(vlb_access) ? 1 : 0;
 
   db.prepare(`
-    INSERT INTO users (id, name, email, password_hash, role, phone, wedding_id, avatar_url, salutation, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(id, name.trim(), email.toLowerCase().trim(), hash, role, phone || null, wedding_id || null, avatar_url || null, salutation || null, now, now);
+    INSERT INTO users (id, name, email, password_hash, role, phone, wedding_id, avatar_url, salutation, vlb_access, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(id, name.trim(), email.toLowerCase().trim(), hash, role, phone || null, wedding_id || null, avatar_url || null, salutation || null, vlbAccessVal, now, now);
 
   if (Array.isArray(assigned_wedding_ids) && (role === 'COORDINADOR' || role === 'STAFF')) {
     const insertAssign = db.prepare(`
@@ -512,7 +519,7 @@ router.post('/users/:id/resend-welcome', authenticateToken, requireRole(['ADMINI
 // Admin: Edit User
 router.put('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
   const { id } = req.params;
-  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role, avatar_url, salutation } = req.body;
+  const { name, email, password, role, phone, wedding_id, assigned_wedding_ids, assigned_role, avatar_url, salutation, vlb_access } = req.body;
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
   if (!user) {
@@ -535,9 +542,10 @@ router.put('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req
   const finalRole = role || user.role;
   const finalAvatar = avatar_url !== undefined ? avatar_url : user.avatar_url;
   const finalSalutation = salutation !== undefined ? salutation : user.salutation;
+  const finalVlbAccess = finalRole === 'ADMINISTRADOR' ? 1 : (vlb_access !== undefined ? (vlb_access ? 1 : 0) : (user.vlb_access ? 1 : 0));
 
   db.prepare(`
-    UPDATE users SET name = ?, email = ?, password_hash = ?, role = ?, phone = ?, wedding_id = ?, avatar_url = ?, salutation = ?, updated_at = ?
+    UPDATE users SET name = ?, email = ?, password_hash = ?, role = ?, phone = ?, wedding_id = ?, avatar_url = ?, salutation = ?, vlb_access = ?, updated_at = ?
     WHERE id = ?
   `).run(
     name ? name.trim() : user.name,
@@ -548,6 +556,7 @@ router.put('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req
     wedding_id !== undefined ? wedding_id : user.wedding_id,
     finalAvatar,
     finalSalutation,
+    finalVlbAccess,
     now,
     id
   );
@@ -592,6 +601,23 @@ router.delete('/users/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (
   logAudit(null, req.user!.id, req.user!.name, 'ELIMINAR_USUARIO', 'USER', id, `Eliminación de usuario ${user.name} (${user.email})`);
 
   return res.json({ message: 'Usuario eliminado correctamente.' });
+});
+
+// Admin: Toggle VLB Submodule Access (Cotizador VLB)
+router.patch('/users/:id/vlb-access', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
+  const { id } = req.params;
+  const { vlb_access } = req.body;
+
+  const user = db.prepare('SELECT id, name, role FROM users WHERE id = ?').get(id) as any;
+  if (!user) {
+    return res.status(404).json({ error: 'Usuario no encontrado.' });
+  }
+
+  const val = user.role === 'ADMINISTRADOR' ? 1 : (Boolean(vlb_access) ? 1 : 0);
+  db.prepare('UPDATE users SET vlb_access = ?, updated_at = ? WHERE id = ?').run(val, new Date().toISOString(), id);
+  logAudit(null, req.user!.id, req.user!.name, 'TOGGLE_VLB_ACCESS', 'USER', id, `${val ? 'Activación' : 'Desactivación'} de acceso a Cotizador VLB para ${user.name}`);
+
+  return res.json({ success: true, vlb_access: val });
 });
 
 export default router;

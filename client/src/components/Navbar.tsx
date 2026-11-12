@@ -194,8 +194,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               </button>
             )}
 
-            {/* Platform Switcher: Lazo Planning ⇄ Viva la Bride (EXCLUSIVO ADMINISTRADOR - LADO DERECHO) */}
-            {user.role === 'ADMINISTRADOR' && (
+            {/* Platform Switcher: Lazo Planning ⇄ Viva la Bride */}
+            {(user.role === 'ADMINISTRADOR' || Boolean(user.vlb_access)) && (
               <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
                 <button
                   onClick={() => {

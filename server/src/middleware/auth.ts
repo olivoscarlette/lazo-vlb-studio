@@ -11,6 +11,7 @@ export interface AuthUser {
   role: 'ADMINISTRADOR' | 'COORDINADOR' | 'STAFF' | 'NOVIOS';
   phone?: string;
   wedding_id?: string | null;
+  vlb_access?: number | boolean;
 }
 
 declare global {
@@ -40,7 +41,7 @@ export function authenticateToken(req: Request, res: Response, next: NextFunctio
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as AuthUser;
     // Verify user still exists in DB
-    const user = db.prepare('SELECT id, name, email, role, phone, wedding_id FROM users WHERE id = ?').get(decoded.id) as AuthUser | undefined;
+    const user = db.prepare('SELECT id, name, email, role, phone, wedding_id, vlb_access FROM users WHERE id = ?').get(decoded.id) as AuthUser | undefined;
     if (!user) {
       return res.status(401).json({ error: 'Usuario no válido o eliminado.' });
     }

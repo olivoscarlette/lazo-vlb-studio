@@ -70,6 +70,16 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [copiedBreakdownId, setCopiedBreakdownId] = useState<string | null>(null);
 
+  // Calculadora de Costos de Taller (Insumos: Hojas, Tinta, Navaja/Corte, Acabados)
+  const [showWorkshopCostCalc, setShowWorkshopCostCalc] = useState<boolean>(false);
+  const [calcPieces, setCalcPieces] = useState<number>(50);
+  const [calcPaperPreset, setCalcPaperPreset] = useState<string>('cotton');
+  const [calcPaperUnitCost, setCalcPaperUnitCost] = useState<number>(3.50);
+  const [calcInkTier, setCalcInkTier] = useState<'LIGERO' | 'MEDIO' | 'ALTO'>('MEDIO');
+  const [calcCuttingType, setCalcCuttingType] = useState<'CIZALLA' | 'PLOTTER' | 'NINGUNO'>('CIZALLA');
+  const [calcHasRibbon, setCalcHasRibbon] = useState<boolean>(false);
+  const [calcHasWaxSeal, setCalcHasWaxSeal] = useState<boolean>(false);
+
   // Formulario de Ajustes
   const [settingsForm, setSettingsForm] = useState({
     staff_rate: 450,
@@ -409,9 +419,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       `\n📦 *Insumos Directos:* ${fmt(calc.suppliesExpense)}\n` +
       `   • Insumos Stands / Bar: ${fmt(calc.suppliesServicesExpense)}\n` +
       `   • Insumos Papelería: ${fmt(calc.suppliesStationeryExpense)}\n` +
-      (calc.stationeryAmount > 0 ? `   ✨ Margen Papelería (quitando gastos): ${fmt(calc.stationeryNetMargin)}\n` : '') +
+      (calc.stationeryAmount > 0 ? `   ✨ Margen Operativo Papelería: ${fmt(calc.stationeryNetMargin)}\n` : '') +
       `\n🛠️ *Operación & Mano de Obra:*\n` +
-      `   • Elaboración Papelería: ${fmt(calc.stationeryPayout)} (${calc.stationeryBeneficiary})\n` +
+      `   • Elaboración Papelería: ${fmt(calc.stationeryPayout)} (${calc.stationeryBeneficiary === 'AMBAS' ? 'Ambas 50/50' : calc.stationeryBeneficiary})\n` +
       `   • Flete / Carro: ${fmt(calc.freightPayout)} (${calc.freightBeneficiary})\n` +
       `   • Staff Externo (${calc.externalStaffCount}p): ${fmt(calc.externalStaffPayout)}\n` +
       `   • Turno Scarlette: ${fmt(calc.scarletteShiftPayout)}\n` +
@@ -422,9 +432,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       `🏛️ *Fondo Empresa (60%):* ${fmt(calc.companyFundAmount)}\n` +
       `🤝 *Bolsa Utilidades (40%):* ${fmt(calc.partnersProfitPool)}\n\n` +
       `💰 *PAGO FINAL SCARLETTE:* ${fmt(calc.scarletteTotalPayout)}\n` +
-      `   (Turno: ${fmt(calc.scarletteShiftPayout)} + Carro: ${fmt(item.car_provider === 'SCARLETTE' ? calc.freightPayout : 0)} + Papel: ${fmt(item.stationery_provider === 'SCARLETTE' ? calc.stationeryPayout : 0)} + Utilidad 50%: ${fmt(calc.scarletteProfitShare)})\n\n` +
+      `   (Turno: ${fmt(calc.scarletteShiftPayout)} + Carro: ${fmt(item.car_provider === 'SCARLETTE' ? calc.freightPayout : 0)} + Papel: ${fmt(calc.scarletteStationeryPayout)} + Utilidad 50%: ${fmt(calc.scarletteProfitShare)})\n\n` +
       `💰 *PAGO FINAL VICTORIA:* ${fmt(calc.victoriaTotalPayout)}\n` +
-      `   (Turno: ${fmt(calc.victoriaShiftPayout)} + Carro: ${fmt(item.car_provider === 'VICTORIA' ? calc.freightPayout : 0)} + Papel: ${fmt(item.stationery_provider === 'VICTORIA' ? calc.stationeryPayout : 0)} + Utilidad 50%: ${fmt(calc.victoriaProfitShare)})\n\n` +
+      `   (Turno: ${fmt(calc.victoriaShiftPayout)} + Carro: ${fmt(item.car_provider === 'VICTORIA' ? calc.freightPayout : 0)} + Papel: ${fmt(calc.victoriaStationeryPayout)} + Utilidad 50%: ${fmt(calc.victoriaProfitShare)})\n\n` +
       `💼 *PAGO STAFF / MAQUILA EXTERNA:* ${fmt(calc.externalTotalPayout)}`;
 
     if (navigator.clipboard) {
@@ -788,11 +798,24 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                               ? 'bg-[#FFF6F8] text-[#E84E6D] border border-[#F5C2CD]'
                               : item.stationery_provider === 'VICTORIA'
                               ? 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
+                              : item.stationery_provider === 'AMBAS'
+                              ? 'bg-[#F2EDFF] text-[#6E42C1] border border-[#D5C2F5]'
                               : 'bg-gray-100 text-gray-700'
                           }`}>
-                            {item.stationery_provider === 'SCARLETTE' ? 'Scarlette' : item.stationery_provider === 'VICTORIA' ? 'Victoria' : 'Externo'}
+                            {item.stationery_provider === 'SCARLETTE'
+                              ? 'Scarlette'
+                              : item.stationery_provider === 'VICTORIA'
+                              ? 'Victoria'
+                              : item.stationery_provider === 'AMBAS'
+                              ? 'Ambas 50/50'
+                              : 'Externo'}
                           </span>
-                          <div className="text-[10px] text-[#7D6F6B] font-mono font-semibold">{fmt(calc.stationeryPayout)}</div>
+                          <div className="text-[10px] text-[#7D6F6B] font-mono font-semibold">
+                            {fmt(calc.stationeryPayout)}
+                            {item.stationery_provider === 'AMBAS' && (
+                              <span className="block text-[9px] text-[#805AD5]">({fmt(calc.scarletteStationeryPayout)} c/u)</span>
+                            )}
+                          </div>
                         </div>
                       ) : (
                         <span className="text-[#A69995] text-[11px]">-</span>
@@ -990,9 +1013,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>• Elaboración Papelería ({item.stationery_provider === 'SCARLETTE' ? 'Elaboró' : 'No'}):</span>
+                        <span>• Elaboración Papelería ({item.stationery_provider === 'SCARLETTE' ? 'Elaboró 100%' : item.stationery_provider === 'AMBAS' ? 'Ambas (50%)' : 'No'}):</span>
                         <span className="font-semibold text-[#332A28]">
-                          {fmt(item.stationery_provider === 'SCARLETTE' ? calc.stationeryPayout : 0)}
+                          {fmt(calc.scarletteStationeryPayout)}
                         </span>
                       </div>
                       <div className="flex justify-between text-[#E84E6D]">
@@ -1026,9 +1049,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span>• Elaboración Papelería ({item.stationery_provider === 'VICTORIA' ? 'Elaboró' : 'No'}):</span>
+                        <span>• Elaboración Papelería ({item.stationery_provider === 'VICTORIA' ? 'Elaboró 100%' : item.stationery_provider === 'AMBAS' ? 'Ambas (50%)' : 'No'}):</span>
                         <span className="font-semibold text-[#332A28]">
-                          {fmt(item.stationery_provider === 'VICTORIA' ? calc.stationeryPayout : 0)}
+                          {fmt(calc.victoriaStationeryPayout)}
                         </span>
                       </div>
                       <div className="flex justify-between text-[#70443D]">
@@ -1286,9 +1309,19 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                   </div>
 
                   <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Insumos Papelería Social ($)
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block font-semibold text-[#7D6F6B]">
+                        Insumos Papelería Social ($)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowWorkshopCostCalc(!showWorkshopCostCalc)}
+                        className="inline-flex items-center space-x-1 text-[11px] font-bold text-[#9C665C] hover:text-[#70443D] bg-[#FAF6F2] hover:bg-[#F4ECE4] px-2 py-0.5 rounded-lg border border-[#EAE3DA] transition cursor-pointer"
+                      >
+                        <span>🧮</span>
+                        <span>{showWorkshopCostCalc ? 'Cerrar Calculadora' : 'Calculadora de Costos'}</span>
+                      </button>
+                    </div>
                     <input
                       type="number"
                       min={0}
@@ -1309,11 +1342,192 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                   </div>
                 </div>
 
-                {/* Margen de Papelería quitando gastos */}
+                {/* Calculadora Asistente de Costos de Taller (Hojas, Tinta, Navaja/Corte, Acabados) */}
+                {showWorkshopCostCalc && (
+                  <div className="p-3.5 bg-gradient-to-br from-[#FFF9F5] to-[#FCF4EE] rounded-2xl border-2 border-[#EAD5C3] space-y-3 text-xs">
+                    <div className="flex items-center justify-between pb-2 border-b border-[#EAE3DA]">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-base">🧮</span>
+                        <div>
+                          <span className="font-bold text-[#70443D] text-xs block">
+                            Calculadora de Taller (Hojas, Tinta y Corte)
+                          </span>
+                          <span className="text-[10px] text-[#7D6F6B]">
+                            Calcula el costo real unitario de producción propia
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-semibold bg-[#EAD5C3] text-[#70443D] px-2 py-0.5 rounded-full">
+                        Atelier VLB
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {/* Cantidad de piezas */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#7D6F6B] mb-1">
+                          1. Cantidad de piezas a producir:
+                        </label>
+                        <div className="flex items-center space-x-1">
+                          <input
+                            type="number"
+                            min={1}
+                            step={1}
+                            value={calcPieces}
+                            onChange={e => setCalcPieces(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                            className="w-full px-2.5 py-1.5 bg-white border border-[#EAE3DA] rounded-lg text-[#332A28] font-bold text-center"
+                          />
+                          <span className="text-[11px] text-[#7D6F6B]">pzs</span>
+                        </div>
+                      </div>
+
+                      {/* Tipo de papel / Costo por pieza */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#7D6F6B] mb-1">
+                          2. Papel / Cartulina (costo por pieza):
+                        </label>
+                        <select
+                          value={calcPaperPreset}
+                          onChange={e => {
+                            const val = e.target.value;
+                            setCalcPaperPreset(val);
+                            if (val === 'cotton') setCalcPaperUnitCost(3.50);
+                            else if (val === 'opalina') setCalcPaperUnitCost(1.20);
+                            else if (val === 'handmade') setCalcPaperUnitCost(5.00);
+                            else if (val === 'tags') setCalcPaperUnitCost(0.40);
+                          }}
+                          className="w-full px-2 py-1.5 bg-white border border-[#EAE3DA] rounded-lg text-[11px] text-[#332A28] cursor-pointer"
+                        >
+                          <option value="cotton">📜 Cartulina Algodón / Lino ($3.50/pz)</option>
+                          <option value="opalina">📄 Opalina Fina 225-250g ($1.20/pz)</option>
+                          <option value="handmade">🌾 Papel Artesanal Bordes Rasgados ($5.00/pz)</option>
+                          <option value="tags">🏷️ Tags chicos (12-15 x hoja) ($0.40/pz)</option>
+                          <option value="custom">✏️ Personalizado...</option>
+                        </select>
+                        {calcPaperPreset === 'custom' && (
+                          <input
+                            type="number"
+                            min={0}
+                            step="any"
+                            placeholder="Costo $ por pieza"
+                            value={calcPaperUnitCost}
+                            onChange={e => setCalcPaperUnitCost(parseFloat(e.target.value) || 0)}
+                            className="mt-1 w-full px-2 py-1 bg-white border border-[#EAE3DA] rounded-lg text-xs"
+                          />
+                        )}
+                      </div>
+
+                      {/* Nivel de Tinta */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#7D6F6B] mb-1">
+                          3. Cobertura de Tinta (EcoTank):
+                        </label>
+                        <select
+                          value={calcInkTier}
+                          onChange={e => setCalcInkTier(e.target.value as 'LIGERO' | 'MEDIO' | 'ALTO')}
+                          className="w-full px-2 py-1.5 bg-white border border-[#EAE3DA] rounded-lg text-[11px] text-[#332A28] cursor-pointer"
+                        >
+                          <option value="LIGERO">🔤 Ligero ($0.60/pz) · Texto y monograma fino</option>
+                          <option value="MEDIO">🌸 Medio ($1.40/pz) · Color, marcos y flores</option>
+                          <option value="ALTO">🎨 Alto ($2.80/pz) · Fondos oscuros o fotos</option>
+                        </select>
+                        <span className="text-[10px] text-[#A69995] block mt-0.5">
+                          Basado en rendimiento real de tanques de tinta continua.
+                        </span>
+                      </div>
+
+                      {/* Corte y Desgaste */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#7D6F6B] mb-1">
+                          4. Corte & Merma de Navaja:
+                        </label>
+                        <select
+                          value={calcCuttingType}
+                          onChange={e => setCalcCuttingType(e.target.value as 'CIZALLA' | 'PLOTTER' | 'NINGUNO')}
+                          className="w-full px-2 py-1.5 bg-white border border-[#EAE3DA] rounded-lg text-[11px] text-[#332A28] cursor-pointer"
+                        >
+                          <option value="CIZALLA">✂️ Guillotina / Cizalla ($0.40/pz + merma)</option>
+                          <option value="PLOTTER">⚙️ Plotter Silhouette/Cricut ($0.90/pz)</option>
+                          <option value="NINGUNO">🚫 Ya viene a medida ($0.00)</option>
+                        </select>
+                        <span className="text-[10px] text-[#A69995] block mt-0.5">
+                          Amortización de cuchillas y reposición por errores de corte.
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Acabados adicionales */}
+                    <div className="pt-2 border-t border-[#EAE3DA] flex flex-wrap items-center gap-3">
+                      <span className="text-[11px] font-bold text-[#7D6F6B]">Acabados de taller:</span>
+                      <label className="inline-flex items-center space-x-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={calcHasRibbon}
+                          onChange={e => setCalcHasRibbon(e.target.checked)}
+                          className="rounded text-[#E84E6D] focus:ring-[#E84E6D]"
+                        />
+                        <span className="text-[11px] text-[#332A28]">🎗️ Listón / Gasa rasgada (+$3.00/pz)</span>
+                      </label>
+                      <label className="inline-flex items-center space-x-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={calcHasWaxSeal}
+                          onChange={e => setCalcHasWaxSeal(e.target.checked)}
+                          className="rounded text-[#E84E6D] focus:ring-[#E84E6D]"
+                        />
+                        <span className="text-[11px] text-[#332A28]">🕯️ Sello de Lacre (+$1.50/pz)</span>
+                      </label>
+                    </div>
+
+                    {/* Resumen y Botón de Aplicación */}
+                    {(() => {
+                      const inkPrice = calcInkTier === 'LIGERO' ? 0.60 : calcInkTier === 'MEDIO' ? 1.40 : 2.80;
+                      const cutPrice = calcCuttingType === 'CIZALLA' ? 0.40 : calcCuttingType === 'PLOTTER' ? 0.90 : 0;
+                      const ribbonPrice = calcHasRibbon ? 3.00 : 0;
+                      const sealPrice = calcHasWaxSeal ? 1.50 : 0;
+                      const unitCost = Math.round((calcPaperUnitCost + inkPrice + cutPrice + ribbonPrice + sealPrice) * 100) / 100;
+                      const totalWorkshopCost = Math.round(unitCost * calcPieces * 100) / 100;
+
+                      return (
+                        <div className="p-3 bg-white rounded-xl border border-[#EAD5C3] flex flex-col sm:flex-row items-center justify-between gap-2">
+                          <div className="text-center sm:text-left">
+                            <div className="text-[11px] text-[#7D6F6B]">
+                              Costo estimado por pieza: <strong className="text-[#332A28] font-mono">${unitCost.toFixed(2)} MXN</strong>
+                              <span className="text-[10px] text-[#A69995] ml-1">
+                                (Papel ${calcPaperUnitCost.toFixed(2)} + Tinta ${inkPrice.toFixed(2)} + Corte ${cutPrice.toFixed(2)}{ribbonPrice + sealPrice > 0 ? ` + Acabados $${(ribbonPrice + sealPrice).toFixed(2)}` : ''})
+                              </span>
+                            </div>
+                            <div className="text-xs font-bold text-[#70443D] mt-0.5">
+                              Insumos Totales de Producción ({calcPieces} pzs): <span className="font-mono text-sm text-[#E84E6D]">{fmt(totalWorkshopCost)}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const curServ = Number(eventForm.supplies_services_expense) || 0;
+                              setEventForm({
+                                ...eventForm,
+                                supplies_stationery_expense: totalWorkshopCost,
+                                supplies_expense: curServ + totalWorkshopCost
+                              });
+                              setShowWorkshopCostCalc(false);
+                            }}
+                            className="px-3.5 py-1.5 bg-[#70443D] hover:bg-[#5C3731] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer flex items-center space-x-1 whitespace-nowrap"
+                          >
+                            <span>✨ Aplicar a Insumos</span>
+                            <span>({fmt(totalWorkshopCost)})</span>
+                          </button>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                {/* Margen Operativo de Papelería */}
                 {Number(eventForm.stationery_amount) > 0 && (
                   <div className="p-2.5 rounded-xl bg-[#FFF6F8] border border-[#F5C2CD] flex items-center justify-between text-xs">
                     <span className="text-[#E84E6D] font-bold">
-                      Margen de Papelería ("quitando gastos"):
+                      Margen Operativo de Papelería (Neto Taller):
                     </span>
                     <span className="font-mono font-bold text-[#E84E6D]">
                       {fmt(Math.max(0, (Number(eventForm.stationery_amount) || 0) - (Number(eventForm.supplies_stationery_expense) || 0)))}
@@ -1365,6 +1579,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                       <option value="NINGUNA">Ninguna ($0)</option>
                       <option value="SCARLETTE">💌 Scarlette</option>
                       <option value="VICTORIA">💌 Victoria</option>
+                      <option value="AMBAS">💌 Ambas (50% y 50%)</option>
                       <option value="EXTERNO">👥 Taller / Maquila Externa</option>
                     </select>
                   </div>
@@ -1381,7 +1596,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                           </label>
                           <div className="flex items-center space-x-2">
                             <span className="text-[11px] text-[#7D6F6B]">
-                              Sugerido quitando gastos: <strong>{fmt(suggested)}</strong> ({settings.stationery_labor_pct}%)
+                              Sugerido s/ Margen de Taller: <strong>{fmt(suggested)}</strong> ({settings.stationery_labor_pct}%)
                             </span>
                             <button
                               type="button"
@@ -1402,7 +1617,15 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                           placeholder="Monto a pagar por mano de obra"
                         />
                         <span className="text-[10px] text-[#7D6F6B] block">
-                          * Asignado a: {eventForm.stationery_provider === 'SCARLETTE' ? 'Scarlette' : eventForm.stationery_provider === 'VICTORIA' ? 'Victoria' : 'Proveedor Externo'}
+                          * Asignado a: {
+                            eventForm.stationery_provider === 'SCARLETTE'
+                              ? 'Scarlette (100%)'
+                              : eventForm.stationery_provider === 'VICTORIA'
+                              ? 'Victoria (100%)'
+                              : eventForm.stationery_provider === 'AMBAS'
+                              ? 'Ambas en partes iguales (50% Scarlette / 50% Victoria)'
+                              : 'Proveedor Externo'
+                          }
                         </span>
                       </div>
                     );

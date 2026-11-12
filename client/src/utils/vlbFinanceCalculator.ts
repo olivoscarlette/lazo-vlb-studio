@@ -107,15 +107,28 @@ export function calculateEventSettlement(
   const victoriaProfitShare = Math.round(partnersProfitPool * 0.50 * 100) / 100;
 
   // 9. Liquidaciones Finales
+  let scarletteStationery = 0;
+  let victoriaStationery = 0;
+  let externalStationery = 0;
+
+  if (event.stationery_provider === 'SCARLETTE') {
+    scarletteStationery = stationeryPayout;
+  } else if (event.stationery_provider === 'VICTORIA') {
+    victoriaStationery = stationeryPayout;
+  } else if (event.stationery_provider === 'AMBAS') {
+    // Ambas socias elaboraron la papelería: se divide en partes iguales (50% y 50%)
+    scarletteStationery = Math.round((stationeryPayout / 2) * 100) / 100;
+    victoriaStationery = Math.round((stationeryPayout - scarletteStationery) * 100) / 100;
+  } else if (event.stationery_provider === 'EXTERNO') {
+    externalStationery = stationeryPayout;
+  }
+
   const scarletteFreight = event.car_provider === 'SCARLETTE' ? freightPayout : 0;
-  const scarletteStationery = event.stationery_provider === 'SCARLETTE' ? stationeryPayout : 0;
   const scarletteTotalPayout = scarletteShiftPayout + scarletteFreight + scarletteStationery + scarletteProfitShare;
 
   const victoriaFreight = event.car_provider === 'VICTORIA' ? freightPayout : 0;
-  const victoriaStationery = event.stationery_provider === 'VICTORIA' ? stationeryPayout : 0;
   const victoriaTotalPayout = victoriaShiftPayout + victoriaFreight + victoriaStationery + victoriaProfitShare;
 
-  const externalStationery = event.stationery_provider === 'EXTERNO' ? stationeryPayout : 0;
   const externalTotalPayout = externalStaffPayout + externalStationery;
 
   return {
@@ -131,6 +144,8 @@ export function calculateEventSettlement(
     freightBeneficiary: event.car_provider,
     stationeryPayout,
     stationeryBeneficiary: event.stationery_provider,
+    scarletteStationeryPayout: scarletteStationery,
+    victoriaStationeryPayout: victoriaStationery,
     externalStaffCount,
     externalStaffPayout,
     scarletteShiftPayout,

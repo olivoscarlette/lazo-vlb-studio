@@ -148,7 +148,7 @@ export interface VlbDocument {
 }
 
 export type VlbCarProvider = 'SCARLETTE' | 'VICTORIA' | 'NINGUNA_EXTERNO';
-export type VlbStationeryProvider = 'SCARLETTE' | 'VICTORIA' | 'NINGUNA' | 'EXTERNO';
+export type VlbStationeryProvider = 'SCARLETTE' | 'VICTORIA' | 'AMBAS' | 'NINGUNA' | 'EXTERNO';
 
 export interface VlbEventSettlement {
   id: string;
@@ -205,6 +205,8 @@ export interface VlbSettlementCalculation {
   freightBeneficiary: VlbCarProvider;
   stationeryPayout: number;
   stationeryBeneficiary: VlbStationeryProvider;
+  scarletteStationeryPayout: number;
+  victoriaStationeryPayout: number;
   externalStaffCount: number;
   externalStaffPayout: number;
   scarletteShiftPayout: number;

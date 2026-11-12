@@ -9,6 +9,7 @@ export interface User {
   wedding_id?: string | null;
   avatar_url?: string | null;
   salutation?: 'AUTO' | 'NOVIO' | 'NOVIA' | 'PAREJA' | null;
+  vlb_access?: boolean | number;
 }
 
 export interface WeddingTeamMember {
