@@ -70,15 +70,27 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   const [showSettingsModal, setShowSettingsModal] = useState<boolean>(false);
   const [copiedBreakdownId, setCopiedBreakdownId] = useState<string | null>(null);
 
-  // Calculadora de Costos de Taller (Insumos: Hojas, Tinta, Navaja/Corte, Acabados)
+  // Popup Calculadora de Insumos de Taller Multi-Producto (Menús, Capitanes, Fotos...)
   const [showWorkshopCostCalc, setShowWorkshopCostCalc] = useState<boolean>(false);
-  const [calcPieces, setCalcPieces] = useState<number>(50);
-  const [calcPaperPreset, setCalcPaperPreset] = useState<string>('cotton');
-  const [calcPaperUnitCost, setCalcPaperUnitCost] = useState<number>(3.50);
-  const [calcInkTier, setCalcInkTier] = useState<'LIGERO' | 'MEDIO' | 'ALTO'>('MEDIO');
-  const [calcCuttingType, setCalcCuttingType] = useState<'CIZALLA' | 'PLOTTER' | 'NINGUNO'>('CIZALLA');
-  const [calcHasRibbon, setCalcHasRibbon] = useState<boolean>(false);
-  const [calcHasWaxSeal, setCalcHasWaxSeal] = useState<boolean>(false);
+  const [workshopCostItems, setWorkshopCostItems] = useState<Array<{ id: string; name: string; pieces: number; unitCost: number }>>([
+    { id: '1', name: 'Menús de mesa', pieces: 50, unitCost: 4.50 },
+    { id: '2', name: 'Capitanes / Números de mesa', pieces: 12, unitCost: 8.00 },
+    { id: '3', name: 'Fotos estilo Polaroid (firmas)', pieces: 40, unitCost: 4.80 }
+  ]);
+
+  // Modo de servicio en formulario: 'STANDS' | 'PAPELERIA' | 'MIXTO'
+  const [modalServiceMode, setModalServiceMode] = useState<'STANDS' | 'PAPELERIA' | 'MIXTO'>('MIXTO');
+
+  // Cerrar popup de calculadora con tecla Escape
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showWorkshopCostCalc) {
+        setShowWorkshopCostCalc(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showWorkshopCostCalc]);
 
   // Formulario de Ajustes
   const [settingsForm, setSettingsForm] = useState({
@@ -121,6 +133,14 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     const supServ = item.supplies_services_expense ?? (item.supplies_expense || 0);
     const supStat = item.supplies_stationery_expense ?? 0;
 
+    if (statAmt > 0 && standsAmt === 0) {
+      setModalServiceMode('PAPELERIA');
+    } else if (standsAmt > 0 && statAmt === 0) {
+      setModalServiceMode('STANDS');
+    } else {
+      setModalServiceMode('MIXTO');
+    }
+
     setEventForm({
       event_name: item.event_name,
       event_date: item.event_date,
@@ -147,6 +167,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   const handleOpenNew = () => {
     setIsNewEventModal(true);
     setEditModalSettlement(null);
+    setModalServiceMode('MIXTO');
     setEventForm({
       event_name: '',
       event_date: new Date().toISOString().split('T')[0],
@@ -1183,11 +1204,84 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 </div>
               </div>
 
-              {/* 1. INGRESOS DEL EVENTO */}
+              {/* SELECTOR DE TIPO DE PEDIDO / SERVICIO */}
+              <div className="p-3 bg-gradient-to-r from-[#FAF6F2] to-[#F7EFE9] rounded-2xl border border-[#EAE3DA] space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-[#7D6F6B]">
+                    ¿Qué tipo de pedido o servicio es?
+                  </label>
+                  <span className="text-[10px] text-[#A69995]">
+                    {modalServiceMode === 'PAPELERIA' ? '💌 Solo taller: sin flete ni staff presencial' : modalServiceMode === 'STANDS' ? '🍸 Solo evento: con flete y staff presencial' : '✨ Mixto: evento y papelería social'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalServiceMode('PAPELERIA');
+                      setEventForm(prev => ({
+                        ...prev,
+                        stands_amount: 0,
+                        freight_charged: 0,
+                        supplies_services_expense: 0,
+                        car_provider: 'NINGUNA_EXTERNO',
+                        staff_scarlette: false,
+                        staff_victoria: false,
+                        external_staff_count: 0
+                      }));
+                    }}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                      modalServiceMode === 'PAPELERIA'
+                        ? 'bg-[#E84E6D] text-white shadow-xs'
+                        : 'bg-white text-[#7D6F6B] hover:text-[#332A28] border border-[#EAE3DA]'
+                    }`}
+                  >
+                    <span>💌</span>
+                    <span>Solo Papelería Social</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setModalServiceMode('STANDS');
+                      setEventForm(prev => ({
+                        ...prev,
+                        stationery_amount: 0,
+                        supplies_stationery_expense: 0,
+                        stationery_provider: 'NINGUNA',
+                        stationery_labor_payout: 0
+                      }));
+                    }}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                      modalServiceMode === 'STANDS'
+                        ? 'bg-[#70443D] text-white shadow-xs'
+                        : 'bg-white text-[#7D6F6B] hover:text-[#332A28] border border-[#EAE3DA]'
+                    }`}
+                  >
+                    <span>🍸</span>
+                    <span>Solo Stands & Barras</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setModalServiceMode('MIXTO')}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                      modalServiceMode === 'MIXTO'
+                        ? 'bg-[#9C665C] text-white shadow-xs'
+                        : 'bg-white text-[#7D6F6B] hover:text-[#332A28] border border-[#EAE3DA]'
+                    }`}
+                  >
+                    <span>✨</span>
+                    <span>Mixto (Stands + Papelería)</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* 1. INGRESOS DEL PEDIDO */}
               <div className="p-3.5 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[#70443D] uppercase tracking-wider block">
-                    1. Ingresos del Evento
+                    1. Ingresos del Pedido
                   </span>
                   <span className="text-[11px] font-bold text-[#332A28] bg-white px-2 py-0.5 rounded-lg border border-[#EAE3DA]">
                     Total Ingresos: {fmt((Number(eventForm.stands_amount) || 0) + (Number(eventForm.stationery_amount) || 0) + (Number(eventForm.freight_charged) || 0) + (Number(eventForm.extra_services) || 0))}
@@ -1195,66 +1289,73 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Venta Stands & Experiencias ($)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step="any"
-                      placeholder="0.00"
-                      value={eventForm.stands_amount ?? ''}
-                      onChange={e => {
-                        const val = parseFloat(e.target.value) || 0;
-                        setEventForm({
-                          ...eventForm,
-                          stands_amount: val,
-                          service_amount: val + (Number(eventForm.stationery_amount) || 0)
-                        });
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono font-semibold"
-                    />
-                    <span className="text-[10px] text-[#7D6F6B]">Shot bar, stands, audio, experiencias</span>
-                  </div>
+                  {modalServiceMode !== 'PAPELERIA' && (
+                    <div>
+                      <label className="block font-semibold text-[#7D6F6B] mb-1">
+                        Venta Stands & Experiencias ($)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        placeholder="0.00"
+                        value={eventForm.stands_amount ?? ''}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value) || 0;
+                          setEventForm({
+                            ...eventForm,
+                            stands_amount: val,
+                            service_amount: val + (Number(eventForm.stationery_amount) || 0)
+                          });
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono font-semibold"
+                      />
+                      <span className="text-[10px] text-[#7D6F6B]">Shot bar, stands, audio, experiencias</span>
+                    </div>
+                  )}
 
-                  <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Venta Papelería Social ($)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step="any"
-                      placeholder="0.00"
-                      value={eventForm.stationery_amount ?? ''}
-                      onChange={e => {
-                        const val = parseFloat(e.target.value) || 0;
-                        setEventForm({
-                          ...eventForm,
-                          stationery_amount: val,
-                          service_amount: (Number(eventForm.stands_amount) || 0) + val
-                        });
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono font-semibold"
-                    />
-                    <span className="text-[10px] text-[#7D6F6B]">Invitaciones, menús, cajitas snacks, misales</span>
-                  </div>
+                  {modalServiceMode !== 'STANDS' && (
+                    <div className={modalServiceMode === 'PAPELERIA' ? 'sm:col-span-2' : ''}>
+                      <label className="block font-semibold text-[#7D6F6B] mb-1">
+                        Venta Papelería Social ($)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        placeholder="0.00"
+                        value={eventForm.stationery_amount ?? ''}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value) || 0;
+                          setEventForm({
+                            ...eventForm,
+                            stationery_amount: val,
+                            service_amount: (Number(eventForm.stands_amount) || 0) + val
+                          });
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono font-semibold"
+                      />
+                      <span className="text-[10px] text-[#7D6F6B]">Invitaciones, menús, capitanes, fotos, cajitas snacks, misales</span>
+                    </div>
+                  )}
 
-                  <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Flete Cobrado al Cliente ($)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step="any"
-                      placeholder="0.00"
-                      value={eventForm.freight_charged || ''}
-                      onChange={e => setEventForm({ ...eventForm, freight_charged: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
-                    />
-                  </div>
+                  {modalServiceMode !== 'PAPELERIA' && (
+                    <div>
+                      <label className="block font-semibold text-[#7D6F6B] mb-1">
+                        Flete Cobrado al Cliente ($)
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        placeholder="0.00"
+                        value={eventForm.freight_charged || ''}
+                        onChange={e => setEventForm({ ...eventForm, freight_charged: parseFloat(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
+                      />
+                      <span className="text-[10px] text-[#7D6F6B]">Traslado y montaje de mobiliario pesado</span>
+                    </div>
+                  )}
 
                   <div>
                     <label className="block font-semibold text-[#7D6F6B] mb-1">
@@ -1269,6 +1370,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                       onChange={e => setEventForm({ ...eventForm, extra_services: parseFloat(e.target.value) || 0 })}
                       className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
                     />
+                    <span className="text-[10px] text-[#7D6F6B]">Horas extras, paquetería especial o adicionales</span>
                   </div>
                 </div>
               </div>
@@ -1285,246 +1387,69 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Insumos Stands & Evento ($)
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step="any"
-                      placeholder="Hielo, vasos, cerveza, desechables..."
-                      value={eventForm.supplies_services_expense || ''}
-                      onChange={e => {
-                        const val = parseFloat(e.target.value) || 0;
-                        setEventForm({
-                          ...eventForm,
-                          supplies_services_expense: val,
-                          supplies_expense: val + (Number(eventForm.supplies_stationery_expense) || 0)
-                        });
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
-                    />
-                    <span className="text-[10px] text-[#7D6F6B]">Consumibles del bar y stands</span>
-                  </div>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block font-semibold text-[#7D6F6B]">
-                        Insumos Papelería Social ($)
+                  {modalServiceMode !== 'PAPELERIA' && (
+                    <div>
+                      <label className="block font-semibold text-[#7D6F6B] mb-1">
+                        Insumos Stands & Evento ($)
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => setShowWorkshopCostCalc(!showWorkshopCostCalc)}
-                        className="inline-flex items-center space-x-1 text-[11px] font-bold text-[#9C665C] hover:text-[#70443D] bg-[#FAF6F2] hover:bg-[#F4ECE4] px-2 py-0.5 rounded-lg border border-[#EAE3DA] transition cursor-pointer"
-                      >
-                        <span>🧮</span>
-                        <span>{showWorkshopCostCalc ? 'Cerrar Calculadora' : 'Calculadora de Costos'}</span>
-                      </button>
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        placeholder="Hielo, vasos, cerveza, desechables..."
+                        value={eventForm.supplies_services_expense || ''}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value) || 0;
+                          setEventForm({
+                            ...eventForm,
+                            supplies_services_expense: val,
+                            supplies_expense: val + (Number(eventForm.supplies_stationery_expense) || 0)
+                          });
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
+                      />
+                      <span className="text-[10px] text-[#7D6F6B]">Consumibles del bar y stands</span>
                     </div>
-                    <input
-                      type="number"
-                      min={0}
-                      step="any"
-                      placeholder="Papel fino, imprenta, listón, lacres..."
-                      value={eventForm.supplies_stationery_expense || ''}
-                      onChange={e => {
-                        const val = parseFloat(e.target.value) || 0;
-                        setEventForm({
-                          ...eventForm,
-                          supplies_stationery_expense: val,
-                          supplies_expense: (Number(eventForm.supplies_services_expense) || 0) + val
-                        });
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
-                    />
-                    <span className="text-[10px] text-[#7D6F6B]">Materiales y costos directos de impresión</span>
-                  </div>
+                  )}
+
+                  {modalServiceMode !== 'STANDS' && (
+                    <div className={modalServiceMode === 'PAPELERIA' ? 'sm:col-span-2' : ''}>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block font-semibold text-[#7D6F6B]">
+                          Insumos Papelería Social ($)
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowWorkshopCostCalc(true)}
+                          className="inline-flex items-center space-x-1.5 text-[11px] font-bold text-[#E84E6D] hover:text-[#D43B5C] bg-[#FFF2F5] hover:bg-[#FFE5EC] px-2.5 py-1 rounded-lg border border-[#F5C2CD] transition cursor-pointer"
+                        >
+                          <span>🧮</span>
+                          <span>Calculadora de Insumos (Menús, Capitanes, Fotos...)</span>
+                        </button>
+                      </div>
+                      <input
+                        type="number"
+                        min={0}
+                        step="any"
+                        placeholder="Papel fino, tinta, fotos, listones..."
+                        value={eventForm.supplies_stationery_expense || ''}
+                        onChange={e => {
+                          const val = parseFloat(e.target.value) || 0;
+                          setEventForm({
+                            ...eventForm,
+                            supplies_stationery_expense: val,
+                            supplies_expense: (Number(eventForm.supplies_services_expense) || 0) + val
+                          });
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
+                      />
+                      <span className="text-[10px] text-[#7D6F6B]">Costo total de materiales (hojas, cartulinas, tinta, revelado, listón)</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Calculadora Asistente de Costos de Taller (Hojas, Tinta, Navaja/Corte, Acabados) */}
-                {showWorkshopCostCalc && (
-                  <div className="p-3.5 bg-gradient-to-br from-[#FFF9F5] to-[#FCF4EE] rounded-2xl border-2 border-[#EAD5C3] space-y-3 text-xs">
-                    <div className="flex items-center justify-between pb-2 border-b border-[#EAE3DA]">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-base">🧮</span>
-                        <div>
-                          <span className="font-bold text-[#70443D] text-xs block">
-                            Calculadora de Taller (Hojas, Tinta y Corte)
-                          </span>
-                          <span className="text-[10px] text-[#7D6F6B]">
-                            Calcula el costo real unitario de producción propia
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-semibold bg-[#EAD5C3] text-[#70443D] px-2 py-0.5 rounded-full">
-                        Atelier VLB
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                      {/* Cantidad de piezas */}
-                      <div>
-                        <label className="block text-[11px] font-bold text-[#7D6F6B] mb-1">
-                          1. Cantidad de piezas a producir:
-                        </label>
-                        <div className="flex items-center space-x-1">
-                          <input
-                            type="number"
-                            min={1}
-                            step={1}
-                            value={calcPieces}
-                            onChange={e => setCalcPieces(Math.max(1, parseInt(e.target.value, 10) || 1))}
-                            className="w-full px-2.5 py-1.5 bg-white border border-[#EAE3DA] rounded-lg text-[#332A28] font-bold text-center"
-                          />
-                          <span className="text-[11px] text-[#7D6F6B]">pzs</span>
-                        </div>
-                      </div>
-
-                      {/* Tipo de papel / Costo por pieza */}
-                      <div>
-                        <label className="block text-[11px] font-bold text-[#7D6F6B] mb-1">
-                          2. Papel / Cartulina (costo por pieza):
-                        </label>
-                        <select
-                          value={calcPaperPreset}
-                          onChange={e => {
-                            const val = e.target.value;
-                            setCalcPaperPreset(val);
-                            if (val === 'cotton') setCalcPaperUnitCost(3.50);
-                            else if (val === 'opalina') setCalcPaperUnitCost(1.20);
-                            else if (val === 'handmade') setCalcPaperUnitCost(5.00);
-                            else if (val === 'tags') setCalcPaperUnitCost(0.40);
-                          }}
-                          className="w-full px-2 py-1.5 bg-white border border-[#EAE3DA] rounded-lg text-[11px] text-[#332A28] cursor-pointer"
-                        >
-                          <option value="cotton">📜 Cartulina Algodón / Lino ($3.50/pz)</option>
-                          <option value="opalina">📄 Opalina Fina 225-250g ($1.20/pz)</option>
-                          <option value="handmade">🌾 Papel Artesanal Bordes Rasgados ($5.00/pz)</option>
-                          <option value="tags">🏷️ Tags chicos (12-15 x hoja) ($0.40/pz)</option>
-                          <option value="custom">✏️ Personalizado...</option>
-                        </select>
-                        {calcPaperPreset === 'custom' && (
-                          <input
-                            type="number"
-                            min={0}
-                            step="any"
-                            placeholder="Costo $ por pieza"
-                            value={calcPaperUnitCost}
-                            onChange={e => setCalcPaperUnitCost(parseFloat(e.target.value) || 0)}
-                            className="mt-1 w-full px-2 py-1 bg-white border border-[#EAE3DA] rounded-lg text-xs"
-                          />
-                        )}
-                      </div>
-
-                      {/* Nivel de Tinta */}
-                      <div>
-                        <label className="block text-[11px] font-bold text-[#7D6F6B] mb-1">
-                          3. Cobertura de Tinta (EcoTank):
-                        </label>
-                        <select
-                          value={calcInkTier}
-                          onChange={e => setCalcInkTier(e.target.value as 'LIGERO' | 'MEDIO' | 'ALTO')}
-                          className="w-full px-2 py-1.5 bg-white border border-[#EAE3DA] rounded-lg text-[11px] text-[#332A28] cursor-pointer"
-                        >
-                          <option value="LIGERO">🔤 Ligero ($0.60/pz) · Texto y monograma fino</option>
-                          <option value="MEDIO">🌸 Medio ($1.40/pz) · Color, marcos y flores</option>
-                          <option value="ALTO">🎨 Alto ($2.80/pz) · Fondos oscuros o fotos</option>
-                        </select>
-                        <span className="text-[10px] text-[#A69995] block mt-0.5">
-                          Basado en rendimiento real de tanques de tinta continua.
-                        </span>
-                      </div>
-
-                      {/* Corte y Desgaste */}
-                      <div>
-                        <label className="block text-[11px] font-bold text-[#7D6F6B] mb-1">
-                          4. Corte & Merma de Navaja:
-                        </label>
-                        <select
-                          value={calcCuttingType}
-                          onChange={e => setCalcCuttingType(e.target.value as 'CIZALLA' | 'PLOTTER' | 'NINGUNO')}
-                          className="w-full px-2 py-1.5 bg-white border border-[#EAE3DA] rounded-lg text-[11px] text-[#332A28] cursor-pointer"
-                        >
-                          <option value="CIZALLA">✂️ Guillotina / Cizalla ($0.40/pz + merma)</option>
-                          <option value="PLOTTER">⚙️ Plotter Silhouette/Cricut ($0.90/pz)</option>
-                          <option value="NINGUNO">🚫 Ya viene a medida ($0.00)</option>
-                        </select>
-                        <span className="text-[10px] text-[#A69995] block mt-0.5">
-                          Amortización de cuchillas y reposición por errores de corte.
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Acabados adicionales */}
-                    <div className="pt-2 border-t border-[#EAE3DA] flex flex-wrap items-center gap-3">
-                      <span className="text-[11px] font-bold text-[#7D6F6B]">Acabados de taller:</span>
-                      <label className="inline-flex items-center space-x-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={calcHasRibbon}
-                          onChange={e => setCalcHasRibbon(e.target.checked)}
-                          className="rounded text-[#E84E6D] focus:ring-[#E84E6D]"
-                        />
-                        <span className="text-[11px] text-[#332A28]">🎗️ Listón / Gasa rasgada (+$3.00/pz)</span>
-                      </label>
-                      <label className="inline-flex items-center space-x-1.5 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={calcHasWaxSeal}
-                          onChange={e => setCalcHasWaxSeal(e.target.checked)}
-                          className="rounded text-[#E84E6D] focus:ring-[#E84E6D]"
-                        />
-                        <span className="text-[11px] text-[#332A28]">🕯️ Sello de Lacre (+$1.50/pz)</span>
-                      </label>
-                    </div>
-
-                    {/* Resumen y Botón de Aplicación */}
-                    {(() => {
-                      const inkPrice = calcInkTier === 'LIGERO' ? 0.60 : calcInkTier === 'MEDIO' ? 1.40 : 2.80;
-                      const cutPrice = calcCuttingType === 'CIZALLA' ? 0.40 : calcCuttingType === 'PLOTTER' ? 0.90 : 0;
-                      const ribbonPrice = calcHasRibbon ? 3.00 : 0;
-                      const sealPrice = calcHasWaxSeal ? 1.50 : 0;
-                      const unitCost = Math.round((calcPaperUnitCost + inkPrice + cutPrice + ribbonPrice + sealPrice) * 100) / 100;
-                      const totalWorkshopCost = Math.round(unitCost * calcPieces * 100) / 100;
-
-                      return (
-                        <div className="p-3 bg-white rounded-xl border border-[#EAD5C3] flex flex-col sm:flex-row items-center justify-between gap-2">
-                          <div className="text-center sm:text-left">
-                            <div className="text-[11px] text-[#7D6F6B]">
-                              Costo estimado por pieza: <strong className="text-[#332A28] font-mono">${unitCost.toFixed(2)} MXN</strong>
-                              <span className="text-[10px] text-[#A69995] ml-1">
-                                (Papel ${calcPaperUnitCost.toFixed(2)} + Tinta ${inkPrice.toFixed(2)} + Corte ${cutPrice.toFixed(2)}{ribbonPrice + sealPrice > 0 ? ` + Acabados $${(ribbonPrice + sealPrice).toFixed(2)}` : ''})
-                              </span>
-                            </div>
-                            <div className="text-xs font-bold text-[#70443D] mt-0.5">
-                              Insumos Totales de Producción ({calcPieces} pzs): <span className="font-mono text-sm text-[#E84E6D]">{fmt(totalWorkshopCost)}</span>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const curServ = Number(eventForm.supplies_services_expense) || 0;
-                              setEventForm({
-                                ...eventForm,
-                                supplies_stationery_expense: totalWorkshopCost,
-                                supplies_expense: curServ + totalWorkshopCost
-                              });
-                              setShowWorkshopCostCalc(false);
-                            }}
-                            className="px-3.5 py-1.5 bg-[#70443D] hover:bg-[#5C3731] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer flex items-center space-x-1 whitespace-nowrap"
-                          >
-                            <span>✨ Aplicar a Insumos</span>
-                            <span>({fmt(totalWorkshopCost)})</span>
-                          </button>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                )}
-
                 {/* Margen Operativo de Papelería */}
-                {Number(eventForm.stationery_amount) > 0 && (
+                {modalServiceMode !== 'STANDS' && Number(eventForm.stationery_amount) > 0 && (
                   <div className="p-2.5 rounded-xl bg-[#FFF6F8] border border-[#F5C2CD] flex items-center justify-between text-xs">
                     <span className="text-[#E84E6D] font-bold">
                       Margen Operativo de Papelería (Neto Taller):
@@ -1543,49 +1468,53 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 </span>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      ¿Quién llevó carro?
-                    </label>
-                    <select
-                      value={eventForm.car_provider || 'NINGUNA_EXTERNO'}
-                      onChange={e => setEventForm({ ...eventForm, car_provider: e.target.value as VlbCarProvider })}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] cursor-pointer"
-                    >
-                      <option value="NINGUNA_EXTERNO">Ninguna / Externo ($0)</option>
-                      <option value="SCARLETTE">🚗 Scarlette (${eventForm.freight_charged && eventForm.freight_charged > 0 ? eventForm.freight_charged : settings.freight_rate} MXN)</option>
-                      <option value="VICTORIA">🚗 Victoria (${eventForm.freight_charged && eventForm.freight_charged > 0 ? eventForm.freight_charged : settings.freight_rate} MXN)</option>
-                    </select>
-                  </div>
+                  {modalServiceMode !== 'PAPELERIA' && (
+                    <div>
+                      <label className="block font-semibold text-[#7D6F6B] mb-1">
+                        ¿Quién llevó carro?
+                      </label>
+                      <select
+                        value={eventForm.car_provider || 'NINGUNA_EXTERNO'}
+                        onChange={e => setEventForm({ ...eventForm, car_provider: e.target.value as VlbCarProvider })}
+                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] cursor-pointer"
+                      >
+                        <option value="NINGUNA_EXTERNO">Ninguna / Externo ($0)</option>
+                        <option value="SCARLETTE">🚗 Scarlette (${eventForm.freight_charged && eventForm.freight_charged > 0 ? eventForm.freight_charged : settings.freight_rate} MXN)</option>
+                        <option value="VICTORIA">🚗 Victoria (${eventForm.freight_charged && eventForm.freight_charged > 0 ? eventForm.freight_charged : settings.freight_rate} MXN)</option>
+                      </select>
+                    </div>
+                  )}
 
-                  <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      ¿Quién preparó / cortó la papelería?
-                    </label>
-                    <select
-                      value={eventForm.stationery_provider || 'NINGUNA'}
-                      onChange={e => {
-                        const prov = e.target.value as VlbStationeryProvider;
-                        const statMargin = Math.max(0, (Number(eventForm.stationery_amount) || 0) - (Number(eventForm.supplies_stationery_expense) || 0));
-                        const suggested = Math.round(statMargin * ((settings.stationery_labor_pct || 25) / 100));
-                        setEventForm({
-                          ...eventForm,
-                          stationery_provider: prov,
-                          stationery_labor_payout: prov === 'NINGUNA' ? 0 : (eventForm.stationery_labor_payout || suggested || settings.stationery_rate)
-                        });
-                      }}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] cursor-pointer"
-                    >
-                      <option value="NINGUNA">Ninguna ($0)</option>
-                      <option value="SCARLETTE">💌 Scarlette</option>
-                      <option value="VICTORIA">💌 Victoria</option>
-                      <option value="AMBAS">💌 Ambas (50% y 50%)</option>
-                      <option value="EXTERNO">👥 Taller / Maquila Externa</option>
-                    </select>
-                  </div>
+                  {modalServiceMode !== 'STANDS' && (
+                    <div className={modalServiceMode === 'PAPELERIA' ? 'sm:col-span-2' : ''}>
+                      <label className="block font-semibold text-[#7D6F6B] mb-1">
+                        ¿Quién preparó / cortó la papelería?
+                      </label>
+                      <select
+                        value={eventForm.stationery_provider || 'NINGUNA'}
+                        onChange={e => {
+                          const prov = e.target.value as VlbStationeryProvider;
+                          const statMargin = Math.max(0, (Number(eventForm.stationery_amount) || 0) - (Number(eventForm.supplies_stationery_expense) || 0));
+                          const suggested = Math.round(statMargin * ((settings.stationery_labor_pct || 25) / 100));
+                          setEventForm({
+                            ...eventForm,
+                            stationery_provider: prov,
+                            stationery_labor_payout: prov === 'NINGUNA' ? 0 : (eventForm.stationery_labor_payout || suggested || settings.stationery_rate)
+                          });
+                        }}
+                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] cursor-pointer"
+                      >
+                        <option value="NINGUNA">Ninguna ($0)</option>
+                        <option value="SCARLETTE">💌 Scarlette</option>
+                        <option value="VICTORIA">💌 Victoria</option>
+                        <option value="AMBAS">💌 Ambas (50% y 50%)</option>
+                        <option value="EXTERNO">👥 Taller / Maquila Externa</option>
+                      </select>
+                    </div>
+                  )}
 
                   {/* Campo de Pago Mano de Obra Papelería si alguien la elaboró */}
-                  {eventForm.stationery_provider && eventForm.stationery_provider !== 'NINGUNA' && (() => {
+                  {modalServiceMode !== 'STANDS' && eventForm.stationery_provider && eventForm.stationery_provider !== 'NINGUNA' && (() => {
                     const statMargin = Math.max(0, (Number(eventForm.stationery_amount) || 0) - (Number(eventForm.supplies_stationery_expense) || 0));
                     const suggested = Math.round(statMargin * ((settings.stationery_labor_pct || 25) / 100));
                     return (
@@ -1631,49 +1560,53 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                     );
                   })()}
 
-                  <div>
-                    <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Cantidad de Staff Externo
-                    </label>
-                    <input
-                      type="number"
-                      min={0}
-                      step={1}
-                      placeholder="0 personas"
-                      value={eventForm.external_staff_count || ''}
-                      onChange={e => setEventForm({ ...eventForm, external_staff_count: parseInt(e.target.value, 10) || 0 })}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
-                    />
-                  </div>
+                  {modalServiceMode !== 'PAPELERIA' && (
+                    <div>
+                      <label className="block font-semibold text-[#7D6F6B] mb-1">
+                        Cantidad de Staff Externo
+                      </label>
+                      <input
+                        type="number"
+                        min={0}
+                        step={1}
+                        placeholder="0 personas"
+                        value={eventForm.external_staff_count || ''}
+                        onChange={e => setEventForm({ ...eventForm, external_staff_count: parseInt(e.target.value, 10) || 0 })}
+                        className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28]"
+                      />
+                    </div>
+                  )}
                 </div>
 
-                {/* ASISTENCIA DE SOCIAS */}
-                <div className="pt-2 border-t border-[#EAE3DA] space-y-2">
-                  <span className="block font-semibold text-[#7D6F6B]">
-                    Asistencia de Socias al Turno (${settings.staff_rate} MXN c/u):
-                  </span>
-                  <div className="flex items-center space-x-6">
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(eventForm.staff_scarlette)}
-                        onChange={e => setEventForm({ ...eventForm, staff_scarlette: e.target.checked })}
-                        className="w-4 h-4 accent-[#E84E6D] rounded"
-                      />
-                      <span className="font-semibold text-[#332A28]">¿Asistió Scarlette?</span>
-                    </label>
+                {/* ASISTENCIA DE SOCIAS (Solo si no es Solo Papelería) */}
+                {modalServiceMode !== 'PAPELERIA' && (
+                  <div className="pt-2 border-t border-[#EAE3DA] space-y-2">
+                    <span className="block font-semibold text-[#7D6F6B]">
+                      Asistencia de Socias al Turno (${settings.staff_rate} MXN c/u):
+                    </span>
+                    <div className="flex items-center space-x-6">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(eventForm.staff_scarlette)}
+                          onChange={e => setEventForm({ ...eventForm, staff_scarlette: e.target.checked })}
+                          className="w-4 h-4 accent-[#E84E6D] rounded"
+                        />
+                        <span className="font-semibold text-[#332A28]">¿Asistió Scarlette?</span>
+                      </label>
 
-                    <label className="flex items-center space-x-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={Boolean(eventForm.staff_victoria)}
-                        onChange={e => setEventForm({ ...eventForm, staff_victoria: e.target.checked })}
-                        className="w-4 h-4 accent-[#70443D] rounded"
-                      />
-                      <span className="font-semibold text-[#332A28]">¿Asistió Victoria?</span>
-                    </label>
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(eventForm.staff_victoria)}
+                          onChange={e => setEventForm({ ...eventForm, staff_victoria: e.target.checked })}
+                          className="w-4 h-4 accent-[#70443D] rounded"
+                        />
+                        <span className="font-semibold text-[#332A28]">¿Asistió Victoria?</span>
+                      </label>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* ESTADO */}
                 <div className="pt-2 border-t border-[#EAE3DA]">
@@ -1863,6 +1796,287 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------------------------------- */}
+      {/* MODAL 4: POPUP CALCULADORA DE INSUMOS DE TALLER     */}
+      {/* ---------------------------------------------------- */}
+      {showWorkshopCostCalc && (
+        <div
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowWorkshopCostCalc(false);
+            }
+          }}
+          className="fixed inset-0 z-[60] bg-stone-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-fadeIn"
+        >
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-6 shadow-2xl border border-[#EAE3DA] max-h-[92vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-start justify-between pb-3 border-b border-[#EAE3DA]">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-[#FFF2F5] text-[#E84E6D] flex items-center justify-center text-lg border border-[#F5C2CD] shrink-0">
+                  🧮
+                </div>
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-[#332A28]">
+                    Calculadora de Insumos de Papelería
+                  </h3>
+                  <p className="text-xs text-[#7D6F6B]">
+                    Selecciona y ajusta cada producto de este pedido (menús, capitanes, fotos, tags...)
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowWorkshopCostCalc(false)}
+                className="w-8 h-8 rounded-full bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#7D6F6B] hover:text-[#332A28] flex items-center justify-center text-sm transition cursor-pointer"
+                title="Cerrar (Esc o clic afuera)"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Contenido Scrolleable */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+              {/* Presets rápidos */}
+              <div>
+                <span className="text-[11px] font-bold text-[#7D6F6B] uppercase tracking-wider block mb-2">
+                  + Agregar Producto al Pedido:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkshopCostItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Menús de mesa', pieces: 50, unitCost: 4.50 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 📜 Menús ($4.50 c/u)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkshopCostItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Capitanes / Números mesa', pieces: 12, unitCost: 8.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 🏷️ Capitanes ($8.00 c/u)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkshopCostItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Fotos Polaroid (firmas)', pieces: 40, unitCost: 4.80 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 📸 Fotos Polaroid ($4.80 c/u)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkshopCostItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Tags de Agradecimiento', pieces: 100, unitCost: 1.30 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 🔖 Tags ($1.30 c/u)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkshopCostItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Sellos de Lacre Artesanal', pieces: 50, unitCost: 1.50 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 🕯️ Sellos Lacre ($1.50 c/u)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkshopCostItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Letrero Bienvenida / Cartel', pieces: 1, unitCost: 95.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-[#FAF6F2] hover:bg-[#F2ECE7] text-[#70443D] border border-[#EAE3DA] rounded-xl text-xs font-semibold transition cursor-pointer"
+                  >
+                    + 🖼️ Letrero Bienvenida ($95.00)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWorkshopCostItems(prev => [
+                        ...prev,
+                        { id: 'item_' + Date.now(), name: 'Otro producto', pieces: 1, unitCost: 25.00 }
+                      ]);
+                    }}
+                    className="px-2.5 py-1 bg-white hover:bg-stone-50 text-[#C48B81] border border-dashed border-[#C48B81] rounded-xl text-xs font-bold transition cursor-pointer"
+                  >
+                    + ✨ Personalizado
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabla de Productos / Conceptos */}
+              <div className="bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] overflow-hidden">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#FAF6F2] border-b border-[#EAE3DA] text-[10px] font-bold uppercase text-[#7D6F6B]">
+                      <th className="py-2.5 px-3">Producto / Concepto</th>
+                      <th className="py-2.5 px-2 text-center w-24">Piezas</th>
+                      <th className="py-2.5 px-2 text-center w-28">Costo Insumo c/u</th>
+                      <th className="py-2.5 px-3 text-right w-28">Subtotal</th>
+                      <th className="py-2.5 px-2 text-center w-8"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#F5EFEB]">
+                    {workshopCostItems.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-xs text-[#A69995]">
+                          No has agregado productos. Haz clic en los botones de arriba para añadir menús, capitanes, fotos...
+                        </td>
+                      </tr>
+                    ) : (
+                      workshopCostItems.map((item, idx) => (
+                        <tr key={item.id || idx} className="hover:bg-white transition">
+                          <td className="py-2 px-3">
+                            <input
+                              type="text"
+                              value={item.name}
+                              onChange={e => {
+                                const updated = [...workshopCostItems];
+                                updated[idx].name = e.target.value;
+                                setWorkshopCostItems(updated);
+                              }}
+                              className="w-full px-2.5 py-1 bg-white border border-[#EAE3DA] focus:border-[#C48B81] rounded-lg text-xs font-semibold text-[#332A28]"
+                              placeholder="Ej. Menús de mesa..."
+                            />
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            <input
+                              type="number"
+                              min={1}
+                              value={item.pieces}
+                              onChange={e => {
+                                const updated = [...workshopCostItems];
+                                updated[idx].pieces = parseInt(e.target.value, 10) || 0;
+                                setWorkshopCostItems(updated);
+                              }}
+                              className="w-18 px-2 py-1 text-center bg-white border border-[#EAE3DA] focus:border-[#C48B81] rounded-lg text-xs font-mono font-bold"
+                            />
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            <div className="flex items-center justify-center space-x-1">
+                              <span className="text-[11px] text-[#7D6F6B] font-mono">$</span>
+                              <input
+                                type="number"
+                                min={0}
+                                step="any"
+                                value={item.unitCost}
+                                onChange={e => {
+                                  const updated = [...workshopCostItems];
+                                  updated[idx].unitCost = parseFloat(e.target.value) || 0;
+                                  setWorkshopCostItems(updated);
+                                }}
+                                className="w-20 px-2 py-1 text-center bg-white border border-[#EAE3DA] focus:border-[#C48B81] rounded-lg text-xs font-mono font-bold"
+                              />
+                            </div>
+                          </td>
+                          <td className="py-2 px-3 text-right font-mono font-bold text-[#332A28]">
+                            {fmt(Math.round((item.pieces * item.unitCost) * 100) / 100)}
+                          </td>
+                          <td className="py-2 px-2 text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setWorkshopCostItems(prev => prev.filter((_, i) => i !== idx));
+                              }}
+                              className="w-6 h-6 rounded-full hover:bg-rose-50 text-stone-400 hover:text-rose-600 flex items-center justify-center text-xs transition cursor-pointer"
+                              title="Eliminar fila"
+                            >
+                              ✕
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Guía informativa de costos promedio */}
+              <div className="p-3 bg-[#FFFBF7] rounded-xl border border-[#F3E5D8] text-[11px] text-[#7D6F6B] space-y-1">
+                <span className="font-bold text-[#70443D] block">💡 Referencia rápida de costos promedio:</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[10px]">
+                  <span>• <strong>Menú:</strong> $1.80 papel algodón + $0.70 tinta + $0.40 corte + $1.60 listón ≈ $4.50</span>
+                  <span>• <strong>Capitanes:</strong> Cartulina gruesa 300g doble faz + soporte ≈ $8.00</span>
+                  <span>• <strong>Fotos Polaroid:</strong> Papel fotográfico premium + tinta de alta densidad ≈ $4.80</span>
+                  <span>• <strong>Tags:</strong> Cartulina mini lino + perforado ojal + tinta ≈ $1.30</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer con Suma y Botones */}
+            {(() => {
+              const totalPieces = workshopCostItems.reduce((acc, curr) => acc + (Number(curr.pieces) || 0), 0);
+              const totalSum = workshopCostItems.reduce((acc, curr) => acc + ((Number(curr.pieces) || 0) * (Number(curr.unitCost) || 0)), 0);
+              const roundedTotal = Math.round(totalSum * 100) / 100;
+
+              return (
+                <div className="pt-3 border-t border-[#EAE3DA] flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <div className="text-center sm:text-left">
+                    <span className="text-xs text-[#7D6F6B]">
+                      Total del Pedido: <strong>{totalPieces} piezas</strong> ({workshopCostItems.length} conceptos)
+                    </span>
+                    <div className="text-base font-bold text-[#E84E6D] font-mono">
+                      Gasto de Insumos: {fmt(roundedTotal)}
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowWorkshopCostCalc(false)}
+                      className="px-4 py-2 text-xs font-semibold text-[#7D6F6B] hover:bg-[#FAF6F2] rounded-xl transition cursor-pointer"
+                    >
+                      Cancelar (Esc)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const curServ = Number(eventForm.supplies_services_expense) || 0;
+                        setEventForm({
+                          ...eventForm,
+                          supplies_stationery_expense: roundedTotal,
+                          supplies_expense: curServ + roundedTotal
+                        });
+                        setShowWorkshopCostCalc(false);
+                        showToast(`Insumos de papelería actualizados: ${fmt(roundedTotal)} ✨`);
+                      }}
+                      className="px-5 py-2.5 bg-[#70443D] hover:bg-[#5C3731] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer flex items-center space-x-1.5"
+                    >
+                      <span>✨ Guardar y Aplicar</span>
+                      <span className="font-mono">({fmt(roundedTotal)})</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
