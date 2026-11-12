@@ -142,11 +142,16 @@ export function initVlbDatabase() {
       event_date TEXT NOT NULL,
       venue TEXT,
       service_amount REAL NOT NULL DEFAULT 0,
+      stands_amount REAL NOT NULL DEFAULT 0,
+      stationery_amount REAL NOT NULL DEFAULT 0,
       freight_charged REAL NOT NULL DEFAULT 0,
       extra_services REAL NOT NULL DEFAULT 0,
       supplies_expense REAL NOT NULL DEFAULT 0,
+      supplies_services_expense REAL NOT NULL DEFAULT 0,
+      supplies_stationery_expense REAL NOT NULL DEFAULT 0,
       car_provider TEXT NOT NULL DEFAULT 'NINGUNA_EXTERNO', -- 'SCARLETTE' | 'VICTORIA' | 'NINGUNA_EXTERNO'
-      stationery_provider TEXT NOT NULL DEFAULT 'NINGUNA', -- 'SCARLETTE' | 'VICTORIA' | 'NINGUNA'
+      stationery_provider TEXT NOT NULL DEFAULT 'NINGUNA', -- 'SCARLETTE' | 'VICTORIA' | 'NINGUNA' | 'EXTERNO'
+      stationery_labor_payout REAL NOT NULL DEFAULT 0,
       staff_scarlette INTEGER NOT NULL DEFAULT 0,
       staff_victoria INTEGER NOT NULL DEFAULT 0,
       external_staff_count INTEGER NOT NULL DEFAULT 0,
@@ -161,10 +166,30 @@ export function initVlbDatabase() {
     const existingSettings = db.prepare('SELECT id FROM vlb_finance_settings WHERE id = ?').get('default');
     if (!existingSettings) {
       db.prepare(`
-        INSERT INTO vlb_finance_settings (id, staff_rate, freight_rate, stationery_rate, company_fund_pct, partners_profit_pct, pin_code, updated_at)
-        VALUES ('default', 450, 500, 200, 60, 40, '2711', datetime('now'))
+        INSERT INTO vlb_finance_settings (id, staff_rate, freight_rate, stationery_rate, stationery_labor_pct, company_fund_pct, partners_profit_pct, pin_code, updated_at)
+        VALUES ('default', 450, 500, 200, 25, 60, 40, '2711', datetime('now'))
       `).run();
     }
+  } catch {}
+
+  // Migraciones financieras para separación de stands/servicios y papelería social ("quitando gastos")
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN stands_amount REAL NOT NULL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN stationery_amount REAL NOT NULL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN supplies_services_expense REAL NOT NULL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN supplies_stationery_expense REAL NOT NULL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN stationery_labor_payout REAL NOT NULL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_finance_settings ADD COLUMN stationery_labor_pct REAL NOT NULL DEFAULT 25').run();
   } catch {}
 
   // Migrations for dynamic tasks and service type

@@ -148,7 +148,7 @@ export interface VlbDocument {
 }
 
 export type VlbCarProvider = 'SCARLETTE' | 'VICTORIA' | 'NINGUNA_EXTERNO';
-export type VlbStationeryProvider = 'SCARLETTE' | 'VICTORIA' | 'NINGUNA';
+export type VlbStationeryProvider = 'SCARLETTE' | 'VICTORIA' | 'NINGUNA' | 'EXTERNO';
 
 export interface VlbEventSettlement {
   id: string;
@@ -160,12 +160,17 @@ export interface VlbEventSettlement {
   event_name: string;
   event_date: string;
   venue?: string | null;
-  service_amount: number;
+  service_amount: number; // Total histórico / combinado
+  stands_amount?: number; // Venta Stands & Experiencias
+  stationery_amount?: number; // Venta Papelería Social
   freight_charged: number;
   extra_services: number;
-  supplies_expense: number;
+  supplies_expense: number; // Total histórico / combinado
+  supplies_services_expense?: number; // Insumos Stands/Bar (hielo, vasos, cerveza)
+  supplies_stationery_expense?: number; // Insumos Papelería (papel, impresión, listón, sellos)
   car_provider: VlbCarProvider;
   stationery_provider: VlbStationeryProvider;
+  stationery_labor_payout?: number; // Pago asignado por elaboración/corte de papelería
   staff_scarlette: boolean;
   staff_victoria: boolean;
   external_staff_count: number;
@@ -180,6 +185,7 @@ export interface VlbFinanceSettings {
   staff_rate: number;
   freight_rate: number;
   stationery_rate: number;
+  stationery_labor_pct: number; // Porcentaje sugerido para mano de obra tras descontar insumos
   company_fund_pct: number;
   partners_profit_pct: number;
   has_pin: boolean;
@@ -188,7 +194,13 @@ export interface VlbFinanceSettings {
 
 export interface VlbSettlementCalculation {
   totalRevenue: number;
+  standsAmount: number;
+  stationeryAmount: number;
   suppliesExpense: number;
+  suppliesServicesExpense: number;
+  suppliesStationeryExpense: number;
+  stationeryNetMargin: number;
+  suggestedStationeryLabor: number;
   freightPayout: number;
   freightBeneficiary: VlbCarProvider;
   stationeryPayout: number;

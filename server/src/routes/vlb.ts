@@ -2014,8 +2014,8 @@ router.get('/finance/settings', authenticateToken, requireAdmin, (req, res) => {
     if (!settings) {
       const now = new Date().toISOString();
       db.prepare(`
-        INSERT INTO vlb_finance_settings (id, staff_rate, freight_rate, stationery_rate, company_fund_pct, partners_profit_pct, pin_code, updated_at)
-        VALUES ('default', 450, 500, 200, 60, 40, '2711', ?)
+        INSERT INTO vlb_finance_settings (id, staff_rate, freight_rate, stationery_rate, stationery_labor_pct, company_fund_pct, partners_profit_pct, pin_code, updated_at)
+        VALUES ('default', 450, 500, 200, 25, 60, 40, '2711', ?)
       `).run(now);
       settings = db.prepare('SELECT * FROM vlb_finance_settings WHERE id = ?').get('default') as any;
     }
@@ -2024,6 +2024,12 @@ router.get('/finance/settings', authenticateToken, requireAdmin, (req, res) => {
     res.json({
       settings: {
         ...publicSettings,
+        staff_rate: Number(settings.staff_rate) || 450,
+        freight_rate: Number(settings.freight_rate) || 500,
+        stationery_rate: Number(settings.stationery_rate) || 200,
+        stationery_labor_pct: Number(settings.stationery_labor_pct) || 25,
+        company_fund_pct: Number(settings.company_fund_pct) || 60,
+        partners_profit_pct: Number(settings.partners_profit_pct) || 40,
         has_pin: Boolean(pin_code)
       }
     });
@@ -2039,6 +2045,7 @@ router.put('/finance/settings', authenticateToken, requireAdmin, (req, res) => {
       staff_rate,
       freight_rate,
       stationery_rate,
+      stationery_labor_pct,
       company_fund_pct,
       partners_profit_pct,
       new_pin
@@ -2048,6 +2055,7 @@ router.put('/finance/settings', authenticateToken, requireAdmin, (req, res) => {
     const staffRate = Number(staff_rate) >= 0 ? Number(staff_rate) : (current?.staff_rate ?? 450);
     const freightRate = Number(freight_rate) >= 0 ? Number(freight_rate) : (current?.freight_rate ?? 500);
     const stationeryRate = Number(stationery_rate) >= 0 ? Number(stationery_rate) : (current?.stationery_rate ?? 200);
+    const stationeryLaborPct = Number(stationery_labor_pct) >= 0 ? Number(stationery_labor_pct) : (current?.stationery_labor_pct ?? 25);
     const fundPct = Number(company_fund_pct) >= 0 ? Number(company_fund_pct) : (current?.company_fund_pct ?? 60);
     const profitPct = Number(partners_profit_pct) >= 0 ? Number(partners_profit_pct) : (current?.partners_profit_pct ?? 40);
     const pin = (typeof new_pin === 'string' && new_pin.trim().length >= 4) ? new_pin.trim() : (current?.pin_code || '2711');
@@ -2055,9 +2063,9 @@ router.put('/finance/settings', authenticateToken, requireAdmin, (req, res) => {
 
     db.prepare(`
       UPDATE vlb_finance_settings
-      SET staff_rate = ?, freight_rate = ?, stationery_rate = ?, company_fund_pct = ?, partners_profit_pct = ?, pin_code = ?, updated_at = ?
+      SET staff_rate = ?, freight_rate = ?, stationery_rate = ?, stationery_labor_pct = ?, company_fund_pct = ?, partners_profit_pct = ?, pin_code = ?, updated_at = ?
       WHERE id = 'default'
-    `).run(staffRate, freightRate, stationeryRate, fundPct, profitPct, pin, now);
+    `).run(staffRate, freightRate, stationeryRate, stationeryLaborPct, fundPct, profitPct, pin, now);
 
     res.json({
       message: 'Tarifas y configuración financiera actualizadas exitosamente.',
@@ -2066,6 +2074,7 @@ router.put('/finance/settings', authenticateToken, requireAdmin, (req, res) => {
         staff_rate: staffRate,
         freight_rate: freightRate,
         stationery_rate: stationeryRate,
+        stationery_labor_pct: stationeryLaborPct,
         company_fund_pct: fundPct,
         partners_profit_pct: profitPct,
         has_pin: true,
@@ -2095,6 +2104,42 @@ router.post('/finance/verify-pin', authenticateToken, requireAdmin, (req, res) =
   }
 });
 
+// Helper para desglosar importes de un pedido entre Stands & Servicios y Papelería Social
+function calculateOrderAmounts(o: any) {
+  let items: any[] = [];
+  if (o.items_json) {
+    try { items = JSON.parse(o.items_json); } catch {}
+  } else if (o.quote_id) {
+    try {
+      items = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ?').all(o.quote_id) as any[];
+    } catch {}
+  }
+
+  let stationeryTotal = 0;
+  let standsTotal = 0;
+  for (const it of items) {
+    const lineTotal = Number(it.total_price) || (Number(it.unit_price) * (Number(it.quantity) || 1)) || 0;
+    if (it.category === 'PAPELERIA') {
+      stationeryTotal += lineTotal;
+    } else {
+      standsTotal += lineTotal;
+    }
+  }
+
+  const orderTotal = Number(o.total_amount) || 0;
+  const itemsSum = stationeryTotal + standsTotal;
+  if (itemsSum > 0 && orderTotal > 0 && Math.abs(itemsSum - orderTotal) > 1) {
+    const ratio = orderTotal / itemsSum;
+    stationeryTotal = Math.round(stationeryTotal * ratio * 100) / 100;
+    standsTotal = Math.round((orderTotal - stationeryTotal) * 100) / 100;
+  } else if (itemsSum === 0) {
+    standsTotal = orderTotal;
+    stationeryTotal = 0;
+  }
+
+  return { standsTotal, stationeryTotal };
+}
+
 // GET /api/vlb/finance/settlements - Listar liquidaciones de eventos con sincronización automática de pedidos
 router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) => {
   try {
@@ -2110,14 +2155,17 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
       const insertStmt = db.prepare(`
         INSERT INTO vlb_event_settlements (
           id, order_id, quote_id, event_name, event_date, venue, service_amount,
-          freight_charged, extra_services, supplies_expense, car_provider, stationery_provider,
+          stands_amount, stationery_amount, freight_charged, extra_services,
+          supplies_expense, supplies_services_expense, supplies_stationery_expense,
+          car_provider, stationery_provider, stationery_labor_payout,
           staff_scarlette, staff_victoria, external_staff_count, status, notes, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       for (const o of unSyncedOrders) {
         const clientName = o.partner_name ? `${o.client_name} & ${o.partner_name}` : o.client_name;
         const setId = 'set_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        const { standsTotal, stationeryTotal } = calculateOrderAmounts(o);
         insertStmt.run(
           setId,
           o.id,
@@ -2126,11 +2174,16 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
           o.event_date || now.split('T')[0],
           o.event_venue || 'Por definir',
           Number(o.total_amount) || 0,
+          standsTotal,
+          stationeryTotal,
+          0,
+          0,
           0,
           0,
           0,
           'NINGUNA_EXTERNO',
           'NINGUNA',
+          0,
           0,
           0,
           0,
@@ -2149,17 +2202,48 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
       ORDER BY s.event_date DESC, s.created_at DESC
     `).all() as any[];
 
+    // Auto-completar desglose de pedidos existentes sin división previa
+    for (const s of settlements) {
+      if ((!s.stands_amount && !s.stationery_amount) && s.order_id) {
+        const ord = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(s.order_id) as any;
+        if (ord) {
+          const { standsTotal, stationeryTotal } = calculateOrderAmounts(ord);
+          db.prepare('UPDATE vlb_event_settlements SET stands_amount = ?, stationery_amount = ? WHERE id = ?').run(standsTotal, stationeryTotal, s.id);
+          s.stands_amount = standsTotal;
+          s.stationery_amount = stationeryTotal;
+        }
+      }
+    }
+
     // Convertir booleanos de SQLite (0 y 1) a booleanos nativos de JS
-    const formatted = settlements.map(s => ({
-      ...s,
-      staff_scarlette: Boolean(s.staff_scarlette),
-      staff_victoria: Boolean(s.staff_victoria),
-      service_amount: Number(s.service_amount) || 0,
-      freight_charged: Number(s.freight_charged) || 0,
-      extra_services: Number(s.extra_services) || 0,
-      supplies_expense: Number(s.supplies_expense) || 0,
-      external_staff_count: Number(s.external_staff_count) || 0
-    }));
+    const formatted = settlements.map(s => {
+      let standsAmt = Number(s.stands_amount) || 0;
+      let statAmt = Number(s.stationery_amount) || 0;
+      const servAmt = Number(s.service_amount) || 0;
+      if (standsAmt === 0 && statAmt === 0 && servAmt > 0) {
+        standsAmt = servAmt;
+      }
+
+      const suppliesServ = Number(s.supplies_services_expense) || 0;
+      const suppliesStat = Number(s.supplies_stationery_expense) || 0;
+      const suppliesTotal = (suppliesServ + suppliesStat > 0) ? (suppliesServ + suppliesStat) : (Number(s.supplies_expense) || 0);
+
+      return {
+        ...s,
+        staff_scarlette: Boolean(s.staff_scarlette),
+        staff_victoria: Boolean(s.staff_victoria),
+        service_amount: servAmt,
+        stands_amount: standsAmt,
+        stationery_amount: statAmt,
+        freight_charged: Number(s.freight_charged) || 0,
+        extra_services: Number(s.extra_services) || 0,
+        supplies_expense: suppliesTotal,
+        supplies_services_expense: suppliesServ,
+        supplies_stationery_expense: suppliesStat,
+        stationery_labor_payout: Number(s.stationery_labor_payout) || 0,
+        external_staff_count: Number(s.external_staff_count) || 0
+      };
+    });
 
     res.json({ settlements: formatted });
   } catch (err: any) {
@@ -2175,11 +2259,16 @@ router.post('/finance/settlements', authenticateToken, requireAdmin, (req, res) 
       event_date,
       venue,
       service_amount,
+      stands_amount,
+      stationery_amount,
       freight_charged,
       extra_services,
       supplies_expense,
+      supplies_services_expense,
+      supplies_stationery_expense,
       car_provider,
       stationery_provider,
+      stationery_labor_payout,
       staff_scarlette,
       staff_victoria,
       external_staff_count,
@@ -2198,12 +2287,22 @@ router.post('/finance/settlements', authenticateToken, requireAdmin, (req, res) 
     const id = 'set_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
     const now = new Date().toISOString();
 
+    const standsAmt = Number(stands_amount) || 0;
+    const statAmt = Number(stationery_amount) || 0;
+    const servAmt = (standsAmt + statAmt > 0) ? (standsAmt + statAmt) : (Number(service_amount) || 0);
+
+    const supServ = Number(supplies_services_expense) || 0;
+    const supStat = Number(supplies_stationery_expense) || 0;
+    const supTot = (supServ + supStat > 0) ? (supServ + supStat) : (Number(supplies_expense) || 0);
+
     db.prepare(`
       INSERT INTO vlb_event_settlements (
         id, order_id, quote_id, event_name, event_date, venue, service_amount,
-        freight_charged, extra_services, supplies_expense, car_provider, stationery_provider,
+        stands_amount, stationery_amount, freight_charged, extra_services,
+        supplies_expense, supplies_services_expense, supplies_stationery_expense,
+        car_provider, stationery_provider, stationery_labor_payout,
         staff_scarlette, staff_victoria, external_staff_count, status, notes, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       id,
       order_id || null,
@@ -2211,12 +2310,17 @@ router.post('/finance/settlements', authenticateToken, requireAdmin, (req, res) 
       event_name.trim(),
       event_date.trim(),
       venue ? venue.trim() : '',
-      Number(service_amount) || 0,
+      servAmt,
+      standsAmt,
+      statAmt,
       Number(freight_charged) || 0,
       Number(extra_services) || 0,
-      Number(supplies_expense) || 0,
+      supTot,
+      supServ,
+      supStat,
       car_provider || 'NINGUNA_EXTERNO',
       stationery_provider || 'NINGUNA',
+      Number(stationery_labor_payout) || 0,
       staff_scarlette ? 1 : 0,
       staff_victoria ? 1 : 0,
       Number(external_staff_count) || 0,
@@ -2249,11 +2353,16 @@ router.put('/finance/settlements/:id', authenticateToken, requireAdmin, (req, re
       event_date,
       venue,
       service_amount,
+      stands_amount,
+      stationery_amount,
       freight_charged,
       extra_services,
       supplies_expense,
+      supplies_services_expense,
+      supplies_stationery_expense,
       car_provider,
       stationery_provider,
+      stationery_labor_payout,
       staff_scarlette,
       staff_victoria,
       external_staff_count,
@@ -2268,22 +2377,37 @@ router.put('/finance/settlements/:id', authenticateToken, requireAdmin, (req, re
 
     const now = new Date().toISOString();
 
+    const standsAmt = Number(stands_amount) || 0;
+    const statAmt = Number(stationery_amount) || 0;
+    const servAmt = (standsAmt + statAmt > 0) ? (standsAmt + statAmt) : (Number(service_amount) || 0);
+
+    const supServ = Number(supplies_services_expense) || 0;
+    const supStat = Number(supplies_stationery_expense) || 0;
+    const supTot = (supServ + supStat > 0) ? (supServ + supStat) : (Number(supplies_expense) || 0);
+
     db.prepare(`
       UPDATE vlb_event_settlements
-      SET event_name = ?, event_date = ?, venue = ?, service_amount = ?, freight_charged = ?,
-          extra_services = ?, supplies_expense = ?, car_provider = ?, stationery_provider = ?,
+      SET event_name = ?, event_date = ?, venue = ?, service_amount = ?,
+          stands_amount = ?, stationery_amount = ?, freight_charged = ?,
+          extra_services = ?, supplies_expense = ?, supplies_services_expense = ?, supplies_stationery_expense = ?,
+          car_provider = ?, stationery_provider = ?, stationery_labor_payout = ?,
           staff_scarlette = ?, staff_victoria = ?, external_staff_count = ?, status = ?, notes = ?, updated_at = ?
       WHERE id = ?
     `).run(
       event_name.trim(),
       event_date.trim(),
       venue || '',
-      Number(service_amount) || 0,
+      servAmt,
+      standsAmt,
+      statAmt,
       Number(freight_charged) || 0,
       Number(extra_services) || 0,
-      Number(supplies_expense) || 0,
+      supTot,
+      supServ,
+      supStat,
       car_provider || 'NINGUNA_EXTERNO',
       stationery_provider || 'NINGUNA',
+      Number(stationery_labor_payout) || 0,
       staff_scarlette ? 1 : 0,
       staff_victoria ? 1 : 0,
       Number(external_staff_count) || 0,

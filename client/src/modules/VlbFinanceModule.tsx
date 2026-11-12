@@ -75,6 +75,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     staff_rate: 450,
     freight_rate: 500,
     stationery_rate: 200,
+    stationery_labor_pct: 25,
     company_fund_pct: 60,
     partners_profit_pct: 40
   });
@@ -85,17 +86,79 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     event_date: new Date().toISOString().split('T')[0],
     venue: '',
     service_amount: 0,
+    stands_amount: 0,
+    stationery_amount: 0,
     freight_charged: 0,
     extra_services: 0,
     supplies_expense: 0,
+    supplies_services_expense: 0,
+    supplies_stationery_expense: 0,
     car_provider: 'NINGUNA_EXTERNO',
     stationery_provider: 'NINGUNA',
+    stationery_labor_payout: 0,
     staff_scarlette: false,
     staff_victoria: false,
     external_staff_count: 0,
     status: 'PENDIENTE',
     notes: ''
   });
+
+  const handleOpenEdit = (item: VlbEventSettlement) => {
+    setEditModalSettlement(item);
+    setIsNewEventModal(false);
+    const standsAmt = item.stands_amount ?? item.service_amount ?? 0;
+    const statAmt = item.stationery_amount ?? 0;
+    const supServ = item.supplies_services_expense ?? (item.supplies_expense || 0);
+    const supStat = item.supplies_stationery_expense ?? 0;
+
+    setEventForm({
+      event_name: item.event_name,
+      event_date: item.event_date,
+      venue: item.venue || '',
+      service_amount: item.service_amount || (standsAmt + statAmt),
+      stands_amount: standsAmt,
+      stationery_amount: statAmt,
+      freight_charged: item.freight_charged || 0,
+      extra_services: item.extra_services || 0,
+      supplies_expense: item.supplies_expense || (supServ + supStat),
+      supplies_services_expense: supServ,
+      supplies_stationery_expense: supStat,
+      car_provider: item.car_provider || 'NINGUNA_EXTERNO',
+      stationery_provider: item.stationery_provider || 'NINGUNA',
+      stationery_labor_payout: item.stationery_labor_payout ?? 0,
+      staff_scarlette: Boolean(item.staff_scarlette),
+      staff_victoria: Boolean(item.staff_victoria),
+      external_staff_count: item.external_staff_count || 0,
+      status: item.status || 'PENDIENTE',
+      notes: item.notes || ''
+    });
+  };
+
+  const handleOpenNew = () => {
+    setIsNewEventModal(true);
+    setEditModalSettlement(null);
+    setEventForm({
+      event_name: '',
+      event_date: new Date().toISOString().split('T')[0],
+      venue: '',
+      service_amount: 0,
+      stands_amount: 0,
+      stationery_amount: 0,
+      freight_charged: 0,
+      extra_services: 0,
+      supplies_expense: 0,
+      supplies_services_expense: 0,
+      supplies_stationery_expense: 0,
+      car_provider: 'NINGUNA_EXTERNO',
+      stationery_provider: 'NINGUNA',
+      stationery_labor_payout: 0,
+      staff_scarlette: false,
+      staff_victoria: false,
+      external_staff_count: 0,
+      status: 'PENDIENTE',
+      notes: ''
+    });
+  };
 
   const showToast = (text: string, type: 'success' | 'error' = 'success') => {
     setToastMessage({ text, type });
@@ -133,6 +196,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
           staff_rate: setData.settings.staff_rate,
           freight_rate: setData.settings.freight_rate,
           stationery_rate: setData.settings.stationery_rate,
+          stationery_labor_pct: setData.settings.stationery_labor_pct ?? 25,
           company_fund_pct: setData.settings.company_fund_pct,
           partners_profit_pct: setData.settings.partners_profit_pct
         });
@@ -290,7 +354,11 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     return settlementsWithCalc.reduce(
       (acc, { calc }) => {
         acc.totalRevenue += calc.totalRevenue;
+        acc.totalStands += calc.standsAmount;
+        acc.totalStationery += calc.stationeryAmount;
         acc.totalSupplies += calc.suppliesExpense;
+        acc.totalSuppliesServices += calc.suppliesServicesExpense;
+        acc.totalSuppliesStationery += calc.suppliesStationeryExpense;
         acc.totalExpenses += calc.totalExpenses;
         acc.totalNetProfit += calc.netProfit;
         acc.totalCompanyFund += calc.companyFundAmount;
@@ -301,7 +369,11 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       },
       {
         totalRevenue: 0,
+        totalStands: 0,
+        totalStationery: 0,
         totalSupplies: 0,
+        totalSuppliesServices: 0,
+        totalSuppliesStationery: 0,
         totalExpenses: 0,
         totalNetProfit: 0,
         totalCompanyFund: 0,
@@ -330,12 +402,20 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   const copyWhatsAppSummary = (item: VlbEventSettlement, calc: ReturnType<typeof calculateEventSettlement>) => {
     const text = `🌸 *LIQUIDACIÓN OPERATIVA VIVA LA BRIDE*\n💍 *Evento:* ${item.event_name}\n📅 *Fecha:* ${item.event_date}${item.venue ? ` · ${item.venue}` : ''}\n\n` +
       `💳 *Ingreso Total:* ${fmt(calc.totalRevenue)}\n` +
-      `📦 *Insumos:* ${fmt(calc.suppliesExpense)}\n` +
-      `🚗 *Flete / Carro:* ${fmt(calc.freightPayout)} (${calc.freightBeneficiary})\n` +
-      `💌 *Papelería:* ${fmt(calc.stationeryPayout)} (${calc.stationeryBeneficiary})\n` +
-      `👥 *Staff Externo (${calc.externalStaffCount}p):* ${fmt(calc.externalStaffPayout)}\n` +
-      `👩‍💼 *Turno Scarlette:* ${fmt(calc.scarletteShiftPayout)}\n` +
-      `👩‍💼 *Turno Victoria:* ${fmt(calc.victoriaShiftPayout)}\n` +
+      `   • Stands & Servicios: ${fmt(calc.standsAmount)}\n` +
+      `   • Papelería Social: ${fmt(calc.stationeryAmount)}\n` +
+      (item.freight_charged > 0 ? `   • Flete: ${fmt(item.freight_charged)}\n` : '') +
+      (item.extra_services > 0 ? `   • Extras: ${fmt(item.extra_services)}\n` : '') +
+      `\n📦 *Insumos Directos:* ${fmt(calc.suppliesExpense)}\n` +
+      `   • Insumos Stands / Bar: ${fmt(calc.suppliesServicesExpense)}\n` +
+      `   • Insumos Papelería: ${fmt(calc.suppliesStationeryExpense)}\n` +
+      (calc.stationeryAmount > 0 ? `   ✨ Margen Papelería (quitando gastos): ${fmt(calc.stationeryNetMargin)}\n` : '') +
+      `\n🛠️ *Operación & Mano de Obra:*\n` +
+      `   • Elaboración Papelería: ${fmt(calc.stationeryPayout)} (${calc.stationeryBeneficiary})\n` +
+      `   • Flete / Carro: ${fmt(calc.freightPayout)} (${calc.freightBeneficiary})\n` +
+      `   • Staff Externo (${calc.externalStaffCount}p): ${fmt(calc.externalStaffPayout)}\n` +
+      `   • Turno Scarlette: ${fmt(calc.scarletteShiftPayout)}\n` +
+      `   • Turno Victoria: ${fmt(calc.victoriaShiftPayout)}\n` +
       `---------------------------\n` +
       `📉 *Total Gastos:* ${fmt(calc.totalExpenses)}\n` +
       `💎 *Ganancia Neta:* ${fmt(calc.netProfit)}\n\n` +
@@ -345,7 +425,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       `   (Turno: ${fmt(calc.scarletteShiftPayout)} + Carro: ${fmt(item.car_provider === 'SCARLETTE' ? calc.freightPayout : 0)} + Papel: ${fmt(item.stationery_provider === 'SCARLETTE' ? calc.stationeryPayout : 0)} + Utilidad 50%: ${fmt(calc.scarletteProfitShare)})\n\n` +
       `💰 *PAGO FINAL VICTORIA:* ${fmt(calc.victoriaTotalPayout)}\n` +
       `   (Turno: ${fmt(calc.victoriaShiftPayout)} + Carro: ${fmt(item.car_provider === 'VICTORIA' ? calc.freightPayout : 0)} + Papel: ${fmt(item.stationery_provider === 'VICTORIA' ? calc.stationeryPayout : 0)} + Utilidad 50%: ${fmt(calc.victoriaProfitShare)})\n\n` +
-      `💼 *PAGO STAFF EXTERNO:* ${fmt(calc.externalTotalPayout)}`;
+      `💼 *PAGO STAFF / MAQUILA EXTERNA:* ${fmt(calc.externalTotalPayout)}`;
 
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
@@ -393,25 +473,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
 
         <div className="flex items-center flex-wrap gap-2.5 self-start md:self-auto">
           <button
-            onClick={() => {
-              setEventForm({
-                event_name: '',
-                event_date: new Date().toISOString().split('T')[0],
-                venue: '',
-                service_amount: 0,
-                freight_charged: 0,
-                extra_services: 0,
-                supplies_expense: 0,
-                car_provider: 'NINGUNA_EXTERNO',
-                stationery_provider: 'NINGUNA',
-                staff_scarlette: false,
-                staff_victoria: false,
-                external_staff_count: 0,
-                status: 'PENDIENTE',
-                notes: ''
-              });
-              setIsNewEventModal(true);
-            }}
+            onClick={handleOpenNew}
             className="px-3.5 py-2 rounded-xl bg-[#332A28] hover:bg-[#58352F] text-[#FFFFFF] text-xs font-bold transition flex items-center space-x-1.5 shadow-2xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 text-[#CCDACC]" />
@@ -457,8 +519,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
           <div className="text-xl sm:text-2xl font-bold font-serif text-[#332A28]">
             {fmt(globalKpis.totalRevenue)}
           </div>
-          <div className="text-[10px] text-[#7D6F6B] truncate">
-            {filteredSettlements.length} evento(s) considerados
+          <div className="text-[10px] text-[#7D6F6B] flex flex-wrap items-center justify-between gap-1 pt-0.5 border-t border-[#F7F3EE]">
+            <span>Stands: {fmt(globalKpis.totalStands)}</span>
+            <span className="text-[#E84E6D]">Papel: {fmt(globalKpis.totalStationery)}</span>
           </div>
         </div>
 
@@ -486,21 +549,22 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
             {fmt(globalKpis.totalCompanyFund)}
           </div>
           <div className="text-[10px] text-[#7D6F6B]">
-            Reserva fija, reinversión & equipo
+            Reserva fija, reinversión & taller
           </div>
         </div>
 
         {/* Total Insumos */}
         <div className="bg-[#FFFFFF] p-4 rounded-3xl border border-[#EAE3DA] shadow-xs space-y-1">
           <div className="flex items-center justify-between text-[#7D6F6B]">
-            <span className="text-[11px] font-bold uppercase tracking-wider">Insumos de Eventos</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider">Insumos y Materiales</span>
             <DollarSign className="w-4 h-4 text-[#7D6F6B]" />
           </div>
           <div className="text-xl sm:text-2xl font-bold font-serif text-[#332A28]">
             {fmt(globalKpis.totalSupplies)}
           </div>
-          <div className="text-[10px] text-[#7D6F6B]">
-            Hielo, vasos, cerveza, desechables
+          <div className="text-[10px] text-[#7D6F6B] flex flex-wrap items-center justify-between gap-1 pt-0.5 border-t border-[#F7F3EE]">
+            <span>Stands: {fmt(globalKpis.totalSuppliesServices)}</span>
+            <span className="text-[#E84E6D]">Papel: {fmt(globalKpis.totalSuppliesStationery)}</span>
           </div>
         </div>
       </div>
@@ -675,19 +739,24 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                     {/* Ingreso Venta */}
                     <td className="py-3.5 px-3 text-right">
                       <div className="font-bold text-sm text-[#332A28]">{fmt(calc.totalRevenue)}</div>
-                      {(item.freight_charged > 0 || item.extra_services > 0) && (
-                        <div className="text-[10px] text-[#7D6F6B]">
-                          {item.freight_charged > 0 ? `+${fmt(item.freight_charged)} flt` : ''}
-                          {item.extra_services > 0 ? ` +${fmt(item.extra_services)} ext` : ''}
-                        </div>
-                      )}
+                      <div className="text-[10px] text-[#7D6F6B] flex flex-col items-end gap-0.5 mt-0.5">
+                        {calc.standsAmount > 0 && <span>Stands: {fmt(calc.standsAmount)}</span>}
+                        {calc.stationeryAmount > 0 && <span className="text-[#E84E6D]">Papel: {fmt(calc.stationeryAmount)}</span>}
+                        {item.freight_charged > 0 && <span className="text-[#9C665C]">+Flt: {fmt(item.freight_charged)}</span>}
+                      </div>
                     </td>
 
                     {/* Insumos */}
                     <td className="py-3.5 px-3 text-right">
-                      <span className={item.supplies_expense > 0 ? 'text-[#332A28] font-semibold' : 'text-[#A69995]'}>
-                        {fmt(item.supplies_expense)}
-                      </span>
+                      <div className={calc.suppliesExpense > 0 ? 'text-[#332A28] font-semibold text-xs' : 'text-[#A69995] text-xs'}>
+                        {fmt(calc.suppliesExpense)}
+                      </div>
+                      {(calc.suppliesServicesExpense > 0 || calc.suppliesStationeryExpense > 0) && (
+                        <div className="text-[9px] text-[#7D6F6B] flex flex-col items-end gap-0.5 mt-0.5">
+                          {calc.suppliesServicesExpense > 0 && <span>Stands: {fmt(calc.suppliesServicesExpense)}</span>}
+                          {calc.suppliesStationeryExpense > 0 && <span className="text-[#E84E6D]">Papel: {fmt(calc.suppliesStationeryExpense)}</span>}
+                        </div>
+                      )}
                     </td>
 
                     {/* Flete / Carro */}
@@ -721,9 +790,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                               ? 'bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]'
                               : 'bg-gray-100 text-gray-700'
                           }`}>
-                            {item.stationery_provider === 'SCARLETTE' ? 'Scarlette' : 'Victoria'}
+                            {item.stationery_provider === 'SCARLETTE' ? 'Scarlette' : item.stationery_provider === 'VICTORIA' ? 'Victoria' : 'Externo'}
                           </span>
-                          <div className="text-[10px] text-[#7D6F6B] font-mono">{fmt(calc.stationeryPayout)}</div>
+                          <div className="text-[10px] text-[#7D6F6B] font-mono font-semibold">{fmt(calc.stationeryPayout)}</div>
                         </div>
                       ) : (
                         <span className="text-[#A69995] text-[11px]">-</span>
@@ -780,13 +849,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                           <Eye className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => {
-                            setEventForm({
-                              ...item
-                            });
-                            setIsNewEventModal(false);
-                            setEditModalSettlement(item);
-                          }}
+                          onClick={() => handleOpenEdit(item)}
                           className="p-1.5 rounded-lg bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#70443D] transition cursor-pointer"
                           title="Editar insumos y datos operativos"
                         >
@@ -1097,25 +1160,62 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 </div>
               </div>
 
-              {/* MONTOS FINANCIEROS */}
+              {/* 1. INGRESOS DEL EVENTO */}
               <div className="p-3.5 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] space-y-3">
-                <span className="font-bold text-[#70443D] uppercase tracking-wider block">
-                  Ingresos del Evento
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#70443D] uppercase tracking-wider block">
+                    1. Ingresos del Evento
+                  </span>
+                  <span className="text-[11px] font-bold text-[#332A28] bg-white px-2 py-0.5 rounded-lg border border-[#EAE3DA]">
+                    Total Ingresos: {fmt((Number(eventForm.stands_amount) || 0) + (Number(eventForm.stationery_amount) || 0) + (Number(eventForm.freight_charged) || 0) + (Number(eventForm.extra_services) || 0))}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Monto Venta Servicio ($)
+                      Venta Stands & Experiencias ($)
                     </label>
                     <input
                       type="number"
                       min={0}
                       step="any"
                       placeholder="0.00"
-                      value={eventForm.service_amount || ''}
-                      onChange={e => setEventForm({ ...eventForm, service_amount: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
+                      value={eventForm.stands_amount ?? ''}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setEventForm({
+                          ...eventForm,
+                          stands_amount: val,
+                          service_amount: val + (Number(eventForm.stationery_amount) || 0)
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono font-semibold"
                     />
+                    <span className="text-[10px] text-[#7D6F6B]">Shot bar, stands, audio, experiencias</span>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Venta Papelería Social ($)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      placeholder="0.00"
+                      value={eventForm.stationery_amount ?? ''}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setEventForm({
+                          ...eventForm,
+                          stationery_amount: val,
+                          service_amount: (Number(eventForm.stands_amount) || 0) + val
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono font-semibold"
+                    />
+                    <span className="text-[10px] text-[#7D6F6B]">Invitaciones, menús, cajitas snacks, misales</span>
                   </div>
 
                   <div>
@@ -1150,28 +1250,85 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 </div>
               </div>
 
-              {/* GASTOS OPERATIVOS */}
+              {/* 2. INSUMOS DIRECTOS */}
               <div className="p-3.5 bg-[#FCFAF7] rounded-2xl border border-[#EAE3DA] space-y-3">
-                <span className="font-bold text-[#70443D] uppercase tracking-wider block">
-                  Operación & Asignaciones
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-[#70443D] uppercase tracking-wider block">
+                    2. Insumos Directos de Producción
+                  </span>
+                  <span className="text-[11px] font-bold text-[#7D6F6B]">
+                    Total Insumos: {fmt((Number(eventForm.supplies_services_expense) || 0) + (Number(eventForm.supplies_stationery_expense) || 0))}
+                  </span>
+                </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Gasto Insumos del Evento ($)
+                      Insumos Stands & Evento ($)
                     </label>
                     <input
                       type="number"
                       min={0}
                       step="any"
-                      placeholder="Hielos, vasos, cerveza..."
-                      value={eventForm.supplies_expense || ''}
-                      onChange={e => setEventForm({ ...eventForm, supplies_expense: parseFloat(e.target.value) || 0 })}
+                      placeholder="Hielo, vasos, cerveza, desechables..."
+                      value={eventForm.supplies_services_expense || ''}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setEventForm({
+                          ...eventForm,
+                          supplies_services_expense: val,
+                          supplies_expense: val + (Number(eventForm.supplies_stationery_expense) || 0)
+                        });
+                      }}
                       className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
                     />
+                    <span className="text-[10px] text-[#7D6F6B]">Consumibles del bar y stands</span>
                   </div>
 
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Insumos Papelería Social ($)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="any"
+                      placeholder="Papel fino, imprenta, listón, lacres..."
+                      value={eventForm.supplies_stationery_expense || ''}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value) || 0;
+                        setEventForm({
+                          ...eventForm,
+                          supplies_stationery_expense: val,
+                          supplies_expense: (Number(eventForm.supplies_services_expense) || 0) + val
+                        });
+                      }}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
+                    />
+                    <span className="text-[10px] text-[#7D6F6B]">Materiales y costos directos de impresión</span>
+                  </div>
+                </div>
+
+                {/* Margen de Papelería quitando gastos */}
+                {Number(eventForm.stationery_amount) > 0 && (
+                  <div className="p-2.5 rounded-xl bg-[#FFF6F8] border border-[#F5C2CD] flex items-center justify-between text-xs">
+                    <span className="text-[#E84E6D] font-bold">
+                      Margen de Papelería ("quitando gastos"):
+                    </span>
+                    <span className="font-mono font-bold text-[#E84E6D]">
+                      {fmt(Math.max(0, (Number(eventForm.stationery_amount) || 0) - (Number(eventForm.supplies_stationery_expense) || 0)))}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. OPERACIÓN, FLETES & MANO DE OBRA */}
+              <div className="p-3.5 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] space-y-3">
+                <span className="font-bold text-[#70443D] uppercase tracking-wider block">
+                  3. Operación, Fletes & Mano de Obra
+                </span>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-semibold text-[#7D6F6B] mb-1">
                       ¿Quién llevó carro?
@@ -1189,18 +1346,67 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
 
                   <div>
                     <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      ¿Quién preparó papelería?
+                      ¿Quién preparó / cortó la papelería?
                     </label>
                     <select
                       value={eventForm.stationery_provider || 'NINGUNA'}
-                      onChange={e => setEventForm({ ...eventForm, stationery_provider: e.target.value as VlbStationeryProvider })}
+                      onChange={e => {
+                        const prov = e.target.value as VlbStationeryProvider;
+                        const statMargin = Math.max(0, (Number(eventForm.stationery_amount) || 0) - (Number(eventForm.supplies_stationery_expense) || 0));
+                        const suggested = Math.round(statMargin * ((settings.stationery_labor_pct || 25) / 100));
+                        setEventForm({
+                          ...eventForm,
+                          stationery_provider: prov,
+                          stationery_labor_payout: prov === 'NINGUNA' ? 0 : (eventForm.stationery_labor_payout || suggested || settings.stationery_rate)
+                        });
+                      }}
                       className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] cursor-pointer"
                     >
                       <option value="NINGUNA">Ninguna ($0)</option>
-                      <option value="SCARLETTE">💌 Scarlette (${settings.stationery_rate} MXN)</option>
-                      <option value="VICTORIA">💌 Victoria (${settings.stationery_rate} MXN)</option>
+                      <option value="SCARLETTE">💌 Scarlette</option>
+                      <option value="VICTORIA">💌 Victoria</option>
+                      <option value="EXTERNO">👥 Taller / Maquila Externa</option>
                     </select>
                   </div>
+
+                  {/* Campo de Pago Mano de Obra Papelería si alguien la elaboró */}
+                  {eventForm.stationery_provider && eventForm.stationery_provider !== 'NINGUNA' && (() => {
+                    const statMargin = Math.max(0, (Number(eventForm.stationery_amount) || 0) - (Number(eventForm.supplies_stationery_expense) || 0));
+                    const suggested = Math.round(statMargin * ((settings.stationery_labor_pct || 25) / 100));
+                    return (
+                      <div className="sm:col-span-2 p-3 bg-white rounded-xl border border-[#EAE3DA] space-y-2">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                          <label className="block font-semibold text-[#332A28]">
+                            Pago Mano de Obra Papelería (Corte, armado, acabados):
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[11px] text-[#7D6F6B]">
+                              Sugerido quitando gastos: <strong>{fmt(suggested)}</strong> ({settings.stationery_labor_pct}%)
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setEventForm({ ...eventForm, stationery_labor_payout: suggested })}
+                              className="px-2 py-0.5 bg-[#FAF6F2] hover:bg-[#F4ECE4] text-[#9C665C] border border-[#EAE3DA] rounded-lg text-[10px] font-bold cursor-pointer transition"
+                            >
+                              Aplicar Sugerido
+                            </button>
+                          </div>
+                        </div>
+                        <input
+                          type="number"
+                          min={0}
+                          step="any"
+                          value={eventForm.stationery_labor_payout ?? ''}
+                          onChange={e => setEventForm({ ...eventForm, stationery_labor_payout: parseFloat(e.target.value) || 0 })}
+                          className="w-full px-3 py-2 bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono text-sm font-bold"
+                          placeholder="Monto a pagar por mano de obra"
+                        />
+                        <span className="text-[10px] text-[#7D6F6B] block">
+                          * Asignado a: {eventForm.stationery_provider === 'SCARLETTE' ? 'Scarlette' : eventForm.stationery_provider === 'VICTORIA' ? 'Victoria' : 'Proveedor Externo'}
+                        </span>
+                      </div>
+                    );
+                  })()}
 
                   <div>
                     <label className="block font-semibold text-[#7D6F6B] mb-1">
@@ -1312,9 +1518,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
             <form onSubmit={handleSaveSettings} className="space-y-4 text-xs">
               <div className="p-3.5 bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] space-y-3">
                 <span className="font-bold text-[#70443D] uppercase tracking-wider block">
-                  Tarifas Operativas Fijas
+                  Tarifas Operativas Fijas & Porcentajes
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block font-semibold text-[#7D6F6B] mb-1">
                       Tarifa Turno Staff ($)
@@ -1347,7 +1553,23 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
 
                   <div>
                     <label className="block font-semibold text-[#7D6F6B] mb-1">
-                      Tarifa Papelería ($)
+                      % Mano de Obra Papelería (Sugerido)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      max={100}
+                      value={settingsForm.stationery_labor_pct}
+                      onChange={e => setSettingsForm({ ...settingsForm, stationery_labor_pct: parseFloat(e.target.value) || 0 })}
+                      className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
+                    />
+                    <span className="text-[10px] text-[#7D6F6B]">Del margen libre tras descontar gastos</span>
+                  </div>
+
+                  <div>
+                    <label className="block font-semibold text-[#7D6F6B] mb-1">
+                      Tarifa Base Papelería ($)
                     </label>
                     <input
                       type="number"
@@ -1357,7 +1579,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                       onChange={e => setSettingsForm({ ...settingsForm, stationery_rate: parseFloat(e.target.value) || 0 })}
                       className="w-full px-3 py-2 bg-white border border-[#EAE3DA] rounded-xl text-[#332A28] font-mono"
                     />
-                    <span className="text-[10px] text-[#7D6F6B]">Por elaboración en taller</span>
+                    <span className="text-[10px] text-[#7D6F6B]">Mínimo para eventos históricos</span>
                   </div>
                 </div>
               </div>
