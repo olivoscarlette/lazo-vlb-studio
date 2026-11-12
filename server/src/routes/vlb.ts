@@ -572,6 +572,33 @@ export function generateNextVlbQuoteNumber(): string {
   return candidate;
 }
 
+// Helper to generate sequential order numbers for Viva la Bride (Format: VLB-001, VLB-002...)
+export function generateNextVlbOrderNumber(): string {
+  const rows = db.prepare('SELECT order_number FROM vlb_orders').all() as { order_number: string }[];
+  let maxSeq = 0;
+  for (const row of rows) {
+    if (!row.order_number) continue;
+    const match = row.order_number.match(/^(?:ORD-)?VLB-(?:\d{4}-)?(\d+)$/);
+    if (match && match[1]) {
+      const num = parseInt(match[1], 10);
+      if (!isNaN(num) && num < 100000 && num > maxSeq) {
+        maxSeq = num;
+      }
+    }
+  }
+
+  let nextSeqNum = Math.max(maxSeq + 1, rows.length + 1);
+  let candidate = `VLB-${String(nextSeqNum).padStart(3, '0')}`;
+
+  // Guarantee absolute uniqueness in database
+  while (db.prepare('SELECT 1 FROM vlb_orders WHERE order_number = ?').get(candidate)) {
+    nextSeqNum++;
+    candidate = `VLB-${String(nextSeqNum).padStart(3, '0')}`;
+  }
+
+  return candidate;
+}
+
 // GET /api/vlb/quotes - List quotes
 router.get('/quotes', (req, res) => {
   try {
@@ -923,9 +950,7 @@ router.post('/quotes/:id/convert-to-order', (req, res) => {
       return res.status(404).json({ error: 'Cotización no encontrada.' });
     }
 
-    const countRow = db.prepare("SELECT COUNT(*) as count FROM vlb_orders").get() as { count: number };
-    const nextSeq = String(countRow.count + 1).padStart(3, '0');
-    const order_number = `VLB-${nextSeq}`;
+    const order_number = generateNextVlbOrderNumber();
 
     const orderId = 'ord_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
     const now = new Date().toISOString();
@@ -1567,9 +1592,7 @@ router.post('/orders', (req, res) => {
       return res.status(400).json({ error: 'Nombre de la clienta y fecha del evento son requeridos.' });
     }
 
-    const countRow = db.prepare("SELECT COUNT(*) as count FROM vlb_orders").get() as { count: number };
-    const nextSeq = String(countRow.count + 1).padStart(3, '0');
-    const order_number = `VLB-${nextSeq}`;
+    const order_number = generateNextVlbOrderNumber();
 
     // Calcular montos a partir de los conceptos contratados
     let standsSum = Number(stands_amount) || 0;
