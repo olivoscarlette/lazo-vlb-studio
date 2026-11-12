@@ -55,16 +55,13 @@ export function calculateEventSettlement(
   const suggestedStationeryLabor = Math.round(stationeryNetMargin * laborPct * 100) / 100;
 
   let stationeryPayout = 0;
-  if (event.stationery_provider && event.stationery_provider !== 'NINGUNA') {
+  if (stationeryAmount > 0 && event.stationery_provider && event.stationery_provider !== 'NINGUNA') {
     if (event.stationery_labor_payout !== undefined && event.stationery_labor_payout !== null && Number(event.stationery_labor_payout) > 0) {
       // Monto explícito capturado o confirmado por la socia
       stationeryPayout = Number(event.stationery_labor_payout);
-    } else if (stationeryAmount > 0) {
+    } else {
       // Cálculo sugerido automático basado en el margen tras descontar gastos
       stationeryPayout = suggestedStationeryLabor;
-    } else {
-      // Fallback para eventos históricos sin desglose
-      stationeryPayout = settings.stationery_rate ?? 200;
     }
   }
 

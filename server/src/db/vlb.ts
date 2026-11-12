@@ -310,6 +310,16 @@ export function initVlbDatabase() {
     db.prepare("UPDATE vlb_catalog SET subcategory = TRIM(REPLACE(subcategory, 'finas', '')) WHERE subcategory LIKE '%finas%'").run();
   } catch {}
 
+  // Sanear liquidaciones de eventos de stands/sin papelería para no generar mano de obra indebida
+  try {
+    db.prepare(`
+      UPDATE vlb_event_settlements 
+      SET stationery_provider = 'NINGUNA', stationery_labor_payout = 0 
+      WHERE (stationery_amount <= 0 OR stationery_amount IS NULL) 
+        AND (stationery_provider IS NOT NULL AND stationery_provider != 'NINGUNA')
+    `).run();
+  } catch {}
+
   // Seed default master task templates if empty
   const templateCount = db.prepare('SELECT COUNT(*) as count FROM vlb_task_templates').get() as { count: number };
   if (templateCount.count === 0) {

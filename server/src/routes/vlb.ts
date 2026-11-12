@@ -1075,7 +1075,7 @@ router.put('/quotes/:id', (req, res) => {
             stationeryTotal,
             0, 0, 0, 0, 0, null,
             'NINGUNA_EXTERNO',
-            finalServiceType === 'STANDS_EXPERIENCIAS' ? 'NINGUNA' : 'SCARLETTE',
+            stationeryTotal > 0 ? 'SCARLETTE' : 'NINGUNA',
             0, 0, 0, 0, null, 'PENDIENTE', `Pedido ${ord.order_number}`, now, now
           );
         } catch {}
@@ -2053,7 +2053,7 @@ router.post('/orders', (req, res) => {
         supStat,
         null,
         car_provider || 'NINGUNA_EXTERNO',
-        finalServiceType === 'STANDS_EXPERIENCIAS' ? 'NINGUNA' : 'SCARLETTE',
+        calcStationery > 0 ? 'SCARLETTE' : 'NINGUNA',
         0,
         0,
         0,
@@ -2693,6 +2693,16 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
       }
     }
 
+    // Auto-sanear registros huérfanos o con datos inconsistentes de papelería
+    try {
+      db.prepare(`
+        UPDATE vlb_event_settlements 
+        SET stationery_provider = 'NINGUNA', stationery_labor_payout = 0 
+        WHERE (stationery_amount <= 0 OR stationery_amount IS NULL) 
+          AND (stationery_provider IS NOT NULL AND stationery_provider != 'NINGUNA')
+      `).run();
+    } catch {}
+
     const settlements = db.prepare(`
       SELECT s.*, o.order_number, o.payment_status as order_payment_status, o.total_paid as order_total_paid
       FROM vlb_event_settlements s
@@ -2706,9 +2716,14 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
         const ord = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(s.order_id) as any;
         if (ord) {
           const { standsTotal, stationeryTotal } = calculateOrderAmounts(ord);
-          db.prepare('UPDATE vlb_event_settlements SET stands_amount = ?, stationery_amount = ? WHERE id = ?').run(standsTotal, stationeryTotal, s.id);
+          const finalStatProv = stationeryTotal > 0 ? (s.stationery_provider || 'NINGUNA') : 'NINGUNA';
+          const finalStatLabor = stationeryTotal > 0 ? (s.stationery_labor_payout || 0) : 0;
+          db.prepare('UPDATE vlb_event_settlements SET stands_amount = ?, stationery_amount = ?, stationery_provider = ?, stationery_labor_payout = ? WHERE id = ?')
+            .run(standsTotal, stationeryTotal, finalStatProv, finalStatLabor, s.id);
           s.stands_amount = standsTotal;
           s.stationery_amount = stationeryTotal;
+          s.stationery_provider = finalStatProv;
+          s.stationery_labor_payout = finalStatLabor;
         }
       }
     }
@@ -2726,6 +2741,9 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
       const suppliesStat = Number(s.supplies_stationery_expense) || 0;
       const suppliesTotal = (suppliesServ + suppliesStat > 0) ? (suppliesServ + suppliesStat) : (Number(s.supplies_expense) || 0);
 
+      const cleanStatProvider = statAmt > 0 ? (s.stationery_provider || 'NINGUNA') : 'NINGUNA';
+      const cleanStatLabor = statAmt > 0 ? (Number(s.stationery_labor_payout) || 0) : 0;
+
       return {
         ...s,
         staff_scarlette: Boolean(s.staff_scarlette),
@@ -2736,12 +2754,13 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
         service_amount: servAmt,
         stands_amount: standsAmt,
         stationery_amount: statAmt,
+        stationery_provider: cleanStatProvider,
+        stationery_labor_payout: cleanStatLabor,
         freight_charged: Number(s.freight_charged) || 0,
         extra_services: Number(s.extra_services) || 0,
         supplies_expense: suppliesTotal,
         supplies_services_expense: suppliesServ,
         supplies_stationery_expense: suppliesStat,
-        stationery_labor_payout: Number(s.stationery_labor_payout) || 0,
         external_staff_count: Number(s.external_staff_count) || 0
       };
     });
@@ -2823,8 +2842,8 @@ router.post('/finance/settlements', authenticateToken, requireAdmin, (req, res) 
       supStat,
       supplies_breakdown_json || null,
       car_provider || 'NINGUNA_EXTERNO',
-      stationery_provider || 'NINGUNA',
-      Number(stationery_labor_payout) || 0,
+      statAmt > 0 ? (stationery_provider || 'NINGUNA') : 'NINGUNA',
+      statAmt > 0 ? (Number(stationery_labor_payout) || 0) : 0,
       staff_scarlette ? 1 : 0,
       staff_victoria ? 1 : 0,
       Number(external_staff_count) || 0,
@@ -2917,8 +2936,8 @@ router.put('/finance/settlements/:id', authenticateToken, requireAdmin, (req, re
       supStat,
       supplies_breakdown_json || null,
       car_provider || 'NINGUNA_EXTERNO',
-      stationery_provider || 'NINGUNA',
-      Number(stationery_labor_payout) || 0,
+      statAmt > 0 ? (stationery_provider || 'NINGUNA') : 'NINGUNA',
+      statAmt > 0 ? (Number(stationery_labor_payout) || 0) : 0,
       staff_scarlette ? 1 : 0,
       staff_victoria ? 1 : 0,
       Number(external_staff_count) || 0,

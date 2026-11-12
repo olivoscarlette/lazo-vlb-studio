@@ -333,9 +333,18 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
         : '/api/vlb/finance/settlements';
       const method = isEdit ? 'PUT' : 'POST';
 
+      const statAmt = Number(eventForm.stationery_amount) || 0;
+      const hasStationery = modalServiceMode !== 'STANDS' && statAmt > 0;
+
+      const payload = {
+        ...eventForm,
+        stationery_provider: hasStationery ? (eventForm.stationery_provider || 'NINGUNA') : 'NINGUNA',
+        stationery_labor_payout: hasStationery ? (Number(eventForm.stationery_labor_payout) || 0) : 0
+      };
+
       const res = await apiFetch(url, {
         method,
-        body: JSON.stringify(eventForm)
+        body: JSON.stringify(payload)
       });
 
       if (!res.ok) {
@@ -731,7 +740,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       `   • Insumos Papelería: ${fmt(calc.suppliesStationeryExpense)}\n` +
       (calc.stationeryAmount > 0 ? `   ✨ Margen Operativo Papelería: ${fmt(calc.stationeryNetMargin)}\n` : '') +
       `\n🛠️ *Operación & Mano de Obra:*\n` +
-      `   • Elaboración Papelería: ${fmt(calc.stationeryPayout)} (${calc.stationeryBeneficiary === 'AMBAS' ? 'Ambas 50/50' : calc.stationeryBeneficiary})\n` +
+      (calc.stationeryAmount > 0 && calc.stationeryPayout > 0 ? `   • Elaboración Papelería: ${fmt(calc.stationeryPayout)} (${calc.stationeryBeneficiary === 'AMBAS' ? 'Ambas 50/50' : calc.stationeryBeneficiary})\n` : '') +
       `   • Flete / Carro: ${fmt(calc.freightPayout)} (${calc.freightBeneficiary === 'AMBAS_COMPLETO' ? 'Ambas completo' : calc.freightBeneficiary === 'AMBAS_DIVIDIDO' ? 'Ambas dividido 50/50' : calc.freightBeneficiary})\n` +
       `   • Staff Externo (${calc.externalStaffCount}p${item.external_staff_names ? ` - ${item.external_staff_names}` : ''}): ${fmt(calc.externalStaffPayout)}\n` +
       `   • Turno Scarlette: ${fmt(calc.scarletteShiftPayout)}\n` +
@@ -742,9 +751,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       `🏛️ *Fondo Empresa (60%):* ${fmt(calc.companyFundAmount)}\n` +
       `🤝 *Bolsa Utilidades (40%):* ${fmt(calc.partnersProfitPool)}\n\n` +
       `💰 *PAGO FINAL SCARLETTE:* ${fmt(calc.scarletteTotalPayout)}\n` +
-      `   (Turno: ${fmt(calc.scarletteShiftPayout)} + Carro: ${fmt(calc.scarletteFreightPayout)} + Papel: ${fmt(calc.scarletteStationeryPayout)} + Utilidad 50%: ${fmt(calc.scarletteProfitShare)})\n\n` +
+      `   (Turno: ${fmt(calc.scarletteShiftPayout)} + Carro: ${fmt(calc.scarletteFreightPayout)}${calc.scarletteStationeryPayout > 0 ? ` + Papel: ${fmt(calc.scarletteStationeryPayout)}` : ''} + Utilidad 50%: ${fmt(calc.scarletteProfitShare)})\n\n` +
       `💰 *PAGO FINAL VICTORIA:* ${fmt(calc.victoriaTotalPayout)}\n` +
-      `   (Turno: ${fmt(calc.victoriaShiftPayout)} + Carro: ${fmt(calc.victoriaFreightPayout)} + Papel: ${fmt(calc.victoriaStationeryPayout)} + Utilidad 50%: ${fmt(calc.victoriaProfitShare)})\n\n` +
+      `   (Turno: ${fmt(calc.victoriaShiftPayout)} + Carro: ${fmt(calc.victoriaFreightPayout)}${calc.victoriaStationeryPayout > 0 ? ` + Papel: ${fmt(calc.victoriaStationeryPayout)}` : ''} + Utilidad 50%: ${fmt(calc.victoriaProfitShare)})\n\n` +
       `💼 *PAGO STAFF / MAQUILA EXTERNA:* ${fmt(calc.externalTotalPayout)}${item.external_staff_names ? ` (${item.external_staff_names})` : ''}` +
       (item.notes ? `\n\n📝 *Notas:* ${item.notes}` : '');
 
@@ -1180,7 +1189,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
 
                     {/* Papelería */}
                     <td className="py-3.5 px-3 text-center">
-                      {calc.stationeryPayout > 0 ? (
+                      {calc.stationeryPayout > 0 && calc.stationeryAmount > 0 ? (
                         <div className="space-y-0.5">
                           <span className={`inline-block px-2 py-0.5 rounded-lg text-[10px] font-bold ${
                             item.stationery_provider === 'SCARLETTE'
@@ -1746,12 +1755,14 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                           {fmt(calc.scarletteFreightPayout)}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>• Elaboración Papelería ({item.stationery_provider === 'SCARLETTE' ? 'Elaboró 100%' : item.stationery_provider === 'AMBAS' ? 'Ambas (50%)' : 'No'}):</span>
-                        <span className="font-semibold text-[#332A28]">
-                          {fmt(calc.scarletteStationeryPayout)}
-                        </span>
-                      </div>
+                      {calc.stationeryAmount > 0 && (
+                        <div className="flex justify-between">
+                          <span>• Elaboración Papelería ({item.stationery_provider === 'SCARLETTE' ? 'Elaboró 100%' : item.stationery_provider === 'AMBAS' ? 'Ambas (50%)' : 'No'}):</span>
+                          <span className="font-semibold text-[#332A28]">
+                            {fmt(calc.scarletteStationeryPayout)}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-[#70443D]">
                         <span>• Reparto Utilidad (20% neto):</span>
                         <span className="font-bold">{fmt(calc.scarletteProfitShare)}</span>
@@ -1800,12 +1811,14 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                           {fmt(calc.victoriaFreightPayout)}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span>• Elaboración Papelería ({item.stationery_provider === 'VICTORIA' ? 'Elaboró 100%' : item.stationery_provider === 'AMBAS' ? 'Ambas (50%)' : 'No'}):</span>
-                        <span className="font-semibold text-[#332A28]">
-                          {fmt(calc.victoriaStationeryPayout)}
-                        </span>
-                      </div>
+                      {calc.stationeryAmount > 0 && (
+                        <div className="flex justify-between">
+                          <span>• Elaboración Papelería ({item.stationery_provider === 'VICTORIA' ? 'Elaboró 100%' : item.stationery_provider === 'AMBAS' ? 'Ambas (50%)' : 'No'}):</span>
+                          <span className="font-semibold text-[#332A28]">
+                            {fmt(calc.victoriaStationeryPayout)}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between text-[#70443D]">
                         <span>• Reparto Utilidad (20% neto):</span>
                         <span className="font-bold">{fmt(calc.victoriaProfitShare)}</span>
@@ -2356,7 +2369,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                     </div>
                   )}
 
-                  {modalServiceMode !== 'STANDS' && (
+                  {modalServiceMode !== 'STANDS' && Number(eventForm.stationery_amount || 0) > 0 && (
                     <div className={modalServiceMode === 'PAPELERIA' ? 'sm:col-span-2' : ''}>
                       <label className="block font-semibold text-[#7D6F6B] mb-1">
                         ¿Quién preparó / cortó la papelería?
@@ -2385,7 +2398,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                   )}
 
                   {/* Campo de Pago Mano de Obra Papelería si alguien la elaboró */}
-                  {modalServiceMode !== 'STANDS' && eventForm.stationery_provider && eventForm.stationery_provider !== 'NINGUNA' && (() => {
+                  {modalServiceMode !== 'STANDS' && Number(eventForm.stationery_amount || 0) > 0 && eventForm.stationery_provider && eventForm.stationery_provider !== 'NINGUNA' && (() => {
                     const statMargin = Math.max(0, (Number(eventForm.stationery_amount) || 0) - (Number(eventForm.supplies_stationery_expense) || 0));
                     const suggested = Math.round(statMargin * ((settings.stationery_labor_pct || 25) / 100));
                     return (
