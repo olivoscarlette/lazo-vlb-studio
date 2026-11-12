@@ -233,33 +233,13 @@ if (fs.existsSync(clientDistPath)) {
             ? `${quote.client_name} & ${quote.partner_name}`
             : (quote.client_name || 'Novia');
 
-          const isDeliveryOnly = items.length > 0 && !items.some(i => {
-            const txt = `${i.item_name || ''} ${i.description || ''}`.toLowerCase();
-            return txt.includes('stand') || txt.includes('cerveza') || txt.includes('beer') || txt.includes('memorial') || txt.includes('muro') || txt.includes('backdrop') || txt.includes('mimosa') || txt.includes('coctel');
-          });
-
           const itemsList = items.map(i => i.item_name).filter(Boolean);
           const itemsSummary = itemsList.length > 0
-            ? itemsList.slice(0, 2).join(' + ') + (itemsList.length > 2 ? ` (+${itemsList.length - 2} más)` : '')
-            : 'Cotización Oficial';
+            ? itemsList.join(' · ')
+            : 'Atelier & Experiencias';
 
-          let eventDateFormatted = '';
-          if (quote.event_date) {
-            try {
-              const [y, m, d] = quote.event_date.split('T')[0].split('-');
-              const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-              if (y && m && d) {
-                eventDateFormatted = `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
-              }
-            } catch {}
-          }
-
-          const totalFormatted = `$${Number(quote.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`;
-          const dateLabelText = isDeliveryOnly ? 'Entrega' : 'Fecha';
-          const venueLabelText = isDeliveryOnly ? 'Lugar' : 'Venue';
-
-          const title = `🌸 Propuesta Viva la Bride • ${clientName} (${quote.quote_number || 'Oficial'})`;
-          const description = `✨ ${itemsSummary} | 💳 Total: ${totalFormatted}${eventDateFormatted ? ` | 📅 ${dateLabelText}: ${eventDateFormatted}` : ''}${quote.event_venue ? ` | 📍 ${venueLabelText}: ${quote.event_venue}` : ''}. Haz clic para revisar los detalles y confirmar tu fecha.`;
+          const title = `Propuesta Viva la Bride · ${clientName} (${quote.quote_number || 'Oficial'})`;
+          const description = itemsSummary;
 
           // Foto del artículo (si existe en catálogo) o logo por defecto
           let ogImageUrl = 'https://www.lazostudio.mx/lazo-logo.png';
