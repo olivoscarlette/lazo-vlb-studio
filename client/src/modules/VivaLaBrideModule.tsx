@@ -41,7 +41,8 @@ import {
   Image as ImageIcon,
   ZoomIn,
   Maximize2,
-  Minimize2
+  Minimize2,
+  RotateCcw
 } from 'lucide-react';
 import {
   VlbCatalogItem,
@@ -740,8 +741,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       const data = await res.json();
       const savedFolio = editingQuoteFolio || data.quote?.quote_number || 'guardada';
       showToast(editingQuoteId ? `Cotización ${savedFolio} actualizada con éxito.` : `Cotización ${savedFolio} generada con éxito.`);
-      setEditingQuoteId(null);
-      setEditingQuoteFolio(null);
+      resetQuoteForm();
       loadData();
     } catch (err: any) {
       showToast(err.message, 'error');
@@ -800,7 +800,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     }
   };
 
-  const handleCancelEditQuote = () => {
+  const resetQuoteForm = () => {
     setEditingQuoteId(null);
     setEditingQuoteFolio(null);
     setQuoteDiscountPct(0);
@@ -819,6 +819,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       valid_until: ''
     });
     setQuoteItems([]);
+  };
+
+  const handleCancelEditQuote = () => {
+    resetQuoteForm();
     showToast('Edición cancelada.');
   };
 
@@ -1608,9 +1612,22 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       Datos de la Pareja & Evento
                     </h2>
                   </div>
-                  <span className="text-xs font-bold text-[#C83460] bg-[#F8E4E9] px-3 py-1 rounded-full font-mono border border-[#F0D5DD]">
-                    Folio: {editingQuoteFolio || currentPreviewFolio}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    {(editingQuoteId || quoteItems.length > 0 || quoteForm.client_name) && (
+                      <button
+                        type="button"
+                        onClick={resetQuoteForm}
+                        className="text-xs text-[#7D6F6B] hover:text-[#9C665C] transition cursor-pointer underline flex items-center space-x-1 mr-1"
+                        title="Limpiar cotizador para empezar una nueva cotización"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Limpiar</span>
+                      </button>
+                    )}
+                    <span className="text-xs font-bold text-[#C83460] bg-[#F8E4E9] px-3 py-1 rounded-full font-mono border border-[#F0D5DD]">
+                      Folio: {editingQuoteFolio || currentPreviewFolio}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2002,6 +2019,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                           const targetId = editingQuoteId || data.quote?.id;
                           if (targetId) {
                             await handleConvertQuoteToOrder(targetId);
+                            resetQuoteForm();
                           }
                         } catch (e: any) {
                           showToast(e.message, 'error');
