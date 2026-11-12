@@ -261,7 +261,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
 
         {/* Viva la Bride Shortcut */}
-        {(user?.role === 'ADMINISTRADOR' || Boolean(user?.vlb_access)) && (
+        {user?.role === 'ADMINISTRADOR' && (
           <div className="p-2 border-t border-[#EFE8E1] bg-[#FAF7F5]">
             <button
               onClick={() => setActiveModule('vlb')}

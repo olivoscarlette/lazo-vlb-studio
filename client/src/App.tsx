@@ -486,7 +486,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     });
   };
 
-  const hasVlbAccess = user?.role === 'ADMINISTRADOR' || Boolean(user?.vlb_access);
+  const hasVlbAccess = user?.role === 'ADMINISTRADOR';
 
   // If in Viva la Bride Studio mode
   if (hasVlbAccess && activeModule === 'vlb') {
@@ -701,7 +701,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      {(user?.role === 'ADMINISTRADOR' || Boolean(user?.vlb_access)) && activeModule === 'vlb' ? (
+      {user?.role === 'ADMINISTRADOR' && activeModule === 'vlb' ? (
         <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
           <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
           <div className="flex-1 bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">

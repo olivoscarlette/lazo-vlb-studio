@@ -87,7 +87,6 @@ export const GeneralDashboard: React.FC = () => {
     assigned_wedding_ids: [] as string[],
     assigned_role: '',
     salutation: 'AUTO' as 'AUTO' | 'NOVIO' | 'NOVIA' | 'PAREJA',
-    vlb_access: false,
     send_welcome_email: true
   });
   const [userError, setUserError] = useState('');
@@ -434,7 +433,6 @@ export const GeneralDashboard: React.FC = () => {
       assigned_wedding_ids: weddings.map(w => w.id),
       assigned_role: 'Coordinadora Senior',
       salutation: 'AUTO',
-      vlb_access: false,
       send_welcome_email: true
     });
     setShowUserModal(true);
@@ -453,7 +451,6 @@ export const GeneralDashboard: React.FC = () => {
       assigned_wedding_ids: Array.isArray(u.assigned_wedding_ids) ? u.assigned_wedding_ids : [],
       assigned_role: u.assignments?.[0]?.assigned_role || (u.role === 'COORDINADOR' ? 'Coordinadora General' : 'Staff Operativo Día Boda'),
       salutation: u.salutation || 'AUTO',
-      vlb_access: Boolean(u.vlb_access),
       send_welcome_email: false
     });
     setShowUserModal(true);
@@ -538,30 +535,6 @@ export const GeneralDashboard: React.FC = () => {
       await fetchWeddings();
     } catch (err: any) {
       setUserError(err.message);
-    }
-  };
-
-  const handleToggleVlbAccess = async (targetUser: any) => {
-    const nextVal = !targetUser.vlb_access;
-    try {
-      const res = await fetch(`/api/auth/users/${targetUser.id}/vlb-access`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ vlb_access: nextVal })
-      });
-      if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || 'Error al actualizar acceso');
-      }
-      setUsersList(prev => prev.map(u => u.id === targetUser.id ? { ...u, vlb_access: nextVal ? 1 : 0 } : u));
-      if (targetUser.id === user?.id) {
-        setUser({ ...user, vlb_access: nextVal ? 1 : 0 });
-      }
-    } catch (err: any) {
-      alert('Error al actualizar acceso a Cotizador VLB: ' + err.message);
     }
   };
 
@@ -2922,14 +2895,13 @@ export const GeneralDashboard: React.FC = () => {
                         <th className="py-3 px-4">Tipo & Segmento</th>
                         <th className="py-3 px-4">WhatsApp</th>
                         <th className="py-3 px-4">Boda / Cobertura</th>
-                        <th className="py-3 px-4 text-center">Acceso Cotizador VLB</th>
                         <th className="py-3 px-4 text-right">Acciones</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#F5EFEB] text-xs">
                       {filteredUsersList.length === 0 ? (
                         <tr>
-                          <td colSpan={6} className="py-10 text-center text-sm text-[#7D6F6B]">
+                          <td colSpan={5} className="py-10 text-center text-sm text-[#7D6F6B]">
                             No se encontraron usuarios en esta categoría o búsqueda.
                           </td>
                         </tr>
@@ -3084,39 +3056,7 @@ export const GeneralDashboard: React.FC = () => {
                                 )}
                               </td>
 
-                              {/* 5. Acceso Cotizador VLB */}
-                              <td className="py-3.5 px-4 text-center whitespace-nowrap">
-                                {u.role === 'ADMINISTRADOR' ? (
-                                  <span
-                                    title="Los administradores tienen acceso total por defecto al submódulo VLB"
-                                    className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#FAF6F2] text-[#70443D] border border-[#EAE3DA]"
-                                  >
-                                    <span>👑</span>
-                                    <span>Total (Admin)</span>
-                                  </span>
-                                ) : (
-                                  <label
-                                    className="inline-flex items-center space-x-2 cursor-pointer group select-none"
-                                    title="Activar o desactivar visibilidad del Cotizador y Submódulo Viva la Bride"
-                                  >
-                                    <input
-                                      type="checkbox"
-                                      checked={Boolean(u.vlb_access)}
-                                      onChange={() => handleToggleVlbAccess(u)}
-                                      className="w-4 h-4 rounded text-[#9C665C] focus:ring-[#9C665C] border-[#D1C7BD] cursor-pointer"
-                                    />
-                                    <span
-                                      className={`text-xs font-semibold transition ${
-                                        u.vlb_access ? 'text-[#9C665C] font-bold' : 'text-[#A69995] group-hover:text-[#7D6F6B]'
-                                      }`}
-                                    >
-                                      {u.vlb_access ? 'Cotizador VLB' : 'Sin acceso'}
-                                    </span>
-                                  </label>
-                                )}
-                              </td>
-
-                              {/* 6. Acciones */}
+                              {/* 5. Acciones */}
                               <td className="py-3.5 px-4 text-right whitespace-nowrap">
                                 <div className="inline-flex items-center space-x-1.5">
                                   {/* Acción destacada: Upgradear a VLB si es Novio Virtual */}
@@ -4334,31 +4274,6 @@ export const GeneralDashboard: React.FC = () => {
                   </div>
                 </>
               )}
-              {/* Casilla: Acceso a Cotizador y Submódulo VLB */}
-              <div className="p-3 bg-[#FAF6F2] border border-[#EAE3DA] rounded-2xl text-xs space-y-1">
-                <label className="flex items-start space-x-2.5 font-semibold text-[#2B2826] cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={Boolean(userForm.vlb_access) || userForm.role === 'ADMINISTRADOR'}
-                    disabled={userForm.role === 'ADMINISTRADOR'}
-                    onChange={e => setUserForm({ ...userForm, vlb_access: e.target.checked })}
-                    className="mt-0.5 rounded border-[#C48B81] text-[#9C665C] focus:ring-[#9C665C]"
-                  />
-                  <div>
-                    <span className="flex items-center space-x-2">
-                      <span className="text-[#332A28] font-bold">Acceso a Cotizador y Submódulo VLB</span>
-                      {userForm.role === 'ADMINISTRADOR' && (
-                        <span className="text-[10px] font-normal text-[#9C665C] bg-white px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          Incluido en Admin
-                        </span>
-                      )}
-                    </span>
-                    <p className="text-[11px] text-[#7D6F6B] font-normal mt-0.5">
-                      Habilita la vista y uso del cotizador de propuestas, órdenes y catálogo de Viva la Bride.
-                    </p>
-                  </div>
-                </label>
-              </div>
 
               {!editingUser && (
                 <div className="p-3 bg-[#FAF7F4] border border-[#EFE8E1] rounded-xl text-xs space-y-1">
