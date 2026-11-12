@@ -192,6 +192,26 @@ export function initVlbDatabase() {
     db.prepare('ALTER TABLE vlb_finance_settings ADD COLUMN stationery_labor_pct REAL NOT NULL DEFAULT 25').run();
   } catch {}
 
+  // Migraciones para Control de Nómina & Dispersión de Pagos
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN paid_scarlette INTEGER NOT NULL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN paid_victoria INTEGER NOT NULL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN paid_external INTEGER NOT NULL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN paid_scarlette_at TEXT').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN paid_victoria_at TEXT').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE vlb_event_settlements ADD COLUMN paid_external_at TEXT').run();
+  } catch {}
+
   // Migrations for dynamic tasks and service type
   try {
     db.prepare('ALTER TABLE vlb_orders ADD COLUMN tasks_json TEXT').run();

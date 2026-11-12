@@ -175,6 +175,12 @@ export interface VlbEventSettlement {
   staff_victoria: boolean;
   external_staff_count: number;
   status: 'PENDIENTE' | 'LIQUIDADO';
+  paid_scarlette?: boolean | number;
+  paid_victoria?: boolean | number;
+  paid_external?: boolean | number;
+  paid_scarlette_at?: string | null;
+  paid_victoria_at?: string | null;
+  paid_external_at?: string | null;
   notes?: string | null;
   created_at: string;
   updated_at: string;

@@ -2232,6 +2232,9 @@ router.get('/finance/settlements', authenticateToken, requireAdmin, (req, res) =
         ...s,
         staff_scarlette: Boolean(s.staff_scarlette),
         staff_victoria: Boolean(s.staff_victoria),
+        paid_scarlette: Boolean(s.paid_scarlette),
+        paid_victoria: Boolean(s.paid_victoria),
+        paid_external: Boolean(s.paid_external),
         service_amount: servAmt,
         stands_amount: standsAmt,
         stationery_amount: statAmt,
@@ -2335,7 +2338,10 @@ router.post('/finance/settlements', authenticateToken, requireAdmin, (req, res) 
       settlement: {
         ...created,
         staff_scarlette: Boolean(created.staff_scarlette),
-        staff_victoria: Boolean(created.staff_victoria)
+        staff_victoria: Boolean(created.staff_victoria),
+        paid_scarlette: Boolean(created.paid_scarlette),
+        paid_victoria: Boolean(created.paid_victoria),
+        paid_external: Boolean(created.paid_external),
       },
       message: 'Liquidación de evento registrada exitosamente.'
     });
@@ -2422,12 +2428,68 @@ router.put('/finance/settlements/:id', authenticateToken, requireAdmin, (req, re
       settlement: {
         ...updated,
         staff_scarlette: Boolean(updated.staff_scarlette),
-        staff_victoria: Boolean(updated.staff_victoria)
+        staff_victoria: Boolean(updated.staff_victoria),
+        paid_scarlette: Boolean(updated.paid_scarlette),
+        paid_victoria: Boolean(updated.paid_victoria),
+        paid_external: Boolean(updated.paid_external),
       },
       message: 'Liquidación actualizada correctamente.'
     });
   } catch (err: any) {
     res.status(500).json({ error: err.message || 'Error al actualizar liquidación.' });
+  }
+});
+
+// PATCH /api/vlb/finance/settlements/:id/payout-toggle - Cambiar estado de dispersión/pago a Scarlette, Victoria o Staff
+router.patch('/finance/settlements/:id/payout-toggle', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { id } = req.params;
+    const { target, paid } = req.body; // target: 'scarlette' | 'victoria' | 'external'
+    const existing = db.prepare('SELECT * FROM vlb_event_settlements WHERE id = ?').get(id) as any;
+    if (!existing) {
+      return res.status(404).json({ error: 'Registro de liquidación no encontrado.' });
+    }
+
+    const now = new Date().toISOString();
+    let col = '';
+    let colDate = '';
+    if (target === 'scarlette') {
+      col = 'paid_scarlette';
+      colDate = 'paid_scarlette_at';
+    } else if (target === 'victoria') {
+      col = 'paid_victoria';
+      colDate = 'paid_victoria_at';
+    } else if (target === 'external') {
+      col = 'paid_external';
+      colDate = 'paid_external_at';
+    } else {
+      return res.status(400).json({ error: 'Target de pago inválido.' });
+    }
+
+    const currentVal = Boolean(existing[col]);
+    const nextVal = paid !== undefined ? Boolean(paid) : !currentVal;
+    const paidAt = nextVal ? now : null;
+
+    db.prepare(`
+      UPDATE vlb_event_settlements
+      SET ${col} = ?, ${colDate} = ?, updated_at = ?
+      WHERE id = ?
+    `).run(nextVal ? 1 : 0, paidAt, now, id);
+
+    const updated = db.prepare('SELECT * FROM vlb_event_settlements WHERE id = ?').get(id) as any;
+    res.json({
+      settlement: {
+        ...updated,
+        staff_scarlette: Boolean(updated.staff_scarlette),
+        staff_victoria: Boolean(updated.staff_victoria),
+        paid_scarlette: Boolean(updated.paid_scarlette),
+        paid_victoria: Boolean(updated.paid_victoria),
+        paid_external: Boolean(updated.paid_external),
+      },
+      message: `Pago de ${target} actualizado a ${nextVal ? 'PAGADO' : 'PENDIENTE'}.`
+    });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message || 'Error al actualizar estado de dispersión.' });
   }
 });
 
