@@ -225,7 +225,10 @@ export function isPapeleriaItem(i: VlbQuoteItem): boolean {
     text.includes('loteria') ||
     text.includes('número de mesa') ||
     text.includes('numero de mesa') ||
-    text.includes('save the date')
+    text.includes('save the date') ||
+    text.includes('tag') ||
+    text.includes('etiqueta') ||
+    text.includes('tarjeta')
   );
 }
 
@@ -254,6 +257,27 @@ export function detectContractType(items: VlbQuoteItem[], quote?: VlbQuote): 'SN
 
   if (items.every(i => i.category === 'PAPELERIA')) return 'PAPELERIA';
   return 'COMBO';
+}
+
+/**
+ * Determina si una cotización es de entrega física / envío (como cajas de snacks o papelería)
+ * sin requerir horario ni montaje presencial el día del evento.
+ */
+export function isDeliveryOnlyQuote(items: VlbQuoteItem[], quote?: VlbQuote): boolean {
+  if (!items || items.length === 0) {
+    if (quote?.quote_number?.startsWith('PS-')) return true;
+    return false;
+  }
+  // Si tiene algún servicio presencial de stand, muro memorial o barra de bebidas, requiere horario y montaje
+  const hasOnSiteService = items.some(i => isMemorialItem(i) || isDrinksItem(i) || isStandOrDecorItem(i));
+  if (hasOnSiteService) return false;
+
+  // Si todos los artículos son snacks, botanas, cajas de recuerdos o papelería social (o flete/envío)
+  return items.every(i => {
+    const text = `${i.item_name || ''} ${i.description || ''} ${(i as any).subcategory || ''}`.toLowerCase();
+    const isShipping = text.includes('flete') || text.includes('envio') || text.includes('envío') || text.includes('entrega') || text.includes('shipping');
+    return isSnackItem(i) || isPapeleriaItem(i) || isShipping;
+  });
 }
 
 // Generador modular de cláusulas legales unificadas de Viva la Bride
@@ -888,18 +912,24 @@ export async function buildVlbQuotePdf(
   safeDraw(page, 'TELÉFONO:', { x: 265, y: 623, size: 9.6, font: fontBold, color: pinkLabel });
   safeDraw(page, quote.client_phone || 'Sin contacto', { x: 330, y: 623, size: 9.6, font: fontRegular, color: textColor });
 
-  // Renglón 3: FECHA EVENTO y VENUE
-  safeDraw(page, 'FECHA EVENTO:', { x: 50.4, y: 597.5, size: 9.6, font: fontBold, color: pinkLabel });
-  safeDraw(page, formatSpanishDate(quote.event_date), { x: 142, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
+  // Renglón 3: FECHA EVENTO o DÍA DE ENTREGA, y VENUE / LUGAR
+  const isDeliveryOnly = isDeliveryOnlyQuote(items, quote);
+  const dateLabel = isDeliveryOnly ? 'DÍA DE ENTREGA:' : 'FECHA EVENTO:';
+  safeDraw(page, dateLabel, { x: 50.4, y: 597.5, size: 9.6, font: fontBold, color: pinkLabel });
+  const dateX = isDeliveryOnly ? 152 : 142;
+  safeDraw(page, formatSpanishDate(quote.event_date), { x: dateX, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
 
-  safeDraw(page, 'VENUE:', { x: 370, y: 597.5, size: 9.6, font: fontBold, color: pinkLabel });
+  const venueLabel = isDeliveryOnly ? 'LUGAR:' : 'VENUE:';
+  safeDraw(page, venueLabel, { x: isDeliveryOnly ? 362 : 370, y: 597.5, size: 9.6, font: fontBold, color: pinkLabel });
   const venueStr = quote.event_venue || 'Por definir';
-  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: 418, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
+  safeDraw(page, venueStr.length > 20 ? venueStr.substring(0, 18) + '...' : venueStr, { x: isDeliveryOnly ? 408 : 418, y: 597.5, size: 9.6, font: fontRegular, color: textColor });
 
-  // Renglón 4: HORA INICIO
-  safeDraw(page, 'HORA INICIO:', { x: 50.4, y: 572.5, size: 9.6, font: fontBold, color: pinkLabel });
-  const timeStr = standardizeEventTime(quote.event_time || quote.ceremony_time || quote.service_time);
-  safeDraw(page, timeStr, { x: 124, y: 572.5, size: 9.6, font: fontRegular, color: textColor });
+  // Renglón 4: HORA INICIO (Solo para servicios con montaje presencial; en papelería y snacks se oculta)
+  if (!isDeliveryOnly) {
+    safeDraw(page, 'HORA INICIO:', { x: 50.4, y: 572.5, size: 9.6, font: fontBold, color: pinkLabel });
+    const timeStr = standardizeEventTime(quote.event_time || quote.ceremony_time || quote.service_time);
+    safeDraw(page, timeStr, { x: 124, y: 572.5, size: 9.6, font: fontRegular, color: textColor });
+  }
 
   // 8. TABLE ITEMS (Limpieza del área de filas para evitar cualquier empalme)
   page.drawRectangle({
@@ -1053,7 +1083,10 @@ export async function buildVlbQuotePdf(
     // 2. Card Superior Derecha (Datos del Evento y Folio con bordes redondeados)
     const venueClean = cleanWinAnsi(quote.event_venue || 'Por definir');
     const timeClean = cleanWinAnsi(standardizeEventTime(quote.event_time || quote.ceremony_time || quote.service_time));
-    const dateClean = formatConceptDate(quote.event_date) || 'Por definir';
+    const dateParts = (quote.event_date || '').split('T')[0].split('-');
+    const dateClean = (dateParts.length === 3 && dateParts[0].length === 4)
+      ? `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`
+      : (cleanWinAnsi(quote.event_date) || 'Por definir');
 
     page2.drawRectangle({
       x: 235,
@@ -1067,16 +1100,18 @@ export async function buildVlbQuotePdf(
 
     safeDraw(page2, 'Folio cotización:', { x: 245, y: 794, size: 7.2, font: fontRegular, color: mutedColor });
     safeDraw(page2, folioNumber, { x: 318, y: 794, size: 8.0, font: fontBold, color: pinkAccent });
-    safeDraw(page2, 'Fecha evento:', { x: 405, y: 794, size: 7.2, font: fontRegular, color: mutedColor });
-    safeDraw(page2, dateClean, { x: 465, y: 794, size: 7.5, font: fontBold, color: darkColor });
+    safeDraw(page2, isDeliveryOnly ? 'Día de entrega:' : 'Fecha evento:', { x: isDeliveryOnly ? 396 : 405, y: 794, size: 7.2, font: fontRegular, color: mutedColor });
+    safeDraw(page2, dateClean, { x: isDeliveryOnly ? 466 : 465, y: 794, size: 7.5, font: fontBold, color: darkColor });
 
     safeDraw(page2, 'Cliente:', { x: 245, y: 778, size: 7.2, font: fontRegular, color: mutedColor });
     safeDraw(page2, clientFullName, { x: 285, y: 778, size: 7.8, font: fontBold, color: darkColor });
 
-    safeDraw(page2, 'Sede:', { x: 245, y: 762, size: 7.2, font: fontRegular, color: mutedColor });
-    safeDraw(page2, venueClean, { x: 275, y: 762, size: 7.5, font: fontRegular, color: darkColor });
-    safeDraw(page2, 'Horario:', { x: 420, y: 762, size: 7.2, font: fontRegular, color: mutedColor });
-    safeDraw(page2, timeClean, { x: 460, y: 762, size: 7.5, font: fontBold, color: pinkAccent });
+    safeDraw(page2, isDeliveryOnly ? 'Lugar de entrega:' : 'Sede:', { x: 245, y: 762, size: 7.2, font: fontRegular, color: mutedColor });
+    safeDraw(page2, venueClean, { x: isDeliveryOnly ? 320 : 275, y: 762, size: 7.5, font: fontRegular, color: darkColor });
+    if (!isDeliveryOnly) {
+      safeDraw(page2, 'Horario:', { x: 420, y: 762, size: 7.2, font: fontRegular, color: mutedColor });
+      safeDraw(page2, timeClean, { x: 460, y: 762, size: 7.5, font: fontBold, color: pinkAccent });
+    }
 
     // 3. Título Principal Centrado y Subtítulo
     const { clauses, serviceTitle } = getContractClauses(items, quote, folioNumber, options?.contractType);

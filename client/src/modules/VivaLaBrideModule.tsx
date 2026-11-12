@@ -54,7 +54,7 @@ import {
   VlbDocument,
   VlbTask
 } from '../types/vlb';
-import { generateVlbQuotePdf, buildVlbQuotePdf, standardizeEventTime, time12To24, time24To12, VlbContractType, detectContractType } from '../utils/vlbPdfGenerator';
+import { generateVlbQuotePdf, buildVlbQuotePdf, standardizeEventTime, time12To24, time24To12, VlbContractType, detectContractType, isDeliveryOnlyQuote } from '../utils/vlbPdfGenerator';
 import { VlbTimePicker } from '../components/VlbTimePicker';
 import { convertHeicToJpeg, optimizeImageFile } from '../utils/heicConverter';
 
@@ -270,7 +270,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   };
 
   const handleCopyProposalLink = (quoteId: string) => {
-    const url = `${window.location.origin}/vlb/propuesta/${quoteId}`;
+    const cacheBuster = Date.now().toString(36);
+    const url = `${window.location.origin}/vlb/propuesta/${quoteId}?v=${cacheBuster}`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(url);
       showToast(`¡Liga copiada al portapapeles! (${url})`);
@@ -685,6 +686,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     return detectContractType(quoteItems, { quote_number: currentPreviewFolio } as any);
   }, [quoteItems, currentPreviewFolio]);
 
+  const isDeliveryOnly = useMemo(() => {
+    return isDeliveryOnlyQuote(quoteItems, { quote_number: currentPreviewFolio } as any);
+  }, [quoteItems, currentPreviewFolio]);
+
   const contractDisplayNames: Record<string, string> = {
     AUTO: 'Automático',
     SNACKS: 'Snacks, Favores & Cajas',
@@ -1073,20 +1078,27 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       }
     }
 
+    const cacheBuster = Date.now().toString(36);
     const proposalUrl = (finalQuote?.id && !finalQuote.id.startsWith('preview_'))
-      ? `${window.location.origin}/vlb/propuesta/${finalQuote.id}`
+      ? `${window.location.origin}/vlb/propuesta/${finalQuote.id}?v=${cacheBuster}`
       : '';
 
     const directPdfText = pdfDirectUrl ? `\n📎 *Descargar archivo PDF oficial:* ${pdfDirectUrl}` : '';
     const proposalLinkText = proposalUrl ? `\n✍️ *Revisar propuesta y firmar en línea:* ${proposalUrl}` : '';
 
+    const isQuoteDeliveryOnly = isDeliveryOnlyQuote(activeItems, finalQuote);
+
     const paymentConditionText = hasStands
       ? '• *Stands & Servicios:* Separación fija de $1,000 MXN; el saldo se liquida 10 días antes del evento.'
-      : '• *Papelería Social:* 50% de anticipo; el saldo se liquida al entregar el pedido o programar envío.';
+      : '• *Papelería & Favores:* 50% de anticipo; el saldo se liquida al entregar el pedido o programar envío.';
 
     const eventTime = standardizeEventTime(isCurrent ? quoteForm.event_time : targetQuote!.event_time);
 
-    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te comparto tu *Cotización Oficial en PDF* de *Viva la Bride* (*${folio}*):\n\n💍 *Pareja:* ${couple || 'Novios'}\n📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n⏰ *Horario:* ${eventTime}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${hasStands ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${directPdfText}${proposalLinkText}\n\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
+    const logisticsInfo = isQuoteDeliveryOnly
+      ? `📅 *Día de Entrega:* ${eventDate || 'Por definir'}\n📍 *Lugar de Entrega:* ${eventVenue || 'Por definir'}`
+      : `📅 *Fecha del Evento:* ${eventDate || 'Por definir'}\n⏰ *Horario:* ${eventTime}\n🏛️ *Sede:* ${eventVenue || 'Por definir'}`;
+
+    const msg = `¡Hola ${clientName || 'Novia'}! ✨ Te comparto tu *Cotización Oficial en PDF* de *Viva la Bride* (*${folio}*):\n\n💍 *Pareja:* ${couple || 'Novios'}\n${logisticsInfo}\n\n💳 *Total Contratado:* $${total.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n✨ *${hasStands ? 'Separación Requerida' : 'Anticipo (50%)'}:* $${downPayment.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN\n🏷️ *Saldo Pendiente:* $${balance.toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN${directPdfText}${proposalLinkText}\n\n*Condición de Pago:*\n${paymentConditionText}\n\n¡Quedo a tus órdenes para resolver cualquier duda o agendar tu sesión de diseño! 🤍`;
 
     // 1. INTENTO DE ENVÍO DIRECTO DEL ARCHIVO PDF VÍA WEB SHARE (Móviles & Mac Safari)
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -1131,7 +1143,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     const folioStr = formatOrderFolio(order.order_number);
     const eventDateStr = formatDateMX(order.event_date);
     if (type === 'contrato') {
-      const proposalLink = `${window.location.origin}/vlb/propuesta/${order.quote_id || order.id}`;
+      const cacheBuster = Date.now().toString(36);
+      const proposalLink = `${window.location.origin}/vlb/propuesta/${order.quote_id || order.id}?v=${cacheBuster}`;
       text = `¡Hola ${order.client_name}! ✨ Te saluda Vivi de *Viva la Bride*.\n\n¡Tu anticipo / separación para tu evento del ${eventDateStr} ha sido acreditado con éxito! 🎉💍\n\nTe comparto tu *Liga Oficial de Contrato y Pagos en Vivo*:\n🔗 ${proposalLink}\n\nEn este enlace podrás:\n1. Revisar tu contrato formal y condiciones de tu servicio.\n2. Asentar tu firma digital formal.\n3. Monitorear tu estado de cuenta con cada abono registrado.\n\n¡Quedo a tus órdenes para cualquier duda! 🤍`;
     } else if (type === 'anticipo') {
       text = `¡Hola ${order.client_name}! ✨ Te saluda Vivi de *Viva la Bride*.\n\nQueremos confirmar tu proyecto con folio *${folioStr}* para su gran día. 💍\n\nPara apartar formalmente tu fecha en el taller de imprenta y asegurar el mobiliario, te recordamos que el anticipo es del 50%:\n💳 *Anticipo Requerido:* $${(order.total_amount * 0.5).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN.\n\nEn cuanto realices tu transferencia, por favor envíanos tu comprobante por aquí para agendar tu primera muestra personalizada. ¡Muchas gracias! 🌸`;
@@ -1653,7 +1666,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-1">
-                      Fecha del Evento
+                      {isDeliveryOnly ? 'Día de Entrega' : 'Fecha del Evento'}
                     </label>
                     <input
                       type="date"
@@ -1662,39 +1675,41 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       className="w-full px-3.5 py-2.5 text-sm bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"
                     />
                   </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider">
-                        Horario del Evento / Montaje
-                      </label>
-                      {(!quoteForm.event_time || quoteForm.event_time === 'Por definir') ? (
-                        <span className="text-[10px] font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                          Por definir
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setQuoteForm({ ...quoteForm, event_time: 'Por definir' })}
-                          className="text-[10px] text-[#7D6F6B] hover:text-[#9C665C] transition cursor-pointer underline"
-                          title="Restablecer como por definir"
-                        >
-                          Marcar por definir
-                        </button>
-                      )}
+                  {!isDeliveryOnly && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider">
+                          Horario del Evento / Montaje
+                        </label>
+                        {(!quoteForm.event_time || quoteForm.event_time === 'Por definir') ? (
+                          <span className="text-[10px] font-semibold text-[#9C665C] bg-[#FAF6F2] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
+                            Por definir
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setQuoteForm({ ...quoteForm, event_time: 'Por definir' })}
+                            className="text-[10px] text-[#7D6F6B] hover:text-[#9C665C] transition cursor-pointer underline"
+                            title="Restablecer como por definir"
+                          >
+                            Marcar por definir
+                          </button>
+                        )}
+                      </div>
+                      <VlbTimePicker
+                        value={quoteForm.event_time}
+                        onChange={val => setQuoteForm({ ...quoteForm, event_time: val })}
+                        placeholder="Ej. 04:00 PM o Por definir"
+                      />
                     </div>
-                    <VlbTimePicker
-                      value={quoteForm.event_time}
-                      onChange={val => setQuoteForm({ ...quoteForm, event_time: val })}
-                      placeholder="Ej. 04:00 PM o Por definir"
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
+                  )}
+                  <div className={isDeliveryOnly ? 'sm:col-span-1' : 'sm:col-span-2'}>
                     <label className="block text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-1">
-                      Sede / Venue
+                      {isDeliveryOnly ? 'Lugar de Entrega / Venue' : 'Sede / Venue'}
                     </label>
                     <input
                       type="text"
-                      placeholder="Hacienda San José del Carmen"
+                      placeholder={isDeliveryOnly ? 'Ej. Casa de la Novia, Hacienda...' : 'Hacienda San José del Carmen'}
                       value={quoteForm.event_venue}
                       onChange={e => setQuoteForm({ ...quoteForm, event_venue: e.target.value })}
                       className="w-full px-3.5 py-2.5 text-sm bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C]"

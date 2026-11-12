@@ -221,9 +221,10 @@ if (fs.existsSync(clientDistPath)) {
 
         if (quote) {
           const items = db.prepare(`
-            SELECT qi.*, c.image_url as catalog_image_url
+            SELECT qi.*, COALESCE(c.image_url, c2.image_url) as catalog_image_url
             FROM vlb_quote_items qi
             LEFT JOIN vlb_catalog c ON c.id = qi.catalog_id
+            LEFT JOIN vlb_catalog c2 ON c2.name = qi.item_name
             WHERE qi.quote_id = ?
             ORDER BY qi.sort_order ASC
           `).all(quote.id) as any[];
@@ -231,6 +232,11 @@ if (fs.existsSync(clientDistPath)) {
           const clientName = quote.partner_name
             ? `${quote.client_name} & ${quote.partner_name}`
             : (quote.client_name || 'Novia');
+
+          const isDeliveryOnly = items.length > 0 && !items.some(i => {
+            const txt = `${i.item_name || ''} ${i.description || ''}`.toLowerCase();
+            return txt.includes('stand') || txt.includes('cerveza') || txt.includes('beer') || txt.includes('memorial') || txt.includes('muro') || txt.includes('backdrop') || txt.includes('mimosa') || txt.includes('coctel');
+          });
 
           const itemsList = items.map(i => i.item_name).filter(Boolean);
           const itemsSummary = itemsList.length > 0
@@ -240,47 +246,61 @@ if (fs.existsSync(clientDistPath)) {
           let eventDateFormatted = '';
           if (quote.event_date) {
             try {
-              const [y, m, d] = quote.event_date.split('-');
-              const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-              eventDateFormatted = `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
+              const [y, m, d] = quote.event_date.split('T')[0].split('-');
+              const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+              if (y && m && d) {
+                eventDateFormatted = `${parseInt(d, 10)} ${months[parseInt(m, 10) - 1]} ${y}`;
+              }
             } catch {}
           }
 
           const totalFormatted = `$${Number(quote.total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} MXN`;
+          const dateLabelText = isDeliveryOnly ? 'Entrega' : 'Fecha';
+          const venueLabelText = isDeliveryOnly ? 'Lugar' : 'Venue';
 
-          const title = `🌸 Cotización Viva la Bride • ${clientName}`;
-          const description = `✨ ${itemsSummary}${eventDateFormatted ? ` • ${eventDateFormatted}` : ''}${quote.event_venue ? ` • ${quote.event_venue}` : ''} • Total: ${totalFormatted}. Haz clic para revisar tu propuesta personalizada y apartar tu fecha en línea.`;
+          const title = `🌸 Propuesta Viva la Bride • ${clientName} (${quote.quote_number || 'Oficial'})`;
+          const description = `✨ ${itemsSummary} | 💳 Total: ${totalFormatted}${eventDateFormatted ? ` | 📅 ${dateLabelText}: ${eventDateFormatted}` : ''}${quote.event_venue ? ` | 📍 ${venueLabelText}: ${quote.event_venue}` : ''}. Haz clic para revisar los detalles y confirmar tu fecha.`;
 
           // Foto del artículo (si existe en catálogo) o logo por defecto
-          let ogImageUrl = '/lazo-logo.png';
+          let ogImageUrl = 'https://www.lazostudio.mx/lazo-logo.png';
           const itemWithImage = items.find(i => i.catalog_image_url);
           if (itemWithImage?.catalog_image_url) {
             ogImageUrl = itemWithImage.catalog_image_url;
           }
 
           const host = req.get('host') || 'www.lazostudio.mx';
-          const proto = (req.headers['x-forwarded-proto'] as string) || (req.secure ? 'https' : 'https');
-          const absoluteUrl = `${proto}://${host}${req.originalUrl}`;
-          const absoluteImageUrl = ogImageUrl.startsWith('http') ? ogImageUrl : `${proto}://${host}${ogImageUrl}`;
+          const absoluteUrl = `https://${host}${req.originalUrl}`;
+          const absoluteImageUrl = ogImageUrl.startsWith('http')
+            ? ogImageUrl
+            : `https://${host}${ogImageUrl.startsWith('/') ? '' : '/'}${ogImageUrl}`;
 
           let html = fs.readFileSync(indexPath, 'utf8');
-          html = html.replace(/<title>.*?<\/title>/i, `<title>${escapeHtml(title)}</title>`);
 
-          const metaTags = `
-    <!-- OpenGraph / WhatsApp / Redes Sociales Dinámico -->
+          // 1. Eliminar COMPLETAMENTE cualquier meta etiqueta previa para que WhatsApp no tome las de Lazo general
+          html = html
+            .replace(/<title>.*?<\/title>/gi, '')
+            .replace(/<meta\s+property=["']og:[^"']*["'][^>]*>/gi, '')
+            .replace(/<meta\s+name=["']twitter:[^"']*["'][^>]*>/gi, '')
+            .replace(/<meta\s+name=["']description["'][^>]*>/gi, '');
+
+          // 2. Inyectar las etiquetas exclusivas de la propuesta al mero inicio de <head>
+          const dynamicMeta = `
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}" />
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Viva la Bride — Atelier & Experiencias" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:image" content="${escapeHtml(absoluteImageUrl)}" />
     <meta property="og:image:secure_url" content="${escapeHtml(absoluteImageUrl)}" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:url" content="${escapeHtml(absoluteUrl)}" />
-    <meta property="og:site_name" content="Viva la Bride — Atelier & Experiencias" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     <meta name="twitter:image" content="${escapeHtml(absoluteImageUrl)}" />
 `;
-          html = html.replace('</head>', `${metaTags}\n  </head>`);
+          html = html.replace('<head>', `<head>${dynamicMeta}`);
           res.setHeader('Content-Type', 'text/html; charset=utf-8');
           return res.send(html);
         }

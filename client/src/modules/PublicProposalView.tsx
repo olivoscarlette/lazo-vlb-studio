@@ -5,7 +5,7 @@ import {
   CreditCard, MessageSquare
 } from 'lucide-react';
 import { VlbQuote, VlbQuoteItem } from '../types/vlb';
-import { generateVlbQuotePdf, getContractClauses, standardizeEventTime } from '../utils/vlbPdfGenerator';
+import { generateVlbQuotePdf, getContractClauses, standardizeEventTime, isDeliveryOnlyQuote } from '../utils/vlbPdfGenerator';
 
 interface PublicProposalViewProps {
   token: string;
@@ -245,6 +245,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
   };
 
   const conceptDateNum = formatConceptDateNumeric(quote?.event_date);
+  const isDeliveryOnly = isDeliveryOnlyQuote(items, quote || undefined);
   const isContractUnlocked = totalPaid > 0 || isSigned || quote?.status === 'CONVERTIDA' || quote?.status === 'APROBADA';
   const { clauses: contractClauses } = quote ? getContractClauses(items, quote, formatFolio(quote.quote_number)) : { clauses: [] };
   const [showClausesPreview, setShowClausesPreview] = useState(false);
@@ -335,11 +336,11 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
             </div>
           </div>
 
-          {/* DATOS DE LA CELEBRACIÓN */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+          {/* DATOS DE LA CELEBRACIÓN O ENTREGA */}
+          <div className={`grid ${isDeliveryOnly ? 'grid-cols-1 sm:grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'} gap-3 pt-1`}>
             <div className="bg-[#FCFAF7] p-3.5 rounded-2xl border border-[#EAE3DA]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#7D6F6B] block">
-                Pareja / Novios
+                {isDeliveryOnly ? 'Cliente / Novios' : 'Pareja / Novios'}
               </span>
               <span className="font-serif font-bold text-base text-[#222222] block mt-0.5 truncate">
                 {quote.client_name} {quote.partner_name ? `& ${quote.partner_name}` : ''}
@@ -348,7 +349,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
 
             <div className="bg-[#FCFAF7] p-3.5 rounded-2xl border border-[#EAE3DA]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#7D6F6B] block">
-                Fecha del Gran Día
+                {isDeliveryOnly ? 'Día de Entrega' : 'Fecha del Gran Día'}
               </span>
               <span className="font-bold text-sm text-[#C83460] flex items-center space-x-1.5 mt-0.5">
                 <Calendar className="w-3.5 h-3.5 shrink-0" />
@@ -358,7 +359,7 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
 
             <div className="bg-[#FCFAF7] p-3.5 rounded-2xl border border-[#EAE3DA]">
               <span className="text-[10px] font-bold uppercase tracking-wider text-[#7D6F6B] block">
-                Sede / Venue
+                {isDeliveryOnly ? 'Lugar de Entrega / Venue' : 'Sede / Venue'}
               </span>
               <span className="font-semibold text-xs text-[#222222] flex items-center space-x-1.5 mt-0.5 truncate">
                 <MapPin className="w-3.5 h-3.5 text-[#B88A82] shrink-0" />
@@ -366,15 +367,17 @@ export const PublicProposalView: React.FC<PublicProposalViewProps> = ({ token })
               </span>
             </div>
 
-            <div className="bg-[#FCFAF7] p-3.5 rounded-2xl border border-[#EAE3DA]">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#7D6F6B] block">
-                Horario
-              </span>
-              <span className="font-semibold text-xs text-[#222222] flex items-center space-x-1.5 mt-0.5 truncate">
-                <Clock className="w-3.5 h-3.5 text-[#B88A82] shrink-0" />
-                <span className="truncate">{standardizeEventTime(quote.event_time || quote.ceremony_time || quote.service_time)}</span>
-              </span>
-            </div>
+            {!isDeliveryOnly && (
+              <div className="bg-[#FCFAF7] p-3.5 rounded-2xl border border-[#EAE3DA]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#7D6F6B] block">
+                  Horario
+                </span>
+                <span className="font-semibold text-xs text-[#222222] flex items-center space-x-1.5 mt-0.5 truncate">
+                  <Clock className="w-3.5 h-3.5 text-[#B88A82] shrink-0" />
+                  <span className="truncate">{standardizeEventTime(quote.event_time || quote.ceremony_time || quote.service_time)}</span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
