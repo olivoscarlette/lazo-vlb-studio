@@ -1754,20 +1754,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
       {/* Header Editorial Exclusivo Viva la Bride - Versión Compacta y Elegante */}
       <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-2xl px-5 py-3 shadow-2xs relative overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
-          <div className="flex items-center space-x-3">
-            {onBackToLazo && (
-              <button
-                type="button"
-                onClick={onBackToLazo}
-                className="px-3 py-1.5 bg-white hover:bg-[#FAF6F2] border border-[#EAE3DA] rounded-xl text-[#70443D] transition shadow-2xs cursor-pointer flex items-center space-x-1.5 text-xs font-bold shrink-0"
-                title="Volver al panel principal de Lazo Planning"
-              >
-                <ArrowLeft className="w-3.5 h-3.5 text-[#9C665C]" />
-                <span className="hidden sm:inline">Lazo Planning</span>
-                <span className="sm:hidden">Lazo</span>
-              </button>
-            )}
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 relative z-10">
+          <div className="flex items-center space-x-3 shrink-0">
             <img
               src="/vlb-monogram-pink.png"
               alt="Viva la Bride"
@@ -1786,96 +1774,112 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
             </div>
           </div>
 
-          {/* Quick Tab Switcher Compacto */}
-          <div className="flex items-center flex-wrap gap-1 bg-[#FFFFFF]/90 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs self-start sm:self-auto shrink-0">
-            <button
-              onClick={() => setActiveTab('quotes')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === 'quotes'
-                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                  : 'text-[#7D6F6B] hover:text-[#332A28]'
-              }`}
-            >
-              <FileText className="w-3.5 h-3.5" />
-              <span>Cotizador</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === 'orders'
-                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                  : 'text-[#7D6F6B] hover:text-[#332A28]'
-              }`}
-            >
-              <Users className="w-3.5 h-3.5" />
-              <span>CRM Parejas</span>
-              {orders.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full">
-                  {orders.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab('packing');
-                const sList = orders.filter(o => o.service_type === 'STANDS_EXPERIENCIAS' || o.service_type === 'STANDS' || o.service_type === 'MIXTO');
-                const isCurrentValid = sList.some(o => o.id === selectedPackingOrderId);
-                const targetId = isCurrentValid ? selectedPackingOrderId : (sList.length > 0 ? sList[0].id : '');
-                setSelectedPackingOrderId(targetId);
-                if (targetId) {
-                  loadOrderPackingList(targetId);
-                }
-              }}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === 'packing'
-                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                  : 'text-[#7D6F6B] hover:text-[#332A28]'
-              }`}
-            >
-              <Truck className="w-3.5 h-3.5" />
-              <span>Carga al Auto (Día D)</span>
-              {serviceOrders.length > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
-                  {serviceOrders.length}
-                </span>
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('templates')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === 'templates'
-                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                  : 'text-[#7D6F6B] hover:text-[#332A28]'
-              }`}
-            >
-              <ListTodo className="w-3.5 h-3.5" />
-              <span>Mis Actividades</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('catalog')}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                activeTab === 'catalog'
-                  ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                  : 'text-[#7D6F6B] hover:text-[#332A28]'
-              }`}
-            >
-              <Package className="w-3.5 h-3.5" />
-              <span>Catálogo</span>
-            </button>
-            {(!user || user.role === 'ADMINISTRADOR') && (
+          {/* Quick Tab Switcher Agrupado por Pilares */}
+          <div className="flex items-center flex-wrap gap-2 self-start xl:self-auto shrink-0">
+            {/* 1. Comercial & Clientes */}
+            <div className="flex items-center bg-[#FFFFFF]/95 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs gap-0.5">
               <button
-                onClick={() => setActiveTab('finances')}
+                onClick={() => setActiveTab('quotes')}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'finances'
+                  activeTab === 'quotes'
                     ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                    : 'text-[#7D6F6B] hover:text-[#332A28]'
+                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
                 }`}
-                title="Módulo de Nómina, Gastos y Reparto de Utilidades (Exclusivo Administradores)"
+                title="Generar cotizaciones y presupuestos"
               >
-                <Coins className="w-3.5 h-3.5" />
-                <span>Nómina & Reparto</span>
+                <FileText className="w-3.5 h-3.5" />
+                <span>Cotizador</span>
               </button>
-            )}
+              <button
+                onClick={() => setActiveTab('orders')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  activeTab === 'orders'
+                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
+                }`}
+                title="Seguimiento de pedidos confirmados y parejas"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>CRM Parejas</span>
+                {orders.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
+                    {orders.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
+            {/* 2. Operaciones & Día D */}
+            <div className="flex items-center bg-[#FFFFFF]/95 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs gap-0.5">
+              <button
+                onClick={() => {
+                  setActiveTab('packing');
+                  const sList = orders.filter(o => o.service_type === 'STANDS_EXPERIENCIAS' || o.service_type === 'STANDS' || o.service_type === 'MIXTO');
+                  const isCurrentValid = sList.some(o => o.id === selectedPackingOrderId);
+                  const targetId = isCurrentValid ? selectedPackingOrderId : (sList.length > 0 ? sList[0].id : '');
+                  setSelectedPackingOrderId(targetId);
+                  if (targetId) {
+                    loadOrderPackingList(targetId);
+                  }
+                }}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  activeTab === 'packing'
+                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
+                }`}
+                title="Checklist de carga al auto para eventos de servicios"
+              >
+                <Truck className="w-3.5 h-3.5" />
+                <span>Carga al Auto (Día D)</span>
+                {serviceOrders.length > 0 && (
+                  <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
+                    {serviceOrders.length}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('templates')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  activeTab === 'templates'
+                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
+                }`}
+                title="Listas maestras de actividades por servicio"
+              >
+                <ListTodo className="w-3.5 h-3.5" />
+                <span>Mis Actividades</span>
+              </button>
+            </div>
+
+            {/* 3. Catálogo & Finanzas */}
+            <div className="flex items-center bg-[#FFFFFF]/95 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs gap-0.5">
+              <button
+                onClick={() => setActiveTab('catalog')}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                  activeTab === 'catalog'
+                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
+                }`}
+                title="Catálogo de productos, stands y papelería"
+              >
+                <Package className="w-3.5 h-3.5" />
+                <span>Catálogo</span>
+              </button>
+              {(!user || user.role === 'ADMINISTRADOR') && (
+                <button
+                  onClick={() => setActiveTab('finances')}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    activeTab === 'finances'
+                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
+                      : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
+                  }`}
+                  title="Liquidaciones de eventos, gastos y reparto 60/40"
+                >
+                  <Coins className="w-3.5 h-3.5" />
+                  <span>Nómina & Reparto</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
