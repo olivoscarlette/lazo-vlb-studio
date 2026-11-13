@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
+  ArrowLeft,
+  Heart,
   Sparkles,
   FileText,
   Users,
@@ -81,15 +83,6 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const [newPackingItemName, setNewPackingItemName] = useState('');
   const [newPackingItemCategory, setNewPackingItemCategory] = useState('Mobiliario / Stand');
 
-  // Solo pedidos de Servicios (Stands, Barras, Experiencias o Mixto) que requieren vehículo de carga al Día D
-  const serviceOrders = useMemo(() => {
-    return orders.filter(o =>
-      o.service_type === 'STANDS_EXPERIENCIAS' ||
-      o.service_type === 'STANDS' ||
-      o.service_type === 'MIXTO'
-    );
-  }, [orders]);
-
   // Task Templates State (Lista Maestra de Actividades)
   const [taskTemplates, setTaskTemplates] = useState<any[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
@@ -122,6 +115,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const [catalogItems, setCatalogItems] = useState<VlbCatalogItem[]>([]);
   const [quotes, setQuotes] = useState<VlbQuote[]>([]);
   const [orders, setOrders] = useState<VlbOrder[]>([]);
+
+  // Solo pedidos de Servicios (Stands, Barras, Experiencias o Mixto) que requieren vehículo de carga al Día D
+  const serviceOrders = useMemo(() => {
+    return (orders || []).filter(o =>
+      o.service_type === 'STANDS_EXPERIENCIAS' ||
+      o.service_type === 'STANDS' ||
+      o.service_type === 'MIXTO'
+    );
+  }, [orders]);
 
   // Selected for Details / Modals
   const [selectedOrder, setSelectedOrder] = useState<VlbOrder | null>(null);
@@ -1754,6 +1756,18 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-2xl px-5 py-3 shadow-2xs relative overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative z-10">
           <div className="flex items-center space-x-3">
+            {onBackToLazo && (
+              <button
+                type="button"
+                onClick={onBackToLazo}
+                className="px-3 py-1.5 bg-white hover:bg-[#FAF6F2] border border-[#EAE3DA] rounded-xl text-[#70443D] transition shadow-2xs cursor-pointer flex items-center space-x-1.5 text-xs font-bold shrink-0"
+                title="Volver al panel principal de Lazo Planning"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-[#9C665C]" />
+                <span className="hidden sm:inline">Lazo Planning</span>
+                <span className="sm:hidden">Lazo</span>
+              </button>
+            )}
             <img
               src="/vlb-monogram-pink.png"
               alt="Viva la Bride"
