@@ -1754,7 +1754,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       )}
 
       {/* Header Editorial Exclusivo Viva la Bride - Versión Compacta y Elegante */}
-      <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-2xl px-5 py-3 shadow-2xs relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#FAF6F2] via-[#F6ECE8] to-[#FCFAF7] border border-[#EFE2DF] rounded-2xl px-5 py-3 shadow-2xs relative z-30">
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3 relative z-10">
           <div className="flex items-center space-x-3 shrink-0">
             <img
@@ -1778,19 +1778,19 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
           {/* Backdrop para cerrar dropdowns al hacer clic fuera */}
           {openMenu && (
             <div
-              className="fixed inset-0 z-30 bg-transparent"
+              className="fixed inset-0 z-35 bg-transparent cursor-default"
               onClick={() => setOpenMenu(null)}
             />
           )}
 
           {/* Quick Tab Switcher: Menús Desplegables Agrupados */}
-          <div className="relative z-30 flex items-center flex-wrap gap-2 self-start xl:self-auto shrink-0">
+          <div className="relative z-40 flex items-center flex-wrap gap-2 self-start xl:self-auto shrink-0">
             {/* 1. Comercial & Clientes */}
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setOpenMenu(openMenu === 'comercial' ? null : 'comercial')}
-                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-2xs ${
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#9C665C]/30 ${
                   activeTab === 'quotes' || activeTab === 'orders'
                     ? 'bg-[#9C665C] text-[#FFFFFF] border-[#8B564C]'
                     : 'bg-[#FFFFFF]/95 text-[#7D6F6B] hover:text-[#332A28] border-[#EAE3DA] hover:bg-[#FAF6F2]'
@@ -1827,7 +1827,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               </button>
 
               {openMenu === 'comercial' && (
-                <div className="absolute left-0 mt-1.5 w-60 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] p-1.5 z-40 animate-in fade-in zoom-in-95">
+                <div className="absolute left-0 mt-2 w-64 bg-[#FFFFFF] rounded-2xl shadow-2xl border border-[#EAE3DA] p-1.5 z-50 animate-in fade-in zoom-in-95">
                   <div className="px-3 py-1.5 text-[10px] font-bold text-[#A89F91] uppercase tracking-wider">
                     Ventas & Clientes
                   </div>
@@ -1894,7 +1894,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               <button
                 type="button"
                 onClick={() => setOpenMenu(openMenu === 'operaciones' ? null : 'operaciones')}
-                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-2xs ${
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#9C665C]/30 ${
                   activeTab === 'packing' || activeTab === 'templates'
                     ? 'bg-[#9C665C] text-[#FFFFFF] border-[#8B564C]'
                     : 'bg-[#FFFFFF]/95 text-[#7D6F6B] hover:text-[#332A28] border-[#EAE3DA] hover:bg-[#FAF6F2]'
@@ -1931,7 +1931,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               </button>
 
               {openMenu === 'operaciones' && (
-                <div className="absolute left-0 mt-1.5 w-64 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] p-1.5 z-40 animate-in fade-in zoom-in-95">
+                <div className="absolute left-0 mt-2 w-64 bg-[#FFFFFF] rounded-2xl shadow-2xl border border-[#EAE3DA] p-1.5 z-50 animate-in fade-in zoom-in-95">
                   <div className="px-3 py-1.5 text-[10px] font-bold text-[#A89F91] uppercase tracking-wider">
                     Logística & Ejecución
                   </div>
@@ -2005,7 +2005,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               <button
                 type="button"
                 onClick={() => setOpenMenu(openMenu === 'gestion' ? null : 'gestion')}
-                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-2xs ${
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-2xs focus:outline-none focus:ring-2 focus:ring-[#9C665C]/30 ${
                   activeTab === 'catalog' || activeTab === 'finances'
                     ? 'bg-[#9C665C] text-[#FFFFFF] border-[#8B564C]'
                     : 'bg-[#FFFFFF]/95 text-[#7D6F6B] hover:text-[#332A28] border-[#EAE3DA] hover:bg-[#FAF6F2]'
@@ -2036,7 +2036,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               </button>
 
               {openMenu === 'gestion' && (
-                <div className="absolute right-0 mt-1.5 w-64 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] p-1.5 z-40 animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 mt-2 w-64 bg-[#FFFFFF] rounded-2xl shadow-2xl border border-[#EAE3DA] p-1.5 z-50 animate-in fade-in zoom-in-95">
                   <div className="px-3 py-1.5 text-[10px] font-bold text-[#A89F91] uppercase tracking-wider">
                     Administración
                   </div>
