@@ -1644,10 +1644,19 @@ router.get('/orders/:id/packing-list', (req, res) => {
     const order = db.prepare('SELECT * FROM vlb_orders WHERE id = ?').get(id) as any;
     if (!order) return res.status(404).json({ error: 'Pedido no encontrado' });
 
+    const forceRegenerate = req.query.regenerate === 'true';
+
     let packingList: any[] = [];
-    if (order.packing_list_json) {
+    if (!forceRegenerate && order.packing_list_json) {
       try {
-        packingList = JSON.parse(order.packing_list_json);
+        const parsed = JSON.parse(order.packing_list_json);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          packingList = parsed.map((it: any) => ({
+            ...it,
+            name: it.name || it.item_name || 'Elemento',
+            item_name: it.item_name || it.name || 'Elemento'
+          }));
+        }
       } catch {}
     }
 
@@ -1662,12 +1671,27 @@ router.get('/orders/:id/packing-list', (req, res) => {
 
       // 1. Partidas y artículos específicos del evento
       for (const it of items) {
+        const itemName = `${it.pricing_type === 'PER_PIECE' ? `${it.quantity}x ` : ''}${it.item_name}`;
         packingList.push({
           id: 'pack_it_' + (it.id || Math.random().toString(36).substring(2, 7)),
-          item_name: `${it.pricing_type === 'PER_PIECE' ? `${it.quantity}x ` : ''}${it.item_name}`,
+          name: itemName,
+          item_name: itemName,
           category: it.category === 'PAPELERIA' ? 'Papelería' : 'Mobiliario / Stand',
           packed: false,
           notes: it.category === 'PAPELERIA' ? 'Empacado con protección' : 'Verificar armado y limpieza'
+        });
+      }
+
+      // Si no hay partidas registradas explícitas, agregar el paquete del servicio
+      if (items.length === 0) {
+        const isPapeleria = order.service_type === 'PAPELERIA';
+        packingList.push({
+          id: 'pack_it_main_' + Math.random().toString(36).substring(2, 7),
+          name: isPapeleria ? 'Caja(s) con Papelería Social y sobres empacados' : 'Estructuras y material principal de stand',
+          item_name: isPapeleria ? 'Caja(s) con Papelería Social y sobres empacados' : 'Estructuras y material principal de stand',
+          category: isPapeleria ? 'Papelería' : 'Mobiliario / Stand',
+          packed: false,
+          notes: 'Verificar conteo y estado antes de subir al auto'
         });
       }
 
@@ -1688,6 +1712,7 @@ router.get('/orders/:id/packing-list', (req, res) => {
       for (const kit of essentialKit) {
         packingList.push({
           id: 'pack_kit_' + Math.random().toString(36).substring(2, 7),
+          name: kit.name,
           item_name: kit.name,
           category: kit.cat,
           packed: false,
@@ -1702,6 +1727,7 @@ router.get('/orders/:id/packing-list', (req, res) => {
 
     res.json({
       packingList,
+      packing_list: packingList,
       orderNumber: order.order_number,
       clientName: order.client_name,
       partnerName: order.partner_name,
@@ -1718,17 +1744,22 @@ router.get('/orders/:id/packing-list', (req, res) => {
 router.put('/orders/:id/packing-list', (req, res) => {
   try {
     const { id } = req.params;
-    const { packingList } = req.body;
-    if (!Array.isArray(packingList)) {
+    const rawList = req.body.packingList || req.body.packing_list;
+    if (!Array.isArray(rawList)) {
       return res.status(400).json({ error: 'Formato inválido de checklist.' });
     }
+    const packingList = rawList.map((it: any) => ({
+      ...it,
+      name: it.name || it.item_name || 'Elemento',
+      item_name: it.item_name || it.name || 'Elemento'
+    }));
     const now = new Date().toISOString();
     db.prepare('UPDATE vlb_orders SET packing_list_json = ?, updated_at = ? WHERE id = ?').run(
       JSON.stringify(packingList),
       now,
       id
     );
-    res.json({ success: true, packingList, message: 'Checklist de carga actualizado.' });
+    res.json({ success: true, packingList, packing_list: packingList, message: 'Checklist de carga actualizado.' });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

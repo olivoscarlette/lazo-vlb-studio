@@ -288,6 +288,13 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     loadData(true);
   }, []);
 
+  // Carga automática del checklist al abrir la pestaña o cambiar de evento seleccionado
+  useEffect(() => {
+    if (activeTab === 'packing' && selectedPackingOrderId) {
+      loadOrderPackingList(selectedPackingOrderId);
+    }
+  }, [activeTab, selectedPackingOrderId]);
+
   // Cierre Inteligente: Cerrar cualquier modal o drawer activo al presionar Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -453,14 +460,22 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   // ----------------------------------------
   // PACKING CHECKLIST ACTIONS (DÍA DEL EVENTO)
   // ----------------------------------------
-  const loadOrderPackingList = async (orderId: string) => {
+  const loadOrderPackingList = async (orderId: string, forceRegenerate = false) => {
     if (!orderId) return;
     setLoadingPacking(true);
     try {
-      const res = await apiFetch(`/api/vlb/orders/${orderId}/packing-list`);
+      const url = forceRegenerate
+        ? `/api/vlb/orders/${orderId}/packing-list?regenerate=true`
+        : `/api/vlb/orders/${orderId}/packing-list`;
+      const res = await apiFetch(url);
       if (res.ok) {
         const data = await res.json();
-        setPackingList(data.packing_list || []);
+        const list = data.packingList || data.packing_list || [];
+        setPackingList(list.map((it: any) => ({
+          ...it,
+          name: it.name || it.item_name || 'Elemento',
+          item_name: it.item_name || it.name || 'Elemento'
+        })));
       }
     } catch (err) {
       console.error(err);
@@ -477,7 +492,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packing_list: updated })
+        body: JSON.stringify({ packing_list: updated, packingList: updated })
       });
     } catch (err) {
       console.error('Error auto-saving packing status:', err);
@@ -492,7 +507,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packing_list: updated })
+        body: JSON.stringify({ packing_list: updated, packingList: updated })
       });
     } catch (err) {
       console.error(err);
@@ -502,10 +517,12 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const handleAddCustomPackingItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPackingItemName.trim()) return;
+    const itemName = newPackingItemName.trim();
     const newItem = {
       id: `custom_${Date.now()}`,
       category: newPackingItemCategory,
-      name: newPackingItemName.trim(),
+      name: itemName,
+      item_name: itemName,
       notes: 'Elemento añadido manualmente',
       packed: false
     };
@@ -517,7 +534,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
       await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packing_list: updated })
+        body: JSON.stringify({ packing_list: updated, packingList: updated })
       });
       showToast('Elemento agregado a la lista de carga.');
     } catch (err) {
@@ -527,19 +544,33 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
   const handleResetPackingList = async () => {
     if (!selectedPackingOrderId) return;
-    if (!window.confirm('¿Reiniciar todos los elementos como NO subidos al vehículo?')) return;
+    if (packingList.length === 0) {
+      await loadOrderPackingList(selectedPackingOrderId, true);
+      showToast('Checklist generado con el material del pedido y kit del auto.');
+      return;
+    }
+    if (!window.confirm('¿Reiniciar todos los elementos como NO subidos al vehículo (0%)?')) return;
     const updated = packingList.map(it => ({ ...it, packed: false }));
     setPackingList(updated);
     try {
       await apiFetch(`/api/vlb/orders/${selectedPackingOrderId}/packing-list`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packing_list: updated })
+        body: JSON.stringify({ packing_list: updated, packingList: updated })
       });
       showToast('Checklist reiniciado a 0% para el evento.');
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleRegeneratePackingList = async () => {
+    if (!selectedPackingOrderId) return;
+    if (packingList.length > 0 && !window.confirm('¿Deseas restaurar la lista inteligente original del auto con el material contratado y kit indispensable?')) {
+      return;
+    }
+    await loadOrderPackingList(selectedPackingOrderId, true);
+    showToast('Checklist de carga generado exitosamente ✨');
   };
 
   // ----------------------------------------
@@ -1749,7 +1780,14 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               )}
             </button>
             <button
-              onClick={() => setActiveTab('packing')}
+              onClick={() => {
+                setActiveTab('packing');
+                const targetId = selectedPackingOrderId || (orders.length > 0 ? orders[0].id : '');
+                if (targetId) {
+                  setSelectedPackingOrderId(targetId);
+                  loadOrderPackingList(targetId);
+                }
+              }}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                 activeTab === 'packing'
                   ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
@@ -3043,19 +3081,30 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
 
           {/* Checklist Items Grouped by Category */}
           <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <h3 className="font-serif text-lg font-bold text-[#332A28]">
                 Material, Estructuras & Herramientas a Subir
               </h3>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
+                  type="button"
+                  onClick={handleRegeneratePackingList}
+                  className="text-xs text-[#9C665C] hover:text-[#70443D] hover:underline cursor-pointer flex items-center space-x-1 font-semibold"
+                  title="Restaurar o generar automáticamente el checklist con los artículos del pedido y kit del auto"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Restaurar kit completo</span>
+                </button>
+                <span className="text-[#D1C6BD]">•</span>
+                <button
+                  type="button"
                   onClick={handleResetPackingList}
                   className="text-xs text-[#7D6F6B] hover:text-[#70443D] hover:underline cursor-pointer"
                 >
-                  Reiniciar lista
+                  Reiniciar casillas
                 </button>
-                <span className="text-xs text-[#7D6F6B]">
-                  Toca cada casilla conforme lo coloques en la cajuela
+                <span className="hidden md:inline text-xs text-[#7D6F6B]">
+                  (Toca cada casilla conforme lo coloques en la cajuela)
                 </span>
               </div>
             </div>
@@ -3065,8 +3114,16 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                 Cargando lista de empaque...
               </div>
             ) : packingList.length === 0 ? (
-              <div className="py-12 text-center text-xs text-[#7D6F6B]">
-                No hay elementos en el checklist. Selecciona un evento o agrega elementos abajo.
+              <div className="py-12 text-center text-xs text-[#7D6F6B] space-y-3">
+                <p>No hay elementos en el checklist para este evento.</p>
+                <button
+                  type="button"
+                  onClick={handleRegeneratePackingList}
+                  className="px-4 py-2 bg-[#9C665C] hover:bg-[#8A574E] text-white font-bold rounded-xl transition inline-flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Generar Checklist Inteligente para el Auto</span>
+                </button>
               </div>
             ) : (
               <div className="space-y-3">
@@ -3090,7 +3147,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                       </div>
                       <div className="min-w-0">
                         <span className={`text-sm font-bold block ${item.packed ? 'line-through text-[#7D6F6B]' : 'text-[#332A28]'}`}>
-                          {item.name}
+                          {item.name || item.item_name}
                         </span>
                         {item.notes && (
                           <span className="text-[11px] text-[#7D6F6B] block">
