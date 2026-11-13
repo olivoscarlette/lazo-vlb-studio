@@ -1646,6 +1646,22 @@ router.get('/orders/:id/packing-list', (req, res) => {
 
     const forceRegenerate = req.query.regenerate === 'true';
 
+    // Si la orden es exclusivamente de papelería social, Carga al Auto no aplica
+    if (order.service_type === 'PAPELERIA') {
+      return res.json({
+        packingList: [],
+        packing_list: [],
+        orderNumber: order.order_number,
+        clientName: order.client_name,
+        partnerName: order.partner_name,
+        eventDate: order.event_date,
+        eventVenue: order.event_venue,
+        serviceType: order.service_type,
+        isServiceEvent: false,
+        message: 'Este pedido es exclusivamente de papelería social y no requiere checklist de carga al auto.'
+      });
+    }
+
     let packingList: any[] = [];
     if (!forceRegenerate && order.packing_list_json) {
       try {
@@ -1669,45 +1685,57 @@ router.get('/orders/:id/packing-list', (req, res) => {
         items = db.prepare('SELECT * FROM vlb_quote_items WHERE quote_id = ?').all(order.quote_id);
       }
 
-      // 1. Partidas y artículos específicos del evento
+      // 1. Partidas y artículos específicos del evento (solo servicios/stands)
       for (const it of items) {
-        const itemName = `${it.pricing_type === 'PER_PIECE' ? `${it.quantity}x ` : ''}${it.item_name}`;
+        if (it.category === 'STANDS_EXPERIENCIAS' || it.category === 'SERVICIOS' || it.category === 'STANDS') {
+          const itemName = `${it.pricing_type === 'PER_PIECE' ? `${it.quantity}x ` : ''}${it.item_name}`;
+          packingList.push({
+            id: 'pack_it_' + (it.id || Math.random().toString(36).substring(2, 7)),
+            name: itemName,
+            item_name: itemName,
+            category: 'Mobiliario / Stand',
+            packed: false,
+            notes: 'Verificar armado, estructura y limpieza'
+          });
+        }
+      }
+
+      // Si es mixto y también lleva papelería al venue
+      const hasPapeleria = items.some(i => i.category === 'PAPELERIA') || order.service_type === 'MIXTO';
+      if (hasPapeleria) {
         packingList.push({
-          id: 'pack_it_' + (it.id || Math.random().toString(36).substring(2, 7)),
-          name: itemName,
-          item_name: itemName,
-          category: it.category === 'PAPELERIA' ? 'Papelería' : 'Mobiliario / Stand',
+          id: 'pack_it_pap_' + Math.random().toString(36).substring(2, 7),
+          name: 'Caja(s) con Papelería Social y menús/sobres empacados',
+          item_name: 'Caja(s) con Papelería Social y menús/sobres empacados',
+          category: 'Papelería',
           packed: false,
-          notes: it.category === 'PAPELERIA' ? 'Empacado con protección' : 'Verificar armado y limpieza'
+          notes: 'Empacado con protección para traslado'
         });
       }
 
-      // Si no hay partidas registradas explícitas, agregar el paquete del servicio
-      if (items.length === 0) {
-        const isPapeleria = order.service_type === 'PAPELERIA';
+      // Si no hubo partidas específicas registradas de stands, agregar el mobiliario base
+      const hasStands = items.some(i => i.category === 'STANDS_EXPERIENCIAS' || i.category === 'SERVICIOS' || i.category === 'STANDS');
+      if (!hasStands) {
         packingList.push({
           id: 'pack_it_main_' + Math.random().toString(36).substring(2, 7),
-          name: isPapeleria ? 'Caja(s) con Papelería Social y sobres empacados' : 'Estructuras y material principal de stand',
-          item_name: isPapeleria ? 'Caja(s) con Papelería Social y sobres empacados' : 'Estructuras y material principal de stand',
-          category: isPapeleria ? 'Papelería' : 'Mobiliario / Stand',
+          name: 'Estructuras y material principal de stand / barra',
+          item_name: 'Estructuras y material principal de stand / barra',
+          category: 'Mobiliario / Stand',
           packed: false,
-          notes: 'Verificar conteo y estado antes de subir al auto'
+          notes: 'Verificar estructura, accesorios y limpieza'
         });
       }
 
-      // 2. Kit de Logística y Herramientas Indispensables para el Auto
+      // 2. Kit de Logística y Herramientas Indispensables para el Auto (Exclusivo de Servicios)
       const essentialKit = [
         { name: 'Caballete(s) y bases de soporte pesadas', cat: 'Estructuras', notes: 'Para letreros de bienvenida y seating chart' },
         { name: 'Caja de herramientas de montaje (tijeras, cinta doble cara, cúter, masking)', cat: 'Herramientas', notes: 'Indispensable en cajuela' },
         { name: 'Extensiones eléctricas uso rudo & multicontacto', cat: 'Eléctrico', notes: 'Mínimo 15m para áreas abiertas' },
         { name: 'Paños de microfibra & limpiador para acrílicos y vidrio', cat: 'Limpieza', notes: 'Dejar todo impecable en venue' },
-        { name: 'Kit de emergencia de lacre, encendedor y silicón', cat: 'Emergencia', notes: 'Para cualquier imprevisto' }
+        { name: 'Kit de emergencia de lacre, encendedor y silicón', cat: 'Emergencia', notes: 'Para cualquier imprevisto' },
+        { name: 'Hielera con insumos / botánicos / jarabes / hielo', cat: 'Bebidas', notes: 'Bien refrigerado antes de salir' },
+        { name: 'Audio Guestbook: Teléfono, instructivo enmarcado y batería', cat: 'Audio Guestbook', notes: 'Verificar batería 100% y memoria' }
       ];
-
-      if (order.service_type !== 'PAPELERIA') {
-        essentialKit.push({ name: 'Hielera con insumos / botánicos / jarabes / hielo', cat: 'Bebidas', notes: 'Bien refrigerado antes de salir' });
-        essentialKit.push({ name: 'Audio Guestbook: Teléfono, instructivo enmarcado y batería', cat: 'Audio Guestbook', notes: 'Verificar batería 100% y memoria' });
-      }
 
       for (const kit of essentialKit) {
         packingList.push({

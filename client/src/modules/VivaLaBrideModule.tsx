@@ -81,6 +81,15 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
   const [newPackingItemName, setNewPackingItemName] = useState('');
   const [newPackingItemCategory, setNewPackingItemCategory] = useState('Mobiliario / Stand');
 
+  // Solo pedidos de Servicios (Stands, Barras, Experiencias o Mixto) que requieren vehículo de carga al Día D
+  const serviceOrders = useMemo(() => {
+    return orders.filter(o =>
+      o.service_type === 'STANDS_EXPERIENCIAS' ||
+      o.service_type === 'STANDS' ||
+      o.service_type === 'MIXTO'
+    );
+  }, [orders]);
+
   // Task Templates State (Lista Maestra de Actividades)
   const [taskTemplates, setTaskTemplates] = useState<any[]>([]);
   const [loadingTemplates, setLoadingTemplates] = useState(false);
@@ -268,9 +277,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
         const oData = await ordersRes.json();
         const oList = oData.orders || [];
         setOrders(oList);
-        if (oList.length > 0 && !selectedPackingOrderId) {
-          setSelectedPackingOrderId(oList[0].id);
-          loadOrderPackingList(oList[0].id);
+        const sList = oList.filter((o: any) => o.service_type === 'STANDS_EXPERIENCIAS' || o.service_type === 'STANDS' || o.service_type === 'MIXTO');
+        if (sList.length > 0 && !selectedPackingOrderId) {
+          setSelectedPackingOrderId(sList[0].id);
+          loadOrderPackingList(sList[0].id);
         }
       }
       if (tplRes.ok) {
@@ -288,12 +298,24 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
     loadData(true);
   }, []);
 
-  // Carga automática del checklist al abrir la pestaña o cambiar de evento seleccionado
+  // Carga automática del checklist al abrir la pestaña o cambiar de evento seleccionado (exclusivo para eventos de servicios)
   useEffect(() => {
-    if (activeTab === 'packing' && selectedPackingOrderId) {
-      loadOrderPackingList(selectedPackingOrderId);
+    if (activeTab === 'packing') {
+      const sList = orders.filter(o => o.service_type === 'STANDS_EXPERIENCIAS' || o.service_type === 'STANDS' || o.service_type === 'MIXTO');
+      if (sList.length > 0) {
+        const isCurrentValid = sList.some(o => o.id === selectedPackingOrderId);
+        if (!isCurrentValid) {
+          setSelectedPackingOrderId(sList[0].id);
+          loadOrderPackingList(sList[0].id);
+        } else if (selectedPackingOrderId) {
+          loadOrderPackingList(selectedPackingOrderId);
+        }
+      } else {
+        setSelectedPackingOrderId('');
+        setPackingList([]);
+      }
     }
-  }, [activeTab, selectedPackingOrderId]);
+  }, [activeTab, selectedPackingOrderId, orders]);
 
   // Cierre Inteligente: Cerrar cualquier modal o drawer activo al presionar Escape
   useEffect(() => {
@@ -1782,9 +1804,11 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
             <button
               onClick={() => {
                 setActiveTab('packing');
-                const targetId = selectedPackingOrderId || (orders.length > 0 ? orders[0].id : '');
+                const sList = orders.filter(o => o.service_type === 'STANDS_EXPERIENCIAS' || o.service_type === 'STANDS' || o.service_type === 'MIXTO');
+                const isCurrentValid = sList.some(o => o.id === selectedPackingOrderId);
+                const targetId = isCurrentValid ? selectedPackingOrderId : (sList.length > 0 ? sList[0].id : '');
+                setSelectedPackingOrderId(targetId);
                 if (targetId) {
-                  setSelectedPackingOrderId(targetId);
                   loadOrderPackingList(targetId);
                 }
               }}
@@ -1796,6 +1820,11 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
             >
               <Truck className="w-3.5 h-3.5" />
               <span>Carga al Auto (Día D)</span>
+              {serviceOrders.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
+                  {serviceOrders.length}
+                </span>
+              )}
             </button>
             <button
               onClick={() => setActiveTab('templates')}
@@ -2981,7 +3010,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               {/* Selector de Evento */}
               <div className="flex items-center space-x-2">
                 <label className="text-xs font-semibold text-[#7D6F6B] shrink-0">
-                  Evento:
+                  Evento de Servicio:
                 </label>
                 <select
                   value={selectedPackingOrderId}
@@ -2991,10 +3020,10 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
                   }}
                   className="px-3 py-2 text-xs font-semibold bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:border-[#9C665C] max-w-xs"
                 >
-                  {orders.length === 0 ? (
-                    <option value="">No hay eventos activos</option>
+                  {serviceOrders.length === 0 ? (
+                    <option value="">No hay eventos de servicios activos</option>
                   ) : (
-                    orders.map(o => (
+                    serviceOrders.map(o => (
                       <option key={o.id} value={o.id}>
                         {formatOrderFolio(o.order_number)} · {o.client_name} ({formatDateMX(o.event_date)})
                       </option>
@@ -3004,9 +3033,19 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               </div>
             </div>
 
-            {/* Event Info & Progress Bar */}
-            {(() => {
-              const currentPackingOrder = orders.find(o => o.id === selectedPackingOrderId);
+            {/* Si no hay eventos de servicios contratados */}
+            {serviceOrders.length === 0 ? (
+              <div className="p-8 text-center bg-[#FAF6F2] rounded-2xl border border-[#EAE3DA] space-y-2">
+                <Truck className="w-8 h-8 text-[#9C665C] mx-auto opacity-60" />
+                <h4 className="font-serif font-bold text-sm text-[#332A28]">
+                  No hay eventos de servicios o stands activos
+                </h4>
+                <p className="text-xs text-[#7D6F6B] max-w-md mx-auto">
+                  El checklist de Carga al Auto aplica exclusivamente para eventos presenciales con montaje de stands, barras y experiencias. Los pedidos de solo papelería social no requieren vehículo de traslado.
+                </p>
+              </div>
+            ) : (() => {
+              const currentPackingOrder = serviceOrders.find(o => o.id === selectedPackingOrderId) || serviceOrders[0];
               const packedCount = packingList.filter(it => it.packed).length;
               const totalCount = packingList.length;
               const progressPct = totalCount > 0 ? Math.round((packedCount / totalCount) * 100) : 0;
@@ -3079,7 +3118,8 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
             })()}
           </div>
 
-          {/* Checklist Items Grouped by Category */}
+          {/* Checklist Items Grouped by Category (solo si hay eventos de servicio) */}
+          {serviceOrders.length > 0 && (
           <div className="bg-[#FFFFFF] p-6 rounded-3xl border border-[#EFE8E1] shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <h3 className="font-serif text-lg font-bold text-[#332A28]">
@@ -3207,6 +3247,7 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
               </button>
             </form>
           </div>
+          )}
         </div>
       )}
 
