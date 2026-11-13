@@ -72,6 +72,7 @@ interface VivaLaBrideModuleProps {
 export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLazo, user }) => {
   // Navigation Tabs: 'quotes' | 'orders' | 'packing' | 'templates' | 'catalog' | 'finances'
   const [activeTab, setActiveTab] = useState<'quotes' | 'orders' | 'catalog' | 'packing' | 'templates' | 'finances'>('quotes');
+  const [openMenu, setOpenMenu] = useState<'comercial' | 'operaciones' | 'gestion' | null>(null);
   const [quoteDiscountPct, setQuoteDiscountPct] = useState<number>(0);
   const [selectedContractType, setSelectedContractType] = useState<VlbContractType>('AUTO');
   const [pdfMenuQuoteId, setPdfMenuQuoteId] = useState<string | null>(null);
@@ -1774,110 +1775,321 @@ export const VivaLaBrideModule: React.FC<VivaLaBrideModuleProps> = ({ onBackToLa
             </div>
           </div>
 
-          {/* Quick Tab Switcher Agrupado por Pilares */}
-          <div className="flex items-center flex-wrap gap-2 self-start xl:self-auto shrink-0">
+          {/* Backdrop para cerrar dropdowns al hacer clic fuera */}
+          {openMenu && (
+            <div
+              className="fixed inset-0 z-30 bg-transparent"
+              onClick={() => setOpenMenu(null)}
+            />
+          )}
+
+          {/* Quick Tab Switcher: Menús Desplegables Agrupados */}
+          <div className="relative z-30 flex items-center flex-wrap gap-2 self-start xl:self-auto shrink-0">
             {/* 1. Comercial & Clientes */}
-            <div className="flex items-center bg-[#FFFFFF]/95 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs gap-0.5">
+            <div className="relative">
               <button
-                onClick={() => setActiveTab('quotes')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'quotes'
-                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
+                type="button"
+                onClick={() => setOpenMenu(openMenu === 'comercial' ? null : 'comercial')}
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-2xs ${
+                  activeTab === 'quotes' || activeTab === 'orders'
+                    ? 'bg-[#9C665C] text-[#FFFFFF] border-[#8B564C]'
+                    : 'bg-[#FFFFFF]/95 text-[#7D6F6B] hover:text-[#332A28] border-[#EAE3DA] hover:bg-[#FAF6F2]'
                 }`}
-                title="Generar cotizaciones y presupuestos"
+                title="Menú Comercial: Cotizador y CRM Parejas"
               >
-                <FileText className="w-3.5 h-3.5" />
-                <span>Cotizador</span>
-              </button>
-              <button
-                onClick={() => setActiveTab('orders')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'orders'
-                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
-                }`}
-                title="Seguimiento de pedidos confirmados y parejas"
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span>CRM Parejas</span>
-                {orders.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
+                <div className="flex items-center space-x-1.5">
+                  {activeTab === 'quotes' ? (
+                    <FileText className="w-3.5 h-3.5" />
+                  ) : activeTab === 'orders' ? (
+                    <Users className="w-3.5 h-3.5" />
+                  ) : (
+                    <FileText className="w-3.5 h-3.5 opacity-70" />
+                  )}
+                  <span>Comercial</span>
+                  {(activeTab === 'quotes' || activeTab === 'orders') && (
+                    <span className="text-[11px] opacity-90 font-normal">
+                      · {activeTab === 'quotes' ? 'Cotizador' : 'CRM Parejas'}
+                    </span>
+                  )}
+                </div>
+
+                {orders.length > 0 && activeTab !== 'orders' && (
+                  <span className="px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
                     {orders.length}
                   </span>
                 )}
+
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    openMenu === 'comercial' ? 'rotate-180' : ''
+                  }`}
+                />
               </button>
+
+              {openMenu === 'comercial' && (
+                <div className="absolute left-0 mt-1.5 w-60 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] p-1.5 z-40 animate-in fade-in zoom-in-95">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-[#A89F91] uppercase tracking-wider">
+                    Ventas & Clientes
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('quotes');
+                      setOpenMenu(null);
+                    }}
+                    className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition cursor-pointer ${
+                      activeTab === 'quotes'
+                        ? 'bg-[#FAF6F2] text-[#9C665C] font-semibold'
+                        : 'text-[#332A28] hover:bg-[#FAF6F2]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <div className={`p-1.5 rounded-lg ${activeTab === 'quotes' ? 'bg-[#9C665C] text-[#FFFFFF]' : 'bg-[#FAF6F2] text-[#70443D]'}`}>
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold">Cotizador</div>
+                        <div className="text-[11px] text-[#A89F91] font-normal">Propuestas y presupuestos</div>
+                      </div>
+                    </div>
+                    {activeTab === 'quotes' && <Check className="w-4 h-4 text-[#9C665C]" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('orders');
+                      setOpenMenu(null);
+                    }}
+                    className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition cursor-pointer mt-0.5 ${
+                      activeTab === 'orders'
+                        ? 'bg-[#FAF6F2] text-[#9C665C] font-semibold'
+                        : 'text-[#332A28] hover:bg-[#FAF6F2]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <div className={`p-1.5 rounded-lg ${activeTab === 'orders' ? 'bg-[#9C665C] text-[#FFFFFF]' : 'bg-[#FAF6F2] text-[#70443D]'}`}>
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold">CRM Parejas</div>
+                        <div className="text-[11px] text-[#A89F91] font-normal">Seguimiento y novias</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1.5">
+                      {orders.length > 0 && (
+                        <span className="px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
+                          {orders.length}
+                        </span>
+                      )}
+                      {activeTab === 'orders' && <Check className="w-4 h-4 text-[#9C665C]" />}
+                    </div>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 2. Operaciones & Día D */}
-            <div className="flex items-center bg-[#FFFFFF]/95 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs gap-0.5">
+            <div className="relative">
               <button
-                onClick={() => {
-                  setActiveTab('packing');
-                  const sList = orders.filter(o => o.service_type === 'STANDS_EXPERIENCIAS' || o.service_type === 'STANDS' || o.service_type === 'MIXTO');
-                  const isCurrentValid = sList.some(o => o.id === selectedPackingOrderId);
-                  const targetId = isCurrentValid ? selectedPackingOrderId : (sList.length > 0 ? sList[0].id : '');
-                  setSelectedPackingOrderId(targetId);
-                  if (targetId) {
-                    loadOrderPackingList(targetId);
-                  }
-                }}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'packing'
-                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
+                type="button"
+                onClick={() => setOpenMenu(openMenu === 'operaciones' ? null : 'operaciones')}
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-2xs ${
+                  activeTab === 'packing' || activeTab === 'templates'
+                    ? 'bg-[#9C665C] text-[#FFFFFF] border-[#8B564C]'
+                    : 'bg-[#FFFFFF]/95 text-[#7D6F6B] hover:text-[#332A28] border-[#EAE3DA] hover:bg-[#FAF6F2]'
                 }`}
-                title="Checklist de carga al auto para eventos de servicios"
+                title="Menú Operaciones: Carga al Auto y Mis Actividades"
               >
-                <Truck className="w-3.5 h-3.5" />
-                <span>Carga al Auto (Día D)</span>
-                {serviceOrders.length > 0 && (
-                  <span className="ml-1 px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
+                <div className="flex items-center space-x-1.5">
+                  {activeTab === 'packing' ? (
+                    <Truck className="w-3.5 h-3.5" />
+                  ) : activeTab === 'templates' ? (
+                    <ListTodo className="w-3.5 h-3.5" />
+                  ) : (
+                    <Truck className="w-3.5 h-3.5 opacity-70" />
+                  )}
+                  <span>Operaciones</span>
+                  {(activeTab === 'packing' || activeTab === 'templates') && (
+                    <span className="text-[11px] opacity-90 font-normal">
+                      · {activeTab === 'packing' ? 'Carga Auto' : 'Actividades'}
+                    </span>
+                  )}
+                </div>
+
+                {serviceOrders.length > 0 && activeTab !== 'packing' && (
+                  <span className="px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
                     {serviceOrders.length}
                   </span>
                 )}
+
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    openMenu === 'operaciones' ? 'rotate-180' : ''
+                  }`}
+                />
               </button>
-              <button
-                onClick={() => setActiveTab('templates')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'templates'
-                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
-                }`}
-                title="Listas maestras de actividades por servicio"
-              >
-                <ListTodo className="w-3.5 h-3.5" />
-                <span>Mis Actividades</span>
-              </button>
+
+              {openMenu === 'operaciones' && (
+                <div className="absolute left-0 mt-1.5 w-64 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] p-1.5 z-40 animate-in fade-in zoom-in-95">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-[#A89F91] uppercase tracking-wider">
+                    Logística & Ejecución
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('packing');
+                      setOpenMenu(null);
+                      const sList = orders.filter(o => o.service_type === 'STANDS_EXPERIENCIAS' || o.service_type === 'STANDS' || o.service_type === 'MIXTO');
+                      const isCurrentValid = sList.some(o => o.id === selectedPackingOrderId);
+                      const targetId = isCurrentValid ? selectedPackingOrderId : (sList.length > 0 ? sList[0].id : '');
+                      setSelectedPackingOrderId(targetId);
+                      if (targetId) {
+                        loadOrderPackingList(targetId);
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition cursor-pointer ${
+                      activeTab === 'packing'
+                        ? 'bg-[#FAF6F2] text-[#9C665C] font-semibold'
+                        : 'text-[#332A28] hover:bg-[#FAF6F2]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <div className={`p-1.5 rounded-lg ${activeTab === 'packing' ? 'bg-[#9C665C] text-[#FFFFFF]' : 'bg-[#FAF6F2] text-[#70443D]'}`}>
+                        <Truck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold">Carga al Auto (Día D)</div>
+                        <div className="text-[11px] text-[#A89F91] font-normal">Checklist de salida al venue</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1.5">
+                      {serviceOrders.length > 0 && (
+                        <span className="px-1.5 py-0.2 text-[10px] bg-[#EFE2DF] text-[#70443D] rounded-full font-bold">
+                          {serviceOrders.length}
+                        </span>
+                      )}
+                      {activeTab === 'packing' && <Check className="w-4 h-4 text-[#9C665C]" />}
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('templates');
+                      setOpenMenu(null);
+                    }}
+                    className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition cursor-pointer mt-0.5 ${
+                      activeTab === 'templates'
+                        ? 'bg-[#FAF6F2] text-[#9C665C] font-semibold'
+                        : 'text-[#332A28] hover:bg-[#FAF6F2]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <div className={`p-1.5 rounded-lg ${activeTab === 'templates' ? 'bg-[#9C665C] text-[#FFFFFF]' : 'bg-[#FAF6F2] text-[#70443D]'}`}>
+                        <ListTodo className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold">Mis Actividades</div>
+                        <div className="text-[11px] text-[#A89F91] font-normal">Plantillas maestras de tareas</div>
+                      </div>
+                    </div>
+                    {activeTab === 'templates' && <Check className="w-4 h-4 text-[#9C665C]" />}
+                  </button>
+                </div>
+              )}
             </div>
 
-            {/* 3. Catálogo & Finanzas */}
-            <div className="flex items-center bg-[#FFFFFF]/95 backdrop-blur-xs p-1 rounded-xl border border-[#EAE3DA] shadow-2xs gap-0.5">
+            {/* 3. Gestión & Finanzas */}
+            <div className="relative">
               <button
-                onClick={() => setActiveTab('catalog')}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                  activeTab === 'catalog'
-                    ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                    : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
+                type="button"
+                onClick={() => setOpenMenu(openMenu === 'gestion' ? null : 'gestion')}
+                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border shadow-2xs ${
+                  activeTab === 'catalog' || activeTab === 'finances'
+                    ? 'bg-[#9C665C] text-[#FFFFFF] border-[#8B564C]'
+                    : 'bg-[#FFFFFF]/95 text-[#7D6F6B] hover:text-[#332A28] border-[#EAE3DA] hover:bg-[#FAF6F2]'
                 }`}
-                title="Catálogo de productos, stands y papelería"
+                title="Menú Gestión: Catálogo y Finanzas"
               >
-                <Package className="w-3.5 h-3.5" />
-                <span>Catálogo</span>
-              </button>
-              {(!user || user.role === 'ADMINISTRADOR') && (
-                <button
-                  onClick={() => setActiveTab('finances')}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
-                    activeTab === 'finances'
-                      ? 'bg-[#9C665C] text-[#FFFFFF] shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#FAF6F2]'
+                <div className="flex items-center space-x-1.5">
+                  {activeTab === 'catalog' ? (
+                    <Package className="w-3.5 h-3.5" />
+                  ) : activeTab === 'finances' ? (
+                    <Coins className="w-3.5 h-3.5" />
+                  ) : (
+                    <Package className="w-3.5 h-3.5 opacity-70" />
+                  )}
+                  <span>Gestión</span>
+                  {(activeTab === 'catalog' || activeTab === 'finances') && (
+                    <span className="text-[11px] opacity-90 font-normal">
+                      · {activeTab === 'catalog' ? 'Catálogo' : 'Nómina & Reparto'}
+                    </span>
+                  )}
+                </div>
+
+                <ChevronDown
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    openMenu === 'gestion' ? 'rotate-180' : ''
                   }`}
-                  title="Liquidaciones de eventos, gastos y reparto 60/40"
-                >
-                  <Coins className="w-3.5 h-3.5" />
-                  <span>Nómina & Reparto</span>
-                </button>
+                />
+              </button>
+
+              {openMenu === 'gestion' && (
+                <div className="absolute right-0 mt-1.5 w-64 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EAE3DA] p-1.5 z-40 animate-in fade-in zoom-in-95">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-[#A89F91] uppercase tracking-wider">
+                    Administración
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('catalog');
+                      setOpenMenu(null);
+                    }}
+                    className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition cursor-pointer ${
+                      activeTab === 'catalog'
+                        ? 'bg-[#FAF6F2] text-[#9C665C] font-semibold'
+                        : 'text-[#332A28] hover:bg-[#FAF6F2]'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2.5">
+                      <div className={`p-1.5 rounded-lg ${activeTab === 'catalog' ? 'bg-[#9C665C] text-[#FFFFFF]' : 'bg-[#FAF6F2] text-[#70443D]'}`}>
+                        <Package className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-semibold">Catálogo</div>
+                        <div className="text-[11px] text-[#A89F91] font-normal">Stands, papelería y precios</div>
+                      </div>
+                    </div>
+                    {activeTab === 'catalog' && <Check className="w-4 h-4 text-[#9C665C]" />}
+                  </button>
+
+                  {(!user || user.role === 'ADMINISTRADOR') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab('finances');
+                        setOpenMenu(null);
+                      }}
+                      className={`w-full flex items-center justify-between p-2 rounded-xl text-left transition cursor-pointer mt-0.5 ${
+                        activeTab === 'finances'
+                          ? 'bg-[#FAF6F2] text-[#9C665C] font-semibold'
+                          : 'text-[#332A28] hover:bg-[#FAF6F2]'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        <div className={`p-1.5 rounded-lg ${activeTab === 'finances' ? 'bg-[#9C665C] text-[#FFFFFF]' : 'bg-[#FAF6F2] text-[#70443D]'}`}>
+                          <Coins className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-semibold">Nómina & Reparto</div>
+                          <div className="text-[11px] text-[#A89F91] font-normal">Liquidaciones y reparto 60/40</div>
+                        </div>
+                      </div>
+                      {activeTab === 'finances' && <Check className="w-4 h-4 text-[#9C665C]" />}
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           </div>
