@@ -618,131 +618,129 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         </div>
       </div>
 
-      {/* 2. Tarjetas de Métricas Principales (RSVP Radial Ring, Presupuesto y Tareas — MOCKUP STYLE) */}
+      {/* 2. Tarjetas de Métricas Principales (Diseño Editorial Minimalista & Escultural) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Card 1: RSVP Guest Tracker con Anillo Radial */}
+        {/* Card 1: Asistencia & Invitados */}
         <div
           onClick={() => onNavigateTab('invitados')}
-          className="luxury-card rounded-[28px] p-6 sm:p-7 border border-[#EFE8E1] cursor-pointer group flex flex-col justify-between"
+          className="bg-[#FAF8F5] rounded-[28px] p-6 sm:p-7 border border-[#EFE8E1] cursor-pointer group flex flex-col justify-between hover:border-[#C48B81]/40 transition-all shadow-[0_2px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_25px_rgba(196,139,129,0.08)]"
         >
           <div>
-            <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-4">
-              <span className="font-sans text-base sm:text-lg font-bold text-[#2B2826] tracking-tight">RSVP Guest Tracker</span>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] font-bold text-[#7D6F6B] uppercase tracking-widest">01 / Asistencia</span>
               <Users className="w-4 h-4 text-[#C48B81] group-hover:scale-110 transition-transform" />
             </div>
 
-            {/* Circular Progress Ring */}
-            <div className="flex items-center justify-center py-3">
-              <div className="relative w-36 h-36 flex items-center justify-center">
-                <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    fill="none"
-                    stroke="#F7EDEB"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    cx="50"
-                    cy="50"
-                    r="42"
-                    fill="none"
-                    stroke="#C48B81"
-                    strokeWidth="8"
-                    strokeDasharray={263.89}
-                    strokeDashoffset={263.89 - (263.89 * rsvpPercent) / 100}
-                    strokeLinecap="round"
-                    className="transition-all duration-700 ease-out"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-3xl font-sans font-bold text-[#2B2826] leading-none">
-                    {rsvpPercent}%
-                  </span>
-                  <span className="text-[11px] text-[#7D6F6B] font-medium mt-1">
-                    Confirmados
-                  </span>
-                </div>
+            <div className="py-2">
+              <div className="flex items-baseline space-x-2">
+                <span className="font-novios text-4xl sm:text-5xl font-normal text-[#181514] tracking-tight">
+                  {confirmedSeats}
+                </span>
+                <span className="text-sm font-light text-[#7D6F6B]">
+                  / {totalSeats > 0 ? totalSeats : 1} esperados
+                </span>
+              </div>
+              <p className="text-xs text-[#7D6F6B] mt-1 font-light">
+                {rsvpPercent > 0 ? `${rsvpPercent}% de asistencia confirmada` : 'Esperando primeras confirmaciones'}
+              </p>
+
+              {/* Barra hairline continua */}
+              <div className="w-full h-1.5 bg-[#EFE8E1] rounded-full overflow-hidden mt-4 mb-1">
+                <div
+                  className="h-full bg-[#C48B81] rounded-full transition-all duration-700"
+                  style={{ width: `${Math.max(rsvpPercent, 2)}%` }}
+                />
               </div>
             </div>
           </div>
 
           {/* Breakdown Pills */}
-          <div className="pt-4 border-t border-[#F5EFEB] flex items-center justify-center gap-2">
-            <span className="px-3.5 py-1.5 rounded-full bg-[#F7EDEB] text-[#A86B60] text-xs font-semibold">
-              {confirmedSeats} Confirmados
+          <div className="pt-4 border-t border-[#EFE8E1]/80 flex items-center justify-between text-xs">
+            <span className="inline-flex items-center space-x-1.5 text-[#2B2826] font-medium">
+              <span className="w-2 h-2 rounded-full bg-[#C48B81]" />
+              <span>{confirmedSeats} Confirmados</span>
             </span>
-            <span className="px-3.5 py-1.5 rounded-full bg-[#FAF7F5] text-[#7D6F6B] border border-[#EFE8E1] text-xs font-medium">
-              {Math.max(0, totalSeats - confirmedSeats)} Pendientes
+            <span className="inline-flex items-center space-x-1.5 text-[#7D6F6B]">
+              <span className="w-2 h-2 rounded-full bg-[#EAE3DA]" />
+              <span>{Math.max(0, totalSeats - confirmedSeats)} Pendientes</span>
             </span>
           </div>
         </div>
 
-        {/* Card 2: Presupuesto & Finanzas */}
+        {/* Card 2: Control Financiero */}
         <div
           onClick={() => onNavigateTab('proveedores')}
-          className="luxury-card rounded-[28px] p-6 sm:p-7 border border-[#EFE8E1] cursor-pointer group flex flex-col justify-between hover:border-[#C48B81]/40 transition-all shadow-sm hover:shadow-md"
+          className="bg-[#FAF8F5] rounded-[28px] p-6 sm:p-7 border border-[#EFE8E1] cursor-pointer group flex flex-col justify-between hover:border-[#C48B81]/40 transition-all shadow-[0_2px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_25px_rgba(196,139,129,0.08)]"
         >
           <div>
-            <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-4">
-              <span className="font-sans text-base sm:text-lg font-bold text-[#2B2826] tracking-tight">Presupuesto</span>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] font-bold text-[#7D6F6B] uppercase tracking-widest">02 / Presupuesto</span>
               <DollarSign className="w-4 h-4 text-[#C48B81] group-hover:scale-110 transition-transform" />
             </div>
 
             <div className="py-2">
-              <div className="flex items-baseline space-x-2">
-                <span className="text-3xl sm:text-4xl font-sans font-bold text-[#2B2826] tracking-tight">
-                  ${totalPagado.toLocaleString()}
-                </span>
-                <span className="text-sm sm:text-base text-[#7D6F6B] font-normal">
-                  / ${(totalCostoReal > 0 ? totalCostoReal : targetBudget).toLocaleString()}
-                </span>
-              </div>
+              {totalCostoReal > 0 || totalPagado > 0 ? (
+                <>
+                  <div className="flex items-baseline space-x-2">
+                    <span className="font-novios text-4xl sm:text-5xl font-normal text-[#181514] tracking-tight">
+                      ${totalPagado.toLocaleString()}
+                    </span>
+                    <span className="text-sm font-light text-[#7D6F6B]">
+                      / ${(totalCostoReal > 0 ? totalCostoReal : targetBudget).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#7D6F6B] mt-1 font-light">
+                    {budgetPaidPercent}% cubierto al momento
+                  </p>
 
-              {/* Barra de progreso continua y elegante */}
-              <div className="w-full h-3 bg-[#F7EDEB] rounded-full overflow-hidden mt-5 mb-2">
-                <div
-                  className="h-full bg-gradient-to-r from-[#D9A59B] to-[#C48B81] rounded-full transition-all duration-700"
-                  style={{ width: `${budgetPaidPercent}%` }}
-                />
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-[#7D6F6B] mt-2 font-medium">
-                <span className="font-semibold text-[#2B2826]">
-                  {budgetPaidPercent}% pagado
-                </span>
-                <span className="text-[#A86B60] font-semibold">
-                  Restante: ${totalRestante.toLocaleString()}
-                </span>
-              </div>
+                  {/* Barra hairline continua */}
+                  <div className="w-full h-1.5 bg-[#EFE8E1] rounded-full overflow-hidden mt-4 mb-1">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#D9A59B] to-[#C48B81] rounded-full transition-all duration-700"
+                      style={{ width: `${Math.max(budgetPaidPercent, 2)}%` }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div className="py-1 space-y-1">
+                  <span className="font-novios text-3xl sm:text-4xl font-normal text-[#181514] tracking-tight">
+                    Por definir
+                  </span>
+                  <p className="text-xs text-[#7D6F6B] font-light">
+                    Agrega proveedores o costos para monitorear tu inversión.
+                  </p>
+                  <div className="w-full h-1.5 bg-[#EFE8E1] rounded-full mt-4 mb-1" />
+                </div>
+              )}
             </div>
+          </div>
+
+          <div className="pt-4 border-t border-[#EFE8E1]/80 flex items-center justify-between text-xs">
+            <span className="text-[#7D6F6B]">Restante por pagar</span>
+            <span className="font-semibold text-[#A86B60]">${totalRestante.toLocaleString()}</span>
           </div>
         </div>
 
-        {/* Card 3: Próximas Tareas & Checklist */}
+        {/* Card 3: Siguientes Pasos & Checklist */}
         <div
           onClick={() => onNavigateTab('checklist')}
-          className="luxury-card rounded-[28px] p-6 sm:p-7 border border-[#EFE8E1] cursor-pointer group flex flex-col justify-between"
+          className="bg-[#FAF8F5] rounded-[28px] p-6 sm:p-7 border border-[#EFE8E1] cursor-pointer group flex flex-col justify-between hover:border-[#C48B81]/40 transition-all shadow-[0_2px_15px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_25px_rgba(196,139,129,0.08)]"
         >
           <div>
-            <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-4">
-              <div>
-                <h3 className="font-sans text-base sm:text-lg font-bold text-[#2B2826] tracking-tight">Próximas Tareas</h3>
-                <p className="text-[11px] text-[#7D6F6B] font-normal normal-case mt-0.5">Itinerario & Checklist</p>
-              </div>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] font-bold text-[#7D6F6B] uppercase tracking-widest">03 / Siguientes Pasos</span>
               <CheckCircle2 className="w-4 h-4 text-[#C48B81] group-hover:scale-110 transition-transform" />
             </div>
 
-            <div className="space-y-2.5 py-1">
+            <div className="space-y-2 py-1">
               {(() => {
                 const pendingTasks = realTasks.filter(t => t.status !== 'Completada');
                 const displayTasks = pendingTasks.length > 0 ? pendingTasks.slice(0, 3) : realTasks.slice(0, 3);
 
                 if (displayTasks.length === 0) {
                   return (
-                    <div className="text-center py-6 px-3 text-xs text-[#7D6F6B] bg-[#FAF7F5] rounded-xl border border-dashed border-[#EFE8E1]">
-                      <span>No hay tareas pendientes en el checklist.</span>
+                    <div className="text-center py-6 px-3 text-xs text-[#7D6F6B] bg-white/60 rounded-2xl border border-dashed border-[#EFE8E1]">
+                      <span>Todo al día. No hay tareas pendientes inmediatas.</span>
                     </div>
                   );
                 }
@@ -750,21 +748,18 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
                 return displayTasks.map(task => (
                   <div
                     key={task.id}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF7F5] border border-[#EFE8E1] transition hover:bg-white gap-2"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-white/70 border border-[#EFE8E1]/80 transition group-hover:border-[#EFE8E1] gap-2.5"
                   >
-                    <span className="text-xs font-medium text-[#2B2826] truncate" title={task.title}>
-                      {task.title}
-                    </span>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${
-                        task.status === 'Completada'
-                          ? 'bg-[#E5EDE6] text-[#4B634D]'
-                          : task.status === 'En proceso'
-                          ? 'bg-[#FAF3E8] text-[#8A6332]'
-                          : 'bg-[#F7EDEB] text-[#A86B60]'
-                      }`}
-                    >
-                      {task.status || 'Pendiente'}
+                    <div className="flex items-center space-x-2.5 min-w-0">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${
+                        task.status === 'Completada' ? 'bg-[#4B634D]' : task.status === 'En proceso' ? 'bg-[#C48B81]' : 'bg-[#D9CFC4]'
+                      }`} />
+                      <span className="text-xs font-medium text-[#2B2826] truncate" title={task.title}>
+                        {task.title}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-[#7D6F6B] font-light shrink-0">
+                      {task.status === 'Completada' ? 'Completado' : task.status === 'En proceso' ? 'En marcha' : 'Prioritario'}
                     </span>
                   </div>
                 ));
@@ -772,8 +767,8 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-[#F5EFEB] flex items-center justify-between text-xs text-[#C48B81] font-semibold">
-            <span>Ver Checklist Completo</span>
+          <div className="pt-4 border-t border-[#EFE8E1]/80 flex items-center justify-between text-xs text-[#C48B81] font-medium">
+            <span>Explorar Checklist Completo</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
           </div>
         </div>
