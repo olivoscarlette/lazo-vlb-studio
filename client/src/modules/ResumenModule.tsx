@@ -14,6 +14,7 @@ interface ResumenProps {
 
 export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   const { currentWedding, setCurrentWedding, token, user } = useAuth();
+  const isNovios = user?.role === 'NOVIOS';
   const [weddingData, setWeddingData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showEditWeddingModal, setShowEditWeddingModal] = useState(false);

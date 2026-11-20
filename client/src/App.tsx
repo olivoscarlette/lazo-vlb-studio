@@ -447,6 +447,7 @@ interface MainWorkspaceProps {
 
 const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOpen }) => {
   const { user, currentWedding, setCurrentWedding, activeTab, setActiveTab, activeModule, setActiveModule, setGeneralDashboardTab } = useAuth();
+  const isNovios = user?.role === 'NOVIOS';
 
   // Check if today matches the wedding date
   const todayStr = new Date().toISOString().split('T')[0];
@@ -555,8 +556,6 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
         return <ResumenModule onNavigateTab={setActiveTab} />;
     }
   };
-
-  const isNovios = user?.role === 'NOVIOS';
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-4rem)] sm:min-h-[calc(100vh-4.5rem)] bg-[#FAF7F5] relative max-w-full">
