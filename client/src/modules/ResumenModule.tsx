@@ -4,7 +4,7 @@ import {
   MapPin, Users, DollarSign, CheckCircle2,
   Clock, Sparkles, Edit3, ShieldCheck, Mail, Phone,
   ArrowRight, Calendar, Landmark, Church,
-  Upload, FileText, Link as LinkIcon, ExternalLink, Trash2, Bot, Check, AlertCircle, Loader2, Camera, RotateCcw, Move
+  Upload, FileText, Link as LinkIcon, ExternalLink, Trash2, Bot, Check, AlertCircle, Loader2, Camera, RotateCcw, Move, MessageSquare
 } from 'lucide-react';
 import { BroadcastScheduleModal } from '../components/BroadcastScheduleModal';
 
@@ -24,6 +24,7 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   const [savingSettings, setSavingSettings] = useState(false);
   const [invitationFeedback, setInvitationFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
+  const [showCoordinationModal, setShowCoordinationModal] = useState(false);
   const [realTasks, setRealTasks] = useState<any[]>([]);
 
   const handleUploadCoverPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -332,6 +333,10 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
      weddingData.package_type.toLowerCase().includes('autónomo'))
   );
   const coordinationBrand = isPlannerVirtual ? 'Lazo Studio' : 'Viva la Bride';
+
+  const vivaLaBrideWhatsAppUrl =
+    'https://wa.me/528128663440?text=' +
+    encodeURIComponent(`¡Hola Viva la Bride! Soy cliente de Lazo (${weddingData?.name || currentWedding?.name || 'mi boda'}) y me gustaría recibir información sobre los paquetes de acompañamiento y coordinación presencial para mi evento.`);
 
   // Helper para convertir nombres a Title Case y evitar empalmes de letras mayúsculas en Atteron
   const toTitleCase = (str: string) => {
@@ -1195,6 +1200,39 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         </div>
       )}
 
+      {/* Editorial Luxury Concierge Card for Novios in Virtual / Autonomous Mode */}
+      {isNovios && isPlannerVirtual && (
+        <div className="bg-[#FAF8F5] rounded-3xl p-6 sm:p-8 border border-[#EFE8E1] shadow-2xs relative overflow-hidden">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="max-w-xl space-y-2">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-medium bg-white text-[#7D6F6B] border border-[#EFE8E1] shadow-2xs">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#6E8C70]" />
+                <span className="font-semibold text-[#2B2826]">Dirección Presencial Disponible</span>
+                <span className="text-[#EFE8E1]">·</span>
+                <span className="text-[#8A7E72]">Viva la Bride</span>
+              </div>
+              <h3 className="font-novios text-2xl sm:text-3xl text-[#2B2826] font-normal tracking-tight">
+                ¿Deseas que nuestro equipo dirija tu boda en sitio?
+              </h3>
+              <p className="text-xs sm:text-sm text-[#7D6F6B] font-light leading-relaxed">
+                Tu plataforma digital te da control total. Si buscas que coordinadores profesionales supervisen minuto a minuto, proveedores y montaje el gran día, conoce nuestros servicios presenciales de alta gama.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowCoordinationModal(true)}
+                className="inline-flex items-center justify-center space-x-2 px-6 py-3 bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
+              >
+                <span>Conocer Servicios de Coordinación</span>
+                <ArrowRight className="w-3.5 h-3.5 text-[#C48B81]" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Requirement 4: Equipo Staff Asignado (OCULTO PARA NOVIOS, VISIBLE SOLO PARA ADMIN Y COORD) */}
       {canSeeStaffSection && (
         <div className="luxury-card rounded-2xl p-6 sm:p-7 border border-[#EFE8E1] bg-[#FFFFFF] shadow-xs">
@@ -1430,6 +1468,94 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
           weddingName={currentWedding.name}
           weddingDate={currentWedding.wedding_date || currentWedding.date}
         />
+      )}
+      {/* Modal: Servicios de Coordinación Viva la Bride para Novios */}
+      {showCoordinationModal && (
+        <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-[#EFE8E1] max-h-[90vh] overflow-y-auto space-y-6">
+            <div className="flex items-start justify-between pb-4 border-b border-[#FAF8F5]">
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+                  Exclusivo Viva la Bride
+                </span>
+                <h3 className="font-novios text-2xl sm:text-3xl text-[#2B2826] mt-1 font-normal">
+                  Coordinación & Dirección Presencial
+                </h3>
+                <p className="text-xs text-[#7D6F6B] mt-1 font-light leading-relaxed">
+                  Para novias que desean delegar la supervisión de proveedores, minuto a minuto y montaje en manos de nuestro equipo profesional el gran día.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCoordinationModal(false)}
+                className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-full hover:bg-[#FAF8F5] transition cursor-pointer shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-1">
+              {/* Pilar 1 */}
+              <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-[#EFE8E1] space-y-2">
+                <span className="font-novios text-2xl text-[#C48B81]">01</span>
+                <h4 className="font-novios text-base text-[#2B2826] font-normal">
+                  Asesoría Personalizada
+                </h4>
+                <p className="text-xs text-[#7D6F6B] leading-relaxed font-light">
+                  Sesiones 1 a 1 para afinar presupuesto, resolver dudas técnicas y revisar contratos de tus proveedores clave.
+                </p>
+              </div>
+
+              {/* Pilar 2 */}
+              <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-[#EFE8E1] space-y-2">
+                <span className="font-novios text-2xl text-[#C48B81]">02</span>
+                <h4 className="font-novios text-base text-[#2B2826] font-normal">
+                  Minuto a Minuto Oficial
+                </h4>
+                <p className="text-xs text-[#7D6F6B] leading-relaxed font-light">
+                  Diseño de la escaleta técnica y logística, alineación con la locación y timing exacto de cada momento de tu evento.
+                </p>
+              </div>
+
+              {/* Pilar 3 */}
+              <div className="bg-[#FAF8F5] p-5 rounded-2xl border border-[#EFE8E1] space-y-2">
+                <span className="font-novios text-2xl text-[#C48B81]">03</span>
+                <h4 className="font-novios text-base text-[#2B2826] font-normal">
+                  Dirección: El Gran Día
+                </h4>
+                <p className="text-xs text-[#7D6F6B] leading-relaxed font-light">
+                  Coordinador titular y equipo de staff presencial en sitio para supervisar montaje, tiempos y resolver cualquier imprevisto.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-[#EFE8E1] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-2 text-xs text-[#7D6F6B] font-light">
+                <span className="w-2 h-2 rounded-full bg-[#6E8C70]" />
+                <span>Atención directa y personalizada por WhatsApp</span>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCoordinationModal(false)}
+                  className="px-4 py-2.5 rounded-full text-xs text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer font-medium"
+                >
+                  Cerrar
+                </button>
+                <a
+                  href={vivaLaBrideWhatsAppUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center space-x-2 px-6 py-2.5 bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>Hablar con Dirección de Viva la Bride</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
