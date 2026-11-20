@@ -495,32 +495,32 @@ export const ChecklistModule: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
-            Base de Datos Maestra · Planeación Integral
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+            Organización & Tiempos
           </span>
-          <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
+          <h2 className="font-novios text-3xl sm:text-4xl text-[#2B2826] mt-1 tracking-tight">
             Checklist de la Boda
           </h2>
-          <p className="text-sm text-[#8A7E72] mt-1">
-            Organiza las actividades por sección general o por etapas mensuales según el tiempo restante.
+          <p className="text-xs sm:text-sm text-[#8A7E72] mt-1.5 leading-relaxed font-light">
+            Tu guía paso a paso para planear cada detalle a tu propio ritmo.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {!isNovios && (
             <>
               <button
                 type="button"
                 onClick={handleOpenMasterModal}
                 disabled={importingTemplate}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold rounded-xl transition cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium rounded-full transition shadow-2xs cursor-pointer disabled:opacity-50"
                 title="Elegir y asignar actividades desde la Base de Datos Maestra de VLB Studio"
               >
                 <Layers className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>Asignar desde Plantilla</span>
               </button>
 
-              <label className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold rounded-xl cursor-pointer transition">
+              <label className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium rounded-full cursor-pointer transition shadow-2xs">
                 <Upload className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>Subir Excel</span>
                 <input
@@ -536,7 +536,7 @@ export const ChecklistModule: React.FC = () => {
 
           <button
             onClick={handleOpenNewModal}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Nueva Actividad</span>
@@ -544,33 +544,33 @@ export const ChecklistModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Progress Metric Card */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+      {/* Progress Metric Card: Diseño Editorial Cálido */}
+      <div className="bg-[#FAF8F5] rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <div className="text-xs uppercase font-semibold tracking-wider text-[#8A7E72]">
-              Avance Global ({stats.completed} de {stats.total} actividades)
-            </div>
-            <div className="text-2xl font-serif font-bold text-[#2B2826] mt-0.5">
-              {stats.progressPercent}% Completado
+            <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
+              Progreso de Planeación
+            </span>
+            <div className="font-novios text-3xl sm:text-4xl text-[#2B2826] mt-0.5 tracking-tight">
+              {stats.progressPercent}% <span className="text-base sm:text-lg font-light text-[#8A7E72]">Completado</span>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-semibold">
-            <span className="text-[#A86B60] bg-[#FAF8F5] border border-[#EFE8E1] px-3 py-1 rounded-xl">
-              En esta vista: {tabCompleted} / {tabTotal}
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-[#2B2826] bg-white border border-[#EFE8E1] px-3 py-1 rounded-full font-medium shadow-2xs">
+              En esta vista: <strong>{tabCompleted}</strong> de {tabTotal}
             </span>
-            <span className="text-[#384C3A] bg-[#E5EDE6] px-2.5 py-1 rounded-xl border border-[#D5E2D7]">
+            <span className="text-[#384C3A] bg-[#E5EDE6] px-3 py-1 rounded-full font-medium border border-[#D5E2D7]">
               {stats.completed} listas
             </span>
-            <span className="text-[#8A7E72] bg-[#FAF8F5] px-2.5 py-1 rounded-xl border border-[#EFE8E1]">
+            <span className="text-[#8A7E72] bg-white px-3 py-1 rounded-full font-light border border-[#EFE8E1]">
               {stats.pending} pendientes
             </span>
           </div>
         </div>
 
-        <div className="h-3 w-full bg-[#FAF8F5] border border-[#EFE8E1] rounded-full overflow-hidden">
+        <div className="h-2 w-full bg-white border border-[#EFE8E1] rounded-full overflow-hidden p-0.5">
           <div
-            className="h-full bg-[#C48B81] rounded-full transition-all duration-300"
+            className="h-full bg-gradient-to-r from-[#C48B81] to-[#B3796F] rounded-full transition-all duration-500"
             style={{ width: `${stats.progressPercent}%` }}
           />
         </div>
@@ -578,19 +578,19 @@ export const ChecklistModule: React.FC = () => {
 
       {/* Main Two-Fold View Navigation */}
       <div className="space-y-3">
-        <div className="flex items-center p-1 bg-[#FAF8F5] rounded-2xl border border-[#EFE8E1] w-fit">
+        <div className="flex items-center p-1 bg-[#FAF8F5] rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
           <button
             type="button"
             onClick={() => setMainView('GENERAL')}
-            className={`px-5 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-2 ${
+            className={`px-4 py-2 rounded-full text-xs font-medium transition cursor-pointer flex items-center space-x-2 ${
               mainView === 'GENERAL'
-                ? 'bg-white text-[#2B2826] shadow-xs border border-[#EFE8E1]'
+                ? 'bg-white text-[#2B2826] shadow-2xs border border-[#EFE8E1]'
                 : 'text-[#8A7E72] hover:text-[#2B2826]'
             }`}
           >
-            <span>Checklist General</span>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full ${
-              mainView === 'GENERAL' ? 'bg-[#C48B81] text-white' : 'bg-[#EFE8E1] text-[#5A524C]'
+            <span>Por Categorías</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+              mainView === 'GENERAL' ? 'bg-[#2B2826] text-white' : 'bg-[#EFE8E1] text-[#5A524C]'
             }`}>
               {generalTasks.length}
             </span>
@@ -599,15 +599,15 @@ export const ChecklistModule: React.FC = () => {
           <button
             type="button"
             onClick={() => setMainView('MESES')}
-            className={`px-5 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-2 ${
+            className={`px-4 py-2 rounded-full text-xs font-medium transition cursor-pointer flex items-center space-x-2 ${
               mainView === 'MESES'
-                ? 'bg-white text-[#2B2826] shadow-xs border border-[#EFE8E1]'
+                ? 'bg-white text-[#2B2826] shadow-2xs border border-[#EFE8E1]'
                 : 'text-[#8A7E72] hover:text-[#2B2826]'
             }`}
           >
-            <span>Actividades por Meses</span>
-            <span className={`text-[11px] px-2 py-0.5 rounded-full ${
-              mainView === 'MESES' ? 'bg-[#C48B81] text-white' : 'bg-[#EFE8E1] text-[#5A524C]'
+            <span>Cronograma por Meses</span>
+            <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+              mainView === 'MESES' ? 'bg-[#2B2826] text-white' : 'bg-[#EFE8E1] text-[#5A524C]'
             }`}>
               {monthTasks.length}
             </span>
@@ -616,17 +616,17 @@ export const ChecklistModule: React.FC = () => {
 
         {/* Sub-Pills for 'MESES' view */}
         {mainView === 'MESES' && (
-          <div className="flex items-center space-x-2 overflow-x-auto pb-1 pt-1">
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar">
             <button
               type="button"
               onClick={() => setMonthFilter('ALL')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition cursor-pointer ${
                 monthFilter === 'ALL'
-                  ? 'bg-[#C48B81] text-white shadow-xs'
+                  ? 'bg-[#2B2826] text-white shadow-2xs'
                   : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
               }`}
             >
-              Todos los Meses ({monthTasks.length})
+              Todos ({monthTasks.length})
             </button>
             {availableMonthStages.map(stage => {
               const countInStage = monthTasks.filter(t => (t.category || '').toLowerCase() === stage.toLowerCase()).length;
@@ -635,9 +635,9 @@ export const ChecklistModule: React.FC = () => {
                   key={stage}
                   type="button"
                   onClick={() => setMonthFilter(stage)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition cursor-pointer flex items-center space-x-1.5 ${
                     monthFilter === stage
-                      ? 'bg-[#C48B81] text-white shadow-xs'
+                      ? 'bg-[#2B2826] text-white shadow-2xs'
                       : 'bg-white text-[#5A524C] hover:bg-[#FAF8F5] border border-[#EFE8E1]'
                   }`}
                 >
@@ -656,21 +656,21 @@ export const ChecklistModule: React.FC = () => {
 
       {/* Content Area */}
       {loading ? (
-        <div className="py-12 text-center text-[#8A7E72] text-sm">Cargando checklist...</div>
+        <div className="py-12 text-center text-[#8A7E72] text-xs font-light">Cargando checklist...</div>
       ) : currentViewTasks.length === 0 ? (
-        <div className="bg-white rounded-3xl p-10 text-center border border-dashed border-[#EFE8E1] max-w-xl mx-auto space-y-4">
-          <div className="w-12 h-12 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">
+        <div className="bg-white rounded-3xl p-10 sm:p-14 text-center border border-[#EFE8E1] max-w-xl mx-auto space-y-4 shadow-2xs">
+          <div className="w-12 h-12 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">
             <CheckCircle2 className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="font-serif text-lg font-semibold text-[#2B2826]">
+            <h3 className="font-novios text-xl font-normal text-[#2B2826]">
               {mainView === 'GENERAL'
                 ? 'No hay actividades en el Checklist General'
                 : monthFilter === 'ALL'
                 ? 'No hay actividades por meses asignadas aún'
                 : `No hay actividades para la etapa: ${monthFilter}`}
             </h3>
-            <p className="text-xs text-[#8A7E72] mt-1 max-w-md mx-auto">
+            <p className="text-xs text-[#8A7E72] mt-1.5 max-w-md mx-auto font-light leading-relaxed">
               {!isNovios
                 ? 'Puedes asignar actividades selectivamente desde la Base de Datos Maestra o crear una nueva manualmente.'
                 : 'Tu equipo de coordinación asignará las actividades correspondientes a esta etapa.'}
@@ -682,7 +682,7 @@ export const ChecklistModule: React.FC = () => {
               <button
                 type="button"
                 onClick={handleOpenMasterModal}
-                className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
               >
                 <Layers className="w-3.5 h-3.5" />
                 <span>Asignar desde Plantilla Maestra</span>
@@ -690,7 +690,7 @@ export const ChecklistModule: React.FC = () => {
               <button
                 type="button"
                 onClick={handleOpenNewModal}
-                className="inline-flex items-center space-x-1.5 px-4 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold rounded-xl transition cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-4 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium rounded-full transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Nueva Actividad</span>
@@ -700,82 +700,79 @@ export const ChecklistModule: React.FC = () => {
         </div>
       ) : mainView === 'GENERAL' ? (
         /* Grouped View for Checklist General */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
           {generalSections.map(([sectionName, sectionTasks]) => {
             const doneCount = sectionTasks.filter(t => t.status === 'Completada').length;
             return (
-              <div key={sectionName} className="bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-xs flex flex-col">
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#FAF8F5]">
-                  <div>
-                    <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
-                      Checklist General
+              <div key={sectionName} className="bg-white rounded-2xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3.5 mb-2 border-b border-[#FAF8F5]">
+                    <h3 className="font-novios text-xl text-[#2B2826] font-normal">{sectionName}</h3>
+                    <span className="text-xs font-light px-3 py-0.5 rounded-full bg-[#FAF8F5] text-[#7D6F6B] border border-[#EFE8E1]">
+                      {doneCount} de {sectionTasks.length} listas
                     </span>
-                    <h3 className="font-serif text-xl font-semibold text-[#2B2826]">{sectionName}</h3>
                   </div>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#FAF8F5] text-[#A86B60] border border-[#EFE8E1]">
-                    {doneCount} / {sectionTasks.length}
-                  </span>
-                </div>
 
-                <div className="divide-y divide-[#FAF8F5]">
-                  {sectionTasks.map(task => (
-                    <div
-                      key={task.id}
-                      className="py-2.5 flex items-center justify-between gap-3 group hover:bg-[#FAF8F5]/60 px-2 rounded-xl transition"
-                    >
+                  <div className="divide-y divide-[#FAF8F5]">
+                    {sectionTasks.map(task => (
                       <div
-                        onClick={() => handleToggleCheckbox(task)}
-                        className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0"
+                        key={task.id}
+                        className="py-2.5 flex items-center justify-between gap-3 group hover:bg-[#FAF8F5]/50 px-2 rounded-xl transition"
                       >
-                        <button
-                          type="button"
-                          className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition ${
-                            task.status === 'Completada'
-                              ? 'bg-[#C48B81] border-[#C48B81] text-white'
-                              : 'border-[#EFE8E1] bg-[#FAF8F5] hover:border-[#C48B81]'
-                          }`}
+                        <div
+                          onClick={() => handleToggleCheckbox(task)}
+                          className="flex items-center space-x-3 cursor-pointer flex-1 min-w-0"
                         >
-                          {task.status === 'Completada' && <CheckCircle2 className="w-3.5 h-3.5" />}
-                        </button>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className={`text-sm font-medium block ${
-                              task.status === 'Completada' ? 'line-through text-[#8A7E72]' : 'text-[#2B2826]'
-                            }`}>
-                              {task.title}
-                            </span>
-                            {isTaskOverdue(task) && (
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F7EDEB] text-[#C48B81] border border-[#F0D5D1] whitespace-nowrap">
-                                Vencida
+                          <button
+                            type="button"
+                            className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition ${
+                              task.status === 'Completada'
+                                ? 'bg-[#577355] border-[#577355] text-white shadow-2xs'
+                                : 'border-[#EFE8E1] bg-white hover:border-[#C48B81]'
+                            }`}
+                          >
+                            {task.status === 'Completada' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                          </button>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs sm:text-sm font-light block ${
+                                task.status === 'Completada' ? 'line-through text-[#8A7E72] opacity-60' : 'text-[#2B2826]'
+                              }`}>
+                                {task.title}
                               </span>
+                              {isTaskOverdue(task) && (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F7EDEB] text-[#C48B81] border border-[#F0D5D1] whitespace-nowrap">
+                                  Vencida
+                                </span>
+                              )}
+                            </div>
+                            {task.notes && (
+                              <span className="text-[11px] text-[#8A7E72] italic block mt-0.5 font-light">{task.notes}</span>
                             )}
                           </div>
-                          {task.notes && (
-                            <span className="text-xs text-[#8A7E72] italic block">{task.notes}</span>
-                          )}
+                        </div>
+
+                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditModal(task)}
+                            className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-white transition cursor-pointer"
+                            title="Editar o agregar comentario"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTask(task.id)}
+                            className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
-
-                      <div className="flex items-center space-x-1 opacity-70 group-hover:opacity-100 transition shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEditModal(task)}
-                          className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-[#FAF8F5] cursor-pointer"
-                          title="Editar o agregar comentario"
-                        >
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteTask(task.id)}
-                          className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 cursor-pointer"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
             );
@@ -783,17 +780,17 @@ export const ChecklistModule: React.FC = () => {
         </div>
       ) : (
         /* Stage List View for 'MESES' */
-        <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
-          <div className="flex items-center justify-between pb-4 mb-4 border-b border-[#FAF8F5]">
+        <div className="bg-white rounded-2xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
+          <div className="flex items-center justify-between pb-3.5 border-b border-[#FAF8F5]">
             <div>
-              <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
+              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
                 Cronograma por Etapa
               </span>
-              <h3 className="font-serif text-2xl font-semibold text-[#2B2826]">
+              <h3 className="font-novios text-2xl text-[#2B2826] font-normal mt-0.5">
                 {monthFilter === 'ALL' ? 'Todas las Etapas Mensuales' : `Etapa: ${monthFilter}`}
               </h3>
             </div>
-            <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[#FAF8F5] text-[#A86B60] border border-[#EFE8E1]">
+            <span className="text-xs font-light px-3 py-1 rounded-full bg-[#FAF8F5] text-[#7D6F6B] border border-[#EFE8E1]">
               {tabCompleted} de {tabTotal} realizadas
             </span>
           </div>
@@ -802,7 +799,7 @@ export const ChecklistModule: React.FC = () => {
             {currentViewTasks.map(task => (
               <div
                 key={task.id}
-                className={`py-3.5 px-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-[#FAF8F5]/70 rounded-2xl transition ${
+                className={`py-3 px-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group hover:bg-[#FAF8F5]/50 rounded-xl transition ${
                   task.status === 'Completada' ? 'opacity-70' : ''
                 }`}
               >
@@ -812,12 +809,12 @@ export const ChecklistModule: React.FC = () => {
                 >
                   <button
                     type="button"
-                    className={`mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition ${
+                    className={`mt-0.5 w-5 h-5 rounded-full border flex items-center justify-center shrink-0 transition ${
                       task.status === 'Completada'
-                        ? 'bg-[#C48B81] border-[#C48B81] text-white'
+                        ? 'bg-[#577355] border-[#577355] text-white shadow-2xs'
                         : task.status === 'En proceso'
                         ? 'bg-[#F5EFEB] border-[#EFE8E1] text-[#7D6F6B]'
-                        : 'border-[#EFE8E1] bg-[#FAF8F5] hover:border-[#C48B81]'
+                        : 'border-[#EFE8E1] bg-white hover:border-[#C48B81]'
                     }`}
                   >
                     {task.status === 'Completada' && <CheckCircle2 className="w-3.5 h-3.5" />}
@@ -826,8 +823,8 @@ export const ChecklistModule: React.FC = () => {
 
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h4 className={`text-sm font-medium leading-relaxed ${
-                        task.status === 'Completada' ? 'line-through text-[#8A7E72]' : 'text-[#2B2826]'
+                      <h4 className={`text-xs sm:text-sm font-light leading-relaxed ${
+                        task.status === 'Completada' ? 'line-through text-[#8A7E72] opacity-60' : 'text-[#2B2826]'
                       }`}>
                         {task.title}
                       </h4>
@@ -838,9 +835,9 @@ export const ChecklistModule: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#8A7E72] mt-1">
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-[#8A7E72] mt-1 font-light">
                       {task.category && (
-                        <span className="bg-[#FAF8F5] text-[#2B2826] px-2 py-0.5 rounded-md text-[11px] border border-[#EFE8E1]">
+                        <span className="bg-[#FAF8F5] text-[#5A524C] px-2 py-0.5 rounded-md text-[11px] border border-[#EFE8E1]">
                           {task.category}
                         </span>
                       )}
@@ -853,40 +850,27 @@ export const ChecklistModule: React.FC = () => {
                     </div>
 
                     {task.notes && (
-                      <p className="text-xs text-[#A86B60] bg-[#FAF8F5] px-2.5 py-1 rounded-lg mt-1.5 inline-block border border-[#EFE8E1]">
+                      <p className="text-xs text-[#A86B60] bg-[#FAF8F5] px-2.5 py-1 rounded-lg mt-1.5 inline-block border border-[#EFE8E1] font-light">
                         {task.notes}
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-end space-x-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => handleToggleCheckbox(task)}
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-xl border transition cursor-pointer ${
-                      task.status === 'Completada'
-                        ? 'bg-[#E4ECE5] text-[#2B5235] border-[#D0DED2]'
-                        : 'bg-[#FAF8F5] text-[#2B2826] border-[#EFE8E1] hover:border-[#C48B81]'
-                    }`}
-                  >
-                    {task.status === 'Completada' ? 'Hecho' : 'Pendiente'}
-                  </button>
-
+                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity self-end sm:self-center shrink-0">
                   <button
                     type="button"
                     onClick={() => handleOpenEditModal(task)}
-                    className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-xl hover:bg-[#FAF8F5] cursor-pointer"
-                    title="Editar tarea o agregar comentario"
+                    className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-white transition cursor-pointer"
+                    title="Editar o agregar comentario"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
-
                   <button
                     type="button"
                     onClick={() => handleDeleteTask(task.id)}
-                    className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-xl hover:bg-rose-50 cursor-pointer"
-                    title="Eliminar tarea"
+                    className="text-[#8A7E72]/60 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                    title="Eliminar"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -896,7 +880,6 @@ export const ChecklistModule: React.FC = () => {
           </div>
         </div>
       )}
-
       {/* Modal: Asignar desde Plantilla Maestra */}
       {showMasterModal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
