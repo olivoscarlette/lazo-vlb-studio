@@ -304,13 +304,15 @@ export const ReunionesModule: React.FC = () => {
             <MessageSquare className="w-3.5 h-3.5 text-[#2B5235]" />
             <span>Línea Concierge</span>
           </a>
-          <button
-            onClick={() => setShowScheduleModal(true)}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{isNovios ? (isPlannerVirtual ? 'Solicitar Sesión 1 a 1' : 'Solicitar Reunión') : 'Agendar Reunión'}</span>
-          </button>
+          {(!isNovios || (packageInfo && packageInfo.maxMeetings > 0)) && (
+            <button
+              onClick={() => setShowScheduleModal(true)}
+              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isNovios ? 'Solicitar Reunión' : 'Agendar Reunión'}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -539,13 +541,25 @@ export const ReunionesModule: React.FC = () => {
                 : 'No hay sesiones registradas aún. Solicita tu primera sesión de planeación con el equipo de coordinación.'}
             </p>
             <div className="mt-5 flex items-center gap-3">
-              <button
-                onClick={() => setShowScheduleModal(true)}
-                className="inline-flex items-center space-x-1.5 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>{isPlannerVirtual ? 'Solicitar Sesión 1 a 1' : 'Solicitar Primera Reunión'}</span>
-              </button>
+              {(!isNovios || (packageInfo && packageInfo.maxMeetings > 0)) ? (
+                <button
+                  onClick={() => setShowScheduleModal(true)}
+                  className="inline-flex items-center space-x-1.5 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>{isNovios ? 'Solicitar Reunión' : 'Agendar Reunión'}</span>
+                </button>
+              ) : (
+                <a
+                  href={vivaLaBrideWhatsAppUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center space-x-1.5 px-5 py-2.5 bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>Consultar con Dirección de Viva la Bride</span>
+                </a>
+              )}
             </div>
           </div>
         ) : (
@@ -754,8 +768,8 @@ export const ReunionesModule: React.FC = () => {
         )}
         </div>
 
-      {/* Modal: Solicitar / Agendar Reunión */}
-      {showScheduleModal && (
+      {/* Modal: Solicitar / Agendar Reunión (Solo si está habilitado en su paquete o es Administrador/Coordinador) */}
+      {showScheduleModal && (!isNovios || (packageInfo && packageInfo.maxMeetings > 0)) && (
         <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1]">
             <div className="flex items-center justify-between mb-2">
