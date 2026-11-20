@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import {
   MapPin, Users, DollarSign, CheckCircle2,
   Clock, Sparkles, Edit3, ShieldCheck, Mail, Phone,
   ArrowRight, Calendar, Landmark, Church,
-  Upload, FileText, Link as LinkIcon, ExternalLink, Trash2, Bot, Check, AlertCircle, Loader2, Camera, RotateCcw
+  Upload, FileText, Link as LinkIcon, ExternalLink, Trash2, Bot, Check, AlertCircle, Loader2, Camera, RotateCcw, Move
 } from 'lucide-react';
 import { BroadcastScheduleModal } from '../components/BroadcastScheduleModal';
 
@@ -65,10 +65,109 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
-        setWeddingData((prev: any) => ({ ...prev, cover_photo_url: null }));
-        setCurrentWedding({ ...currentWedding, cover_photo_url: null });
+        setWeddingData((prev: any) => ({ ...prev, cover_photo_url: null, cover_photo_position: 'center 50%' }));
+        setCurrentWedding({ ...currentWedding, cover_photo_url: null, cover_photo_position: 'center 50%' });
       }
     } catch {}
+  };
+
+  // Reposicionamiento interactivo de foto de portada
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const [isRepositioning, setIsRepositioning] = useState(false);
+  const [coverPosY, setCoverPosY] = useState(50);
+  const [savingCoverPos, setSavingCoverPos] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [dragStartPosY, setDragStartPosY] = useState(50);
+
+  const parseCoverPosY = (posStr?: string) => {
+    if (!posStr) return 50;
+    const match = posStr.match(/(\d+)%/);
+    return match ? parseInt(match[1], 10) : 50;
+  };
+
+  useEffect(() => {
+    if (weddingData?.cover_photo_position) {
+      setCoverPosY(parseCoverPosY(weddingData.cover_photo_position));
+    }
+  }, [weddingData?.cover_photo_position]);
+
+  const handleStartReposition = () => {
+    setCoverPosY(parseCoverPosY(weddingData?.cover_photo_position));
+    setIsRepositioning(true);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isRepositioning) return;
+    setIsDragging(true);
+    setDragStartY(e.clientY);
+    setDragStartPosY(coverPosY);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isRepositioning || !isDragging || !bannerRef.current) return;
+    const bannerHeight = bannerRef.current.clientHeight || 350;
+    const deltaY = e.clientY - dragStartY;
+    const deltaPct = (deltaY / bannerHeight) * 100;
+    const newPct = Math.max(0, Math.min(100, Math.round(dragStartPosY - deltaPct)));
+    setCoverPosY(newPct);
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging) setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isRepositioning) return;
+    setIsDragging(true);
+    setDragStartY(e.touches[0].clientY);
+    setDragStartPosY(coverPosY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isRepositioning || !isDragging || !bannerRef.current) return;
+    const bannerHeight = bannerRef.current.clientHeight || 350;
+    const deltaY = e.touches[0].clientY - dragStartY;
+    const deltaPct = (deltaY / bannerHeight) * 100;
+    const newPct = Math.max(0, Math.min(100, Math.round(dragStartPosY - deltaPct)));
+    setCoverPosY(newPct);
+  };
+
+  const handleTouchEnd = () => {
+    if (isDragging) setIsDragging(false);
+  };
+
+  const handleSaveCoverPosition = async () => {
+    if (!currentWedding || !token) return;
+    setSavingCoverPos(true);
+    const newPosition = `center ${coverPosY}%`;
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/cover-position`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ cover_photo_position: newPosition })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setWeddingData((prev: any) => ({ ...prev, cover_photo_position: newPosition }));
+        setCurrentWedding({ ...currentWedding, cover_photo_position: newPosition });
+        setIsRepositioning(false);
+      } else {
+        alert(data.error || 'No se pudo guardar la posición.');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error de conexión.');
+    } finally {
+      setSavingCoverPos(false);
+    }
+  };
+
+  const handleCancelReposition = () => {
+    setCoverPosY(parseCoverPosY(weddingData?.cover_photo_position));
+    setIsRepositioning(false);
   };
 
   const handleUploadInvitationPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -298,56 +397,141 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* 1. Cabecera Hero Cinematográfica Editorial (Idéntica al Mockup Autorizado) */}
       <div className="relative rounded-[32px] overflow-hidden shadow-md border border-[#EFE8E1] bg-[#181514]">
-        {/* Foto de portada cinematográfica con overlay editorial */}
-        <div className="relative h-72 sm:h-84 md:h-96 w-full overflow-hidden">
+        {/* Foto de portada cinematográfica con overlay editorial y soporte de encuadre */}
+        <div
+          ref={bannerRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className={`relative h-72 sm:h-84 md:h-96 w-full overflow-hidden ${
+            isRepositioning ? 'cursor-grab active:cursor-grabbing select-none' : ''
+          }`}
+        >
           <img
             src={weddingData.cover_photo_url || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80"}
             alt="Boda Cover"
-            className="w-full h-full object-cover object-center filter brightness-[0.70] contrast-[1.05] transition-transform duration-700 hover:scale-105"
+            style={{
+              objectPosition: isRepositioning
+                ? `center ${coverPosY}%`
+                : (weddingData.cover_photo_position || 'center 50%')
+            }}
+            className={`w-full h-full object-cover filter brightness-[0.70] contrast-[1.05] pointer-events-none select-none ${
+              !isRepositioning ? 'transition-all duration-500 hover:scale-[1.02]' : 'transition-none'
+            }`}
           />
           {/* Degradado cinematográfico para máxima legibilidad */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#181514] via-[#181514]/40 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#181514] via-[#181514]/40 to-black/30 pointer-events-none" />
 
-          {/* Botones de Cabecera (Cambiar Portada & Gestionar Boda) */}
-          <div className="absolute top-5 right-5 z-20 flex items-center space-x-2">
-            {/* Botón Cambiar Foto de Portada */}
-            <label className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white text-xs font-medium cursor-pointer transition shadow-sm select-none">
-              {uploadingCover ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#E8D8CE]" />
-              ) : (
-                <Camera className="w-3.5 h-3.5 text-[#E8D8CE]" />
-              )}
-              <span>{uploadingCover ? 'Subiendo...' : 'Cambiar Foto'}</span>
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
-                className="hidden"
-                disabled={uploadingCover}
-                onChange={handleUploadCoverPhoto}
-              />
-            </label>
+          {/* Guía flotante durante el modo reposicionamiento */}
+          {isRepositioning && (
+            <div className="absolute top-5 left-1/2 -translate-x-1/2 z-30 px-5 py-2 rounded-full bg-black/75 backdrop-blur-md border border-white/30 text-white text-xs font-medium flex items-center space-x-2.5 shadow-2xl animate-in fade-in zoom-in-95 pointer-events-none">
+              <Move className="w-4 h-4 text-[#E8D8CE] animate-bounce" />
+              <span>Arrastra hacia arriba o abajo para encuadrar ({coverPosY}%)</span>
+            </div>
+          )}
 
-            {/* Botón Restablecer Foto si tiene foto personalizada */}
-            {weddingData.cover_photo_url && (
-              <button
-                type="button"
-                onClick={handleDeleteCoverPhoto}
-                title="Restablecer foto predeterminada"
-                className="p-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white/80 hover:text-white transition cursor-pointer"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-            )}
+          {/* Botones de Cabecera (Cambiar Portada, Ajustar Encuadre & Gestionar) */}
+          <div className="absolute top-5 right-5 z-30 flex items-center space-x-2">
+            {isRepositioning ? (
+              <>
+                {/* Botones de micro-ajuste rápido */}
+                <div className="hidden sm:flex items-center space-x-1 bg-black/50 backdrop-blur-md border border-white/20 rounded-full p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setCoverPosY(p => Math.max(0, p - 5))}
+                    title="Mover hacia arriba"
+                    className="px-2 py-1 text-white hover:text-[#E8D8CE] text-xs font-bold transition cursor-pointer"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCoverPosY(p => Math.min(100, p + 5))}
+                    title="Mover hacia abajo"
+                    className="px-2 py-1 text-white hover:text-[#E8D8CE] text-xs font-bold transition cursor-pointer"
+                  >
+                    ▼
+                  </button>
+                </div>
 
-            {/* Botón Gestionar Boda (Solo Admin / Coordinador) */}
-            {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
-              <button
-                onClick={() => setShowEditWeddingModal(true)}
-                className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white text-xs font-semibold transition cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5 text-[#E8D8CE]" />
-                <span className="hidden sm:inline">Gestionar</span>
-              </button>
+                <button
+                  type="button"
+                  onClick={handleCancelReposition}
+                  disabled={savingCoverPos}
+                  className="px-3.5 py-1.5 rounded-full bg-black/50 hover:bg-black/70 backdrop-blur-md border border-white/20 text-white text-xs font-medium transition cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveCoverPosition}
+                  disabled={savingCoverPos}
+                  className="inline-flex items-center space-x-1.5 px-4 py-1.5 rounded-full bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-semibold shadow-md transition cursor-pointer"
+                >
+                  {savingCoverPos ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Check className="w-3.5 h-3.5" />
+                  )}
+                  <span>Guardar</span>
+                </button>
+              </>
+            ) : (
+              <>
+                {/* Botón Cambiar Foto de Portada */}
+                <label className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white text-xs font-medium cursor-pointer transition shadow-sm select-none">
+                  {uploadingCover ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[#E8D8CE]" />
+                  ) : (
+                    <Camera className="w-3.5 h-3.5 text-[#E8D8CE]" />
+                  )}
+                  <span>{uploadingCover ? 'Subiendo...' : 'Cambiar Foto'}</span>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
+                    className="hidden"
+                    disabled={uploadingCover}
+                    onChange={handleUploadCoverPhoto}
+                  />
+                </label>
+
+                {/* Botón Ajustar Posición de la Foto */}
+                <button
+                  type="button"
+                  onClick={handleStartReposition}
+                  title="Mover y encuadrar la foto"
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white text-xs font-medium cursor-pointer transition shadow-sm select-none"
+                >
+                  <Move className="w-3.5 h-3.5 text-[#E8D8CE]" />
+                  <span className="hidden sm:inline">Ajustar</span>
+                </button>
+
+                {/* Botón Restablecer Foto si tiene foto personalizada */}
+                {weddingData.cover_photo_url && (
+                  <button
+                    type="button"
+                    onClick={handleDeleteCoverPhoto}
+                    title="Restablecer foto predeterminada"
+                    className="p-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white/80 hover:text-white transition cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                )}
+
+                {/* Botón Gestionar Boda (Solo Admin / Coordinador) */}
+                {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+                  <button
+                    onClick={() => setShowEditWeddingModal(true)}
+                    className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white text-xs font-semibold transition cursor-pointer"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-[#E8D8CE]" />
+                    <span className="hidden sm:inline">Gestionar</span>
+                  </button>
+                )}
+              </>
             )}
           </div>
 

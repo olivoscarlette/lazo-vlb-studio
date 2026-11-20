@@ -373,6 +373,12 @@ export function initDatabase() {
   }
 
   try {
+    db.exec("ALTER TABLE weddings ADD COLUMN cover_photo_position TEXT DEFAULT 'center 50%';");
+  } catch {
+    // Column already exists
+  }
+
+  try {
     db.exec('ALTER TABLE notifications ADD COLUMN creator_id TEXT;');
   } catch {
     // Column already exists

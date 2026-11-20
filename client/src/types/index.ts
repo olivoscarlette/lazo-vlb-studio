@@ -55,6 +55,7 @@ export interface Wedding {
   package_type: string;
   event_type?: string;
   cover_photo_url?: string | null;
+  cover_photo_position?: string | null;
   floor_plan_url?: string | null;
   invitation_type?: 'LINK' | 'PDF';
   invitation_url?: string | null;

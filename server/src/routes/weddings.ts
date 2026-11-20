@@ -764,13 +764,33 @@ router.delete('/:weddingId/cover-photo', authenticateToken, requireWeddingAccess
 
   db.prepare(`
     UPDATE weddings
-    SET cover_photo_url = NULL, updated_at = datetime('now')
+    SET cover_photo_url = NULL, cover_photo_position = 'center 50%', updated_at = datetime('now')
     WHERE id = ?
   `).run(weddingId);
 
   logAudit(weddingId, req.user!.id, req.user!.name, 'ELIMINAR_PORTADA', 'WEDDING', weddingId, 'Restablecimiento de foto de portada predeterminada');
 
   return res.json({ success: true });
+});
+
+// PUT /api/weddings/:weddingId/cover-position - Guardar encuadre / posición de la foto de portada
+router.put('/:weddingId/cover-position', authenticateToken, requireWeddingAccess, (req, res) => {
+  const { weddingId } = req.params;
+  const { cover_photo_position } = req.body;
+
+  if (!cover_photo_position) {
+    return res.status(400).json({ error: 'Posición de encuadre requerida.' });
+  }
+
+  db.prepare(`
+    UPDATE weddings
+    SET cover_photo_position = ?, updated_at = datetime('now')
+    WHERE id = ?
+  `).run(cover_photo_position, weddingId);
+
+  logAudit(weddingId, req.user!.id, req.user!.name, 'ACTUALIZAR_ENCUADRE_PORTADA', 'WEDDING', weddingId, `Ajuste de encuadre a ${cover_photo_position}`);
+
+  return res.json({ success: true, cover_photo_position });
 });
 
 export default router;
