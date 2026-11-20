@@ -514,8 +514,17 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     switch (activeTab) {
       case 'resumen':
         return <ResumenModule onNavigateTab={setActiveTab} />;
-      case 'reuniones':
+      case 'reuniones': {
+        const isVirtualNovios = isNovios && Boolean(
+          !currentWedding?.package_type ||
+          currentWedding.package_type.toLowerCase().includes('virtual') ||
+          currentWedding.package_type.toLowerCase().includes('autónomo')
+        );
+        if (isVirtualNovios) {
+          return <ResumenModule onNavigateTab={setActiveTab} />;
+        }
         return <ReunionesModule />;
+      }
       case 'invitados':
         return <InvitadosModule />;
       case 'mesas':

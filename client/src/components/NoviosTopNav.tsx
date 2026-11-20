@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { WorkspaceTab } from './Sidebar';
+import { useAuth } from '../context/AuthContext';
 
 interface NoviosTopNavProps {
   currentTab: WorkspaceTab;
@@ -12,9 +13,18 @@ interface NoviosTabDef {
 }
 
 export const NoviosTopNav: React.FC<NoviosTopNavProps> = ({ currentTab, onSelectTab }) => {
-  // Orden exacto autorizado para Novios:
-  // dashboard, reuniones, proveedores y pagos, checklist, invitados, mesas y layout, civil, religiosa, documentos e itinerario
-  const tabs: NoviosTabDef[] = [
+  const { currentWedding } = useAuth();
+
+  // Modalidad virtual / autónomo no incluye reuniones presenciales a menos que la administradora se las active
+  const isVirtual = Boolean(
+    !currentWedding?.package_type ||
+    currentWedding.package_type.toLowerCase().includes('virtual') ||
+    currentWedding.package_type.toLowerCase().includes('autónomo')
+  );
+
+  // Orden autorizado para Novios:
+  // Mi Boda, [Reuniones - solo si están activas], Proveedores y Pagos, Checklist, Invitados, Mesas y Layout, Civil, Religiosa, Documentos, Itinerario
+  const allTabs: NoviosTabDef[] = [
     { id: 'resumen', label: 'Mi Boda' },
     { id: 'reuniones', label: 'Reuniones' },
     { id: 'proveedores', label: 'Proveedores y Pagos' },
@@ -26,6 +36,16 @@ export const NoviosTopNav: React.FC<NoviosTopNavProps> = ({ currentTab, onSelect
     { id: 'documentos', label: 'Documentos' },
     { id: 'timeline', label: 'Itinerario' },
   ];
+
+  // Si es modalidad virtual / autónoma, la pestaña 'Reuniones' se oculta completamente
+  const tabs = allTabs.filter(tab => !(isVirtual && tab.id === 'reuniones'));
+
+  // Si la pestaña actual era 'reuniones' pero está oculta para este usuario, redirigir a 'resumen'
+  useEffect(() => {
+    if (isVirtual && currentTab === 'reuniones') {
+      onSelectTab('resumen');
+    }
+  }, [isVirtual, currentTab, onSelectTab]);
 
   return (
     <div className="w-full bg-[#FAF7F5]/95 backdrop-blur-md border-b border-[#EFE8E1] sticky top-16 sm:top-[72px] z-40 transition-all">
