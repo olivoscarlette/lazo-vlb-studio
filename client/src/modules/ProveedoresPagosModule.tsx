@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Vendor, Payment } from '../types';
 import {
   CreditCard, Plus, DollarSign, CheckCircle2, Clock, Phone,
-  Building2, Calendar, FileText, Trash2, Edit3, MessageSquare, AlertCircle, AlertTriangle
+  Building2, Calendar, FileText, Trash2, Edit3, MessageSquare, AlertCircle, AlertTriangle, Sparkles
 } from 'lucide-react';
 
 export const ProveedoresPagosModule: React.FC = () => {
@@ -328,28 +328,28 @@ export const ProveedoresPagosModule: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs uppercase font-bold tracking-widest text-[#8A7E72]">
-            Módulo Financiero y Logístico
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+            Equipo Creativo & Finanzas
           </span>
-          <h2 className="font-serif text-3xl font-bold text-[#2B2826] mt-1">
-            Proveedores y Pagos
+          <h2 className="font-novios text-3xl sm:text-4xl text-[#2B2826] mt-1 tracking-tight">
+            Proveedores & Presupuesto
           </h2>
-          <p className="text-sm text-[#8A7E72] mt-1 leading-relaxed">
-            Contratos vigentes, participación en etapas del evento y control estricto de liquidación.
+          <p className="text-xs sm:text-sm text-[#8A7E72] mt-1.5 leading-relaxed font-light">
+            Curaduría de profesionales, calendario de pagos y control de inversión de tu gran día.
           </p>
         </div>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2.5">
           <button
             onClick={handleOpenAddPayment}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-lg border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-medium rounded-full border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
           >
             <DollarSign className="w-3.5 h-3.5 text-[#6E8C70]" />
             <span>Registrar Pago</span>
           </button>
           <button
             onClick={handleOpenAddVendor}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-lg shadow-2xs transition cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Nuevo Proveedor</span>
@@ -357,44 +357,59 @@ export const ProveedoresPagosModule: React.FC = () => {
         </div>
       </div>
 
-      {/* Financial Summary: 3 grandes cifras destacadas */}
+      {/* Financial Summary: 3 tarjetas de métricas editoriales */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider mb-2">
-            <span>TOTAL CONTRATADO</span>
-            <DollarSign className="w-4 h-4 text-[#C48B81]" />
+        {/* Card 01: Inversión Total */}
+        <div className="bg-[#FAF8F5] rounded-2xl p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
+              01 / Inversión Estimada
+            </span>
+            <div className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] flex items-center justify-center text-[#8A7E72]">
+              <DollarSign className="w-3.5 h-3.5 text-[#C48B81]" />
+            </div>
           </div>
-          <div className="text-3xl font-serif font-bold text-[#2B2826]">
+          <div className="font-novios text-3xl sm:text-4xl text-[#2B2826] tracking-tight">
             ${financialSummary.costo_real.toLocaleString()}
           </div>
-          <div className="text-xs text-[#7D6F6B] mt-2">
-            Costo real con proveedores contratados
+          <div className="text-xs text-[#8A7E72] mt-3 font-light">
+            {financialSummary.costo_real > 0 ? 'Costo total contratado' : 'Por definir con proveedores'}
           </div>
         </div>
 
-        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#577355] uppercase tracking-wider mb-2">
-            <span>MONTO PAGADO</span>
-            <CheckCircle2 className="w-4 h-4 text-[#6E8C70]" />
+        {/* Card 02: Total Liquidado */}
+        <div className="bg-[#FAF8F5] rounded-2xl p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#577355]">
+              02 / Total Liquidado
+            </span>
+            <div className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] flex items-center justify-center text-[#577355]">
+              <CheckCircle2 className="w-3.5 h-3.5 text-[#6E8C70]" />
+            </div>
           </div>
-          <div className="text-3xl font-serif font-bold text-[#455C44]">
+          <div className="font-novios text-3xl sm:text-4xl text-[#455C44] tracking-tight">
             ${financialSummary.monto_pagado.toLocaleString()}
           </div>
-          <div className="text-xs text-[#577355] font-medium mt-2">
-            Comprobado y liquidado
+          <div className="text-xs text-[#577355] mt-3 font-light">
+            {financialSummary.monto_pagado > 0 ? 'Comprobado y transferido' : 'Sin anticipos registrados'}
           </div>
         </div>
 
-        <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EFE8E1] shadow-xs flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs font-semibold text-[#A86B60] uppercase tracking-wider mb-2">
-            <span>SALDO RESTANTE</span>
-            <Clock className="w-4 h-4 text-[#C48B81]" />
+        {/* Card 03: Saldo Pendiente */}
+        <div className="bg-[#FAF8F5] rounded-2xl p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#A86B60]">
+              03 / Compromisos Pendientes
+            </span>
+            <div className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] flex items-center justify-center text-[#A86B60]">
+              <Clock className="w-3.5 h-3.5 text-[#C48B81]" />
+            </div>
           </div>
-          <div className="text-3xl font-serif font-bold text-[#A86B60]">
+          <div className="font-novios text-3xl sm:text-4xl text-[#A86B60] tracking-tight">
             ${financialSummary.restante.toLocaleString()}
           </div>
-          <div className="text-xs text-[#A86B60] font-medium mt-2">
-            Saldo pendiente por liquidar
+          <div className="text-xs text-[#A86B60] mt-3 font-light">
+            {financialSummary.restante > 0 ? 'Saldo pendiente por liquidar' : 'Sin compromisos pendientes'}
           </div>
         </div>
       </div>
@@ -459,51 +474,51 @@ export const ProveedoresPagosModule: React.FC = () => {
       })()}
 
       {/* Vendors List Section */}
-      <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EFE8E1] shadow-xs space-y-4">
+      <div className="bg-[#FFFFFF] rounded-2xl p-6 border border-[#EFE8E1] shadow-xs space-y-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <span className="text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">Directorio Operativo</span>
-            <h3 className="font-serif text-2xl font-bold text-[#2B2826]">Lista de Proveedores</h3>
+            <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">Directorio de Artistas & Aliados</span>
+            <h3 className="font-novios text-2xl text-[#2B2826] mt-0.5">Lista de Proveedores</h3>
           </div>
 
           {/* Filtro de Ubicación */}
-          <div className="flex items-center space-x-1 overflow-x-auto pb-1">
+          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1">
             <button
               onClick={() => setLocationFilter('TODAS')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'TODAS'
-                  ? 'bg-[#C48B81] text-white shadow-2xs'
-                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8E1] hover:text-[#2B2826]'
+                  ? 'bg-[#2B2826] text-white shadow-2xs'
+                  : 'bg-[#FAF8F5] text-[#8A7E72] hover:bg-[#EFE8E1] hover:text-[#2B2826] border border-[#EFE8E1]'
               }`}
             >
               Todas ({vendors.length})
             </button>
             <button
               onClick={() => setLocationFilter('CIVIL')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'CIVIL'
-                  ? 'bg-[#C48B81] text-white shadow-2xs'
-                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8E1] hover:text-[#2B2826]'
+                  ? 'bg-[#2B2826] text-white shadow-2xs'
+                  : 'bg-[#FAF8F5] text-[#8A7E72] hover:bg-[#EFE8E1] hover:text-[#2B2826] border border-[#EFE8E1]'
               }`}
             >
               Civil ({vendors.filter(v => v.locations?.some(l => l.toUpperCase().includes('CIVIL'))).length})
             </button>
             <button
               onClick={() => setLocationFilter('RECEPCIÓN')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'RECEPCIÓN'
-                  ? 'bg-[#C48B81] text-white shadow-2xs'
-                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8E1] hover:text-[#2B2826]'
+                  ? 'bg-[#2B2826] text-white shadow-2xs'
+                  : 'bg-[#FAF8F5] text-[#8A7E72] hover:bg-[#EFE8E1] hover:text-[#2B2826] border border-[#EFE8E1]'
               }`}
             >
               Recepción ({vendors.filter(v => v.locations?.some(l => l.toUpperCase().includes('RECEPCI') || l.toUpperCase().includes('BODA'))).length})
             </button>
             <button
               onClick={() => setLocationFilter('GENERAL')}
-              className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer whitespace-nowrap ${
+              className={`px-3 py-1 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
                 locationFilter === 'GENERAL'
-                  ? 'bg-[#C48B81] text-white shadow-2xs'
-                  : 'bg-[#F7F3EE] text-[#7D6F6B] hover:bg-[#EFE8E1] hover:text-[#2B2826]'
+                  ? 'bg-[#2B2826] text-white shadow-2xs'
+                  : 'bg-[#FAF8F5] text-[#8A7E72] hover:bg-[#EFE8E1] hover:text-[#2B2826] border border-[#EFE8E1]'
               }`}
             >
               General ({vendors.filter(v => !v.locations?.length || v.locations?.some(l => l.toUpperCase().includes('GENERAL'))).length})
@@ -511,28 +526,90 @@ export const ProveedoresPagosModule: React.FC = () => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72]">
-                <th className="py-2.5 px-3 whitespace-nowrap">PROVEEDOR</th>
-                <th className="py-2.5 px-3 whitespace-nowrap">CATEGORÍA</th>
-                <th className="py-2.5 px-3 whitespace-nowrap">TELÉFONO</th>
-                <th className="py-2.5 px-3 whitespace-nowrap">ETAPAS</th>
-                <th className="py-2.5 px-3 text-center whitespace-nowrap">FECHA LÍMITE</th>
-                <th className="py-2.5 px-3 text-right whitespace-nowrap">COSTO</th>
-                <th className="py-2.5 px-3 text-right whitespace-nowrap">PAGADO</th>
-                <th className="py-2.5 px-3 text-right whitespace-nowrap">RESTANTE</th>
-                <th className="py-2.5 px-2 text-center whitespace-nowrap"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#FAF8F5] text-xs">
-              {loading ? (
-                <tr><td colSpan={9} className="py-8 text-center text-[#8A7E72]">Cargando proveedores...</td></tr>
-              ) : filteredVendors.length === 0 ? (
-                <tr><td colSpan={9} className="py-8 text-center text-[#8A7E72]">No hay proveedores que coincidan con el filtro.</td></tr>
-              ) : (
-                filteredVendors.map(v => {
+        {loading ? (
+          <div className="py-12 text-center text-[#8A7E72] text-xs font-light">
+            Cargando proveedores...
+          </div>
+        ) : vendors.length === 0 ? (
+          /* Empty State estilo Concierge de Lujo */
+          <div className="py-12 sm:py-16 px-4 text-center flex flex-col items-center justify-center bg-[#FAF8F5] rounded-xl border border-[#EFE8E1]/80 my-2">
+            <div className="w-14 h-14 rounded-full bg-white border border-[#EFE8E1] shadow-2xs flex items-center justify-center mb-4 text-[#C48B81]">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <h4 className="font-novios text-2xl text-[#2B2826] font-normal">
+              Tu equipo de ensueño comienza aquí
+            </h4>
+            <p className="text-xs sm:text-sm text-[#8A7E72] max-w-md mt-2 font-light leading-relaxed">
+              Reúne a los fotógrafos, diseñadores florales, banquete y música que darán vida a tu boda.
+            </p>
+            <button
+              onClick={handleOpenAddVendor}
+              className="mt-6 inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Agregar Primer Proveedor</span>
+            </button>
+
+            {/* Sugerencias de Inicio Rápido */}
+            <div className="mt-8 pt-6 border-t border-[#EFE8E1]/60 w-full max-w-lg">
+              <span className="text-[10px] uppercase tracking-[0.16em] font-medium text-[#8A7E72] block mb-3">
+                Sugerencias de inicio rápido
+              </span>
+              <div className="flex flex-wrap justify-center gap-2">
+                {[
+                  { label: '+ Fotografía', type: 'Fotografía' },
+                  { label: '+ Flores & Decoración', type: 'Flores' },
+                  { label: '+ Banquete & Barra', type: 'Banquete' },
+                  { label: '+ Música & DJ', type: 'Música' },
+                  { label: '+ Maquillaje & Peinado', type: 'Maquillaje' },
+                ].map(chip => (
+                  <button
+                    key={chip.type}
+                    onClick={() => {
+                      setEditingVendor(null);
+                      setVendorForm({
+                        name: '',
+                        phone: '+52 ',
+                        type: chip.type,
+                        locations: ['RECEPCIÓN'],
+                        costo_real: '' as any,
+                        payment_due_date: '',
+                        contact_person: '',
+                        notes: ''
+                      });
+                      setVendorError('');
+                      setShowVendorModal(true);
+                    }}
+                    className="px-3.5 py-1.5 rounded-full text-xs bg-white hover:bg-[#F4EFEA] text-[#5A524C] border border-[#EFE8E1] transition shadow-2xs cursor-pointer font-light"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : filteredVendors.length === 0 ? (
+          <div className="py-12 text-center text-[#8A7E72] text-xs font-light">
+            No hay proveedores en la categoría seleccionada ({locationFilter}).
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72]">
+                  <th className="py-2.5 px-3 whitespace-nowrap">PROVEEDOR</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">CATEGORÍA</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">TELÉFONO</th>
+                  <th className="py-2.5 px-3 whitespace-nowrap">ETAPAS</th>
+                  <th className="py-2.5 px-3 text-center whitespace-nowrap">FECHA LÍMITE</th>
+                  <th className="py-2.5 px-3 text-right whitespace-nowrap">COSTO</th>
+                  <th className="py-2.5 px-3 text-right whitespace-nowrap">PAGADO</th>
+                  <th className="py-2.5 px-3 text-right whitespace-nowrap">RESTANTE</th>
+                  <th className="py-2.5 px-2 text-center whitespace-nowrap"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#FAF8F5] text-xs">
+                {filteredVendors.map(v => {
                   const dueStatus = getPaymentDueStatus(v.payment_due_date, v.saldo_restante);
                   return (
                     <tr key={v.id} className="hover:bg-[#FCFAF7] transition group">
@@ -613,41 +690,60 @@ export const ProveedoresPagosModule: React.FC = () => {
                       </td>
                     </tr>
                   );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Payments Ledger Section */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white rounded-2xl p-6 border border-[#EFE8E1] shadow-xs space-y-4">
+        <div className="flex items-center justify-between">
           <div>
-            <span className="text-xs uppercase font-bold tracking-widest text-[#8A7E72]">Historial Contable</span>
-            <h3 className="font-serif text-2xl font-bold text-[#2B2826] mt-0.5">Bitácora de Pagos Realizados</h3>
+            <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">Cronograma de Liquidación</span>
+            <h3 className="font-novios text-2xl text-[#2B2826] mt-0.5">Historial de Liquidaciones & Anticipos</h3>
           </div>
-          <span className="text-sm text-[#8A7E72] font-medium">{payments.length} pagos registrados</span>
+          <span className="text-xs text-[#8A7E72] font-light">
+            {payments.length === 0 ? 'Sin registros' : `${payments.length} ${payments.length === 1 ? 'pago registrado' : 'pagos registrados'}`}
+          </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-xs font-semibold uppercase tracking-wider text-[#8A7E72]">
-                <th className="py-3.5 px-4 whitespace-nowrap">FECHA</th>
-                <th className="py-3.5 px-4 whitespace-nowrap">CONCEPTO</th>
-                <th className="py-3.5 px-4 whitespace-nowrap">PROVEEDOR ASOCIADO</th>
-                <th className="py-3.5 px-4 whitespace-nowrap">MÉTODO DE PAGO</th>
-                <th className="py-3.5 px-4 text-right whitespace-nowrap">MONTO</th>
-                <th className="py-3.5 px-4 whitespace-nowrap">NOTAS</th>
-                <th className="py-3.5 px-3 text-center whitespace-nowrap">ACCIONES</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#FAF8F5] text-sm">
-              {payments.length === 0 ? (
-                <tr><td colSpan={7} className="py-8 text-center text-[#8A7E72]">No hay pagos registrados aún.</td></tr>
-              ) : (
-                payments.map(p => (
+        {payments.length === 0 ? (
+          <div className="py-10 px-4 text-center flex flex-col items-center justify-center bg-[#FAF8F5] rounded-xl border border-[#EFE8E1]/80 my-2">
+            <div className="w-10 h-10 rounded-full bg-white border border-[#EFE8E1] flex items-center justify-center mb-3 text-[#6E8C70]">
+              <DollarSign className="w-5 h-5" />
+            </div>
+            <h4 className="font-novios text-lg text-[#2B2826] font-normal">
+              Bitácora contable automática
+            </h4>
+            <p className="text-xs text-[#8A7E72] max-w-md mt-1.5 font-light leading-relaxed">
+              Al registrar anticipos o liquidaciones de tus proveedores, aquí se generará tu bitácora de saldos y comprobantes de forma ordenada.
+            </p>
+            <button
+              onClick={handleOpenAddPayment}
+              className="mt-4 inline-flex items-center space-x-1.5 px-4 py-2 bg-white hover:bg-[#F4EFEA] text-[#2B2826] text-xs font-medium rounded-full border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5 text-[#6E8C70]" />
+              <span>Registrar Primer Pago</span>
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72]">
+                  <th className="py-3 px-4 whitespace-nowrap">FECHA</th>
+                  <th className="py-3 px-4 whitespace-nowrap">CONCEPTO</th>
+                  <th className="py-3 px-4 whitespace-nowrap">PROVEEDOR ASOCIADO</th>
+                  <th className="py-3 px-4 whitespace-nowrap">MÉTODO DE PAGO</th>
+                  <th className="py-3 px-4 text-right whitespace-nowrap">MONTO</th>
+                  <th className="py-3 px-4 whitespace-nowrap">NOTAS</th>
+                  <th className="py-3 px-3 text-center whitespace-nowrap">ACCIONES</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#FAF8F5] text-sm">
+                {payments.map(p => (
                   <tr key={p.id} className="hover:bg-[#FCFAF7] transition">
                     <td className="py-3 px-4 font-medium text-[#2B2826] whitespace-nowrap">{p.payment_date}</td>
                     <td className="py-3 px-4 font-semibold text-[#2B2826] whitespace-nowrap">{p.concept}</td>
@@ -671,11 +767,11 @@ export const ProveedoresPagosModule: React.FC = () => {
                       </button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Modal: Registrar o Editar Proveedor */}
