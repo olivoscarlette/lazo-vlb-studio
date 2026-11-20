@@ -1416,62 +1416,6 @@ export const InvitadosModule: React.FC = () => {
         </div>
       )}
 
-      {/* Barra de Pestañas de Filtro Rápido */}
-      <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar">
-        <button
-          onClick={() => { setStatusFilter(''); setTableFilter(''); setPage(1); }}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
-            statusFilter === '' && tableFilter === ''
-              ? 'bg-[#2B2826] text-white shadow-2xs'
-              : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
-          }`}
-        >
-          Todos ({summary.total})
-        </button>
-        <button
-          onClick={() => { setStatusFilter('Confirmado'); setTableFilter(''); setPage(1); }}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
-            statusFilter === 'Confirmado' && tableFilter === ''
-              ? 'bg-[#577355] text-white shadow-2xs'
-              : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
-          }`}
-        >
-          Confirmados ({summary.confirmed})
-        </button>
-        <button
-          onClick={() => { setStatusFilter('Pendiente de confirmar'); setTableFilter(''); setPage(1); }}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
-            statusFilter === 'Pendiente de confirmar' && tableFilter === ''
-              ? 'bg-[#2B2826] text-white shadow-2xs'
-              : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
-          }`}
-        >
-          Pendientes ({summary.pending})
-        </button>
-        <button
-          onClick={() => { setStatusFilter('No asistirá'); setTableFilter(''); setPage(1); }}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
-            statusFilter === 'No asistirá' && tableFilter === ''
-              ? 'bg-[#A86B60] text-white shadow-2xs'
-              : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
-          }`}
-        >
-          No asistirán ({summary.declined})
-        </button>
-        {(!isCivilDifferentDay || eventTarget === 'principal') && (
-          <button
-            onClick={() => { setTableFilter('unassigned'); setStatusFilter(''); setPage(1); }}
-            className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
-              tableFilter === 'unassigned'
-                ? 'bg-[#2B2826] text-white shadow-2xs'
-                : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
-            }`}
-          >
-            Sin Mesa Asignada ({(summary as any).unassigned ?? '—'})
-          </button>
-        )}
-      </div>
-
       {/* WhatsApp Feedback Banner */}
       {whatsappBanner && (
         <div
@@ -1498,19 +1442,24 @@ export const InvitadosModule: React.FC = () => {
         </div>
       )}
 
-      {/* Summary KPI Strip — Diseño Editorial Cálido */}
+      {/* Summary KPI Strip — Tarjetas clicables que funcionan como filtro único */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         <div
           onClick={() => { setStatusFilter(''); setTableFilter(''); setPage(1); }}
-          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition select-none bg-[#FAF8F5] ${
+          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition-all select-none ${
             statusFilter === '' && tableFilter === ''
-              ? 'border-[#C48B81] bg-white shadow-2xs'
-              : 'border-[#EFE8E1] hover:border-[#C48B81]/60'
+              ? 'bg-white border-[#E5D5CE] shadow-sm'
+              : 'bg-[#FAF8F5] border-[#EFE8E1] hover:bg-white/70'
           }`}
           title="Ver todos los invitados"
         >
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
-            {isCivilDifferentDay && eventTarget === 'civil' ? 'Total Civil' : 'Total Invitados'}
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
+              {isCivilDifferentDay && eventTarget === 'civil' ? 'Total Civil' : 'Total Invitados'}
+            </div>
+            {statusFilter === '' && tableFilter === '' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]" />
+            )}
           </div>
           <div className="font-novios text-3xl text-[#2B2826] mt-1 tracking-tight">{summary.total_places_all}</div>
           <div className="text-[11px] text-[#8A7E72] mt-1 font-light">
@@ -1520,15 +1469,20 @@ export const InvitadosModule: React.FC = () => {
 
         <div
           onClick={() => { setStatusFilter('Confirmado'); setTableFilter(''); setPage(1); }}
-          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition select-none bg-[#FAF8F5] ${
+          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition-all select-none ${
             statusFilter === 'Confirmado'
-              ? 'border-[#577355] bg-white shadow-2xs'
-              : 'border-[#EFE8E1] hover:border-[#577355]/60'
+              ? 'bg-white border-[#CCDACC] shadow-sm'
+              : 'bg-[#FAF8F5] border-[#EFE8E1] hover:bg-white/70'
           }`}
           title="Filtrar solo Confirmados"
         >
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#577355]">
-            {isCivilDifferentDay && eventTarget === 'civil' ? 'Confirmados Civil' : 'Confirmados'}
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#577355]">
+              {isCivilDifferentDay && eventTarget === 'civil' ? 'Confirmados Civil' : 'Confirmados'}
+            </div>
+            {statusFilter === 'Confirmado' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#577355]" />
+            )}
           </div>
           <div className="font-novios text-3xl text-[#455C44] mt-1 tracking-tight">{summary.confirmed_places}</div>
           <div className="text-[11px] text-[#577355] mt-1 font-light">
@@ -1538,15 +1492,20 @@ export const InvitadosModule: React.FC = () => {
 
         <div
           onClick={() => { setStatusFilter('Pendiente de confirmar'); setTableFilter(''); setPage(1); }}
-          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition select-none bg-[#FAF8F5] ${
+          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition-all select-none ${
             statusFilter === 'Pendiente de confirmar'
-              ? 'border-[#C48B81] bg-white shadow-2xs'
-              : 'border-[#EFE8E1] hover:border-[#C48B81]/60'
+              ? 'bg-white border-[#E5D5CE] shadow-sm'
+              : 'bg-[#FAF8F5] border-[#EFE8E1] hover:bg-white/70'
           }`}
           title="Filtrar solo Pendientes de confirmar"
         >
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
-            {isCivilDifferentDay && eventTarget === 'civil' ? 'Pendientes Civil' : 'Pendientes'}
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
+              {isCivilDifferentDay && eventTarget === 'civil' ? 'Pendientes Civil' : 'Pendientes'}
+            </div>
+            {statusFilter === 'Pendiente de confirmar' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]" />
+            )}
           </div>
           <div className="font-novios text-3xl text-[#2B2826] mt-1 tracking-tight">{summary.pending_places ?? summary.pending}</div>
           <div className="text-[11px] text-[#8A7E72] mt-1 font-light">Por confirmar</div>
@@ -1554,15 +1513,20 @@ export const InvitadosModule: React.FC = () => {
 
         <div
           onClick={() => { setStatusFilter('No asistirá'); setTableFilter(''); setPage(1); }}
-          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition select-none bg-[#FAF8F5] ${
+          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition-all select-none ${
             statusFilter === 'No asistirá'
-              ? 'border-[#A86B60] bg-white shadow-2xs'
-              : 'border-[#EFE8E1] hover:border-[#A86B60]/60'
+              ? 'bg-white border-[#E5D5CE] shadow-sm'
+              : 'bg-[#FAF8F5] border-[#EFE8E1] hover:bg-white/70'
           }`}
           title="Filtrar quienes No asistirán"
         >
-          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A86B60]">
-            {isCivilDifferentDay && eventTarget === 'civil' ? 'No asistirán Civil' : 'No asistirán'}
+          <div className="flex items-center justify-between">
+            <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A86B60]">
+              {isCivilDifferentDay && eventTarget === 'civil' ? 'No asistirán Civil' : 'No asistirán'}
+            </div>
+            {statusFilter === 'No asistirá' && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#A86B60]" />
+            )}
           </div>
           <div className="font-novios text-3xl text-[#A86B60] mt-1 tracking-tight">{summary.declined_places ?? summary.declined}</div>
           <div className="text-[11px] text-[#A86B60] mt-1 font-light">Declinados</div>
@@ -1608,18 +1572,21 @@ export const InvitadosModule: React.FC = () => {
             </select>
           </div>
 
-          <select
-            value={tableFilter}
-            onChange={e => { setTableFilter(e.target.value); setPage(1); }}
-            className="px-3.5 py-2 text-xs font-medium border border-[#EFE8E1] rounded-full bg-white text-[#2B2826] focus:outline-none focus:border-[#C48B81] cursor-pointer"
-          >
-            <option value="">Todas las Mesas</option>
-            <option value="assigned">Con Mesa Asignada</option>
-            <option value="unassigned">Sin Mesa Asignada</option>
-            {tables.map(t => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+          <div className="inline-flex items-center space-x-1.5 bg-[#FAF8F5] px-3.5 py-1 rounded-full border border-[#EFE8E1]">
+            <span className="text-[11px] font-medium text-[#8A7E72] whitespace-nowrap">Mesa:</span>
+            <select
+              value={tableFilter}
+              onChange={e => { setTableFilter(e.target.value); setPage(1); }}
+              className="py-1 text-xs font-medium bg-transparent text-[#2B2826] focus:outline-none cursor-pointer"
+            >
+              <option value="">Todas</option>
+              <option value="assigned">Con Mesa Asignada</option>
+              <option value="unassigned">Sin Mesa Asignada</option>
+              {tables.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
