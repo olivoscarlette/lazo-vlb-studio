@@ -209,13 +209,17 @@ export const ChecklistModule: React.FC = () => {
         : `/api/weddings/${currentWedding!.id}/checklist`;
       const method = editingTaskId ? 'PUT' : 'POST';
 
+      const payload = isNovios && editingTaskId
+        ? { notes: taskForm.notes }
+        : taskForm;
+
       const res = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(taskForm)
+        body: JSON.stringify(payload)
       });
       if (res.ok) {
         setShowTaskModal(false);
@@ -757,7 +761,7 @@ export const ChecklistModule: React.FC = () => {
                             type="button"
                             onClick={() => handleOpenEditModal(task)}
                             className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-white transition cursor-pointer"
-                            title="Editar o agregar comentario"
+                            title={isNovios ? 'Agregar o editar nota' : 'Editar o agregar comentario'}
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -862,7 +866,7 @@ export const ChecklistModule: React.FC = () => {
                     type="button"
                     onClick={() => handleOpenEditModal(task)}
                     className="text-[#8A7E72] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-white transition cursor-pointer"
-                    title="Editar o agregar comentario"
+                    title={isNovios ? 'Agregar o editar nota' : 'Editar o agregar comentario'}
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                   </button>
@@ -1109,91 +1113,152 @@ export const ChecklistModule: React.FC = () => {
 
       {/* Modal: Nueva o Editar Actividad */}
       {showTaskModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
+        <div className="fixed inset-0 bg-[#2B2826]/40 z-50 flex items-center justify-center p-4 backdrop-blur-xs">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-[#EFE8E1] animate-in fade-in zoom-in-95">
-            <h3 className="font-serif text-xl font-semibold text-[#2B2826] mb-4">
-              {editingTaskId ? 'Editar Actividad / Comentario' : 'Nueva Actividad en Checklist'}
+            <h3 className="font-novios text-2xl font-normal text-[#2B2826] mb-4">
+              {editingTaskId
+                ? isNovios
+                  ? 'Notas de la Actividad'
+                  : 'Editar Actividad / Comentario'
+                : 'Nueva Actividad en Checklist'}
             </h3>
 
-            <form onSubmit={handleSaveTask} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-[#2B2826] mb-1">Tarea / Actividad *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej. Separar iglesia o confirmar banquete"
-                  value={taskForm.title}
-                  onChange={e => setTaskForm({ ...taskForm, title: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-[#FAF8F5] text-[#2B2826] placeholder:text-[#8A7E72]/50 focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
-                />
-              </div>
-
-              <div className={`grid ${taskForm.category === 'Checklist General' ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
-                <div>
-                  <label className="block text-xs font-semibold text-[#2B2826] mb-1">Lista / Etapa</label>
-                  <select
-                    value={taskForm.category}
-                    onChange={e => setTaskForm({ ...taskForm, category: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
-                  >
-                    <option value="Checklist General">Checklist General</option>
-                    {MONTH_STAGES.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                    {!isNovios && <option value="Día Boda">Día Boda</option>}
-                  </select>
-                </div>
-                {taskForm.category === 'Checklist General' && (
-                  <div>
-                    <label className="block text-xs font-semibold text-[#2B2826] mb-1">Sección General</label>
-                    <select
-                      value={taskForm.responsible}
-                      onChange={e => setTaskForm({ ...taskForm, responsible: e.target.value })}
-                      className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
-                    >
-                      {GENERAL_SECTIONS_ORDER.map(sec => (
-                        <option key={sec} value={sec}>{sec}</option>
-                      ))}
-                    </select>
+            <form onSubmit={handleSaveTask} className="space-y-4">
+              {isNovios && editingTaskId ? (
+                /* Vista para Novios editando actividad existente: etapa y fecha bloqueadas, solo notas editables */
+                <>
+                  <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFE8E1] space-y-2">
+                    <div className="text-sm font-medium text-[#2B2826] leading-snug">
+                      {taskForm.title}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] text-[#8A7E72]">
+                      <span className="bg-white px-2.5 py-0.5 rounded-full border border-[#EFE8E1] text-[#5A524C]">
+                        {taskForm.category === 'Checklist General' ? taskForm.responsible : taskForm.category}
+                      </span>
+                      {taskForm.due_date && (
+                        <span className="inline-flex items-center space-x-1 bg-white px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
+                          <Calendar className="w-3 h-3 text-[#C48B81]" />
+                          <span>Fecha: {taskForm.due_date}</span>
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
-              </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-[#2B2826] mb-1">Prioridad</label>
-                  <select
-                    value={taskForm.priority}
-                    onChange={e => setTaskForm({ ...taskForm, priority: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
-                  >
-                    <option value="Alta">Alta</option>
-                    <option value="Media">Media</option>
-                    <option value="Baja">Baja</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-[#2B2826] mb-1">Fecha Límite</label>
-                  <input
-                    type="date"
-                    value={taskForm.due_date}
-                    onChange={e => setTaskForm({ ...taskForm, due_date: e.target.value })}
-                    className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
-                  >
-                  </input>
-                </div>
-              </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">
+                      Tus Notas o Comentarios
+                    </label>
+                    <textarea
+                      rows={4}
+                      autoFocus
+                      placeholder="Agrega aquí recordatorios, ideas, teléfonos o acuerdos sobre esta actividad..."
+                      value={taskForm.notes}
+                      onChange={e => setTaskForm({ ...taskForm, notes: e.target.value })}
+                      className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-2xl text-sm bg-[#FAF8F5] text-[#2B2826] placeholder:text-[#8A7E72]/50 focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                    />
+                  </div>
+                </>
+              ) : (
+                /* Vista para Admin/Coord o Novios creando nueva actividad */
+                <>
+                  <div>
+                    <label className="block text-xs font-semibold text-[#2B2826] mb-1">Tarea / Actividad *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ej. Separar iglesia o confirmar banquete"
+                      value={taskForm.title}
+                      onChange={e => setTaskForm({ ...taskForm, title: e.target.value })}
+                      className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-[#FAF8F5] text-[#2B2826] placeholder:text-[#8A7E72]/50 focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                    />
+                  </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-[#2B2826] mb-1">Comentarios</label>
-                <textarea
-                  rows={2}
-                  placeholder="Comentarios o acuerdos sobre esta tarea..."
-                  value={taskForm.notes}
-                  onChange={e => setTaskForm({ ...taskForm, notes: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-[#FAF8F5] text-[#2B2826] placeholder:text-[#8A7E72]/50 focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
-                />
-              </div>
+                  {!isNovios ? (
+                    <>
+                      <div className={`grid ${taskForm.category === 'Checklist General' ? 'grid-cols-2' : 'grid-cols-1'} gap-3`}>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#2B2826] mb-1">Lista / Etapa</label>
+                          <select
+                            value={taskForm.category}
+                            onChange={e => setTaskForm({ ...taskForm, category: e.target.value })}
+                            className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                          >
+                            <option value="Checklist General">Checklist General</option>
+                            {MONTH_STAGES.map(s => (
+                              <option key={s} value={s}>{s}</option>
+                            ))}
+                            <option value="Día Boda">Día Boda</option>
+                          </select>
+                        </div>
+                        {taskForm.category === 'Checklist General' && (
+                          <div>
+                            <label className="block text-xs font-semibold text-[#2B2826] mb-1">Sección General</label>
+                            <select
+                              value={taskForm.responsible}
+                              onChange={e => setTaskForm({ ...taskForm, responsible: e.target.value })}
+                              className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                            >
+                              {GENERAL_SECTIONS_ORDER.map(sec => (
+                                <option key={sec} value={sec}>{sec}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-[#2B2826] mb-1">Prioridad</label>
+                          <select
+                            value={taskForm.priority}
+                            onChange={e => setTaskForm({ ...taskForm, priority: e.target.value as any })}
+                            className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                          >
+                            <option value="Alta">Alta</option>
+                            <option value="Media">Media</option>
+                            <option value="Baja">Baja</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-semibold text-[#2B2826] mb-1">Fecha Límite</label>
+                          <input
+                            type="date"
+                            value={taskForm.due_date}
+                            onChange={e => setTaskForm({ ...taskForm, due_date: e.target.value })}
+                            className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    taskForm.category === 'Checklist General' && (
+                      <div>
+                        <label className="block text-xs font-semibold text-[#2B2826] mb-1">Sección</label>
+                        <select
+                          value={taskForm.responsible}
+                          onChange={e => setTaskForm({ ...taskForm, responsible: e.target.value })}
+                          className="w-full px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-[#FAF8F5] text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                        >
+                          {GENERAL_SECTIONS_ORDER.map(sec => (
+                            <option key={sec} value={sec}>{sec}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )
+                  )}
+
+                  <div>
+                    <label className="block text-xs font-semibold text-[#2B2826] mb-1">Notas / Comentarios</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Comentarios o acuerdos sobre esta tarea..."
+                      value={taskForm.notes}
+                      onChange={e => setTaskForm({ ...taskForm, notes: e.target.value })}
+                      className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm bg-[#FAF8F5] text-[#2B2826] placeholder:text-[#8A7E72]/50 focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                    />
+                  </div>
+                </>
+              )}
 
               <div className="flex justify-end space-x-2 pt-4 border-t border-[#FAF8F5]">
                 <button
@@ -1202,15 +1267,15 @@ export const ChecklistModule: React.FC = () => {
                     setShowTaskModal(false);
                     setEditingTaskId(null);
                   }}
-                  className="px-4 py-2 text-xs font-semibold text-[#8A7E72] hover:bg-[#FAF8F5] rounded-xl transition cursor-pointer"
+                  className="px-4 py-2 text-xs font-medium text-[#8A7E72] hover:bg-[#FAF8F5] rounded-full transition cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition cursor-pointer"
+                  className="px-5 py-2 text-xs font-medium bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-full shadow-2xs transition cursor-pointer"
                 >
-                  {editingTaskId ? 'Guardar Cambios' : 'Guardar Actividad'}
+                  {editingTaskId ? (isNovios ? 'Guardar Nota' : 'Guardar Cambios') : 'Guardar Actividad'}
                 </button>
               </div>
             </form>
