@@ -65,6 +65,36 @@ const uploadFloorPlan = multer({
   }
 });
 
+const COVERS_DIR = path.resolve(process.cwd(), 'data', 'uploads', 'covers');
+if (!fs.existsSync(COVERS_DIR)) {
+  fs.mkdirSync(COVERS_DIR, { recursive: true });
+}
+
+const coverStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, COVERS_DIR);
+  },
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const uniqueSuffix = 'cover_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+    cb(null, uniqueSuffix + ext);
+  }
+});
+
+const uploadCover = multer({
+  storage: coverStorage,
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
+  fileFilter: (_req, file, cb) => {
+    const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp', 'image/heic', 'image/heif'];
+    const isAllowedExt = /\.(png|jpe?g|webp|heic|heif)$/i.test(file.originalname);
+    if (allowed.includes(file.mimetype) || isAllowedExt) {
+      cb(null, true);
+    } else {
+      cb(new Error('Solo se permiten imágenes (JPG, PNG, WebP o HEIC) para la portada.'));
+    }
+  }
+});
+
 // GET /api/weddings - General Dashboard list (scoped by role)
 router.get('/', authenticateToken, (req, res) => {
   const user = req.user!;
@@ -704,6 +734,43 @@ router.delete('/:weddingId', authenticateToken, requireRole(['ADMINISTRADOR']), 
   db.prepare('DELETE FROM weddings WHERE id = ?').run(weddingId);
   logAudit(null, req.user!.id, req.user!.name, 'ELIMINAR_BODA', 'WEDDING', weddingId, `Eliminación de la boda ${wedding.name}`);
   return res.json({ message: 'Boda eliminada correctamente.' });
+});
+
+// POST /api/weddings/:weddingId/cover-photo - Subir foto de portada personalizada
+router.post('/:weddingId/cover-photo', authenticateToken, requireWeddingAccess, uploadCover.single('cover_photo'), (req, res) => {
+  const { weddingId } = req.params;
+  const file = req.file;
+
+  if (!file) {
+    return res.status(400).json({ error: 'No se subió ningún archivo de imagen.' });
+  }
+
+  const coverUrl = `/uploads/covers/${file.filename}`;
+
+  db.prepare(`
+    UPDATE weddings
+    SET cover_photo_url = ?, updated_at = datetime('now')
+    WHERE id = ?
+  `).run(coverUrl, weddingId);
+
+  logAudit(weddingId, req.user!.id, req.user!.name, 'ACTUALIZAR_PORTADA', 'WEDDING', weddingId, 'Actualización de foto de portada de la boda');
+
+  return res.json({ success: true, cover_photo_url: coverUrl });
+});
+
+// DELETE /api/weddings/:weddingId/cover-photo - Restablecer foto de portada predeterminada
+router.delete('/:weddingId/cover-photo', authenticateToken, requireWeddingAccess, (req, res) => {
+  const { weddingId } = req.params;
+
+  db.prepare(`
+    UPDATE weddings
+    SET cover_photo_url = NULL, updated_at = datetime('now')
+    WHERE id = ?
+  `).run(weddingId);
+
+  logAudit(weddingId, req.user!.id, req.user!.name, 'ELIMINAR_PORTADA', 'WEDDING', weddingId, 'Restablecimiento de foto de portada predeterminada');
+
+  return res.json({ success: true });
 });
 
 export default router;

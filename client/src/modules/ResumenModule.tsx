@@ -4,7 +4,7 @@ import {
   MapPin, Users, DollarSign, CheckCircle2,
   Clock, Sparkles, Edit3, ShieldCheck, Mail, Phone,
   ArrowRight, Calendar, Landmark, Church,
-  Upload, FileText, Link as LinkIcon, ExternalLink, Trash2, Bot, Check, AlertCircle, Loader2
+  Upload, FileText, Link as LinkIcon, ExternalLink, Trash2, Bot, Check, AlertCircle, Loader2, Camera, RotateCcw
 } from 'lucide-react';
 import { BroadcastScheduleModal } from '../components/BroadcastScheduleModal';
 
@@ -20,10 +20,56 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
   const [editForm, setEditForm] = useState<any>({});
   const [packagesList, setPackagesList] = useState<{ name: string; maxMeetings: number; description: string }[]>([]);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
   const [invitationFeedback, setInvitationFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [showBroadcastModal, setShowBroadcastModal] = useState(false);
   const [realTasks, setRealTasks] = useState<any[]>([]);
+
+  const handleUploadCoverPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentWedding || !token) return;
+
+    setUploadingCover(true);
+    const formData = new FormData();
+    formData.append('cover_photo', file);
+
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/cover-photo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setWeddingData((prev: any) => ({ ...prev, cover_photo_url: data.cover_photo_url }));
+        setCurrentWedding({ ...currentWedding, cover_photo_url: data.cover_photo_url });
+      } else {
+        alert(data.error || 'Error al subir foto de portada.');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Error de conexión.');
+    } finally {
+      setUploadingCover(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleDeleteCoverPhoto = async () => {
+    if (!currentWedding || !token) return;
+    if (!confirm('¿Deseas restablecer la foto de portada predeterminada?')) return;
+
+    try {
+      const res = await fetch(`/api/weddings/${currentWedding.id}/cover-photo`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        setWeddingData((prev: any) => ({ ...prev, cover_photo_url: null }));
+        setCurrentWedding({ ...currentWedding, cover_photo_url: null });
+      }
+    } catch {}
+  };
 
   const handleUploadInvitationPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -262,18 +308,48 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
           {/* Degradado cinematográfico para máxima legibilidad */}
           <div className="absolute inset-0 bg-gradient-to-t from-[#181514] via-[#181514]/40 to-black/30" />
 
-          {/* Botón Gestionar Boda (Arriba a la derecha, sutil para Admin/Coordinador) */}
-          {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
-            <div className="absolute top-5 right-5 z-20">
+          {/* Botones de Cabecera (Cambiar Portada & Gestionar Boda) */}
+          <div className="absolute top-5 right-5 z-20 flex items-center space-x-2">
+            {/* Botón Cambiar Foto de Portada */}
+            <label className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white text-xs font-medium cursor-pointer transition shadow-sm select-none">
+              {uploadingCover ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#E8D8CE]" />
+              ) : (
+                <Camera className="w-3.5 h-3.5 text-[#E8D8CE]" />
+              )}
+              <span>{uploadingCover ? 'Subiendo...' : 'Cambiar Foto'}</span>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
+                className="hidden"
+                disabled={uploadingCover}
+                onChange={handleUploadCoverPhoto}
+              />
+            </label>
+
+            {/* Botón Restablecer Foto si tiene foto personalizada */}
+            {weddingData.cover_photo_url && (
+              <button
+                type="button"
+                onClick={handleDeleteCoverPhoto}
+                title="Restablecer foto predeterminada"
+                className="p-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white/80 hover:text-white transition cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {/* Botón Gestionar Boda (Solo Admin / Coordinador) */}
+            {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
               <button
                 onClick={() => setShowEditWeddingModal(true)}
-                className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-semibold transition cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md border border-white/25 text-white text-xs font-semibold transition cursor-pointer"
               >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Gestionar Boda</span>
+                <Edit3 className="w-3.5 h-3.5 text-[#E8D8CE]" />
+                <span className="hidden sm:inline">Gestionar</span>
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Contenido Central: Nombres Monumentales & Píldora Flotante */}
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center p-6 space-y-4">
@@ -311,24 +387,10 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
           </div>
         </div>
 
-        {/* Tira Editorial Inferior en Fondo Alabaster Cálido */}
-        <div className="bg-[#FAF8F5] p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 border-t border-[#EFE8E1]">
-          {/* 1. Fecha de la Boda */}
+        {/* Tira Editorial Inferior en Fondo Alabaster Cálido (Civil, Religiosa, Recepción) */}
+        <div className="bg-[#FAF8F5] p-6 sm:p-8 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 border-t border-[#EFE8E1]">
+          {/* 1. Ceremonia Civil */}
           <div className="space-y-1">
-            <div className="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">
-              <Calendar className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Fecha Oficial</span>
-            </div>
-            <div className="text-sm font-semibold text-[#181514] font-sans mt-0.5 leading-snug break-words">
-              {formatFullDateSpanish(weddingData.wedding_date)}
-            </div>
-            <div className="text-xs text-[#7D6F6B]">
-              {weddingData.wedding_date ? getCountdownText(weddingData.wedding_date) : 'Por definir'}
-            </div>
-          </div>
-
-          {/* 2. Ceremonia Civil */}
-          <div className="space-y-1 sm:border-l sm:border-[#EFE8E1] sm:pl-6 lg:pl-8">
             <div className="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">
               <Landmark className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Ceremonia Civil</span>
@@ -342,8 +404,8 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             </div>
           </div>
 
-          {/* 3. Ceremonia Religiosa */}
-          <div className="space-y-1 lg:border-l lg:border-[#EFE8E1] lg:pl-8">
+          {/* 2. Ceremonia Religiosa */}
+          <div className="space-y-1 md:border-l md:border-[#EFE8E1] md:pl-6 lg:pl-8">
             <div className="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">
               <Church className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Ceremonia Religiosa</span>
@@ -356,8 +418,8 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
             </div>
           </div>
 
-          {/* 4. Recepción */}
-          <div className="space-y-1 sm:border-l sm:border-[#EFE8E1] sm:pl-6 lg:pl-8">
+          {/* 3. Recepción */}
+          <div className="space-y-1 md:border-l md:border-[#EFE8E1] md:pl-6 lg:pl-8">
             <div className="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">
               <MapPin className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Recepción</span>
