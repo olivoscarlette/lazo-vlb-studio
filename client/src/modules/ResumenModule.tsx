@@ -250,40 +250,47 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {/* 1. Cabecera Hero Luminosa y Cálida con Atteron y Sombras Flotantes */}
-      <div className="luxury-card rounded-[28px] p-7 sm:p-9 border border-[#EFE8E1] relative overflow-hidden space-y-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2.5">
-            <h1 className="font-atteron text-4xl sm:text-5xl lg:text-[54px] font-normal tracking-tight leading-tight">
+      {/* 1. Cabecera Hero Luminosa y Editorial con Estilo Atelier */}
+      <div className="bg-gradient-to-br from-[#FAF7F5] via-[#FFFFFF] to-[#F5EFEB] rounded-[32px] p-7 sm:p-9 lg:p-10 border border-[#EFE8E1] shadow-[0_4px_30px_rgba(0,0,0,0.03)] relative overflow-hidden space-y-8">
+        {/* Glow sutil de fondo para calidez */}
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-[#F7EDEB]/50 blur-3xl pointer-events-none" />
+
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-3">
+            <h1 className="font-novios text-4xl sm:text-5xl lg:text-[56px] font-normal tracking-tight leading-tight text-[#181514]">
               {weddingData.partner_1_name && weddingData.partner_2_name ? (
                 <>
-                  <span className="text-[#2B2826]">{toTitleCase(weddingData.partner_1_name)}</span>{' '}
-                  <span className="text-[#C48B81] mx-1 sm:mx-2">&</span>{' '}
-                  <span className="text-[#A86B60]">{toTitleCase(weddingData.partner_2_name)}</span>
+                  <span>{toTitleCase(weddingData.partner_1_name)}</span>{' '}
+                  <span className="font-novios italic text-[#C48B81] mx-1 sm:mx-2 font-normal">&</span>{' '}
+                  <span>{toTitleCase(weddingData.partner_2_name)}</span>
                 </>
               ) : coupleTitle.includes('&') ? (
                 <>
-                  <span className="text-[#2B2826]">{coupleTitle.split('&')[0].trim()}</span>{' '}
-                  <span className="text-[#C48B81] mx-1 sm:mx-2">&</span>{' '}
-                  <span className="text-[#A86B60]">{coupleTitle.split('&').slice(1).join('&').trim()}</span>
+                  <span>{coupleTitle.split('&')[0].trim()}</span>{' '}
+                  <span className="font-novios italic text-[#C48B81] mx-1 sm:mx-2 font-normal">&</span>{' '}
+                  <span>{coupleTitle.split('&').slice(1).join('&').trim()}</span>
                 </>
               ) : (
-                <span className="text-[#2B2826]">{coupleTitle}</span>
+                <span>{coupleTitle}</span>
               )}
             </h1>
 
-            {/* Countdown pill badge en tono blush */}
+            {/* Countdown pill badge flotante en cristal y tono blush */}
             {weddingData.wedding_date && (
-              <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-[#F7EDEB] text-[#A86B60] text-xs font-semibold border border-[#EEDAD6] shadow-2xs">
-                <Clock className="w-3.5 h-3.5 text-[#C48B81]" />
-                <span>{getCountdownText(weddingData.wedding_date)}</span>
-                <span className="text-[#A86B60]/60">·</span>
-                <span className="font-normal">{formatFullDateSpanish(weddingData.wedding_date)}</span>
+              <div className="inline-flex items-center space-x-2.5 px-4.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-xs font-medium border border-[#EAD6D2] shadow-2xs">
+                <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span className="font-bold text-[#A86B60] tracking-wide uppercase text-[11px]">
+                  {getCountdownText(weddingData.wedding_date)}
+                </span>
+                <span className="text-[#C48B81]/40">·</span>
+                <span className="text-[#2B2826] font-normal">
+                  {formatFullDateSpanish(weddingData.wedding_date)}
+                </span>
               </div>
             )}
           </div>
 
-          {/* Botón Gestionar Boda (Pill Rose Satin Glow) */}
+          {/* Botón Gestionar Boda (Solo Admin / Coordinador) */}
           <div className="flex flex-wrap items-center gap-2.5 shrink-0">
             {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
               <button
@@ -297,75 +304,62 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
           </div>
         </div>
 
-        {/* 4 Fichas Informativas debajo del nombre: Fecha, Civil, Religiosa, Recepción */}
-        <div className="pt-3 border-t border-[#F5EFEB] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Tira Editorial de Sedes & Momentos (Limpia con separadores finos) */}
+        <div className="pt-6 border-t border-[#EFE8E1] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 relative z-10">
           {/* 1. Fecha de la Boda */}
-          <div className="p-4 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] flex items-start space-x-3 transition hover:bg-white hover:shadow-2xs">
-            <div className="w-8 h-8 rounded-xl bg-white border border-[#EFE8E1] flex items-center justify-center text-[#C48B81] shrink-0 mt-0.5">
-              <Calendar className="w-4 h-4" />
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">
+              <Calendar className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Fecha Oficial</span>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B]">
-                Fecha de la Boda
-              </div>
-              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 leading-snug break-words">
-                {formatFullDateSpanish(weddingData.wedding_date)}
-              </div>
+            <div className="text-sm font-semibold text-[#181514] font-sans mt-0.5 leading-snug break-words">
+              {formatFullDateSpanish(weddingData.wedding_date)}
+            </div>
+            <div className="text-xs text-[#7D6F6B]">
+              {weddingData.wedding_date ? getCountdownText(weddingData.wedding_date) : 'Por definir'}
             </div>
           </div>
 
           {/* 2. Ceremonia Civil */}
-          <div className="p-4 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] flex items-start space-x-3 transition hover:bg-white hover:shadow-2xs">
-            <div className="w-8 h-8 rounded-xl bg-white border border-[#EFE8E1] flex items-center justify-center text-[#C48B81] shrink-0 mt-0.5">
-              <Landmark className="w-4 h-4" />
+          <div className="space-y-1 sm:border-l sm:border-[#EFE8E1] sm:pl-6 lg:pl-8">
+            <div className="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">
+              <Landmark className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Ceremonia Civil</span>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B]">
-                Ceremonia Civil
-              </div>
-              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 leading-snug break-words">
-                {civilInfo.location || 'Lugar por definir'}
-              </div>
-              <div className="text-[11px] text-[#7D6F6B] mt-0.5 leading-snug break-words">
-                {civilInfo.time ? `${civilInfo.time} hrs` : 'Horario por definir'}
-                {civilInfo.date && civilInfo.date !== weddingData.wedding_date ? ` · ${civilInfo.date}` : ''}
-              </div>
+            <div className="text-sm font-semibold text-[#181514] font-sans mt-0.5 leading-snug break-words">
+              {civilInfo.location || 'Lugar por definir'}
+            </div>
+            <div className="text-xs text-[#7D6F6B] leading-snug break-words">
+              {civilInfo.time ? `${civilInfo.time} hrs` : 'Horario por definir'}
+              {civilInfo.date && civilInfo.date !== weddingData.wedding_date ? ` · ${civilInfo.date}` : ''}
             </div>
           </div>
 
           {/* 3. Ceremonia Religiosa */}
-          <div className="p-4 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] flex items-start space-x-3 transition hover:bg-white hover:shadow-2xs">
-            <div className="w-8 h-8 rounded-xl bg-white border border-[#EFE8E1] flex items-center justify-center text-[#C48B81] shrink-0 mt-0.5">
-              <Church className="w-4 h-4" />
+          <div className="space-y-1 lg:border-l lg:border-[#EFE8E1] lg:pl-8">
+            <div className="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">
+              <Church className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Ceremonia Religiosa</span>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B]">
-                Ceremonia Religiosa
-              </div>
-              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 leading-snug break-words">
-                {relInfo.temple_name || weddingData.ceremony_venue || 'Lugar por definir'}
-              </div>
-              <div className="text-[11px] text-[#7D6F6B] mt-0.5 leading-snug break-words">
-                {relInfo.time || weddingData.ceremony_time ? `${relInfo.time || weddingData.ceremony_time} hrs` : 'Horario por definir'}
-              </div>
+            <div className="text-sm font-semibold text-[#181514] font-sans mt-0.5 leading-snug break-words">
+              {relInfo.temple_name || weddingData.ceremony_venue || 'Lugar por definir'}
+            </div>
+            <div className="text-xs text-[#7D6F6B] leading-snug break-words">
+              {relInfo.time || weddingData.ceremony_time ? `${relInfo.time || weddingData.ceremony_time} hrs` : 'Horario por definir'}
             </div>
           </div>
 
           {/* 4. Recepción */}
-          <div className="p-4 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] flex items-start space-x-3 transition hover:bg-white hover:shadow-2xs">
-            <div className="w-8 h-8 rounded-xl bg-white border border-[#EFE8E1] flex items-center justify-center text-[#C48B81] shrink-0 mt-0.5">
-              <MapPin className="w-4 h-4" />
+          <div className="space-y-1 sm:border-l sm:border-[#EFE8E1] sm:pl-6 lg:pl-8">
+            <div className="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">
+              <MapPin className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Recepción</span>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B]">
-                Recepción
-              </div>
-              <div className="text-sm font-semibold text-[#2B2826] mt-0.5 leading-snug break-words">
-                {weddingData.reception_venue || 'Lugar por definir'}
-              </div>
-              <div className="text-[11px] text-[#7D6F6B] mt-0.5 leading-snug break-words">
-                {weddingData.reception_time ? `${weddingData.reception_time} hrs` : 'Horario por definir'}
-              </div>
+            <div className="text-sm font-semibold text-[#181514] font-sans mt-0.5 leading-snug break-words">
+              {weddingData.reception_venue || 'Lugar por definir'}
+            </div>
+            <div className="text-xs text-[#7D6F6B] leading-snug break-words">
+              {weddingData.reception_time ? `${weddingData.reception_time} hrs` : 'Horario por definir'}
             </div>
           </div>
         </div>

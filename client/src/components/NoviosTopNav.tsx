@@ -15,7 +15,7 @@ export const NoviosTopNav: React.FC<NoviosTopNavProps> = ({ currentTab, onSelect
   // Orden exacto autorizado para Novios:
   // dashboard, reuniones, proveedores y pagos, checklist, invitados, mesas y layout, civil, religiosa, documentos e itinerario
   const tabs: NoviosTabDef[] = [
-    { id: 'resumen', label: 'Dashboard' },
+    { id: 'resumen', label: 'Mi Boda' },
     { id: 'reuniones', label: 'Reuniones' },
     { id: 'proveedores', label: 'Proveedores y Pagos' },
     { id: 'checklist', label: 'Checklist' },
