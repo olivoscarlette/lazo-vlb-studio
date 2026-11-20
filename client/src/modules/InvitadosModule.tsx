@@ -1092,14 +1092,14 @@ export const InvitadosModule: React.FC = () => {
       {/* Top Header & Metrics */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span className="text-[10px] uppercase font-bold tracking-widest text-stone-400">
-            Lista Oficial
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+            Lista de Invitados & Cortesía
           </span>
-          <h2 className="font-serif text-3xl font-bold text-stone-900">
+          <h2 className="font-novios text-3xl sm:text-4xl text-[#2B2826] mt-1 tracking-tight">
             Invitados y Confirmaciones
           </h2>
-          <p className="text-xs text-stone-500 mt-1">
-            Gestión unificada de asistencia, acompañantes y asignación de mesas.
+          <p className="text-xs sm:text-sm text-[#8A7E72] mt-1.5 font-light">
+            Gestión unificada de asistencia, pases y asignación de mesas.
           </p>
         </div>
 
@@ -1109,7 +1109,7 @@ export const InvitadosModule: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowDownloadsMenu(!showDownloadsMenu)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-semibold rounded-xl transition border border-[#EFE8E1] shadow-2xs cursor-pointer focus:outline-none"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-medium rounded-full transition border border-[#EFE8E1] shadow-2xs cursor-pointer focus:outline-none"
               title="Descargas, importación de Excel, configuración de invitaciones y opciones"
             >
               <SlidersHorizontal className="w-3.5 h-3.5 text-[#786C68]" />
@@ -1324,7 +1324,7 @@ export const InvitadosModule: React.FC = () => {
           {/* Estado Informativo para Novios con Coordinación Contratada */}
           {isCoordinationManagedForNovios && (
             <div
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#FAF8F5] text-[#7D6F6B] text-xs font-semibold rounded-xl border border-[#EFE8E1]"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#FAF8F5] text-[#7D6F6B] text-xs font-medium rounded-full border border-[#EFE8E1]"
               title="Tu coordinadora de Viva la Bride gestiona el envío oficial de confirmaciones de tu evento"
             >
               <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
@@ -1335,7 +1335,7 @@ export const InvitadosModule: React.FC = () => {
           {/* Estado Informativo para Novios en Planner Virtual (Envíos personales) */}
           {canNoviosSendPersonal && (
             <div
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F0FDF4] text-[#166534] text-xs font-semibold rounded-xl border border-[#BBF7D0]"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F0FDF4] text-[#166534] text-xs font-medium rounded-full border border-[#BBF7D0]"
               title="Envía tus invitaciones uno por uno desde tu WhatsApp personal con el botón verde de cada invitado"
             >
               <MessageSquare className="w-3.5 h-3.5 text-[#16A34A]" />
@@ -1348,7 +1348,7 @@ export const InvitadosModule: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowLazoInvitationUpgradeModal(true)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-[#F2ECE7] hover:bg-[#EAE2DC] text-[#7D6F6B] hover:text-[#2B2826] text-xs font-semibold rounded-xl transition border border-[#E5DDD5] shadow-2xs cursor-pointer group"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#7D6F6B] hover:text-[#2B2826] text-xs font-medium rounded-full transition border border-[#EFE8E1] shadow-2xs cursor-pointer group"
               title="Servicio de envío de invitaciones y confirmación RSVP con Lazo Studio"
             >
               <Send className="w-3.5 h-3.5 text-[#A39690] group-hover:text-[#C48B81] transition" />
@@ -1360,7 +1360,7 @@ export const InvitadosModule: React.FC = () => {
           {/* Botón Principal: + Nuevo Invitado */}
           <button
             onClick={handleOpenAdd}
-            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#2B2826] hover:bg-[#1E1B19] text-white text-xs font-semibold rounded-xl transition shadow-xs cursor-pointer shrink-0"
+            className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full transition shadow-2xs cursor-pointer shrink-0"
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Nuevo Invitado</span>
@@ -1417,43 +1417,43 @@ export const InvitadosModule: React.FC = () => {
       )}
 
       {/* Barra de Pestañas de Filtro Rápido */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
+      <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 no-scrollbar">
         <button
           onClick={() => { setStatusFilter(''); setTableFilter(''); setPage(1); }}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
             statusFilter === '' && tableFilter === ''
-              ? 'bg-[#C48B81] text-white shadow-xs'
-              : 'bg-[#FFFFFF] text-[#5E524E] border border-[#EFE8E1] hover:bg-[#F7F3EE]'
+              ? 'bg-[#2B2826] text-white shadow-2xs'
+              : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
           }`}
         >
           Todos ({summary.total})
         </button>
         <button
           onClick={() => { setStatusFilter('Confirmado'); setTableFilter(''); setPage(1); }}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
             statusFilter === 'Confirmado' && tableFilter === ''
-              ? 'bg-[#6E8C70] text-white shadow-xs'
-              : 'bg-[#FFFFFF] text-[#354B38] border border-[#CCDACC] hover:bg-[#E4ECE5]'
+              ? 'bg-[#577355] text-white shadow-2xs'
+              : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
           }`}
         >
           Confirmados ({summary.confirmed})
         </button>
         <button
           onClick={() => { setStatusFilter('Pendiente de confirmar'); setTableFilter(''); setPage(1); }}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
             statusFilter === 'Pendiente de confirmar' && tableFilter === ''
-              ? 'bg-[#A86B60] text-white shadow-xs'
-              : 'bg-[#FFFFFF] text-[#6D5A43] border border-[#EFE8E1] hover:bg-[#F7F3EE]'
+              ? 'bg-[#2B2826] text-white shadow-2xs'
+              : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
           }`}
         >
           Pendientes ({summary.pending})
         </button>
         <button
           onClick={() => { setStatusFilter('No asistirá'); setTableFilter(''); setPage(1); }}
-          className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
             statusFilter === 'No asistirá' && tableFilter === ''
-              ? 'bg-[#70443D] text-white shadow-xs'
-              : 'bg-[#FFFFFF] text-[#70443D] border border-[#EAD2D0] hover:bg-[#FBF4F3]'
+              ? 'bg-[#A86B60] text-white shadow-2xs'
+              : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
           }`}
         >
           No asistirán ({summary.declined})
@@ -1461,10 +1461,10 @@ export const InvitadosModule: React.FC = () => {
         {(!isCivilDifferentDay || eventTarget === 'principal') && (
           <button
             onClick={() => { setTableFilter('unassigned'); setStatusFilter(''); setPage(1); }}
-            className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer whitespace-nowrap shadow-2xs ${
+            className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer whitespace-nowrap ${
               tableFilter === 'unassigned'
-                ? 'bg-[#C48B81] text-white shadow-xs'
-                : 'bg-[#FFFFFF] text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#F7F3EE]'
+                ? 'bg-[#2B2826] text-white shadow-2xs'
+                : 'bg-white text-[#7D6F6B] border border-[#EFE8E1] hover:bg-[#FAF8F5] hover:text-[#2B2826]'
             }`}
           >
             Sin Mesa Asignada ({(summary as any).unassigned ?? '—'})
@@ -1475,7 +1475,7 @@ export const InvitadosModule: React.FC = () => {
       {/* WhatsApp Feedback Banner */}
       {whatsappBanner && (
         <div
-          className={`p-3.5 rounded-xl border flex items-center justify-between text-xs font-medium animate-fadeIn ${
+          className={`p-3.5 rounded-2xl border flex items-center justify-between text-xs font-medium animate-fadeIn ${
             whatsappBanner.type === 'success'
               ? 'bg-[#E5EDE6] text-[#384C3A] border-[#D5E2D7]'
               : 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5]'
@@ -1498,123 +1498,120 @@ export const InvitadosModule: React.FC = () => {
         </div>
       )}
 
-      {/* Summary KPI Strip — Cuenta asistente + acompañante (+1) como cifra principal */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+      {/* Summary KPI Strip — Diseño Editorial Cálido */}
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         <div
-          onClick={() => { setStatusFilter(''); setPage(1); }}
-          className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none ${
-            statusFilter === '' ? 'ring-2 ring-[#C48B81] bg-[#FFFFFF]' : 'hover:border-[#C48B81]'
+          onClick={() => { setStatusFilter(''); setTableFilter(''); setPage(1); }}
+          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition select-none bg-[#FAF8F5] ${
+            statusFilter === '' && tableFilter === ''
+              ? 'border-[#C48B81] bg-white shadow-2xs'
+              : 'border-[#EFE8E1] hover:border-[#C48B81]/60'
           }`}
           title="Ver todos los invitados"
         >
-          <div className="text-[10px] uppercase font-bold text-[#786C68]">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
             {isCivilDifferentDay && eventTarget === 'civil' ? 'Total Civil' : 'Total Invitados'}
           </div>
-          <div className="text-2xl font-serif font-bold text-[#332C2A] mt-0.5">{summary.total_places_all}</div>
-          <div className="text-[11px] text-[#786C68]">
-            Asistentes con +1 ({summary.total} registros{isCivilDifferentDay && eventTarget === 'civil' ? ' civil' : ''})
+          <div className="font-novios text-3xl text-[#2B2826] mt-1 tracking-tight">{summary.total_places_all}</div>
+          <div className="text-[11px] text-[#8A7E72] mt-1 font-light">
+            Personas en lista
           </div>
         </div>
 
         <div
-          onClick={() => { setStatusFilter('Confirmado'); setPage(1); }}
-          className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#EFE2DF]/45 border-[#DFC9C4] ${
-            statusFilter === 'Confirmado' ? 'ring-2 ring-[#C48B81] shadow-xs' : 'hover:border-[#C48B81]'
+          onClick={() => { setStatusFilter('Confirmado'); setTableFilter(''); setPage(1); }}
+          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition select-none bg-[#FAF8F5] ${
+            statusFilter === 'Confirmado'
+              ? 'border-[#577355] bg-white shadow-2xs'
+              : 'border-[#EFE8E1] hover:border-[#577355]/60'
           }`}
           title="Filtrar solo Confirmados"
         >
-          <div className="text-[10px] uppercase font-bold text-[#82524D]">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#577355]">
             {isCivilDifferentDay && eventTarget === 'civil' ? 'Confirmados Civil' : 'Confirmados'}
           </div>
-          <div className="text-2xl font-serif font-bold text-[#6E433F] mt-0.5">{summary.confirmed_places}</div>
-          <div className="text-[11px] text-[#82524D] font-semibold">
-            Lugares confirmados ({summary.confirmed} registros)
+          <div className="font-novios text-3xl text-[#455C44] mt-1 tracking-tight">{summary.confirmed_places}</div>
+          <div className="text-[11px] text-[#577355] mt-1 font-light">
+            Asistencia confirmada
           </div>
         </div>
 
         <div
-          onClick={() => { setStatusFilter('Pendiente de confirmar'); setPage(1); }}
-          className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#EFE8DE]/60 border-[#EFE8E1] ${
-            statusFilter === 'Pendiente de confirmar' ? 'ring-2 ring-[#C48B81] shadow-xs' : 'hover:border-[#C48B81]'
+          onClick={() => { setStatusFilter('Pendiente de confirmar'); setTableFilter(''); setPage(1); }}
+          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition select-none bg-[#FAF8F5] ${
+            statusFilter === 'Pendiente de confirmar'
+              ? 'border-[#C48B81] bg-white shadow-2xs'
+              : 'border-[#EFE8E1] hover:border-[#C48B81]/60'
           }`}
           title="Filtrar solo Pendientes de confirmar"
         >
-          <div className="text-[10px] uppercase font-bold text-[#6D5A43]">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
             {isCivilDifferentDay && eventTarget === 'civil' ? 'Pendientes Civil' : 'Pendientes'}
           </div>
-          <div className="text-2xl font-serif font-bold text-[#564734] mt-0.5">{summary.pending_places ?? summary.pending}</div>
-          <div className="text-[11px] text-[#857056]">Por confirmar ({summary.pending} registros)</div>
+          <div className="font-novios text-3xl text-[#2B2826] mt-1 tracking-tight">{summary.pending_places ?? summary.pending}</div>
+          <div className="text-[11px] text-[#8A7E72] mt-1 font-light">Por confirmar</div>
         </div>
 
         <div
-          onClick={() => { setStatusFilter('No asistirá'); setPage(1); }}
-          className={`luxury-card rounded-xl p-4 cursor-pointer transition select-none bg-[#F5ECEB]/60 border-[#DBC1BE] ${
-            statusFilter === 'No asistirá' ? 'ring-2 ring-[#C48B81] shadow-xs' : 'hover:border-[#C48B81]'
+          onClick={() => { setStatusFilter('No asistirá'); setTableFilter(''); setPage(1); }}
+          className={`rounded-2xl p-4 sm:p-5 border cursor-pointer transition select-none bg-[#FAF8F5] ${
+            statusFilter === 'No asistirá'
+              ? 'border-[#A86B60] bg-white shadow-2xs'
+              : 'border-[#EFE8E1] hover:border-[#A86B60]/60'
           }`}
           title="Filtrar quienes No asistirán"
         >
-          <div className="text-[10px] uppercase font-bold text-[#6E4541]">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A86B60]">
             {isCivilDifferentDay && eventTarget === 'civil' ? 'No asistirán Civil' : 'No asistirán'}
           </div>
-          <div className="text-2xl font-serif font-bold text-[#593734] mt-0.5">{summary.declined_places ?? summary.declined}</div>
-          <div className="text-[11px] text-[#855652]">Lugares liberados ({summary.declined} registros)</div>
+          <div className="font-novios text-3xl text-[#A86B60] mt-1 tracking-tight">{summary.declined_places ?? summary.declined}</div>
+          <div className="text-[11px] text-[#A86B60] mt-1 font-light">Declinados</div>
         </div>
 
-        <div className="luxury-card rounded-xl p-4 col-span-2 sm:col-span-1">
-          <div className="text-[10px] uppercase font-bold text-[#786C68]">
+        <div className="rounded-2xl p-4 sm:p-5 border border-[#EFE8E1] bg-[#FAF8F5] col-span-2 sm:col-span-1">
+          <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
             {isCivilDifferentDay && eventTarget === 'civil' ? 'Avance Civil' : 'Avance RSVP'}
           </div>
-          <div className="text-2xl font-serif font-bold text-[#332C2A] mt-0.5">
+          <div className="font-novios text-3xl text-[#2B2826] mt-1 tracking-tight">
             {summary.total_places_all > 0 ? Math.round((summary.confirmed_places / summary.total_places_all) * 100) : 0}%
           </div>
-          <div className="text-[11px] text-[#786C68]">Tasa de asistencia</div>
+          <div className="text-[11px] text-[#8A7E72] mt-1 font-light">Tasa de respuesta</div>
         </div>
       </div>
 
       {/* Filters, Search & Sort Bar */}
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#EFE8E1] shadow-xs">
+      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#EFE8E1] shadow-2xs">
         <div className="relative flex-1 w-full lg:max-w-md">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#786C68]" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A7E72]" />
           <input
             type="text"
-            placeholder="Buscar por nombre, apellido o teléfono (con o sin acentos)..."
+            placeholder="Buscar por nombre, apellido o teléfono..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-xs border border-[#EFE8E1] rounded-xl focus:outline-none"
+            className="w-full pl-9 pr-4 py-2 text-xs border border-[#EFE8E1] rounded-full bg-[#FAF8F5]/60 focus:bg-white text-[#2B2826] placeholder:text-[#8A7E72]/70 focus:outline-none focus:border-[#C48B81] transition"
           />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           {/* Sort By Selector: Alphabetical */}
-          <div className="inline-flex items-center space-x-1.5 bg-[#F9F6F2] px-2.5 py-1 rounded-xl border border-[#EFE8E1]">
-            <span className="text-[11px] font-bold text-[#786C68] whitespace-nowrap">Ordenar:</span>
+          <div className="inline-flex items-center space-x-1.5 bg-[#FAF8F5] px-3.5 py-1 rounded-full border border-[#EFE8E1]">
+            <span className="text-[11px] font-medium text-[#8A7E72] whitespace-nowrap">Ordenar:</span>
             <select
               value={sortBy}
               onChange={e => { setSortBy(e.target.value as any); setPage(1); }}
-              className="py-1 text-xs font-semibold bg-transparent text-[#332C2A] focus:outline-none cursor-pointer"
+              className="py-1 text-xs font-medium bg-transparent text-[#2B2826] focus:outline-none cursor-pointer"
             >
-              <option value="alpha_asc">Alfabético: Nombre (A → Z)</option>
-              <option value="alpha_desc">Alfabético: Nombre (Z → A)</option>
-              <option value="lastname_asc">Alfabético: Apellido (A → Z)</option>
-              <option value="lastname_desc">Alfabético: Apellido (Z → A)</option>
+              <option value="alpha_asc">Nombre (A → Z)</option>
+              <option value="alpha_desc">Nombre (Z → A)</option>
+              <option value="lastname_asc">Apellido (A → Z)</option>
+              <option value="lastname_desc">Apellido (Z → A)</option>
             </select>
           </div>
 
           <select
-            value={statusFilter}
-            onChange={e => { setStatusFilter(e.target.value); setPage(1); }}
-            className="px-3 py-2 text-xs border border-[#EFE8E1] rounded-xl bg-white text-[#332C2A] focus:outline-none"
-          >
-            <option value="">Todos los Estatus</option>
-            <option value="Confirmado">Confirmados</option>
-            <option value="Pendiente de confirmar">Pendientes</option>
-            <option value="No asistirá">No asistirán</option>
-          </select>
-
-          <select
             value={tableFilter}
             onChange={e => { setTableFilter(e.target.value); setPage(1); }}
-            className="px-3 py-2 text-xs border border-[#EFE8E1] rounded-xl bg-white text-[#332C2A] focus:outline-none"
+            className="px-3.5 py-2 text-xs font-medium border border-[#EFE8E1] rounded-full bg-white text-[#2B2826] focus:outline-none focus:border-[#C48B81] cursor-pointer"
           >
             <option value="">Todas las Mesas</option>
             <option value="assigned">Con Mesa Asignada</option>
@@ -1627,23 +1624,23 @@ export const InvitadosModule: React.FC = () => {
       </div>
 
       {/* Main Table: Operational, Single-Line & Properly Proportioned Columns */}
-      <div className="luxury-card rounded-2xl overflow-hidden border border-[#EFE8E1]">
+      <div className="bg-white rounded-2xl overflow-hidden border border-[#EFE8E1] shadow-2xs">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#EFE8DE] border-b border-[#EFE8E1] font-bold uppercase tracking-wider text-[#786C68]">
+              <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72]">
                 <th
                   onClick={() => {
                     setSortBy(sortBy === 'alpha_asc' ? 'alpha_desc' : 'alpha_asc');
                     setPage(1);
                   }}
-                  className="py-3.5 px-4 whitespace-nowrap cursor-pointer hover:text-[#332C2A] select-none transition"
+                  className="py-3.5 px-4 whitespace-nowrap cursor-pointer hover:text-[#2B2826] select-none transition"
                   title="Haz clic para ordenar alfabéticamente"
                 >
                   NOMBRE Y APELLIDO {sortBy === 'alpha_asc' ? '↑' : sortBy === 'alpha_desc' ? '↓' : '↕'}
                 </th>
                 <th className="py-3.5 px-4 whitespace-nowrap min-w-[175px]">WHATSAPP</th>
-                <th className="py-3.5 px-4 text-center whitespace-nowrap"># ACOMPAÑANTES</th>
+                <th className="py-3.5 px-4 text-center whitespace-nowrap">PASES</th>
                 <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">
                   {isCivilDifferentDay && eventTarget === 'civil' ? 'ESTATUS CIVIL' : 'ESTATUS'}
                 </th>
@@ -1656,16 +1653,16 @@ export const InvitadosModule: React.FC = () => {
                 <th className="py-3.5 px-4 whitespace-nowrap">OBSERVACIONES</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#EFEAE2]">
+            <tbody className="divide-y divide-[#FAF8F5]">
               {loading ? (
                 <tr>
-                  <td colSpan={canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
                     Cargando invitados...
                   </td>
                 </tr>
               ) : guests.length === 0 ? (
                 <tr>
-                  <td colSpan={canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#786C68]">
+                  <td colSpan={canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
                     No se encontraron invitados con los filtros actuales.
                   </td>
                 </tr>
@@ -1673,18 +1670,19 @@ export const InvitadosModule: React.FC = () => {
                 guests.map(guest => (
                   <tr
                     key={guest.id}
-                    className="hover:bg-[#F9F6F2] transition group"
+                    className="hover:bg-[#FAF8F5]/60 transition group"
                   >
                     {/* Clickable name opens fast edit — Single line */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div
                         onClick={() => handleOpenEdit(guest)}
-                        className="cursor-pointer font-semibold text-sm text-[#2B2826] group-hover:text-[#C48B81] inline-flex items-center space-x-2 whitespace-nowrap"
+                        className="cursor-pointer font-medium text-sm text-[#2B2826] group-hover:text-[#C48B81] inline-flex items-center space-x-2 whitespace-nowrap transition"
+                        title="Clic para editar invitado"
                       >
-                        <span className="underline decoration-[#D2C4B4] decoration-1 underline-offset-4 whitespace-nowrap">
+                        <span className="whitespace-nowrap">
                           {guest.first_name} {guest.last_name}
                         </span>
-                        <Edit2 className="w-3.5 h-3.5 text-[#C7B6A6] group-hover:text-[#C48B81] transition shrink-0" />
+                        <Edit2 className="w-3 h-3 text-[#C7B6A6] opacity-0 group-hover:opacity-100 group-hover:text-[#C48B81] transition shrink-0" />
                       </div>
                     </td>
 
@@ -1706,38 +1704,40 @@ export const InvitadosModule: React.FC = () => {
                             })()}
                             target="_blank"
                             rel="noreferrer"
-                            className="p-1.5 rounded-lg bg-[#E4ECE5] hover:bg-[#CCDACC] text-[#354B38] transition shadow-2xs shrink-0"
+                            className="p-1.5 rounded-full bg-[#E4ECE5] hover:bg-[#CCDACC] text-[#354B38] transition shadow-2xs shrink-0"
                             title="Enviar mensaje personalizado por WhatsApp (1 clic)"
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                           </a>
-                          <span className="font-mono text-sm text-[#4A3F3C]">{guest.phone}</span>
+                          <span className="font-mono text-xs text-[#5A524C]">{guest.phone}</span>
                         </div>
                       ) : (
-                        <span className="text-xs text-[#7D6F6B] italic">Sin teléfono</span>
+                        <span className="text-xs text-[#8A7E72] italic font-light">Sin teléfono</span>
                       )}
                     </td>
 
-                    {/* Companion count — Single line with confirmed places badge */}
+                    {/* Companion count — Clear passes display */}
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <div className="inline-flex flex-col items-center">
                         <div className="inline-flex items-center space-x-1.5 whitespace-nowrap">
-                          <span className="font-semibold text-xs text-[#2B2826] bg-[#EFE8DE] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
-                            {guest.companion_count}
+                          <span className="font-medium text-xs text-[#2B2826] bg-[#FAF8F5] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
+                            {1 + guest.companion_count} {1 + guest.companion_count === 1 ? 'pase' : 'pases'}
                           </span>
-                          <span className="text-xs text-[#7D6F6B] whitespace-nowrap">
-                            ({1 + guest.companion_count} {1 + guest.companion_count === 1 ? 'pase' : 'pases'})
-                          </span>
+                          {guest.companion_count > 0 && (
+                            <span className="text-[11px] text-[#8A7E72] font-light whitespace-nowrap">
+                              (+{guest.companion_count})
+                            </span>
+                          )}
                         </div>
                         {isCivilDifferentDay && eventTarget === 'civil' ? (
                           guest.confirmed_places_civil ? (
-                            <span className="text-[10px] font-semibold text-[#82524D] bg-[#EFE2DF] px-2 py-0.5 rounded-full mt-1">
+                            <span className="text-[10px] font-medium text-[#82524D] bg-[#EFE2DF] px-2 py-0.5 rounded-full mt-1">
                               ✓ {guest.confirmed_places_civil} civil
                             </span>
                           ) : null
                         ) : (
                           guest.confirmed_places ? (
-                            <span className="text-[10px] font-semibold text-[#354B38] bg-[#E4ECE5] px-2 py-0.5 rounded-full mt-1">
+                            <span className="text-[10px] font-medium text-[#354B38] bg-[#E4ECE5] px-2 py-0.5 rounded-full mt-1">
                               ✓ {guest.confirmed_places} confirmados
                             </span>
                           ) : null
@@ -1751,12 +1751,12 @@ export const InvitadosModule: React.FC = () => {
                         <select
                           value={isCivilDifferentDay && eventTarget === 'civil' ? (guest.status_civil || 'Pendiente de confirmar') : guest.status}
                           onChange={e => handleInlineStatusChange(guest, e.target.value as any)}
-                          className={`w-36 text-xs font-semibold rounded-xl px-2.5 py-1.5 border transition focus:outline-none cursor-pointer ${
+                          className={`w-36 text-xs font-medium rounded-full px-3 py-1.5 border transition focus:outline-none cursor-pointer ${
                             (isCivilDifferentDay && eventTarget === 'civil' ? guest.status_civil : guest.status) === 'Confirmado'
                               ? 'bg-[#E5EDE6] text-[#384C3A] border-[#D0DDD1]'
                               : (isCivilDifferentDay && eventTarget === 'civil' ? guest.status_civil : guest.status) === 'No asistirá'
                               ? 'bg-[#FAF4F3] text-[#9B6158] border-[#EEDAD6]'
-                              : 'bg-[#FAF7F5] text-[#7D6F6B] border-[#EFE8E1]'
+                              : 'bg-[#FAF8F5] text-[#7D6F6B] border-[#EFE8E1]'
                           }`}
                         >
                           <option value="Pendiente de confirmar">Pendiente</option>
