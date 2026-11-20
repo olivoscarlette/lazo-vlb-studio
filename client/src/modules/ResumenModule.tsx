@@ -250,62 +250,69 @@ export const ResumenModule: React.FC<ResumenProps> = ({ onNavigateTab }) => {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
-      {/* 1. Cabecera Hero Luminosa y Editorial con Estilo Atelier */}
-      <div className="bg-gradient-to-br from-[#FAF7F5] via-[#FFFFFF] to-[#F5EFEB] rounded-[32px] p-7 sm:p-9 lg:p-10 border border-[#EFE8E1] shadow-[0_4px_30px_rgba(0,0,0,0.03)] relative overflow-hidden space-y-8">
-        {/* Glow sutil de fondo para calidez */}
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-[#F7EDEB]/50 blur-3xl pointer-events-none" />
+      {/* 1. Cabecera Hero Cinematográfica Editorial (Idéntica al Mockup Autorizado) */}
+      <div className="relative rounded-[32px] overflow-hidden shadow-md border border-[#EFE8E1] bg-[#181514]">
+        {/* Foto de portada cinematográfica con overlay editorial */}
+        <div className="relative h-72 sm:h-84 md:h-96 w-full overflow-hidden">
+          <img
+            src={weddingData.cover_photo_url || "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=80"}
+            alt="Boda Cover"
+            className="w-full h-full object-cover object-center filter brightness-[0.70] contrast-[1.05] transition-transform duration-700 hover:scale-105"
+          />
+          {/* Degradado cinematográfico para máxima legibilidad */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#181514] via-[#181514]/40 to-black/30" />
 
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
-          <div className="space-y-3">
-            <h1 className="font-novios text-4xl sm:text-5xl lg:text-[56px] font-normal tracking-tight leading-tight text-[#181514]">
+          {/* Botón Gestionar Boda (Arriba a la derecha, sutil para Admin/Coordinador) */}
+          {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
+            <div className="absolute top-5 right-5 z-20">
+              <button
+                onClick={() => setShowEditWeddingModal(true)}
+                className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/20 text-white text-xs font-semibold transition cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Gestionar Boda</span>
+              </button>
+            </div>
+          )}
+
+          {/* Contenido Central: Nombres Monumentales & Píldora Flotante */}
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center text-center p-6 space-y-4">
+            <h1 className="font-novios text-4xl sm:text-6xl md:text-7xl font-normal tracking-wide text-white drop-shadow-md select-none">
               {weddingData.partner_1_name && weddingData.partner_2_name ? (
                 <>
-                  <span>{toTitleCase(weddingData.partner_1_name)}</span>{' '}
-                  <span className="font-novios italic text-[#C48B81] mx-1 sm:mx-2 font-normal">&</span>{' '}
-                  <span>{toTitleCase(weddingData.partner_2_name)}</span>
+                  <span>{weddingData.partner_1_name.toUpperCase()}</span>{' '}
+                  <span className="font-novios italic text-[#E8D8CE] mx-2 font-normal">&</span>{' '}
+                  <span>{weddingData.partner_2_name.toUpperCase()}</span>
                 </>
               ) : coupleTitle.includes('&') ? (
                 <>
-                  <span>{coupleTitle.split('&')[0].trim()}</span>{' '}
-                  <span className="font-novios italic text-[#C48B81] mx-1 sm:mx-2 font-normal">&</span>{' '}
-                  <span>{coupleTitle.split('&').slice(1).join('&').trim()}</span>
+                  <span>{coupleTitle.split('&')[0].trim().toUpperCase()}</span>{' '}
+                  <span className="font-novios italic text-[#E8D8CE] mx-2 font-normal">&</span>{' '}
+                  <span>{coupleTitle.split('&').slice(1).join('&').trim().toUpperCase()}</span>
                 </>
               ) : (
-                <span>{coupleTitle}</span>
+                <span>{coupleTitle.toUpperCase()}</span>
               )}
             </h1>
 
-            {/* Countdown pill badge flotante en cristal y tono blush */}
+            {/* Píldora Glassmorphic Centrada */}
             {weddingData.wedding_date && (
-              <div className="inline-flex items-center space-x-2.5 px-4.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-xs font-medium border border-[#EAD6D2] shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
-                <span className="font-bold text-[#A86B60] tracking-wide uppercase text-[11px]">
+              <div className="inline-flex items-center space-x-2.5 px-6 py-2 rounded-full bg-white/20 hover:bg-white/25 backdrop-blur-md border border-white/30 text-white text-xs sm:text-sm font-medium tracking-wide shadow-lg transition">
+                <Sparkles className="w-3.5 h-3.5 text-[#E8D8CE]" />
+                <span className="font-bold uppercase tracking-wider text-[11px] sm:text-xs">
                   {getCountdownText(weddingData.wedding_date)}
                 </span>
-                <span className="text-[#C48B81]/40">·</span>
-                <span className="text-[#2B2826] font-normal">
+                <span className="opacity-60">·</span>
+                <span className="font-light">
                   {formatFullDateSpanish(weddingData.wedding_date)}
                 </span>
               </div>
             )}
           </div>
-
-          {/* Botón Gestionar Boda (Solo Admin / Coordinador) */}
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
-            {(user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
-              <button
-                onClick={() => setShowEditWeddingModal(true)}
-                className="inline-flex items-center space-x-2 px-6 py-2.5 rounded-full bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs sm:text-sm font-semibold transition shadow-[0_6px_20px_-3px_rgba(196,139,129,0.35)] hover:shadow-[0_8px_24px_-3px_rgba(196,139,129,0.45)] cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Gestionar Boda</span>
-              </button>
-            )}
-          </div>
         </div>
 
-        {/* Tira Editorial de Sedes & Momentos (Limpia con separadores finos) */}
-        <div className="pt-6 border-t border-[#EFE8E1] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 relative z-10">
+        {/* Tira Editorial Inferior en Fondo Alabaster Cálido */}
+        <div className="bg-[#FAF8F5] p-6 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 border-t border-[#EFE8E1]">
           {/* 1. Fecha de la Boda */}
           <div className="space-y-1">
             <div className="flex items-center space-x-2 text-[10px] uppercase font-bold tracking-widest text-[#7D6F6B]">

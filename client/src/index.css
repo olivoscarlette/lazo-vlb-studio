@@ -141,18 +141,18 @@
   }
 
   /* Encabezados y fuentes del sistema con Outfit (Sans geométrica de alta legibilidad) */
-  h1, h2, h3, h4, h5, h6, .font-serif, .lazo-heading {
-    font-family: var(--font-heading) !important;
+  h1:not(.font-novios):not(.font-atteron),
+  h2:not(.font-novios):not(.font-atteron),
+  h3, h4, h5, h6, .lazo-heading {
+    font-family: var(--font-heading);
     letter-spacing: -0.01em;
     line-height: 1.25;
   }
 
   /* Tipografía Prata EXCLUSIVA para nombres de los novios (Didone Editorial de Alta Gama) */
-  .font-atteron, .font-novios {
+  .font-atteron, .font-novios, .font-atteron *, .font-novios * {
     font-family: 'Prata', Georgia, serif !important;
-    font-weight: 400 !important;
-    letter-spacing: 0.01em;
-    text-transform: capitalize;
+    letter-spacing: 0.02em;
   }
 
   /* Sans-serif limpia, espaciosa y legible para toda la información operativa */
