@@ -793,7 +793,7 @@ router.put('/:weddingId/cover-position', authenticateToken, requireWeddingAccess
   return res.json({ success: true, cover_photo_position });
 });
 
-// GET /api/weddings/:weddingId/novios-studio - Cargar estado completo de Nuevo Lazo + hidratación desde DB
+// GET /api/weddings/:weddingId/novios-studio - Cargar estado completo de Nuevo Lazo + hidratación real desde DB
 router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
   const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
@@ -822,24 +822,28 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
     studio = null;
   }
 
-  // Hydrate existing DB records so couples transitioning from legacy Lazo keep all their real data
+  // Hydrate ALL real DB records using the exact SQLite schema table names
   let guests: any[] = [];
   let tables: any[] = [];
+  let layoutElements: any[] = [];
   let vendors: any[] = [];
-  let checklist: any[] = [];
+  let payments: any[] = [];
+  let tasks: any[] = [];
   let timeline: any[] = [];
   let civil: any = null;
   let religious: any = null;
   let documents: any[] = [];
 
-  try { guests = db.prepare('SELECT * FROM guests WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch {}
-  try { tables = db.prepare('SELECT * FROM tables WHERE wedding_id = ? ORDER BY created_at ASC').all(weddingId) as any[]; } catch {}
-  try { vendors = db.prepare('SELECT * FROM vendors WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch {}
-  try { checklist = db.prepare('SELECT * FROM checklist_tasks WHERE wedding_id = ? ORDER BY due_date ASC').all(weddingId) as any[]; } catch {}
-  try { timeline = db.prepare('SELECT * FROM timeline_events WHERE wedding_id = ? ORDER BY time ASC').all(weddingId) as any[]; } catch {}
-  try { civil = db.prepare('SELECT * FROM civil_ceremony WHERE wedding_id = ?').get(weddingId) as any; } catch {}
-  try { religious = db.prepare('SELECT * FROM religious_ceremony WHERE wedding_id = ?').get(weddingId) as any; } catch {}
-  try { documents = db.prepare('SELECT * FROM documents WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch {}
+  try { guests = db.prepare('SELECT * FROM guests WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch (e) { console.error('hydrate guests err:', e); }
+  try { tables = db.prepare('SELECT * FROM tables WHERE wedding_id = ? ORDER BY created_at ASC').all(weddingId) as any[]; } catch (e) { console.error('hydrate tables err:', e); }
+  try { layoutElements = db.prepare('SELECT * FROM layout_elements WHERE wedding_id = ? ORDER BY created_at ASC').all(weddingId) as any[]; } catch (e) { console.error('hydrate layout_elements err:', e); }
+  try { vendors = db.prepare('SELECT * FROM vendors WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch (e) { console.error('hydrate vendors err:', e); }
+  try { payments = db.prepare('SELECT * FROM payments WHERE wedding_id = ? ORDER BY payment_date DESC').all(weddingId) as any[]; } catch (e) { console.error('hydrate payments err:', e); }
+  try { tasks = db.prepare('SELECT * FROM tasks WHERE wedding_id = ? ORDER BY due_date ASC').all(weddingId) as any[]; } catch (e) { console.error('hydrate tasks err:', e); }
+  try { timeline = db.prepare('SELECT * FROM timeline_events WHERE wedding_id = ? ORDER BY order_index ASC, time ASC').all(weddingId) as any[]; } catch (e) { console.error('hydrate timeline err:', e); }
+  try { civil = db.prepare('SELECT * FROM civil_ceremony WHERE wedding_id = ?').get(weddingId) as any; } catch (e) { console.error('hydrate civil err:', e); }
+  try { religious = db.prepare('SELECT * FROM religious_ceremony WHERE wedding_id = ?').get(weddingId) as any; } catch (e) { console.error('hydrate religious err:', e); }
+  try { documents = db.prepare('SELECT * FROM documents WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch (e) { console.error('hydrate documents err:', e); }
 
   return res.json({
     studio,
@@ -861,8 +865,10 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
     seedFromDb: {
       guests,
       tables,
+      layoutElements,
       vendors,
-      checklist,
+      payments,
+      tasks,
       timeline,
       civil,
       religious,
