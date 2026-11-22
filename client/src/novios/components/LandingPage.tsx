@@ -1,16 +1,89 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  Sparkles, Check, ArrowRight, Heart, Wallet, Users, CalendarCheck2, Clock
+  Sparkles, Check, ArrowRight, Heart, Wallet, Users, CalendarCheck2, Clock, Lock, MessageSquare
 } from 'lucide-react';
+import { Modal } from './Modal';
+import { VLB_QUOTES_PHONE } from './VlbCoordinationModal';
 
 interface LandingPageProps {
   onOpenLogin: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
+  const [checkoutPlan, setCheckoutPlan] = useState<'esencial' | 'pro' | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [mpNotConfigured, setMpNotConfigured] = useState(false);
+  const [form, setForm] = useState({
+    partner1: '',
+    partner2: '',
+    weddingDate: new Date(Date.now() + 300 * 86400000).toISOString().split('T')[0],
+    email: '',
+    phone: '+52 ',
+    password: ''
+  });
+
   const scrollToPricing = () => {
     document.getElementById('planes-lazo')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const openCheckout = (plan: 'esencial' | 'pro') => {
+    setError('');
+    setMpNotConfigured(false);
+    setCheckoutPlan(plan);
+  };
+
+  const handleCheckoutSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkoutPlan) return;
+    setError('');
+    setMpNotConfigured(false);
+
+    if (form.password.length < 6) {
+      setError('Tu contraseña debe tener al menos 6 caracteres.');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const res = await fetch('/api/checkout/mercadopago', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          planId: checkoutPlan,
+          partner1: form.partner1.trim(),
+          partner2: form.partner2.trim(),
+          weddingDate: form.weddingDate,
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          password: form.password
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (data.code === 'MP_NOT_CONFIGURED') {
+          setMpNotConfigured(true);
+        }
+        setError(data.error || 'No se pudo iniciar el pago.');
+        return;
+      }
+      if (data.init_point) {
+        window.location.href = data.init_point;
+      }
+    } catch {
+      setError('Error de conexión. Intenta nuevamente.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const whatsappFallbackUrl = checkoutPlan
+    ? `https://wa.me/${VLB_QUOTES_PHONE}?text=${encodeURIComponent(
+        `¡Hola! Somos ${form.partner1 || 'Novia'} & ${form.partner2 || 'Novio'} (${form.email || 'sin correo'}), fecha de boda ${form.weddingDate}, y queremos adquirir ${
+          checkoutPlan === 'pro' ? 'Lazo Pro ($1,990 MXN)' : 'Plan Esencial ($990 MXN)'
+        }.`
+      )}`
+    : `https://wa.me/${VLB_QUOTES_PHONE}`;
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826]">
@@ -203,10 +276,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
 
             <button
               type="button"
-              onClick={onOpenLogin}
+              onClick={() => openCheckout('esencial')}
               className="mt-7 w-full py-3 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
             >
-              Entrar / Solicitar Plan Esencial
+              Adquirir Plan Esencial · $990
             </button>
           </div>
 
@@ -248,10 +321,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
 
             <button
               type="button"
-              onClick={onOpenLogin}
+              onClick={() => openCheckout('pro')}
               className="mt-7 w-full py-3 rounded-full bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-medium transition cursor-pointer"
             >
-              Entrar / Solicitar Lazo Pro
+              Adquirir Lazo Pro · $1,990
             </button>
           </div>
         </div>
@@ -260,6 +333,146 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
       <footer className="py-8 border-t border-[#EFE8E1] text-center text-xs text-[#8A7E72] font-light">
         <span className="font-editorial tracking-[0.2em] text-[#2B2826]">LAZO</span> · Tu boda, organizada con calma.
       </footer>
+
+      {/* Modal: Registro + Checkout MercadoPago */}
+      <Modal
+        isOpen={Boolean(checkoutPlan)}
+        onClose={() => setCheckoutPlan(null)}
+        title={checkoutPlan === 'pro' ? 'Lazo Pro · $1,990 MXN' : 'Plan Esencial · $990 MXN'}
+        subtitle="Crea tu cuenta y paga de forma segura con MercadoPago. Entrarás directo a tu boda al confirmar."
+        maxWidthClass="max-w-md"
+      >
+        <form onSubmit={handleCheckoutSubmit} className="space-y-3.5">
+          {error && (
+            <div className="p-3 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-700 space-y-2">
+              <p>{error}</p>
+              {mpNotConfigured && (
+                <a
+                  href={whatsappFallbackUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#2B2826] text-white text-[11px] font-medium"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Solicitar acceso por WhatsApp</span>
+                </a>
+              )}
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Novia / Pareja 1 *
+              </label>
+              <input
+                type="text"
+                required
+                autoFocus
+                placeholder="Ej. Sofía"
+                value={form.partner1}
+                onChange={e => setForm({ ...form, partner1: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Novio / Pareja 2 *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Ej. Mateo"
+                value={form.partner2}
+                onChange={e => setForm({ ...form, partner2: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Fecha de la boda *
+              </label>
+              <input
+                type="date"
+                required
+                value={form.weddingDate}
+                onChange={e => setForm({ ...form, weddingDate: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                WhatsApp
+              </label>
+              <input
+                type="tel"
+                placeholder="+52 ..."
+                value={form.phone}
+                onChange={e => setForm({ ...form, phone: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              Correo electrónico (para iniciar sesión) *
+            </label>
+            <input
+              type="email"
+              required
+              placeholder="tu@correo.com"
+              value={form.email}
+              onChange={e => setForm({ ...form, email: e.target.value })}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+            />
+          </div>
+
+          <div>
+            <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              Crea tu contraseña (mín. 6 caracteres) *
+            </label>
+            <input
+              type="password"
+              required
+              minLength={6}
+              placeholder="••••••••"
+              value={form.password}
+              onChange={e => setForm({ ...form, password: e.target.value })}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full mt-2 py-3 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold uppercase tracking-wider shadow-2xs transition cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-2"
+          >
+            <Lock className="w-3.5 h-3.5" />
+            <span>
+              {submitting
+                ? 'Conectando con MercadoPago...'
+                : `Pagar $${checkoutPlan === 'pro' ? '1,990' : '990'} MXN con MercadoPago`}
+            </span>
+          </button>
+
+          <div className="text-center pt-1">
+            <button
+              type="button"
+              onClick={() => {
+                setCheckoutPlan(null);
+                onOpenLogin();
+              }}
+              className="text-[11px] text-[#8A7E72] hover:text-[#2B2826] underline cursor-pointer"
+            >
+              ¿Ya tienes cuenta? Inicia sesión aquí
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

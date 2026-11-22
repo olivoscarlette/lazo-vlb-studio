@@ -573,6 +573,28 @@ export function initDatabase() {
   try {
     db.exec("ALTER TABLE weddings ADD COLUMN novios_studio_json TEXT DEFAULT '{}';");
   } catch {}
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS checkout_orders (
+        id TEXT PRIMARY KEY,
+        plan_id TEXT NOT NULL,
+        amount REAL NOT NULL,
+        partner_1_name TEXT NOT NULL,
+        partner_2_name TEXT NOT NULL,
+        wedding_date TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT,
+        password_hash TEXT NOT NULL,
+        status TEXT DEFAULT 'PENDING',
+        mp_preference_id TEXT,
+        mp_payment_id TEXT,
+        created_user_id TEXT,
+        created_wedding_id TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+  } catch {}
 
   // Update legacy templates to strictly use "Viva la Bride"
   try {

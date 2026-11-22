@@ -673,12 +673,51 @@ const AppContent: React.FC = () => {
   });
 
   const [activeToast, setActiveToast] = useState<{ title: string; body?: string; link?: string; tag?: string } | null>(null);
+  const [checkoutVerifying, setCheckoutVerifying] = useState(false);
+  const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
   const [showLogin, setShowLogin] = useState(() => {
     if (typeof window !== 'undefined') {
       return new URLSearchParams(window.location.search).has('reset_token');
     }
     return false;
   });
+
+  // Handle return from MercadoPago Checkout Pro (?checkout_order=...)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('checkout_order');
+    const mpStatus = params.get('mp_status');
+    const paymentId = params.get('payment_id') || params.get('collection_id') || '';
+    if (!orderId) return;
+
+    if (mpStatus === 'failure') {
+      setCheckoutNotice('El pago no se completó. Puedes intentar nuevamente cuando gustes.');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      return;
+    }
+
+    setCheckoutVerifying(true);
+    fetch(`/api/checkout/verify?orderId=${encodeURIComponent(orderId)}&payment_id=${encodeURIComponent(paymentId)}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.approved && data.token) {
+          localStorage.setItem('lazo_token', data.token);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          window.location.reload();
+        } else if (data.pending) {
+          setCheckoutNotice('Tu pago está en proceso de validación (ej. OXXO o SPEI). En cuanto se apruebe podrás iniciar sesión con tu correo y contraseña.');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+          setCheckoutNotice(data.error || 'No pudimos confirmar el pago aún. Si ya pagaste, contáctanos por WhatsApp.');
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      })
+      .catch(() => {
+        setCheckoutNotice('Error al verificar el pago. Intenta iniciar sesión o escríbenos por WhatsApp.');
+      })
+      .finally(() => setCheckoutVerifying(false));
+  }, []);
 
   useEffect(() => {
     let timer: any;
@@ -731,19 +770,37 @@ const AppContent: React.FC = () => {
     return <PublicProposalView token={proposalToken} />;
   }
 
-  if (loading) {
+  if (loading || checkoutVerifying) {
     return (
-      <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center text-[#332A28]">
+      <div className="min-h-screen bg-[#FCFAF7] flex flex-col items-center justify-center text-[#332A28] px-5 text-center">
         <div className="w-11 h-11 rounded-full border-2 border-[#EFE8E1] border-t-[#C48B81] animate-spin mb-4" />
-        <span className="font-serif text-3xl font-semibold tracking-[0.22em] text-[#332A28]">LAZO</span>
-        <span className="text-xs text-[#7D6F6B] uppercase tracking-[0.24em] mt-1">LAZO STUDIO · PLANNING</span>
+        <img src="/lazo-logo.png" alt="LAZO" className="h-10 w-auto object-contain mb-2" />
+        <span className="text-xs text-[#7D6F6B] uppercase tracking-[0.22em] mt-1">
+          {checkoutVerifying ? 'Confirmando tu pago y preparando tu boda...' : 'LAZO STUDIO · PLANNING'}
+        </span>
       </div>
     );
   }
 
   if (!user) {
     if (!showLogin) {
-      return <LandingPage onOpenLogin={() => setShowLogin(true)} />;
+      return (
+        <>
+          {checkoutNotice && (
+            <div className="bg-[#2B2826] text-white text-xs px-4 py-3 text-center flex items-center justify-center gap-3">
+              <span>{checkoutNotice}</span>
+              <button
+                type="button"
+                onClick={() => setCheckoutNotice(null)}
+                className="underline text-[#E5B7AE] cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          )}
+          <LandingPage onOpenLogin={() => setShowLogin(true)} />
+        </>
+      );
     }
     return <LoginView onBack={() => setShowLogin(false)} />;
   }
