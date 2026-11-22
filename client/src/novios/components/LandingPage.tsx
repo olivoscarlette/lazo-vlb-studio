@@ -160,16 +160,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             <button
               type="button"
               onClick={onOpenLogin}
-              className="px-4 py-2 rounded-full text-xs font-medium text-[#5A524C] hover:text-[#2B2826] transition cursor-pointer"
+              className="px-5 py-2 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
             >
               Iniciar Sesión
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection('planes-lazo')}
-              className="px-4 sm:px-5 py-2 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
-            >
-              Empezar
             </button>
           </div>
         </div>
@@ -203,15 +196,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                 onClick={() => scrollToSection('planes-lazo')}
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-medium shadow-sm transition cursor-pointer"
               >
-                <span>Ver planes y empezar</span>
+                <span>Ver planes</span>
                 <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={onOpenLogin}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-white hover:bg-[#F5F0EB] text-[#2B2826] border border-[#EFE8E1] text-sm font-medium transition cursor-pointer"
-              >
-                <span>Ya tengo cuenta</span>
               </button>
             </div>
 
