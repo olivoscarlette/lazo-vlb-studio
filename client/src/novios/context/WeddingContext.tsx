@@ -31,6 +31,7 @@ export interface WeddingFlags {
   isAdmin: boolean;
   isVirtualNovios: boolean;
   hasWhatsappRsvp: boolean;
+  hasLayout2d: boolean;
   packageType: string;
 }
 
@@ -347,6 +348,7 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       isAdmin,
       isVirtualNovios,
       hasWhatsappRsvp: Boolean((currentWedding as any)?.has_whatsapp_rsvp),
+      hasLayout2d: Boolean((currentWedding as any)?.has_layout_2d),
       packageType: pkg
     };
   });
@@ -382,6 +384,7 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ child
           isAdmin,
           isVirtualNovios,
           hasWhatsappRsvp: Boolean(data.wedding?.has_whatsapp_rsvp),
+          hasLayout2d: Boolean(data.wedding?.has_layout_2d),
           packageType: pkg
         });
         // ALWAYS hydrate operational tables live from SQLite so Admin <-> Novios stay 100% in sync!

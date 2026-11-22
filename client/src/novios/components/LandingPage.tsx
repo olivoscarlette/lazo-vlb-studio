@@ -188,10 +188,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
               <ul className="mt-6 space-y-2.5 text-xs text-[#5A524C]">
                 {[
                   'Las 5 secciones completas (Celular + Web)',
-                  'Sincronización en pareja en tiempo real',
-                  'Comparador de cotizaciones y plan de ahorro',
-                  'Invitados con confirmación 1-clic por WhatsApp',
-                  'Checklist automático con fechas reales'
+                  'Comparador de cotizaciones, pagos y contratos',
+                  'Checklist maestro con fechas reales y ceremonias',
+                  'Lista de invitados y asignación de mesas (vista lista)',
+                  'Confirmación manual 1-clic por WhatsApp y PDFs'
                 ].map(f => (
                   <li key={f} className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-[#577355] shrink-0" />
@@ -227,16 +227,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                 <span className="text-xs text-white/60">MXN · pago único</span>
               </div>
               <p className="text-xs text-white/70 mt-2 font-light">
-                Todo lo del Plan Esencial + envío automatizado de invitaciones y confirmaciones actualizadas en tiempo real.
+                Todo lo del Plan Esencial + Plano 2D interactivo de mesas y envío automatizado de invitaciones en tiempo real.
               </p>
 
               <ul className="mt-6 space-y-2.5 text-xs text-white/85">
                 {[
                   'Todo lo incluido en el Plan Esencial',
+                  'Plano 2D interactivo del salón (mesas, serpentina, elementos y PDF)',
                   'Envío automatizado de invitaciones por WhatsApp',
                   'Confirmaciones actualizadas en tiempo real en tu lista',
-                  'Recordatorios automáticos previos a la boda',
-                  'Envío automático de número de mesa el día del evento'
+                  'Recordatorios automáticos y envío de mesa el día del evento'
                 ].map(f => (
                   <li key={f} className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />

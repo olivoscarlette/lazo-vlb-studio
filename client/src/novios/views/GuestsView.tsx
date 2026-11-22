@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, MessageSquare, Trash2, Search, Users, Armchair, Map, LayoutList, Download } from 'lucide-react';
+import { Plus, MessageSquare, Trash2, Search, Users, Armchair, Map, LayoutList, Download, Lock } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
 import { FloorElement, GuestItem, GuestStatus, TableItem } from '../types/lazo';
 import { Modal } from '../components/Modal';
@@ -8,8 +8,9 @@ import { exportFloorPlanPdf, exportGuestsPdf } from '../utils/pdfExport';
 
 export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ initialSubTab }) => {
   const { wedding, flags, updateWedding } = useWedding();
+  const canUseLayout2D = flags.isAdmin || !flags.isVirtualNovios || flags.hasLayout2d || flags.hasWhatsappRsvp;
   const [subTab, setSubTab] = useState<'lista' | 'mesas'>(initialSubTab || 'lista');
-  const [tablesView, setTablesView] = useState<'plano' | 'tarjetas'>('plano');
+  const [tablesView, setTablesView] = useState<'plano' | 'tarjetas'>(canUseLayout2D ? 'plano' : 'tarjetas');
   const [statusFilter, setStatusFilter] = useState<'TODOS' | GuestStatus>('TODOS');
   const [search, setSearch] = useState('');
 
@@ -281,15 +282,17 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
         <div className="flex items-center gap-2">
           {subTab === 'mesas' ? (
             <>
-              <button
-                type="button"
-                onClick={() => exportFloorPlanPdf(profile, tables, guests, defaultFloorElements)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
-                title="Descargar Plano 2D y Mesas en PDF"
-              >
-                <Download className="w-3.5 h-3.5 text-[#C48B81]" />
-                <span>PDF Plano</span>
-              </button>
+              {canUseLayout2D && (
+                <button
+                  type="button"
+                  onClick={() => exportFloorPlanPdf(profile, tables, guests, defaultFloorElements)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
+                  title="Descargar Plano 2D y Mesas en PDF"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>PDF Plano</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => setShowTableModal(true)}
@@ -508,7 +511,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                   tablesView === 'plano' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
                 }`}
               >
-                <Map className="w-3.5 h-3.5" />
+                {canUseLayout2D ? <Map className="w-3.5 h-3.5" /> : <Lock className="w-3 h-3 text-[#C48B81]" />}
                 <span>Plano 2D</span>
               </button>
               <button
@@ -524,7 +527,27 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
             </div>
           </div>
 
-          {tablesView === 'plano' ? (
+          {tablesView === 'plano' && !canUseLayout2D ? (
+            <div className="bg-white rounded-3xl p-10 text-center border border-[#EFE8E1] shadow-2xs space-y-3">
+              <div className="w-12 h-12 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">
+                <Lock className="w-5 h-5" />
+              </div>
+              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81] block">
+                Exclusivo Lazo Pro
+              </span>
+              <h3 className="font-editorial text-2xl text-[#2B2826]">Plano 2D Interactivo de Mesas</h3>
+              <p className="text-xs text-[#8A7E72] max-w-md mx-auto font-light leading-relaxed">
+                Diseña tu salón en 2D con mesas redondas, imperiales y serpentina, pista de baile, alberca y elementos a escala, además de envío automatizado de invitaciones por WhatsApp.
+              </p>
+              <button
+                type="button"
+                onClick={() => setTablesView('tarjetas')}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium cursor-pointer"
+              >
+                <span>Volver a Vista Lista</span>
+              </button>
+            </div>
+          ) : tablesView === 'plano' ? (
             <SeatingCanvas2D
               tables={tables}
               guests={guests}
