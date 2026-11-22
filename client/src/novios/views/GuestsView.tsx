@@ -6,9 +6,9 @@ import { Modal } from '../components/Modal';
 import { SeatingCanvas2D } from '../components/SeatingCanvas2D';
 import { exportFloorPlanPdf, exportGuestsPdf } from '../utils/pdfExport';
 
-export const GuestsView: React.FC = () => {
+export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ initialSubTab }) => {
   const { wedding, flags, updateWedding } = useWedding();
-  const [subTab, setSubTab] = useState<'lista' | 'mesas'>('lista');
+  const [subTab, setSubTab] = useState<'lista' | 'mesas'>(initialSubTab || 'lista');
   const [tablesView, setTablesView] = useState<'plano' | 'tarjetas'>('plano');
   const [statusFilter, setStatusFilter] = useState<'TODOS' | GuestStatus>('TODOS');
   const [search, setSearch] = useState('');

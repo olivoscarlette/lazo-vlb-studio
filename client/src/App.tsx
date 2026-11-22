@@ -523,7 +523,8 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     return <GeneralDashboard />;
   }
 
-  // Map Sidebar wedding tabs to the unified Nuevo Lazo editorial interface so Admin sees the EXACT same design as Novios
+  // Map Sidebar wedding tabs to the unified Nuevo Lazo editorial interface so Admin sees the same design as Novios
+  // while keeping Admin's full InvitadosModule (Meta WhatsApp invitations, Excel import, RSVP automation) intact!
   const mapSidebarToNoviosTab = (tab: WorkspaceTab): 'inicio' | 'presupuesto' | 'invitados' | 'checklist' | 'midia' | null => {
     switch (tab) {
       case 'resumen':
@@ -531,7 +532,6 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
       case 'proveedores':
       case 'documentos':
         return 'presupuesto';
-      case 'invitados':
       case 'mesas':
         return 'invitados';
       case 'checklist':
@@ -554,6 +554,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
         <NoviosStudioRoot
           embedded
           forcedTab={mappedNoviosTab}
+          initialGuestsSubTab={activeTab === 'mesas' ? 'mesas' : 'lista'}
           onTabChange={nextTab => {
             const reverseMap: Record<string, WorkspaceTab> = {
               inicio: 'resumen',
@@ -569,6 +570,8 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     }
 
     switch (activeTab) {
+      case 'invitados':
+        return <InvitadosModule />;
       case 'reuniones':
         return <ReunionesModule />;
       case 'reportes':

@@ -12,6 +12,7 @@ import { LazoTab } from './types/lazo';
 interface NoviosStudioRootProps {
   embedded?: boolean;
   forcedTab?: LazoTab;
+  initialGuestsSubTab?: 'lista' | 'mesas';
   onTabChange?: (tab: LazoTab) => void;
 }
 
@@ -26,6 +27,7 @@ const EMBEDDED_TABS: Array<{ id: LazoTab; label: string }> = [
 const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
   embedded = false,
   forcedTab,
+  initialGuestsSubTab,
   onTabChange
 }) => {
   const { wedding, loading, saving } = useWedding();
@@ -62,7 +64,7 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
     <>
       {activeTab === 'inicio' && <HomeView onNavigate={handleSelectTab} />}
       {activeTab === 'presupuesto' && <BudgetView />}
-      {activeTab === 'invitados' && <GuestsView />}
+      {activeTab === 'invitados' && <GuestsView initialSubTab={initialGuestsSubTab} />}
       {activeTab === 'checklist' && <ChecklistView />}
       {activeTab === 'midia' && <MyDayView />}
       {activeTab === 'reuniones' && <ReunionesModule />}
