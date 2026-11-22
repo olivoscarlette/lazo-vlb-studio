@@ -933,14 +933,12 @@ export const MesasLayoutModule: React.FC = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
       {/* 1. Header: Clean & Minimal */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <div>
-          <div className="flex items-center space-x-2.5 mb-1">
-            <span className="text-[10px] uppercase font-bold tracking-widest text-[#8A7E72]">
-              Asignación y Logística de Invitados
-            </span>
-          </div>
-          <h2 className="font-serif text-3xl font-bold text-[#2B2826]">
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+            Diseño de Recepción & Asignación
+          </span>
+          <h2 className="font-novios text-3xl sm:text-4xl text-[#2B2826] mt-1 tracking-tight">
             Mesas y Layout
           </h2>
         </div>
@@ -948,7 +946,7 @@ export const MesasLayoutModule: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowHelpModal(true)}
-          className="w-9 h-9 rounded-xl bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B] hover:text-[#2B2826] flex items-center justify-center transition shadow-2xs cursor-pointer"
+          className="w-9 h-9 rounded-full bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B] hover:text-[#2B2826] flex items-center justify-center transition shadow-2xs cursor-pointer shrink-0"
           title="Ayuda y guía de uso"
         >
           <HelpCircle className="w-4 h-4" />
@@ -958,19 +956,19 @@ export const MesasLayoutModule: React.FC = () => {
       {/* 2. Discreet Compact Status Chips (Solo salen en caso necesario) */}
       {(totalConfirmedPlaces > 0 || tables.length > 0) && (
         <div className="flex flex-wrap items-center justify-between gap-2.5 text-xs">
-          <div className="inline-flex items-center space-x-2.5 px-3 py-1.5 rounded-xl bg-white border border-[#EFE8E1] text-[#7D6F6B] shadow-2xs">
-            <span className="font-semibold text-[#2B2826]">
+          <div className="inline-flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B] shadow-2xs">
+            <span className="font-medium text-[#2B2826]">
               {totalAssigned} de {totalConfirmedPlaces} sentados
             </span>
             <span className="text-[#D2C4B4]">·</span>
-            <span>{unassignedPlaces} sin mesa</span>
-            <div className="w-16 bg-[#FAF7F5] h-1.5 rounded-full overflow-hidden border border-[#EFE8E1]">
+            <span className="font-light">{unassignedPlaces} sin mesa</span>
+            <div className="w-16 bg-white h-1.5 rounded-full overflow-hidden border border-[#EFE8E1]">
               <div
                 className="bg-[#C48B81] h-full rounded-full transition-all duration-300"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
-            <span className="font-mono text-[10px] text-[#C48B81] font-bold">
+            <span className="font-mono text-[10px] text-[#C48B81] font-semibold">
               {progressPercent}%
             </span>
           </div>

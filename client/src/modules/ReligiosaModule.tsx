@@ -453,30 +453,30 @@ export const ReligiosaModule: React.FC = () => {
       <div className="space-y-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
-              Liturgia y Templo
+            <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+              Liturgia & Templo
             </span>
-            <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
+            <h2 className="font-novios text-3xl sm:text-4xl text-[#2B2826] mt-1 tracking-tight">
               Ceremonia Religiosa
             </h2>
-            <p className="text-sm text-[#8A7E72] mt-1">
-              Parroquia, celebrante, listado musical litúrgico y lecturas con lectores confirmados.
+            <p className="text-xs sm:text-sm text-[#8A7E72] mt-1.5 font-light">
+              Parroquia, celebrante, repertorio musical y lecturas con lectores confirmados.
             </p>
           </div>
         </div>
 
-        <div className="bg-white rounded-3xl p-10 border border-[#EFE8E1] shadow-xs text-center max-w-xl mx-auto my-8">
-          <div className="w-16 h-16 rounded-2xl bg-[#FCFAF7] border border-[#EFE8E1] flex items-center justify-center mx-auto mb-5 text-[#C48B81]">
-            <Church className="w-8 h-8 stroke-[1.5]" />
+        <div className="bg-[#FAF8F5] rounded-3xl p-10 sm:p-14 border border-[#EFE8E1] shadow-2xs text-center max-w-xl mx-auto my-8">
+          <div className="w-14 h-14 rounded-full bg-white border border-[#EFE8E1] shadow-2xs flex items-center justify-center mx-auto mb-5 text-[#C48B81]">
+            <Church className="w-6 h-6 stroke-[1.5]" />
           </div>
-          <span className="text-xs font-semibold uppercase tracking-wider text-[#8A7E72] bg-[#FAF8F5] px-3 py-1 rounded-full border border-[#EFE8E1]">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8A7E72] bg-white px-3 py-1 rounded-full border border-[#EFE8E1]">
             Módulo Opcional
           </span>
-          <h3 className="font-serif text-2xl font-semibold text-[#2B2826] mt-3 mb-2">
+          <h3 className="font-novios text-2xl font-normal text-[#2B2826] mt-4 mb-2">
             Sin Ceremonia Religiosa Registrada
           </h3>
-          <p className="text-sm text-[#8A7E72] leading-relaxed max-w-md mx-auto mb-6">
-            Esta boda aún no tiene configurada una ceremonia o misa religiosa (o se celebrará únicamente ceremonia civil y fiesta). Puedes configurarla en cualquier momento si la pareja lo requiere.
+          <p className="text-xs sm:text-sm text-[#8A7E72] leading-relaxed max-w-md mx-auto mb-6 font-light">
+            Aún no hay una misa o ceremonia religiosa configurada. Puedes activarla en cualquier momento para organizar templo, música y lecturas.
           </p>
           <div className="flex items-center justify-center gap-3">
             <button
@@ -485,9 +485,9 @@ export const ReligiosaModule: React.FC = () => {
                 setIsConfiguring(true);
                 setIsEditingDetails(true);
               }}
-              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-semibold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium transition shadow-2xs cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               <span>Configurar Ceremonia Religiosa</span>
             </button>
           </div>
@@ -501,14 +501,14 @@ export const ReligiosaModule: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
-            Liturgia y Templo
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+            Liturgia & Templo
           </span>
-          <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
+          <h2 className="font-novios text-3xl sm:text-4xl text-[#2B2826] mt-1 tracking-tight">
             Ceremonia Religiosa
           </h2>
-          <p className="text-sm text-[#8A7E72] mt-1">
-            Parroquia, celebrante, listado musical litúrgico y lecturas con lectores confirmados.
+          <p className="text-xs sm:text-sm text-[#8A7E72] mt-1.5 font-light">
+            Parroquia, celebrante, repertorio musical y lecturas con lectores confirmados.
           </p>
         </div>
 
@@ -517,29 +517,31 @@ export const ReligiosaModule: React.FC = () => {
             <button
               type="button"
               onClick={handleDeactivateCeremony}
-              className="text-xs font-semibold text-[#8A7E72] hover:text-rose-600 px-3 py-1.5 rounded-xl border border-[#EFE8E1] bg-white transition cursor-pointer"
+              className="text-xs font-medium text-[#8A7E72] hover:text-rose-600 px-3.5 py-1.5 rounded-full border border-[#EFE8E1] bg-white transition cursor-pointer"
               title="Ocultar y limpiar este módulo si la boda no tendrá ceremonia religiosa"
             >
               Desactivar Ceremonia
             </button>
           )}
           {saving && (
-            <span className="text-xs text-[#8A7E72] animate-pulse">Guardando cambios...</span>
+            <span className="text-xs text-[#8A7E72] font-light animate-pulse">Guardando cambios...</span>
           )}
         </div>
       </div>
 
       {/* Main Details Card — Fixed / Read-Only by Default */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
+      <div className="bg-white rounded-2xl p-6 border border-[#EFE8E1] shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-[#FAF8F5]">
           <div className="flex items-center space-x-2.5">
-            <Church className="w-5 h-5 text-[#C48B81]" />
+            <div className="w-9 h-9 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center shrink-0">
+              <Church className="w-4 h-4 text-[#C48B81]" />
+            </div>
             <div>
-              <h3 className="font-serif text-xl font-semibold text-[#2B2826]">
+              <h3 className="font-novios text-xl font-normal text-[#2B2826]">
                 Datos del Templo y Celebración
               </h3>
-              <p className="text-xs text-[#8A7E72] flex items-center space-x-1 mt-0.5">
-                <span>Parroquia, templo, fecha, hora oficial y sacerdote celebrante.</span>
+              <p className="text-xs text-[#8A7E72] font-light mt-0.5">
+                Parroquia, templo, fecha, hora oficial y sacerdote celebrante.
               </p>
             </div>
           </div>

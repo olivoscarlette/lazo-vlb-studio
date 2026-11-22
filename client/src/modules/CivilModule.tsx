@@ -243,46 +243,46 @@ export const CivilModule: React.FC = () => {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs uppercase font-semibold tracking-wider text-[#C48B81]">
-            Protocolo Legal
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+            Protocolo Legal & Firma
           </span>
-          <h2 className="font-serif text-3xl font-semibold text-[#2B2826]">
+          <h2 className="font-novios text-3xl sm:text-4xl text-[#2B2826] mt-1 tracking-tight">
             Ceremonia Civil
           </h2>
-          <p className="text-sm text-[#8A7E72] mt-1">
+          <p className="text-xs sm:text-sm text-[#8A7E72] mt-1.5 font-light">
             Organización de juzgado, juez oficial, testigos y requisitos prenupciales.
           </p>
         </div>
 
         {saving && (
-          <span className="text-xs text-[#8A7E72] animate-pulse">Guardando cambios...</span>
+          <span className="text-xs text-[#8A7E72] font-light animate-pulse">Guardando cambios...</span>
         )}
       </div>
 
-
-
       {/* Ceremony Overview Details Card — Fixed / Read-Only by Default */}
-      <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-xs">
+      <div className="bg-white rounded-2xl p-6 border border-[#EFE8E1] shadow-2xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-[#FAF8F5]">
           <div className="flex items-center space-x-2.5">
-            <Landmark className="w-5 h-5 text-[#C48B81]" />
+            <div className="w-9 h-9 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center shrink-0">
+              <Landmark className="w-4 h-4 text-[#C48B81]" />
+            </div>
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                <h3 className="font-serif text-xl font-semibold text-[#2B2826]">
-                  Datos Oficiales de la Ceremonia Civil
+                <h3 className="font-novios text-xl font-normal text-[#2B2826]">
+                  Datos Oficiales de la Ceremonia
                 </h3>
                 {civil.date && currentWedding?.wedding_date && civil.date !== currentWedding.wedding_date ? (
-                  <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#F7EDEB] text-[#C48B81] border border-[#F0D5D1]">
-                    Otro Día · Fecha Independiente ({civil.date})
+                  <span className="px-3 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]">
+                    Fecha Independiente · {civil.date}
                   </span>
                 ) : (
-                  <span className="px-3 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1]">
+                  <span className="px-3 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider bg-[#FAF8F5] text-[#8A7E72] border border-[#EFE8E1]">
                     Mismo Día de la Boda
                   </span>
                 )}
               </div>
-              <p className="text-xs text-[#8A7E72] flex items-center space-x-1 mt-0.5">
-                <span>Fecha, hora, juzgado, juez y lugar oficial de la ceremonia civil.</span>
+              <p className="text-xs text-[#8A7E72] font-light mt-0.5">
+                Fecha, hora, juzgado, juez y lugar oficial de la ceremonia civil.
               </p>
             </div>
           </div>
@@ -291,7 +291,7 @@ export const CivilModule: React.FC = () => {
             <button
               type="button"
               onClick={handleStartEditDetails}
-              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer self-start sm:self-auto"
             >
               <Edit3 className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>Editar Datos</span>
@@ -301,7 +301,7 @@ export const CivilModule: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsEditingDetails(false)}
-                className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+                className="inline-flex items-center space-x-1 px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#7D6F6B] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
               >
                 <X className="w-3.5 h-3.5" />
                 <span>Cancelar</span>
@@ -309,7 +309,7 @@ export const CivilModule: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSaveDetails}
-                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold transition shadow-xs cursor-pointer"
+                className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium transition shadow-2xs cursor-pointer"
               >
                 <Save className="w-3.5 h-3.5" />
                 <span>Guardar Cambios</span>

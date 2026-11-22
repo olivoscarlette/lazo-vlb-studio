@@ -513,10 +513,10 @@ export const TimelineModule: React.FC = () => {
           <span className="text-[11px] uppercase font-semibold tracking-[0.2em] text-[#8E807A] block mb-1">
             {currentWedding?.name || `Evento ${teamBrand}`}
           </span>
-          <h2 className="font-serif text-4xl sm:text-5xl font-normal text-[#332C2A] tracking-tight">
-            Itinerario<span className="text-[#D4A5A5]">.</span>
+          <h2 className="font-novios text-3xl sm:text-4xl font-normal text-[#2B2826] tracking-tight mt-1">
+            Itinerario<span className="text-[#C48B81]">.</span>
           </h2>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-[#786C68] mt-3">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-[#786C68] mt-2.5 font-light">
             <span className="inline-flex items-center space-x-1.5">
               <Calendar className="w-3.5 h-3.5 text-[#8E807A]" />
               <span>Fecha: {formattedWeddingDate}</span>
@@ -525,7 +525,7 @@ export const TimelineModule: React.FC = () => {
               <MapPin className="w-3.5 h-3.5 text-[#8E807A]" />
               <span>{venueLabel}</span>
             </span>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]">
               {activeTimeline.length} {activeTimeline.length === 1 ? 'actividad' : 'actividades'}
             </span>
           </div>
@@ -535,7 +535,7 @@ export const TimelineModule: React.FC = () => {
           {viewMode === 'operation' && !isNovios && (
             <button
               onClick={() => setShowFullProgramInOp(!showFullProgramInOp)}
-              className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#363432] hover:bg-[#242220] text-white text-xs font-medium rounded-xl shadow-xs transition"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
             >
               <Play className="w-3.5 h-3.5" />
               <span>{showFullProgramInOp ? 'Ocultar programa completo' : 'Ver programa completo'}</span>
@@ -543,7 +543,7 @@ export const TimelineModule: React.FC = () => {
           )}
           <button
             onClick={handleDownloadPDF}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-2.5 bg-white hover:bg-[#EFE8DE] text-[#332C2A] text-xs font-semibold rounded-xl border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
+            className="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-white hover:bg-[#FAF8F5] text-[#2B2826] text-xs font-medium rounded-full border border-[#EFE8E1] transition shadow-2xs cursor-pointer"
             title="Descargar Itinerario en PDF"
           >
             <FileDown className="w-3.5 h-3.5 text-[#C48B81]" />
@@ -552,7 +552,7 @@ export const TimelineModule: React.FC = () => {
           {canEditTimeline && (
             <button
               onClick={handleOpenAdd}
-              className="inline-flex items-center space-x-1.5 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium rounded-full shadow-2xs transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Agregar Actividad</span>
