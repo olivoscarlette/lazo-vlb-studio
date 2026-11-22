@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import {
-  Camera, CheckCircle2, ArrowRight, ChevronUp, ChevronDown, Move, Upload, Trash2, Plus, X, Pencil
+  Camera, CheckCircle2, ArrowRight, ChevronUp, ChevronDown, Move, Upload, Trash2, Plus, X, Pencil, Sparkles
 } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
 import { daysUntil, formatMXN, formatShortDate } from '../data/seedWedding';
 import { LazoTab } from '../types/lazo';
 import { Modal } from '../components/Modal';
+import { VlbCoordinationModal } from '../components/VlbCoordinationModal';
 
 interface HomeViewProps {
   onNavigate: (tab: LazoTab) => void;
 }
 
 export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
-  const { wedding, updateWedding } = useWedding();
+  const { wedding, flags, updateWedding } = useWedding();
   const [subTab, setSubTab] = useState<'resumen' | 'estilo'>('resumen');
   const [isRepositioning, setIsRepositioning] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showVlbModal, setShowVlbModal] = useState(false);
   const [profileForm, setProfileForm] = useState({
     partner1: '',
     partner2: '',
@@ -316,6 +318,32 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
               </div>
             )}
           </div>
+
+          {/* 4. Subtle Editorial VLB Coordination Offer (ONLY for Virtual Novios) */}
+          {flags.isVirtualNovios && (
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EEDAD6] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
+                  <Sparkles className="w-3 h-3" />
+                  <span>Viva la Bride · Coordinación</span>
+                </span>
+                <h3 className="font-editorial text-xl text-[#2B2826]">
+                  ¿Prefieres disfrutar tu boda sin preocuparte por la logística?
+                </h3>
+                <p className="text-xs text-[#7D6F6B] font-light max-w-xl">
+                  Nuestro equipo puede acompañarte con Coordinación del Día, Plan Integral o Exclusivo usando todo lo que ya organizaste aquí en Lazo.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowVlbModal(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium shadow-2xs transition cursor-pointer shrink-0"
+              >
+                <span>Conocer Paquetes</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         /* MOODBOARD & LOOK (Emotional heart of Mi Boda) */
@@ -583,6 +611,12 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
           </div>
         </form>
       </Modal>
+
+      <VlbCoordinationModal
+        isOpen={showVlbModal}
+        onClose={() => setShowVlbModal(false)}
+        profile={profile}
+      />
     </div>
   );
 };

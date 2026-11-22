@@ -5,6 +5,7 @@ import { FloorElement, GuestItem, GuestStatus, TableItem } from '../types/lazo';
 import { Modal } from '../components/Modal';
 import { SeatingCanvas2D } from '../components/SeatingCanvas2D';
 import { exportFloorPlanPdf, exportGuestsPdf } from '../utils/pdfExport';
+import { buildVlbWhatsAppUrl } from '../components/VlbCoordinationModal';
 
 export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ initialSubTab }) => {
   const { wedding, flags, updateWedding } = useWedding();
@@ -539,13 +540,24 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
               <p className="text-xs text-[#8A7E72] max-w-md mx-auto font-light leading-relaxed">
                 Diseña tu salón en 2D con mesas redondas, imperiales y serpentina, pista de baile, alberca y elementos a escala, además de envío automatizado de invitaciones por WhatsApp.
               </p>
-              <button
-                type="button"
-                onClick={() => setTablesView('tarjetas')}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium cursor-pointer"
-              >
-                <span>Volver a Vista Lista</span>
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+                <a
+                  href={buildVlbWhatsAppUrl(profile, 'Subir a Lazo Pro (Plano 2D + Envío Automatizado RSVP)')}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium transition"
+                >
+                  <MessageSquare className="w-3.5 h-3.5" />
+                  <span>Activar Lazo Pro por WhatsApp</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => setTablesView('tarjetas')}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium cursor-pointer"
+                >
+                  <span>Volver a Vista Lista</span>
+                </button>
+              </div>
             </div>
           ) : tablesView === 'plano' ? (
             <SeatingCanvas2D

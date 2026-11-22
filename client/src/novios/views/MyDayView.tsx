@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Clock, MapPin, Pencil, Download } from 'lucide-react';
+import { Plus, Trash2, Clock, MapPin, Pencil, Download, Sparkles } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
 import { CeremoniesSection } from '../components/CeremoniesSection';
 import { Modal } from '../components/Modal';
+import { VlbCoordinationModal } from '../components/VlbCoordinationModal';
 import { TimelineItem } from '../types/lazo';
 import { exportTimelinePdf } from '../utils/pdfExport';
 
 export const MyDayView: React.FC = () => {
-  const { wedding, updateWedding } = useWedding();
+  const { wedding, flags, updateWedding } = useWedding();
   const [subTab, setSubTab] = useState<'itinerario' | 'ceremonias'>('itinerario');
+  const [showVlbModal, setShowVlbModal] = useState(false);
 
   // Add / Edit Timeline Modal
   const [showEventModal, setShowEventModal] = useState(false);
@@ -150,6 +152,7 @@ export const MyDayView: React.FC = () => {
 
       {/* SUB-TAB 1: ITINERARIO EDITABLE */}
       {subTab === 'itinerario' && (
+        <div className="space-y-4">
         <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs">
           {timeline.length === 0 ? (
             <div className="py-10 text-center space-y-3">
@@ -222,6 +225,32 @@ export const MyDayView: React.FC = () => {
               ))}
             </div>
           )}
+        </div>
+
+        {flags.isVirtualNovios && (
+          <div className="bg-[#FAF8F5] rounded-2xl p-4 sm:p-5 border border-[#EEDAD6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#F7EDEB] border border-[#EEDAD6] flex items-center justify-center text-[#C48B81] shrink-0 mt-0.5">
+                <Sparkles className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-[#2B2826]">
+                  ¿Quién va a operar este minuto a minuto el día de tu boda?
+                </p>
+                <p className="text-[11px] text-[#7D6F6B] font-light mt-0.5">
+                  Deja la coordinación de proveedores, montaje y tiempos en manos de Viva la Bride.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowVlbModal(true)}
+              className="px-4 py-2 rounded-full bg-white hover:bg-[#F7EDEB] text-[#A86B60] border border-[#EEDAD6] text-xs font-medium transition cursor-pointer shrink-0 self-start sm:self-auto"
+            >
+              Cotizar Coordinación
+            </button>
+          </div>
+        )}
         </div>
       )}
 
@@ -339,6 +368,12 @@ export const MyDayView: React.FC = () => {
           </div>
         </form>
       </Modal>
+
+      <VlbCoordinationModal
+        isOpen={showVlbModal}
+        onClose={() => setShowVlbModal(false)}
+        profile={profile}
+      />
     </div>
   );
 };
