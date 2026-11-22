@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import {
-  Sparkles, Check, ArrowRight, Heart, Wallet, Users, CalendarCheck2, Clock, Lock, MessageSquare
+  Sparkles,
+  Check,
+  ArrowRight,
+  Lock,
+  MessageSquare,
+  ChevronDown,
+  ShieldCheck,
+  Smartphone,
+  FileDown,
+  Map
 } from 'lucide-react';
 import { Modal } from './Modal';
 import { VLB_QUOTES_PHONE } from './VlbCoordinationModal';
@@ -9,8 +18,28 @@ interface LandingPageProps {
   onOpenLogin: () => void;
 }
 
+const FAQS = [
+  {
+    q: '¿Es un pago único o se cobra cada mes?',
+    a: 'Es un solo pago único por boda, sin mensualidades ni cargos ocultos. Tienes acceso ilimitado desde hoy hasta después de tu Gran Día.'
+  },
+  {
+    q: '¿Funciona en celular y computadora?',
+    a: 'Sí. Lazo está diseñado para usarse cómodamente desde tu celular (iPhone o Android) y también en computadora o iPad, todo sincronizado en tiempo real.'
+  },
+  {
+    q: '¿Podemos entrar mi pareja y yo al mismo tiempo?',
+    a: 'Sí, ambos pueden iniciar sesión con su cuenta desde sus celulares para revisar pagos, invitados, mesas y tareas sincronizadas.'
+  },
+  {
+    q: '¿Si elijo el Plan Esencial ($990) puedo subir a Lazo Pro después?',
+    a: '¡Claro! En cualquier momento puedes activar el Plano 2D y el envío automatizado de invitaciones pagando solo la diferencia.'
+  }
+];
+
 export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
   const [checkoutPlan, setCheckoutPlan] = useState<'esencial' | 'pro' | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [mpNotConfigured, setMpNotConfigured] = useState(false);
@@ -23,8 +52,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
     password: ''
   });
 
-  const scrollToPricing = () => {
-    document.getElementById('planes-lazo')?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToSection = (id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const openCheckout = (plan: 'esencial' | 'pro') => {
@@ -86,179 +115,405 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
     : `https://wa.me/${VLB_QUOTES_PHONE}`;
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826]">
-      {/* Minimalist Top Bar */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#EFE8E1]">
-        <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] overflow-x-hidden">
+      {/* ==================== 1. GLASS EDITORIAL HEADER ==================== */}
+      <header className="sticky top-0 z-40 bg-[#FAF8F5]/85 backdrop-blur-xl border-b border-[#EFE8E1]/80">
+        <div className="max-w-6xl mx-auto px-5 h-16 sm:h-[72px] flex items-center justify-between gap-4">
           <img
             src="/lazo-logo.png"
             alt="Lazo — Studio Planning"
             className="h-9 sm:h-10 w-auto object-contain select-none"
           />
-          <div className="flex items-center gap-2.5">
+
+          <nav className="hidden md:flex items-center gap-7 text-xs text-[#7D6F6B]">
             <button
               type="button"
-              onClick={scrollToPricing}
-              className="px-4 py-2 rounded-full text-xs font-medium text-[#7D6F6B] hover:text-[#2B2826] transition cursor-pointer"
+              onClick={() => scrollToSection('experiencia-lazo')}
+              className="hover:text-[#2B2826] transition cursor-pointer"
+            >
+              Qué incluye
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('plano-2d')}
+              className="hover:text-[#2B2826] transition cursor-pointer"
+            >
+              Plano 2D & RSVP
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('planes-lazo')}
+              className="hover:text-[#2B2826] transition cursor-pointer"
             >
               Planes
             </button>
             <button
               type="button"
+              onClick={() => scrollToSection('faq-lazo')}
+              className="hover:text-[#2B2826] transition cursor-pointer"
+            >
+              Preguntas
+            </button>
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
               onClick={onOpenLogin}
-              className="px-4 py-2 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium transition cursor-pointer"
+              className="px-4 py-2 rounded-full text-xs font-medium text-[#5A524C] hover:text-[#2B2826] transition cursor-pointer"
             >
               Iniciar Sesión
+            </button>
+            <button
+              type="button"
+              onClick={() => scrollToSection('planes-lazo')}
+              className="px-4 sm:px-5 py-2 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
+            >
+              Empezar
             </button>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="max-w-5xl mx-auto px-5 pt-14 pb-16 sm:pt-20 sm:pb-24 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#EFE8E1] text-[11px] font-medium text-[#8A7E72] shadow-2xs mb-6">
-          <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
-          <span>Diseñada por wedding planners · Hecha para tu celular</span>
-        </div>
+      {/* ==================== 2. ASYMMETRIC MAGAZINE HERO ==================== */}
+      <section className="relative max-w-6xl mx-auto px-5 pt-12 pb-16 sm:pt-16 sm:pb-24">
+        {/* Soft editorial blush glow */}
+        <div className="absolute -top-10 right-0 w-[420px] h-[420px] rounded-full bg-[#EFE2DF]/60 blur-3xl pointer-events-none -z-10" />
 
-        <h1 className="font-editorial text-4xl sm:text-6xl text-[#2B2826] leading-[1.12] tracking-tight max-w-3xl mx-auto">
-          Planea tu boda con paz mental, sin archivos de Excel eternos.
-        </h1>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          {/* Left Editorial Copy */}
+          <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#EFE8E1] text-[11px] font-medium text-[#8A7E72] shadow-2xs">
+              <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
+              <span>Creado por wedding planners en México</span>
+            </div>
 
-        <p className="text-sm sm:text-base text-[#7D6F6B] font-light max-w-xl mx-auto mt-5 leading-relaxed">
-          Presupuesto, plan de ahorro, comparador de cotizaciones, invitados por WhatsApp, plano 2D de mesas, estilo y checklist con fechas reales — todo en una sola app para ti y tu pareja.
-        </p>
+            <h1 className="font-editorial text-4xl sm:text-5xl lg:text-[56px] text-[#2B2826] leading-[1.08] tracking-tight">
+              Tu boda, diseñada con{' '}
+              <span className="italic text-[#A86B60]">calma y claridad</span>.
+            </h1>
 
-        <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={onOpenLogin}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-medium shadow-sm transition cursor-pointer"
-          >
-            <span>Entrar a mi boda</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={scrollToPricing}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-white hover:bg-[#F5F0EB] text-[#2B2826] border border-[#EFE8E1] text-sm font-medium transition cursor-pointer"
-          >
-            <span>Ver planes y precios</span>
-          </button>
-        </div>
+            <p className="text-sm sm:text-base text-[#7D6F6B] font-light leading-relaxed max-w-lg mx-auto lg:mx-0">
+              Deja atrás los archivos de Excel infinitos y las notas perdidas en WhatsApp. Organiza presupuesto, proveedores, invitados, plano 2D de mesas, checklist con fechas reales e itinerario en un espacio tan bonito como tu boda.
+            </p>
 
-        {/* Visual Preview Strip */}
-        <div className="mt-14 rounded-3xl overflow-hidden border border-[#EFE8E1] shadow-md bg-white relative">
-          <div className="relative h-64 sm:h-80 w-full">
-            <img
-              src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1600&q=80"
-              alt="Lazo Editorial Preview"
-              className="w-full h-full object-cover object-center"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#181514]/75 via-[#181514]/30 to-transparent flex flex-col items-center justify-center text-white px-6">
-              <span className="text-[10px] uppercase tracking-[0.25em] text-white/80 mb-2">TU ESPACIO PRIVADO</span>
-              <div className="font-editorial text-4xl sm:text-6xl tracking-wide">SOFÍA & MATEO</div>
-              <div className="mt-4 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-xs tracking-wider">
-                ✨ FALTAN 240 DÍAS · TU BODA EN CALMA
+            <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 pt-1">
+              <button
+                type="button"
+                onClick={() => scrollToSection('planes-lazo')}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-medium shadow-sm transition cursor-pointer"
+              >
+                <span>Ver planes y empezar</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={onOpenLogin}
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-white hover:bg-[#F5F0EB] text-[#2B2826] border border-[#EFE8E1] text-sm font-medium transition cursor-pointer"
+              >
+                <span>Ya tengo cuenta</span>
+              </button>
+            </div>
+
+            {/* Subtle Trust Micro-Strip */}
+            <div className="pt-3 flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2 text-[11px] text-[#8A7E72]">
+              <span className="inline-flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#577355]" /> Pago único · Sin mensualidades
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <Smartphone className="w-3.5 h-3.5 text-[#C48B81]" /> Celular + Computadora
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <FileDown className="w-3.5 h-3.5 text-[#C48B81]" /> Exportación a PDF
+              </span>
+            </div>
+          </div>
+
+          {/* Right Editorial Visual Collage */}
+          <div className="lg:col-span-6 relative">
+            <div className="relative rounded-[2rem] overflow-hidden border border-[#EFE8E1] shadow-xl bg-white aspect-[4/5] max-h-[540px] w-full">
+              <img
+                src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1400&q=85"
+                alt="Lazo Editorial"
+                className="w-full h-full object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1A1614]/80 via-[#1A1614]/20 to-transparent" />
+
+              {/* Floating Top Glass Countdown Pill */}
+              <div className="absolute top-5 left-5 right-5 flex items-center justify-between">
+                <span className="px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-[10px] uppercase tracking-[0.2em] font-semibold text-[#2B2826] shadow-sm">
+                  Tu espacio privado
+                </span>
+                <span className="px-3 py-1.5 rounded-full bg-[#2B2826]/75 backdrop-blur-md text-white text-[10px] tracking-wider border border-white/15">
+                  ✨ Faltan 184 días
+                </span>
+              </div>
+
+              {/* Bottom Editorial Overlay Card */}
+              <div className="absolute bottom-5 left-5 right-5 space-y-3">
+                <div className="text-white">
+                  <div className="font-editorial text-3xl sm:text-4xl tracking-wide">
+                    SOFÍA <span className="italic text-[#E5B7AE]">&</span> MATEO
+                  </div>
+                  <p className="text-[11px] text-white/80 tracking-widest uppercase mt-1">
+                    18 Noviembre · Monterrey
+                  </p>
+                </div>
+
+                {/* Mini Live Metrics Glass Strip */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="rounded-2xl bg-white/92 backdrop-blur-md p-3 border border-white/40">
+                    <span className="text-[9px] uppercase tracking-wider text-[#8A7E72] block">Asistencia</span>
+                    <span className="font-editorial text-lg text-[#2B2826]">142 / 180</span>
+                  </div>
+                  <div className="rounded-2xl bg-white/92 backdrop-blur-md p-3 border border-white/40">
+                    <span className="text-[9px] uppercase tracking-wider text-[#8A7E72] block">Avance</span>
+                    <span className="font-editorial text-lg text-[#577355]">68% listo</span>
+                  </div>
+                  <div className="rounded-2xl bg-white/92 backdrop-blur-md p-3 border border-white/40">
+                    <span className="text-[9px] uppercase tracking-wider text-[#8A7E72] block">Mesas 2D</span>
+                    <span className="font-editorial text-lg text-[#A86B60]">18 mesas</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 5 Pillars Section */}
-      <section className="max-w-5xl mx-auto px-5 py-14 border-t border-[#EFE8E1]">
-        <div className="text-center mb-10">
-          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
-            Solo lo que realmente necesitas
-          </span>
-          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-2">
-            5 secciones claras. Cero ruido.
-          </h2>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[
-            {
-              icon: Heart,
-              num: '01',
-              title: 'Mi Boda & Estilo',
-              desc: 'Tu portada, cuenta regresiva, prioridades del mes, moodboard, paleta de colores y look de novios.'
-            },
-            {
-              icon: Wallet,
-              num: '02',
-              title: 'Presupuesto & Proveedores',
-              desc: 'Plan de ahorro familiar, comparador de 3 cotizaciones lado a lado, pagos y contratos en un mismo sitio.'
-            },
-            {
-              icon: Users,
-              num: '03',
-              title: 'Invitados & Mesas',
-              desc: 'Confirma asistencia en 1 clic por WhatsApp, registra alergias y acomoda mesas sin complicaciones.'
-            },
-            {
-              icon: CalendarCheck2,
-              num: '04',
-              title: 'Checklist con Fechas Reales',
-              desc: 'Calculado automáticamente según el día de tu boda. Sabrás qué toca este mes y quién lo hace.'
-            },
-            {
-              icon: Clock,
-              num: '05',
-              title: 'El Gran Día',
-              desc: 'Tu itinerario minuto a minuto y los detalles clave de ceremonia civil y religiosa si los necesitas.'
-            }
-          ].map(item => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={item.num}
-                className="bg-white rounded-2xl p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="font-editorial text-2xl text-[#C48B81]">{item.num}</span>
-                    <div className="w-9 h-9 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center text-[#7D6F6B]">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <h3 className="font-editorial text-xl text-[#2B2826]">{item.title}</h3>
-                  <p className="text-xs text-[#7D6F6B] mt-2 leading-relaxed font-light">{item.desc}</p>
-                </div>
-              </div>
-            );
-          })}
+      {/* ==================== 3. EDITORIAL MANIFESTO STRIP ==================== */}
+      <section className="border-y border-[#EFE8E1] bg-white">
+        <div className="max-w-5xl mx-auto px-5 py-12 sm:py-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
+          <div>
+            <span className="font-editorial text-3xl text-[#C48B81]">117</span>
+            <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#2B2826] mt-1">
+              Pasos reales de planeación
+            </p>
+            <p className="text-xs text-[#7D6F6B] font-light mt-1.5 leading-relaxed">
+              Checklist maestro calculado automáticamente según la fecha exacta de tu boda.
+            </p>
+          </div>
+          <div>
+            <span className="font-editorial text-3xl text-[#C48B81]">0</span>
+            <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#2B2826] mt-1">
+              Anuncios ni ruido visual
+            </p>
+            <p className="text-xs text-[#7D6F6B] font-light mt-1.5 leading-relaxed">
+              Un espacio privado, sereno y editorial — sin publicidad invasiva ni directorios que te distraigan.
+            </p>
+          </div>
+          <div>
+            <span className="font-editorial text-3xl text-[#C48B81]">1 clic</span>
+            <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#2B2826] mt-1">
+              PDFs listos para tu salón
+            </p>
+            <p className="text-xs text-[#7D6F6B] font-light mt-1.5 leading-relaxed">
+              Descarga tu lista de invitados con alergias, tu plano 2D de mesas y tu itinerario del Gran Día.
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Simple Direct-to-Consumer Pricing */}
-      <section id="planes-lazo" className="max-w-4xl mx-auto px-5 py-16 border-t border-[#EFE8E1]">
-        <div className="text-center mb-10">
-          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
-            Un solo pago · Sin mensualidades
+      {/* ==================== 4. VISUAL FEATURE SHOWCASE (5 PILLARS) ==================== */}
+      <section id="experiencia-lazo" className="max-w-6xl mx-auto px-5 py-16 sm:py-24 space-y-12">
+        <div className="max-w-2xl">
+          <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+            Todo en un solo lugar
           </span>
-          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-2">
-            Elige tu acceso a Lazo
+          <h2 className="font-editorial text-3xl sm:text-5xl text-[#2B2826] mt-2 leading-tight">
+            Diseñado para disfrutar el proceso, no sufrirlo.
           </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[
+            {
+              num: '01',
+              title: 'Mi Boda & Moodboard',
+              desc: 'Tu portada personalizada, cuenta regresiva, prioridades del mes, paleta de colores editable, tablero de inspiración y look de novios.',
+              pill: 'Visión & Estilo'
+            },
+            {
+              num: '02',
+              title: 'Presupuesto & Proveedores',
+              desc: 'Meta de ahorro con aportaciones familiares, comparador de 3 cotizaciones lado a lado, historial de cada abono y vista previa de contratos.',
+              pill: 'Finanzas Claras'
+            },
+            {
+              num: '03',
+              title: 'Invitados & Confirmaciones',
+              desc: 'Control exacto de pases, alergias y restricciones. Confirmación 1-clic por WhatsApp o envío automatizado en tiempo real en Lazo Pro.',
+              pill: 'Asistencia'
+            },
+            {
+              num: '04',
+              title: 'Checklist por Etapas',
+              desc: 'Resalta automáticamente tu etapa actual según los meses que faltan para tu boda para que sepas qué toca hoy sin abrumarte.',
+              pill: 'Fechas Reales'
+            },
+            {
+              num: '05',
+              title: 'El Gran Día & Ceremonias',
+              desc: 'Itinerario minuto a minuto editable con descarga en PDF, además de módulos completos opcionales para Ceremonia Civil y Religiosa.',
+              pill: 'Logística'
+            },
+            {
+              num: '06',
+              title: 'Plano 2D Interactivo',
+              desc: 'Acomoda mesas redondas, imperiales y serpentina en S; agrega pista, DJ, alberca o espejos, gíralos, cambia su tamaño y descarga en PDF.',
+              pill: 'Exclusivo Lazo Pro'
+            }
+          ].map(card => (
+            <div
+              key={card.num}
+              className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] shadow-2xs hover:border-[#C48B81]/50 transition flex flex-col justify-between space-y-6"
+            >
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-editorial text-2xl text-[#C48B81]">{card.num}</span>
+                  <span className="text-[10px] uppercase tracking-wider font-medium px-2.5 py-1 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B]">
+                    {card.pill}
+                  </span>
+                </div>
+                <h3 className="font-editorial text-2xl text-[#2B2826] leading-snug">{card.title}</h3>
+                <p className="text-xs sm:text-[13px] text-[#7D6F6B] font-light leading-relaxed">
+                  {card.desc}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ==================== 5. SPOTLIGHT: PLANO 2D + RSVP AUTOMATIZADO ==================== */}
+      <section id="plano-2d" className="max-w-6xl mx-auto px-5 pb-16 sm:pb-24">
+        <div className="bg-[#2B2826] text-white rounded-[2.25rem] p-7 sm:p-12 overflow-hidden relative">
+          <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-[#C48B81]/20 blur-3xl pointer-events-none" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+            <div className="lg:col-span-6 space-y-5">
+              <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-semibold text-[#E5B7AE]">
+                <Map className="w-3.5 h-3.5" />
+                <span>Estrella de Lazo Pro</span>
+              </span>
+              <h2 className="font-editorial text-3xl sm:text-4xl leading-tight">
+                Diseña tu salón en 2D y automatiza tus confirmaciones por WhatsApp.
+              </h2>
+              <p className="text-xs sm:text-sm text-white/75 font-light leading-relaxed">
+                Olvídate de perseguir a 200 invitados por mensaje ni dibujar mesas en papel. Con Lazo Pro ves cada silla ocupada en tu plano 2D interactivo y recibes tus confirmaciones actualizadas en tiempo real.
+              </p>
+              <ul className="space-y-2.5 text-xs text-white/90 pt-1">
+                {[
+                  'Mesas redondas, rectangulares, imperiales y serpentina en S',
+                  'Agrega pista, DJ, barra, árboles, alberca, espejos o stands y ajústalos a escala',
+                  'Envío automatizado de invitaciones y recordatorios por WhatsApp',
+                  'Envío automático de número de mesa el día de tu boda'
+                ].map(item => (
+                  <li key={item} className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => openCheckout('pro')}
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-medium transition cursor-pointer"
+                >
+                  <span>Quiero Lazo Pro · $1,990 MXN</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Stylized Editorial Mini 2D Floor Plan Visual */}
+            <div className="lg:col-span-6">
+              <div
+                className="rounded-3xl bg-[#FCFBF9] text-[#2B2826] p-6 border border-white/10 shadow-2xl relative"
+                style={{
+                  backgroundImage: 'radial-gradient(#DDD4CB 1px, transparent 1px)',
+                  backgroundSize: '18px 18px'
+                }}
+              >
+                <div className="flex items-center justify-between text-[10px] text-[#8A7E72] pb-4">
+                  <span className="uppercase tracking-widest font-semibold">Plano 2D · Vista Previa</span>
+                  <span className="inline-flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#577355]" /> Ocupado</span>
+                    <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white border border-[#D8CFC8]" /> Libre</span>
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 items-center py-3">
+                  {/* Round Table */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-20 h-20 rounded-full bg-white border-2 border-[#C48B81] shadow-sm flex flex-col items-center justify-center">
+                      <span className="text-[10px] font-medium">Mesa 1</span>
+                      <span className="text-[9px] text-[#577355] font-semibold">8/10</span>
+                    </div>
+                  </div>
+                  {/* Dancefloor */}
+                  <div className="h-24 rounded-2xl bg-[#F5EFEA]/90 border border-dashed border-[#D2C2B6] flex items-center justify-center text-center px-2">
+                    <span className="text-[9px] uppercase tracking-[0.16em] font-semibold text-[#7D6F6B]">
+                      Pista de Baile
+                    </span>
+                  </div>
+                  {/* Round Table 2 */}
+                  <div className="flex flex-col items-center">
+                    <div className="w-20 h-20 rounded-full bg-white border border-[#E5DDD5] shadow-sm flex flex-col items-center justify-center">
+                      <span className="text-[10px] font-medium">Mesa 2</span>
+                      <span className="text-[9px] text-[#8A7E72] font-semibold">10/10</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between gap-3 pt-3 border-t border-[#EFE8E1]">
+                  <div className="px-4 py-2 rounded-xl bg-[#2B2826] text-white text-[9px] uppercase tracking-[0.16em] font-semibold">
+                    DJ / Escenario
+                  </div>
+                  <div className="px-3.5 py-2 rounded-xl bg-[#EBF4F8] border border-[#C5DCE8] text-[#355A6E] text-[9px] uppercase tracking-[0.14em] font-semibold">
+                    Alberca
+                  </div>
+                  <div className="px-3.5 py-2 rounded-xl bg-[#E5EDE6] border border-[#BDD4C1] text-[#354B38] text-[9px] uppercase tracking-[0.14em] font-semibold">
+                    Jardín
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ==================== 6. PRICING SECTION ==================== */}
+      <section id="planes-lazo" className="max-w-4xl mx-auto px-5 py-16 sm:py-20 border-t border-[#EFE8E1]">
+        <div className="text-center mb-12">
+          <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+            Un solo pago · Sin mensualidades
+          </span>
+          <h2 className="font-editorial text-3xl sm:text-5xl text-[#2B2826] mt-2">
+            Elige tu acceso a Lazo
+          </h2>
+          <p className="text-xs sm:text-sm text-[#7D6F6B] font-light mt-2 max-w-md mx-auto">
+            Acceso inmediato en cuanto se confirma tu pago con MercadoPago.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Plan Esencial */}
-          <div className="bg-white rounded-3xl p-7 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between">
+          <div className="bg-white rounded-[2rem] p-8 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between">
             <div>
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
                 Plan Esencial
               </span>
               <div className="mt-3 flex items-baseline gap-1.5">
-                <span className="font-editorial text-4xl text-[#2B2826]">$990</span>
+                <span className="font-editorial text-5xl text-[#2B2826]">$990</span>
                 <span className="text-xs text-[#8A7E72]">MXN · pago único</span>
               </div>
-              <p className="text-xs text-[#7D6F6B] mt-2 font-light">
+              <p className="text-xs text-[#7D6F6B] mt-2.5 font-light leading-relaxed">
                 Acceso ilimitado para ti y tu pareja hasta el día de tu boda.
               </p>
 
-              <ul className="mt-6 space-y-2.5 text-xs text-[#5A524C]">
+              <ul className="mt-7 space-y-3 text-xs text-[#5A524C]">
                 {[
                   'Las 5 secciones completas (Celular + Web)',
                   'Comparador de cotizaciones, pagos y contratos',
@@ -266,8 +521,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                   'Lista de invitados y asignación de mesas (vista lista)',
                   'Confirmación manual 1-clic por WhatsApp y PDFs'
                 ].map(f => (
-                  <li key={f} className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-[#577355] shrink-0" />
+                  <li key={f} className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-[#577355] shrink-0 mt-0.5" />
                     <span>{f}</span>
                   </li>
                 ))}
@@ -277,33 +532,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             <button
               type="button"
               onClick={() => openCheckout('esencial')}
-              className="mt-7 w-full py-3 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+              className="mt-8 w-full py-3.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold tracking-wide transition cursor-pointer"
             >
               Adquirir Plan Esencial · $990
             </button>
           </div>
 
-          {/* Plan Pro · RSVP Automatizado */}
-          <div className="bg-[#2B2826] text-white rounded-3xl p-7 border border-[#2B2826] shadow-md flex flex-col justify-between relative overflow-hidden">
-            <div>
+          {/* Plan Pro · RSVP Automatizado + Plano 2D */}
+          <div className="bg-[#2B2826] text-white rounded-[2rem] p-8 border border-[#2B2826] shadow-xl flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-[#C48B81]/20 blur-2xl pointer-events-none" />
+            <div className="relative z-10">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
-                  Lazo Pro · RSVP Automatizado
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#E5B7AE]">
+                  Lazo Pro · Plano 2D + RSVP
                 </span>
-                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#C48B81]/20 text-[#E5B7AE] border border-[#C48B81]/30 whitespace-nowrap">
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#C48B81]/25 text-[#F2CFC8] border border-[#C48B81]/40 whitespace-nowrap">
                   Por tiempo limitado
                 </span>
               </div>
-              <div className="mt-3 flex flex-wrap items-baseline gap-2">
-                <span className="font-editorial text-xl text-white/40 line-through">$2,290</span>
-                <span className="font-editorial text-4xl text-white">$1,990</span>
+              <div className="mt-3 flex flex-wrap items-baseline gap-2.5">
+                <span className="font-editorial text-2xl text-white/40 line-through">$2,290</span>
+                <span className="font-editorial text-5xl text-white">$1,990</span>
                 <span className="text-xs text-white/60">MXN · pago único</span>
               </div>
-              <p className="text-xs text-white/70 mt-2 font-light">
+              <p className="text-xs text-white/75 mt-2.5 font-light leading-relaxed">
                 Todo lo del Plan Esencial + Plano 2D interactivo de mesas y envío automatizado de invitaciones en tiempo real.
               </p>
 
-              <ul className="mt-6 space-y-2.5 text-xs text-white/85">
+              <ul className="mt-7 space-y-3 text-xs text-white/90">
                 {[
                   'Todo lo incluido en el Plan Esencial',
                   'Plano 2D interactivo del salón (mesas, serpentina, elementos y PDF)',
@@ -311,8 +567,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                   'Confirmaciones actualizadas en tiempo real en tu lista',
                   'Recordatorios automáticos y envío de mesa el día del evento'
                 ].map(f => (
-                  <li key={f} className="flex items-center gap-2">
-                    <Check className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                  <li key={f} className="flex items-start gap-2.5">
+                    <Check className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
                     <span>{f}</span>
                   </li>
                 ))}
@@ -322,7 +578,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             <button
               type="button"
               onClick={() => openCheckout('pro')}
-              className="mt-7 w-full py-3 rounded-full bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-medium transition cursor-pointer"
+              className="relative z-10 mt-8 w-full py-3.5 rounded-full bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-semibold tracking-wide shadow-md transition cursor-pointer"
             >
               Adquirir Lazo Pro · $1,990
             </button>
@@ -330,11 +586,76 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
         </div>
       </section>
 
-      <footer className="py-8 border-t border-[#EFE8E1] text-center text-xs text-[#8A7E72] font-light">
-        <span className="font-editorial tracking-[0.2em] text-[#2B2826]">LAZO</span> · Tu boda, organizada con calma.
+      {/* ==================== 7. FAQ ACCORDION ==================== */}
+      <section id="faq-lazo" className="max-w-3xl mx-auto px-5 py-16 border-t border-[#EFE8E1]">
+        <div className="text-center mb-10">
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+            Dudas frecuentes
+          </span>
+          <h2 className="font-editorial text-3xl text-[#2B2826] mt-2">
+            Todo claro antes de empezar
+          </h2>
+        </div>
+
+        <div className="space-y-3">
+          {FAQS.map((item, idx) => {
+            const isOpen = openFaq === idx;
+            return (
+              <div
+                key={item.q}
+                className="bg-white rounded-2xl border border-[#EFE8E1] overflow-hidden"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(isOpen ? null : idx)}
+                  className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left cursor-pointer"
+                >
+                  <span className="text-sm font-medium text-[#2B2826]">{item.q}</span>
+                  <ChevronDown
+                    className={`w-4 h-4 text-[#C48B81] shrink-0 transition-transform ${
+                      isOpen ? 'rotate-180' : ''
+                    }`}
+                  />
+                </button>
+                {isOpen && (
+                  <div className="px-5 pb-4 text-xs text-[#7D6F6B] font-light leading-relaxed">
+                    {item.a}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ==================== 8. EDITORIAL FOOTER ==================== */}
+      <footer className="py-10 border-t border-[#EFE8E1] bg-white">
+        <div className="max-w-6xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8A7E72] font-light">
+          <div className="flex items-center gap-3">
+            <img src="/lazo-logo.png" alt="Lazo" className="h-7 w-auto object-contain" />
+            <span>· Planeación de bodas con calma.</span>
+          </div>
+          <div className="flex items-center gap-5">
+            <a
+              href={`https://wa.me/${VLB_QUOTES_PHONE}`}
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-[#2B2826] transition"
+            >
+              WhatsApp de soporte
+            </a>
+            <button
+              type="button"
+              onClick={onOpenLogin}
+              className="hover:text-[#2B2826] transition cursor-pointer"
+            >
+              Iniciar Sesión
+            </button>
+          </div>
+        </div>
       </footer>
 
-      {/* Modal: Registro + Checkout MercadoPago */}
+      {/* ==================== CHECKOUT MODAL (MERCADOPAGO) ==================== */}
       <Modal
         isOpen={Boolean(checkoutPlan)}
         onClose={() => setCheckoutPlan(null)}
