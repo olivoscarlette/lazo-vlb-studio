@@ -1697,15 +1697,9 @@ export const GeneralDashboard: React.FC = () => {
                 <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#8A7E72] block mb-1">
                   Estudio de Planeación · Temporada 2026–2027
                 </span>
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="font-editorial text-3xl sm:text-4xl font-normal text-[#2B2826] tracking-tight">
-                    Hola, {userName}
-                  </h1>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-white text-[#A86B60] border border-[#EFE8E1] shadow-2xs shrink-0">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]"></span>
-                    {activeWeddings.length} {activeWeddings.length === 1 ? 'evento activo' : 'eventos activos'}
-                  </span>
-                </div>
+                <h1 className="font-editorial text-3xl sm:text-4xl font-normal text-[#2B2826] tracking-tight">
+                  Hola, {userName}
+                </h1>
               </div>
 
               {/* Switcher Plataforma & Botón de Agregar Evento */}
@@ -1979,164 +1973,9 @@ export const GeneralDashboard: React.FC = () => {
               );
             })()}
 
-            {/* Barra de Búsqueda Rápida y Filtros Directos */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
-              <div className="relative flex-1 max-w-full md:max-w-md">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
-                <input
-                  type="text"
-                  placeholder="Buscar evento por nombre, tipo o fecha..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-11 pr-4 py-2.5 bg-[#FFFFFF] border border-[#EFE8E1] rounded-full text-sm text-[#2B2826] placeholder-[#7D6F6B]/70 focus:outline-none focus:border-[#C48B81] shadow-2xs transition"
-                />
-              </div>
-
-              {/* Selector Desplegable de Tipo de Evento (Dropdown Editorial) */}
-              <div className="relative self-start sm:self-auto">
-                <button
-                  type="button"
-                  onClick={() => setShowCategoryMenu(!showCategoryMenu)}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#FFFFFF] hover:bg-[#FAF7F5] border border-[#EFE8E1] rounded-full text-xs font-semibold text-[#2B2826] shadow-2xs hover:border-[#C48B81] transition cursor-pointer select-none"
-                >
-                  <span className="text-[#7D6F6B] font-normal">Ver:</span>
-                  <span className="text-[#2B2826] font-semibold">{getCategoryLabel().label}</span>
-                  <span className="bg-[#F7EDEB] text-[#A86B60] text-[11px] px-2 py-0.5 rounded-full font-bold">
-                    {getCategoryLabel().count}
-                  </span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-[#C48B81] transition-transform duration-200 ${showCategoryMenu ? 'rotate-180' : ''}`} />
-                </button>
-
-                {showCategoryMenu && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-20"
-                      onClick={() => setShowCategoryMenu(false)}
-                    />
-                    <div className="absolute right-0 mt-2 w-64 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] p-1.5 z-30 transition-all duration-150">
-                      <div className="px-3 py-2 text-[10px] font-bold tracking-wider uppercase text-[#7D6F6B] border-b border-[#FAF7F5]">
-                        Filtrar por tipo de evento
-                      </div>
-
-                      <div className="space-y-0.5 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCategoryFilter('ALL');
-                            setShowCategoryMenu(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
-                            categoryFilter === 'ALL'
-                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
-                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'ALL' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
-                            <span>Todos los eventos</span>
-                          </div>
-                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${categoryFilter === 'ALL' ? 'bg-[#FFFFFF] text-[#A86B60] shadow-2xs' : 'bg-[#F7EDEB] text-[#A86B60]'}`}>
-                            {weddings.length}
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCategoryFilter('BODAS');
-                            setShowCategoryMenu(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
-                            categoryFilter === 'BODAS'
-                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
-                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'BODAS' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
-                            <span>Bodas</span>
-                          </div>
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full text-[#7D6F6B]">
-                            {countBodas}
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCategoryFilter('DESPEDIDAS');
-                            setShowCategoryMenu(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
-                            categoryFilter === 'DESPEDIDAS'
-                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
-                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'DESPEDIDAS' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
-                            <span>Despedidas de Soltera</span>
-                          </div>
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full text-[#7D6F6B]">
-                            {countDespedidas}
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCategoryFilter('BABY_SHOWER');
-                            setShowCategoryMenu(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
-                            categoryFilter === 'BABY_SHOWER'
-                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
-                              : countBabyShowers === 0
-                              ? 'text-[#7D6F6B] opacity-60 hover:opacity-100 hover:bg-[#FAF7F5]'
-                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'BABY_SHOWER' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
-                            <span>Baby Showers</span>
-                          </div>
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full text-[#7D6F6B]">
-                            {countBabyShowers}
-                          </span>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCategoryFilter('OTROS');
-                            setShowCategoryMenu(false);
-                          }}
-                          className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition text-left cursor-pointer group ${
-                            categoryFilter === 'OTROS'
-                              ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold'
-                              : countOtros === 0
-                              ? 'text-[#7D6F6B] opacity-60 hover:opacity-100 hover:bg-[#FAF7F5]'
-                              : 'text-[#2B2826] hover:bg-[#FAF7F5] hover:text-[#C48B81]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className={`w-1.5 h-1.5 rounded-full ${categoryFilter === 'OTROS' ? 'bg-[#C48B81]' : 'bg-transparent group-hover:bg-[#C48B81]'}`}></span>
-                            <span>Otros Eventos</span>
-                          </div>
-                          <span className="text-[11px] font-medium px-2 py-0.5 rounded-full text-[#7D6F6B]">
-                            {countOtros}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Píldoras de Segmentación: Coordinación VLB vs Planner Virtual vs Archivados */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-7 pb-1">
-              <div className="inline-flex flex-wrap items-center p-1 bg-white border border-[#EFE8E1] rounded-full shadow-2xs">
+            {/* Barra Única de Filtros & Búsqueda */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-7">
+              <div className="inline-flex flex-wrap items-center p-1 bg-white border border-[#EFE8E1] rounded-full shadow-2xs w-fit">
                 <button
                   type="button"
                   onClick={() => setServiceTierFilter('ALL')}
@@ -2146,45 +1985,35 @@ export const GeneralDashboard: React.FC = () => {
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  <span>Todos ({activeWeddings.length})</span>
+                  Todos ({activeWeddings.length})
                 </button>
                 <button
                   type="button"
                   onClick={() => setServiceTierFilter('COORDINACION')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none flex items-center gap-1.5 ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none ${
                     serviceTierFilter === 'COORDINACION'
                       ? 'bg-[#2B2826] text-white shadow-2xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  <span>Coordinación VLB</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
-                    serviceTierFilter === 'COORDINACION' ? 'bg-white/20 text-white' : 'bg-[#F7EDEB] text-[#A86B60]'
-                  }`}>
-                    {countCoordination}
-                  </span>
+                  Coordinación VLB ({countCoordination})
                 </button>
                 <button
                   type="button"
                   onClick={() => setServiceTierFilter('VIRTUAL')}
-                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none flex items-center gap-1.5 ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none ${
                     serviceTierFilter === 'VIRTUAL'
                       ? 'bg-[#2B2826] text-white shadow-2xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
-                  <span>Planner Virtual</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
-                    serviceTierFilter === 'VIRTUAL' ? 'bg-white/20 text-white' : 'bg-[#FAF8F5] text-[#7D6F6B]'
-                  }`}>
-                    {countVirtual}
-                  </span>
+                  Planner Virtual ({countVirtual})
                 </button>
                 {countArchived > 0 && (
                   <button
                     type="button"
                     onClick={() => setServiceTierFilter('ARCHIVED')}
-                    className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none flex items-center gap-1.5 ${
+                    className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none inline-flex items-center gap-1.5 ${
                       serviceTierFilter === 'ARCHIVED'
                         ? 'bg-[#2B2826] text-white shadow-2xs'
                         : 'text-[#7D6F6B] hover:text-[#2B2826]'
@@ -2196,10 +2025,16 @@ export const GeneralDashboard: React.FC = () => {
                 )}
               </div>
 
-              {/* Conteo Informativo Rápido */}
-              <span className="text-xs text-[#8A7E72] font-light hidden sm:inline-block">
-                Mostrando <strong className="text-[#2B2826] font-medium">{filteredWeddings.length}</strong> de {serviceTierFilter === 'ARCHIVED' ? archivedWeddings.length : activeWeddings.length} eventos
-              </span>
+              <div className="relative w-full lg:w-72">
+                <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A7E72]" />
+                <input
+                  type="text"
+                  placeholder="Buscar evento..."
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-[#EFE8E1] rounded-full text-xs text-[#2B2826] placeholder-[#8A7E72]/70 focus:outline-none focus:border-[#C48B81] shadow-2xs transition"
+                />
+              </div>
             </div>
 
             {/* Grid de Tarjetas de Eventos Limpias y Claras con Separación Editorial */}
@@ -2215,27 +2050,12 @@ export const GeneralDashboard: React.FC = () => {
                 {/* 1. SECCIÓN: COORDINACIÓN VIVA LA BRIDE */}
                 {(serviceTierFilter === 'ALL' || serviceTierFilter === 'COORDINACION') && (
                   <div>
-                    {/* Encabezado de Sección */}
-                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-3 mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-2xl bg-[#F7EDEB] text-[#C48B81] flex items-center justify-center font-bold text-base shadow-2xs border border-[#ECD9D5]">
-                          <Heart className="w-4 h-4 text-[#C48B81]" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-editorial text-2xl font-normal text-[#2B2826] tracking-tight">
-                              Coordinación Viva la Bride
-                            </h3>
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#FAF3F0] px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
-                              Presencial
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-[#7D6F6B] mt-0.5">
-                            Bodas con equipo asignado, reuniones presenciales y coordinación operativa
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-[#A86B60] bg-[#F7EDEB] px-3 py-1 rounded-full border border-[#ECD9D5]">
+                    {/* Encabezado Minimalista de Sección */}
+                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-2.5 mb-5">
+                      <h3 className="font-editorial text-xl text-[#2B2826]">
+                        Coordinación Viva la Bride
+                      </h3>
+                      <span className="text-[11px] text-[#8A7E72] font-light">
                         {filteredWeddings.filter(w => !isVirtualWedding(w)).length} {filteredWeddings.filter(w => !isVirtualWedding(w)).length === 1 ? 'evento' : 'eventos'}
                       </span>
                     </div>
@@ -2392,27 +2212,12 @@ export const GeneralDashboard: React.FC = () => {
                 {/* 2. SECCIÓN: PLANNER VIRTUAL AUTÓNOMO */}
                 {(serviceTierFilter === 'ALL' || serviceTierFilter === 'VIRTUAL') && (
                   <div className="pt-2">
-                    {/* Encabezado de Sección */}
-                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-3 mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-2xl bg-[#FAF7F5] text-[#7D6F6B] flex items-center justify-center font-bold text-base shadow-2xs border border-[#EFE8E1]">
-                          <Laptop className="w-4 h-4 text-[#7D6F6B]" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-editorial text-2xl font-normal text-[#2B2826] tracking-tight">
-                              Planner Virtual Autónomo
-                            </h3>
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B] bg-[#FAF7F5] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
-                              Suite Digital
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-[#7D6F6B] mt-0.5">
-                            Novios autónomos con acceso a herramientas digitales (Checklist, Proveedores, Invitados y Mesas)
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-bold text-[#7D6F6B] bg-[#FAF7F5] px-3 py-1 rounded-full border border-[#EFE8E1]">
+                    {/* Encabezado Minimalista de Sección */}
+                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-2.5 mb-5">
+                      <h3 className="font-editorial text-xl text-[#2B2826]">
+                        Planner Virtual
+                      </h3>
+                      <span className="text-[11px] text-[#8A7E72] font-light">
                         {filteredWeddings.filter(w => isVirtualWedding(w)).length} {filteredWeddings.filter(w => isVirtualWedding(w)).length === 1 ? 'evento' : 'eventos'}
                       </span>
                     </div>
