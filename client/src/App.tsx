@@ -23,11 +23,12 @@ import { CalendarioModule } from './modules/CalendarioModule';
 import { VivaLaBrideModule } from './modules/VivaLaBrideModule';
 import { PublicProposalView } from './modules/PublicProposalView';
 import { NoviosStudioRoot } from './novios/NoviosStudioRoot';
+import { LandingPage } from './novios/components/LandingPage';
 import {
   Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff, Sparkles, BellRing, X
 } from 'lucide-react';
 
-const LoginView: React.FC = () => {
+const LoginView: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -170,6 +171,17 @@ const LoginView: React.FC = () => {
       {/* Subtle Warm Editorial Blush Accents */}
       <div className="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-[#EFE2DF]/70 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-[#F7F3EE]/80 blur-3xl pointer-events-none" />
+
+      {onBack && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="absolute top-6 left-6 z-20 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/80 hover:bg-white border border-[#EFE8E1] text-xs text-[#7D6F6B] hover:text-[#2B2826] transition cursor-pointer"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Inicio</span>
+        </button>
+      )}
 
       {/* Header Editorial con Lazo — Studio Planning */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center relative z-10">
@@ -642,6 +654,12 @@ const AppContent: React.FC = () => {
   });
 
   const [activeToast, setActiveToast] = useState<{ title: string; body?: string; link?: string; tag?: string } | null>(null);
+  const [showLogin, setShowLogin] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).has('reset_token');
+    }
+    return false;
+  });
 
   useEffect(() => {
     let timer: any;
@@ -705,7 +723,10 @@ const AppContent: React.FC = () => {
   }
 
   if (!user) {
-    return <LoginView />;
+    if (!showLogin) {
+      return <LandingPage onOpenLogin={() => setShowLogin(true)} />;
+    }
+    return <LoginView onBack={() => setShowLogin(false)} />;
   }
 
   return (

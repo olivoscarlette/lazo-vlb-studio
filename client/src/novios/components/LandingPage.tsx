@@ -4,10 +4,10 @@ import {
 } from 'lucide-react';
 
 interface LandingPageProps {
-  onStartOnboarding: () => void;
+  onOpenLogin: () => void;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onStartOnboarding }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
   const scrollToPricing = () => {
     document.getElementById('planes-lazo')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -20,16 +20,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartOnboarding }) =
           <span className="font-editorial text-xl tracking-[0.28em] text-[#2B2826]">LAZO</span>
           <div className="flex items-center gap-2.5">
             <button
+              type="button"
               onClick={scrollToPricing}
               className="px-4 py-2 rounded-full text-xs font-medium text-[#7D6F6B] hover:text-[#2B2826] transition cursor-pointer"
             >
               Planes
             </button>
             <button
-              onClick={onStartOnboarding}
+              type="button"
+              onClick={onOpenLogin}
               className="px-4 py-2 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium transition cursor-pointer"
             >
-              Empezar mi boda
+              Iniciar Sesión
             </button>
           </div>
         </div>
@@ -47,18 +49,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartOnboarding }) =
         </h1>
 
         <p className="text-sm sm:text-base text-[#7D6F6B] font-light max-w-xl mx-auto mt-5 leading-relaxed">
-          Presupuesto, plan de ahorro, comparador de cotizaciones, invitados por WhatsApp, mesas, estilo y checklist con fechas reales — todo en una sola app para ti y tu pareja.
+          Presupuesto, plan de ahorro, comparador de cotizaciones, invitados por WhatsApp, plano 2D de mesas, estilo y checklist con fechas reales — todo en una sola app para ti y tu pareja.
         </p>
 
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <button
-            onClick={onStartOnboarding}
+            type="button"
+            onClick={onOpenLogin}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-medium shadow-sm transition cursor-pointer"
           >
-            <span>Crear mi boda en 60 segundos</span>
+            <span>Entrar a mi boda</span>
             <ArrowRight className="w-4 h-4" />
           </button>
           <button
+            type="button"
             onClick={scrollToPricing}
             className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-white hover:bg-[#F5F0EB] text-[#2B2826] border border-[#EFE8E1] text-sm font-medium transition cursor-pointer"
           >
@@ -194,10 +198,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartOnboarding }) =
             </div>
 
             <button
-              onClick={onStartOnboarding}
+              type="button"
+              onClick={onOpenLogin}
               className="mt-7 w-full py-3 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
             >
-              Empezar con Plan Esencial
+              Entrar / Solicitar Plan Esencial
             </button>
           </div>
 
@@ -237,10 +242,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartOnboarding }) =
             </div>
 
             <button
-              onClick={onStartOnboarding}
+              type="button"
+              onClick={onOpenLogin}
               className="mt-7 w-full py-3 rounded-full bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-medium transition cursor-pointer"
             >
-              Empezar con Lazo Pro
+              Entrar / Solicitar Lazo Pro
             </button>
           </div>
         </div>

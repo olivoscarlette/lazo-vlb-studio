@@ -357,3 +357,11 @@ a:focus-visible {
   outline: 2px solid rgba(196, 139, 129, 0.45);
   outline-offset: 2px;
 }
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0px 1000px #FAF8F5 inset !important;
+  -webkit-text-fill-color: #2B2826 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
