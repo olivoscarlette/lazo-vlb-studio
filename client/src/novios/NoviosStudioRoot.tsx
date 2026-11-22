@@ -25,7 +25,7 @@ const NoviosStudioInner: React.FC = () => {
   }
 
   return (
-    <AppShell activeTab={activeTab} onChangeTab={setActiveTab}>
+    <AppShell activeTab={activeTab} onSelectTab={setActiveTab}>
       {activeTab === 'inicio' && <HomeView onNavigate={setActiveTab} />}
       {activeTab === 'presupuesto' && <BudgetView />}
       {activeTab === 'invitados' && <GuestsView />}

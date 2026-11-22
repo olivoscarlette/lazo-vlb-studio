@@ -805,7 +805,18 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
   try {
     const parsed = wedding.novios_studio_json ? JSON.parse(wedding.novios_studio_json) : null;
     if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0 && parsed.profile) {
-      studio = parsed;
+      // Always keep authoritative CRM date & couple names in sync with weddings table
+      studio = {
+        ...parsed,
+        profile: {
+          ...parsed.profile,
+          partner1: wedding.partner_1_name || parsed.profile.partner1,
+          partner2: wedding.partner_2_name || parsed.profile.partner2,
+          weddingDate: wedding.wedding_date || parsed.profile.weddingDate,
+          city: parsed.profile.city || wedding.reception_venue || wedding.ceremony_venue || '',
+          estimatedGuests: Number(wedding.estimated_guests) || parsed.profile.estimatedGuests || 120
+        }
+      };
     }
   } catch {
     studio = null;
@@ -835,13 +846,13 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
     wedding: {
       id: wedding.id,
       name: wedding.name,
-      bride_name: wedding.bride_name,
-      groom_name: wedding.groom_name,
-      date: wedding.date,
-      city: wedding.city,
-      venue: wedding.venue,
+      partner_1_name: wedding.partner_1_name,
+      partner_2_name: wedding.partner_2_name,
+      wedding_date: wedding.wedding_date,
+      reception_venue: wedding.reception_venue,
+      ceremony_venue: wedding.ceremony_venue,
       budget_estimated: wedding.budget_estimated,
-      guest_count_estimated: wedding.guest_count_estimated,
+      estimated_guests: wedding.estimated_guests,
       cover_photo_url: wedding.cover_photo_url,
       cover_photo_position: wedding.cover_photo_position,
       package_type: wedding.package_type,
@@ -877,26 +888,46 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       WHERE id = ?
     `).run(serialized, weddingId);
 
-    // Keep basic profile metadata in sync on weddings table
+    // Keep core wedding CRM columns in sync when couple edits their wedding info
     if (studio.profile) {
-      const p = studio.profile;
-      const updates: string[] = [];
-      const params: any[] = [];
-      if (typeof p.budgetGoal === 'number') {
-        updates.push('budget_estimated = ?');
-        params.push(p.budgetGoal);
-      }
-      if (typeof p.city === 'string' && p.city.trim()) {
-        updates.push('city = ?');
-        params.push(p.city.trim());
-      }
-      if (typeof p.coverPositionY === 'number') {
-        updates.push('cover_photo_position = ?');
-        params.push(`center ${p.coverPositionY}%`);
-      }
-      if (updates.length > 0) {
-        params.push(weddingId);
-        db.prepare(`UPDATE weddings SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+      try {
+        const p = studio.profile;
+        const updates: string[] = [];
+        const params: any[] = [];
+        if (typeof p.partner1 === 'string' && p.partner1.trim()) {
+          updates.push('partner_1_name = ?');
+          params.push(p.partner1.trim());
+        }
+        if (typeof p.partner2 === 'string' && p.partner2.trim()) {
+          updates.push('partner_2_name = ?');
+          params.push(p.partner2.trim());
+        }
+        if (typeof p.partner1 === 'string' && typeof p.partner2 === 'string' && p.partner1.trim() && p.partner2.trim()) {
+          updates.push('name = ?');
+          params.push(`${p.partner1.trim()} & ${p.partner2.trim()}`);
+        }
+        if (typeof p.weddingDate === 'string' && p.weddingDate.trim()) {
+          updates.push('wedding_date = ?');
+          params.push(p.weddingDate.trim());
+        }
+        if (typeof p.city === 'string') {
+          updates.push('reception_venue = ?');
+          params.push(p.city.trim());
+        }
+        if (typeof p.estimatedGuests === 'number' && p.estimatedGuests > 0) {
+          updates.push('estimated_guests = ?');
+          params.push(Math.round(p.estimatedGuests));
+        }
+        if (typeof p.coverPositionY === 'number') {
+          updates.push('cover_photo_position = ?');
+          params.push(`center ${p.coverPositionY}%`);
+        }
+        if (updates.length > 0) {
+          params.push(weddingId);
+          db.prepare(`UPDATE weddings SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+        }
+      } catch (syncErr) {
+        console.warn('Non-critical CRM column sync warning:', syncErr);
       }
     }
 

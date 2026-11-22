@@ -26,10 +26,16 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EFE8E1]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <button
+            type="button"
             onClick={() => onSelectTab('inicio')}
-            className="font-editorial text-lg tracking-[0.28em] text-[#2B2826] cursor-pointer"
+            className="flex items-center cursor-pointer"
+            title="Inicio"
           >
-            LAZO
+            <img
+              src="/lazo-logo.png"
+              alt="Lazo — Studio Planning"
+              className="h-9 sm:h-10 w-auto object-contain select-none"
+            />
           </button>
 
           {/* Desktop 5-Tab Floating Pill Nav */}

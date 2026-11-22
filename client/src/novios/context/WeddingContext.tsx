@@ -40,19 +40,19 @@ function hydrateWeddingFromLegacyDb(apiData: any): WeddingState {
   const w = apiData.wedding || {};
   const seed = apiData.seedFromDb || {};
 
-  // Split couple name if bride/groom not explicitly set
+  // Split couple name if partner names not explicitly set
   const nameParts = (w.name || '').split(/&| y /i).map((s: string) => s.trim()).filter(Boolean);
-  const partner1 = w.bride_name || nameParts[0] || 'Novia';
-  const partner2 = w.groom_name || nameParts[1] || 'Novio';
-  const weddingDate = w.date || new Date(Date.now() + 300 * 86400000).toISOString().split('T')[0];
+  const partner1 = w.partner_1_name || w.bride_name || nameParts[0] || 'Novia';
+  const partner2 = w.partner_2_name || w.groom_name || nameParts[1] || 'Novio';
+  const weddingDate = w.wedding_date || w.date || new Date(Date.now() + 300 * 86400000).toISOString().split('T')[0];
 
   const profile: WeddingProfile = {
     partner1,
     partner2,
     weddingDate,
-    city: w.city || w.venue || '',
+    city: w.reception_venue || w.ceremony_venue || w.city || w.venue || '',
     budgetGoal: Number(w.budget_estimated) || 350000,
-    estimatedGuests: Number(w.guest_count_estimated) || 120,
+    estimatedGuests: Number(w.estimated_guests || w.guest_count_estimated) || 120,
     coverPhoto: w.cover_photo_url || DEFAULT_COVER_PHOTOS[0].url,
     coverPositionY: parsePositionY(w.cover_photo_position),
     partnerInviteCode: `LAZO-${String(w.id || '0000').slice(-4).toUpperCase()}`

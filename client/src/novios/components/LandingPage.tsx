@@ -17,7 +17,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
       {/* Minimalist Top Bar */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5]/90 backdrop-blur-md border-b border-[#EFE8E1]">
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          <span className="font-editorial text-xl tracking-[0.28em] text-[#2B2826]">LAZO</span>
+          <img
+            src="/lazo-logo.png"
+            alt="Lazo — Studio Planning"
+            className="h-9 sm:h-10 w-auto object-contain select-none"
+          />
           <div className="flex items-center gap-2.5">
             <button
               type="button"

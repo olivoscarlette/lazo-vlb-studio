@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import {
-  Camera, CheckCircle2, ArrowRight, Share2, Check, ChevronUp, ChevronDown, Move, Upload, Trash2
+  Camera, CheckCircle2, ArrowRight, ChevronUp, ChevronDown, Move, Upload, Trash2, Plus, X, Pencil
 } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
 import { daysUntil, formatMXN, formatShortDate } from '../data/seedWedding';
 import { LazoTab } from '../types/lazo';
+import { Modal } from '../components/Modal';
 
 interface HomeViewProps {
   onNavigate: (tab: LazoTab) => void;
@@ -14,11 +15,49 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   const { wedding, updateWedding } = useWedding();
   const [subTab, setSubTab] = useState<'resumen' | 'estilo'>('resumen');
   const [isRepositioning, setIsRepositioning] = useState(false);
-  const [copiedInvite, setCopiedInvite] = useState(false);
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    partner1: '',
+    partner2: '',
+    weddingDate: '',
+    city: '',
+    estimatedGuests: '120',
+    budgetGoal: '350000'
+  });
 
   if (!wedding) return null;
 
   const { profile, guests, vendors, checklist, style } = wedding;
+
+  const openEditProfile = () => {
+    setProfileForm({
+      partner1: profile.partner1,
+      partner2: profile.partner2,
+      weddingDate: profile.weddingDate,
+      city: profile.city || '',
+      estimatedGuests: String(profile.estimatedGuests || 120),
+      budgetGoal: String(profile.budgetGoal || 350000)
+    });
+    setShowEditProfile(true);
+  };
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!profileForm.partner1.trim() || !profileForm.partner2.trim()) return;
+    updateWedding(prev => ({
+      ...prev,
+      profile: {
+        ...prev.profile,
+        partner1: profileForm.partner1.trim(),
+        partner2: profileForm.partner2.trim(),
+        weddingDate: profileForm.weddingDate || prev.profile.weddingDate,
+        city: profileForm.city.trim(),
+        estimatedGuests: Math.max(1, Number(profileForm.estimatedGuests) || 120),
+        budgetGoal: Math.max(0, Number(profileForm.budgetGoal) || 0)
+      }
+    }));
+    setShowEditProfile(false);
+  };
   const days = daysUntil(profile.weddingDate);
 
   const confirmedPasses = guests
@@ -85,13 +124,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     }));
   };
 
-  const handleCopyPartnerLink = () => {
-    const text = `¡Planeemos nuestra boda juntos en Lazo! Código de pareja: ${profile.partnerInviteCode}`;
-    navigator.clipboard?.writeText(text).catch(() => {});
-    setCopiedInvite(true);
-    setTimeout(() => setCopiedInvite(false), 2500);
-  };
-
   return (
     <div className="space-y-6">
       {/* 1. Editorial Hero Cover */}
@@ -125,6 +157,15 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             ) : (
               <>
                 <button
+                  type="button"
+                  onClick={openEditProfile}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md text-white text-[11px] border border-white/20 transition cursor-pointer"
+                >
+                  <Pencil className="w-3 h-3" />
+                  <span className="hidden sm:inline">Editar Boda</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsRepositioning(true)}
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md text-white text-[11px] border border-white/20 transition cursor-pointer"
                 >
@@ -280,30 +321,107 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         /* MOODBOARD & LOOK (Emotional heart of Mi Boda) */
         <div className="space-y-5">
           <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex-1">
-                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
-                  Concepto Visual & Paleta
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81] flex items-center gap-1.5">
+                  <span>Concepto Visual & Paleta</span>
+                  <Pencil className="w-2.5 h-2.5 opacity-60" />
                 </span>
                 <input
                   type="text"
                   value={style.vibe}
+                  placeholder="Escribe el estilo de tu boda..."
                   onChange={e => updateWedding(prev => ({ ...prev, style: { ...prev.style, vibe: e.target.value } }))}
-                  className="block w-full font-editorial text-xl text-[#2B2826] mt-0.5 bg-transparent focus:outline-none border-b border-transparent focus:border-[#EFE8E1]"
+                  className="block w-full font-editorial text-xl text-[#2B2826] mt-0.5 bg-transparent focus:outline-none border-b border-transparent hover:border-[#EFE8E1] focus:border-[#C48B81] transition pb-0.5"
                 />
               </div>
 
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
                 {style.palette.map((c, idx) => (
-                  <div key={idx} className="flex flex-col items-center gap-1">
-                    <span
-                      className="w-8 h-8 rounded-full border border-[#EFE8E1] shadow-2xs"
+                  <div key={idx} className="relative group flex flex-col items-center gap-1">
+                    <label
+                      className="w-9 h-9 rounded-full border border-[#EFE8E1] shadow-2xs cursor-pointer transition-transform hover:scale-105 block overflow-hidden"
                       style={{ backgroundColor: c.hex }}
-                      title={c.name}
+                      title="Haz clic para cambiar este color"
+                    >
+                      <input
+                        type="color"
+                        value={c.hex}
+                        onChange={e => {
+                          const nextHex = e.target.value;
+                          updateWedding(prev => ({
+                            ...prev,
+                            style: {
+                              ...prev.style,
+                              palette: prev.style.palette.map((item, i) =>
+                                i === idx ? { ...item, hex: nextHex } : item
+                              )
+                            }
+                          }));
+                        }}
+                        className="opacity-0 w-full h-full cursor-pointer"
+                      />
+                    </label>
+                    {style.palette.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          updateWedding(prev => ({
+                            ...prev,
+                            style: {
+                              ...prev.style,
+                              palette: prev.style.palette.filter((_, i) => i !== idx)
+                            }
+                          }))
+                        }
+                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white border border-[#EFE8E1] text-[#8A7E72] hover:text-rose-600 shadow-2xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                        title="Quitar color"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    )}
+                    <input
+                      type="text"
+                      value={c.name}
+                      onChange={e => {
+                        const nextName = e.target.value;
+                        updateWedding(prev => ({
+                          ...prev,
+                          style: {
+                            ...prev.style,
+                            palette: prev.style.palette.map((item, i) =>
+                              i === idx ? { ...item, name: nextName } : item
+                            )
+                          }
+                        }));
+                      }}
+                      className="w-16 text-center text-[10px] text-[#8A7E72] bg-transparent border-b border-transparent hover:border-[#EFE8E1] focus:border-[#C48B81] focus:text-[#2B2826]"
+                      title="Editar nombre del color"
                     />
-                    <span className="text-[10px] text-[#8A7E72]">{c.name}</span>
                   </div>
                 ))}
+
+                {style.palette.length < 6 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateWedding(prev => ({
+                        ...prev,
+                        style: {
+                          ...prev.style,
+                          palette: [...prev.style.palette, { name: 'Nuevo', hex: '#D8C7B8' }]
+                        }
+                      }))
+                    }
+                    className="flex flex-col items-center gap-1 group cursor-pointer"
+                    title="Agregar color a la paleta"
+                  >
+                    <span className="w-9 h-9 rounded-full border border-dashed border-[#D8CFC8] bg-[#FAF8F5] group-hover:border-[#C48B81] flex items-center justify-center text-[#8A7E72] group-hover:text-[#C48B81] transition">
+                      <Plus className="w-3.5 h-3.5" />
+                    </span>
+                    <span className="text-[10px] text-[#8A7E72]">Agregar</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -357,6 +475,114 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
           </div>
         </div>
       )}
+
+      {/* Modal: Editar Información de la Boda */}
+      <Modal
+        isOpen={showEditProfile}
+        onClose={() => setShowEditProfile(false)}
+        title="Información de tu Boda"
+        subtitle="Edita sus nombres, fecha, sede o metas cuando necesites."
+        maxWidthClass="max-w-md"
+      >
+        <form onSubmit={handleSaveProfile} className="space-y-3.5">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Novia / Pareja 1 *
+              </label>
+              <input
+                type="text"
+                required
+                value={profileForm.partner1}
+                onChange={e => setProfileForm({ ...profileForm, partner1: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Novio / Pareja 2 *
+              </label>
+              <input
+                type="text"
+                required
+                value={profileForm.partner2}
+                onChange={e => setProfileForm({ ...profileForm, partner2: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Fecha de la Boda *
+              </label>
+              <input
+                type="date"
+                required
+                value={profileForm.weddingDate}
+                onChange={e => setProfileForm({ ...profileForm, weddingDate: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Sede / Ciudad
+              </label>
+              <input
+                type="text"
+                placeholder="Ej. Monterrey, Hacienda..."
+                value={profileForm.city}
+                onChange={e => setProfileForm({ ...profileForm, city: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Invitados Estimados
+              </label>
+              <input
+                type="number"
+                min={1}
+                value={profileForm.estimatedGuests}
+                onChange={e => setProfileForm({ ...profileForm, estimatedGuests: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Meta Presupuesto (MXN)
+              </label>
+              <input
+                type="number"
+                min={0}
+                value={profileForm.budgetGoal}
+                onChange={e => setProfileForm({ ...profileForm, budgetGoal: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => setShowEditProfile(false)}
+              className="px-4 py-2 text-xs text-[#8A7E72] cursor-pointer"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium cursor-pointer"
+            >
+              Guardar Cambios
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };
