@@ -206,32 +206,33 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             </button>
           </div>
 
-          {/* Plan Pro + IA */}
+          {/* Plan Pro · RSVP Automatizado */}
           <div className="bg-[#2B2826] text-white rounded-3xl p-7 border border-[#2B2826] shadow-md flex flex-col justify-between relative overflow-hidden">
             <div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
-                  Lazo Pro + Asistente IA
+                  Lazo Pro · RSVP Automatizado
                 </span>
-                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#C48B81]/20 text-[#E5B7AE] border border-[#C48B81]/30">
-                  Más elegido
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#C48B81]/20 text-[#E5B7AE] border border-[#C48B81]/30 whitespace-nowrap">
+                  Por tiempo limitado
                 </span>
               </div>
-              <div className="mt-3 flex items-baseline gap-1.5">
-                <span className="font-editorial text-4xl text-white">$1,590</span>
+              <div className="mt-3 flex flex-wrap items-baseline gap-2">
+                <span className="font-editorial text-xl text-white/40 line-through">$2,290</span>
+                <span className="font-editorial text-4xl text-white">$1,990</span>
                 <span className="text-xs text-white/60">MXN · pago único</span>
               </div>
               <p className="text-xs text-white/70 mt-2 font-light">
-                Todo lo del Plan Esencial + tu asistente inteligente 24/7 entrenada por wedding planners.
+                Todo lo del Plan Esencial + envío automatizado de invitaciones y confirmaciones actualizadas en tiempo real.
               </p>
 
               <ul className="mt-6 space-y-2.5 text-xs text-white/85">
                 {[
                   'Todo lo incluido en el Plan Esencial',
-                  'Asistente IA 24/7 con los datos reales de tu boda',
-                  'Lectura automática de cotizaciones (PDF / foto)',
-                  'Plantillas listas de mensajes para proveedores',
-                  'Garantía de satisfacción de 14 días'
+                  'Envío automatizado de invitaciones por WhatsApp',
+                  'Confirmaciones actualizadas en tiempo real en tu lista',
+                  'Recordatorios automáticos previos a la boda',
+                  'Envío automático de número de mesa el día del evento'
                 ].map(f => (
                   <li key={f} className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />

@@ -275,23 +275,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
               </div>
             )}
           </div>
-
-          {/* 4. Couple Sync Card */}
-          <div className="bg-[#FAF8F5] rounded-2xl p-5 border border-[#EFE8E1] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <h3 className="font-editorial text-lg text-[#2B2826]">Planea junto a {profile.partner2}</h3>
-              <p className="text-xs text-[#7D6F6B] font-light mt-0.5">
-                Comparte el acceso de pareja para que ambos vean pagos, tareas e invitados sincronizados.
-              </p>
-            </div>
-            <button
-              onClick={handleCopyPartnerLink}
-              className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#F3ECE6] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer shrink-0"
-            >
-              {copiedInvite ? <Check className="w-3.5 h-3.5 text-[#577355]" /> : <Share2 className="w-3.5 h-3.5 text-[#C48B81]" />}
-              <span>{copiedInvite ? '¡Invitación copiada!' : 'Invitar a mi pareja'}</span>
-            </button>
-          </div>
         </div>
       ) : (
         /* MOODBOARD & LOOK (Emotional heart of Mi Boda) */
