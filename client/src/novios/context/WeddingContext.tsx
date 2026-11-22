@@ -126,10 +126,14 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
         })
       : base.tables;
 
-  // 3. Layout Elements (exact columns: id, name, type, x, y, width, height, rotation)
+  // 3. Layout Elements (exact columns: id, name, type, x, y, width, height, rotation — preserving shape/tone from existingStudio)
+  const existingElMeta = new Map<string, any>(
+    ((existingStudio?.floorElements as any[]) || []).map((e: any) => [String(e.id), e])
+  );
   const floorElements: FloorElement[] =
     (seed.layoutElements || []).length > 0
       ? seed.layoutElements.map((el: any) => {
+          const prevMeta = existingElMeta.get(String(el.id));
           const rawType = String(el.type || '').toLowerCase();
           let type: FloorElement['type'] = 'otro';
           if (rawType.includes('pista') || rawType.includes('dance')) type = 'pista';
@@ -144,10 +148,12 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
             y: typeof el.y === 'number' ? el.y : 260,
             width: Number(el.width) || 130,
             height: Number(el.height) || 52,
-            rotation: Number(el.rotation) || 0
+            rotation: Number(el.rotation) || 0,
+            shape: prevMeta?.shape,
+            tone: prevMeta?.tone
           };
         })
-      : base.floorElements ?? [];
+      : (existingStudio?.floorElements ?? base.floorElements ?? []);
 
   // 4. Vendors + Payments (exact tables: vendors.costo_real, vendors.type, vendors.payment_due_date + payments.vendor_id, payments.amount, payments.concept, payments.payment_date, payments.payment_method)
   const allPayments: any[] = seed.payments || [];
@@ -345,26 +351,9 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .then(res => (res.ok ? res.json() : Promise.reject(new Error('No se pudo cargar la boda'))))
       .then(data => {
         if (cancelled) return;
-        const existing = data.studio;
-        const needsHydration =
-          !existing ||
-          !existing.profile ||
-          (existing.studioVersion || 0) < CURRENT_STUDIO_VERSION;
-
-        if (!needsHydration) {
-          setWedding(existing);
-        } else {
-          const hydrated = hydrateWeddingFromLegacyDb(data, existing);
-          setWedding(hydrated);
-          fetch(`/api/weddings/${weddingId}/novios-studio`, {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`
-            },
-            body: JSON.stringify({ studio: hydrated })
-          }).catch(() => {});
-        }
+        // ALWAYS hydrate operational tables live from SQLite so Admin <-> Novios stay 100% in sync!
+        const hydrated = hydrateWeddingFromLegacyDb(data, data.studio);
+        setWedding(hydrated);
       })
       .catch(err => {
         console.error('Error loading novios studio:', err);

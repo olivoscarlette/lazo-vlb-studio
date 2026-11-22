@@ -877,7 +877,7 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
   });
 });
 
-// PUT /api/weddings/:weddingId/novios-studio - Guardar estado de Nuevo Lazo en DB real
+// PUT /api/weddings/:weddingId/novios-studio - Sincronización bidireccional real con las tablas SQLite + extras de Nuevo Lazo
 router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
   const { studio } = req.body;
@@ -886,7 +886,10 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
     return res.status(400).json({ error: 'Estado de estudio requerido.' });
   }
 
+  const now = new Date().toISOString();
+
   try {
+    // 1. Save UI extras (style, quotes, contributions, coverPhoto, budgetGoal) in novios_studio_json
     const serialized = JSON.stringify(studio);
     db.prepare(`
       UPDATE weddings
@@ -894,9 +897,11 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       WHERE id = ?
     `).run(serialized, weddingId);
 
-    // Keep core wedding CRM columns in sync when couple edits their wedding info
-    if (studio.profile) {
-      try {
+    // 2. Sync ALL operational data bidirectionally into the real SQLite tables inside a single transaction
+    db.exec('BEGIN');
+    try {
+      // 2a. Wedding core profile columns
+      if (studio.profile) {
         const p = studio.profile;
         const updates: string[] = [];
         const params: any[] = [];
@@ -930,11 +935,276 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
         }
         if (updates.length > 0) {
           params.push(weddingId);
-          db.prepare(`UPDATE weddings SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+          try {
+            db.prepare(`UPDATE weddings SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+          } catch {}
         }
-      } catch (syncErr) {
-        console.warn('Non-critical CRM column sync warning:', syncErr);
       }
+
+      // 2b. Tables (upsert + delete removed)
+      if (Array.isArray(studio.tables)) {
+        const existingIds = new Set(
+          (db.prepare('SELECT id FROM tables WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
+        );
+        const keepIds = new Set<string>();
+        for (const t of studio.tables) {
+          const id = String(t.id);
+          keepIds.add(id);
+          const typeVal = t.shape || 'Redonda';
+          if (existingIds.has(id)) {
+            db.prepare(`
+              UPDATE tables SET name = ?, type = ?, capacity = ?, x = ?, y = ?, rotation = ?, updated_at = ?
+              WHERE id = ? AND wedding_id = ?
+            `).run(t.name || 'Mesa', typeVal, Number(t.capacity) || 10, Number(t.x) || 150, Number(t.y) || 150, Number(t.rotation) || 0, now, id, weddingId);
+          } else {
+            db.prepare(`
+              INSERT INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(id, weddingId, t.name || 'Mesa', typeVal, Number(t.capacity) || 10, Number(t.x) || 150, Number(t.y) || 150, Number(t.rotation) || 0, now, now);
+          }
+        }
+        for (const oldId of existingIds) {
+          if (!keepIds.has(oldId)) {
+            db.prepare('DELETE FROM tables WHERE id = ? AND wedding_id = ?').run(oldId, weddingId);
+          }
+        }
+      }
+
+      // 2c. Layout Elements (upsert + delete removed)
+      if (Array.isArray(studio.floorElements)) {
+        const existingIds = new Set(
+          (db.prepare('SELECT id FROM layout_elements WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
+        );
+        const keepIds = new Set<string>();
+        for (const el of studio.floorElements) {
+          const id = String(el.id);
+          keepIds.add(id);
+          if (existingIds.has(id)) {
+            db.prepare(`
+              UPDATE layout_elements SET name = ?, type = ?, x = ?, y = ?, width = ?, height = ?, rotation = ?, updated_at = ?
+              WHERE id = ? AND wedding_id = ?
+            `).run(el.label || 'Elemento', el.type || 'otro', Number(el.x) || 300, Number(el.y) || 250, Number(el.width) || 120, Number(el.height) || 50, Number(el.rotation) || 0, now, id, weddingId);
+          } else {
+            db.prepare(`
+              INSERT INTO layout_elements (id, wedding_id, name, type, x, y, width, height, rotation, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(id, weddingId, el.label || 'Elemento', el.type || 'otro', Number(el.x) || 300, Number(el.y) || 250, Number(el.width) || 120, Number(el.height) || 50, Number(el.rotation) || 0, now, now);
+          }
+        }
+        for (const oldId of existingIds) {
+          if (!keepIds.has(oldId)) {
+            db.prepare('DELETE FROM layout_elements WHERE id = ? AND wedding_id = ?').run(oldId, weddingId);
+          }
+        }
+      }
+
+      // 2d. Guests (lossless UPDATE for existing to preserve WhatsApp RSVP columns, INSERT for new, DELETE removed)
+      if (Array.isArray(studio.guests)) {
+        const validTableIds = new Set(
+          (db.prepare('SELECT id FROM tables WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
+        );
+        const existingIds = new Set(
+          (db.prepare('SELECT id FROM guests WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
+        );
+        const keepIds = new Set<string>();
+        for (const g of studio.guests) {
+          const id = String(g.id);
+          keepIds.add(id);
+          const parts = String(g.name || 'Invitado').trim().split(/\s+/);
+          const fn = (g.firstName || parts[0] || 'Invitado').trim();
+          const ln = (g.lastName ?? parts.slice(1).join(' ')).trim();
+          const phone = String(g.phone || '').trim();
+          const comp = Math.max(0, (Number(g.passes) || 1) - 1);
+          const dbStatus =
+            g.status === 'Confirmado'
+              ? 'Confirmado'
+              : g.status === 'No asistirá'
+              ? 'No asistirá'
+              : 'Pendiente de confirmar';
+          const tableId = g.tableId && validTableIds.has(String(g.tableId)) ? String(g.tableId) : null;
+          const obs = String(g.dietary || '').trim();
+
+          if (existingIds.has(id)) {
+            db.prepare(`
+              UPDATE guests
+              SET first_name = ?, last_name = ?, phone = ?, companion_count = ?, status = ?, table_id = ?, observations = ?, updated_at = ?
+              WHERE id = ? AND wedding_id = ?
+            `).run(fn, ln, phone, comp, dbStatus, tableId, obs, now, id, weddingId);
+          } else {
+            db.prepare(`
+              INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, status, table_id, observations, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(id, weddingId, fn, ln, phone, comp, dbStatus, tableId, obs, now, now);
+          }
+        }
+        for (const oldId of existingIds) {
+          if (!keepIds.has(oldId)) {
+            db.prepare('DELETE FROM guests WHERE id = ? AND wedding_id = ?').run(oldId, weddingId);
+          }
+        }
+      }
+
+      // 2e. Vendors & Payments (lossless upsert + delete removed)
+      if (Array.isArray(studio.vendors)) {
+        const existingVendorIds = new Set(
+          (db.prepare('SELECT id FROM vendors WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
+        );
+        const existingPaymentIds = new Set(
+          (db.prepare('SELECT id FROM payments WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
+        );
+        const keepVendorIds = new Set<string>();
+        const keepPaymentIds = new Set<string>();
+
+        for (const v of studio.vendors) {
+          const vid = String(v.id);
+          const isVirtualOrphanBucket = vid === 'v_general_payments';
+          if (!isVirtualOrphanBucket) {
+            keepVendorIds.add(vid);
+            if (existingVendorIds.has(vid)) {
+              db.prepare(`
+                UPDATE vendors
+                SET name = ?, phone = ?, type = ?, costo_real = ?, payment_due_date = ?, notes = ?, updated_at = ?
+                WHERE id = ? AND wedding_id = ?
+              `).run(v.name || 'Proveedor', v.phone || '', v.category || 'Otro', Number(v.totalCost) || 0, v.nextDueDate || null, v.notes || '', now, vid, weddingId);
+            } else {
+              db.prepare(`
+                INSERT INTO vendors (id, wedding_id, name, phone, type, locations, costo_real, payment_due_date, notes, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).run(vid, weddingId, v.name || 'Proveedor', v.phone || '', v.category || 'Otro', '["Recepción"]', Number(v.totalCost) || 0, v.nextDueDate || null, v.notes || '', now, now);
+            }
+          }
+
+          if (Array.isArray(v.payments)) {
+            for (const pay of v.payments) {
+              const pid = String(pay.id);
+              keepPaymentIds.add(pid);
+              const linkedVendorId = isVirtualOrphanBucket ? null : vid;
+              if (existingPaymentIds.has(pid)) {
+                db.prepare(`
+                  UPDATE payments
+                  SET vendor_id = ?, concept = ?, amount = ?, payment_date = ?, payment_method = ?, notes = ?, updated_at = ?
+                  WHERE id = ? AND wedding_id = ?
+                `).run(linkedVendorId, pay.concept || 'Abono', Number(pay.amount) || 0, pay.date || now.split('T')[0], pay.method || 'Transferencia', pay.notes || '', now, pid, weddingId);
+              } else {
+                db.prepare(`
+                  INSERT INTO payments (id, wedding_id, vendor_id, concept, amount, payment_date, payment_method, notes, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `).run(pid, weddingId, linkedVendorId, pay.concept || 'Abono', Number(pay.amount) || 0, pay.date || now.split('T')[0], pay.method || 'Transferencia', pay.notes || '', now, now);
+              }
+            }
+          }
+        }
+
+        for (const oldPid of existingPaymentIds) {
+          if (!keepPaymentIds.has(oldPid)) {
+            db.prepare('DELETE FROM payments WHERE id = ? AND wedding_id = ?').run(oldPid, weddingId);
+          }
+        }
+        for (const oldVid of existingVendorIds) {
+          if (!keepVendorIds.has(oldVid)) {
+            db.prepare('DELETE FROM vendors WHERE id = ? AND wedding_id = ?').run(oldVid, weddingId);
+          }
+        }
+      }
+
+      // 2f. Tasks / Checklist
+      if (Array.isArray(studio.checklist)) {
+        const existingTaskIds = new Set(
+          (db.prepare('SELECT id FROM tasks WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
+        );
+        const keepTaskIds = new Set<string>();
+        for (const t of studio.checklist) {
+          const tid = String(t.id);
+          keepTaskIds.add(tid);
+          const dbStatus = t.completed ? 'Completada' : 'Pendiente';
+          if (existingTaskIds.has(tid)) {
+            db.prepare(`
+              UPDATE tasks SET title = ?, category = ?, responsible = ?, due_date = ?, status = ?, notes = ?, updated_at = ?
+              WHERE id = ? AND wedding_id = ?
+            `).run(t.title || 'Tarea', t.category || 'General', t.owner || 'Ambos', t.dueDate || null, dbStatus, t.notes || '', now, tid, weddingId);
+          } else {
+            db.prepare(`
+              INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, 'Media', ?, ?, ?, ?)
+            `).run(tid, weddingId, t.title || 'Tarea', t.category || 'General', t.owner || 'Ambos', t.dueDate || null, dbStatus, t.notes || '', now, now);
+          }
+        }
+        for (const oldTid of existingTaskIds) {
+          if (!keepTaskIds.has(oldTid)) {
+            db.prepare('DELETE FROM tasks WHERE id = ? AND wedding_id = ?').run(oldTid, weddingId);
+          }
+        }
+      }
+
+      // 2g. Timeline Events
+      if (Array.isArray(studio.timeline)) {
+        const existingTlIds = new Set(
+          (db.prepare('SELECT id FROM timeline_events WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
+        );
+        const keepTlIds = new Set<string>();
+        studio.timeline.forEach((ev: any, idx: number) => {
+          const eid = String(ev.id);
+          keepTlIds.add(eid);
+          if (existingTlIds.has(eid)) {
+            db.prepare(`
+              UPDATE timeline_events SET time = ?, activity = ?, location = ?, notes = ?, order_index = ?, updated_at = ?
+              WHERE id = ? AND wedding_id = ?
+            `).run(ev.time || '18:00', ev.title || 'Momento', ev.location || '', ev.notes || '', idx, now, eid, weddingId);
+          } else {
+            db.prepare(`
+              INSERT INTO timeline_events (id, wedding_id, time, activity, location, notes, order_index, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(eid, weddingId, ev.time || '18:00', ev.title || 'Momento', ev.location || '', ev.notes || '', idx, now, now);
+          }
+        });
+        for (const oldEid of existingTlIds) {
+          if (!keepTlIds.has(oldEid)) {
+            db.prepare('DELETE FROM timeline_events WHERE id = ? AND wedding_id = ?').run(oldEid, weddingId);
+          }
+        }
+      }
+
+      // 2h. Civil & Religious Ceremonies
+      if (studio.ceremonies) {
+        const c = studio.ceremonies;
+        const existingCivil = db.prepare('SELECT id FROM civil_ceremony WHERE wedding_id = ?').get(weddingId) as any;
+        const witnessesJson = JSON.stringify(c.civilWitnessList || []);
+        const civilReqsJson = JSON.stringify(c.civilRequirements || []);
+        const civilSongsJson = JSON.stringify(c.civilMusicSongs || []);
+        if (existingCivil) {
+          db.prepare(`
+            UPDATE civil_ceremony
+            SET date = ?, time = ?, location = ?, juez_oficial = ?, witnesses = ?, requirements_status = ?, has_music = ?, music_songs = ?, notes = ?, updated_at = ?
+            WHERE wedding_id = ?
+          `).run(c.civilDate || '', c.civilTime || '', c.civilVenue || '', c.civilJudge || '', witnessesJson, civilReqsJson, c.civilHasMusic ? 1 : 0, civilSongsJson, c.civilNotes || '', now, weddingId);
+        } else if (c.civilEnabled) {
+          db.prepare(`
+            INSERT INTO civil_ceremony (id, wedding_id, date, time, location, juez_oficial, witnesses, requirements_status, has_music, music_songs, notes, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(`civ_${Date.now()}`, weddingId, c.civilDate || '', c.civilTime || '', c.civilVenue || '', c.civilJudge || '', witnessesJson, civilReqsJson, c.civilHasMusic ? 1 : 0, civilSongsJson, c.civilNotes || '', now);
+        }
+
+        const existingRel = db.prepare('SELECT id FROM religious_ceremony WHERE wedding_id = ?').get(weddingId) as any;
+        const relSongsJson = JSON.stringify((c.religiousMusicList || []).map((m: any) => ({ id: m.id, moment: m.moment, song: m.title, artist: m.artist })));
+        const relReadingsJson = JSON.stringify(c.religiousReadingsList || []);
+        const relReqsJson = JSON.stringify(c.religiousRequirements || []);
+        if (existingRel) {
+          db.prepare(`
+            UPDATE religious_ceremony
+            SET date = ?, time = ?, temple_name = ?, officiant = ?, music_notes = ?, readings_notes = ?, requirements_status = ?, notes = ?, updated_at = ?
+            WHERE wedding_id = ?
+          `).run(c.religiousDate || '', c.religiousTime || '', c.religiousVenue || '', c.religiousOfficiant || '', relSongsJson, relReadingsJson, relReqsJson, c.religiousNotes || '', now, weddingId);
+        } else if (c.religiousEnabled) {
+          db.prepare(`
+            INSERT INTO religious_ceremony (id, wedding_id, date, time, temple_name, officiant, music_notes, readings_notes, requirements_status, notes, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(`rel_${Date.now()}`, weddingId, c.religiousDate || '', c.religiousTime || '', c.religiousVenue || '', c.religiousOfficiant || '', relSongsJson, relReadingsJson, relReqsJson, c.religiousNotes || '', now);
+        }
+      }
+      db.exec('COMMIT');
+    } catch (txErr) {
+      try { db.exec('ROLLBACK'); } catch {}
+      throw txErr;
     }
 
     return res.json({ success: true });

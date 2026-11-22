@@ -523,38 +523,54 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
     return <GeneralDashboard />;
   }
 
+  // Map Sidebar wedding tabs to the unified Nuevo Lazo editorial interface so Admin sees the EXACT same design as Novios
+  const mapSidebarToNoviosTab = (tab: WorkspaceTab): 'inicio' | 'presupuesto' | 'invitados' | 'checklist' | 'midia' | null => {
+    switch (tab) {
+      case 'resumen':
+        return 'inicio';
+      case 'proveedores':
+      case 'documentos':
+        return 'presupuesto';
+      case 'invitados':
+      case 'mesas':
+        return 'invitados';
+      case 'checklist':
+        return 'checklist';
+      case 'timeline':
+      case 'civil':
+      case 'religiosa':
+        return 'midia';
+      default:
+        return null;
+    }
+  };
+
+  const mappedNoviosTab = mapSidebarToNoviosTab(activeTab);
+
   // If wedding is selected or user is Novios/Coord/Staff: render wedding workspace
   const renderModuleContent = () => {
+    if (mappedNoviosTab) {
+      return (
+        <NoviosStudioRoot
+          embedded
+          forcedTab={mappedNoviosTab}
+          onTabChange={nextTab => {
+            const reverseMap: Record<string, WorkspaceTab> = {
+              inicio: 'resumen',
+              presupuesto: 'proveedores',
+              invitados: 'invitados',
+              checklist: 'checklist',
+              midia: 'timeline'
+            };
+            if (reverseMap[nextTab]) setActiveTab(reverseMap[nextTab]);
+          }}
+        />
+      );
+    }
+
     switch (activeTab) {
-      case 'resumen':
-        return <ResumenModule onNavigateTab={setActiveTab} />;
-      case 'reuniones': {
-        const isVirtualNovios = isNovios && Boolean(
-          !currentWedding?.package_type ||
-          currentWedding.package_type.toLowerCase().includes('virtual') ||
-          currentWedding.package_type.toLowerCase().includes('autónomo')
-        );
-        if (isVirtualNovios) {
-          return <ResumenModule onNavigateTab={setActiveTab} />;
-        }
+      case 'reuniones':
         return <ReunionesModule />;
-      }
-      case 'invitados':
-        return <InvitadosModule />;
-      case 'mesas':
-        return <MesasLayoutModule />;
-      case 'proveedores':
-        return <ProveedoresPagosModule />;
-      case 'civil':
-        return <CivilModule />;
-      case 'religiosa':
-        return <ReligiosaModule />;
-      case 'timeline':
-        return <TimelineModule />;
-      case 'checklist':
-        return <ChecklistModule />;
-      case 'documentos':
-        return <DocumentosModule />;
       case 'reportes':
         return <ReportesModule />;
       case 'directorio':
