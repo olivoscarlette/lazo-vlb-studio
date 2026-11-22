@@ -1262,8 +1262,6 @@ export const GeneralDashboard: React.FC = () => {
   };
 
   const sidebarNavItems = [
-    { id: 'weddings', label: 'Eventos', icon: Users2 },
-    ...(user?.role === 'ADMINISTRADOR' ? [{ id: 'vlb', label: 'Viva la Bride', icon: Sparkles }] : []),
     { id: 'calendario', label: 'Calendario General', icon: Calendar },
     { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare },
     { id: 'plantillas', label: 'Plantillas', icon: FileText },
