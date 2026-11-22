@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Wallet, Users, CalendarCheck2, Clock, LogOut } from 'lucide-react';
+import { Heart, Wallet, Users, CalendarCheck2, Clock, LogOut, CalendarDays } from 'lucide-react';
 import { LazoTab } from '../types/lazo';
 import { useWedding } from '../context/WeddingContext';
 
@@ -9,7 +9,7 @@ interface AppShellProps {
   children: React.ReactNode;
 }
 
-const TABS: Array<{ id: LazoTab; label: string; shortLabel: string; icon: React.ElementType }> = [
+const BASE_TABS: Array<{ id: LazoTab; label: string; shortLabel: string; icon: React.ElementType }> = [
   { id: 'inicio', label: 'Mi Boda', shortLabel: 'Mi Boda', icon: Heart },
   { id: 'presupuesto', label: 'Presupuesto', shortLabel: 'Gastos', icon: Wallet },
   { id: 'invitados', label: 'Invitados', shortLabel: 'Invitados', icon: Users },
@@ -17,8 +17,17 @@ const TABS: Array<{ id: LazoTab; label: string; shortLabel: string; icon: React.
   { id: 'midia', label: 'El Gran Día', shortLabel: 'Gran Día', icon: Clock }
 ];
 
+const REUNIONES_TAB = {
+  id: 'reuniones' as LazoTab,
+  label: 'Reuniones',
+  shortLabel: 'Citas',
+  icon: CalendarDays
+};
+
 export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, children }) => {
-  const { wedding, exitToLanding } = useWedding();
+  const { wedding, flags, exitToLanding } = useWedding();
+  const showReuniones = !flags.isAdmin && !flags.isVirtualNovios;
+  const TABS = showReuniones ? [...BASE_TABS, REUNIONES_TAB] : BASE_TABS;
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] flex flex-col">
@@ -80,9 +89,9 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
         {children}
       </main>
 
-      {/* Mobile Native-Style Bottom Tab Bar (5 tabs) */}
+      {/* Mobile Native-Style Bottom Tab Bar */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#EFE8E1] pb-safe">
-        <div className="grid grid-cols-5 h-16 max-w-md mx-auto">
+        <div className={`grid ${showReuniones ? 'grid-cols-6' : 'grid-cols-5'} h-16 max-w-md mx-auto`}>
           {TABS.map(tab => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;

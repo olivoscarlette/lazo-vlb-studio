@@ -6,6 +6,7 @@ import { BudgetView } from './views/BudgetView';
 import { GuestsView } from './views/GuestsView';
 import { ChecklistView } from './views/ChecklistView';
 import { MyDayView } from './views/MyDayView';
+import { ReunionesModule } from '../modules/ReunionesModule';
 import { LazoTab } from './types/lazo';
 
 interface NoviosStudioRootProps {
@@ -64,6 +65,7 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
       {activeTab === 'invitados' && <GuestsView />}
       {activeTab === 'checklist' && <ChecklistView />}
       {activeTab === 'midia' && <MyDayView />}
+      {activeTab === 'reuniones' && <ReunionesModule />}
     </>
   );
 

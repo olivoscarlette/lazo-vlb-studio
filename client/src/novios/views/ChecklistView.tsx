@@ -32,7 +32,8 @@ function detectCurrentStage(weddingDate?: string): string {
 }
 
 export const ChecklistView: React.FC = () => {
-  const { wedding, updateWedding } = useWedding();
+  const { wedding, flags, updateWedding } = useWedding();
+  const isLockedAgencyNovios = !flags.isAdmin && !flags.isVirtualNovios;
   const currentStage = useMemo(
     () => detectCurrentStage(wedding?.profile.weddingDate),
     [wedding?.profile.weddingDate]
@@ -412,18 +413,20 @@ export const ChecklistView: React.FC = () => {
                             type="button"
                             onClick={() => openEditTask(task)}
                             className="p-2 rounded-full text-[#8A7E72] hover:text-[#2B2826] hover:bg-white transition cursor-pointer focus:outline-none"
-                            title="Editar tarea o nota"
+                            title={isLockedAgencyNovios ? 'Agregar nota personal' : 'Editar tarea o nota'}
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => deleteTask(task.id)}
-                            className="p-2 rounded-full text-[#8A7E72]/40 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer focus:outline-none sm:opacity-0 sm:group-hover:opacity-100"
-                            title="Quitar tarea (si no aplica a tu boda)"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {!isLockedAgencyNovios && (
+                            <button
+                              type="button"
+                              onClick={() => deleteTask(task.id)}
+                              className="p-2 rounded-full text-[#8A7E72]/40 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer focus:outline-none sm:opacity-0 sm:group-hover:opacity-100"
+                              title="Quitar tarea (si no aplica a tu boda)"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -439,8 +442,12 @@ export const ChecklistView: React.FC = () => {
       <Modal
         isOpen={Boolean(editingTask)}
         onClose={() => setEditingTask(null)}
-        title="Detalle de Tarea"
-        subtitle="Edita la fecha, responsable, notas o quítala si no aplica a tu boda."
+        title={isLockedAgencyNovios ? 'Nota Personal' : 'Detalle de Tarea'}
+        subtitle={
+          isLockedAgencyNovios
+            ? 'Las fechas y etapas son coordinadas por tu equipo de planeación.'
+            : 'Edita la fecha, responsable, notas o quítala si no aplica a tu boda.'
+        }
         maxWidthClass="max-w-md"
       >
         <form onSubmit={handleSaveEdit} className="space-y-3.5">
@@ -449,49 +456,52 @@ export const ChecklistView: React.FC = () => {
             <input
               type="text"
               required
+              disabled={isLockedAgencyNovios}
               value={editForm.title}
               onChange={e => setEditForm({ ...editForm, title: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:outline-none focus:border-[#C48B81]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:outline-none focus:border-[#C48B81] disabled:opacity-70"
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">Etapa</label>
-              <select
-                value={editForm.category}
-                onChange={e => setEditForm({ ...editForm, category: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
-              >
-                {CHECKLIST_STAGE_ORDER.map(stage => (
-                  <option key={stage} value={stage}>
-                    {stage}
-                  </option>
-                ))}
-              </select>
+          {!isLockedAgencyNovios && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">Etapa</label>
+                <select
+                  value={editForm.category}
+                  onChange={e => setEditForm({ ...editForm, category: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                >
+                  {CHECKLIST_STAGE_ORDER.map(stage => (
+                    <option key={stage} value={stage}>
+                      {stage}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">Responsable</label>
+                <select
+                  value={editForm.owner}
+                  onChange={e => setEditForm({ ...editForm, owner: e.target.value as any })}
+                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                >
+                  <option value="Ambos">Ambos</option>
+                  <option value="Novia">Novia</option>
+                  <option value="Novio">Novio</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">Fecha</label>
+                <input
+                  type="date"
+                  value={editForm.dueDate}
+                  onChange={e => setEditForm({ ...editForm, dueDate: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">Responsable</label>
-              <select
-                value={editForm.owner}
-                onChange={e => setEditForm({ ...editForm, owner: e.target.value as any })}
-                className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
-              >
-                <option value="Ambos">Ambos</option>
-                <option value="Novia">Novia</option>
-                <option value="Novio">Novio</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">Fecha</label>
-              <input
-                type="date"
-                value={editForm.dueDate}
-                onChange={e => setEditForm({ ...editForm, dueDate: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
-              />
-            </div>
-          </div>
+          )}
 
           <div>
             <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">Nota personal</label>
@@ -505,14 +515,18 @@ export const ChecklistView: React.FC = () => {
           </div>
 
           <div className="flex items-center justify-between pt-2">
-            <button
-              type="button"
-              onClick={() => editingTask && deleteTask(editingTask.id)}
-              className="inline-flex items-center gap-1.5 text-xs text-rose-600 hover:underline cursor-pointer focus:outline-none"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Quitar tarea</span>
-            </button>
+            {!isLockedAgencyNovios ? (
+              <button
+                type="button"
+                onClick={() => editingTask && deleteTask(editingTask.id)}
+                className="inline-flex items-center gap-1.5 text-xs text-rose-600 hover:underline cursor-pointer focus:outline-none"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Quitar tarea</span>
+              </button>
+            ) : (
+              <span />
+            )}
 
             <div className="flex items-center gap-2">
               <button

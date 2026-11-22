@@ -1,4 +1,4 @@
-export type LazoTab = 'inicio' | 'presupuesto' | 'invitados' | 'checklist' | 'midia';
+export type LazoTab = 'inicio' | 'presupuesto' | 'invitados' | 'checklist' | 'midia' | 'reuniones';
 
 export interface WeddingProfile {
   partner1: string;
@@ -66,6 +66,7 @@ export interface GuestItem {
   dietary?: string;
   tableId?: string;
   side: 'Novia' | 'Novio' | 'Ambos';
+  whatsappStatus?: string;
 }
 
 export interface TableItem {

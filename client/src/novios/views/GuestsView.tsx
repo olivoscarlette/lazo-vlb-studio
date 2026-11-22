@@ -7,7 +7,7 @@ import { SeatingCanvas2D } from '../components/SeatingCanvas2D';
 import { exportFloorPlanPdf, exportGuestsPdf } from '../utils/pdfExport';
 
 export const GuestsView: React.FC = () => {
-  const { wedding, updateWedding } = useWedding();
+  const { wedding, flags, updateWedding } = useWedding();
   const [subTab, setSubTab] = useState<'lista' | 'mesas'>('lista');
   const [tablesView, setTablesView] = useState<'plano' | 'tarjetas'>('plano');
   const [statusFilter, setStatusFilter] = useState<'TODOS' | GuestStatus>('TODOS');
@@ -346,6 +346,15 @@ export const GuestsView: React.FC = () => {
       {/* SUB-TAB 1: LISTA DE INVITADOS */}
       {subTab === 'lista' && (
         <div className="space-y-4">
+          {/* Informational Banner when Automated WhatsApp RSVP is active (VLB triggers via Meta) */}
+          {flags.hasWhatsappRsvp && (
+            <div className="bg-[#E5EDE6]/60 border border-[#D0DDD1] rounded-2xl px-4 py-3 flex items-center justify-between gap-3 text-xs text-[#384C3A]">
+              <span>
+                <strong>✓ Envío automatizado de invitaciones activo.</strong> Las confirmaciones por WhatsApp se actualizan automáticamente en tiempo real en esta lista.
+              </span>
+            </div>
+          )}
+
           {/* 4 Clickable KPI Filter Cards (Zero Redundancy) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
@@ -431,6 +440,11 @@ export const GuestsView: React.FC = () => {
                             {assignedTable.name}
                           </span>
                         )}
+                        {flags.hasWhatsappRsvp && g.whatsappStatus && g.whatsappStatus !== 'NO_ENVIADO' && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E5EDE6] text-[#384C3A] border border-[#D0DDD1]">
+                            WA: {g.whatsappStatus.replace(/_/g, ' ').toLowerCase()}
+                          </span>
+                        )}
                       </div>
                       {g.dietary && (
                         <p className="text-[11px] text-[#8A7E72] font-light">{g.dietary}</p>
@@ -454,13 +468,13 @@ export const GuestsView: React.FC = () => {
                         <option value="No asistirá">No asistirá</option>
                       </select>
 
-                      {g.phone && (
+                      {!flags.hasWhatsappRsvp && g.phone && (
                         <a
                           href={buildWhatsAppLink(g)}
                           target="_blank"
                           rel="noreferrer"
                           className="p-2 rounded-full bg-[#E5EDE6] hover:bg-[#D5E3D7] text-[#384C3A] transition"
-                          title="Enviar confirmación por WhatsApp"
+                          title="Enviar confirmación manual por WhatsApp"
                         >
                           <MessageSquare className="w-3.5 h-3.5" />
                         </a>

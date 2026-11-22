@@ -27,8 +27,16 @@ const CURRENT_STUDIO_VERSION = 2;
 
 type PersistedWeddingState = WeddingState & { studioVersion?: number };
 
+export interface WeddingFlags {
+  isAdmin: boolean;
+  isVirtualNovios: boolean;
+  hasWhatsappRsvp: boolean;
+  packageType: string;
+}
+
 interface WeddingContextValue {
   wedding: WeddingState | null;
+  flags: WeddingFlags;
   loading: boolean;
   saving: boolean;
   updateWedding: (updater: (prev: WeddingState) => WeddingState) => void;
@@ -101,7 +109,8 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
       status,
       dietary: notesParts,
       tableId: g.table_id ? String(g.table_id) : undefined,
-      side: 'Ambos'
+      side: 'Ambos',
+      whatsappStatus: g.whatsapp_status || undefined
     };
   });
 
@@ -326,8 +335,21 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
 }
 
 export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { currentWedding, token, logout } = useAuth();
+  const { user, currentWedding, token, logout } = useAuth();
   const [wedding, setWedding] = useState<PersistedWeddingState | null>(null);
+  const [flags, setFlags] = useState<WeddingFlags>(() => {
+    const pkg = currentWedding?.package_type || '';
+    const isAdmin = user?.role !== 'NOVIOS';
+    const isVirtualNovios =
+      !isAdmin &&
+      Boolean(!pkg || pkg.toLowerCase().includes('virtual') || pkg.toLowerCase().includes('autónomo'));
+    return {
+      isAdmin,
+      isVirtualNovios,
+      hasWhatsappRsvp: Boolean((currentWedding as any)?.has_whatsapp_rsvp),
+      packageType: pkg
+    };
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const saveTimerRef = useRef<number | null>(null);
@@ -351,6 +373,17 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .then(res => (res.ok ? res.json() : Promise.reject(new Error('No se pudo cargar la boda'))))
       .then(data => {
         if (cancelled) return;
+        const pkg = data.wedding?.package_type || currentWedding?.package_type || '';
+        const isAdmin = user?.role !== 'NOVIOS';
+        const isVirtualNovios =
+          !isAdmin &&
+          Boolean(!pkg || pkg.toLowerCase().includes('virtual') || pkg.toLowerCase().includes('autónomo'));
+        setFlags({
+          isAdmin,
+          isVirtualNovios,
+          hasWhatsappRsvp: Boolean(data.wedding?.has_whatsapp_rsvp),
+          packageType: pkg
+        });
         // ALWAYS hydrate operational tables live from SQLite so Admin <-> Novios stay 100% in sync!
         const hydrated = hydrateWeddingFromLegacyDb(data, data.studio);
         setWedding(hydrated);
@@ -421,7 +454,7 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   return (
     <WeddingContext.Provider
-      value={{ wedding, loading, saving, updateWedding, startNewWedding, loadDemoWedding, exitToLanding }}
+      value={{ wedding, flags, loading, saving, updateWedding, startNewWedding, loadDemoWedding, exitToLanding }}
     >
       {children}
     </WeddingContext.Provider>

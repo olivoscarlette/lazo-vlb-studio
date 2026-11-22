@@ -860,7 +860,8 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       cover_photo_url: wedding.cover_photo_url,
       cover_photo_position: wedding.cover_photo_position,
       package_type: wedding.package_type,
-      event_type: wedding.event_type
+      event_type: wedding.event_type,
+      has_whatsapp_rsvp: Boolean(wedding.has_whatsapp_rsvp)
     },
     seedFromDb: {
       guests,
