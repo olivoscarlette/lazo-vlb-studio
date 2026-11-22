@@ -1239,9 +1239,9 @@ export const GeneralDashboard: React.FC = () => {
 
     return (
       <>
-        <div className="truncate text-[#2B2826]">{line1}</div>
-        <div className="truncate text-[#A86B60]">
-          {hasAmpersand && <span className="text-[#C48B81] mr-1.5">&</span>}
+        <div className="text-[#2B2826] break-words">{line1}</div>
+        <div className="text-[#A86B60] break-words">
+          {hasAmpersand && <span className="italic text-[#C48B81] mr-1.5">&</span>}
           {line2}
         </div>
       </>
@@ -1692,20 +1692,20 @@ export const GeneralDashboard: React.FC = () => {
         {activeTab === 'weddings' && (
           <div>
             {/* Cabecera Editorial */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 sm:mb-8">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
               <div>
-                <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-                  <h1 className="font-serif text-2xl sm:text-4xl font-bold text-[#2B2826] tracking-tight">
+                <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#8A7E72] block mb-1">
+                  Estudio de Planeación · Temporada 2026–2027
+                </span>
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="font-editorial text-3xl sm:text-4xl font-normal text-[#2B2826] tracking-tight">
                     Hola, {userName}
                   </h1>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5] shrink-0">
-                    <span className="w-2 h-2 rounded-full bg-[#C48B81]"></span>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-white text-[#A86B60] border border-[#EFE8E1] shadow-2xs shrink-0">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]"></span>
                     {activeWeddings.length} {activeWeddings.length === 1 ? 'evento activo' : 'eventos activos'}
                   </span>
                 </div>
-                <p className="text-xs text-[#7D6F6B] mt-1 sm:mt-1.5 leading-relaxed">
-                  Estudio de planeación y diseño integral · Temporada 2026-2027
-                </p>
               </div>
 
               {/* Switcher Plataforma & Botón de Agregar Evento */}
@@ -1907,6 +1907,78 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             </div>
 
+            {/* Franja Ejecutiva: Próximo Evento + KPIs del Estudio */}
+            {!loading && activeWeddings.length > 0 && (() => {
+              const todayStr = new Date().toISOString().split('T')[0];
+              const upcomingSorted = [...activeWeddings]
+                .filter(w => w.wedding_date && w.wedding_date >= todayStr)
+                .sort((a, b) => (a.wedding_date || '').localeCompare(b.wedding_date || ''));
+              const nextEvent = upcomingSorted[0] || activeWeddings[0];
+              const virtualProCount = activeWeddings.filter(
+                w => isVirtualWedding(w) && (Boolean(w.has_whatsapp_rsvp) || Boolean(w.has_layout_2d))
+              ).length;
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  {/* Próximo Evento */}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentWedding(nextEvent)}
+                    className="md:col-span-1 text-left bg-[#2B2826] text-white rounded-3xl p-5 border border-[#2B2826] shadow-sm hover:bg-[#1E1B1A] transition cursor-pointer flex flex-col justify-between group"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#E5B7AE]">
+                        Próximo Evento
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-[#E5B7AE] transition-transform group-hover:translate-x-1" />
+                    </div>
+                    <div className="mt-2">
+                      <div className="font-editorial text-xl text-white leading-snug">
+                        {nextEvent.name}
+                      </div>
+                      <div className="text-[11px] text-white/75 mt-1 font-light">
+                        {formatWeddingCountdown(nextEvent.wedding_date)}
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Coordinación VLB */}
+                  <button
+                    type="button"
+                    onClick={() => setServiceTierFilter('COORDINACION')}
+                    className="text-left bg-white rounded-3xl p-5 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition cursor-pointer flex flex-col justify-between"
+                  >
+                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
+                      Coordinación VLB
+                    </span>
+                    <div className="mt-2">
+                      <div className="font-editorial text-3xl text-[#2B2826]">{countCoordination}</div>
+                      <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">
+                        Eventos presenciales activos
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Planner Virtual */}
+                  <button
+                    type="button"
+                    onClick={() => setServiceTierFilter('VIRTUAL')}
+                    className="text-left bg-white rounded-3xl p-5 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition cursor-pointer flex flex-col justify-between"
+                  >
+                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
+                      Planner Virtual
+                    </span>
+                    <div className="mt-2">
+                      <div className="font-editorial text-3xl text-[#2B2826]">{countVirtual}</div>
+                      <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">
+                        {virtualProCount > 0 ? `${virtualProCount} en Lazo Pro (2D + RSVP)` : 'Novios en suite digital'}
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              );
+            })()}
+
             {/* Barra de Búsqueda Rápida y Filtros Directos */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
               <div className="relative flex-1 max-w-full md:max-w-md">
@@ -2063,14 +2135,14 @@ export const GeneralDashboard: React.FC = () => {
             </div>
 
             {/* Píldoras de Segmentación: Coordinación VLB vs Planner Virtual vs Archivados */}
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6 sm:mb-8 pb-1">
-              <div className="inline-flex p-1 bg-[#FAF7F5] border border-[#EFE8E1] rounded-2xl shadow-2xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-7 pb-1">
+              <div className="inline-flex flex-wrap items-center p-1 bg-white border border-[#EFE8E1] rounded-full shadow-2xs">
                 <button
                   type="button"
                   onClick={() => setServiceTierFilter('ALL')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none ${
                     serviceTierFilter === 'ALL'
-                      ? 'bg-[#FFFFFF] text-[#2B2826] shadow-2xs border border-[#EFE8E1]'
+                      ? 'bg-[#2B2826] text-white shadow-2xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
@@ -2079,14 +2151,14 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setServiceTierFilter('COORDINACION')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none flex items-center gap-1.5 ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none flex items-center gap-1.5 ${
                     serviceTierFilter === 'COORDINACION'
                       ? 'bg-[#2B2826] text-white shadow-2xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
                   <span>Coordinación VLB</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
                     serviceTierFilter === 'COORDINACION' ? 'bg-white/20 text-white' : 'bg-[#F7EDEB] text-[#A86B60]'
                   }`}>
                     {countCoordination}
@@ -2095,15 +2167,15 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setServiceTierFilter('VIRTUAL')}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none flex items-center gap-1.5 ${
+                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none flex items-center gap-1.5 ${
                     serviceTierFilter === 'VIRTUAL'
-                      ? 'bg-[#C48B81] text-white shadow-2xs'
+                      ? 'bg-[#2B2826] text-white shadow-2xs'
                       : 'text-[#7D6F6B] hover:text-[#2B2826]'
                   }`}
                 >
                   <span>Planner Virtual</span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                    serviceTierFilter === 'VIRTUAL' ? 'bg-white/20 text-white' : 'bg-[#FAF7F5] text-[#7D6F6B]'
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                    serviceTierFilter === 'VIRTUAL' ? 'bg-white/20 text-white' : 'bg-[#FAF8F5] text-[#7D6F6B]'
                   }`}>
                     {countVirtual}
                   </span>
@@ -2112,9 +2184,9 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setServiceTierFilter('ARCHIVED')}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer select-none flex items-center gap-1.5 ${
+                    className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none flex items-center gap-1.5 ${
                       serviceTierFilter === 'ARCHIVED'
-                        ? 'bg-[#8F8178] text-white shadow-2xs'
+                        ? 'bg-[#2B2826] text-white shadow-2xs'
                         : 'text-[#7D6F6B] hover:text-[#2B2826]'
                     }`}
                   >
@@ -2125,8 +2197,8 @@ export const GeneralDashboard: React.FC = () => {
               </div>
 
               {/* Conteo Informativo Rápido */}
-              <span className="text-xs text-[#7D6F6B] hidden sm:inline-block">
-                Mostrando <strong className="text-[#2B2826]">{filteredWeddings.length}</strong> de {serviceTierFilter === 'ARCHIVED' ? archivedWeddings.length : activeWeddings.length} eventos
+              <span className="text-xs text-[#8A7E72] font-light hidden sm:inline-block">
+                Mostrando <strong className="text-[#2B2826] font-medium">{filteredWeddings.length}</strong> de {serviceTierFilter === 'ARCHIVED' ? archivedWeddings.length : activeWeddings.length} eventos
               </span>
             </div>
 
@@ -2151,7 +2223,7 @@ export const GeneralDashboard: React.FC = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826] tracking-tight">
+                            <h3 className="font-editorial text-2xl font-normal text-[#2B2826] tracking-tight">
                               Coordinación Viva la Bride
                             </h3>
                             <span className="text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#FAF3F0] px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
@@ -2195,7 +2267,7 @@ export const GeneralDashboard: React.FC = () => {
                                         {w.package_type || w.event_type || 'Boda Completa'}
                                       </span>
                                     </div>
-                                    <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2]">
+                                    <div className="font-editorial text-2xl sm:text-[26px] font-normal leading-[1.2]">
                                       {renderCoupleNames(w)}
                                     </div>
                                   </div>
@@ -2229,7 +2301,7 @@ export const GeneralDashboard: React.FC = () => {
                                     {countdownText}
                                   </span>
                                   {Boolean(w.has_whatsapp_rsvp) && (
-                                    <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2.5 py-0.5 rounded-full select-none" title="Módulo WhatsApp RSVP Activo">
+                                    <span className="text-[10px] font-medium text-[#384C3A] bg-[#E5EDE6] border border-[#D0DDD1] px-2.5 py-0.5 rounded-full select-none" title="Módulo WhatsApp RSVP Activo">
                                       WhatsApp
                                     </span>
                                   )}
@@ -2328,7 +2400,7 @@ export const GeneralDashboard: React.FC = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826] tracking-tight">
+                            <h3 className="font-editorial text-2xl font-normal text-[#2B2826] tracking-tight">
                               Planner Virtual Autónomo
                             </h3>
                             <span className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B] bg-[#FAF7F5] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
@@ -2367,12 +2439,18 @@ export const GeneralDashboard: React.FC = () => {
                               <div>
                                 <div className="flex items-start justify-between gap-2 mb-4">
                                   <div className="min-w-0 flex-1">
-                                    <div className="mb-2">
-                                      <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B] bg-[#FAF7F5] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
-                                        Planner Virtual
-                                      </span>
+                                    <div className="mb-2 flex items-center gap-1.5">
+                                      {Boolean(w.has_whatsapp_rsvp) || Boolean(w.has_layout_2d) ? (
+                                        <span className="inline-flex items-center text-[10px] uppercase font-semibold tracking-wider text-white bg-[#2B2826] px-2.5 py-0.5 rounded-full">
+                                          Lazo Pro
+                                        </span>
+                                      ) : (
+                                        <span className="inline-flex items-center text-[10px] uppercase font-semibold tracking-wider text-[#7D6F6B] bg-[#FAF7F5] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
+                                          Plan Esencial
+                                        </span>
+                                      )}
                                     </div>
-                                    <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2]">
+                                    <div className="font-editorial text-2xl sm:text-[26px] font-normal leading-[1.2]">
                                       {renderCoupleNames(w)}
                                     </div>
                                   </div>
@@ -2406,7 +2484,7 @@ export const GeneralDashboard: React.FC = () => {
                                     {countdownText}
                                   </span>
                                   {Boolean(w.has_whatsapp_rsvp) && (
-                                    <span className="text-[10px] font-semibold text-[#16A34A] bg-[#DCFCE7] border border-[#BBF7D0] px-2.5 py-0.5 rounded-full select-none" title="Módulo WhatsApp RSVP Activo">
+                                    <span className="text-[10px] font-medium text-[#384C3A] bg-[#E5EDE6] border border-[#D0DDD1] px-2.5 py-0.5 rounded-full select-none" title="Módulo WhatsApp RSVP Activo">
                                       WhatsApp
                                     </span>
                                   )}
@@ -2474,7 +2552,7 @@ export const GeneralDashboard: React.FC = () => {
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826] tracking-tight">
+                            <h3 className="font-editorial text-2xl font-normal text-[#2B2826] tracking-tight">
                               Eventos Archivados y Cancelados
                             </h3>
                             <span className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B] bg-[#F0ECE9] px-2.5 py-0.5 rounded-full border border-[#E0D8D0]">
