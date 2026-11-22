@@ -4,7 +4,7 @@ import { Modal } from './Modal';
 import { WeddingProfile } from '../types/lazo';
 import { formatShortDate } from '../data/seedWedding';
 
-export const VLB_QUOTES_PHONE = '56661406247';
+export const VLB_QUOTES_PHONE = '525661406247';
 
 interface VlbCoordinationModalProps {
   isOpen: boolean;
@@ -19,14 +19,13 @@ const VLB_PACKAGES = [
     tag: 'Coordinación del Día',
     dark: false,
     previo: [
-      'Layout del evento',
-      'Logística y minuto a minuto',
-      '2 Citas de planeación',
-      'Confirmación de proveedores'
+      '2 citas de planeación y revisión final con tu planner',
+      'Revisión experta de tu layout y minuto a minuto',
+      'Confirmación directa y coordinación previa con proveedores'
     ],
     granDia: [
-      'Supervisión de montaje',
-      'Coordinación ceremonia religiosa y proveedores',
+      'Supervisión de montaje y dirección de proveedores',
+      'Coordinación de ceremonia religiosa',
       'Resguardo de artículos de valor',
       '1 coordinadora · 6 horas de servicio',
       'Cortesía: 1 hostess para recibir a tus invitados'
@@ -38,14 +37,14 @@ const VLB_PACKAGES = [
     tag: 'Más elegido',
     dark: false,
     previo: [
-      'Moodboard con la visión de tu boda',
-      'Presupuesto, control de gastos y layout',
-      'Logística, minuto a minuto y 4 Citas',
-      'Confirmación de invitados, testigos y padrinos'
+      '4 citas de planeación y seguimiento con tu equipo VLB',
+      'Curaduría de tu visión, presupuesto y layout junto a tu planner',
+      'Confirmación oficial de invitados (RSVP), testigos y padrinos',
+      'Confirmación y seguimiento directo con tus proveedores'
     ],
     granDia: [
-      'Supervisión de montaje y proveedores',
-      'Coordinación ceremonia religiosa y civil',
+      'Supervisión de montaje y coordinación de proveedores',
+      'Coordinación de ceremonia religiosa y civil',
       'Resguardo de artículos de valor',
       '1 Coordinadora + 1 hostess',
       '10 horas de servicio ó hasta ramo y liga'
@@ -57,15 +56,15 @@ const VLB_PACKAGES = [
     tag: 'Acompañamiento Total',
     dark: true,
     previo: [
-      'Moodboard y Citas ilimitadas',
-      'Presupuesto, control de gastos y layout',
-      'Asesoría en trámites (civil, religioso o simbólico)',
-      'Logística, minuto a minuto y confirmaciones'
+      'Citas ilimitadas de planeación y diseño',
+      'Búsqueda, recomendación y seguimiento total de proveedores',
+      'Asesoría personalizada en trámites (civil, religioso o simbólico)',
+      'Confirmación oficial de invitados (RSVP), testigos y padrinos'
     ],
     granDia: [
-      'Acompañamiento en getting ready',
-      'Supervisión de montaje y proveedores',
-      'Coordinación ceremonia religiosa y civil',
+      'Acompañamiento desde el getting ready',
+      'Supervisión total de montaje y proveedores',
+      'Coordinación de ceremonia religiosa y civil',
       '2 hostess + resguardo de artículos de valor',
       'Servicio hasta el final del evento o 1:00 am'
     ]
@@ -76,14 +75,14 @@ const VLB_PACKAGES = [
     tag: 'Evento Pre-Boda',
     dark: false,
     previo: [
-      'Moodboard con la visión de tu evento',
-      'Invitación digital interactiva (PDF) y confirmaciones',
-      '1 cita de planeación y 1 de últimos detalles'
+      '1 cita de planeación y 1 cita de últimos detalles',
+      'Invitación digital interactiva (PDF) y confirmación de asistentes',
+      'Papelería personalizada: números de mesa, tags y dinámica (hasta 50 personas)'
     ],
     granDia: [
       'Logística, montaje y coordinación de proveedores',
-      '1 coordinadora + 1 hostess (1 hr previa + 3 hrs evento)',
-      'Papelería personalizada (hasta 50 personas) y descuento en catálogo'
+      '1 coordinadora + 1 hostess (1 hr previa + 3 hrs de evento)',
+      'Descuento exclusivo en catálogo de servicios'
     ]
   }
 ];
