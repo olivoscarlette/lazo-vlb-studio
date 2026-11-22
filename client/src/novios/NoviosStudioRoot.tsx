@@ -73,28 +73,8 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
 
   if (embedded) {
     return (
-      <div className="max-w-5xl mx-auto space-y-5 pb-12">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center p-1 rounded-full bg-white border border-[#EFE8E1] shadow-2xs">
-            {EMBEDDED_TABS.map(tab => {
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => handleSelectTab(tab.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-                    active
-                      ? 'bg-[#2B2826] text-white shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-
+      <div className="max-w-5xl mx-auto space-y-4 pb-12">
+        <div className="flex justify-end">
           <span className="text-[11px] text-[#8A7E72] font-light">
             {saving ? 'Guardando cambios...' : '✓ Sincronizado en tiempo real con Novios'}
           </span>

@@ -70,30 +70,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     : [
         {
-          title: 'PLANIFICACIÓN',
+          title: 'LA BODA',
           items: [
-            { id: 'resumen', label: 'Resumen', icon: LayoutDashboard },
-            { id: 'reuniones', label: 'Información y Reuniones', icon: CalendarCheck2 },
+            { id: 'resumen', label: 'Mi Boda', icon: LayoutDashboard },
+            { id: 'proveedores', label: 'Presupuesto & Contratos', icon: CreditCard },
+            { id: 'invitados', label: 'Invitados & RSVP', icon: Users2 },
+            { id: 'mesas', label: 'Mesas & Plano 2D', icon: Grid2x2Check },
             { id: 'checklist', label: 'Checklist', icon: CheckSquare },
-            { id: 'proveedores', label: 'Proveedores y Pagos', icon: CreditCard }
+            { id: 'timeline', label: 'El Gran Día', icon: Clock3 }
           ]
         },
         {
-          title: 'LOGÍSTICA & INVITADOS',
+          title: 'AGENCIA & OPERACIÓN',
           items: [
-            { id: 'timeline', label: 'Itinerario', icon: Clock3 },
-            { id: 'invitados', label: 'Invitados y Confirmaciones', icon: Users2 },
-            { id: 'mesas', label: 'Mesas y Layout', icon: Grid2x2Check },
-            { id: 'civil', label: 'Civil', icon: Landmark },
-            { id: 'religiosa', label: 'Ceremonia Religiosa', icon: Church }
-          ]
-        },
-        {
-          title: 'GESTIÓN & ARCHIVOS',
-          items: [
-            { id: 'calendario', label: 'Calendario General', icon: Calendar, hiddenForNovios: true },
+            { id: 'reuniones', label: 'Reuniones', icon: CalendarCheck2 },
             { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare, hiddenForNovios: true },
-            { id: 'documentos', label: 'Documentos', icon: FileText },
             { id: 'reportes', label: 'Reportes', icon: BarChart3 },
             { id: 'directorio', label: 'Directorio', icon: Contact2, hiddenForNovios: true },
             { id: 'bitacora', label: 'Bitácora', icon: History, hiddenForNovios: true }
@@ -256,22 +247,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
             >
               <Sparkles className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
               {isOpen && <span>{weddingDayMode ? 'Ver Planeación Completa' : 'Modo Día de Boda'}</span>}
-            </button>
-          </div>
-        )}
-
-        {/* Viva la Bride Shortcut */}
-        {user?.role === 'ADMINISTRADOR' && (
-          <div className="p-2 border-t border-[#EFE8E1] bg-[#FAF7F5]">
-            <button
-              onClick={() => setActiveModule('vlb')}
-              title="Abrir Viva la Bride (Papelería & Stands)"
-              className={`w-full py-2 rounded-xl text-xs font-semibold flex items-center justify-center transition cursor-pointer bg-[#F7EDEB] text-[#70443D] hover:bg-[#F2ECE7] border border-[#ECD9D5] ${
-                isOpen ? 'px-3 space-x-2' : 'p-2'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[#9C665C] shrink-0" />
-              {isOpen && <span>Viva la Bride Atelier</span>}
             </button>
           </div>
         )}
