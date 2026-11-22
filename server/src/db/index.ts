@@ -570,6 +570,9 @@ export function initDatabase() {
   try {
     db.exec("ALTER TABLE weddings ADD COLUMN allow_novios_rsvp INTEGER DEFAULT NULL;");
   } catch {}
+  try {
+    db.exec("ALTER TABLE weddings ADD COLUMN novios_studio_json TEXT DEFAULT '{}';");
+  } catch {}
 
   // Update legacy templates to strictly use "Viva la Bride"
   try {

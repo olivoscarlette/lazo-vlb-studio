@@ -793,4 +793,118 @@ router.put('/:weddingId/cover-position', authenticateToken, requireWeddingAccess
   return res.json({ success: true, cover_photo_position });
 });
 
+// GET /api/weddings/:weddingId/novios-studio - Cargar estado completo de Nuevo Lazo + hidratación desde DB
+router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess, (req, res) => {
+  const { weddingId } = req.params;
+  const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId) as any;
+  if (!wedding) {
+    return res.status(404).json({ error: 'Boda no encontrada.' });
+  }
+
+  let studio: any = null;
+  try {
+    const parsed = wedding.novios_studio_json ? JSON.parse(wedding.novios_studio_json) : null;
+    if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0 && parsed.profile) {
+      studio = parsed;
+    }
+  } catch {
+    studio = null;
+  }
+
+  // Hydrate existing DB records so couples transitioning from legacy Lazo keep all their real data
+  let guests: any[] = [];
+  let tables: any[] = [];
+  let vendors: any[] = [];
+  let checklist: any[] = [];
+  let timeline: any[] = [];
+  let civil: any = null;
+  let religious: any = null;
+  let documents: any[] = [];
+
+  try { guests = db.prepare('SELECT * FROM guests WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch {}
+  try { tables = db.prepare('SELECT * FROM tables WHERE wedding_id = ? ORDER BY created_at ASC').all(weddingId) as any[]; } catch {}
+  try { vendors = db.prepare('SELECT * FROM vendors WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch {}
+  try { checklist = db.prepare('SELECT * FROM checklist_tasks WHERE wedding_id = ? ORDER BY due_date ASC').all(weddingId) as any[]; } catch {}
+  try { timeline = db.prepare('SELECT * FROM timeline_events WHERE wedding_id = ? ORDER BY time ASC').all(weddingId) as any[]; } catch {}
+  try { civil = db.prepare('SELECT * FROM civil_ceremony WHERE wedding_id = ?').get(weddingId) as any; } catch {}
+  try { religious = db.prepare('SELECT * FROM religious_ceremony WHERE wedding_id = ?').get(weddingId) as any; } catch {}
+  try { documents = db.prepare('SELECT * FROM documents WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch {}
+
+  return res.json({
+    studio,
+    wedding: {
+      id: wedding.id,
+      name: wedding.name,
+      bride_name: wedding.bride_name,
+      groom_name: wedding.groom_name,
+      date: wedding.date,
+      city: wedding.city,
+      venue: wedding.venue,
+      budget_estimated: wedding.budget_estimated,
+      guest_count_estimated: wedding.guest_count_estimated,
+      cover_photo_url: wedding.cover_photo_url,
+      cover_photo_position: wedding.cover_photo_position,
+      package_type: wedding.package_type,
+      event_type: wedding.event_type
+    },
+    seedFromDb: {
+      guests,
+      tables,
+      vendors,
+      checklist,
+      timeline,
+      civil,
+      religious,
+      documents
+    }
+  });
+});
+
+// PUT /api/weddings/:weddingId/novios-studio - Guardar estado de Nuevo Lazo en DB real
+router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess, (req, res) => {
+  const { weddingId } = req.params;
+  const { studio } = req.body;
+
+  if (!studio || typeof studio !== 'object') {
+    return res.status(400).json({ error: 'Estado de estudio requerido.' });
+  }
+
+  try {
+    const serialized = JSON.stringify(studio);
+    db.prepare(`
+      UPDATE weddings
+      SET novios_studio_json = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).run(serialized, weddingId);
+
+    // Keep basic profile metadata in sync on weddings table
+    if (studio.profile) {
+      const p = studio.profile;
+      const updates: string[] = [];
+      const params: any[] = [];
+      if (typeof p.budgetGoal === 'number') {
+        updates.push('budget_estimated = ?');
+        params.push(p.budgetGoal);
+      }
+      if (typeof p.city === 'string' && p.city.trim()) {
+        updates.push('city = ?');
+        params.push(p.city.trim());
+      }
+      if (typeof p.coverPositionY === 'number') {
+        updates.push('cover_photo_position = ?');
+        params.push(`center ${p.coverPositionY}%`);
+      }
+      if (updates.length > 0) {
+        params.push(weddingId);
+        db.prepare(`UPDATE weddings SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+      }
+    }
+
+    return res.json({ success: true });
+  } catch (err: any) {
+    console.error('Error saving novios-studio:', err);
+    return res.status(500).json({ error: 'No se pudo guardar el estado de la boda.' });
+  }
+});
+
 export default router;

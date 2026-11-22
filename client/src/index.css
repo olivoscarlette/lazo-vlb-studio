@@ -326,3 +326,34 @@ table tbody tr:hover {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--lazo-rose);
 }
+
+/* Nuevo Lazo Editorial Utilities & Clean Warm Focus */
+.font-editorial {
+  font-family: 'Prata', Georgia, serif !important;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+button:focus,
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid rgba(196, 139, 129, 0.45);
+  outline-offset: 2px;
+}

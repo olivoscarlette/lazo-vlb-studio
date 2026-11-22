@@ -22,6 +22,7 @@ import { WhatsAppHubModule } from './modules/WhatsAppHubModule';
 import { CalendarioModule } from './modules/CalendarioModule';
 import { VivaLaBrideModule } from './modules/VivaLaBrideModule';
 import { PublicProposalView } from './modules/PublicProposalView';
+import { NoviosStudioRoot } from './novios/NoviosStudioRoot';
 import {
   Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff, Sparkles, BellRing, X
 } from 'lucide-react';
@@ -709,7 +710,9 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      {user?.role === 'ADMINISTRADOR' && activeModule === 'vlb' ? (
+      {user.role === 'NOVIOS' ? (
+        <NoviosStudioRoot />
+      ) : user?.role === 'ADMINISTRADOR' && activeModule === 'vlb' ? (
         <div className="min-h-screen flex flex-col bg-[#FCFAF7] text-[#332A28]">
           <Navbar onToggleSidebar={handleToggleSidebar} sidebarOpen={sidebarOpen} />
           <div className="flex-1 bg-[#FCFAF7] p-3 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">

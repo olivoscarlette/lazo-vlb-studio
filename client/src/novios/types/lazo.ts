@@ -1,0 +1,191 @@
+export type LazoTab = 'inicio' | 'presupuesto' | 'invitados' | 'checklist' | 'midia';
+
+export interface WeddingProfile {
+  partner1: string;
+  partner2: string;
+  weddingDate: string; // YYYY-MM-DD
+  city: string;
+  budgetGoal: number;
+  estimatedGuests: number;
+  coverPhoto: string;
+  coverPositionY: number; // 0 to 100
+  partnerInviteCode: string;
+}
+
+export interface ContributionItem {
+  id: string;
+  label: string; // Novia, Novio, Familia de ella, Familia de él, Ahorro mensual
+  pledged: number;
+  saved: number;
+}
+
+export interface QuoteOption {
+  id: string;
+  category: string;
+  vendorName: string;
+  price: number;
+  includes: string;
+  pros: string;
+  cons: string;
+  phone: string;
+  selected?: boolean;
+}
+
+export interface PaymentRecord {
+  id: string;
+  date: string;
+  amount: number;
+  concept: string;
+  method: 'Transferencia' | 'Tarjeta' | 'Efectivo' | 'Otro';
+  notes?: string;
+}
+
+export interface VendorItem {
+  id: string;
+  name: string;
+  category: string;
+  phone: string;
+  totalCost: number;
+  paidAmount: number;
+  nextDueDate: string;
+  contractName?: string;
+  notes?: string;
+  payments?: PaymentRecord[];
+}
+
+export type GuestStatus = 'Confirmado' | 'Pendiente' | 'No asistirá';
+
+export interface GuestItem {
+  id: string;
+  name: string;
+  firstName?: string;
+  lastName?: string;
+  phone: string;
+  passes: number;
+  status: GuestStatus;
+  dietary?: string;
+  tableId?: string;
+  side: 'Novia' | 'Novio' | 'Ambos';
+}
+
+export interface TableItem {
+  id: string;
+  name: string;
+  shape: 'Redonda' | 'Rectangular' | 'Imperial' | 'Serpentina (S)';
+  capacity: number;
+  x?: number;
+  y?: number;
+  rotation?: number; // 0 or 90
+}
+
+export interface FloorElement {
+  id: string;
+  type: 'pista' | 'dj' | 'barra' | 'entrada' | 'otro';
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+  shape?: 'rect' | 'circle';
+  tone?: 'neutral' | 'nature' | 'water' | 'accent';
+}
+
+export interface ChecklistItem {
+  id: string;
+  title: string;
+  category: string;
+  monthsBefore: number;
+  dueDate: string; // YYYY-MM-DD calculated from weddingDate
+  completed: boolean;
+  owner: 'Novia' | 'Novio' | 'Ambos';
+  notes?: string;
+}
+
+export interface TimelineItem {
+  id: string;
+  time: string;
+  title: string;
+  location: string;
+  notes?: string;
+}
+
+export interface CeremonyRequirement {
+  id: string;
+  title: string;
+  completed: boolean;
+}
+
+export interface CeremonySongItem {
+  id: string;
+  moment: string;
+  title: string;
+  artist?: string;
+}
+
+export interface CeremonyReadingItem {
+  id: string;
+  type: string;
+  title: string;
+  reader: string;
+}
+
+export interface CeremonyDetails {
+  civilEnabled: boolean;
+  civilDate: string;
+  civilTime: string;
+  civilVenue: string;
+  civilJudge?: string;
+  civilNotes?: string;
+  civilWitnesses: string;
+  civilWitnessList?: string[];
+  civilRequirements?: CeremonyRequirement[];
+  civilHasMusic?: boolean;
+  civilMusicSongs?: CeremonySongItem[];
+
+  religiousEnabled: boolean;
+  religiousDate?: string;
+  religiousTime: string;
+  religiousVenue: string;
+  religiousOfficiant?: string;
+  religiousNotes?: string;
+  religiousSongs: string;
+  religiousMusicList?: CeremonySongItem[];
+  religiousReadings: string;
+  religiousReadingsList?: CeremonyReadingItem[];
+  religiousRequirements?: CeremonyRequirement[];
+}
+
+export interface StyleBoard {
+  palette: { name: string; hex: string }[];
+  vibe: string;
+  brideLook: string;
+  groomLook: string;
+  photos: { id: string; url: string; caption: string }[];
+}
+
+export interface FileItem {
+  id: string;
+  name: string;
+  category: 'Contrato' | 'Comprobante' | 'Cotización' | 'Personal';
+  date: string;
+  notes?: string;
+  dataUrl?: string;
+  mimeType?: string;
+}
+
+export interface WeddingState {
+  onboarded: boolean;
+  profile: WeddingProfile;
+  contributions: ContributionItem[];
+  quotes: QuoteOption[];
+  vendors: VendorItem[];
+  guests: GuestItem[];
+  tables: TableItem[];
+  floorElements?: FloorElement[];
+  checklist: ChecklistItem[];
+  timeline: TimelineItem[];
+  ceremonies: CeremonyDetails;
+  style: StyleBoard;
+  files: FileItem[];
+}
