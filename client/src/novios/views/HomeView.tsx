@@ -498,17 +498,27 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
               <h3 className="font-editorial text-lg text-[#2B2826]">Look de {profile.partner1}</h3>
               <textarea
                 rows={3}
-                placeholder="Diseñador del vestido, fechas de pruebas, velo, zapatos, joyería..."
+                placeholder={
+                  isNonWedding || !hasPartner2
+                    ? 'Vestido o outfit, peinado, maquillaje, accesorios, zapatos...'
+                    : 'Diseñador del vestido, fechas de pruebas, velo, zapatos, joyería...'
+                }
                 value={style.brideLook}
                 onChange={e => updateWedding(prev => ({ ...prev, style: { ...prev.style, brideLook: e.target.value } }))}
                 className="w-full p-3 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
               />
             </div>
             <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs space-y-2">
-              <h3 className="font-editorial text-lg text-[#2B2826]">Look de {profile.partner2}</h3>
+              <h3 className="font-editorial text-lg text-[#2B2826]">
+                {isNonWedding || !hasPartner2 ? 'Notas de Inspiración & Decoración' : `Look de ${profile.partner2}`}
+              </h3>
               <textarea
                 rows={3}
-                placeholder="Traje / smoking, sastrería, corbata o moño, zapatos, mancuernillas..."
+                placeholder={
+                  isNonWedding || !hasPartner2
+                    ? 'Flores, montaje, detalles especiales, dress code, música o ideas clave...'
+                    : 'Traje / smoking, sastrería, corbata o moño, zapatos, mancuernillas...'
+                }
                 value={style.groomLook}
                 onChange={e => updateWedding(prev => ({ ...prev, style: { ...prev.style, groomLook: e.target.value } }))}
                 className="w-full p-3 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"

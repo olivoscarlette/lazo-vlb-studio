@@ -40,7 +40,6 @@ export const ChecklistView: React.FC = () => {
   );
 
   const [filter, setFilter] = useState<'PENDIENTES' | 'PRONTO' | 'LISTAS'>('PENDIENTES');
-  const [ownerFilter, setOwnerFilter] = useState<'TODOS' | 'Novia' | 'Novio' | 'Ambos'>('TODOS');
   const [search, setSearch] = useState('');
   const [expandedStages, setExpandedStages] = useState<Record<string, boolean>>(() => ({
     [detectCurrentStage(wedding?.profile.weddingDate)]: true
@@ -86,7 +85,6 @@ export const ChecklistView: React.FC = () => {
       if (filter === 'LISTAS' && !t.completed) return false;
       if (filter === 'PENDIENTES' && t.completed) return false;
       if (filter === 'PRONTO' && (t.completed || t.dueDate > soonCutoff)) return false;
-      if (ownerFilter !== 'TODOS' && t.owner !== ownerFilter) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         if (!t.title.toLowerCase().includes(q) && !(t.notes || '').toLowerCase().includes(q)) {
@@ -96,11 +94,11 @@ export const ChecklistView: React.FC = () => {
       return true;
     });
 
-    if (filter === 'PRONTO' && base.length === 0 && !search.trim() && ownerFilter === 'TODOS') {
+    if (filter === 'PRONTO' && base.length === 0 && !search.trim()) {
       return checklist.filter(t => !t.completed).slice(0, 10);
     }
     return base;
-  }, [checklist, filter, ownerFilter, search, soonCutoff]);
+  }, [checklist, filter, search, soonCutoff]);
 
   const groupedByStage = useMemo(() => {
     const map = new Map<string, ChecklistItem[]>();
@@ -268,24 +266,6 @@ export const ChecklistView: React.FC = () => {
                 }`}
               >
                 {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Owner Pills */}
-          <div className="flex items-center p-1 bg-[#FAF8F5] rounded-full border border-[#EFE8E1] w-fit">
-            {(['TODOS', 'Novia', 'Novio', 'Ambos'] as const).map(o => (
-              <button
-                key={o}
-                type="button"
-                onClick={() => setOwnerFilter(o)}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer focus:outline-none ${
-                  ownerFilter === o
-                    ? 'bg-white text-[#2B2826] shadow-2xs'
-                    : 'text-[#8A7E72] hover:text-[#2B2826]'
-                }`}
-              >
-                {o === 'TODOS' ? 'Todos' : o}
               </button>
             ))}
           </div>

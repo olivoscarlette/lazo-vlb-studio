@@ -125,6 +125,30 @@ export const BudgetView: React.FC = () => {
     }));
   };
 
+  const handleUpdateContributionLabel = (id: string, label: string) => {
+    updateWedding(prev => ({
+      ...prev,
+      contributions: prev.contributions.map(c => (c.id === id ? { ...c, label } : c))
+    }));
+  };
+
+  const handleAddContribution = () => {
+    updateWedding(prev => ({
+      ...prev,
+      contributions: [
+        ...prev.contributions,
+        { id: `c_${Date.now()}`, label: 'Nuevo aportante', pledged: 0, saved: 0 }
+      ]
+    }));
+  };
+
+  const handleDeleteContribution = (id: string) => {
+    updateWedding(prev => ({
+      ...prev,
+      contributions: prev.contributions.filter(c => c.id !== id)
+    }));
+  };
+
   const handleSaveQuote = (e: React.FormEvent) => {
     e.preventDefault();
     if (!quoteForm.vendorName.trim()) return;
@@ -386,26 +410,57 @@ export const BudgetView: React.FC = () => {
 
           {/* Plan de Ahorro y Aportaciones Familiares */}
           <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
-            <div>
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
-                Plan de Ahorro & Aportaciones
-              </span>
-              <h3 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
-                ¿Cómo se financia la boda?
-              </h3>
-              <p className="text-xs text-[#8A7E72] font-light mt-1">
-                Lleva claridad sobre cuánto aporta cada persona y cuánto llevan ahorrado hoy.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
+                  Plan de Ahorro &amp; Aportaciones
+                </span>
+                <h3 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                  {profile.eventType && !profile.eventType.toLowerCase().includes('boda')
+                    ? '¿Cómo se financia el evento?'
+                    : '¿Cómo se financia la boda?'}
+                </h3>
+                <p className="text-xs text-[#8A7E72] font-light mt-1">
+                  Lleva claridad sobre cuánto aporta cada persona y cuánto llevan ahorrado hoy. Haz clic en cualquier nombre para editarlo.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddContribution}
+                className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#F3ECE6] border border-[#EFE8E1] text-[11px] font-medium text-[#2B2826] transition cursor-pointer shrink-0"
+              >
+                <Plus className="w-3 h-3 text-[#C48B81]" />
+                <span>Agregar aportante</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
               {contributions.map(c => {
                 const pct = c.pledged > 0 ? Math.min(100, Math.round((c.saved / c.pledged) * 100)) : 0;
                 return (
-                  <div key={c.id} className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFE8E1] space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm text-[#2B2826]">{c.label}</span>
-                      <span className="text-[11px] font-medium text-[#577355]">{pct}%</span>
+                  <div key={c.id} className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFE8E1] space-y-3 group">
+                    <div className="flex items-center justify-between gap-2">
+                      <input
+                        type="text"
+                        value={c.label}
+                        onChange={e => handleUpdateContributionLabel(c.id, e.target.value)}
+                        placeholder="Nombre del aportante"
+                        title="Haz clic para editar el nombre"
+                        className="flex-1 min-w-0 font-medium text-sm text-[#2B2826] bg-transparent border-b border-transparent hover:border-[#D8CFC8] focus:border-[#C48B81] focus:bg-white focus:px-1.5 rounded-sm py-0.5 transition"
+                      />
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[11px] font-medium text-[#577355]">{pct}%</span>
+                        {contributions.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteContribution(c.id)}
+                            title="Eliminar aportante"
+                            className="p-1 rounded-full text-[#8A7E72] hover:text-rose-600 hover:bg-white opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                     <div className="h-1.5 w-full bg-white rounded-full overflow-hidden">
                       <div className="h-full bg-[#577355] rounded-full transition-all" style={{ width: `${pct}%` }} />

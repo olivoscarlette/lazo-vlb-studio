@@ -25,6 +25,8 @@ export const MyDayView: React.FC = () => {
   if (!wedding) return null;
 
   const { profile, timeline, ceremonies } = wedding;
+  const isNonWedding = Boolean(profile.eventType && !profile.eventType.toLowerCase().includes('boda'));
+  const activeSubTab = isNonWedding ? 'itinerario' : subTab;
 
   const openAddEvent = () => {
     setEditingEventId(null);
@@ -106,7 +108,7 @@ export const MyDayView: React.FC = () => {
           </h2>
         </div>
 
-        {subTab === 'itinerario' && (
+        {activeSubTab === 'itinerario' && (
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
               type="button"
@@ -128,30 +130,32 @@ export const MyDayView: React.FC = () => {
         )}
       </div>
 
-      {/* 2 Clean Sub-Tabs: Itinerario + Ceremonias */}
-      <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
-        <button
-          type="button"
-          onClick={() => setSubTab('itinerario')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-            subTab === 'itinerario' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
-          }`}
-        >
-          Itinerario ({timeline.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setSubTab('ceremonias')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-            subTab === 'ceremonias' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
-          }`}
-        >
-          Ceremonias
-        </button>
-      </div>
+      {/* 2 Clean Sub-Tabs: Itinerario + Ceremonias (Ceremonias solo en bodas) */}
+      {!isNonWedding && (
+        <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
+          <button
+            type="button"
+            onClick={() => setSubTab('itinerario')}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+              activeSubTab === 'itinerario' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+            }`}
+          >
+            Itinerario ({timeline.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setSubTab('ceremonias')}
+            className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+              activeSubTab === 'ceremonias' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+            }`}
+          >
+            Ceremonias
+          </button>
+        </div>
+      )}
 
       {/* SUB-TAB 1: ITINERARIO EDITABLE */}
-      {subTab === 'itinerario' && (
+      {activeSubTab === 'itinerario' && (
         <div className="space-y-4">
         <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs">
           {timeline.length === 0 ? (
@@ -255,7 +259,7 @@ export const MyDayView: React.FC = () => {
       )}
 
       {/* SUB-TAB 2: CEREMONIAS OPCIONALES (MÓDULOS COMPLETOS CIVIL & RELIGIOSA) */}
-      {subTab === 'ceremonias' && (
+      {activeSubTab === 'ceremonias' && !isNonWedding && (
         <CeremoniesSection
           ceremonies={ceremonies}
           weddingDate={wedding.profile.weddingDate}
