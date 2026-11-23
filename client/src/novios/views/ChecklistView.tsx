@@ -380,7 +380,6 @@ export const ChecklistView: React.FC = () => {
                                 <Calendar className="w-3 h-3 text-[#C48B81]" />
                                 {formatShortDate(task.dueDate)}
                               </span>
-                              <span>· {task.owner}</span>
                             </div>
                             {task.notes && (
                               <p className="text-xs text-[#A86B60] italic mt-1.5 font-light">{task.notes}</p>
@@ -457,18 +456,6 @@ export const ChecklistView: React.FC = () => {
                       {stage}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">Responsable</label>
-                <select
-                  value={editForm.owner}
-                  onChange={e => setEditForm({ ...editForm, owner: e.target.value as any })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
-                >
-                  <option value="Ambos">Ambos</option>
-                  <option value="Novia">Novia</option>
-                  <option value="Novio">Novio</option>
                 </select>
               </div>
               <div>
@@ -557,16 +544,8 @@ export const ChecklistView: React.FC = () => {
               ))}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <select
-              value={newForm.owner}
-              onChange={e => setNewForm({ ...newForm, owner: e.target.value as any })}
-              className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
-            >
-              <option value="Ambos">Ambos</option>
-              <option value="Novia">Novia</option>
-              <option value="Novio">Novio</option>
-            </select>
+          <div>
+            <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">Fecha objetivo</label>
             <input
               type="date"
               value={newForm.dueDate}

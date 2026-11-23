@@ -406,9 +406,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                         </p>
                       </div>
                     </div>
-                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#FAF8F5] text-[#7D6F6B] border border-[#EFE8E1] shrink-0">
-                      {task.owner}
-                    </span>
                   </div>
                 ))}
               </div>
