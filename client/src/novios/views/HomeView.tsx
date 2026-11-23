@@ -3,6 +3,7 @@ import {
   Camera, CheckCircle2, ArrowRight, ChevronUp, ChevronDown, Move, Upload, Trash2, Plus, X, Pencil, Sparkles
 } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
+import { useAuth } from '../../context/AuthContext';
 import { daysUntil, formatMXN, formatShortDate } from '../data/seedWedding';
 import { LazoTab } from '../types/lazo';
 import { Modal } from '../components/Modal';
@@ -14,8 +15,12 @@ interface HomeViewProps {
 
 export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   const { wedding, flags, updateWedding } = useWedding();
+  const { currentWedding, token } = useAuth();
   const [subTab, setSubTab] = useState<'resumen' | 'estilo'>('resumen');
   const [isRepositioning, setIsRepositioning] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [coverFitMode, setCoverFitMode] = useState<'auto' | 'cover' | 'contain'>('auto');
+  const [coverIsPortraitOrSmall, setCoverIsPortraitOrSmall] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showVlbModal, setShowVlbModal] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -75,12 +80,42 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   const nextTasks = checklist.filter(t => !t.completed).slice(0, 3);
   const completedCount = checklist.filter(t => t.completed).length;
 
-  const handleCoverUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Upload original full-resolution file directly to server (/uploads/covers/...)
+    if (currentWedding?.id && token) {
+      setUploadingCover(true);
+      try {
+        const formData = new FormData();
+        formData.append('cover_photo', file);
+        const res = await fetch(`/api/weddings/${currentWedding.id}/cover-photo`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.cover_photo_url) {
+          setCoverFitMode('auto');
+          updateWedding(prev => ({
+            ...prev,
+            profile: { ...prev.profile, coverPhoto: data.cover_photo_url, coverPositionY: 50 }
+          }));
+          e.target.value = '';
+          return;
+        }
+      } catch {
+        // Fallback to local FileReader below
+      } finally {
+        setUploadingCover(false);
+      }
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
+        setCoverFitMode('auto');
         updateWedding(prev => ({
           ...prev,
           profile: { ...prev.profile, coverPhoto: reader.result as string, coverPositionY: 50 }
@@ -88,6 +123,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
       }
     };
     reader.readAsDataURL(file);
+    e.target.value = '';
   };
 
   const handleUploadMoodPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -131,26 +167,67 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   return (
     <div className="space-y-6">
       {/* 1. Editorial Hero Cover */}
+      {(() => {
+        const useCrispFrame = coverFitMode === 'contain' || (coverFitMode === 'auto' && coverIsPortraitOrSmall);
+        return (
       <div className="relative rounded-3xl overflow-hidden border border-[#EFE8E1] shadow-sm bg-[#181514]">
-        <div className="relative h-60 sm:h-76 w-full">
-          <img
-            src={profile.coverPhoto}
-            alt="Portada de boda"
-            className="w-full h-full object-cover transition-all duration-300"
-            style={{ objectPosition: `50% ${profile.coverPositionY}%` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#181514]/80 via-[#181514]/35 to-[#181514]/15" />
+        <div className="relative h-64 sm:h-80 w-full overflow-hidden">
+          {useCrispFrame ? (
+            <>
+              {/* Atmospheric blurred backdrop so vertical/narrow photos never stretch or pixelate */}
+              <img
+                src={profile.coverPhoto}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-65 brightness-75"
+                style={{ objectPosition: `50% ${profile.coverPositionY}%` }}
+              />
+              <img
+                src={profile.coverPhoto}
+                alt="Portada del evento"
+                onLoad={e => {
+                  const img = e.currentTarget;
+                  setCoverIsPortraitOrSmall(img.naturalHeight > img.naturalWidth * 1.05 || img.naturalWidth < 800);
+                }}
+                className="relative z-[1] w-full h-full object-contain contrast-[1.03] saturate-[1.04] transition-all duration-300"
+              />
+            </>
+          ) : (
+            <img
+              src={profile.coverPhoto}
+              alt="Portada del evento"
+              onLoad={e => {
+                const img = e.currentTarget;
+                setCoverIsPortraitOrSmall(img.naturalHeight > img.naturalWidth * 1.05 || img.naturalWidth < 800);
+              }}
+              className="w-full h-full object-cover contrast-[1.03] saturate-[1.04] transition-all duration-300"
+              style={{ objectPosition: `50% ${profile.coverPositionY}%` }}
+            />
+          )}
+          <div className="absolute inset-0 z-[2] bg-gradient-to-t from-[#181514]/75 via-[#181514]/25 to-[#181514]/15 pointer-events-none" />
 
           {/* Top-right cover controls */}
-          <div className="absolute top-3.5 right-3.5 flex items-center gap-1.5">
+          <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5">
             {isRepositioning ? (
-              <div className="flex items-center gap-1 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-white text-[11px]">
-                <button onClick={() => nudgeCover(-10)} className="p-1 hover:text-[#C48B81] cursor-pointer" title="Subir">
-                  <ChevronUp className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1 bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-white text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => setCoverFitMode(useCrispFrame ? 'cover' : 'contain')}
+                  className="px-2 py-0.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-[10px] font-medium cursor-pointer"
+                  title="Alternar entre rellenar todo el banner o mantener nitidez sin recortar"
+                >
+                  {useCrispFrame ? 'Rellenar' : 'Ajuste nítido'}
                 </button>
-                <button onClick={() => nudgeCover(10)} className="p-1 hover:text-[#C48B81] cursor-pointer" title="Bajar">
-                  <ChevronDown className="w-3.5 h-3.5" />
-                </button>
+                {!useCrispFrame && (
+                  <>
+                    <button onClick={() => nudgeCover(-10)} className="p-1 hover:text-[#C48B81] cursor-pointer" title="Subir">
+                      <ChevronUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button onClick={() => nudgeCover(10)} className="p-1 hover:text-[#C48B81] cursor-pointer" title="Bajar">
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
                 <button
                   onClick={() => setIsRepositioning(false)}
                   className="ml-1 px-2 py-0.5 rounded-full bg-[#C48B81] text-white font-medium cursor-pointer"
@@ -178,15 +255,15 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </button>
                 <label className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md text-white text-[11px] border border-white/20 transition cursor-pointer">
                   <Camera className="w-3 h-3" />
-                  <span className="hidden sm:inline">Cambiar Foto</span>
-                  <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" />
+                  <span className="hidden sm:inline">{uploadingCover ? 'Subiendo...' : 'Cambiar Foto'}</span>
+                  <input type="file" accept="image/*" onChange={handleCoverUpload} disabled={uploadingCover} className="hidden" />
                 </label>
               </>
             )}
           </div>
 
           {/* Centered Event / Couple Title & Glassmorphic Countdown */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-5 pointer-events-none">
+          <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center text-center text-white px-5 pointer-events-none">
             {isNonWedding && profile.eventType && (
               <span className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-[#E5B7AE] font-medium mb-2 drop-shadow-xs">
                 {profile.eventType}
@@ -209,6 +286,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
           </div>
         </div>
       </div>
+        );
+      })()}
 
       {/* Sub-Tabs inside Mi Boda: Resumen vs Moodboard & Look */}
       <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
