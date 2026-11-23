@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { WeddingProvider, useWedding } from './context/WeddingContext';
+import { useAuth } from '../context/AuthContext';
 import { AppShell } from './components/AppShell';
+import { WelcomeScreen } from './components/WelcomeScreen';
 import { HomeView } from './views/HomeView';
 import { BudgetView } from './views/BudgetView';
 import { GuestsView } from './views/GuestsView';
@@ -30,8 +32,10 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
   initialGuestsSubTab,
   onTabChange
 }) => {
-  const { wedding, loading, saving } = useWedding();
+  const { wedding, flags, loading, saving, updateWedding } = useWedding();
+  const { user, currentWedding } = useAuth();
   const [activeTab, setActiveTab] = useState<LazoTab>(forcedTab || 'inicio');
+  const [dismissedWelcomeIds, setDismissedWelcomeIds] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (forcedTab) {
@@ -81,6 +85,38 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
         </div>
         {content}
       </div>
+    );
+  }
+
+  // First-time exclusive welcome screen for NOVIOS only
+  const weddingIdKey = currentWedding?.id || '';
+  const localSeen =
+    typeof window !== 'undefined' && weddingIdKey
+      ? localStorage.getItem(`lazo_welcome_seen_${weddingIdKey}`) === '1'
+      : false;
+  const shouldShowWelcome =
+    user?.role === 'NOVIOS' &&
+    Boolean(weddingIdKey) &&
+    !wedding.profile.welcomeSeen &&
+    !localSeen &&
+    !dismissedWelcomeIds[weddingIdKey];
+
+  if (shouldShowWelcome) {
+    return (
+      <WelcomeScreen
+        profile={wedding.profile}
+        isVirtualNovios={flags.isVirtualNovios}
+        onEnter={() => {
+          if (typeof window !== 'undefined' && weddingIdKey) {
+            localStorage.setItem(`lazo_welcome_seen_${weddingIdKey}`, '1');
+          }
+          setDismissedWelcomeIds(prev => ({ ...prev, [weddingIdKey]: true }));
+          updateWedding(prev => ({
+            ...prev,
+            profile: { ...prev.profile, welcomeSeen: true }
+          }));
+        }}
+      />
     );
   }
 

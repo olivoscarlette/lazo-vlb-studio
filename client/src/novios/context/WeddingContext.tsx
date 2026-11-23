@@ -90,7 +90,8 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
     estimatedGuests: Number(w.estimated_guests) || existingStudio?.profile?.estimatedGuests || 120,
     coverPhoto: existingStudio?.profile?.coverPhoto || w.cover_photo_url || DEFAULT_COVER_PHOTOS[0].url,
     coverPositionY: existingStudio?.profile?.coverPositionY ?? parsePositionY(w.cover_photo_position),
-    partnerInviteCode: `LAZO-${String(w.id || '0000').slice(-4).toUpperCase()}`
+    partnerInviteCode: `LAZO-${String(w.id || '0000').slice(-4).toUpperCase()}`,
+    welcomeSeen: Boolean(existingStudio?.profile?.welcomeSeen)
   };
 
   const base = createInitialWeddingState(profile);
