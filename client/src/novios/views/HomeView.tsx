@@ -19,8 +19,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   const [subTab, setSubTab] = useState<'resumen' | 'estilo'>('resumen');
   const [isRepositioning, setIsRepositioning] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
-  const [coverFitMode, setCoverFitMode] = useState<'auto' | 'cover' | 'contain'>('auto');
-  const [coverIsPortraitOrSmall, setCoverIsPortraitOrSmall] = useState(false);
+  const [coverIsPortrait, setCoverIsPortrait] = useState(false);
   const [showEditProfile, setShowEditProfile] = useState(false);
   const [showVlbModal, setShowVlbModal] = useState(false);
   const [profileForm, setProfileForm] = useState({
@@ -97,10 +96,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.cover_photo_url) {
-          setCoverFitMode('auto');
           updateWedding(prev => ({
             ...prev,
-            profile: { ...prev.profile, coverPhoto: data.cover_photo_url, coverPositionY: 50 }
+            profile: { ...prev.profile, coverPhoto: data.cover_photo_url, coverPositionY: 50, coverFitMode: 'auto' }
           }));
           e.target.value = '';
           return;
@@ -115,10 +113,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === 'string') {
-        setCoverFitMode('auto');
         updateWedding(prev => ({
           ...prev,
-          profile: { ...prev.profile, coverPhoto: reader.result as string, coverPositionY: 50 }
+          profile: { ...prev.profile, coverPhoto: reader.result as string, coverPositionY: 50, coverFitMode: 'auto' }
         }));
       }
     };
@@ -168,13 +165,20 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
     <div className="space-y-6">
       {/* 1. Editorial Hero Cover */}
       {(() => {
-        const useCrispFrame = coverFitMode === 'contain' || (coverFitMode === 'auto' && coverIsPortraitOrSmall);
+        const savedFit = profile.coverFitMode || 'cover';
+        const useCrispFrame = savedFit === 'contain';
+        const setPersistedFitMode = (nextMode: 'cover' | 'contain') => {
+          updateWedding(prev => ({
+            ...prev,
+            profile: { ...prev.profile, coverFitMode: nextMode }
+          }));
+        };
         return (
       <div className="relative rounded-3xl overflow-hidden border border-[#EFE8E1] shadow-sm bg-[#181514]">
         <div className="relative h-64 sm:h-80 w-full overflow-hidden">
           {useCrispFrame ? (
             <>
-              {/* Atmospheric blurred backdrop so vertical/narrow photos never stretch or pixelate */}
+              {/* Atmospheric blurred backdrop so vertical photos never stretch or pixelate */}
               <img
                 src={profile.coverPhoto}
                 alt=""
@@ -187,7 +191,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 alt="Portada del evento"
                 onLoad={e => {
                   const img = e.currentTarget;
-                  setCoverIsPortraitOrSmall(img.naturalHeight > img.naturalWidth * 1.05 || img.naturalWidth < 800);
+                  setCoverIsPortrait(img.naturalHeight > img.naturalWidth * 1.15);
                 }}
                 className="relative z-[1] w-full h-full object-contain contrast-[1.03] saturate-[1.04] transition-all duration-300"
               />
@@ -198,7 +202,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
               alt="Portada del evento"
               onLoad={e => {
                 const img = e.currentTarget;
-                setCoverIsPortraitOrSmall(img.naturalHeight > img.naturalWidth * 1.05 || img.naturalWidth < 800);
+                setCoverIsPortrait(img.naturalHeight > img.naturalWidth * 1.15);
               }}
               className="w-full h-full object-cover contrast-[1.03] saturate-[1.04] transition-all duration-300"
               style={{ objectPosition: `50% ${profile.coverPositionY}%` }}
@@ -212,7 +216,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
               <div className="flex items-center gap-1 bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-white text-[11px]">
                 <button
                   type="button"
-                  onClick={() => setCoverFitMode(useCrispFrame ? 'cover' : 'contain')}
+                  onClick={() => setPersistedFitMode(useCrispFrame ? 'cover' : 'contain')}
                   className="px-2 py-0.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-[10px] font-medium cursor-pointer"
                   title="Alternar entre rellenar todo el banner o mantener nitidez sin recortar"
                 >

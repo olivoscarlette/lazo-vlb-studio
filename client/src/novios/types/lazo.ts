@@ -11,6 +11,7 @@ export interface WeddingProfile {
   estimatedGuests: number;
   coverPhoto: string;
   coverPositionY: number; // 0 to 100
+  coverFitMode?: 'auto' | 'cover' | 'contain';
   partnerInviteCode: string;
   welcomeSeen?: boolean;
 }
