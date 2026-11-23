@@ -19,6 +19,7 @@ import { ReportesModule } from './modules/ReportesModule';
 import { DirectorioModule } from './modules/DirectorioModule';
 import { BitacoraModule } from './modules/BitacoraModule';
 import { WhatsAppHubModule } from './modules/WhatsAppHubModule';
+import { RsvpAutomationModule } from './modules/RsvpAutomationModule';
 import { CalendarioModule } from './modules/CalendarioModule';
 import { VivaLaBrideModule } from './modules/VivaLaBrideModule';
 import { PublicProposalView } from './modules/PublicProposalView';
@@ -574,6 +575,8 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
         return <InvitadosModule />;
       case 'reuniones':
         return <ReunionesModule />;
+      case 'rsvp_envios':
+        return <RsvpAutomationModule onNavigateTab={setActiveTab} />;
       case 'reportes':
         return <ReportesModule />;
       case 'directorio':

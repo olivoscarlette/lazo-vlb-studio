@@ -4,12 +4,13 @@ import {
   LayoutDashboard, CalendarCheck2, Users2, Grid2x2Check,
   CreditCard, Landmark, Church, Clock3, CheckSquare,
   FileText, BarChart3, Contact2, History, X, MessageSquare,
-  ChevronLeft, Sparkles, Calendar, PanelLeft
+  ChevronLeft, Sparkles, Calendar, PanelLeft, Send
 } from 'lucide-react';
 
 export type WorkspaceTab =
   | 'resumen'
   | 'reuniones'
+  | 'rsvp_envios'
   | 'invitados'
   | 'mesas'
   | 'proveedores'
@@ -84,6 +85,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           title: 'AGENCIA & OPERACIÓN',
           items: [
             { id: 'reuniones', label: 'Reuniones', icon: CalendarCheck2 },
+            { id: 'rsvp_envios', label: 'RSVP & Envíos', icon: Send, hiddenForNovios: true },
             { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare, hiddenForNovios: true },
             { id: 'reportes', label: 'Reportes', icon: BarChart3 },
             { id: 'directorio', label: 'Directorio', icon: Contact2, hiddenForNovios: true },
