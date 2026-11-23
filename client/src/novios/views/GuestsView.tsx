@@ -517,7 +517,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                       className="fixed inset-0 z-30"
                       onClick={() => setShowToolsMenu(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-72 bg-white rounded-3xl shadow-xl border border-[#EFE8E1] p-2 z-40">
+                    <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-3xl shadow-xl border border-[#EFE8E1] p-2 z-40">
                       <div className="px-3 py-2 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
                         Archivos y Listas
                       </div>
