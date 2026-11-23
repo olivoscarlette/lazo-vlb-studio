@@ -56,8 +56,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
     finalAmount: number;
   } | null>(null);
   const [form, setForm] = useState({
-    partner1: '',
-    partner2: '',
+    firstName: '',
+    lastName: '',
     weddingDate: new Date(Date.now() + 300 * 86400000).toISOString().split('T')[0],
     email: '',
     phone: '+52 ',
@@ -127,8 +127,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planId: checkoutPlan,
-          partner1: form.partner1.trim(),
-          partner2: form.partner2.trim(),
+          firstName: form.firstName.trim(),
+          lastName: form.lastName.trim(),
           weddingDate: form.weddingDate,
           email: form.email.trim(),
           phone: form.phone.trim(),
@@ -161,7 +161,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
 
   const whatsappFallbackUrl = checkoutPlan
     ? `https://wa.me/${VLB_QUOTES_PHONE}?text=${encodeURIComponent(
-        `¡Hola! Somos ${form.partner1 || 'Novia'} & ${form.partner2 || 'Novio'} (${form.email || 'sin correo'}), fecha de boda ${form.weddingDate}, y queremos adquirir ${
+        `¡Hola! Soy ${`${form.firstName} ${form.lastName}`.trim() || 'nueva clienta'} (${form.email || 'sin correo'}), fecha del evento ${form.weddingDate}, y quiero adquirir ${
           checkoutPlan === 'pro' ? 'Lazo Pro ($1,990 MXN)' : 'Plan Esencial ($990 MXN)'
         }.`
       )}`
@@ -723,28 +723,28 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
-                Novia / Pareja 1 *
+                Nombre *
               </label>
               <input
                 type="text"
                 required
                 autoFocus
                 placeholder="Ej. Sofía"
-                value={form.partner1}
-                onChange={e => setForm({ ...form, partner1: e.target.value })}
+                value={form.firstName}
+                onChange={e => setForm({ ...form, firstName: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
               />
             </div>
             <div>
               <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
-                Novio / Pareja 2 *
+                Apellido *
               </label>
               <input
                 type="text"
                 required
-                placeholder="Ej. Mateo"
-                value={form.partner2}
-                onChange={e => setForm({ ...form, partner2: e.target.value })}
+                placeholder="Ej. Garza"
+                value={form.lastName}
+                onChange={e => setForm({ ...form, lastName: e.target.value })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
               />
             </div>
@@ -753,7 +753,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
-                Fecha de la boda *
+                Fecha del evento *
               </label>
               <input
                 type="date"
@@ -836,7 +836,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="Ej. EXNOVIA50"
+                  placeholder="Ingresa tu código"
                   value={couponInput}
                   onChange={e => {
                     setCouponInput(e.target.value.toUpperCase());

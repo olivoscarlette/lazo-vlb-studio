@@ -84,8 +84,18 @@ function fulfillCheckoutOrder(orderId: string, mpPaymentId?: string): { user: an
   let weddingId = existingUser?.wedding_id || `wed_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
   let userId = existingUser?.id || `usr_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
 
-  const coupleName = `${order.partner_1_name} & ${order.partner_2_name}`;
-  const slug = makeSlug(order.partner_1_name, order.partner_2_name);
+  const hasSecondPartner = Boolean(order.partner_2_name && !String(order.partner_2_name).startsWith('__LASTNAME__:'));
+  const extractedLastName = String(order.partner_2_name || '').startsWith('__LASTNAME__:')
+    ? String(order.partner_2_name).replace('__LASTNAME__:', '').trim()
+    : '';
+  const userFullName = extractedLastName
+    ? `${order.partner_1_name} ${extractedLastName}`.trim()
+    : hasSecondPartner
+    ? `${order.partner_1_name} & ${order.partner_2_name}`
+    : order.partner_1_name;
+  const weddingPartner2 = hasSecondPartner ? order.partner_2_name : '';
+  const coupleName = hasSecondPartner ? `${order.partner_1_name} & ${order.partner_2_name}` : order.partner_1_name;
+  const slug = makeSlug(order.partner_1_name, extractedLastName || weddingPartner2 || 'evento');
 
   db.exec('BEGIN');
   try {
@@ -102,7 +112,7 @@ function fulfillCheckoutOrder(orderId: string, mpPaymentId?: string): { user: an
         coupleName,
         slug,
         order.partner_1_name,
-        order.partner_2_name,
+        weddingPartner2,
         order.wedding_date,
         120,
         plan.hasWhatsappRsvp,
@@ -127,7 +137,7 @@ function fulfillCheckoutOrder(orderId: string, mpPaymentId?: string): { user: an
         VALUES (?, ?, ?, ?, 'NOVIOS', ?, ?, ?, ?)
       `).run(
         userId,
-        coupleName,
+        userFullName,
         order.email.toLowerCase().trim(),
         order.password_hash,
         order.phone || '',
@@ -244,18 +254,20 @@ router.post('/validate-coupon', (req, res) => {
 
 // POST /api/checkout/mercadopago - Crear orden y preferencia de Checkout Pro
 router.post('/mercadopago', async (req, res) => {
-  const { planId, partner1, partner2, weddingDate, email, phone, password, couponCode } = req.body || {};
+  const { planId, firstName, lastName, partner1, partner2, weddingDate, email, phone, password, couponCode } = req.body || {};
 
   if (!planId || !(planId in PLANS)) {
     return res.status(400).json({ error: 'Plan inválido.' });
   }
-  const p1 = String(partner1 || '').trim();
-  const p2 = String(partner2 || '').trim();
+  const cleanFirst = String(firstName || partner1 || '').trim();
+  const cleanLast = String(lastName || '').trim();
+  const p1 = cleanFirst;
+  const p2 = cleanLast ? `__LASTNAME__:${cleanLast}` : String(partner2 || '').trim();
   const cleanEmail = String(email || '').trim().toLowerCase();
   const cleanPass = String(password || '');
   const cleanDate = String(weddingDate || '').trim();
 
-  if (!p1 || !p2 || !cleanDate || !cleanEmail || cleanPass.length < 6) {
+  if (!p1 || (!cleanLast && !p2) || !cleanDate || !cleanEmail || cleanPass.length < 6) {
     return res.status(400).json({ error: 'Completa todos los campos (contraseña mínima de 6 caracteres).' });
   }
 
