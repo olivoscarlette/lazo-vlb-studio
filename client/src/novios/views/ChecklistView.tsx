@@ -132,7 +132,7 @@ export const ChecklistView: React.FC = () => {
 
   if (!wedding) return null;
 
-  const autoExpandAll = Boolean(search.trim()) || filter === 'PRONTO' || filter === 'LISTAS' || ownerFilter !== 'TODOS';
+  const autoExpandAll = Boolean(search.trim()) || filter === 'PRONTO' || filter === 'LISTAS';
 
   const toggleTask = (id: string) => {
     updateWedding(prev => ({
