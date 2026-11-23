@@ -89,7 +89,12 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
   }
 
   // First-time exclusive welcome screen for NOVIOS only
+  // (Demo/recording mode: always show on load for Andrea's Despedida test event)
   const weddingIdKey = currentWedding?.id || '';
+  const isAndreaDespedidaDemo =
+    weddingIdKey === 'wed_1795461449591_ik0w' ||
+    (wedding.profile.partner1.trim().toLowerCase() === 'andrea' &&
+      (wedding.profile.eventType || '').toLowerCase().includes('despedida'));
   const localSeen =
     typeof window !== 'undefined' && weddingIdKey
       ? localStorage.getItem(`lazo_welcome_seen_${weddingIdKey}`) === '1'
@@ -97,9 +102,8 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
   const shouldShowWelcome =
     user?.role === 'NOVIOS' &&
     Boolean(weddingIdKey) &&
-    !wedding.profile.welcomeSeen &&
-    !localSeen &&
-    !dismissedWelcomeIds[weddingIdKey];
+    !dismissedWelcomeIds[weddingIdKey] &&
+    (isAndreaDespedidaDemo || (!wedding.profile.welcomeSeen && !localSeen));
 
   if (shouldShowWelcome) {
     return (
@@ -107,14 +111,16 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
         profile={wedding.profile}
         isVirtualNovios={flags.isVirtualNovios}
         onEnter={() => {
-          if (typeof window !== 'undefined' && weddingIdKey) {
-            localStorage.setItem(`lazo_welcome_seen_${weddingIdKey}`, '1');
-          }
           setDismissedWelcomeIds(prev => ({ ...prev, [weddingIdKey]: true }));
-          updateWedding(prev => ({
-            ...prev,
-            profile: { ...prev.profile, welcomeSeen: true }
-          }));
+          if (!isAndreaDespedidaDemo) {
+            if (typeof window !== 'undefined' && weddingIdKey) {
+              localStorage.setItem(`lazo_welcome_seen_${weddingIdKey}`, '1');
+            }
+            updateWedding(prev => ({
+              ...prev,
+              profile: { ...prev.profile, welcomeSeen: true }
+            }));
+          }
         }}
       />
     );
