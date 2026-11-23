@@ -76,7 +76,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
   const showHamburger = Boolean(user.role !== 'NOVIOS' && (currentWedding || user.role !== 'ADMINISTRADOR'));
 
   return (
-    <header className="sticky top-0 z-50 bg-[#FAF7F5]/95 backdrop-blur-md border-b border-[#EFE8E1] h-16 sm:h-[72px] transition-all">
+    <header className="sticky top-0 z-50 bg-[#FAF7F5] pt-[env(safe-area-inset-top)] border-b border-[#EFE8E1] transition-all">
       <div className="w-full px-2.5 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-[72px]">
           {/* Left: Hamburger Menu Button + Brand Logo */}
@@ -186,17 +186,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                     setGeneralDashboardTab('calendario');
                   }
                 }}
-                className="inline-flex items-center space-x-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition shadow-2xs cursor-pointer shrink-0"
+                className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition shadow-2xs cursor-pointer shrink-0"
                 title="Abrir Calendario General"
               >
                 <Calendar className="w-3.5 h-3.5 text-[#C48B81]" />
-                <span className="hidden sm:inline">Calendario General</span>
+                <span>Calendario General</span>
               </button>
             )}
 
             {/* Platform Switcher: Lazo Planning ⇄ Viva la Bride */}
             {user.role === 'ADMINISTRADOR' && (
-              <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
+              <div className="hidden sm:flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
                 <button
                   onClick={() => {
                     setActiveModule('lazo');
@@ -237,11 +237,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
 
             {/* Authentic Role Badge */}
             <div
-              className={`text-xs p-1.5 sm:px-3 sm:py-1.5 rounded-full border flex items-center space-x-1.5 font-medium select-none shrink-0 ${getRoleBadgeStyle(user.role)}`}
+              className={`hidden md:flex text-xs px-3 py-1.5 rounded-full border items-center space-x-1.5 font-medium select-none shrink-0 ${getRoleBadgeStyle(user.role)}`}
               title={`Rol: ${user.role}`}
             >
-              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <span className="hidden md:inline">{user.role}</span>
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              <span>{user.role}</span>
             </div>
 
             {/* Notifications Bell */}

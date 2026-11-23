@@ -1265,10 +1265,14 @@ export const GeneralDashboard: React.FC = () => {
   const sidebarNavItems = [
     { id: 'calendario', label: 'Calendario General', icon: Calendar },
     { id: 'whatsapp', label: 'WhatsApp Hub', icon: MessageSquare },
-    { id: 'plantillas', label: 'Plantillas', icon: FileText },
-    { id: 'catalogos', label: 'Catálogos', icon: LayoutGrid },
-    { id: 'usuarios', label: 'Usuarios & Accesos', icon: Users },
-    { id: 'ajustes', label: 'Ajustes', icon: Settings },
+    ...(user?.role === 'ADMINISTRADOR'
+      ? [
+          { id: 'plantillas', label: 'Plantillas', icon: FileText },
+          { id: 'catalogos', label: 'Catálogos', icon: LayoutGrid },
+          { id: 'usuarios', label: 'Usuarios & Accesos', icon: Users },
+          { id: 'ajustes', label: 'Ajustes', icon: Settings },
+        ]
+      : []),
   ];
 
   const isVirtualWedding = (w: Wedding) =>
@@ -1704,7 +1708,7 @@ export const GeneralDashboard: React.FC = () => {
               {/* Switcher Plataforma & Botón de Agregar Evento */}
               <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
                 {user?.role === 'ADMINISTRADOR' && (
-                  <div className="flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
+                  <div className="hidden md:flex items-center bg-[#F3EDE6] p-1 rounded-full border border-[#EAE3DA] shadow-2xs shrink-0">
                     <button
                       onClick={() => {
                         setActiveTab('weddings');

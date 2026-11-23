@@ -246,7 +246,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return;
         }
 
-        // Auto select current wedding if Novios or only 1 wedding
+        // Auto select current wedding ONLY for Novios; Admin, Coordinador & Staff land on GeneralDashboard
         if (data.user.role === 'NOVIOS' && weddings.length > 0) {
           setCurrentWeddingState(weddings[0]);
           setActiveTabState('resumen');
@@ -254,17 +254,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (window.location.pathname !== targetUrl) {
             window.history.replaceState({ type: 'wedding', weddingId: weddings[0].id, tab: 'resumen' }, '', targetUrl);
           }
-        } else if (data.user.role !== 'ADMINISTRADOR' && weddings.length > 0) {
-          const savedId = localStorage.getItem('lazo_active_wedding');
-          const found = weddings.find(w => w.id === savedId) || weddings[0];
-          setCurrentWeddingState(found);
-          setActiveTabState('resumen');
-          const targetUrl = `/boda/${found.id}/resumen`;
-          if (window.location.pathname !== targetUrl && window.location.pathname === '/') {
-            window.history.replaceState({ type: 'wedding', weddingId: found.id, tab: 'resumen' }, '', targetUrl);
-          }
         } else {
-          // Admin at root /
+          // Admin, Coordinador & Staff at root / -> GeneralDashboard ("Hola, Nombre")
           setCurrentWeddingState(null);
           setGeneralDashboardTabState('weddings');
         }

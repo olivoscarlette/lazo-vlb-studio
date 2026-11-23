@@ -117,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const showReturnButton = user.role === 'ADMINISTRADOR' || user.role === 'COORDINADOR';
+  const showReturnButton = user.role !== 'NOVIOS';
 
   return (
     <>
