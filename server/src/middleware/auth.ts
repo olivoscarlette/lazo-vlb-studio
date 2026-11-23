@@ -106,11 +106,19 @@ export function requireWeddingAccess(req: Request, res: Response, next: NextFunc
     return next();
   }
 
-  // 2. NOVIOS: Only their specific wedding
+  // 2. NOVIOS: Own wedding_id OR any wedding assigned to them in wedding_assignments (up to 3 events)
   if (user.role === 'NOVIOS') {
-    if (user.wedding_id !== weddingId) {
+    if (user.wedding_id === weddingId) {
+      return next();
+    }
+    const assignment = db.prepare(`
+      SELECT id FROM wedding_assignments
+      WHERE wedding_id = ? AND user_id = ?
+    `).get(weddingId, user.id);
+
+    if (!assignment) {
       return res.status(403).json({
-        error: 'Acceso denegado: Los novios solo pueden acceder a su propia boda asignada.'
+        error: 'Acceso denegado: Los novios solo pueden acceder a sus propios eventos asignados.'
       });
     }
     return next();

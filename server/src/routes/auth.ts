@@ -313,9 +313,14 @@ router.get('/me', authenticateToken, (req, res) => {
       WHERE a.user_id = ?
       ORDER BY w.wedding_date ASC
     `).all(req.user.id);
-  } else if (req.user.role === 'NOVIOS' && req.user.wedding_id) {
-    const wedding = db.prepare('SELECT * FROM weddings WHERE id = ?').get(req.user.wedding_id);
-    if (wedding) assignedWeddings = [wedding];
+  } else if (req.user.role === 'NOVIOS') {
+    assignedWeddings = db.prepare(`
+      SELECT DISTINCT w.*
+      FROM weddings w
+      LEFT JOIN wedding_assignments a ON a.wedding_id = w.id AND a.user_id = ?
+      WHERE a.user_id IS NOT NULL OR w.id = ?
+      ORDER BY w.wedding_date ASC
+    `).all(req.user.id, req.user.wedding_id || '');
   }
 
   return res.json({
