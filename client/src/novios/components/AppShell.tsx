@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, Wallet, Users, CalendarCheck2, Clock, LogOut, CalendarDays, ChevronDown, Check, Sparkles } from 'lucide-react';
+import { Heart, Wallet, Users, CalendarCheck2, Clock, LogOut, CalendarDays, ChevronDown, Check, Sparkles, Plus } from 'lucide-react';
 import { LazoTab } from '../types/lazo';
 import { useWedding } from '../context/WeddingContext';
 import { useAuth } from '../../context/AuthContext';
+import { Modal } from './Modal';
 
 interface AppShellProps {
   activeTab: LazoTab;
@@ -27,8 +28,18 @@ const REUNIONES_TAB = {
 
 export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, children }) => {
   const { wedding, flags, exitToLanding } = useWedding();
-  const { assignedWeddings, currentWedding, setCurrentWedding } = useAuth();
+  const { assignedWeddings, currentWedding, setCurrentWedding, token, refreshUserData } = useAuth();
   const [eventsOpen, setEventsOpen] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [creatingEvent, setCreatingEvent] = useState(false);
+  const [createError, setCreateError] = useState('');
+  const [newEventForm, setNewEventForm] = useState({
+    event_type: 'Boda Completa',
+    partner_1_name: '',
+    partner_2_name: '',
+    wedding_date: new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
+    reception_venue: ''
+  });
   const eventsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,12 +58,65 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
     t.id === 'inicio' && isNonWedding ? { ...t, label: 'Mi Evento', shortLabel: 'Evento' } : t
   );
   const TABS = showReuniones ? [...resolvedBaseTabs, REUNIONES_TAB] : resolvedBaseTabs;
-  const hasMultipleEvents = assignedWeddings.length > 1;
+  const MAX_NOVIOS_EVENTS = 3;
+  const remainingEvents = Math.max(0, MAX_NOVIOS_EVENTS - assignedWeddings.length);
+  const newEventIsNonWedding = !newEventForm.event_type.toLowerCase().includes('boda');
   const currentTitle = wedding
     ? wedding.profile.partner2?.trim()
       ? `${wedding.profile.partner1} & ${wedding.profile.partner2}`
       : wedding.profile.partner1
     : currentWedding?.name || 'Mi Evento';
+
+  const openCreateEventModal = () => {
+    setEventsOpen(false);
+    setCreateError('');
+    setNewEventForm({
+      event_type: isNonWedding ? 'Boda Completa' : 'Despedida de Soltera',
+      partner_1_name: wedding?.profile.partner1 || '',
+      partner_2_name: '',
+      wedding_date: new Date(Date.now() + 180 * 86400000).toISOString().split('T')[0],
+      reception_venue: ''
+    });
+    setShowCreateModal(true);
+  };
+
+  const handleCreateEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!token || !newEventForm.partner_1_name.trim() || !newEventForm.wedding_date) return;
+    setCreatingEvent(true);
+    setCreateError('');
+    try {
+      const res = await fetch('/api/weddings/novios-create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          event_type: newEventForm.event_type,
+          partner_1_name: newEventForm.partner_1_name.trim(),
+          partner_2_name: newEventIsNonWedding ? '' : newEventForm.partner_2_name.trim(),
+          wedding_date: newEventForm.wedding_date,
+          reception_venue: newEventForm.reception_venue.trim()
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setCreateError(data.error || 'No se pudo crear el evento.');
+        return;
+      }
+      await refreshUserData();
+      if (data.wedding) {
+        setCurrentWedding(data.wedding);
+        onSelectTab('inicio');
+      }
+      setShowCreateModal(false);
+    } catch {
+      setCreateError('Error de conexión. Intenta nuevamente.');
+    } finally {
+      setCreatingEvent(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] flex flex-col">
@@ -93,13 +157,13 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
           </nav>
 
           <div className="flex items-center gap-2">
-            {hasMultipleEvents ? (
+            {wedding && (
               <div className="relative" ref={eventsRef}>
                 <button
                   type="button"
                   onClick={() => setEventsOpen(prev => !prev)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#2B2826] shadow-2xs transition cursor-pointer max-w-[180px]"
-                  title="Cambiar entre tus eventos"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#2B2826] shadow-2xs transition cursor-pointer max-w-[190px]"
+                  title="Mis Eventos"
                 >
                   <Sparkles className="w-3 h-3 text-[#C48B81] shrink-0" />
                   <span className="truncate font-medium">{currentTitle}</span>
@@ -108,12 +172,15 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
 
                 {eventsOpen && (
                   <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl border border-[#EFE8E1] shadow-xl py-2 z-50">
-                    <div className="px-3.5 py-1.5 border-b border-[#F5EFEB]">
+                    <div className="px-3.5 py-1.5 border-b border-[#F5EFEB] flex items-center justify-between">
                       <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8A7E72]">
-                        Mis Eventos ({assignedWeddings.length})
+                        Mis Eventos
+                      </span>
+                      <span className="text-[10px] font-medium text-[#C48B81]">
+                        {assignedWeddings.length} de {MAX_NOVIOS_EVENTS}
                       </span>
                     </div>
-                    <div className="py-1 max-h-72 overflow-y-auto">
+                    <div className="py-1 max-h-64 overflow-y-auto">
                       {assignedWeddings.map(ev => {
                         const isActive = currentWedding?.id === ev.id;
                         return (
@@ -142,14 +209,34 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                         );
                       })}
                     </div>
+
+                    <div className="pt-1.5 px-2.5 border-t border-[#F5EFEB]">
+                      {remainingEvents > 0 ? (
+                        <button
+                          type="button"
+                          onClick={openCreateEventModal}
+                          className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE6] text-left flex items-center gap-2 transition cursor-pointer"
+                        >
+                          <span className="w-6 h-6 rounded-full bg-[#C48B81]/15 text-[#C48B81] flex items-center justify-center shrink-0">
+                            <Plus className="w-3.5 h-3.5" />
+                          </span>
+                          <div className="min-w-0">
+                            <div className="text-xs font-semibold text-[#2B2826]">Crear otro evento</div>
+                            <div className="text-[10px] text-[#8A7E72]">
+                              Te {remainingEvents === 1 ? 'queda 1 evento incluido' : `quedan ${remainingEvents} eventos incluidos`}
+                            </div>
+                          </div>
+                        </button>
+                      ) : (
+                        <div className="px-2 py-1.5 text-[11px] text-[#8A7E72] text-center">
+                          Has utilizado tus {MAX_NOVIOS_EVENTS} eventos incluidos.
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
-            ) : wedding ? (
-              <span className="hidden sm:inline-block text-[11px] text-[#8A7E72] font-light">
-                {currentTitle}
-              </span>
-            ) : null}
+            )}
             <button
               onClick={exitToLanding}
               title="Salir a la portada"
@@ -187,6 +274,128 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
           })}
         </div>
       </nav>
+
+      {/* Modal: Crear otro evento (hasta 3 por cuenta) */}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        title="Crear otro evento"
+        subtitle={`Tu cuenta incluye hasta ${MAX_NOVIOS_EVENTS} eventos con tu plan actual (ej. Despedida, Civil y Boda).`}
+        maxWidthClass="max-w-md"
+      >
+        <form onSubmit={handleCreateEvent} className="space-y-3.5">
+          {createError && (
+            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs">
+              {createError}
+            </div>
+          )}
+
+          <div>
+            <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              Tipo de evento *
+            </label>
+            <select
+              value={newEventForm.event_type}
+              onChange={e => setNewEventForm({ ...newEventForm, event_type: e.target.value })}
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+            >
+              <option value="Boda Completa">Boda Completa</option>
+              <option value="Boda Civil">Boda Civil</option>
+              <option value="Boda Religiosa">Boda Religiosa</option>
+              <option value="Despedida de Soltera">Despedida de Soltera</option>
+              <option value="XV Años">XV Años</option>
+              <option value="Baby Shower">Baby Shower</option>
+              <option value="Bautizo">Bautizo</option>
+              <option value="Aniversario">Aniversario</option>
+              <option value="Cumpleaños">Cumpleaños</option>
+              <option value="Evento Social">Otro Evento</option>
+            </select>
+          </div>
+
+          {newEventIsNonWedding ? (
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Nombre del festejado / evento *
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Ej. Andrea"
+                value={newEventForm.partner_1_name}
+                onChange={e => setNewEventForm({ ...newEventForm, partner_1_name: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                  Novia / Pareja 1 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Ej. Andrea"
+                  value={newEventForm.partner_1_name}
+                  onChange={e => setNewEventForm({ ...newEventForm, partner_1_name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                  Novio / Pareja 2 (opcional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Mateo"
+                  value={newEventForm.partner_2_name}
+                  onChange={e => setNewEventForm({ ...newEventForm, partner_2_name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Fecha del evento *
+              </label>
+              <input
+                type="date"
+                required
+                value={newEventForm.wedding_date}
+                onChange={e => setNewEventForm({ ...newEventForm, wedding_date: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                Ciudad / Sede (opcional)
+              </label>
+              <input
+                type="text"
+                placeholder="Ej. Monterrey"
+                value={newEventForm.reception_venue}
+                onChange={e => setNewEventForm({ ...newEventForm, reception_venue: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              />
+            </div>
+          </div>
+
+          <p className="text-[11px] text-[#8A7E72] leading-relaxed">
+            Los eventos creados quedan guardados de forma permanente en tu cuenta (no se pueden eliminar) y heredan tu plan actual.
+          </p>
+
+          <button
+            type="submit"
+            disabled={creatingEvent}
+            className="w-full py-3 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold uppercase tracking-wider shadow-2xs transition cursor-pointer disabled:opacity-60"
+          >
+            {creatingEvent ? 'Creando evento...' : 'Crear Evento'}
+          </button>
+        </form>
+      </Modal>
     </div>
   );
 };

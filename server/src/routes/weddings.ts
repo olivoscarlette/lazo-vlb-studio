@@ -159,6 +159,109 @@ router.get('/', authenticateToken, (req, res) => {
   return res.json({ weddings });
 });
 
+// POST /api/weddings/novios-create - Novios pueden crear hasta 3 eventos en su cuenta (no eliminables)
+router.post('/novios-create', authenticateToken, requireRole(['NOVIOS']), (req, res) => {
+  const userId = req.user!.id;
+  const {
+    event_type = 'Boda Completa',
+    partner_1_name,
+    partner_2_name = '',
+    wedding_date,
+    reception_venue = ''
+  } = req.body || {};
+
+  const p1 = String(partner_1_name || '').trim();
+  const cleanEventType = String(event_type || 'Boda Completa').trim();
+  const isNonWedding = Boolean(cleanEventType && !cleanEventType.toLowerCase().includes('boda'));
+  const p2 = isNonWedding ? '' : String(partner_2_name || '').trim();
+  const cleanDate = String(wedding_date || '').trim();
+  const cleanVenue = String(reception_venue || '').trim();
+
+  if (!p1 || !cleanDate) {
+    return res.status(400).json({ error: 'El nombre y la fecha del evento son obligatorios.' });
+  }
+
+  // Count distinct weddings assigned to this NOVIOS user
+  const userRow = db.prepare('SELECT wedding_id FROM users WHERE id = ?').get(userId) as any;
+  const assignedRows = db.prepare('SELECT wedding_id FROM wedding_assignments WHERE user_id = ?').all(userId) as { wedding_id: string }[];
+  const existingIds = new Set<string>(assignedRows.map(r => r.wedding_id));
+  if (userRow?.wedding_id) existingIds.add(userRow.wedding_id);
+
+  if (existingIds.size >= 3) {
+    return res.status(403).json({
+      error: 'Tu cuenta incluye hasta 3 eventos sin costo adicional.'
+    });
+  }
+
+  // Inherit plan flags from their primary/first existing wedding
+  let inheritedLayout2d = 0;
+  let inheritedWhatsappRsvp = 0;
+  let inheritedPackageType = 'Planner Virtual';
+  const firstWeddingId = userRow?.wedding_id || assignedRows[0]?.wedding_id;
+  if (firstWeddingId) {
+    const baseWedding = db.prepare(
+      'SELECT has_layout_2d, has_whatsapp_rsvp, package_type FROM weddings WHERE id = ?'
+    ).get(firstWeddingId) as any;
+    if (baseWedding) {
+      inheritedLayout2d = baseWedding.has_layout_2d ? 1 : 0;
+      inheritedWhatsappRsvp = baseWedding.has_whatsapp_rsvp ? 1 : 0;
+      inheritedPackageType = baseWedding.package_type || 'Planner Virtual';
+    }
+  }
+
+  const now = new Date().toISOString();
+  const weddingId = `wed_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+  const displayName = p2 ? `${p1} & ${p2}` : p1;
+  const slugBase = displayName
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40) || 'evento';
+  const slug = `${slugBase}-${Math.random().toString(36).slice(2, 6)}`;
+
+  try {
+    db.exec('BEGIN');
+    db.prepare(`
+      INSERT INTO weddings (
+        id, name, slug, partner_1_name, partner_2_name, wedding_date,
+        reception_venue, estimated_guests, status, package_type, event_type,
+        has_whatsapp_rsvp, has_layout_2d, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PLANNING', ?, ?, ?, ?, ?, ?)
+    `).run(
+      weddingId,
+      displayName,
+      slug,
+      p1,
+      p2,
+      cleanDate,
+      cleanVenue,
+      100,
+      inheritedPackageType,
+      cleanEventType,
+      inheritedWhatsappRsvp,
+      inheritedLayout2d,
+      now,
+      now
+    );
+
+    db.prepare(`
+      INSERT OR IGNORE INTO wedding_assignments (id, wedding_id, user_id, assigned_role, created_at)
+      VALUES (?, ?, ?, 'NOVIOS', ?)
+    `).run(`wa_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, weddingId, userId, now);
+
+    db.exec('COMMIT');
+
+    const created = db.prepare('SELECT * FROM weddings WHERE id = ?').get(weddingId);
+    return res.status(201).json({ wedding: created });
+  } catch (err) {
+    try { db.exec('ROLLBACK'); } catch {}
+    console.error('Error creating novios event:', err);
+    return res.status(500).json({ error: 'No se pudo crear el evento. Intenta nuevamente.' });
+  }
+});
+
 // POST /api/weddings - Admin only: Create Wedding
 router.post('/', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
   const {
