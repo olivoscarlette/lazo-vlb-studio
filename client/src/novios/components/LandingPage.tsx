@@ -169,45 +169,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] overflow-x-hidden">
-      {/* ==================== 1. GLASS EDITORIAL HEADER ==================== */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/85 backdrop-blur-xl border-b border-[#EFE8E1]/80">
+      {/* ==================== 1. EDITORIAL HEADER ==================== */}
+      <header className="sticky top-0 z-40 bg-[#FAF8F5] pt-[env(safe-area-inset-top)] border-b border-[#EFE8E1]">
         <div className="max-w-6xl mx-auto px-5 h-16 sm:h-[72px] flex items-center justify-between gap-4">
           <img
             src="/lazo-logo.png"
             alt="Lazo — Studio Planning"
             className="h-9 sm:h-10 w-auto object-contain select-none"
           />
-
-          <nav className="hidden md:flex items-center gap-7 text-xs text-[#7D6F6B]">
-            <button
-              type="button"
-              onClick={() => scrollToSection('experiencia-lazo')}
-              className="hover:text-[#2B2826] transition cursor-pointer"
-            >
-              Qué incluye
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection('plano-2d')}
-              className="hover:text-[#2B2826] transition cursor-pointer"
-            >
-              Plano 2D & RSVP
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection('planes-lazo')}
-              className="hover:text-[#2B2826] transition cursor-pointer"
-            >
-              Planes
-            </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection('faq-lazo')}
-              className="hover:text-[#2B2826] transition cursor-pointer"
-            >
-              Preguntas
-            </button>
-          </nav>
 
           <div className="flex items-center gap-2">
             <button

@@ -121,7 +121,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] flex flex-col">
       {/* Top Minimalist Header */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5]/95 backdrop-blur-md border-b border-[#EFE8E1]">
+      <header className="sticky top-0 z-40 bg-[#FAF8F5] pt-[env(safe-area-inset-top)] border-b border-[#EFE8E1]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <button
             type="button"
@@ -254,7 +254,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
       </main>
 
       {/* Mobile Native-Style Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#EFE8E1] pb-safe">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#EFE8E1] pb-safe">
         <div className={`grid ${showReuniones ? 'grid-cols-6' : 'grid-cols-5'} h-16 max-w-md mx-auto`}>
           {TABS.map(tab => {
             const Icon = tab.icon;
