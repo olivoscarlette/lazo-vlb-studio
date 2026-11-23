@@ -56,6 +56,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   if (!user || !currentWedding || user.role === 'NOVIOS') return null;
 
   const isNovios = user.role === 'NOVIOS';
+  const isNonWedding = Boolean(
+    currentWedding?.event_type && !currentWedding.event_type.toLowerCase().includes('boda')
+  );
 
   // Si weddingDayMode está activo, SOLO se muestran Modo Operación, Asignación de Mesas y Listado de Invitados
   const sections: { title: string; items: MenuItemDef[] }[] = weddingDayMode
@@ -71,9 +74,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ]
     : [
         {
-          title: 'LA BODA',
+          title: isNonWedding ? 'EL EVENTO' : 'LA BODA',
           items: [
-            { id: 'resumen', label: 'Mi Boda', icon: LayoutDashboard },
+            { id: 'resumen', label: isNonWedding ? 'Mi Evento' : 'Mi Boda', icon: LayoutDashboard },
             { id: 'proveedores', label: 'Presupuesto & Contratos', icon: CreditCard },
             { id: 'invitados', label: 'Invitados & RSVP', icon: Users2 },
             { id: 'mesas', label: 'Mesas & Plano 2D', icon: Grid2x2Check },

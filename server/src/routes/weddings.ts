@@ -805,13 +805,16 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
   try {
     const parsed = wedding.novios_studio_json ? JSON.parse(wedding.novios_studio_json) : null;
     if (parsed && typeof parsed === 'object' && Object.keys(parsed).length > 0 && parsed.profile) {
-      // Always keep authoritative CRM date & couple names in sync with weddings table
+      // Always keep authoritative CRM date, event type & couple/event names in sync with weddings table
+      const isNonWedding = Boolean(wedding.event_type && !String(wedding.event_type).toLowerCase().includes('boda'));
       studio = {
         ...parsed,
         profile: {
           ...parsed.profile,
           partner1: wedding.partner_1_name || parsed.profile.partner1,
-          partner2: wedding.partner_2_name || parsed.profile.partner2,
+          partner2: isNonWedding ? (wedding.partner_2_name || '') : (wedding.partner_2_name || parsed.profile.partner2),
+          eventType: wedding.event_type || parsed.profile.eventType || 'Boda Completa',
+          eventName: wedding.name || parsed.profile.eventName,
           weddingDate: wedding.wedding_date || parsed.profile.weddingDate,
           city: parsed.profile.city || wedding.reception_venue || wedding.ceremony_venue || '',
           estimatedGuests: Number(wedding.estimated_guests) || parsed.profile.estimatedGuests || 120
@@ -911,13 +914,14 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
           updates.push('partner_1_name = ?');
           params.push(p.partner1.trim());
         }
-        if (typeof p.partner2 === 'string' && p.partner2.trim()) {
+        if (typeof p.partner2 === 'string') {
           updates.push('partner_2_name = ?');
           params.push(p.partner2.trim());
         }
-        if (typeof p.partner1 === 'string' && typeof p.partner2 === 'string' && p.partner1.trim() && p.partner2.trim()) {
+        if (typeof p.partner1 === 'string' && p.partner1.trim()) {
+          const p2Clean = typeof p.partner2 === 'string' ? p.partner2.trim() : '';
           updates.push('name = ?');
-          params.push(`${p.partner1.trim()} & ${p.partner2.trim()}`);
+          params.push(p2Clean ? `${p.partner1.trim()} & ${p2Clean}` : p.partner1.trim());
         }
         if (typeof p.weddingDate === 'string' && p.weddingDate.trim()) {
           updates.push('wedding_date = ?');

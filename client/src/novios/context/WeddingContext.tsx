@@ -69,14 +69,21 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
   const w = apiData.wedding || {};
   const seed = apiData.seedFromDb || {};
 
-  const nameParts = (w.name || '').split(/&| y /i).map((s: string) => s.trim()).filter(Boolean);
-  const partner1 = w.partner_1_name || existingStudio?.profile?.partner1 || nameParts[0] || 'Novia';
-  const partner2 = w.partner_2_name || existingStudio?.profile?.partner2 || nameParts[1] || 'Novio';
+  const eventType = (w.event_type || existingStudio?.profile?.eventType || 'Boda Completa').trim();
+  const isNonWedding = Boolean(eventType && !eventType.toLowerCase().includes('boda'));
+  const rawName = (w.name || '').trim();
+  const nameParts = rawName.split(/&| y /i).map((s: string) => s.trim()).filter(Boolean);
+  const partner1 = w.partner_1_name || existingStudio?.profile?.partner1 || nameParts[0] || (isNonWedding ? rawName || 'Evento' : 'Novia');
+  const partner2 = isNonWedding
+    ? (w.partner_2_name || '').trim()
+    : (w.partner_2_name || existingStudio?.profile?.partner2 || nameParts[1] || '');
   const weddingDate = w.wedding_date || existingStudio?.profile?.weddingDate || new Date(Date.now() + 300 * 86400000).toISOString().split('T')[0];
 
   const profile: WeddingProfile = {
     partner1,
     partner2,
+    eventType,
+    eventName: rawName || undefined,
     weddingDate,
     city: w.reception_venue || w.ceremony_venue || existingStudio?.profile?.city || '',
     budgetGoal: Number(w.budget_estimated) || existingStudio?.profile?.budgetGoal || 350000,

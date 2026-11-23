@@ -30,11 +30,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
   if (!wedding) return null;
 
   const { profile, guests, vendors, checklist, style } = wedding;
+  const isNonWedding = Boolean(profile.eventType && !profile.eventType.toLowerCase().includes('boda'));
+  const hasPartner2 = Boolean(profile.partner2 && profile.partner2.trim());
 
   const openEditProfile = () => {
     setProfileForm({
       partner1: profile.partner1,
-      partner2: profile.partner2,
+      partner2: profile.partner2 || '',
       weddingDate: profile.weddingDate,
       city: profile.city || '',
       estimatedGuests: String(profile.estimatedGuests || 120),
@@ -45,13 +47,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
   const handleSaveProfile = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!profileForm.partner1.trim() || !profileForm.partner2.trim()) return;
+    if (!profileForm.partner1.trim()) return;
+    if (!isNonWedding && !profileForm.partner2.trim()) return;
     updateWedding(prev => ({
       ...prev,
       profile: {
         ...prev.profile,
         partner1: profileForm.partner1.trim(),
-        partner2: profileForm.partner2.trim(),
+        partner2: isNonWedding ? profileForm.partner2.trim() : profileForm.partner2.trim(),
         weddingDate: profileForm.weddingDate || prev.profile.weddingDate,
         city: profileForm.city.trim(),
         estimatedGuests: Math.max(1, Number(profileForm.estimatedGuests) || 120),
@@ -164,7 +167,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md text-white text-[11px] border border-white/20 transition cursor-pointer"
                 >
                   <Pencil className="w-3 h-3" />
-                  <span className="hidden sm:inline">Editar Boda</span>
+                  <span className="hidden sm:inline">{isNonWedding ? 'Editar Evento' : 'Editar Boda'}</span>
                 </button>
                 <button
                   type="button"
@@ -183,10 +186,21 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             )}
           </div>
 
-          {/* Centered Couple Title & Glassmorphic Countdown */}
+          {/* Centered Event / Couple Title & Glassmorphic Countdown */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center text-white px-5 pointer-events-none">
+            {isNonWedding && profile.eventType && (
+              <span className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-[#E5B7AE] font-medium mb-2 drop-shadow-xs">
+                {profile.eventType}
+              </span>
+            )}
             <h1 className="font-editorial text-4xl sm:text-6xl tracking-wide drop-shadow-sm">
-              {profile.partner1.toUpperCase()} <span className="italic font-normal text-[#E5B7AE]">&</span> {profile.partner2.toUpperCase()}
+              {hasPartner2 ? (
+                <>
+                  {profile.partner1.toUpperCase()} <span className="italic font-normal text-[#E5B7AE]">&amp;</span> {profile.partner2.toUpperCase()}
+                </>
+              ) : (
+                profile.partner1.toUpperCase()
+              )}
             </h1>
             <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[11px] sm:text-xs tracking-wider">
               <span>✨ FALTAN {days} DÍAS</span>
@@ -504,19 +518,19 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* Modal: Editar Información de la Boda */}
+      {/* Modal: Editar Información del Evento / Boda */}
       <Modal
         isOpen={showEditProfile}
         onClose={() => setShowEditProfile(false)}
-        title="Información de tu Boda"
-        subtitle="Edita sus nombres, fecha, sede o metas cuando necesites."
+        title={isNonWedding ? 'Información del Evento' : 'Información de tu Boda'}
+        subtitle={isNonWedding ? 'Edita el nombre, fecha, sede o metas cuando necesites.' : 'Edita sus nombres, fecha, sede o metas cuando necesites.'}
         maxWidthClass="max-w-md"
       >
         <form onSubmit={handleSaveProfile} className="space-y-3.5">
-          <div className="grid grid-cols-2 gap-3">
+          {isNonWedding ? (
             <div>
               <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
-                Novia / Pareja 1 *
+                Nombre del Festejado / Evento *
               </label>
               <input
                 type="text"
@@ -526,24 +540,39 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
               />
             </div>
-            <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
-                Novio / Pareja 2 *
-              </label>
-              <input
-                type="text"
-                required
-                value={profileForm.partner2}
-                onChange={e => setProfileForm({ ...profileForm, partner2: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
-              />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                  Novia / Pareja 1 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={profileForm.partner1}
+                  onChange={e => setProfileForm({ ...profileForm, partner1: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                  Novio / Pareja 2 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={profileForm.partner2}
+                  onChange={e => setProfileForm({ ...profileForm, partner2: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
-                Fecha de la Boda *
+                {isNonWedding ? 'Fecha del Evento *' : 'Fecha de la Boda *'}
               </label>
               <input
                 type="date"

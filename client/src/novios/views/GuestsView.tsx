@@ -270,7 +270,32 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
   const buildWhatsAppLink = (g: GuestItem) => {
     let clean = g.phone.replace(/\D/g, '');
     if (clean.length === 10) clean = `52${clean}`;
-    const msg = `¡Hola ${g.name}! Nos emociona muchísimo celebrar nuestra boda contigo (${profile.partner1} & ${profile.partner2}). Tienes ${g.passes} ${g.passes === 1 ? 'pase reservado' : 'pases reservados'}. ¿Nos confirmas si nos podrás acompañar?`;
+    const eventTypeRaw = (profile.eventType || 'Boda Completa').trim();
+    const etLower = eventTypeRaw.toLowerCase();
+    const hostDisplay = profile.partner2?.trim()
+      ? `${profile.partner1} y ${profile.partner2}`
+      : profile.partner1;
+    const passesText = g.passes === 1 ? '1 lugar' : `${g.passes} lugares`;
+
+    let msg = '';
+    if (etLower.includes('despedida')) {
+      msg = `Hola ${g.name}, qué emoción invitarte a la despedida de soltera de ${hostDisplay}. Hemos reservado ${passesText} especialmente para ti. ¿Nos confirmas si podrás acompañarnos a celebrar?`;
+    } else if (etLower.includes('xv') || etLower.includes('quince')) {
+      msg = `Hola ${g.name}, nos encantaría celebrar contigo los XV años de ${hostDisplay}. Hemos reservado ${passesText} especialmente para ti. ¿Nos confirmas si podrás acompañarnos?`;
+    } else if (etLower.includes('baby')) {
+      msg = `Hola ${g.name}, qué alegría invitarte al baby shower de ${hostDisplay}. Hemos reservado ${passesText} especialmente para ti. ¿Nos confirmas si podrás acompañarnos a celebrar?`;
+    } else if (etLower.includes('bautizo')) {
+      msg = `Hola ${g.name}, nos haría muy felices compartir contigo el bautizo de ${hostDisplay}. Hemos reservado ${passesText} especialmente para ti. ¿Nos confirmas si podrás acompañarnos?`;
+    } else if (etLower.includes('aniversario')) {
+      msg = `Hola ${g.name}, qué alegría invitarte a celebrar el aniversario de ${hostDisplay}. Hemos reservado ${passesText} especialmente para ti. ¿Nos confirmas si podrás acompañarnos?`;
+    } else if (etLower.includes('cumple')) {
+      msg = `Hola ${g.name}, nos encantaría celebrar contigo el cumpleaños de ${hostDisplay}. Hemos reservado ${passesText} especialmente para ti. ¿Nos confirmas si podrás acompañarnos?`;
+    } else if (etLower.includes('boda')) {
+      msg = `Hola ${g.name}, qué alegría invitarte a nuestra boda. Somos ${hostDisplay} y hemos reservado ${passesText} especialmente para ti. ¿Nos confirmas si podrás acompañarnos en este día tan especial?`;
+    } else {
+      msg = `Hola ${g.name}, nos encantaría que nos acompañes en ${eventTypeRaw.toLowerCase()} de ${hostDisplay}. Hemos reservado ${passesText} especialmente para ti. ¿Nos confirmas si podrás asistir?`;
+    }
+
     return `https://wa.me/${clean}?text=${encodeURIComponent(msg)}`;
   };
 

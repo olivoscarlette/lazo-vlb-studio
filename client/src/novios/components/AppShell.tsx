@@ -26,8 +26,12 @@ const REUNIONES_TAB = {
 
 export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, children }) => {
   const { wedding, flags, exitToLanding } = useWedding();
+  const isNonWedding = Boolean(wedding?.profile.eventType && !wedding.profile.eventType.toLowerCase().includes('boda'));
   const showReuniones = !flags.isAdmin && !flags.isVirtualNovios;
-  const TABS = showReuniones ? [...BASE_TABS, REUNIONES_TAB] : BASE_TABS;
+  const resolvedBaseTabs = BASE_TABS.map(t =>
+    t.id === 'inicio' && isNonWedding ? { ...t, label: 'Mi Evento', shortLabel: 'Evento' } : t
+  );
+  const TABS = showReuniones ? [...resolvedBaseTabs, REUNIONES_TAB] : resolvedBaseTabs;
 
   return (
     <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] flex flex-col">
@@ -70,7 +74,9 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
           <div className="flex items-center gap-2">
             {wedding && (
               <span className="hidden sm:inline-block text-[11px] text-[#8A7E72] font-light">
-                {wedding.profile.partner1} & {wedding.profile.partner2}
+                {wedding.profile.partner2?.trim()
+                  ? `${wedding.profile.partner1} & ${wedding.profile.partner2}`
+                  : wedding.profile.partner1}
               </span>
             )}
             <button

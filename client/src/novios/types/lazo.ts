@@ -3,6 +3,8 @@ export type LazoTab = 'inicio' | 'presupuesto' | 'invitados' | 'checklist' | 'mi
 export interface WeddingProfile {
   partner1: string;
   partner2: string;
+  eventType?: string;
+  eventName?: string;
   weddingDate: string; // YYYY-MM-DD
   city: string;
   budgetGoal: number;
