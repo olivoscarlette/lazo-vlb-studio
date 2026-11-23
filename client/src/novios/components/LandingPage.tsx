@@ -43,6 +43,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [mpNotConfigured, setMpNotConfigured] = useState(false);
+  const [couponInput, setCouponInput] = useState('');
+  const [couponChecking, setCouponChecking] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    description?: string;
+    discount_type: string;
+    discount_value: number;
+    baseAmount: number;
+    discountAmount: number;
+    finalAmount: number;
+  } | null>(null);
   const [form, setForm] = useState({
     partner1: '',
     partner2: '',
@@ -59,7 +71,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
   const openCheckout = (plan: 'esencial' | 'pro') => {
     setError('');
     setMpNotConfigured(false);
+    setCouponInput('');
+    setCouponError('');
+    setAppliedCoupon(null);
     setCheckoutPlan(plan);
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!checkoutPlan || !couponInput.trim()) return;
+    setCouponChecking(true);
+    setCouponError('');
+    try {
+      const res = await fetch('/api/checkout/validate-coupon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponInput.trim(), planId: checkoutPlan })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAppliedCoupon(null);
+        setCouponError(data.error || 'Código inválido.');
+        return;
+      }
+      setAppliedCoupon({
+        code: data.coupon.code,
+        description: data.coupon.description,
+        discount_type: data.coupon.discount_type,
+        discount_value: data.coupon.discount_value,
+        baseAmount: data.baseAmount,
+        discountAmount: data.discountAmount,
+        finalAmount: data.finalAmount
+      });
+    } catch {
+      setCouponError('No se pudo validar el código.');
+    } finally {
+      setCouponChecking(false);
+    }
   };
 
   const handleCheckoutSubmit = async (e: React.FormEvent) => {
@@ -85,7 +132,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
           weddingDate: form.weddingDate,
           email: form.email.trim(),
           phone: form.phone.trim(),
-          password: form.password
+          password: form.password,
+          couponCode: appliedCoupon?.code || undefined
         })
       });
       const data = await res.json().catch(() => ({}));
@@ -94,6 +142,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
           setMpNotConfigured(true);
         }
         setError(data.error || 'No se pudo iniciar el pago.');
+        return;
+      }
+      if (data.freeActivation && data.token) {
+        localStorage.setItem('lazo_token', data.token);
+        window.location.href = '/';
         return;
       }
       if (data.init_point) {
@@ -753,6 +806,59 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             />
           </div>
 
+          {/* Código de descuento opcional */}
+          <div className="pt-1 space-y-1.5">
+            <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block">
+              ¿Tienes un código de descuento? (Opcional)
+            </label>
+            {appliedCoupon ? (
+              <div className="flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-[#E5EDE6] border border-[#CCDACC] text-[#354B38] text-xs">
+                <div>
+                  <span className="font-bold tracking-wider">{appliedCoupon.code}</span>
+                  <span className="ml-2 text-[11px]">
+                    −${appliedCoupon.discountAmount.toLocaleString('es-MX')} MXN
+                    {appliedCoupon.discount_type === 'PERCENT' ? ` (${appliedCoupon.discount_value}% off)` : ''}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAppliedCoupon(null);
+                    setCouponInput('');
+                    setCouponError('');
+                  }}
+                  className="text-[11px] font-semibold underline cursor-pointer"
+                >
+                  Quitar
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Ej. EXNOVIA50"
+                  value={couponInput}
+                  onChange={e => {
+                    setCouponInput(e.target.value.toUpperCase());
+                    if (couponError) setCouponError('');
+                  }}
+                  className="flex-1 px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs uppercase tracking-wider focus:border-[#C48B81]"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyCoupon}
+                  disabled={couponChecking || !couponInput.trim()}
+                  className="px-4 py-2 rounded-xl bg-[#2B2826] hover:bg-[#1E1B19] text-white text-xs font-medium transition cursor-pointer disabled:opacity-40"
+                >
+                  {couponChecking ? 'Validando...' : 'Aplicar'}
+                </button>
+              </div>
+            )}
+            {couponError && (
+              <p className="text-[11px] text-[#9A4A3E]">{couponError}</p>
+            )}
+          </div>
+
           <button
             type="submit"
             disabled={submitting}
@@ -761,7 +867,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             <Lock className="w-3.5 h-3.5" />
             <span>
               {submitting
-                ? 'Conectando con MercadoPago...'
+                ? 'Procesando...'
+                : appliedCoupon
+                ? appliedCoupon.finalAmount <= 0
+                  ? 'Activar acceso de cortesía gratis'
+                  : `Pagar $${appliedCoupon.finalAmount.toLocaleString('es-MX')} MXN con MercadoPago`
                 : `Pagar $${checkoutPlan === 'pro' ? '1,990' : '990'} MXN con MercadoPago`}
             </span>
           </button>

@@ -13,6 +13,7 @@ import {
 import { WhatsAppHubModule } from './WhatsAppHubModule';
 import { CalendarioModule } from './CalendarioModule';
 import { UserProfileModal } from '../components/UserProfileModal';
+import { CouponsAdminPanel } from '../components/CouponsAdminPanel';
 import { VivaLaBrideModule } from './VivaLaBrideModule';
 import {
   getBrowserNotificationPermission,
@@ -3924,9 +3925,13 @@ export const GeneralDashboard: React.FC = () => {
               onClick={() => setActiveTab('weddings')}
               className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
             >
-              ← Volver a Bodas
+              ← Volver a Eventos
             </button>
           </div>
+
+          {/* Códigos de Descuento / Cupones MercadoPago */}
+          <CouponsAdminPanel token={token} />
+
           {/* Simplified Backup Card */}
           <div className="luxury-card rounded-3xl p-6 border border-stone-200">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

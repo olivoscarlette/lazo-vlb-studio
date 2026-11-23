@@ -595,6 +595,30 @@ export function initDatabase() {
       );
     `);
   } catch {}
+  try {
+    db.exec("ALTER TABLE checkout_orders ADD COLUMN coupon_code TEXT;");
+  } catch {}
+  try {
+    db.exec("ALTER TABLE checkout_orders ADD COLUMN discount_amount REAL DEFAULT 0;");
+  } catch {}
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS discount_coupons (
+        id TEXT PRIMARY KEY,
+        code TEXT UNIQUE NOT NULL,
+        description TEXT,
+        discount_type TEXT NOT NULL DEFAULT 'PERCENT',
+        discount_value REAL NOT NULL,
+        applicable_plan TEXT DEFAULT 'ALL',
+        max_uses INTEGER DEFAULT NULL,
+        used_count INTEGER DEFAULT 0,
+        expires_at TEXT DEFAULT NULL,
+        is_active INTEGER DEFAULT 1,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+  } catch {}
 
   // Update legacy templates to strictly use "Viva la Bride"
   try {

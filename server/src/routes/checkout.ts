@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { db } from '../db/index.js';
-import { JWT_SECRET } from '../middleware/auth.js';
+import { JWT_SECRET, authenticateToken, requireRole } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -150,6 +150,14 @@ function fulfillCheckoutOrder(orderId: string, mpPaymentId?: string): { user: an
       WHERE id = ?
     `).run(mpPaymentId || null, userId, weddingId, now, orderId);
 
+    if (order.coupon_code && order.status !== 'APPROVED') {
+      db.prepare(`
+        UPDATE discount_coupons
+        SET used_count = COALESCE(used_count, 0) + 1, updated_at = ?
+        WHERE upper(code) = upper(?)
+      `).run(now, order.coupon_code);
+    }
+
     db.exec('COMMIT');
     return { user: existingUser, wedding };
   } catch (err) {
@@ -159,9 +167,84 @@ function fulfillCheckoutOrder(orderId: string, mpPaymentId?: string): { user: an
   }
 }
 
+function evaluateCoupon(rawCode: string, planId: PlanId): {
+  valid: boolean;
+  error?: string;
+  coupon?: any;
+  baseAmount: number;
+  discountAmount: number;
+  finalAmount: number;
+} {
+  const plan = PLANS[planId];
+  const baseAmount = plan.amount;
+  const cleanCode = String(rawCode || '').trim().toUpperCase();
+  if (!cleanCode) {
+    return { valid: false, error: 'Ingresa un código de descuento.', baseAmount, discountAmount: 0, finalAmount: baseAmount };
+  }
+
+  const coupon = db.prepare('SELECT * FROM discount_coupons WHERE upper(code) = ?').get(cleanCode) as any;
+  if (!coupon || !coupon.is_active) {
+    return { valid: false, error: 'Código no válido o inactivo.', baseAmount, discountAmount: 0, finalAmount: baseAmount };
+  }
+
+  if (coupon.applicable_plan && coupon.applicable_plan !== 'ALL' && coupon.applicable_plan !== planId) {
+    const planName = coupon.applicable_plan === 'pro' ? 'Lazo Pro' : 'Plan Esencial';
+    return { valid: false, error: `Este código solo aplica para ${planName}.`, baseAmount, discountAmount: 0, finalAmount: baseAmount };
+  }
+
+  if (coupon.expires_at) {
+    const today = new Date().toISOString().split('T')[0];
+    if (String(coupon.expires_at).slice(0, 10) < today) {
+      return { valid: false, error: 'Este código ya expiró.', baseAmount, discountAmount: 0, finalAmount: baseAmount };
+    }
+  }
+
+  if (coupon.max_uses !== null && coupon.max_uses !== undefined && Number(coupon.max_uses) > 0) {
+    if (Number(coupon.used_count || 0) >= Number(coupon.max_uses)) {
+      return { valid: false, error: 'Este código alcanzó su límite de usos.', baseAmount, discountAmount: 0, finalAmount: baseAmount };
+    }
+  }
+
+  let discountAmount = 0;
+  if (coupon.discount_type === 'FIXED') {
+    discountAmount = Math.min(baseAmount, Math.max(0, Math.round(Number(coupon.discount_value) || 0)));
+  } else {
+    const pct = Math.min(100, Math.max(0, Number(coupon.discount_value) || 0));
+    discountAmount = Math.round((baseAmount * pct) / 100);
+  }
+  const finalAmount = Math.max(0, baseAmount - discountAmount);
+
+  return {
+    valid: true,
+    coupon: {
+      id: coupon.id,
+      code: coupon.code,
+      description: coupon.description || '',
+      discount_type: coupon.discount_type,
+      discount_value: Number(coupon.discount_value)
+    },
+    baseAmount,
+    discountAmount,
+    finalAmount
+  };
+}
+
+// POST /api/checkout/validate-coupon - Validar código de descuento público
+router.post('/validate-coupon', (req, res) => {
+  const { code, planId } = req.body || {};
+  if (!planId || !(planId in PLANS)) {
+    return res.status(400).json({ error: 'Plan inválido.' });
+  }
+  const check = evaluateCoupon(code, planId as PlanId);
+  if (!check.valid) {
+    return res.status(400).json({ error: check.error || 'Código inválido.' });
+  }
+  return res.json(check);
+});
+
 // POST /api/checkout/mercadopago - Crear orden y preferencia de Checkout Pro
 router.post('/mercadopago', async (req, res) => {
-  const { planId, partner1, partner2, weddingDate, email, phone, password } = req.body || {};
+  const { planId, partner1, partner2, weddingDate, email, phone, password, couponCode } = req.body || {};
 
   if (!planId || !(planId in PLANS)) {
     return res.status(400).json({ error: 'Plan inválido.' });
@@ -188,6 +271,78 @@ router.post('/mercadopago', async (req, res) => {
     });
   }
 
+  const plan = PLANS[planId as PlanId];
+  let finalAmount: number = plan.amount;
+  let appliedCouponCode: string | null = null;
+  let discountAmount = 0;
+
+  if (couponCode && String(couponCode).trim()) {
+    const check = evaluateCoupon(couponCode, planId as PlanId);
+    if (!check.valid) {
+      return res.status(400).json({ error: check.error || 'Código de descuento inválido.' });
+    }
+    finalAmount = check.finalAmount;
+    appliedCouponCode = check.coupon.code;
+    discountAmount = check.discountAmount;
+  }
+
+  const orderId = `ord_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+  const now = new Date().toISOString();
+  const passwordHash = bcrypt.hashSync(cleanPass, 10);
+
+  db.prepare(`
+    INSERT INTO checkout_orders (
+      id, plan_id, amount, partner_1_name, partner_2_name, wedding_date,
+      email, phone, password_hash, status, coupon_code, discount_amount, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?, ?)
+  `).run(
+    orderId,
+    plan.id,
+    finalAmount,
+    p1,
+    p2,
+    cleanDate,
+    cleanEmail,
+    String(phone || '').trim(),
+    passwordHash,
+    appliedCouponCode,
+    discountAmount,
+    now,
+    now
+  );
+
+  // Si el cupón cubre el 100% (cortesía), activar de inmediato sin MercadoPago
+  if (finalAmount <= 0) {
+    const result = fulfillCheckoutOrder(orderId, `COUPON_${appliedCouponCode || 'FREE'}`);
+    if (!result) {
+      return res.status(500).json({ error: 'No se pudo activar tu cuenta de cortesía.' });
+    }
+    const { user, wedding } = result;
+    const tokenPayload = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      phone: user.phone,
+      wedding_id: user.wedding_id,
+      vlb_access: 0
+    };
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+    return res.json({
+      orderId,
+      freeActivation: true,
+      token,
+      user: tokenPayload,
+      wedding
+    });
+  }
+
   const mpToken = process.env.MP_ACCESS_TOKEN;
   if (!mpToken) {
     return res.status(503).json({
@@ -196,39 +351,16 @@ router.post('/mercadopago', async (req, res) => {
     });
   }
 
-  const plan = PLANS[planId as PlanId];
-  const orderId = `ord_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
-  const now = new Date().toISOString();
-  const passwordHash = bcrypt.hashSync(cleanPass, 10);
-
-  db.prepare(`
-    INSERT INTO checkout_orders (
-      id, plan_id, amount, partner_1_name, partner_2_name, wedding_date,
-      email, phone, password_hash, status, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?)
-  `).run(
-    orderId,
-    plan.id,
-    plan.amount,
-    p1,
-    p2,
-    cleanDate,
-    cleanEmail,
-    String(phone || '').trim(),
-    passwordHash,
-    now,
-    now
-  );
-
   const baseUrl = getBaseUrl(req);
+  const itemTitle = appliedCouponCode ? `${plan.title} · Cupón ${appliedCouponCode}` : plan.title;
   const preferencePayload = {
     items: [
       {
         id: plan.id,
-        title: plan.title,
+        title: itemTitle,
         quantity: 1,
         currency_id: 'MXN',
-        unit_price: plan.amount
+        unit_price: finalAmount
       }
     ],
     payer: {
@@ -359,6 +491,94 @@ router.get('/verify', async (req, res) => {
     user: tokenPayload,
     wedding
   });
+});
+
+// ==================== ADMIN: GESTIÓN DE CÓDIGOS DE DESCUENTO ====================
+
+// GET /api/checkout/coupons
+router.get('/coupons', authenticateToken, requireRole(['ADMINISTRADOR']), (_req, res) => {
+  try {
+    const coupons = db.prepare('SELECT * FROM discount_coupons ORDER BY created_at DESC').all();
+    return res.json({ coupons });
+  } catch (err) {
+    console.error('Error listing coupons:', err);
+    return res.status(500).json({ error: 'No se pudieron cargar los códigos.' });
+  }
+});
+
+// POST /api/checkout/coupons
+router.post('/coupons', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
+  const { code, description, discount_type, discount_value, applicable_plan, max_uses, expires_at } = req.body || {};
+  const cleanCode = String(code || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '');
+  if (!cleanCode || cleanCode.length < 3) {
+    return res.status(400).json({ error: 'El código debe tener al menos 3 caracteres (letras o números).' });
+  }
+  const type = discount_type === 'FIXED' ? 'FIXED' : 'PERCENT';
+  const value = Number(discount_value);
+  if (isNaN(value) || value <= 0 || (type === 'PERCENT' && value > 100)) {
+    return res.status(400).json({ error: type === 'PERCENT' ? 'El porcentaje debe estar entre 1 y 100.' : 'El monto de descuento debe ser mayor a 0.' });
+  }
+
+  const planScope = ['ALL', 'esencial', 'pro'].includes(applicable_plan) ? applicable_plan : 'ALL';
+  const maxUsesNum = max_uses !== '' && max_uses !== null && max_uses !== undefined ? Math.max(1, parseInt(String(max_uses), 10)) : null;
+  const expiresStr = expires_at && String(expires_at).trim() ? String(expires_at).trim() : null;
+  const now = new Date().toISOString();
+  const id = `cpn_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+
+  try {
+    db.prepare(`
+      INSERT INTO discount_coupons (
+        id, code, description, discount_type, discount_value,
+        applicable_plan, max_uses, used_count, expires_at, is_active, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, 1, ?, ?)
+    `).run(id, cleanCode, String(description || '').trim(), type, value, planScope, maxUsesNum, expiresStr, now, now);
+
+    const created = db.prepare('SELECT * FROM discount_coupons WHERE id = ?').get(id);
+    return res.status(201).json({ coupon: created });
+  } catch (err: any) {
+    if (String(err?.message || '').includes('UNIQUE')) {
+      return res.status(400).json({ error: `El código "${cleanCode}" ya existe.` });
+    }
+    console.error('Error creating coupon:', err);
+    return res.status(500).json({ error: 'No se pudo crear el código.' });
+  }
+});
+
+// PUT /api/checkout/coupons/:id
+router.put('/coupons/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
+  const { id } = req.params;
+  const existing = db.prepare('SELECT * FROM discount_coupons WHERE id = ?').get(id) as any;
+  if (!existing) {
+    return res.status(404).json({ error: 'Código no encontrado.' });
+  }
+
+  const { is_active, description, max_uses, expires_at } = req.body || {};
+  const nextActive = typeof is_active === 'boolean' ? (is_active ? 1 : 0) : existing.is_active;
+  const nextDesc = typeof description === 'string' ? description.trim() : existing.description;
+  const nextMaxUses =
+    max_uses === undefined
+      ? existing.max_uses
+      : max_uses === '' || max_uses === null
+      ? null
+      : Math.max(1, parseInt(String(max_uses), 10));
+  const nextExpires =
+    expires_at === undefined ? existing.expires_at : String(expires_at || '').trim() || null;
+
+  db.prepare(`
+    UPDATE discount_coupons
+    SET is_active = ?, description = ?, max_uses = ?, expires_at = ?, updated_at = ?
+    WHERE id = ?
+  `).run(nextActive, nextDesc, nextMaxUses, nextExpires, new Date().toISOString(), id);
+
+  const updated = db.prepare('SELECT * FROM discount_coupons WHERE id = ?').get(id);
+  return res.json({ coupon: updated });
+});
+
+// DELETE /api/checkout/coupons/:id
+router.delete('/coupons/:id', authenticateToken, requireRole(['ADMINISTRADOR']), (req, res) => {
+  const { id } = req.params;
+  db.prepare('DELETE FROM discount_coupons WHERE id = ?').run(id);
+  return res.json({ success: true });
 });
 
 export default router;
