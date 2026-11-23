@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Heart, Wallet, Users, CalendarCheck2, Clock, LogOut, CalendarDays, ChevronDown, Check, Sparkles, Plus } from 'lucide-react';
+import { Heart, Wallet, Users, CalendarCheck2, Clock, LogOut, CalendarDays, ChevronDown, Check, Sparkles, Plus, Smartphone } from 'lucide-react';
 import { LazoTab } from '../types/lazo';
 import { useWedding } from '../context/WeddingContext';
 import { useAuth } from '../../context/AuthContext';
 import { Modal } from './Modal';
+import { InstallAppModal } from './InstallAppModal';
 
 interface AppShellProps {
   activeTab: LazoTab;
@@ -31,6 +32,9 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
   const { assignedWeddings, currentWedding, setCurrentWedding, token, refreshUserData } = useAuth();
   const [eventsOpen, setEventsOpen] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isStandalone, setIsStandalone] = useState(false);
   const [creatingEvent, setCreatingEvent] = useState(false);
   const [createError, setCreateError] = useState('');
   const [newEventForm, setNewEventForm] = useState({
@@ -51,6 +55,31 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const standalone =
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      Boolean((window.navigator as any).standalone);
+    setIsStandalone(standalone);
+
+    const handleBeforeInstall = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleTriggerNativeInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    try {
+      await deferredPrompt.userChoice;
+    } catch {}
+    setDeferredPrompt(null);
+    setShowInstallModal(false);
+  };
 
   const isNonWedding = Boolean(wedding?.profile.eventType && !wedding.profile.eventType.toLowerCase().includes('boda'));
   const showReuniones = !flags.isAdmin && !flags.isVirtualNovios;
@@ -233,9 +262,39 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                         </div>
                       )}
                     </div>
+                    {!isStandalone && (
+                      <div className="pt-1.5 mt-1.5 px-2.5 border-t border-[#F5EFEB]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEventsOpen(false);
+                            setShowInstallModal(true);
+                          }}
+                          className="w-full px-3 py-2 rounded-xl hover:bg-[#FAF8F5] text-left flex items-center gap-2 transition cursor-pointer"
+                        >
+                          <span className="w-6 h-6 rounded-full bg-[#EFE8E1] text-[#5A524C] flex items-center justify-center shrink-0">
+                            <Smartphone className="w-3.5 h-3.5" />
+                          </span>
+                          <div className="min-w-0">
+                            <div className="text-xs font-medium text-[#2B2826]">Agregar app al celular</div>
+                            <div className="text-[10px] text-[#8A7E72]">Mini guía para iPhone y Android</div>
+                          </div>
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
+            )}
+            {!isStandalone && (
+              <button
+                type="button"
+                onClick={() => setShowInstallModal(true)}
+                title="Agregar Lazo como app en tu celular"
+                className="p-2 rounded-full text-[#8A7E72] hover:text-[#C48B81] hover:bg-white border border-transparent hover:border-[#EFE8E1] transition cursor-pointer"
+              >
+                <Smartphone className="w-4 h-4" />
+              </button>
             )}
             <button
               onClick={exitToLanding}
@@ -396,6 +455,14 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
           </button>
         </form>
       </Modal>
+
+      {/* Mini tutorial: Instalar Lazo como app en celular */}
+      <InstallAppModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+        deferredPrompt={deferredPrompt}
+        onTriggerNativeInstall={handleTriggerNativeInstall}
+      />
     </div>
   );
 };
