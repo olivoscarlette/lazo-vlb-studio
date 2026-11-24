@@ -188,47 +188,63 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         return (
           <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-[#EFE8E1] shadow-xs overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12">
-              {/* Left 5 cols (Desktop) / Bottom (Mobile): Airy Light Editorial Panel */}
-              <div className="order-2 lg:order-1 lg:col-span-5 p-5 sm:p-8 lg:p-10 flex flex-col justify-between bg-gradient-to-br from-white via-[#FCF9F6] to-[#F7EDEB]/40">
-                <div className="space-y-2.5 sm:space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+              {/* Left 5 cols (Desktop) / Bottom (Mobile): Sculptural Editorial Panel */}
+              <div className="order-2 lg:order-1 lg:col-span-5 p-6 sm:p-8 lg:p-10 flex flex-col justify-between bg-gradient-to-br from-white via-[#FCF9F6] to-[#F7EDEB]/45">
+                <div>
+                  {/* Quiet Event Type Eyebrow */}
+                  <div className="flex items-center gap-3">
+                    <span className="h-px w-6 bg-[#C48B81]/70" />
+                    <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.26em] font-medium text-[#B3786E]">
                       {(profile.eventType || 'Boda').toUpperCase()}
                     </span>
-                    {profile.weddingDate && (
-                      <>
-                        <span className="text-[#EEDAD6]">·</span>
-                        <span className="text-[11px] text-[#7D6F6B] font-light">
-                          {formatShortDate(profile.weddingDate)}
-                        </span>
-                      </>
-                    )}
                   </div>
 
-                  <h1 className="font-editorial text-3xl sm:text-4xl lg:text-[2.95rem] leading-[1.08] text-[#2B2826]">
+                  {/* Protagonist Event / Couple Title */}
+                  <h1 className="font-editorial text-4xl sm:text-[2.95rem] lg:text-[3.4rem] leading-[1.04] tracking-[-0.015em] text-[#2B2826] mt-3.5">
                     {hasPartner2 ? (
                       <>
-                        {profile.partner1} <span className="text-[#C48B81] font-light">&amp;</span> {profile.partner2}
+                        {profile.partner1}{' '}
+                        <span className="text-[#C48B81] font-light">&amp;</span>{' '}
+                        {profile.partner2}
                       </>
                     ) : (
                       profile.partner1
                     )}
                   </h1>
 
-                  <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <span className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#F7EDEB] text-[#A86B60] text-xs font-medium border border-[#EEDAD6]/70">
-                      {days === 0 ? 'Hoy es el gran día' : days === 1 ? 'Falta 1 día' : `Faltan ${days} días`}
-                    </span>
-                    {profile.city && (
-                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#FAF8F5] text-[#7D6F6B] text-xs border border-[#EFE8E1]">
-                        {profile.city}
-                      </span>
-                    )}
+                  {/* Sculptural Editorial Countdown + Date & Venue (Zero Generic Pills) */}
+                  <div className="mt-6 flex items-center gap-5">
+                    <div className="font-editorial text-[3.1rem] sm:text-[3.5rem] leading-none text-[#C48B81] tracking-[-0.02em] shrink-0">
+                      {days === 0 ? '¡Hoy!' : days}
+                    </div>
+                    <div className="h-11 w-px bg-[#E5D7CE] shrink-0" />
+                    <div className="min-w-0 space-y-1">
+                      <div className="text-[10.5px] sm:text-[11px] uppercase tracking-[0.22em] font-semibold text-[#2B2826]">
+                        {days === 0
+                          ? isNonWedding
+                            ? 'Es tu gran celebración'
+                            : 'Es el gran día'
+                          : days === 1
+                            ? isNonWedding
+                              ? 'Día para tu celebración'
+                              : 'Día para el gran día'
+                            : isNonWedding
+                              ? 'Días para tu celebración'
+                              : 'Días para el gran día'}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-[13px] text-[#7D6F6B] font-light">
+                        {profile.weddingDate && <span>{formatShortDate(profile.weddingDate)}</span>}
+                        {profile.weddingDate && profile.city && (
+                          <span className="text-[#D4BEB7]">·</span>
+                        )}
+                        {profile.city && <span className="truncate">{profile.city}</span>}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
                 {/* Clean 4-Metric Horizontal Strip */}
-                <div className="mt-6 lg:mt-8 pt-5 border-t border-[#EFE8E1] grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+                <div className="mt-7 lg:mt-9 pt-5 border-t border-[#EFE8E1] grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
                   <button
                     type="button"
                     onClick={() => onNavigate('invitados')}
