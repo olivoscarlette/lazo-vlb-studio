@@ -28,7 +28,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
     setStage('opening');
     setTimeout(() => {
       setStage('card');
-    }, 900);
+    }, 980);
   };
 
   const handleEnter = () => {
@@ -45,7 +45,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
   return (
     <div
-      className={`min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center px-5 py-10 relative overflow-hidden transition-all duration-300 ease-out ${
+      className={`min-h-screen bg-[#F7F3EE] flex flex-col items-center justify-center px-5 py-10 relative overflow-hidden transition-all duration-300 ease-out ${
         exiting ? 'opacity-0 scale-[1.02]' : 'opacity-100 scale-100'
       }`}
     >
@@ -63,7 +63,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         @keyframes lazoCardReveal {
           0% {
             opacity: 0;
-            transform: translateY(28px) scale(0.96);
+            transform: translateY(28px) scale(0.97);
           }
           100% {
             opacity: 1;
@@ -104,24 +104,24 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             transform: translateX(260%) skewX(-20deg);
           }
         }
-        @keyframes lazoSealPulse {
-          0%, 100% {
-            box-shadow: 0 10px 24px -6px rgba(168, 107, 96, 0.45), 0 0 0 0 rgba(196, 139, 129, 0.35);
-          }
-          50% {
-            box-shadow: 0 12px 28px -6px rgba(168, 107, 96, 0.55), 0 0 0 10px rgba(196, 139, 129, 0);
-          }
-        }
         @keyframes lazoEnvelopeFloat {
           0%, 100% {
             transform: translateY(0px);
           }
           50% {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
+          }
+        }
+        @keyframes lazoSealBreathe {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.035);
           }
         }
         .lazo-card-reveal {
-          animation: lazoCardReveal 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+          animation: lazoCardReveal 740ms cubic-bezier(0.22, 1, 0.36, 1) both;
         }
         .lazo-stagger-1 {
           animation: lazoWelcomeFadeUp 640ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
@@ -154,72 +154,86 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         .lazo-silk-sheen {
           animation: lazoSilkSheen 4.8s ease-in-out 1.6s infinite;
         }
-        .lazo-seal-pulse {
-          animation: lazoSealPulse 2.8s ease-in-out infinite;
-        }
         .lazo-envelope-float {
-          animation: lazoEnvelopeFloat 5s ease-in-out infinite;
+          animation: lazoEnvelopeFloat 5.5s ease-in-out infinite;
+        }
+        .lazo-seal-breathe {
+          animation: lazoSealBreathe 3.2s ease-in-out infinite;
         }
         .lazo-envelope-perspective {
-          perspective: 1100px;
+          perspective: 1200px;
         }
         .lazo-flap-3d {
           transform-origin: top center;
-          transition: transform 620ms cubic-bezier(0.32, 0.72, 0, 1);
+          transition: transform 680ms cubic-bezier(0.32, 0.72, 0, 1);
           transform-style: preserve-3d;
         }
         .lazo-flap-open {
-          transform: rotateX(-165deg);
+          transform: rotateX(-172deg);
+        }
+        .lazo-cotton-paper {
+          background-color: #FAF6F0;
+          background-image:
+            radial-gradient(circle at 20% 15%, rgba(255,255,255,0.75) 0%, transparent 55%),
+            radial-gradient(circle at 85% 90%, rgba(226,210,198,0.32) 0%, transparent 55%),
+            url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
         }
       `}</style>
 
-      {/* Soft living blush & champagne ambient light */}
+      {/* Soft living blush & warm daylight aura */}
       <div
         aria-hidden="true"
-        className="lazo-aura-a pointer-events-none absolute -top-24 left-1/2 w-[560px] h-[560px] rounded-full bg-[#EFE2DF]/65 blur-3xl"
+        className="lazo-aura-a pointer-events-none absolute -top-24 left-1/2 w-[580px] h-[580px] rounded-full bg-[#EFE0DC]/70 blur-3xl"
       />
       <div
         aria-hidden="true"
-        className="lazo-aura-b pointer-events-none absolute -bottom-32 right-1/4 w-[440px] h-[440px] rounded-full bg-[#F4EAE3]/75 blur-3xl"
+        className="lazo-aura-b pointer-events-none absolute -bottom-32 right-1/4 w-[460px] h-[460px] rounded-full bg-[#EFE5DA]/80 blur-3xl"
       />
 
-      {/* PHASE 1 & 2: Minimalist Luxury Cotton-Paper Envelope */}
+      {/* PHASE 1 & 2: Fine-Art Cotton-Paper European Envelope with Real Wax Seal */}
       {stage !== 'card' && (
         <div
-          className={`relative z-10 flex flex-col items-center w-full max-w-[430px] transition-all duration-500 ${
-            stage === 'opening' ? 'scale-[1.03]' : ''
+          className={`relative z-10 flex flex-col items-center w-full max-w-[460px] transition-all duration-500 ${
+            stage === 'opening' ? 'scale-[1.02]' : ''
           }`}
         >
-          {/* Subtle LAZO crest above envelope */}
+          {/* Official LAZO crest above */}
           <img
             src="/lazo-logo.png"
             alt="LAZO — Studio Planning"
-            className={`h-12 sm:h-14 w-auto object-contain select-none mb-7 transition-opacity duration-500 ${
-              stage === 'opening' ? 'opacity-0' : 'opacity-90'
+            className={`h-13 sm:h-15 w-auto object-contain select-none mb-8 transition-all duration-500 ${
+              stage === 'opening' ? 'opacity-0 -translate-y-2' : 'opacity-95'
             }`}
           />
 
-          {/* Interactive 3D Envelope */}
+          {/* Interactive Fine-Art European Wedding Envelope */}
           <button
             type="button"
             onClick={handleOpenEnvelope}
-            aria-label="Abrir invitación"
-            className={`group lazo-envelope-perspective relative w-full aspect-[1.48/1] cursor-pointer focus:outline-none ${
+            aria-label="Abrir sobre de invitación"
+            className={`group lazo-envelope-perspective relative w-full aspect-[1.5/1] cursor-pointer focus:outline-none ${
               stage === 'envelope' ? 'lazo-envelope-float' : ''
             }`}
           >
-            {/* Inner letter peeking out when opening */}
+            {/* Soft blush-ivory inner envelope liner visible when flap opens */}
             <div
-              className={`absolute left-[7%] right-[7%] top-[10%] bottom-[12%] rounded-2xl bg-white border border-[#EFE8E1] shadow-md flex flex-col items-center justify-center px-6 transition-all duration-700 ease-out z-10 ${
+              className={`absolute inset-0 rounded-[4px] bg-gradient-to-b from-[#F3E4E0] to-[#F8EFEA] border border-[#E5D7CC] transition-opacity duration-500 ${
+                stage === 'opening' ? 'opacity-100' : 'opacity-0'
+              }`}
+            />
+
+            {/* Inner stationery card rising out of the envelope pocket */}
+            <div
+              className={`absolute left-[6%] right-[6%] top-[8%] bottom-[10%] rounded-[3px] bg-[#FFFEFC] border border-[#EAE0D7] shadow-[0_18px_40px_-14px_rgba(43,40,38,0.18)] flex flex-col items-center justify-center px-6 transition-all duration-700 ease-out z-10 ${
                 stage === 'opening'
                   ? '-translate-y-24 opacity-100 scale-100'
-                  : 'translate-y-0 opacity-0 scale-95'
+                  : 'translate-y-2 opacity-0 scale-95'
               }`}
             >
               <img
                 src="/lazo-logo.png"
                 alt="LAZO"
-                className="h-9 w-auto object-contain opacity-85 mb-2"
+                className="h-9 w-auto object-contain opacity-90 mb-2"
               />
               <span className="font-editorial text-lg text-[#2B2826]">
                 {hasPartner2 && !isNonWedding ? 'Bienvenidos,' : 'Bienvenida,'}{' '}
@@ -227,105 +241,131 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               </span>
             </div>
 
-            {/* Envelope base body */}
+            {/* Cotton-paper envelope body — crisp tailored corners (rounded-[4px]) */}
             <div
-              className={`relative w-full h-full rounded-[1.5rem] bg-gradient-to-br from-[#FFFDFB] via-[#FAF6F1] to-[#F3EBE4] border border-[#E5D9CE] shadow-[0_28px_65px_-24px_rgba(43,40,38,0.18)] overflow-hidden transition-opacity duration-500 ${
-                stage === 'opening' ? 'opacity-30' : 'opacity-100'
+              className={`lazo-cotton-paper relative w-full h-full rounded-[4px] border border-[#E4D9CE] shadow-[0_32px_68px_-22px_rgba(43,40,38,0.22),0_8px_20px_-8px_rgba(43,40,38,0.08)] overflow-hidden transition-opacity duration-500 ${
+                stage === 'opening' ? 'opacity-35' : 'opacity-100'
               }`}
             >
-              {/* Side & bottom folded paper triangles (crisp SVG) */}
+              {/* Delicate tailored paper seams (ultra-soft cotton tone shifts, NO harsh email X) */}
               <svg
-                viewBox="0 0 440 300"
+                viewBox="0 0 460 306"
                 preserveAspectRatio="none"
                 className="absolute inset-0 w-full h-full pointer-events-none z-20"
               >
-                {/* Left fold */}
+                <defs>
+                  <linearGradient id="lazoLeftPocket" x1="0" y1="0" x2="1" y2="0.5">
+                    <stop offset="0%" stopColor="#F5EFE7" />
+                    <stop offset="100%" stopColor="#FAF6F0" />
+                  </linearGradient>
+                  <linearGradient id="lazoRightPocket" x1="1" y1="0" x2="0" y2="0.5">
+                    <stop offset="0%" stopColor="#F2EAE1" />
+                    <stop offset="100%" stopColor="#F9F4EE" />
+                  </linearGradient>
+                  <linearGradient id="lazoBottomPocket" x1="0.5" y1="1" x2="0.5" y2="0">
+                    <stop offset="0%" stopColor="#FCF9F5" />
+                    <stop offset="100%" stopColor="#F6EFE8" />
+                  </linearGradient>
+                </defs>
+
+                {/* Subtle side flaps */}
                 <polygon
-                  points="0,0 218,154 0,300"
-                  fill="#FBF8F4"
-                  stroke="#EAE0D7"
-                  strokeWidth="1"
+                  points="0,0 160,153 0,306"
+                  fill="url(#lazoLeftPocket)"
+                  opacity="0.72"
                 />
-                {/* Right fold */}
                 <polygon
-                  points="440,0 222,154 440,300"
-                  fill="#F8F2EC"
-                  stroke="#EAE0D7"
-                  strokeWidth="1"
+                  points="460,0 300,153 460,306"
+                  fill="url(#lazoRightPocket)"
+                  opacity="0.72"
                 />
-                {/* Bottom fold */}
-                <polygon
-                  points="0,300 220,142 440,300"
-                  fill="#FFFDFB"
-                  stroke="#E7DCD2"
-                  strokeWidth="1.2"
+                {/* Soft horizontal bottom pocket seam */}
+                <path
+                  d="M 0 306 L 148 164 Q 230 154 312 164 L 460 306 Z"
+                  fill="url(#lazoBottomPocket)"
+                  stroke="#E8DDD3"
+                  strokeWidth="0.9"
                 />
               </svg>
 
-              {/* Subtle recipient name engraved near bottom of envelope */}
-              <div className="absolute bottom-5 inset-x-0 z-20 text-center pointer-events-none">
-                <p className="text-[10px] uppercase tracking-[0.24em] text-[#A2938C] mb-0.5">
+              {/* Subtle letterpress recipient line near bottom */}
+              <div className="absolute bottom-5 sm:bottom-6 inset-x-0 z-20 text-center pointer-events-none">
+                <p className="text-[9.5px] uppercase tracking-[0.28em] text-[#A2938B] mb-1">
                   Para
                 </p>
-                <p className="font-editorial text-base sm:text-lg text-[#2B2826]/90">
+                <p className="font-editorial text-lg sm:text-[1.2rem] text-[#2B2826]/90 tracking-[0.01em]">
                   {recipientLabel}
                 </p>
               </div>
             </div>
 
-            {/* Top V-Flap with 3D open rotation */}
+            {/* Deep European Pointed V-Flap with realistic soft studio shadow */}
             <div
-              className={`lazo-flap-3d absolute inset-x-0 top-0 h-[58%] z-30 pointer-events-none ${
+              className={`lazo-flap-3d absolute inset-x-0 top-0 h-[62%] z-30 pointer-events-none ${
                 stage === 'opening' ? 'lazo-flap-open' : ''
               }`}
             >
               <svg
-                viewBox="0 0 440 174"
+                viewBox="0 0 460 190"
                 preserveAspectRatio="none"
-                className="w-full h-full drop-shadow-[0_8px_14px_rgba(43,40,38,0.07)]"
+                className="w-full h-full drop-shadow-[0_12px_18px_rgba(43,40,38,0.10)]"
               >
+                <defs>
+                  <linearGradient id="lazoEuroFlap" x1="0.2" y1="0" x2="0.8" y2="1">
+                    <stop offset="0%" stopColor="#FFFDFB" />
+                    <stop offset="55%" stopColor="#FAF5EE" />
+                    <stop offset="100%" stopColor="#F3EBE2" />
+                  </linearGradient>
+                </defs>
                 <path
-                  d="M 18 0 L 422 0 Q 440 0 440 18 L 234 162 Q 220 172 206 162 L 0 18 Q 0 0 18 0 Z"
-                  fill="#FFFFFF"
-                  stroke="#E7DCD2"
-                  strokeWidth="1.2"
+                  d="M 0 0 L 460 0 L 243 176 Q 230 186 217 176 L 0 0 Z"
+                  fill="url(#lazoEuroFlap)"
+                  stroke="#E5D9CE"
+                  strokeWidth="1"
+                />
+                {/* Subtle embossed inner border line along the European flap */}
+                <path
+                  d="M 16 4 L 230 171 L 444 4"
+                  fill="none"
+                  stroke="#FFFFFF"
+                  strokeOpacity="0.65"
+                  strokeWidth="1"
                 />
               </svg>
             </div>
 
-            {/* Dusty-Rose Wax Seal at the center tip */}
+            {/* REAL Photorealistic Hand-Poured Dusty-Rose Wax Seal */}
             <div
-              className={`absolute left-1/2 top-[53%] -translate-x-1/2 -translate-y-1/2 z-40 transition-all duration-300 ${
+              className={`absolute left-1/2 top-[58%] -translate-x-1/2 -translate-y-1/2 z-40 transition-all duration-300 ${
                 stage === 'opening'
-                  ? 'opacity-0 scale-75'
+                  ? 'opacity-0 scale-75 -translate-y-4'
                   : 'opacity-100 scale-100 group-hover:scale-105'
               }`}
             >
-              <div className="lazo-seal-pulse w-16 h-16 sm:w-[70px] sm:h-[70px] rounded-full bg-gradient-to-br from-[#D0988E] via-[#C48B81] to-[#A86B60] p-1.5 flex items-center justify-center">
-                <div className="w-full h-full rounded-full border border-white/40 flex items-center justify-center bg-[#C48B81]/30">
-                  <span className="font-editorial text-white text-xl sm:text-2xl tracking-wider select-none">
-                    L
-                  </span>
-                </div>
-              </div>
+              <img
+                src="/lazo-wax-seal.png"
+                alt="Sello de lacre LAZO"
+                className="lazo-seal-breathe w-[78px] h-[78px] sm:w-[88px] sm:h-[88px] object-contain select-none drop-shadow-[0_10px_18px_rgba(43,40,38,0.22)]"
+                draggable={false}
+              />
             </div>
           </button>
 
-          {/* Subtle tap hint */}
+          {/* Subtle editorial prompt */}
           <p
-            className={`mt-7 text-[11px] uppercase tracking-[0.24em] text-[#9A8B84] transition-opacity duration-300 ${
+            className={`mt-8 text-[10.5px] uppercase tracking-[0.26em] text-[#9A8B83] transition-opacity duration-300 ${
               stage === 'opening' ? 'opacity-0' : 'opacity-100'
             }`}
           >
-            Toca el sello para abrir
+            Toca el sello de lacre para abrir
           </p>
         </div>
       )}
 
-      {/* PHASE 3: Fine-Art Stationery Welcome Card */}
+      {/* PHASE 3: Fine-Art Cotton Stationery Welcome Card */}
       {stage === 'card' && (
-        <div className="lazo-card-reveal relative z-10 w-full max-w-[470px] bg-white/95 rounded-[2.25rem] p-3 sm:p-3.5 border border-[#EAE0D8] shadow-[0_32px_72px_-30px_rgba(43,40,38,0.14)]">
-          <div className="rounded-[1.65rem] border border-[#F1E8E2] bg-gradient-to-b from-white via-[#FFFDFB] to-[#FAF5F2]/65 px-7 sm:px-11 py-11 sm:py-14 text-center flex flex-col items-center">
+        <div className="lazo-card-reveal relative z-10 w-full max-w-[470px] bg-white/95 rounded-[1.5rem] p-3 sm:p-3.5 border border-[#E7DDD4] shadow-[0_32px_72px_-30px_rgba(43,40,38,0.16)]">
+          <div className="rounded-[1.1rem] border border-[#F0E6DE] bg-gradient-to-b from-white via-[#FFFDFB] to-[#FAF5F1]/70 px-7 sm:px-11 py-11 sm:py-14 text-center flex flex-col items-center">
             {/* Official LAZO Crest — larger & focal */}
             <img
               src="/lazo-logo.png"
