@@ -62,6 +62,13 @@ router.post('/login', (req, res) => {
 
   loginAttempts.delete(rateKey);
 
+  // Bloqueo temporal: solo ADMINISTRADOR puede iniciar sesión
+  if (user.role !== 'ADMINISTRADOR') {
+    return res.status(403).json({
+      error: 'La plataforma se encuentra en actualización privada. Acceso temporalmente reservado a administración.'
+    });
+  }
+
   const tokenPayload = {
     id: user.id,
     name: user.name,

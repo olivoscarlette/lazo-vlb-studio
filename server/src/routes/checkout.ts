@@ -240,20 +240,17 @@ function evaluateCoupon(rawCode: string, planId: PlanId): {
 }
 
 // POST /api/checkout/validate-coupon - Validar código de descuento público
-router.post('/validate-coupon', (req, res) => {
-  const { code, planId } = req.body || {};
-  if (!planId || !(planId in PLANS)) {
-    return res.status(400).json({ error: 'Plan inválido.' });
-  }
-  const check = evaluateCoupon(code, planId as PlanId);
-  if (!check.valid) {
-    return res.status(400).json({ error: check.error || 'Código inválido.' });
-  }
-  return res.json(check);
+router.post('/validate-coupon', (_req, res) => {
+  return res.status(503).json({ error: 'El registro público está temporalmente pausado por actualización.' });
 });
 
 // POST /api/checkout/mercadopago - Crear orden y preferencia de Checkout Pro
-router.post('/mercadopago', async (req, res) => {
+router.post('/mercadopago', async (_req, res) => {
+  return res.status(503).json({ error: 'El registro público está temporalmente pausado por actualización.' });
+});
+
+// Original checkout handler preserved below (temporarily paused)
+router.post('/mercadopago-paused-backup', async (req, res) => {
   const { planId, firstName, lastName, partner1, partner2, weddingDate, email, phone, password, couponCode } = req.body || {};
 
   if (!planId || !(planId in PLANS)) {

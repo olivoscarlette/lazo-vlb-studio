@@ -788,24 +788,76 @@ const AppContent: React.FC = () => {
   if (!user) {
     if (!showLogin) {
       return (
-        <>
-          {checkoutNotice && (
-            <div className="bg-[#2B2826] text-white text-xs px-4 py-3 text-center flex items-center justify-center gap-3">
-              <span>{checkoutNotice}</span>
+        <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center px-5 py-12 text-center relative overflow-hidden">
+          <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full bg-[#EFE2DF]/60 blur-3xl" />
+          <div className="relative z-10 bg-white rounded-[2rem] border border-[#EFE8E1] shadow-sm max-w-md w-full px-8 py-12 space-y-5">
+            <img
+              src="/lazo-logo.png"
+              alt="LAZO — Studio Planning"
+              className="h-14 w-auto mx-auto object-contain select-none"
+            />
+            <div className="space-y-2">
+              <span className="inline-block text-[10px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+                Acceso Privado
+              </span>
+              <h1 className="font-editorial text-2xl sm:text-3xl text-[#2B2826]">
+                Estamos preparando algo nuevo
+              </h1>
+              <p className="text-xs sm:text-sm text-[#7D6F6B] font-light leading-relaxed">
+                La plataforma se encuentra en actualización privada. Vuelve pronto para conocer la nueva experiencia.
+              </p>
+            </div>
+            <div className="pt-2">
               <button
                 type="button"
-                onClick={() => setCheckoutNotice(null)}
-                className="underline text-[#E5B7AE] cursor-pointer"
+                onClick={() => setShowLogin(true)}
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#2B2826] hover:bg-[#191716] text-white text-xs font-medium transition cursor-pointer"
               >
-                Cerrar
+                <Lock className="w-3.5 h-3.5 text-[#E5B7AE]" />
+                <span>Acceso Administración</span>
               </button>
             </div>
-          )}
-          <LandingPage onOpenLogin={() => setShowLogin(true)} />
-        </>
+          </div>
+        </div>
       );
     }
     return <LoginView onBack={() => setShowLogin(false)} />;
+  }
+
+  // Bloqueo temporal: solo ADMINISTRADOR puede entrar mientras se renueva el concepto
+  if (user.role !== 'ADMINISTRADOR') {
+    return (
+      <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center px-5 py-12 text-center">
+        <div className="bg-white rounded-[2rem] border border-[#EFE8E1] shadow-sm max-w-md w-full px-8 py-12 space-y-5">
+          <img
+            src="/lazo-logo.png"
+            alt="LAZO — Studio Planning"
+            className="h-12 w-auto mx-auto object-contain select-none"
+          />
+          <div className="space-y-2">
+            <span className="inline-block text-[10px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+              En actualización
+            </span>
+            <h1 className="font-editorial text-2xl text-[#2B2826]">
+              Acceso temporalmente pausado
+            </h1>
+            <p className="text-xs text-[#7D6F6B] font-light leading-relaxed">
+              Estamos realizando mejoras en la plataforma. En breve volveremos a habilitar el acceso.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.removeItem('lazo_token');
+              window.location.href = '/';
+            }}
+            className="px-6 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] border border-[#EFE8E1] text-xs font-medium text-[#2B2826] transition cursor-pointer"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
