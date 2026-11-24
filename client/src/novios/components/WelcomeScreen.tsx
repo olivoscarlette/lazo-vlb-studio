@@ -30,72 +30,97 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
   return (
     <div
-      className={`min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center px-5 py-12 relative overflow-hidden transition-opacity duration-300 ${
+      className={`min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center px-5 py-10 relative overflow-hidden transition-opacity duration-300 ${
         exiting ? 'opacity-0' : 'opacity-100'
       }`}
     >
-      {/* Subtle luxury blush radial aura behind the card */}
+      {/* Soft ambient blush & champagne glow */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[560px] h-[560px] rounded-full bg-[#EFE2DF]/80 blur-3xl"
+        className="pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-[540px] h-[540px] rounded-full bg-[#EFE2DF]/60 blur-3xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-32 right-1/4 w-[420px] h-[420px] rounded-full bg-[#F4EAE3]/70 blur-3xl"
       />
 
-      {/* Official LAZO logo */}
-      <div className="relative z-10 mb-7 sm:mb-10 flex flex-col items-center animate-in fade-in slide-in-from-bottom-2 duration-500">
-        <img
-          src="/lazo-logo.png"
-          alt="LAZO — Studio Planning"
-          className="h-16 sm:h-18 w-auto object-contain select-none"
-        />
-      </div>
+      {/* Fine-Art Stationery Frame */}
+      <div className="relative z-10 w-full max-w-[460px] bg-white/90 rounded-[2.25rem] p-3 sm:p-3.5 border border-[#EAE0D8] shadow-[0_30px_70px_-30px_rgba(43,40,38,0.14)] animate-in fade-in zoom-in-95 duration-500">
+        <div className="rounded-[1.65rem] border border-[#F1E8E2] bg-gradient-to-b from-white via-[#FFFDFB] to-[#FAF5F2]/60 px-7 sm:px-11 py-11 sm:py-14 text-center flex flex-col items-center">
+          {/* Official LAZO Crest */}
+          <img
+            src="/lazo-logo.png"
+            alt="LAZO — Studio Planning"
+            className="h-11 sm:h-12 w-auto object-contain select-none opacity-95"
+          />
 
-      {/* Editorial Welcome Card (Opción A) */}
-      <div className="relative z-10 bg-white rounded-[2rem] border border-[#EFE8E1] shadow-[0_24px_60px_-24px_rgba(43,40,38,0.14)] max-w-md w-full px-7 sm:px-11 py-10 sm:py-12 text-center animate-in fade-in zoom-in-95 duration-500">
-        <span className="inline-block text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
-          {isVirtualNovios
-            ? 'Tu espacio privado está listo'
-            : 'Viva la Bride · Tu espacio privado está listo'}
-        </span>
-
-        <h1 className="font-editorial text-[2.2rem] sm:text-[2.6rem] text-[#2B2826] leading-[1.15] mt-4">
-          {hasPartner2 && !isNonWedding ? (
-            <>
-              Bienvenidos a Lazo,
-              <br />
-              {profile.partner1} &amp; {profile.partner2}
-            </>
-          ) : (
-            <>
-              Bienvenida a Lazo,
-              <br />
-              {profile.partner1}
-            </>
-          )}
-        </h1>
-
-        <p className="text-sm sm:text-[15px] text-[#7D6F6B] font-light leading-relaxed mt-4 max-w-sm mx-auto">
-          {isVirtualNovios
-            ? 'Preparamos este espacio exclusivo para que disfrutes planear cada detalle de tu gran día con calma, claridad y estilo.'
-            : 'Tu equipo de Viva la Bride preparó este espacio exclusivo para que disfrutes planear cada detalle de tu gran día con calma, claridad y estilo.'}
-        </p>
-
-        {profile.weddingDate && (
-          <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#5A524C]">
-            <span>✨ Faltan {days} días</span>
-            <span className="opacity-45">·</span>
-            <span>{formatShortDate(profile.weddingDate)}</span>
+          {/* Delicate hairline ornament */}
+          <div className="flex items-center justify-center gap-3 my-7 w-28">
+            <span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#DFCFC8]" />
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]/70" />
+            <span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#DFCFC8]" />
           </div>
-        )}
 
-        <div className="mt-8">
-          <button
-            type="button"
-            onClick={handleEnter}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-9 py-4 rounded-full bg-[#2B2826] hover:bg-[#191716] text-white text-sm font-medium tracking-wide shadow-sm transition cursor-pointer"
-          >
-            <span>{isNonWedding ? 'Entrar a mi evento' : 'Entrar a mi boda'}</span>
-            <ArrowRight className="w-4 h-4 text-[#E5B7AE]" />
-          </button>
+          {/* Clean, non-redundant greeting */}
+          <h1 className="font-editorial text-[2.25rem] sm:text-[2.75rem] text-[#2B2826] leading-[1.12] tracking-[-0.01em]">
+            {hasPartner2 && !isNonWedding ? (
+              <>
+                Bienvenidos,
+                <span className="block mt-1.5 text-[#2B2826]">
+                  {profile.partner1}{' '}
+                  <span className="text-[#C48B81]">&amp;</span>{' '}
+                  {profile.partner2}
+                </span>
+              </>
+            ) : (
+              <>
+                Bienvenida,
+                <span className="block mt-1 text-[#2B2826]">
+                  {profile.partner1}
+                </span>
+              </>
+            )}
+          </h1>
+
+          {/* Single poetic, airy line */}
+          <p className="text-[13.5px] sm:text-sm text-[#7D6F6B] font-light leading-relaxed mt-5 max-w-[300px]">
+            {isNonWedding
+              ? 'Todo listo para dar forma a cada detalle de tu celebración.'
+              : 'Todo listo para dar forma a cada detalle de tu gran día.'}
+          </p>
+
+          {/* Editorial date & countdown row (no generic pill, no emoji) */}
+          {profile.weddingDate && (
+            <div className="mt-8 pt-6 border-t border-[#EFE8E1] w-full flex items-center justify-center gap-4 text-[11px] uppercase tracking-[0.18em] text-[#7D6F6B]">
+              <span>{formatShortDate(profile.weddingDate)}</span>
+              <span className="h-3 w-px bg-[#DFCFC8]" />
+              <span className="text-[#A86B60] font-medium">
+                {days === 0
+                  ? 'Hoy es el gran día'
+                  : days === 1
+                    ? 'Falta 1 día'
+                    : `Faltan ${days} días`}
+              </span>
+            </div>
+          )}
+
+          {/* Soft dusty-rose signature CTA */}
+          <div className="mt-8 w-full flex flex-col items-center">
+            <button
+              type="button"
+              onClick={handleEnter}
+              className="group w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-9 py-3.5 rounded-full bg-[#C48B81] hover:bg-[#AE746A] text-white text-xs sm:text-[13px] font-medium uppercase tracking-[0.14em] shadow-[0_10px_24px_-10px_rgba(196,139,129,0.75)] transition-all duration-200 cursor-pointer"
+            >
+              <span>{isNonWedding ? 'Entrar a mi evento' : 'Entrar a mi boda'}</span>
+              <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-1" />
+            </button>
+
+            {!isVirtualNovios && (
+              <span className="mt-6 text-[10px] uppercase tracking-[0.22em] text-[#A89B95]">
+                Curado por Viva la Bride
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>
