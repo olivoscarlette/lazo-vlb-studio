@@ -273,16 +273,16 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             style={{ width: tableSize, height: tableSize }}
             className={`rounded-full flex flex-col items-center justify-center text-center px-1.5 border transition-all shadow-2xs ${
               isSelected
-                ? 'bg-white border-[#C48B81] ring-4 ring-[#C48B81]/20'
+                ? 'bg-white border-[#6E2E3A] ring-4 ring-[#6E2E3A]/20'
                 : isOver
                 ? 'bg-rose-50 border-rose-300'
-                : 'bg-white border-[#E5DDD5] hover:border-[#C48B81]/70'
+                : 'bg-white border-[#E5DDD5] hover:border-[#6E2E3A]/70'
             }`}
           >
-            <span className="text-[10px] font-medium text-[#2B2826] leading-tight line-clamp-2">
+            <span className="text-[10px] font-medium text-[#1F1D1E] leading-tight line-clamp-2">
               {table.name}
             </span>
-            <span className={`text-[9px] mt-0.5 font-semibold ${isOver ? 'text-rose-600' : 'text-[#8A7E72]'}`}>
+            <span className={`text-[9px] mt-0.5 font-semibold ${isOver ? 'text-rose-600' : 'text-[#6B6462]'}`}>
               {usedSeats}/{cap}
             </span>
           </div>
@@ -374,7 +374,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 <path
                   d={dPath}
                   fill="none"
-                  stroke="#C48B81"
+                  stroke="#6E2E3A"
                   strokeOpacity={0.22}
                   strokeWidth={34}
                   strokeLinecap="round"
@@ -385,7 +385,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               <path
                 d={dPath}
                 fill="none"
-                stroke={isSelected ? '#C48B81' : isOver ? '#FCA5A5' : '#E5DDD5'}
+                stroke={isSelected ? '#6E2E3A' : isOver ? '#FCA5A5' : '#E5DDD5'}
                 strokeWidth={26}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -440,10 +440,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             {/* Clean centered label pill */}
             <div
               style={{ transform: `rotate(${-rot}deg)` }}
-              className="absolute px-2.5 py-0.5 rounded-full bg-white/95 border border-[#EFE8E1] shadow-2xs flex items-center gap-1.5 pointer-events-none"
+              className="absolute px-2.5 py-0.5 rounded-full bg-white/95 border border-[#E7E1D8] shadow-2xs flex items-center gap-1.5 pointer-events-none"
             >
-              <span className="text-[10px] font-medium text-[#2B2826] whitespace-nowrap">{table.name}</span>
-              <span className={`text-[9px] font-semibold ${isOver ? 'text-rose-600' : 'text-[#8A7E72]'}`}>
+              <span className="text-[10px] font-medium text-[#1F1D1E] whitespace-nowrap">{table.name}</span>
+              <span className={`text-[9px] font-semibold ${isOver ? 'text-rose-600' : 'text-[#6B6462]'}`}>
                 {usedSeats}/{cap}
               </span>
             </div>
@@ -506,20 +506,20 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             style={{ width: w, height: h }}
             className={`rounded-xl flex flex-col items-center justify-center text-center px-2 border transition-all shadow-2xs ${
               isSelected
-                ? 'bg-white border-[#C48B81] ring-4 ring-[#C48B81]/20'
+                ? 'bg-white border-[#6E2E3A] ring-4 ring-[#6E2E3A]/20'
                 : isOver
                 ? 'bg-rose-50 border-rose-300'
-                : 'bg-white border-[#E5DDD5] hover:border-[#C48B81]/70'
+                : 'bg-white border-[#E5DDD5] hover:border-[#6E2E3A]/70'
             }`}
           >
             <span
-              className="text-[10px] font-medium text-[#2B2826] leading-tight truncate max-w-full"
+              className="text-[10px] font-medium text-[#1F1D1E] leading-tight truncate max-w-full"
               style={{ transform: `rotate(${-rot}deg)` }}
             >
               {table.name}
             </span>
             <span
-              className={`text-[9px] font-semibold ${isOver ? 'text-rose-600' : 'text-[#8A7E72]'}`}
+              className={`text-[9px] font-semibold ${isOver ? 'text-rose-600' : 'text-[#6B6462]'}`}
               style={{ transform: `rotate(${-rot}deg)` }}
             >
               {usedSeats}/{cap}
@@ -533,12 +533,12 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   return (
     <div className="space-y-4">
       {/* Top Studio Toolbar */}
-      <div className="bg-white rounded-2xl p-3 border border-[#EFE8E1] shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
+      <div className="bg-white rounded-2xl p-3 border border-[#E7E1D8] shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
             onClick={onOpenNewTable}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Mesa</span>
@@ -546,57 +546,57 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <button
             type="button"
             onClick={() => onAddElement('pista')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#5A524C] border border-[#E7E1D8] text-xs font-medium transition cursor-pointer"
           >
-            <Sparkles className="w-3 h-3 text-[#C48B81]" />
+            <Sparkles className="w-3 h-3 text-[#6E2E3A]" />
             <span>+ Pista</span>
           </button>
           <button
             type="button"
             onClick={() => onAddElement('dj')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#5A524C] border border-[#E7E1D8] text-xs font-medium transition cursor-pointer"
           >
-            <Music className="w-3 h-3 text-[#C48B81]" />
+            <Music className="w-3 h-3 text-[#6E2E3A]" />
             <span>+ DJ</span>
           </button>
           <button
             type="button"
             onClick={() => onAddElement('barra')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#5A524C] border border-[#E7E1D8] text-xs font-medium transition cursor-pointer"
           >
-            <Wine className="w-3 h-3 text-[#C48B81]" />
+            <Wine className="w-3 h-3 text-[#6E2E3A]" />
             <span>+ Barra</span>
           </button>
           <button
             type="button"
             onClick={() => onAddElement('entrada')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#5A524C] border border-[#E7E1D8] text-xs font-medium transition cursor-pointer"
           >
-            <DoorOpen className="w-3 h-3 text-[#C48B81]" />
+            <DoorOpen className="w-3 h-3 text-[#6E2E3A]" />
             <span>+ Entrada</span>
           </button>
           <button
             type="button"
             onClick={() => setShowOtherModal(true)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#D8CFC8] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white hover:bg-[#F8F5F0] text-[#1F1D1E] border border-[#D8CFC8] text-xs font-medium transition cursor-pointer"
           >
-            <Shapes className="w-3 h-3 text-[#C48B81]" />
+            <Shapes className="w-3 h-3 text-[#6E2E3A]" />
             <span>+ Otro</span>
           </button>
         </div>
 
         {/* Zoom + Unassigned pill */}
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[11px] text-[#7D6F6B]">
-            <Users className="w-3 h-3 text-[#C48B81]" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] text-[11px] text-[#6B6462]">
+            <Users className="w-3 h-3 text-[#6E2E3A]" />
             <span>{totalUnassignedPasses} sin mesa</span>
           </span>
 
-          <div className="inline-flex items-center bg-[#FAF8F5] rounded-full border border-[#EFE8E1] p-0.5">
+          <div className="inline-flex items-center bg-[#F8F5F0] rounded-full border border-[#E7E1D8] p-0.5">
             <button
               type="button"
               onClick={() => setZoom(z => Math.max(0.65, Number((z - 0.1).toFixed(2))))}
-              className="p-1 text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
+              className="p-1 text-[#6B6462] hover:text-[#1F1D1E] cursor-pointer"
               title="Alejar"
             >
               <ZoomOut className="w-3.5 h-3.5" />
@@ -607,7 +607,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             <button
               type="button"
               onClick={() => setZoom(z => Math.min(1.3, Number((z + 0.1).toFixed(2))))}
-              className="p-1 text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
+              className="p-1 text-[#6B6462] hover:text-[#1F1D1E] cursor-pointer"
               title="Acercar"
             >
               <ZoomIn className="w-3.5 h-3.5" />
@@ -619,8 +619,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       {/* Main 2D Canvas + Inspector Split */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         {/* 2D Floor Plan Canvas */}
-        <div className="lg:col-span-2 bg-white rounded-3xl border border-[#EFE8E1] shadow-2xs overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[#FAF8F5] flex items-center justify-between text-[11px] text-[#8A7E72] font-light">
+        <div className="lg:col-span-2 bg-white rounded-3xl border border-[#E7E1D8] shadow-2xs overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-[#F8F5F0] flex items-center justify-between text-[11px] text-[#6B6462] font-light">
             <span>Arrastra mesas o elementos para diseñar tu salón</span>
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-1">
@@ -632,7 +632,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </div>
           </div>
 
-          <div className="overflow-auto p-3 bg-[#FAF8F5]">
+          <div className="overflow-auto p-3 bg-[#F8F5F0]">
             <div
               ref={canvasRef}
               onPointerMove={handlePointerMove}
@@ -647,7 +647,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 backgroundImage: 'radial-gradient(#DDD4CB 1px, transparent 1px)',
                 backgroundSize: `${20 * zoom}px ${20 * zoom}px`
               }}
-              className="relative mx-auto rounded-2xl bg-[#FCFBF9] border border-[#EFE8E1] select-none touch-none overflow-hidden"
+              className="relative mx-auto rounded-2xl bg-[#FCFBF9] border border-[#E7E1D8] select-none touch-none overflow-hidden"
             >
               <div
                 style={{
@@ -664,15 +664,15 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   const shapeClass = el.shape === 'circle' ? 'rounded-full' : 'rounded-2xl';
                   const toneClass =
                     el.type === 'pista'
-                      ? 'bg-[#F5EFEA]/80 border-dashed border-[#D2C2B6] text-[#7D6F6B]'
+                      ? 'bg-[#F5EFEA]/80 border-dashed border-[#D2C2B6] text-[#6B6462]'
                       : el.type === 'dj'
-                      ? 'bg-[#2B2826]/90 border-[#2B2826] text-white'
+                      ? 'bg-[#1F1D1E]/90 border-[#1F1D1E] text-white'
                       : el.tone === 'nature'
                       ? 'bg-[#E5EDE6]/90 border-[#BDD4C1] text-[#354B38]'
                       : el.tone === 'water'
                       ? 'bg-[#EBF4F8]/95 border-[#C5DCE8] text-[#355A6E]'
                       : el.tone === 'accent'
-                      ? 'bg-[#F7EDEB]/95 border-[#E6CFCB] text-[#8F554B]'
+                      ? 'bg-[#F4EAEC]/95 border-[#E6CFCB] text-[#8F554B]'
                       : 'bg-[#FAF3E8]/90 border-[#E8D7B8] text-[#7C5824]';
 
                   return (
@@ -688,7 +688,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         transform: `translate(-50%, -50%) rotate(${el.rotation || 0}deg)`
                       }}
                       className={`group absolute ${shapeClass} border flex items-center justify-center text-center px-2 cursor-grab active:cursor-grabbing transition-shadow ${toneClass} ${
-                        isSel ? 'ring-4 ring-[#C48B81]/25 z-20' : 'z-[5]'
+                        isSel ? 'ring-4 ring-[#6E2E3A]/25 z-20' : 'z-[5]'
                       }`}
                     >
                       <span className="text-[10px] uppercase tracking-[0.14em] font-semibold pointer-events-none leading-tight">
@@ -698,12 +698,12 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       {/* Top-center Rotate Handle (only when selected) */}
                       {isSel && el.shape !== 'circle' && (
                         <>
-                          <span className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-[#C48B81]/70 pointer-events-none" />
+                          <span className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-[#6E2E3A]/70 pointer-events-none" />
                           <button
                             type="button"
                             onPointerDown={e => handlePointerDownRotate(e, el)}
                             onClick={e => e.stopPropagation()}
-                            className="absolute -top-9 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-white border border-[#C48B81] text-[#A86B60] shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing"
+                            className="absolute -top-9 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-white border border-[#6E2E3A] text-[#521F29] shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing"
                             title="Arrastra para girar o haz clic para rotar 45°"
                           >
                             <RotateCw className="w-3 h-3" />
@@ -717,7 +717,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                           type="button"
                           onPointerDown={e => handlePointerDownResize(e, el, 'se')}
                           onClick={e => e.stopPropagation()}
-                          className="absolute -bottom-2.5 -right-2.5 w-6 h-6 rounded-full bg-white border border-[#C48B81] text-[#A86B60] shadow-sm flex items-center justify-center cursor-nwse-resize"
+                          className="absolute -bottom-2.5 -right-2.5 w-6 h-6 rounded-full bg-white border border-[#6E2E3A] text-[#521F29] shadow-sm flex items-center justify-center cursor-nwse-resize"
                           title="Arrastra para cambiar tamaño"
                         >
                           <MoveDiagonal2 className="w-3 h-3" />
@@ -731,7 +731,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                             type="button"
                             onPointerDown={e => handlePointerDownResize(e, el, 'e')}
                             onClick={e => e.stopPropagation()}
-                            className="absolute top-1/2 -right-2.5 -translate-y-1/2 w-5 h-5 rounded-full bg-white border border-[#D8CFC8] hover:border-[#C48B81] text-[#7D6F6B] hover:text-[#A86B60] shadow-sm flex items-center justify-center cursor-ew-resize"
+                            className="absolute top-1/2 -right-2.5 -translate-y-1/2 w-5 h-5 rounded-full bg-white border border-[#D8CFC8] hover:border-[#6E2E3A] text-[#6B6462] hover:text-[#521F29] shadow-sm flex items-center justify-center cursor-ew-resize"
                             title="Arrastra para ajustar ancho"
                           >
                             <MoveHorizontal className="w-2.5 h-2.5" />
@@ -740,7 +740,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                             type="button"
                             onPointerDown={e => handlePointerDownResize(e, el, 's')}
                             onClick={e => e.stopPropagation()}
-                            className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-white border border-[#D8CFC8] hover:border-[#C48B81] text-[#7D6F6B] hover:text-[#A86B60] shadow-sm flex items-center justify-center cursor-ns-resize"
+                            className="absolute -bottom-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-white border border-[#D8CFC8] hover:border-[#6E2E3A] text-[#6B6462] hover:text-[#521F29] shadow-sm flex items-center justify-center cursor-ns-resize"
                             title="Arrastra para ajustar alto"
                           >
                             <MoveVertical className="w-2.5 h-2.5" />
@@ -757,7 +757,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                             onDeleteElement(el.id);
                             setSelectedElementId(null);
                           }}
-                          className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-white border border-[#EFE8E1] text-rose-600 shadow-sm flex items-center justify-center cursor-pointer"
+                          className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-white border border-[#E7E1D8] text-rose-600 shadow-sm flex items-center justify-center cursor-pointer"
                           title="Quitar elemento"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -795,18 +795,18 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
         </div>
 
         {/* Right Side Inspector: Selected Table or Floor Element Controls */}
-        <div className="bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-2xs space-y-4">
+        <div className="bg-white rounded-3xl p-5 border border-[#E7E1D8] shadow-2xs space-y-4">
           {selectedElement && !selectedTable ? (
             <div className="space-y-4">
-              <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#FAF8F5]">
+              <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#F8F5F0]">
                 <div>
-                  <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#C48B81]">
+                  <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6E2E3A]">
                     Elemento del plano
                   </span>
-                  <h4 className="font-editorial text-xl text-[#2B2826] leading-tight">
+                  <h4 className="font-editorial text-xl text-[#1F1D1E] leading-tight">
                     {selectedElement.label}
                   </h4>
-                  <span className="text-[11px] text-[#8A7E72] font-light">
+                  <span className="text-[11px] text-[#6B6462] font-light">
                     Arrastra las flechitas del elemento o ajusta aquí
                   </span>
                 </div>
@@ -816,7 +816,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     onDeleteElement(selectedElement.id);
                     setSelectedElementId(null);
                   }}
-                  className="p-2 rounded-full text-[#8A7E72]/50 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                  className="p-2 rounded-full text-[#6B6462]/50 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                   title="Quitar elemento"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -824,23 +824,23 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               </div>
 
               {selectedElement.shape === 'circle' ? (
-                <div className="flex items-center justify-between bg-[#FAF8F5] px-3.5 py-2.5 rounded-2xl border border-[#EFE8E1]">
+                <div className="flex items-center justify-between bg-[#F8F5F0] px-3.5 py-2.5 rounded-2xl border border-[#E7E1D8]">
                   <span className="text-xs font-medium text-[#5A524C]">Tamaño</span>
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => onResizeElement(selectedElement.id, selectedElement.width - 14, selectedElement.height - 14)}
-                      className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                      className="w-7 h-7 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] flex items-center justify-center text-[#5A524C] cursor-pointer"
                     >
                       <Minus className="w-3 h-3" />
                     </button>
-                    <span className="text-xs font-semibold text-[#2B2826] w-10 text-center">
+                    <span className="text-xs font-semibold text-[#1F1D1E] w-10 text-center">
                       {selectedElement.width}
                     </span>
                     <button
                       type="button"
                       onClick={() => onResizeElement(selectedElement.id, selectedElement.width + 14, selectedElement.height + 14)}
-                      className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                      className="w-7 h-7 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] flex items-center justify-center text-[#5A524C] cursor-pointer"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -848,68 +848,68 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 </div>
               ) : (
                 <div className="space-y-2.5">
-                  <div className="flex items-center justify-between bg-[#FAF8F5] px-3.5 py-2.5 rounded-2xl border border-[#EFE8E1]">
+                  <div className="flex items-center justify-between bg-[#F8F5F0] px-3.5 py-2.5 rounded-2xl border border-[#E7E1D8]">
                     <span className="text-xs font-medium text-[#5A524C]">Ancho</span>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => onResizeElement(selectedElement.id, selectedElement.width - 16, selectedElement.height)}
-                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                        className="w-7 h-7 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] flex items-center justify-center text-[#5A524C] cursor-pointer"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="text-xs font-semibold text-[#2B2826] w-10 text-center">
+                      <span className="text-xs font-semibold text-[#1F1D1E] w-10 text-center">
                         {selectedElement.width}
                       </span>
                       <button
                         type="button"
                         onClick={() => onResizeElement(selectedElement.id, selectedElement.width + 16, selectedElement.height)}
-                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                        className="w-7 h-7 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] flex items-center justify-center text-[#5A524C] cursor-pointer"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between bg-[#FAF8F5] px-3.5 py-2.5 rounded-2xl border border-[#EFE8E1]">
+                  <div className="flex items-center justify-between bg-[#F8F5F0] px-3.5 py-2.5 rounded-2xl border border-[#E7E1D8]">
                     <span className="text-xs font-medium text-[#5A524C]">Alto</span>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => onResizeElement(selectedElement.id, selectedElement.width, selectedElement.height - 14)}
-                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                        className="w-7 h-7 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] flex items-center justify-center text-[#5A524C] cursor-pointer"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
-                      <span className="text-xs font-semibold text-[#2B2826] w-10 text-center">
+                      <span className="text-xs font-semibold text-[#1F1D1E] w-10 text-center">
                         {selectedElement.height}
                       </span>
                       <button
                         type="button"
                         onClick={() => onResizeElement(selectedElement.id, selectedElement.width, selectedElement.height + 14)}
-                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                        className="w-7 h-7 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] flex items-center justify-center text-[#5A524C] cursor-pointer"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between bg-[#FAF8F5] px-3.5 py-2.5 rounded-2xl border border-[#EFE8E1]">
+                  <div className="flex items-center justify-between bg-[#F8F5F0] px-3.5 py-2.5 rounded-2xl border border-[#E7E1D8]">
                     <span className="text-xs font-medium text-[#5A524C]">Rotación</span>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
                         onClick={() => onRotateElement(selectedElement.id, (selectedElement.rotation || 0) - 45)}
-                        className="px-2 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] text-[11px] font-medium text-[#5A524C] cursor-pointer"
+                        className="px-2 h-7 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] text-[11px] font-medium text-[#5A524C] cursor-pointer"
                         title="Girar -45°"
                       >
                         -45°
                       </button>
-                      <span className="text-xs font-semibold text-[#2B2826] w-10 text-center">
+                      <span className="text-xs font-semibold text-[#1F1D1E] w-10 text-center">
                         {selectedElement.rotation || 0}°
                       </span>
                       <button
                         type="button"
                         onClick={() => onRotateElement(selectedElement.id, (selectedElement.rotation || 0) + 45)}
-                        className="px-2 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] text-[11px] font-medium text-[#5A524C] cursor-pointer"
+                        className="px-2 h-7 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] text-[11px] font-medium text-[#5A524C] cursor-pointer"
                         title="Girar +45°"
                       >
                         +45°
@@ -921,8 +921,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </div>
           ) : !selectedTable ? (
             <div className="py-10 text-center space-y-2">
-              <p className="font-editorial text-lg text-[#2B2826]">Selecciona una mesa o elemento</p>
-              <p className="text-xs text-[#8A7E72] font-light">
+              <p className="font-editorial text-lg text-[#1F1D1E]">Selecciona una mesa o elemento</p>
+              <p className="text-xs text-[#6B6462] font-light">
                 Haz clic en una mesa para sentar invitados o en un elemento para cambiar su tamaño.
               </p>
             </div>
@@ -933,12 +933,12 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
 
             return (
               <>
-                <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#FAF8F5]">
+                <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#F8F5F0]">
                   <div>
-                    <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#C48B81]">
+                    <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6E2E3A]">
                       {selectedTable.shape}
                     </span>
-                    <h4 className="font-editorial text-xl text-[#2B2826] leading-tight">
+                    <h4 className="font-editorial text-xl text-[#1F1D1E] leading-tight">
                       {selectedTable.name}
                     </h4>
                     <span className={`text-xs font-medium ${isOver ? 'text-rose-600' : 'text-[#577355]'}`}>
@@ -951,7 +951,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       <button
                         type="button"
                         onClick={() => onRotateTable(selectedTable.id)}
-                        className="p-2 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
+                        className="p-2 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#1F1D1E] border border-[#E7E1D8] transition cursor-pointer"
                         title="Rotar 45°"
                       >
                         <RotateCw className="w-3.5 h-3.5" />
@@ -963,7 +963,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         onDeleteTable(selectedTable.id);
                         setSelectedTableId(null);
                       }}
-                      className="p-2 rounded-full text-[#8A7E72]/50 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                      className="p-2 rounded-full text-[#6B6462]/50 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                       title="Eliminar mesa"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -973,11 +973,11 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
 
                 {/* Seated Guests */}
                 <div className="space-y-2">
-                  <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8A7E72]">
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-[#6B6462]">
                     Invitados en esta mesa
                   </span>
                   {seated.length === 0 ? (
-                    <p className="text-xs text-[#8A7E72] italic font-light py-2">
+                    <p className="text-xs text-[#6B6462] italic font-light py-2">
                       Aún no hay invitados sentados aquí.
                     </p>
                   ) : (
@@ -985,15 +985,15 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       {seated.map(g => (
                         <div
                           key={g.id}
-                          className="flex items-center justify-between text-xs bg-[#FAF8F5] px-3 py-2 rounded-xl border border-[#EFE8E1]/60"
+                          className="flex items-center justify-between text-xs bg-[#F8F5F0] px-3 py-2 rounded-xl border border-[#E7E1D8]/60"
                         >
-                          <span className="text-[#2B2826] truncate">
-                            {g.name} <span className="text-[#8A7E72]">({g.passes})</span>
+                          <span className="text-[#1F1D1E] truncate">
+                            {g.name} <span className="text-[#6B6462]">({g.passes})</span>
                           </span>
                           <button
                             type="button"
                             onClick={() => onAssignGuest(g.id, '')}
-                            className="text-[11px] text-[#A86B60] hover:underline shrink-0 ml-2 cursor-pointer"
+                            className="text-[11px] text-[#521F29] hover:underline shrink-0 ml-2 cursor-pointer"
                           >
                             Quitar
                           </button>
@@ -1008,7 +1008,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   <select
                     value=""
                     onChange={e => e.target.value && onAssignGuest(e.target.value, selectedTable.id)}
-                    className="w-full px-3.5 py-2.5 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#2B2826] cursor-pointer focus:outline-none focus:border-[#C48B81]"
+                    className="w-full px-3.5 py-2.5 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] text-xs text-[#1F1D1E] cursor-pointer focus:outline-none focus:border-[#6E2E3A]"
                   >
                     <option value="">+ Sentar invitado en esta mesa...</option>
                     {unassignedGuests.map(g => (
@@ -1038,7 +1038,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
         <div className="space-y-5">
           {/* Quick Presets */}
           <div>
-            <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72] block mb-2">
+            <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462] block mb-2">
               Elementos rápidos (1 clic)
             </span>
             <div className="flex flex-wrap gap-2">
@@ -1066,7 +1066,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     });
                     setShowOtherModal(false);
                   }}
-                  className="px-3 py-1.5 rounded-full text-xs bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
+                  className="px-3 py-1.5 rounded-full text-xs bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#1F1D1E] border border-[#E7E1D8] transition cursor-pointer"
                 >
                   + {preset.label}
                 </button>
@@ -1093,9 +1093,9 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               setCustomEl({ label: '', shape: 'rect', tone: 'neutral' });
               setShowOtherModal(false);
             }}
-            className="pt-4 border-t border-[#FAF8F5] space-y-3"
+            className="pt-4 border-t border-[#F8F5F0] space-y-3"
           >
-            <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72] block">
+            <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462] block">
               O crea uno personalizado
             </span>
             <input
@@ -1104,15 +1104,15 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               placeholder="Ej. Carrito de Shots, Arco Floral, Baños..."
               value={customEl.label}
               onChange={e => setCustomEl({ ...customEl, label: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:outline-none focus:border-[#C48B81]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:outline-none focus:border-[#6E2E3A]"
             />
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] text-[#7D6F6B] block mb-1">Forma</label>
+                <label className="text-[11px] text-[#6B6462] block mb-1">Forma</label>
                 <select
                   value={customEl.shape}
                   onChange={e => setCustomEl({ ...customEl, shape: e.target.value as any })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                  className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
                 >
                   <option value="rect">Rectangular</option>
                   <option value="square">Cuadrado</option>
@@ -1120,11 +1120,11 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 </select>
               </div>
               <div>
-                <label className="text-[11px] text-[#7D6F6B] block mb-1">Estilo / Color</label>
+                <label className="text-[11px] text-[#6B6462] block mb-1">Estilo / Color</label>
                 <select
                   value={customEl.tone}
                   onChange={e => setCustomEl({ ...customEl, tone: e.target.value as any })}
-                  className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                  className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
                 >
                   <option value="neutral">Arena / Neutro</option>
                   <option value="nature">Verde Jardín / Árbol</option>
@@ -1138,13 +1138,13 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               <button
                 type="button"
                 onClick={() => setShowOtherModal(false)}
-                className="px-4 py-2 text-xs text-[#8A7E72] cursor-pointer"
+                className="px-4 py-2 text-xs text-[#6B6462] cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium cursor-pointer"
+                className="px-5 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium cursor-pointer"
               >
                 Agregar al Plano
               </button>

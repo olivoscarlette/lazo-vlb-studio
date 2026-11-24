@@ -168,9 +168,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
     : `https://wa.me/${VLB_QUOTES_PHONE}`;
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] overflow-x-hidden">
+    <div className="min-h-screen bg-[#F8F5F0] text-[#1F1D1E] overflow-x-hidden">
       {/* ==================== 1. EDITORIAL HEADER ==================== */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5] pt-[env(safe-area-inset-top)] border-b border-[#EFE8E1]">
+      <header className="sticky top-0 z-40 bg-[#F8F5F0] pt-[env(safe-area-inset-top)] border-b border-[#E7E1D8]">
         <div className="max-w-6xl mx-auto px-5 h-16 sm:h-[72px] flex items-center justify-between gap-4">
           <img
             src="/lazo-logo.png"
@@ -182,7 +182,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             <button
               type="button"
               onClick={onOpenLogin}
-              className="px-5 py-2 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
+              className="px-5 py-2 rounded-full bg-[#1F1D1E] hover:bg-[#181514] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
             >
               Iniciar Sesión
             </button>
@@ -190,98 +190,116 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
         </div>
       </header>
 
-      {/* ==================== 2. ASYMMETRIC MAGAZINE HERO ==================== */}
+      {/* ==================== 2. HAUTE COUTURE ARCHITECTURAL HERO ==================== */}
       <section className="relative max-w-6xl mx-auto px-5 pt-12 pb-16 sm:pt-16 sm:pb-24">
-        {/* Soft editorial blush glow */}
-        <div className="absolute -top-10 right-0 w-[420px] h-[420px] rounded-full bg-[#EFE2DF]/60 blur-3xl pointer-events-none -z-10" />
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
           {/* Left Editorial Copy */}
           <div className="lg:col-span-6 space-y-6 text-center lg:text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#EFE8E1] text-[11px] font-medium text-[#8A7E72] shadow-2xs">
-              <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>Creado por wedding planners en México</span>
-            </div>
+            <span className="inline-block text-[11px] uppercase tracking-[0.22em] font-semibold text-[#6E2E3A]">
+              Estudio Digital de Eventos · Plano 2D · RSVP
+            </span>
 
-            <h1 className="font-editorial text-4xl sm:text-5xl lg:text-[56px] text-[#2B2826] leading-[1.08] tracking-tight">
-              Tu boda, diseñada con{' '}
-              <span className="italic text-[#A86B60]">calma y claridad</span>.
+            <h1 className="font-editorial text-4xl sm:text-5xl lg:text-[56px] text-[#1F1D1E] leading-[1.08] tracking-tight">
+              Diseña tu salón, tus invitados{' '}
+              <span className="text-[#6E2E3A]">y cada instante.</span>
             </h1>
 
-            <p className="text-sm sm:text-base text-[#7D6F6B] font-light leading-relaxed max-w-lg mx-auto lg:mx-0">
-              Deja atrás los archivos de Excel infinitos y las notas perdidas en WhatsApp. Organiza presupuesto, proveedores, invitados, plano 2D de mesas, checklist con fechas reales e itinerario en un espacio tan bonito como tu boda.
+            <p className="text-sm sm:text-base text-[#6B6462] font-light leading-relaxed max-w-lg mx-auto lg:mx-0">
+              El estudio privado para planear bodas, despedidas y celebraciones inolvidables con plano 2D interactivo, confirmaciones por WhatsApp y logística en vivo.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 pt-1">
               <button
                 type="button"
                 onClick={() => scrollToSection('planes-lazo')}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-sm font-medium shadow-sm transition cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#5A232E] hover:bg-[#481B24] text-white text-sm font-medium shadow-sm transition cursor-pointer"
               >
-                <span>Ver planes</span>
+                <span>Conocer planes</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Subtle Trust Micro-Strip */}
-            <div className="pt-3 flex flex-wrap items-center justify-center lg:justify-start gap-x-5 gap-y-2 text-[11px] text-[#8A7E72]">
-              <span className="inline-flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#577355]" /> Pago único · Sin mensualidades
+            {/* 3 Signature Differentiator Pills */}
+            <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-2 text-[11px] text-[#1F1D1E]">
+              <span className="px-3.5 py-1.5 rounded-full bg-white border border-[#E7E1D8]">
+                Plano 2D interactivo
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <Smartphone className="w-3.5 h-3.5 text-[#C48B81]" /> Celular + Computadora
+              <span className="px-3.5 py-1.5 rounded-full bg-white border border-[#E7E1D8]">
+                RSVP por WhatsApp
               </span>
-              <span className="inline-flex items-center gap-1.5">
-                <FileDown className="w-3.5 h-3.5 text-[#C48B81]" /> Exportación a PDF
+              <span className="px-3.5 py-1.5 rounded-full bg-white border border-[#E7E1D8]">
+                Hasta 3 eventos incluidos
               </span>
             </div>
           </div>
 
-          {/* Right Editorial Visual Collage */}
+          {/* Right Architectural 2D Floor Plan Showcase Card */}
           <div className="lg:col-span-6 relative">
-            <div className="relative rounded-[2rem] overflow-hidden border border-[#EFE8E1] shadow-xl bg-white aspect-[4/5] max-h-[540px] w-full">
-              <img
-                src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1400&q=85"
-                alt="Lazo Editorial"
-                className="w-full h-full object-cover object-center"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#1A1614]/80 via-[#1A1614]/20 to-transparent" />
-
-              {/* Floating Top Glass Countdown Pill */}
-              <div className="absolute top-5 left-5 right-5 flex items-center justify-between">
-                <span className="px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-[10px] uppercase tracking-[0.2em] font-semibold text-[#2B2826] shadow-sm">
-                  Tu espacio privado
-                </span>
-                <span className="px-3 py-1.5 rounded-full bg-[#2B2826]/75 backdrop-blur-md text-white text-[10px] tracking-wider border border-white/15">
-                  ✨ Faltan 184 días
-                </span>
+            <div className="relative rounded-[2rem] bg-white border border-[#E7E1D8] shadow-xl p-5 sm:p-6">
+              <div className="rounded-2xl border-2 border-[#1F1D1E] bg-[#F8F5F0] p-4 relative overflow-hidden">
+                <svg viewBox="0 0 460 320" className="w-full h-auto">
+                  {/* Architectural Walls & Doors */}
+                  <rect x="4" y="4" width="452" height="312" fill="#F8F5F0" stroke="#1F1D1E" strokeWidth="2.5" />
+                  {/* Dance Floor */}
+                  <rect x="295" y="100" width="95" height="125" fill="#FFFFFF" stroke="#6B6462" strokeWidth="1" />
+                  <text x="342" y="166" textAnchor="middle" fontSize="10" fill="#1F1D1E" letterSpacing="2">PISTA</text>
+                  {/* DJ Booth */}
+                  <rect x="404" y="112" width="38" height="100" fill="#FFFFFF" stroke="#6B6462" strokeWidth="1" />
+                  <text x="423" y="166" textAnchor="middle" fontSize="9" fill="#1F1D1E" letterSpacing="1.5">DJ</text>
+                  {/* Mesa Imperial */}
+                  <rect x="85" y="146" width="170" height="30" rx="2" fill="#FFFFFF" stroke="#1F1D1E" strokeWidth="1.2" />
+                  <text x="170" y="164" textAnchor="middle" fontSize="9" fill="#1F1D1E" letterSpacing="1.4">MESA IMPERIAL</text>
+                  {/* Round Tables */}
+                  {[
+                    { cx: 70, cy: 58, n: 1 },
+                    { cx: 148, cy: 92, n: 2 },
+                    { cx: 225, cy: 58, n: 3 },
+                    { cx: 312, cy: 52, n: 11 },
+                    { cx: 398, cy: 54, n: 12, active: true },
+                    { cx: 70, cy: 262, n: 5 },
+                    { cx: 150, cy: 230, n: 8 },
+                    { cx: 225, cy: 230, n: 7 },
+                    { cx: 312, cy: 268, n: 6 },
+                    { cx: 398, cy: 268, n: 9 }
+                  ].map(t => (
+                    <g key={t.n}>
+                      <circle
+                        cx={t.cx}
+                        cy={t.cy}
+                        r={t.active ? 28 : 24}
+                        fill={t.active ? '#6E2E3A' : '#FFFFFF'}
+                        fillOpacity={t.active ? 0.16 : 1}
+                        stroke={t.active ? '#5A232E' : '#1F1D1E'}
+                        strokeWidth={t.active ? 2 : 1.1}
+                      />
+                      <circle
+                        cx={t.cx}
+                        cy={t.cy}
+                        r={t.active ? 19 : 16}
+                        fill={t.active ? '#5A232E' : '#F8F5F0'}
+                        stroke={t.active ? '#5A232E' : '#6B6462'}
+                        strokeWidth="0.9"
+                      />
+                      <text
+                        x={t.cx}
+                        y={t.cy + 4}
+                        textAnchor="middle"
+                        fontSize="10"
+                        fontWeight={t.active ? '600' : '400'}
+                        fill={t.active ? '#FFFFFF' : '#1F1D1E'}
+                      >
+                        {t.n}
+                      </text>
+                    </g>
+                  ))}
+                </svg>
               </div>
 
-              {/* Bottom Editorial Overlay Card */}
-              <div className="absolute bottom-5 left-5 right-5 space-y-3">
-                <div className="text-white">
-                  <div className="font-editorial text-3xl sm:text-4xl tracking-wide">
-                    SOFÍA <span className="italic text-[#E5B7AE]">&</span> MATEO
-                  </div>
-                  <p className="text-[11px] text-white/80 tracking-widest uppercase mt-1">
-                    18 Noviembre · Monterrey
-                  </p>
-                </div>
-
-                {/* Mini Live Metrics Glass Strip */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="rounded-2xl bg-white/92 backdrop-blur-md p-3 border border-white/40">
-                    <span className="text-[9px] uppercase tracking-wider text-[#8A7E72] block">Asistencia</span>
-                    <span className="font-editorial text-lg text-[#2B2826]">142 / 180</span>
-                  </div>
-                  <div className="rounded-2xl bg-white/92 backdrop-blur-md p-3 border border-white/40">
-                    <span className="text-[9px] uppercase tracking-wider text-[#8A7E72] block">Avance</span>
-                    <span className="font-editorial text-lg text-[#577355]">68% listo</span>
-                  </div>
-                  <div className="rounded-2xl bg-white/92 backdrop-blur-md p-3 border border-white/40">
-                    <span className="text-[9px] uppercase tracking-wider text-[#8A7E72] block">Mesas 2D</span>
-                    <span className="font-editorial text-lg text-[#A86B60]">18 mesas</span>
-                  </div>
+              {/* Floating WhatsApp Mesa Confirmada Pill */}
+              <div className="mt-4 flex justify-center">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-[#E7E1D8] shadow-md text-xs text-[#1F1D1E]">
+                  <MessageSquare className="w-3.5 h-3.5 text-[#5A232E]" />
+                  <span className="font-medium">Mesa 12 confirmada ✓</span>
                 </div>
               </div>
             </div>
@@ -290,32 +308,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
       </section>
 
       {/* ==================== 3. EDITORIAL MANIFESTO STRIP ==================== */}
-      <section className="border-y border-[#EFE8E1] bg-white">
+      <section className="border-y border-[#E7E1D8] bg-white">
         <div className="max-w-5xl mx-auto px-5 py-12 sm:py-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
           <div>
-            <span className="font-editorial text-3xl text-[#C48B81]">117</span>
-            <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#2B2826] mt-1">
+            <span className="font-editorial text-3xl text-[#6E2E3A]">117</span>
+            <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#1F1D1E] mt-1">
               Pasos reales de planeación
             </p>
-            <p className="text-xs text-[#7D6F6B] font-light mt-1.5 leading-relaxed">
+            <p className="text-xs text-[#6B6462] font-light mt-1.5 leading-relaxed">
               Checklist maestro calculado automáticamente según la fecha exacta de tu boda.
             </p>
           </div>
           <div>
-            <span className="font-editorial text-3xl text-[#C48B81]">0</span>
-            <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#2B2826] mt-1">
+            <span className="font-editorial text-3xl text-[#6E2E3A]">0</span>
+            <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#1F1D1E] mt-1">
               Anuncios ni ruido visual
             </p>
-            <p className="text-xs text-[#7D6F6B] font-light mt-1.5 leading-relaxed">
+            <p className="text-xs text-[#6B6462] font-light mt-1.5 leading-relaxed">
               Un espacio privado, sereno y editorial — sin publicidad invasiva ni directorios que te distraigan.
             </p>
           </div>
           <div>
-            <span className="font-editorial text-3xl text-[#C48B81]">1 clic</span>
-            <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#2B2826] mt-1">
+            <span className="font-editorial text-3xl text-[#6E2E3A]">1 clic</span>
+            <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#1F1D1E] mt-1">
               PDFs listos para tu salón
             </p>
-            <p className="text-xs text-[#7D6F6B] font-light mt-1.5 leading-relaxed">
+            <p className="text-xs text-[#6B6462] font-light mt-1.5 leading-relaxed">
               Descarga tu lista de invitados con alergias, tu plano 2D de mesas y tu itinerario del Gran Día.
             </p>
           </div>
@@ -325,10 +343,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
       {/* ==================== 4. VISUAL FEATURE SHOWCASE (5 PILLARS) ==================== */}
       <section id="experiencia-lazo" className="max-w-6xl mx-auto px-5 py-16 sm:py-24 space-y-12">
         <div className="max-w-2xl">
-          <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+          <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#6E2E3A]">
             Todo en un solo lugar
           </span>
-          <h2 className="font-editorial text-3xl sm:text-5xl text-[#2B2826] mt-2 leading-tight">
+          <h2 className="font-editorial text-3xl sm:text-5xl text-[#1F1D1E] mt-2 leading-tight">
             Diseñado para disfrutar el proceso, no sufrirlo.
           </h2>
         </div>
@@ -374,17 +392,17 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
           ].map(card => (
             <div
               key={card.num}
-              className="bg-white rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] shadow-2xs hover:border-[#C48B81]/50 transition flex flex-col justify-between space-y-6"
+              className="bg-white rounded-3xl p-6 sm:p-7 border border-[#E7E1D8] shadow-2xs hover:border-[#6E2E3A]/50 transition flex flex-col justify-between space-y-6"
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="font-editorial text-2xl text-[#C48B81]">{card.num}</span>
-                  <span className="text-[10px] uppercase tracking-wider font-medium px-2.5 py-1 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[#7D6F6B]">
+                  <span className="font-editorial text-2xl text-[#6E2E3A]">{card.num}</span>
+                  <span className="text-[10px] uppercase tracking-wider font-medium px-2.5 py-1 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] text-[#6B6462]">
                     {card.pill}
                   </span>
                 </div>
-                <h3 className="font-editorial text-2xl text-[#2B2826] leading-snug">{card.title}</h3>
-                <p className="text-xs sm:text-[13px] text-[#7D6F6B] font-light leading-relaxed">
+                <h3 className="font-editorial text-2xl text-[#1F1D1E] leading-snug">{card.title}</h3>
+                <p className="text-xs sm:text-[13px] text-[#6B6462] font-light leading-relaxed">
                   {card.desc}
                 </p>
               </div>
@@ -395,12 +413,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
 
       {/* ==================== 5. SPOTLIGHT: PLANO 2D + RSVP AUTOMATIZADO ==================== */}
       <section id="plano-2d" className="max-w-6xl mx-auto px-5 pb-16 sm:pb-24">
-        <div className="bg-[#2B2826] text-white rounded-[2.25rem] p-7 sm:p-12 overflow-hidden relative">
-          <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-[#C48B81]/20 blur-3xl pointer-events-none" />
+        <div className="bg-[#1F1D1E] text-white rounded-[2.25rem] p-7 sm:p-12 overflow-hidden relative">
+          <div className="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-[#6E2E3A]/20 blur-3xl pointer-events-none" />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
             <div className="lg:col-span-6 space-y-5">
-              <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-semibold text-[#E5B7AE]">
+              <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.22em] font-semibold text-[#D9B6BC]">
                 <Map className="w-3.5 h-3.5" />
                 <span>Estrella de Lazo Pro</span>
               </span>
@@ -418,7 +436,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                   'Envío automático de número de mesa el día de tu boda'
                 ].map(item => (
                   <li key={item} className="flex items-start gap-2">
-                    <Check className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[#6E2E3A] shrink-0 mt-0.5" />
                     <span>{item}</span>
                   </li>
                 ))}
@@ -427,7 +445,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                 <button
                   type="button"
                   onClick={() => openCheckout('pro')}
-                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-medium transition cursor-pointer"
+                  className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#6E2E3A] hover:bg-[#5A232E] text-white text-xs font-medium transition cursor-pointer"
                 >
                   <span>Quiero Lazo Pro · $1,990 MXN</span>
                   <ArrowRight className="w-4 h-4" />
@@ -438,13 +456,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             {/* Stylized Editorial Mini 2D Floor Plan Visual */}
             <div className="lg:col-span-6">
               <div
-                className="rounded-3xl bg-[#FCFBF9] text-[#2B2826] p-6 border border-white/10 shadow-2xl relative"
+                className="rounded-3xl bg-[#FCFBF9] text-[#1F1D1E] p-6 border border-white/10 shadow-2xl relative"
                 style={{
                   backgroundImage: 'radial-gradient(#DDD4CB 1px, transparent 1px)',
                   backgroundSize: '18px 18px'
                 }}
               >
-                <div className="flex items-center justify-between text-[10px] text-[#8A7E72] pb-4">
+                <div className="flex items-center justify-between text-[10px] text-[#6B6462] pb-4">
                   <span className="uppercase tracking-widest font-semibold">Plano 2D · Vista Previa</span>
                   <span className="inline-flex items-center gap-2">
                     <span className="inline-flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#577355]" /> Ocupado</span>
@@ -455,14 +473,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                 <div className="grid grid-cols-3 gap-4 items-center py-3">
                   {/* Round Table */}
                   <div className="flex flex-col items-center">
-                    <div className="w-20 h-20 rounded-full bg-white border-2 border-[#C48B81] shadow-sm flex flex-col items-center justify-center">
+                    <div className="w-20 h-20 rounded-full bg-white border-2 border-[#6E2E3A] shadow-sm flex flex-col items-center justify-center">
                       <span className="text-[10px] font-medium">Mesa 1</span>
                       <span className="text-[9px] text-[#577355] font-semibold">8/10</span>
                     </div>
                   </div>
                   {/* Dancefloor */}
                   <div className="h-24 rounded-2xl bg-[#F5EFEA]/90 border border-dashed border-[#D2C2B6] flex items-center justify-center text-center px-2">
-                    <span className="text-[9px] uppercase tracking-[0.16em] font-semibold text-[#7D6F6B]">
+                    <span className="text-[9px] uppercase tracking-[0.16em] font-semibold text-[#6B6462]">
                       Pista de Baile
                     </span>
                   </div>
@@ -470,13 +488,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                   <div className="flex flex-col items-center">
                     <div className="w-20 h-20 rounded-full bg-white border border-[#E5DDD5] shadow-sm flex flex-col items-center justify-center">
                       <span className="text-[10px] font-medium">Mesa 2</span>
-                      <span className="text-[9px] text-[#8A7E72] font-semibold">10/10</span>
+                      <span className="text-[9px] text-[#6B6462] font-semibold">10/10</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between gap-3 pt-3 border-t border-[#EFE8E1]">
-                  <div className="px-4 py-2 rounded-xl bg-[#2B2826] text-white text-[9px] uppercase tracking-[0.16em] font-semibold">
+                <div className="mt-3 flex items-center justify-between gap-3 pt-3 border-t border-[#E7E1D8]">
+                  <div className="px-4 py-2 rounded-xl bg-[#1F1D1E] text-white text-[9px] uppercase tracking-[0.16em] font-semibold">
                     DJ / Escenario
                   </div>
                   <div className="px-3.5 py-2 rounded-xl bg-[#EBF4F8] border border-[#C5DCE8] text-[#355A6E] text-[9px] uppercase tracking-[0.14em] font-semibold">
@@ -493,31 +511,31 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
       </section>
 
       {/* ==================== 6. PRICING SECTION ==================== */}
-      <section id="planes-lazo" className="max-w-4xl mx-auto px-5 py-16 sm:py-20 border-t border-[#EFE8E1]">
+      <section id="planes-lazo" className="max-w-4xl mx-auto px-5 py-16 sm:py-20 border-t border-[#E7E1D8]">
         <div className="text-center mb-12">
-          <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+          <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#6E2E3A]">
             Un solo pago · Sin mensualidades
           </span>
-          <h2 className="font-editorial text-3xl sm:text-5xl text-[#2B2826] mt-2">
+          <h2 className="font-editorial text-3xl sm:text-5xl text-[#1F1D1E] mt-2">
             Elige tu acceso a Lazo
           </h2>
-          <p className="text-xs sm:text-sm text-[#7D6F6B] font-light mt-2 max-w-md mx-auto">
+          <p className="text-xs sm:text-sm text-[#6B6462] font-light mt-2 max-w-md mx-auto">
             Acceso inmediato en cuanto se confirma tu pago con MercadoPago.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Plan Esencial */}
-          <div className="bg-white rounded-[2rem] p-8 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between">
+          <div className="bg-white rounded-[2rem] p-8 border border-[#E7E1D8] shadow-2xs flex flex-col justify-between">
             <div>
-              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#6B6462]">
                 Plan Esencial
               </span>
               <div className="mt-3 flex items-baseline gap-1.5">
-                <span className="font-editorial text-5xl text-[#2B2826]">$990</span>
-                <span className="text-xs text-[#8A7E72]">MXN · pago único</span>
+                <span className="font-editorial text-5xl text-[#1F1D1E]">$990</span>
+                <span className="text-xs text-[#6B6462]">MXN · pago único</span>
               </div>
-              <p className="text-xs text-[#7D6F6B] mt-2.5 font-light leading-relaxed">
+              <p className="text-xs text-[#6B6462] mt-2.5 font-light leading-relaxed">
                 Acceso ilimitado para ti y tu pareja hasta el día de tu boda.
               </p>
 
@@ -540,21 +558,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             <button
               type="button"
               onClick={() => openCheckout('esencial')}
-              className="mt-8 w-full py-3.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-semibold tracking-wide transition cursor-pointer"
+              className="mt-8 w-full py-3.5 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#1F1D1E] border border-[#E7E1D8] text-xs font-semibold tracking-wide transition cursor-pointer"
             >
               Adquirir Plan Esencial · $990
             </button>
           </div>
 
           {/* Plan Pro · RSVP Automatizado + Plano 2D */}
-          <div className="bg-[#2B2826] text-white rounded-[2rem] p-8 border border-[#2B2826] shadow-xl flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-[#C48B81]/20 blur-2xl pointer-events-none" />
+          <div className="bg-[#1F1D1E] text-white rounded-[2rem] p-8 border border-[#1F1D1E] shadow-xl flex flex-col justify-between relative overflow-hidden">
+            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-[#6E2E3A]/20 blur-2xl pointer-events-none" />
             <div className="relative z-10">
               <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#E5B7AE]">
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#D9B6BC]">
                   Lazo Pro · Plano 2D + RSVP
                 </span>
-                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#C48B81]/25 text-[#F2CFC8] border border-[#C48B81]/40 whitespace-nowrap">
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#6E2E3A]/25 text-[#F2CFC8] border border-[#6E2E3A]/40 whitespace-nowrap">
                   Por tiempo limitado
                 </span>
               </div>
@@ -576,7 +594,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                   'Recordatorios automáticos y envío de mesa el día del evento'
                 ].map(f => (
                   <li key={f} className="flex items-start gap-2.5">
-                    <Check className="w-4 h-4 text-[#C48B81] shrink-0 mt-0.5" />
+                    <Check className="w-4 h-4 text-[#6E2E3A] shrink-0 mt-0.5" />
                     <span>{f}</span>
                   </li>
                 ))}
@@ -586,7 +604,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             <button
               type="button"
               onClick={() => openCheckout('pro')}
-              className="relative z-10 mt-8 w-full py-3.5 rounded-full bg-[#C48B81] hover:bg-[#B3796F] text-white text-xs font-semibold tracking-wide shadow-md transition cursor-pointer"
+              className="relative z-10 mt-8 w-full py-3.5 rounded-full bg-[#6E2E3A] hover:bg-[#5A232E] text-white text-xs font-semibold tracking-wide shadow-md transition cursor-pointer"
             >
               Adquirir Lazo Pro · $1,990
             </button>
@@ -595,12 +613,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
       </section>
 
       {/* ==================== 7. FAQ ACCORDION ==================== */}
-      <section id="faq-lazo" className="max-w-3xl mx-auto px-5 py-16 border-t border-[#EFE8E1]">
+      <section id="faq-lazo" className="max-w-3xl mx-auto px-5 py-16 border-t border-[#E7E1D8]">
         <div className="text-center mb-10">
-          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#6B6462]">
             Dudas frecuentes
           </span>
-          <h2 className="font-editorial text-3xl text-[#2B2826] mt-2">
+          <h2 className="font-editorial text-3xl text-[#1F1D1E] mt-2">
             Todo claro antes de empezar
           </h2>
         </div>
@@ -611,22 +629,22 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
             return (
               <div
                 key={item.q}
-                className="bg-white rounded-2xl border border-[#EFE8E1] overflow-hidden"
+                className="bg-white rounded-2xl border border-[#E7E1D8] overflow-hidden"
               >
                 <button
                   type="button"
                   onClick={() => setOpenFaq(isOpen ? null : idx)}
                   className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left cursor-pointer"
                 >
-                  <span className="text-sm font-medium text-[#2B2826]">{item.q}</span>
+                  <span className="text-sm font-medium text-[#1F1D1E]">{item.q}</span>
                   <ChevronDown
-                    className={`w-4 h-4 text-[#C48B81] shrink-0 transition-transform ${
+                    className={`w-4 h-4 text-[#6E2E3A] shrink-0 transition-transform ${
                       isOpen ? 'rotate-180' : ''
                     }`}
                   />
                 </button>
                 {isOpen && (
-                  <div className="px-5 pb-4 text-xs text-[#7D6F6B] font-light leading-relaxed">
+                  <div className="px-5 pb-4 text-xs text-[#6B6462] font-light leading-relaxed">
                     {item.a}
                   </div>
                 )}
@@ -637,8 +655,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
       </section>
 
       {/* ==================== 8. EDITORIAL FOOTER ==================== */}
-      <footer className="py-10 border-t border-[#EFE8E1] bg-white">
-        <div className="max-w-6xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#8A7E72] font-light">
+      <footer className="py-10 border-t border-[#E7E1D8] bg-white">
+        <div className="max-w-6xl mx-auto px-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#6B6462] font-light">
           <div className="flex items-center gap-3">
             <img src="/lazo-logo.png" alt="Lazo" className="h-7 w-auto object-contain" />
             <span>· Planeación de bodas con calma.</span>
@@ -648,14 +666,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
               href={`https://wa.me/${VLB_QUOTES_PHONE}`}
               target="_blank"
               rel="noreferrer"
-              className="hover:text-[#2B2826] transition"
+              className="hover:text-[#1F1D1E] transition"
             >
               WhatsApp de soporte
             </a>
             <button
               type="button"
               onClick={onOpenLogin}
-              className="hover:text-[#2B2826] transition cursor-pointer"
+              className="hover:text-[#1F1D1E] transition cursor-pointer"
             >
               Iniciar Sesión
             </button>
@@ -680,7 +698,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                   href={whatsappFallbackUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#2B2826] text-white text-[11px] font-medium"
+                  className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#1F1D1E] text-white text-[11px] font-medium"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Solicitar acceso por WhatsApp</span>
@@ -691,7 +709,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Nombre *
               </label>
               <input
@@ -701,11 +719,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                 placeholder="Ej. Sofía"
                 value={form.firstName}
                 onChange={e => setForm({ ...form, firstName: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Apellido *
               </label>
               <input
@@ -714,14 +732,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                 placeholder="Ej. Garza"
                 value={form.lastName}
                 onChange={e => setForm({ ...form, lastName: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Fecha del evento *
               </label>
               <input
@@ -729,11 +747,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                 required
                 value={form.weddingDate}
                 onChange={e => setForm({ ...form, weddingDate: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 WhatsApp
               </label>
               <input
@@ -741,13 +759,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                 placeholder="+52 ..."
                 value={form.phone}
                 onChange={e => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+            <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
               Correo electrónico (para iniciar sesión) *
             </label>
             <input
@@ -756,12 +774,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
               placeholder="tu@correo.com"
               value={form.email}
               onChange={e => setForm({ ...form, email: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
             />
           </div>
 
           <div>
-            <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+            <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
               Crea tu contraseña (mín. 6 caracteres) *
             </label>
             <input
@@ -771,13 +789,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
               placeholder="••••••••"
               value={form.password}
               onChange={e => setForm({ ...form, password: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
             />
           </div>
 
           {/* Código de descuento opcional */}
           <div className="pt-1 space-y-1.5">
-            <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block">
+            <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block">
               ¿Tienes un código de descuento? (Opcional)
             </label>
             {appliedCoupon ? (
@@ -811,13 +829,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                     setCouponInput(e.target.value.toUpperCase());
                     if (couponError) setCouponError('');
                   }}
-                  className="flex-1 px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs uppercase tracking-wider focus:border-[#C48B81]"
+                  className="flex-1 px-3.5 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs uppercase tracking-wider focus:border-[#6E2E3A]"
                 />
                 <button
                   type="button"
                   onClick={handleApplyCoupon}
                   disabled={couponChecking || !couponInput.trim()}
-                  className="px-4 py-2 rounded-xl bg-[#2B2826] hover:bg-[#1E1B19] text-white text-xs font-medium transition cursor-pointer disabled:opacity-40"
+                  className="px-4 py-2 rounded-xl bg-[#1F1D1E] hover:bg-[#1E1B19] text-white text-xs font-medium transition cursor-pointer disabled:opacity-40"
                 >
                   {couponChecking ? 'Validando...' : 'Aplicar'}
                 </button>
@@ -831,7 +849,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
           <button
             type="submit"
             disabled={submitting}
-            className="w-full mt-2 py-3 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold uppercase tracking-wider shadow-2xs transition cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-2"
+            className="w-full mt-2 py-3 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-semibold uppercase tracking-wider shadow-2xs transition cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-2"
           >
             <Lock className="w-3.5 h-3.5" />
             <span>
@@ -852,7 +870,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
                 setCheckoutPlan(null);
                 onOpenLogin();
               }}
-              className="text-[11px] text-[#8A7E72] hover:text-[#2B2826] underline cursor-pointer"
+              className="text-[11px] text-[#6B6462] hover:text-[#1F1D1E] underline cursor-pointer"
             >
               ¿Ya tienes cuenta? Inicia sesión aquí
             </button>

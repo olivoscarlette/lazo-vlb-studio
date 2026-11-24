@@ -214,87 +214,87 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
   return (
     <div className="space-y-5">
       {/* ==================== CEREMONIA CIVIL ==================== */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs space-y-6">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E7E1D8] shadow-2xs space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center text-[#C48B81] shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] flex items-center justify-center text-[#6E2E3A] shrink-0">
               <Landmark className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72] block">
+              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6B6462] block">
                 Protocolo Legal & Firma
               </span>
-              <h3 className="font-editorial text-2xl text-[#2B2826] leading-tight">
+              <h3 className="font-editorial text-2xl text-[#1F1D1E] leading-tight">
                 Ceremonia Civil
               </h3>
             </div>
           </div>
 
           <label className="inline-flex items-center gap-2.5 cursor-pointer select-none">
-            <span className="text-xs text-[#8A7E72] hidden sm:inline">
+            <span className="text-xs text-[#6B6462] hidden sm:inline">
               {ceremonies.civilEnabled ? 'Activa' : 'Activar'}
             </span>
             <input
               type="checkbox"
               checked={ceremonies.civilEnabled}
               onChange={e => onChange(prev => ({ ...prev, civilEnabled: e.target.checked }))}
-              className="w-5 h-5 accent-[#C48B81] cursor-pointer rounded"
+              className="w-5 h-5 accent-[#6E2E3A] cursor-pointer rounded"
             />
           </label>
         </div>
 
         {ceremonies.civilEnabled && (
-          <div className="space-y-6 pt-4 border-t border-[#FAF8F5]">
+          <div className="space-y-6 pt-4 border-t border-[#F8F5F0]">
             {/* 1. Datos Principales */}
             <div className="space-y-3">
-              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
+              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462]">
                 Datos de la Ceremonia
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
-                  <label className="text-[10px] uppercase tracking-wider text-[#8A7E72] flex items-center gap-1 mb-1">
-                    <Calendar className="w-3 h-3 text-[#C48B81]" /> Fecha
+                <div className="bg-[#F8F5F0] rounded-2xl p-3 border border-[#E7E1D8]">
+                  <label className="text-[10px] uppercase tracking-wider text-[#6B6462] flex items-center gap-1 mb-1">
+                    <Calendar className="w-3 h-3 text-[#6E2E3A]" /> Fecha
                   </label>
                   <input
                     type="date"
                     value={ceremonies.civilDate || weddingDate}
                     onChange={e => onChange(prev => ({ ...prev, civilDate: e.target.value }))}
-                    className="w-full bg-transparent text-xs text-[#2B2826] font-medium focus:outline-none"
+                    className="w-full bg-transparent text-xs text-[#1F1D1E] font-medium focus:outline-none"
                   />
                 </div>
-                <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
-                  <label className="text-[10px] uppercase tracking-wider text-[#8A7E72] flex items-center gap-1 mb-1">
-                    <Clock className="w-3 h-3 text-[#C48B81]" /> Hora
+                <div className="bg-[#F8F5F0] rounded-2xl p-3 border border-[#E7E1D8]">
+                  <label className="text-[10px] uppercase tracking-wider text-[#6B6462] flex items-center gap-1 mb-1">
+                    <Clock className="w-3 h-3 text-[#6E2E3A]" /> Hora
                   </label>
                   <input
                     type="time"
                     value={ceremonies.civilTime || ''}
                     onChange={e => onChange(prev => ({ ...prev, civilTime: e.target.value }))}
-                    className="w-full bg-transparent text-xs text-[#2B2826] font-medium focus:outline-none"
+                    className="w-full bg-transparent text-xs text-[#1F1D1E] font-medium focus:outline-none"
                   />
                 </div>
-                <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
-                  <label className="text-[10px] uppercase tracking-wider text-[#8A7E72] flex items-center gap-1 mb-1">
-                    <MapPin className="w-3 h-3 text-[#C48B81]" /> Lugar / Juzgado
+                <div className="bg-[#F8F5F0] rounded-2xl p-3 border border-[#E7E1D8]">
+                  <label className="text-[10px] uppercase tracking-wider text-[#6B6462] flex items-center gap-1 mb-1">
+                    <MapPin className="w-3 h-3 text-[#6E2E3A]" /> Lugar / Juzgado
                   </label>
                   <input
                     type="text"
                     placeholder="Ej. Jardín Hacienda / Oficialía 2"
                     value={ceremonies.civilVenue || ''}
                     onChange={e => onChange(prev => ({ ...prev, civilVenue: e.target.value }))}
-                    className="w-full bg-transparent text-xs text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none"
+                    className="w-full bg-transparent text-xs text-[#1F1D1E] placeholder:text-[#6B6462]/60 focus:outline-none"
                   />
                 </div>
-                <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
-                  <label className="text-[10px] uppercase tracking-wider text-[#8A7E72] flex items-center gap-1 mb-1">
-                    <User className="w-3 h-3 text-[#C48B81]" /> Juez / Oficial
+                <div className="bg-[#F8F5F0] rounded-2xl p-3 border border-[#E7E1D8]">
+                  <label className="text-[10px] uppercase tracking-wider text-[#6B6462] flex items-center gap-1 mb-1">
+                    <User className="w-3 h-3 text-[#6E2E3A]" /> Juez / Oficial
                   </label>
                   <input
                     type="text"
                     placeholder="Nombre del juez u oficial"
                     value={ceremonies.civilJudge || ''}
                     onChange={e => onChange(prev => ({ ...prev, civilJudge: e.target.value }))}
-                    className="w-full bg-transparent text-xs text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none"
+                    className="w-full bg-transparent text-xs text-[#1F1D1E] placeholder:text-[#6B6462]/60 focus:outline-none"
                   />
                 </div>
               </div>
@@ -304,25 +304,25 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                 placeholder="Notas de protocolo, régimen patrimonial, detalles de llegada del juez..."
                 value={ceremonies.civilNotes || ''}
                 onChange={e => onChange(prev => ({ ...prev, civilNotes: e.target.value }))}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs text-[#1F1D1E] placeholder:text-[#6B6462]/60 focus:outline-none focus:border-[#6E2E3A]"
               />
             </div>
 
             {/* 2. Testigos + Requisitos en 2 columnas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Testigos */}
-              <div className="bg-[#FAF8F5]/70 rounded-2xl p-4 border border-[#EFE8E1] space-y-3">
+              <div className="bg-[#F8F5F0]/70 rounded-2xl p-4 border border-[#E7E1D8] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72] flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462] flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-[#6E2E3A]" />
                     Testigos ({civilWitnesses.length})
                   </span>
-                  <div className="flex items-center bg-white rounded-full border border-[#EFE8E1] p-0.5 text-[10px]">
+                  <div className="flex items-center bg-white rounded-full border border-[#E7E1D8] p-0.5 text-[10px]">
                     <button
                       type="button"
                       onClick={() => setWitnessMode('guest')}
                       className={`px-2 py-0.5 rounded-full cursor-pointer focus:outline-none ${
-                        witnessMode === 'guest' ? 'bg-[#2B2826] text-white' : 'text-[#8A7E72]'
+                        witnessMode === 'guest' ? 'bg-[#1F1D1E] text-white' : 'text-[#6B6462]'
                       }`}
                     >
                       De lista
@@ -331,7 +331,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                       type="button"
                       onClick={() => setWitnessMode('custom')}
                       className={`px-2 py-0.5 rounded-full cursor-pointer focus:outline-none ${
-                        witnessMode === 'custom' ? 'bg-[#2B2826] text-white' : 'text-[#8A7E72]'
+                        witnessMode === 'custom' ? 'bg-[#1F1D1E] text-white' : 'text-[#6B6462]'
                       }`}
                     >
                       Manual
@@ -340,7 +340,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                 </div>
 
                 {civilWitnesses.length === 0 ? (
-                  <p className="text-xs text-[#8A7E72] italic font-light">
+                  <p className="text-xs text-[#6B6462] italic font-light">
                     Aún no has agregado testigos confirmados.
                   </p>
                 ) : (
@@ -348,13 +348,13 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                     {civilWitnesses.map(w => (
                       <span
                         key={w}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#EFE8E1] text-xs text-[#2B2826]"
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white border border-[#E7E1D8] text-xs text-[#1F1D1E]"
                       >
                         {w}
                         <button
                           type="button"
                           onClick={() => handleRemoveWitness(w)}
-                          className="text-[#8A7E72] hover:text-rose-600 cursor-pointer focus:outline-none"
+                          className="text-[#6B6462] hover:text-rose-600 cursor-pointer focus:outline-none"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -368,7 +368,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                     <select
                       value={selectedWitnessGuest}
                       onChange={e => setSelectedWitnessGuest(e.target.value)}
-                      className="flex-1 px-3 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                      className="flex-1 px-3 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
                     >
                       <option value="">Elegir de tus invitados...</option>
                       {activeGuests
@@ -385,12 +385,12 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                       placeholder="Nombre completo del testigo..."
                       value={customWitness}
                       onChange={e => setCustomWitness(e.target.value)}
-                      className="flex-1 px-3.5 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                      className="flex-1 px-3.5 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                     />
                   )}
                   <button
                     type="submit"
-                    className="px-3.5 py-2 rounded-full bg-[#2B2826] text-white text-xs font-medium cursor-pointer focus:outline-none"
+                    className="px-3.5 py-2 rounded-full bg-[#1F1D1E] text-white text-xs font-medium cursor-pointer focus:outline-none"
                   >
                     + Agregar
                   </button>
@@ -398,9 +398,9 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
               </div>
 
               {/* Requisitos Civiles */}
-              <div className="bg-[#FAF8F5]/70 rounded-2xl p-4 border border-[#EFE8E1] space-y-3">
+              <div className="bg-[#F8F5F0]/70 rounded-2xl p-4 border border-[#E7E1D8] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
+                  <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462]">
                     Requisitos & Trámites Civiles
                   </span>
                   <span className="text-[11px] font-medium text-[#577355] bg-[#E5EDE6] px-2.5 py-0.5 rounded-full">
@@ -413,7 +413,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                     <div
                       key={req.id}
                       onClick={() => handleToggleCivilReq(req.id)}
-                      className="flex items-start justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-[#EFE8E1]/70 cursor-pointer group"
+                      className="flex items-start justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-[#E7E1D8]/70 cursor-pointer group"
                     >
                       <div className="flex items-start gap-2.5 min-w-0">
                         <span
@@ -427,7 +427,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                         </span>
                         <span
                           className={`text-xs leading-snug ${
-                            req.completed ? 'line-through text-[#8A7E72]' : 'text-[#2B2826]'
+                            req.completed ? 'line-through text-[#6B6462]' : 'text-[#1F1D1E]'
                           }`}
                         >
                           {req.title}
@@ -439,7 +439,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                           e.stopPropagation();
                           handleRemoveCivilReq(req.id);
                         }}
-                        className="text-[#8A7E72]/40 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition cursor-pointer focus:outline-none"
+                        className="text-[#6B6462]/40 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition cursor-pointer focus:outline-none"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -453,11 +453,11 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                     placeholder="Agregar otro requisito..."
                     value={newCivilReq}
                     onChange={e => setNewCivilReq(e.target.value)}
-                    className="flex-1 px-3.5 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                    className="flex-1 px-3.5 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                   />
                   <button
                     type="submit"
-                    className="px-3.5 py-2 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] text-xs text-[#2B2826] cursor-pointer focus:outline-none"
+                    className="px-3.5 py-2 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] text-xs text-[#1F1D1E] cursor-pointer focus:outline-none"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>
@@ -466,10 +466,10 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
             </div>
 
             {/* 3. Música de Ceremonia Civil (Opcional) */}
-            <div className="bg-[#FAF8F5]/70 rounded-2xl p-4 border border-[#EFE8E1] space-y-3">
+            <div className="bg-[#F8F5F0]/70 rounded-2xl p-4 border border-[#E7E1D8] space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72] flex items-center gap-1.5">
-                  <Music className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462] flex items-center gap-1.5">
+                  <Music className="w-3.5 h-3.5 text-[#6E2E3A]" />
                   Música en Ceremonia Civil
                 </span>
                 <label className="inline-flex items-center gap-2 text-xs text-[#5A524C] cursor-pointer">
@@ -478,7 +478,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                     type="checkbox"
                     checked={Boolean(ceremonies.civilHasMusic)}
                     onChange={e => onChange(prev => ({ ...prev, civilHasMusic: e.target.checked }))}
-                    className="w-4 h-4 accent-[#C48B81] cursor-pointer"
+                    className="w-4 h-4 accent-[#6E2E3A] cursor-pointer"
                   />
                 </label>
               </div>
@@ -488,12 +488,12 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                   {civilSongs.map(s => (
                     <div
                       key={s.id}
-                      className="flex items-center justify-between bg-white px-3.5 py-2 rounded-xl border border-[#EFE8E1]/70 text-xs"
+                      className="flex items-center justify-between bg-white px-3.5 py-2 rounded-xl border border-[#E7E1D8]/70 text-xs"
                     >
                       <div>
-                        <span className="font-semibold text-[#A86B60]">{s.moment}:</span>{' '}
-                        <span className="text-[#2B2826]">{s.title}</span>
-                        {s.artist && <span className="text-[#8A7E72]"> · {s.artist}</span>}
+                        <span className="font-semibold text-[#521F29]">{s.moment}:</span>{' '}
+                        <span className="text-[#1F1D1E]">{s.title}</span>
+                        {s.artist && <span className="text-[#6B6462]"> · {s.artist}</span>}
                       </div>
                       <button
                         type="button"
@@ -503,7 +503,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                             civilMusicSongs: civilSongs.filter(x => x.id !== s.id)
                           }))
                         }
-                        className="text-[#8A7E72]/50 hover:text-rose-600 cursor-pointer focus:outline-none"
+                        className="text-[#6B6462]/50 hover:text-rose-600 cursor-pointer focus:outline-none"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -517,7 +517,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                       placeholder="Momento (ej. Entrada)"
                       value={civilSongDraft.moment}
                       onChange={e => setCivilSongDraft({ ...civilSongDraft, moment: e.target.value })}
-                      className="px-3 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                      className="px-3 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                     />
                     <input
                       type="text"
@@ -525,18 +525,18 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                       placeholder="Canción *"
                       value={civilSongDraft.title}
                       onChange={e => setCivilSongDraft({ ...civilSongDraft, title: e.target.value })}
-                      className="px-3 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                      className="px-3 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                     />
                     <input
                       type="text"
                       placeholder="Artista (opcional)"
                       value={civilSongDraft.artist}
                       onChange={e => setCivilSongDraft({ ...civilSongDraft, artist: e.target.value })}
-                      className="px-3 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                      className="px-3 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                     />
                     <button
                       type="submit"
-                      className="px-4 py-2 rounded-full bg-[#2B2826] text-white text-xs font-medium cursor-pointer focus:outline-none"
+                      className="px-4 py-2 rounded-full bg-[#1F1D1E] text-white text-xs font-medium cursor-pointer focus:outline-none"
                     >
                       + Canción
                     </button>
@@ -549,87 +549,87 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
       </div>
 
       {/* ==================== CEREMONIA RELIGIOSA ==================== */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs space-y-6">
+      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E7E1D8] shadow-2xs space-y-6">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center text-[#C48B81] shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] flex items-center justify-center text-[#6E2E3A] shrink-0">
               <Church className="w-4 h-4" />
             </div>
             <div>
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72] block">
+              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6B6462] block">
                 Sacramento & Liturgia
               </span>
-              <h3 className="font-editorial text-2xl text-[#2B2826] leading-tight">
+              <h3 className="font-editorial text-2xl text-[#1F1D1E] leading-tight">
                 Ceremonia Religiosa
               </h3>
             </div>
           </div>
 
           <label className="inline-flex items-center gap-2.5 cursor-pointer select-none">
-            <span className="text-xs text-[#8A7E72] hidden sm:inline">
+            <span className="text-xs text-[#6B6462] hidden sm:inline">
               {ceremonies.religiousEnabled ? 'Activa' : 'Activar'}
             </span>
             <input
               type="checkbox"
               checked={ceremonies.religiousEnabled}
               onChange={e => onChange(prev => ({ ...prev, religiousEnabled: e.target.checked }))}
-              className="w-5 h-5 accent-[#C48B81] cursor-pointer rounded"
+              className="w-5 h-5 accent-[#6E2E3A] cursor-pointer rounded"
             />
           </label>
         </div>
 
         {ceremonies.religiousEnabled && (
-          <div className="space-y-6 pt-4 border-t border-[#FAF8F5]">
+          <div className="space-y-6 pt-4 border-t border-[#F8F5F0]">
             {/* 1. Datos del Templo */}
             <div className="space-y-3">
-              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
+              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462]">
                 Datos del Templo
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
-                  <label className="text-[10px] uppercase tracking-wider text-[#8A7E72] flex items-center gap-1 mb-1">
-                    <Calendar className="w-3 h-3 text-[#C48B81]" /> Fecha
+                <div className="bg-[#F8F5F0] rounded-2xl p-3 border border-[#E7E1D8]">
+                  <label className="text-[10px] uppercase tracking-wider text-[#6B6462] flex items-center gap-1 mb-1">
+                    <Calendar className="w-3 h-3 text-[#6E2E3A]" /> Fecha
                   </label>
                   <input
                     type="date"
                     value={ceremonies.religiousDate || weddingDate}
                     onChange={e => onChange(prev => ({ ...prev, religiousDate: e.target.value }))}
-                    className="w-full bg-transparent text-xs text-[#2B2826] font-medium focus:outline-none"
+                    className="w-full bg-transparent text-xs text-[#1F1D1E] font-medium focus:outline-none"
                   />
                 </div>
-                <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
-                  <label className="text-[10px] uppercase tracking-wider text-[#8A7E72] flex items-center gap-1 mb-1">
-                    <Clock className="w-3 h-3 text-[#C48B81]" /> Hora
+                <div className="bg-[#F8F5F0] rounded-2xl p-3 border border-[#E7E1D8]">
+                  <label className="text-[10px] uppercase tracking-wider text-[#6B6462] flex items-center gap-1 mb-1">
+                    <Clock className="w-3 h-3 text-[#6E2E3A]" /> Hora
                   </label>
                   <input
                     type="time"
                     value={ceremonies.religiousTime || ''}
                     onChange={e => onChange(prev => ({ ...prev, religiousTime: e.target.value }))}
-                    className="w-full bg-transparent text-xs text-[#2B2826] font-medium focus:outline-none"
+                    className="w-full bg-transparent text-xs text-[#1F1D1E] font-medium focus:outline-none"
                   />
                 </div>
-                <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
-                  <label className="text-[10px] uppercase tracking-wider text-[#8A7E72] flex items-center gap-1 mb-1">
-                    <MapPin className="w-3 h-3 text-[#C48B81]" /> Parroquia / Templo
+                <div className="bg-[#F8F5F0] rounded-2xl p-3 border border-[#E7E1D8]">
+                  <label className="text-[10px] uppercase tracking-wider text-[#6B6462] flex items-center gap-1 mb-1">
+                    <MapPin className="w-3 h-3 text-[#6E2E3A]" /> Parroquia / Templo
                   </label>
                   <input
                     type="text"
                     placeholder="Ej. Parroquia de Guadalupe"
                     value={ceremonies.religiousVenue || ''}
                     onChange={e => onChange(prev => ({ ...prev, religiousVenue: e.target.value }))}
-                    className="w-full bg-transparent text-xs text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none"
+                    className="w-full bg-transparent text-xs text-[#1F1D1E] placeholder:text-[#6B6462]/60 focus:outline-none"
                   />
                 </div>
-                <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
-                  <label className="text-[10px] uppercase tracking-wider text-[#8A7E72] flex items-center gap-1 mb-1">
-                    <User className="w-3 h-3 text-[#C48B81]" /> Sacerdote / Oficiante
+                <div className="bg-[#F8F5F0] rounded-2xl p-3 border border-[#E7E1D8]">
+                  <label className="text-[10px] uppercase tracking-wider text-[#6B6462] flex items-center gap-1 mb-1">
+                    <User className="w-3 h-3 text-[#6E2E3A]" /> Sacerdote / Oficiante
                   </label>
                   <input
                     type="text"
                     placeholder="Nombre del padre"
                     value={ceremonies.religiousOfficiant || ''}
                     onChange={e => onChange(prev => ({ ...prev, religiousOfficiant: e.target.value }))}
-                    className="w-full bg-transparent text-xs text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none"
+                    className="w-full bg-transparent text-xs text-[#1F1D1E] placeholder:text-[#6B6462]/60 focus:outline-none"
                   />
                 </div>
               </div>
@@ -639,19 +639,19 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                 placeholder="Notas del templo, padrinos (velación, anillos, arras, lazo), cortejo..."
                 value={ceremonies.religiousNotes || ''}
                 onChange={e => onChange(prev => ({ ...prev, religiousNotes: e.target.value }))}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs text-[#1F1D1E] placeholder:text-[#6B6462]/60 focus:outline-none focus:border-[#6E2E3A]"
               />
             </div>
 
             {/* 2. Repertorio Musical por Momento */}
-            <div className="bg-[#FAF8F5]/70 rounded-2xl p-4 border border-[#EFE8E1] space-y-3">
-              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72] flex items-center gap-1.5">
-                <Music className="w-3.5 h-3.5 text-[#C48B81]" />
+            <div className="bg-[#F8F5F0]/70 rounded-2xl p-4 border border-[#E7E1D8] space-y-3">
+              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462] flex items-center gap-1.5">
+                <Music className="w-3.5 h-3.5 text-[#6E2E3A]" />
                 Repertorio Musical ({relSongs.length})
               </span>
 
               {relSongs.length === 0 ? (
-                <p className="text-xs text-[#8A7E72] italic font-light">
+                <p className="text-xs text-[#6B6462] italic font-light">
                   Agrega las canciones para cada momento de la misa (entrada, anillos, firmas, salida).
                 </p>
               ) : (
@@ -659,12 +659,12 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                   {relSongs.map(s => (
                     <div
                       key={s.id}
-                      className="flex items-center justify-between bg-white px-3.5 py-2 rounded-xl border border-[#EFE8E1]/70 text-xs"
+                      className="flex items-center justify-between bg-white px-3.5 py-2 rounded-xl border border-[#E7E1D8]/70 text-xs"
                     >
                       <div>
-                        <span className="font-semibold text-[#A86B60]">{s.moment}:</span>{' '}
-                        <span className="text-[#2B2826]">{s.title}</span>
-                        {s.artist && <span className="text-[#8A7E72]"> · {s.artist}</span>}
+                        <span className="font-semibold text-[#521F29]">{s.moment}:</span>{' '}
+                        <span className="text-[#1F1D1E]">{s.title}</span>
+                        {s.artist && <span className="text-[#6B6462]"> · {s.artist}</span>}
                       </div>
                       <button
                         type="button"
@@ -674,7 +674,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                             religiousMusicList: relSongs.filter(x => x.id !== s.id)
                           }))
                         }
-                        className="text-[#8A7E72]/50 hover:text-rose-600 cursor-pointer focus:outline-none"
+                        className="text-[#6B6462]/50 hover:text-rose-600 cursor-pointer focus:outline-none"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -687,7 +687,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                 <select
                   value={relSongDraft.moment}
                   onChange={e => setRelSongDraft({ ...relSongDraft, moment: e.target.value })}
-                  className="px-3 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                  className="px-3 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
                 >
                   {SACRAMENT_MOMENTS.map(m => (
                     <option key={m} value={m}>
@@ -701,18 +701,18 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                   placeholder="Canción / Pieza *"
                   value={relSongDraft.title}
                   onChange={e => setRelSongDraft({ ...relSongDraft, title: e.target.value })}
-                  className="px-3.5 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                  className="px-3.5 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                 />
                 <input
                   type="text"
                   placeholder="Coro / Intérprete (opcional)"
                   value={relSongDraft.artist}
                   onChange={e => setRelSongDraft({ ...relSongDraft, artist: e.target.value })}
-                  className="px-3.5 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                  className="px-3.5 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-full bg-[#2B2826] text-white text-xs font-medium cursor-pointer focus:outline-none"
+                  className="px-4 py-2 rounded-full bg-[#1F1D1E] text-white text-xs font-medium cursor-pointer focus:outline-none"
                 >
                   + Agregar Canción
                 </button>
@@ -722,14 +722,14 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
             {/* 3. Lecturas + Requisitos Eclesiásticos en 2 columnas */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
               {/* Lecturas */}
-              <div className="bg-[#FAF8F5]/70 rounded-2xl p-4 border border-[#EFE8E1] space-y-3">
-                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72] flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5 text-[#C48B81]" />
+              <div className="bg-[#F8F5F0]/70 rounded-2xl p-4 border border-[#E7E1D8] space-y-3">
+                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462] flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-[#6E2E3A]" />
                   Lecturas & Lectores ({relReadings.length})
                 </span>
 
                 {relReadings.length === 0 ? (
-                  <p className="text-xs text-[#8A7E72] italic font-light">
+                  <p className="text-xs text-[#6B6462] italic font-light">
                     Asigna las lecturas y quién pasará al ambón.
                   </p>
                 ) : (
@@ -737,14 +737,14 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                     {relReadings.map(r => (
                       <div
                         key={r.id}
-                        className="flex items-start justify-between gap-2 bg-white px-3.5 py-2.5 rounded-xl border border-[#EFE8E1]/70 text-xs"
+                        className="flex items-start justify-between gap-2 bg-white px-3.5 py-2.5 rounded-xl border border-[#E7E1D8]/70 text-xs"
                       >
                         <div>
-                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[#C48B81] block">
+                          <span className="text-[10px] uppercase tracking-wider font-semibold text-[#6E2E3A] block">
                             {r.type}
                           </span>
-                          <p className="text-[#2B2826] font-medium">{r.title}</p>
-                          <p className="text-[11px] text-[#8A7E72] font-light">Lector: {r.reader}</p>
+                          <p className="text-[#1F1D1E] font-medium">{r.title}</p>
+                          <p className="text-[11px] text-[#6B6462] font-light">Lector: {r.reader}</p>
                         </div>
                         <button
                           type="button"
@@ -754,7 +754,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                               religiousReadingsList: relReadings.filter(x => x.id !== r.id)
                             }))
                           }
-                          className="text-[#8A7E72]/50 hover:text-rose-600 cursor-pointer focus:outline-none"
+                          className="text-[#6B6462]/50 hover:text-rose-600 cursor-pointer focus:outline-none"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -768,7 +768,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                     <select
                       value={relReadingDraft.type}
                       onChange={e => setRelReadingDraft({ ...relReadingDraft, type: e.target.value })}
-                      className="px-3 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                      className="px-3 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                     >
                       {READING_TYPES.map(rt => (
                         <option key={rt} value={rt}>
@@ -781,7 +781,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                       placeholder="Lector (ej. Hermana)"
                       value={relReadingDraft.reader}
                       onChange={e => setRelReadingDraft({ ...relReadingDraft, reader: e.target.value })}
-                      className="px-3 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                      className="px-3 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                     />
                   </div>
                   <div className="flex gap-2">
@@ -791,11 +791,11 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                       placeholder="Cita o título (ej. 1 Corintios 13)"
                       value={relReadingDraft.title}
                       onChange={e => setRelReadingDraft({ ...relReadingDraft, title: e.target.value })}
-                      className="flex-1 px-3.5 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                      className="flex-1 px-3.5 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                     />
                     <button
                       type="submit"
-                      className="px-3.5 py-2 rounded-full bg-[#2B2826] text-white text-xs font-medium cursor-pointer focus:outline-none"
+                      className="px-3.5 py-2 rounded-full bg-[#1F1D1E] text-white text-xs font-medium cursor-pointer focus:outline-none"
                     >
                       + Lectura
                     </button>
@@ -804,9 +804,9 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
               </div>
 
               {/* Requisitos Eclesiásticos */}
-              <div className="bg-[#FAF8F5]/70 rounded-2xl p-4 border border-[#EFE8E1] space-y-3">
+              <div className="bg-[#F8F5F0]/70 rounded-2xl p-4 border border-[#E7E1D8] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
+                  <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462]">
                     Requisitos Eclesiásticos
                   </span>
                   <span className="text-[11px] font-medium text-[#577355] bg-[#E5EDE6] px-2.5 py-0.5 rounded-full">
@@ -819,7 +819,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                     <div
                       key={req.id}
                       onClick={() => handleToggleRelReq(req.id)}
-                      className="flex items-start justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-[#EFE8E1]/70 cursor-pointer group"
+                      className="flex items-start justify-between gap-2 bg-white px-3 py-2 rounded-xl border border-[#E7E1D8]/70 cursor-pointer group"
                     >
                       <div className="flex items-start gap-2.5 min-w-0">
                         <span
@@ -833,7 +833,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                         </span>
                         <span
                           className={`text-xs leading-snug ${
-                            req.completed ? 'line-through text-[#8A7E72]' : 'text-[#2B2826]'
+                            req.completed ? 'line-through text-[#6B6462]' : 'text-[#1F1D1E]'
                           }`}
                         >
                           {req.title}
@@ -845,7 +845,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                           e.stopPropagation();
                           handleRemoveRelReq(req.id);
                         }}
-                        className="text-[#8A7E72]/40 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition cursor-pointer focus:outline-none"
+                        className="text-[#6B6462]/40 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition cursor-pointer focus:outline-none"
                       >
                         <Trash2 className="w-3 h-3" />
                       </button>
@@ -859,11 +859,11 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
                     placeholder="Agregar otro requisito..."
                     value={newRelReq}
                     onChange={e => setNewRelReq(e.target.value)}
-                    className="flex-1 px-3.5 py-2 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                    className="flex-1 px-3.5 py-2 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
                   />
                   <button
                     type="submit"
-                    className="px-3.5 py-2 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] text-xs text-[#2B2826] cursor-pointer focus:outline-none"
+                    className="px-3.5 py-2 rounded-full bg-white border border-[#E7E1D8] hover:border-[#6E2E3A] text-xs text-[#1F1D1E] cursor-pointer focus:outline-none"
                   >
                     <Plus className="w-3.5 h-3.5" />
                   </button>

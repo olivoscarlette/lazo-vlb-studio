@@ -148,9 +148,9 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] flex flex-col">
+    <div className="min-h-screen bg-[#F8F5F0] text-[#1F1D1E] flex flex-col">
       {/* Top Minimalist Header */}
-      <header className="sticky top-0 z-40 bg-[#FAF8F5] pt-[env(safe-area-inset-top)] border-b border-[#EFE8E1]">
+      <header className="sticky top-0 z-40 bg-[#F8F5F0] pt-[env(safe-area-inset-top)] border-b border-[#E7E1D8]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <button
             type="button"
@@ -165,18 +165,18 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
             />
           </button>
 
-          {/* Desktop 5-Tab Floating Pill Nav */}
-          <nav className="hidden md:flex items-center p-1 rounded-full bg-white border border-[#EFE8E1] shadow-2xs">
+          {/* Desktop Minimalist Underlined Atelier Nav */}
+          <nav className="hidden md:flex items-center gap-6 h-full">
             {TABS.map(tab => {
               const active = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => onSelectTab(tab.id)}
-                  className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+                  className={`h-full inline-flex items-center px-1 text-[13px] tracking-wide border-b-2 transition cursor-pointer ${
                     active
-                      ? 'bg-[#2B2826] text-white shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                      ? 'border-[#6E2E3A] text-[#6E2E3A] font-medium'
+                      : 'border-transparent text-[#6B6462] hover:text-[#1F1D1E]'
                   }`}
                 >
                   {tab.label}
@@ -191,21 +191,21 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                 <button
                   type="button"
                   onClick={() => setEventsOpen(prev => !prev)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#2B2826] shadow-2xs transition cursor-pointer max-w-[190px]"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#F8F5F0] border border-[#E7E1D8] text-xs text-[#1F1D1E] shadow-2xs transition cursor-pointer max-w-[190px]"
                   title="Mis Eventos"
                 >
-                  <Sparkles className="w-3 h-3 text-[#C48B81] shrink-0" />
+                  <Sparkles className="w-3 h-3 text-[#6E2E3A] shrink-0" />
                   <span className="truncate font-medium">{currentTitle}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-[#8A7E72] shrink-0 transition-transform ${eventsOpen ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-[#6B6462] shrink-0 transition-transform ${eventsOpen ? 'rotate-180' : ''}`} />
                 </button>
 
                 {eventsOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl border border-[#EFE8E1] shadow-xl py-2 z-50">
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl border border-[#E7E1D8] shadow-xl py-2 z-50">
                     <div className="px-3.5 py-1.5 border-b border-[#F5EFEB] flex items-center justify-between">
-                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8A7E72]">
+                      <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6B6462]">
                         Mis Eventos
                       </span>
-                      <span className="text-[10px] font-medium text-[#C48B81]">
+                      <span className="text-[10px] font-medium text-[#6E2E3A]">
                         {assignedWeddings.length} de {MAX_NOVIOS_EVENTS}
                       </span>
                     </div>
@@ -222,18 +222,18 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                               setEventsOpen(false);
                             }}
                             className={`w-full px-3.5 py-2.5 text-left flex items-center justify-between gap-2 transition cursor-pointer ${
-                              isActive ? 'bg-[#F7EDEB]/70' : 'hover:bg-[#FAF8F5]'
+                              isActive ? 'bg-[#F4EAEC]/70' : 'hover:bg-[#F8F5F0]'
                             }`}
                           >
                             <div className="min-w-0">
-                              <div className="text-xs font-semibold text-[#2B2826] truncate">
+                              <div className="text-xs font-semibold text-[#1F1D1E] truncate">
                                 {ev.name}
                               </div>
-                              <div className="text-[11px] text-[#8A7E72] truncate">
+                              <div className="text-[11px] text-[#6B6462] truncate">
                                 {ev.event_type || 'Boda'} {ev.wedding_date ? `· ${ev.wedding_date}` : ''}
                               </div>
                             </div>
-                            {isActive && <Check className="w-4 h-4 text-[#C48B81] shrink-0" />}
+                            {isActive && <Check className="w-4 h-4 text-[#6E2E3A] shrink-0" />}
                           </button>
                         );
                       })}
@@ -244,20 +244,20 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                         <button
                           type="button"
                           onClick={openCreateEventModal}
-                          className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] hover:bg-[#F3ECE6] text-left flex items-center gap-2 transition cursor-pointer"
+                          className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] hover:bg-[#F3ECE6] text-left flex items-center gap-2 transition cursor-pointer"
                         >
-                          <span className="w-6 h-6 rounded-full bg-[#C48B81]/15 text-[#C48B81] flex items-center justify-center shrink-0">
+                          <span className="w-6 h-6 rounded-full bg-[#6E2E3A]/15 text-[#6E2E3A] flex items-center justify-center shrink-0">
                             <Plus className="w-3.5 h-3.5" />
                           </span>
                           <div className="min-w-0">
-                            <div className="text-xs font-semibold text-[#2B2826]">Crear otro evento</div>
-                            <div className="text-[10px] text-[#8A7E72]">
+                            <div className="text-xs font-semibold text-[#1F1D1E]">Crear otro evento</div>
+                            <div className="text-[10px] text-[#6B6462]">
                               Te {remainingEvents === 1 ? 'queda 1 evento incluido' : `quedan ${remainingEvents} eventos incluidos`}
                             </div>
                           </div>
                         </button>
                       ) : (
-                        <div className="px-2 py-1.5 text-[11px] text-[#8A7E72] text-center">
+                        <div className="px-2 py-1.5 text-[11px] text-[#6B6462] text-center">
                           Has utilizado tus {MAX_NOVIOS_EVENTS} eventos incluidos.
                         </div>
                       )}
@@ -270,14 +270,14 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                             setEventsOpen(false);
                             setShowInstallModal(true);
                           }}
-                          className="w-full px-3 py-2 rounded-xl hover:bg-[#FAF8F5] text-left flex items-center gap-2 transition cursor-pointer"
+                          className="w-full px-3 py-2 rounded-xl hover:bg-[#F8F5F0] text-left flex items-center gap-2 transition cursor-pointer"
                         >
-                          <span className="w-6 h-6 rounded-full bg-[#EFE8E1] text-[#5A524C] flex items-center justify-center shrink-0">
+                          <span className="w-6 h-6 rounded-full bg-[#E7E1D8] text-[#5A524C] flex items-center justify-center shrink-0">
                             <Smartphone className="w-3.5 h-3.5" />
                           </span>
                           <div className="min-w-0">
-                            <div className="text-xs font-medium text-[#2B2826]">Agregar app al celular</div>
-                            <div className="text-[10px] text-[#8A7E72]">Mini guía para iPhone y Android</div>
+                            <div className="text-xs font-medium text-[#1F1D1E]">Agregar app al celular</div>
+                            <div className="text-[10px] text-[#6B6462]">Mini guía para iPhone y Android</div>
                           </div>
                         </button>
                       </div>
@@ -291,7 +291,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                 type="button"
                 onClick={() => setShowInstallModal(true)}
                 title="Agregar Lazo como app en tu celular"
-                className="p-2 rounded-full text-[#8A7E72] hover:text-[#C48B81] hover:bg-white border border-transparent hover:border-[#EFE8E1] transition cursor-pointer"
+                className="p-2 rounded-full text-[#6B6462] hover:text-[#6E2E3A] hover:bg-white border border-transparent hover:border-[#E7E1D8] transition cursor-pointer"
               >
                 <Smartphone className="w-4 h-4" />
               </button>
@@ -299,7 +299,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
             <button
               onClick={exitToLanding}
               title="Salir a la portada"
-              className="p-2 rounded-full text-[#8A7E72] hover:text-[#2B2826] hover:bg-white border border-transparent hover:border-[#EFE8E1] transition cursor-pointer"
+              className="p-2 rounded-full text-[#6B6462] hover:text-[#1F1D1E] hover:bg-white border border-transparent hover:border-[#E7E1D8] transition cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -313,7 +313,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
       </main>
 
       {/* Mobile Native-Style Bottom Tab Bar */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#EFE8E1] pb-safe">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-[#E7E1D8] pb-safe">
         <div className={`grid ${showReuniones ? 'grid-cols-6' : 'grid-cols-5'} h-16 max-w-md mx-auto`}>
           {TABS.map(tab => {
             const Icon = tab.icon;
@@ -323,7 +323,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                 key={tab.id}
                 onClick={() => onSelectTab(tab.id)}
                 className={`flex flex-col items-center justify-center gap-1 transition cursor-pointer ${
-                  active ? 'text-[#C48B81]' : 'text-[#8A7E72]'
+                  active ? 'text-[#6E2E3A]' : 'text-[#6B6462]'
                 }`}
               >
                 <Icon className={`w-5 h-5 ${active ? 'stroke-[2.2]' : 'stroke-[1.7]'}`} />
@@ -350,13 +350,13 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
           )}
 
           <div>
-            <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+            <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
               Tipo de evento *
             </label>
             <select
               value={newEventForm.event_type}
               onChange={e => setNewEventForm({ ...newEventForm, event_type: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
             >
               <option value="Boda Completa">Boda Completa</option>
               <option value="Boda Civil">Boda Civil</option>
@@ -373,7 +373,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
 
           {newEventIsNonWedding ? (
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Nombre del festejado / evento *
               </label>
               <input
@@ -382,13 +382,13 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                 placeholder="Ej. Andrea"
                 value={newEventForm.partner_1_name}
                 onChange={e => setNewEventForm({ ...newEventForm, partner_1_name: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                   Novia / Pareja 1 *
                 </label>
                 <input
@@ -397,11 +397,11 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                   placeholder="Ej. Andrea"
                   value={newEventForm.partner_1_name}
                   onChange={e => setNewEventForm({ ...newEventForm, partner_1_name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
                 />
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                   Novio / Pareja 2 (opcional)
                 </label>
                 <input
@@ -409,7 +409,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                   placeholder="Ej. Mateo"
                   value={newEventForm.partner_2_name}
                   onChange={e => setNewEventForm({ ...newEventForm, partner_2_name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
                 />
               </div>
             </div>
@@ -417,7 +417,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Fecha del evento *
               </label>
               <input
@@ -425,11 +425,11 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                 required
                 value={newEventForm.wedding_date}
                 onChange={e => setNewEventForm({ ...newEventForm, wedding_date: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Ciudad / Sede (opcional)
               </label>
               <input
@@ -437,19 +437,19 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                 placeholder="Ej. Monterrey"
                 value={newEventForm.reception_venue}
                 onChange={e => setNewEventForm({ ...newEventForm, reception_venue: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
           </div>
 
-          <p className="text-[11px] text-[#8A7E72] leading-relaxed">
+          <p className="text-[11px] text-[#6B6462] leading-relaxed">
             Los eventos creados quedan guardados de forma permanente en tu cuenta (no se pueden eliminar) y heredan tu plan actual.
           </p>
 
           <button
             type="submit"
             disabled={creatingEvent}
-            className="w-full py-3 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold uppercase tracking-wider shadow-2xs transition cursor-pointer disabled:opacity-60"
+            className="w-full py-3 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-semibold uppercase tracking-wider shadow-2xs transition cursor-pointer disabled:opacity-60"
           >
             {creatingEvent ? 'Creando evento...' : 'Crear Evento'}
           </button>

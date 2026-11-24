@@ -256,10 +256,10 @@ export function createInitialWeddingState(profile: WeddingProfile): WeddingState
     },
     style: {
       palette: [
-        { name: 'Marfil', hex: '#FAF8F5' },
-        { name: 'Terracota', hex: '#C48B81' },
+        { name: 'Marfil', hex: '#F8F5F0' },
+        { name: 'Terracota', hex: '#6E2E3A' },
         { name: 'Salvia', hex: '#6E8C70' },
-        { name: 'Espresso', hex: '#2B2826' }
+        { name: 'Espresso', hex: '#1F1D1E' }
       ],
       vibe: 'Editorial Minimalista · Orgánico y Atemporal',
       brideLook: '',

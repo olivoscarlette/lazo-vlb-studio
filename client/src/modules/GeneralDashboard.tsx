@@ -1240,9 +1240,9 @@ export const GeneralDashboard: React.FC = () => {
 
     return (
       <>
-        <div className="text-[#2B2826] break-words">{line1}</div>
-        <div className="text-[#A86B60] break-words">
-          {hasAmpersand && <span className="italic text-[#C48B81] mr-1.5">&</span>}
+        <div className="text-[#1F1D1E] break-words">{line1}</div>
+        <div className="text-[#521F29] break-words">
+          {hasAmpersand && <span className="italic text-[#6E2E3A] mr-1.5">&</span>}
           {line2}
         </div>
       </>
@@ -1386,18 +1386,18 @@ export const GeneralDashboard: React.FC = () => {
   }, [sidebarOpen]);
 
   return (
-    <div className="min-h-screen bg-[#FAF7F5] flex flex-col md:flex-row text-[#2B2826] max-w-full overflow-x-hidden">
+    <div className="min-h-screen bg-[#F8F5F0] flex flex-col md:flex-row text-[#1F1D1E] max-w-full overflow-x-hidden">
       {/* Mobile Backdrop Overlay for GeneralDashboard */}
       {sidebarOpen && (
         <div
           onClick={handleToggleSidebar}
-          className="fixed inset-0 bg-[#2B2826]/40 z-40 backdrop-blur-xs md:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-[#1F1D1E]/40 z-40 backdrop-blur-xs md:hidden transition-opacity duration-300"
         />
       )}
 
       {/* 1. Sidebar Izquierdo Fijo/Acoplado — Sigue la pantalla y nunca se corta al hacer scroll */}
       <aside
-        className={`shrink-0 bg-[#FAF7F5] border-r border-[#EFE8E1] flex flex-col transition-all duration-300 ${
+        className={`shrink-0 bg-[#F8F5F0] border-r border-[#E7E1D8] flex flex-col transition-all duration-300 ${
           // Mobile: drawer
           `fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] h-full shadow-2xl z-50 md:shadow-none md:fixed md:top-0 md:bottom-0 md:left-0 md:h-screen md:z-30 ${
             sidebarOpen
@@ -1425,11 +1425,11 @@ export const GeneralDashboard: React.FC = () => {
               <button
                 onClick={handleToggleSidebar}
                 aria-label="Contraer menú lateral"
-                className="p-1.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-xl transition cursor-pointer"
+                className="p-1.5 text-[#6B6462] hover:text-[#1F1D1E] hover:bg-[#F2ECE7] rounded-xl transition cursor-pointer"
                 title="Contraer menú lateral (⌘B)"
               >
-                <PanelLeftClose className="w-5 h-5 text-[#C48B81] hidden md:block" />
-                <X className="w-5 h-5 text-[#C48B81] md:hidden" />
+                <PanelLeftClose className="w-5 h-5 text-[#6E2E3A] hidden md:block" />
+                <X className="w-5 h-5 text-[#6E2E3A] md:hidden" />
               </button>
             </div>
           ) : (
@@ -1448,10 +1448,10 @@ export const GeneralDashboard: React.FC = () => {
               <button
                 onClick={handleToggleSidebar}
                 aria-label="Expandir menú lateral"
-                className="p-2 text-[#7D6F6B] hover:text-[#C48B81] hover:bg-[#F2ECE7] rounded-xl transition cursor-pointer"
+                className="p-2 text-[#6B6462] hover:text-[#6E2E3A] hover:bg-[#F2ECE7] rounded-xl transition cursor-pointer"
                 title="Expandir menú lateral (⌘B)"
               >
-                <PanelLeft className="w-5 h-5 text-[#C48B81]" />
+                <PanelLeft className="w-5 h-5 text-[#6E2E3A]" />
               </button>
             </div>
           )}
@@ -1480,18 +1480,18 @@ export const GeneralDashboard: React.FC = () => {
                     : 'w-10 h-10 justify-center rounded-xl p-2.5'
                 } ${
                   active
-                    ? 'bg-[#F7EDEB] text-[#C48B81] font-semibold shadow-xs'
-                    : 'text-[#7D6F6B] hover:bg-[#F2ECE7] hover:text-[#2B2826] font-medium'
+                    ? 'bg-[#F4EAEC] text-[#6E2E3A] font-semibold shadow-xs'
+                    : 'text-[#6B6462] hover:bg-[#F2ECE7] hover:text-[#1F1D1E] font-medium'
                 }`}
               >
-                <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#C48B81]' : 'text-[#7D6F6B]'}`} />
+                <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#6E2E3A]' : 'text-[#6B6462]'}`} />
                 {sidebarOpen && <span>{item.label}</span>}
               </button>
             );
           })}
         </nav>
 
-        <div className={`pt-4 border-t border-[#EFE8E1] flex items-center text-xs text-[#7D6F6B] transition-all ${
+        <div className={`pt-4 border-t border-[#E7E1D8] flex items-center text-xs text-[#6B6462] transition-all ${
           sidebarOpen ? 'px-3 justify-between' : 'justify-center p-2'
         }`}>
           {sidebarOpen && <span>Lazo Studio · Planning</span>}
@@ -1504,15 +1504,15 @@ export const GeneralDashboard: React.FC = () => {
         sidebarOpen ? 'md:ml-64 lg:ml-72' : 'md:ml-16 lg:ml-[4.25rem]'
       }`}>
         {/* Barra Superior Móvil: Siempre visible en móvil con Logo, Menú, Notificaciones y Perfil */}
-        <div className="flex md:hidden items-center justify-between gap-3 pb-3 mb-5 border-b border-[#EFE8E1]">
+        <div className="flex md:hidden items-center justify-between gap-3 pb-3 mb-5 border-b border-[#E7E1D8]">
           <div className="flex items-center space-x-2.5">
             <button
               onClick={handleToggleSidebar}
               aria-label="Abrir menú"
-              className="p-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F2ECE7] text-[#2B2826] transition shadow-2xs cursor-pointer shrink-0"
+              className="p-2 rounded-xl border border-[#E7E1D8] bg-[#FFFFFF] hover:bg-[#F2ECE7] text-[#1F1D1E] transition shadow-2xs cursor-pointer shrink-0"
               title="Menú"
             >
-              <PanelLeft className="w-5 h-5 text-[#C48B81]" />
+              <PanelLeft className="w-5 h-5 text-[#6E2E3A]" />
             </button>
             <div
               onClick={() => setActiveTab('weddings')}
@@ -1537,7 +1537,7 @@ export const GeneralDashboard: React.FC = () => {
                     setActiveModule('lazo');
                   }}
                   className={`px-2 py-1 rounded-full text-[11px] font-semibold transition ${
-                    activeTab !== 'vlb' ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs' : 'text-[#7D6F6B]'
+                    activeTab !== 'vlb' ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs' : 'text-[#6B6462]'
                   }`}
                 >
                   Lazo
@@ -1548,7 +1548,7 @@ export const GeneralDashboard: React.FC = () => {
                     setActiveModule('vlb');
                   }}
                   className={`px-2 py-1 rounded-full text-[11px] font-semibold transition ${
-                    activeTab === 'vlb' ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs' : 'text-[#7D6F6B]'
+                    activeTab === 'vlb' ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs' : 'text-[#6B6462]'
                   }`}
                 >
                   VLB
@@ -1560,21 +1560,21 @@ export const GeneralDashboard: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setShowNotifMenu(!showNotifMenu)}
-                className="p-2 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer relative"
+                className="p-2 text-[#6B6462] hover:text-[#1F1D1E] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer relative"
                 title="Notificaciones"
               >
                 <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#C48B81]" />
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#6E2E3A]" />
                 )}
               </button>
 
               {showNotifMenu && (
-                <div className="absolute right-0 mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] py-2 z-50">
+                <div className="absolute right-0 mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E7E1D8] py-2 z-50">
                   <div className="px-4 py-2.5 border-b border-[#F2ECE7] flex items-center justify-between">
-                    <span className="font-serif text-base font-semibold text-[#2B2826]">Notificaciones</span>
+                    <span className="font-serif text-base font-semibold text-[#1F1D1E]">Notificaciones</span>
                     {unreadCount > 0 && (
-                      <span className="text-xs bg-[#F7EDEB] text-[#A86B60] px-2.5 py-0.5 rounded-full font-medium">
+                      <span className="text-xs bg-[#F4EAEC] text-[#521F29] px-2.5 py-0.5 rounded-full font-medium">
                         {unreadCount} nuevas
                       </span>
                     )}
@@ -1591,7 +1591,7 @@ export const GeneralDashboard: React.FC = () => {
                           <div className="text-[11px] font-bold text-[#332A28] truncate">
                             Alertas en tu pantalla
                           </div>
-                          <div className="text-[9px] text-[#7D6F6B] leading-tight">
+                          <div className="text-[9px] text-[#6B6462] leading-tight">
                             Avisos al firmar o confirmar
                           </div>
                         </div>
@@ -1639,7 +1639,7 @@ export const GeneralDashboard: React.FC = () => {
                   )}
                   <div className="max-h-72 overflow-y-auto divide-y divide-[#F2ECE7]">
                     {notifications.length === 0 ? (
-                      <div className="p-4 text-center text-xs text-[#7D6F6B]">
+                      <div className="p-4 text-center text-xs text-[#6B6462]">
                         No hay notificaciones pendientes.
                       </div>
                     ) : (
@@ -1647,11 +1647,11 @@ export const GeneralDashboard: React.FC = () => {
                         <div
                           key={n.id}
                           onClick={() => handleMarkAsRead(n.id)}
-                          className={`p-3 text-xs cursor-pointer hover:bg-[#FAF7F5] transition ${!n.read ? 'bg-[#F7EDEB]/50' : ''}`}
+                          className={`p-3 text-xs cursor-pointer hover:bg-[#F8F5F0] transition ${!n.read ? 'bg-[#F4EAEC]/50' : ''}`}
                         >
-                          <div className="font-semibold text-[#2B2826] mb-0.5">{n.title}</div>
-                          <div className="text-[11px] text-[#7D6F6B] leading-snug">{n.message}</div>
-                          <div className="text-[10px] text-[#7D6F6B] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
+                          <div className="font-semibold text-[#1F1D1E] mb-0.5">{n.title}</div>
+                          <div className="text-[11px] text-[#6B6462] leading-snug">{n.message}</div>
+                          <div className="text-[10px] text-[#6B6462] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
                         </div>
                       ))
                     )}
@@ -1673,18 +1673,18 @@ export const GeneralDashboard: React.FC = () => {
                   className="w-8 h-8 rounded-full object-cover border border-[#CCDACC] shadow-2xs"
                 />
               ) : (
-                <div className="w-8 h-8 rounded-full bg-[#F7EDEB] text-[#A86B60] font-serif font-bold text-xs flex items-center justify-center border border-[#ECD9D5]">
+                <div className="w-8 h-8 rounded-full bg-[#F4EAEC] text-[#521F29] font-serif font-bold text-xs flex items-center justify-center border border-[#ECD9D5]">
                   {userName.charAt(0)}
                 </div>
               )}
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#6E8C70] border-2 border-[#FAF7F5]" />
+              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#6E8C70] border-2 border-[#F8F5F0]" />
             </div>
 
             {/* Salir */}
             <button
               onClick={logout}
               title="Cerrar sesión"
-              className="p-2 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer"
+              className="p-2 text-[#6B6462] hover:text-[#1F1D1E] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer"
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -1697,10 +1697,10 @@ export const GeneralDashboard: React.FC = () => {
             {/* Cabecera Editorial */}
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
               <div>
-                <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#8A7E72] block mb-1">
+                <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#6B6462] block mb-1">
                   Estudio de Planeación · Temporada 2026–2027
                 </span>
-                <h1 className="font-editorial text-3xl sm:text-4xl font-normal text-[#2B2826] tracking-tight">
+                <h1 className="font-editorial text-3xl sm:text-4xl font-normal text-[#1F1D1E] tracking-tight">
                   Hola, {userName}
                 </h1>
               </div>
@@ -1717,11 +1717,11 @@ export const GeneralDashboard: React.FC = () => {
                       className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
                         activeTab !== 'vlb'
                           ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
-                          : 'text-[#7D6F6B] hover:text-[#332A28]'
+                          : 'text-[#6B6462] hover:text-[#332A28]'
                       }`}
                       title="Módulo de Bodas, Invitados y Logística"
                     >
-                      <Heart className="w-3.5 h-3.5 text-[#C48B81]" />
+                      <Heart className="w-3.5 h-3.5 text-[#6E2E3A]" />
                       <span className="hidden sm:inline">Lazo Planning</span>
                       <span className="sm:hidden">Lazo</span>
                     </button>
@@ -1733,7 +1733,7 @@ export const GeneralDashboard: React.FC = () => {
                       className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
                         activeTab === 'vlb'
                           ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
-                          : 'text-[#7D6F6B] hover:text-[#332A28]'
+                          : 'text-[#6B6462] hover:text-[#332A28]'
                       }`}
                       title="Papelería Social & Stands de Bienvenida"
                     >
@@ -1746,7 +1746,7 @@ export const GeneralDashboard: React.FC = () => {
 
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center bg-[#C48B81] hover:bg-[#A86B60] text-[#FFFFFF] px-6 py-2.5 rounded-full text-sm font-semibold shadow-xs hover:shadow-md hover:shadow-[#C48B81]/20 transition cursor-pointer"
+                  className="w-full sm:w-auto inline-flex items-center justify-center bg-[#6E2E3A] hover:bg-[#521F29] text-[#FFFFFF] px-6 py-2.5 rounded-full text-sm font-semibold shadow-xs hover:shadow-md hover:shadow-[#6E2E3A]/20 transition cursor-pointer"
                 >
                   <span>Agregar evento</span>
                 </button>
@@ -1762,14 +1762,14 @@ export const GeneralDashboard: React.FC = () => {
                       <img
                         src={user.avatar_url}
                         alt={user?.name}
-                        className="w-10 h-10 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition"
+                        className="w-10 h-10 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#6E2E3A] transition"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-[#F7EDEB] text-[#A86B60] font-serif font-bold text-base flex items-center justify-center border border-[#ECD9D5] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition">
+                      <div className="w-10 h-10 rounded-full bg-[#F4EAEC] text-[#521F29] font-serif font-bold text-base flex items-center justify-center border border-[#ECD9D5] shadow-2xs group-hover:ring-2 group-hover:ring-[#6E2E3A] transition">
                         {userName.charAt(0)}
                       </div>
                     )}
-                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#6E8C70] border-2 border-[#FAF7F5]" title="En línea" />
+                    <span className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-[#6E8C70] border-2 border-[#F8F5F0]" title="En línea" />
                   </div>
 
                   {/* Botón rápido en barra superior para activar alertas de escritorio */}
@@ -1792,21 +1792,21 @@ export const GeneralDashboard: React.FC = () => {
                   <div className="relative">
                     <button
                       onClick={() => setShowNotifMenu(!showNotifMenu)}
-                      className="p-2.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer relative"
+                      className="p-2.5 text-[#6B6462] hover:text-[#1F1D1E] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer relative"
                       title="Notificaciones"
                     >
                       <Bell className="w-5 h-5" />
                       {unreadCount > 0 && (
-                        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#C48B81]" />
+                        <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#6E2E3A]" />
                       )}
                     </button>
 
                     {showNotifMenu && (
-                      <div className="absolute right-0 mt-2 w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] py-2 z-50">
+                      <div className="absolute right-0 mt-2 w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E7E1D8] py-2 z-50">
                         <div className="px-4 py-2.5 border-b border-[#F2ECE7] flex items-center justify-between">
-                          <span className="font-serif text-lg font-semibold text-[#2B2826]">Notificaciones</span>
+                          <span className="font-serif text-lg font-semibold text-[#1F1D1E]">Notificaciones</span>
                           {unreadCount > 0 && (
-                            <span className="text-xs bg-[#F7EDEB] text-[#A86B60] px-2.5 py-0.5 rounded-full font-medium">
+                            <span className="text-xs bg-[#F4EAEC] text-[#521F29] px-2.5 py-0.5 rounded-full font-medium">
                               {unreadCount} nuevas
                             </span>
                           )}
@@ -1823,7 +1823,7 @@ export const GeneralDashboard: React.FC = () => {
                                 <div className="text-xs font-bold text-[#332A28] truncate">
                                   Alertas en tu pantalla
                                 </div>
-                                <div className="text-[10px] text-[#7D6F6B] leading-tight">
+                                <div className="text-[10px] text-[#6B6462] leading-tight">
                                   Recibe avisos al firmar contratos o confirmar invitados
                                 </div>
                               </div>
@@ -1871,7 +1871,7 @@ export const GeneralDashboard: React.FC = () => {
                         )}
                         <div className="max-h-72 overflow-y-auto divide-y divide-[#F2ECE7]">
                           {notifications.length === 0 ? (
-                            <div className="p-5 text-center text-sm text-[#7D6F6B]">
+                            <div className="p-5 text-center text-sm text-[#6B6462]">
                               No hay notificaciones pendientes.
                             </div>
                           ) : (
@@ -1879,11 +1879,11 @@ export const GeneralDashboard: React.FC = () => {
                               <div
                                 key={n.id}
                                 onClick={() => handleMarkAsRead(n.id)}
-                                className={`p-3.5 text-sm cursor-pointer hover:bg-[#FAF7F5] transition ${!n.read ? 'bg-[#F7EDEB]/50' : ''}`}
+                                className={`p-3.5 text-sm cursor-pointer hover:bg-[#F8F5F0] transition ${!n.read ? 'bg-[#F4EAEC]/50' : ''}`}
                               >
-                                <div className="font-semibold text-[#2B2826] mb-0.5">{n.title}</div>
-                                <div className="text-xs text-[#7D6F6B] leading-snug">{n.message}</div>
-                                <div className="text-xs text-[#7D6F6B] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
+                                <div className="font-semibold text-[#1F1D1E] mb-0.5">{n.title}</div>
+                                <div className="text-xs text-[#6B6462] leading-snug">{n.message}</div>
+                                <div className="text-xs text-[#6B6462] mt-1">{new Date(n.created_at).toLocaleDateString()}</div>
                               </div>
                             ))
                           )}
@@ -1896,7 +1896,7 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     onClick={logout}
                     title="Cerrar sesión"
-                    className="p-2.5 text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer"
+                    className="p-2.5 text-[#6B6462] hover:text-[#1F1D1E] hover:bg-[#F2ECE7] rounded-full transition cursor-pointer"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
@@ -1921,13 +1921,13 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setCurrentWedding(nextEvent)}
-                    className="md:col-span-1 text-left bg-[#2B2826] text-white rounded-3xl p-5 border border-[#2B2826] shadow-sm hover:bg-[#1E1B1A] transition cursor-pointer flex flex-col justify-between group"
+                    className="md:col-span-1 text-left bg-[#1F1D1E] text-white rounded-3xl p-5 border border-[#1F1D1E] shadow-sm hover:bg-[#1E1B1A] transition cursor-pointer flex flex-col justify-between group"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#E5B7AE]">
+                      <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#D9B6BC]">
                         Próximo Evento
                       </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#E5B7AE] transition-transform group-hover:translate-x-1" />
+                      <ArrowRight className="w-3.5 h-3.5 text-[#D9B6BC] transition-transform group-hover:translate-x-1" />
                     </div>
                     <div className="mt-2">
                       <div className="font-editorial text-xl text-white leading-snug">
@@ -1943,14 +1943,14 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setServiceTierFilter('COORDINACION')}
-                    className="text-left bg-white rounded-3xl p-5 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition cursor-pointer flex flex-col justify-between"
+                    className="text-left bg-white rounded-3xl p-5 border border-[#E7E1D8] hover:border-[#6E2E3A]/60 shadow-2xs transition cursor-pointer flex flex-col justify-between"
                   >
-                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
+                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6B6462]">
                       Coordinación VLB
                     </span>
                     <div className="mt-2">
-                      <div className="font-editorial text-3xl text-[#2B2826]">{countCoordination}</div>
-                      <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">
+                      <div className="font-editorial text-3xl text-[#1F1D1E]">{countCoordination}</div>
+                      <div className="text-[11px] text-[#6B6462] font-light mt-0.5">
                         Eventos presenciales activos
                       </div>
                     </div>
@@ -1960,14 +1960,14 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setServiceTierFilter('VIRTUAL')}
-                    className="text-left bg-white rounded-3xl p-5 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition cursor-pointer flex flex-col justify-between"
+                    className="text-left bg-white rounded-3xl p-5 border border-[#E7E1D8] hover:border-[#6E2E3A]/60 shadow-2xs transition cursor-pointer flex flex-col justify-between"
                   >
-                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
+                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6B6462]">
                       Planner Virtual
                     </span>
                     <div className="mt-2">
-                      <div className="font-editorial text-3xl text-[#2B2826]">{countVirtual}</div>
-                      <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">
+                      <div className="font-editorial text-3xl text-[#1F1D1E]">{countVirtual}</div>
+                      <div className="text-[11px] text-[#6B6462] font-light mt-0.5">
                         {virtualProCount > 0 ? `${virtualProCount} en Lazo Pro (2D + RSVP)` : 'Novios en suite digital'}
                       </div>
                     </div>
@@ -1978,14 +1978,14 @@ export const GeneralDashboard: React.FC = () => {
 
             {/* Barra Única de Filtros & Búsqueda */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-7">
-              <div className="inline-flex flex-wrap items-center p-1 bg-white border border-[#EFE8E1] rounded-full shadow-2xs w-fit">
+              <div className="inline-flex flex-wrap items-center p-1 bg-white border border-[#E7E1D8] rounded-full shadow-2xs w-fit">
                 <button
                   type="button"
                   onClick={() => setServiceTierFilter('ALL')}
                   className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none ${
                     serviceTierFilter === 'ALL'
-                      ? 'bg-[#2B2826] text-white shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                      ? 'bg-[#1F1D1E] text-white shadow-2xs'
+                      : 'text-[#6B6462] hover:text-[#1F1D1E]'
                   }`}
                 >
                   Todos ({activeWeddings.length})
@@ -1995,8 +1995,8 @@ export const GeneralDashboard: React.FC = () => {
                   onClick={() => setServiceTierFilter('COORDINACION')}
                   className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none ${
                     serviceTierFilter === 'COORDINACION'
-                      ? 'bg-[#2B2826] text-white shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                      ? 'bg-[#1F1D1E] text-white shadow-2xs'
+                      : 'text-[#6B6462] hover:text-[#1F1D1E]'
                   }`}
                 >
                   Coordinación VLB ({countCoordination})
@@ -2006,8 +2006,8 @@ export const GeneralDashboard: React.FC = () => {
                   onClick={() => setServiceTierFilter('VIRTUAL')}
                   className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none ${
                     serviceTierFilter === 'VIRTUAL'
-                      ? 'bg-[#2B2826] text-white shadow-2xs'
-                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                      ? 'bg-[#1F1D1E] text-white shadow-2xs'
+                      : 'text-[#6B6462] hover:text-[#1F1D1E]'
                   }`}
                 >
                   Planner Virtual ({countVirtual})
@@ -2018,8 +2018,8 @@ export const GeneralDashboard: React.FC = () => {
                     onClick={() => setServiceTierFilter('ARCHIVED')}
                     className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer select-none inline-flex items-center gap-1.5 ${
                       serviceTierFilter === 'ARCHIVED'
-                        ? 'bg-[#2B2826] text-white shadow-2xs'
-                        : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                        ? 'bg-[#1F1D1E] text-white shadow-2xs'
+                        : 'text-[#6B6462] hover:text-[#1F1D1E]'
                     }`}
                   >
                     <Archive className="w-3.5 h-3.5" />
@@ -2029,24 +2029,24 @@ export const GeneralDashboard: React.FC = () => {
               </div>
 
               <div className="relative w-full lg:w-72">
-                <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A7E72]" />
+                <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B6462]" />
                 <input
                   type="text"
                   placeholder="Buscar evento..."
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-white border border-[#EFE8E1] rounded-full text-xs text-[#2B2826] placeholder-[#8A7E72]/70 focus:outline-none focus:border-[#C48B81] shadow-2xs transition"
+                  className="w-full pl-9 pr-4 py-2 bg-white border border-[#E7E1D8] rounded-full text-xs text-[#1F1D1E] placeholder-[#6B6462]/70 focus:outline-none focus:border-[#6E2E3A] shadow-2xs transition"
                 />
               </div>
             </div>
 
             {/* Grid de Tarjetas de Eventos Limpias y Claras con Separación Editorial */}
             {loading ? (
-              <div className="py-20 text-center text-[#7D6F6B] text-sm">Cargando eventos...</div>
+              <div className="py-20 text-center text-[#6B6462] text-sm">Cargando eventos...</div>
             ) : filteredWeddings.length === 0 ? (
-              <div className="bg-[#FFFFFF] rounded-3xl p-12 text-center border border-dashed border-[#EFE8E1]">
-                <h3 className="font-serif text-xl font-semibold text-[#2B2826]">No se encontraron eventos</h3>
-                <p className="text-[#7D6F6B] text-sm mt-1">Crea un nuevo evento o ajusta tus filtros de búsqueda.</p>
+              <div className="bg-[#FFFFFF] rounded-3xl p-12 text-center border border-dashed border-[#E7E1D8]">
+                <h3 className="font-serif text-xl font-semibold text-[#1F1D1E]">No se encontraron eventos</h3>
+                <p className="text-[#6B6462] text-sm mt-1">Crea un nuevo evento o ajusta tus filtros de búsqueda.</p>
               </div>
             ) : (
               <div className="space-y-10">
@@ -2054,17 +2054,17 @@ export const GeneralDashboard: React.FC = () => {
                 {(serviceTierFilter === 'ALL' || serviceTierFilter === 'COORDINACION') && (
                   <div>
                     {/* Encabezado Minimalista de Sección */}
-                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-2.5 mb-5">
-                      <h3 className="font-editorial text-xl text-[#2B2826]">
+                    <div className="flex items-center justify-between border-b border-[#E7E1D8] pb-2.5 mb-5">
+                      <h3 className="font-editorial text-xl text-[#1F1D1E]">
                         Coordinación Viva la Bride
                       </h3>
-                      <span className="text-[11px] text-[#8A7E72] font-light">
+                      <span className="text-[11px] text-[#6B6462] font-light">
                         {filteredWeddings.filter(w => !isVirtualWedding(w)).length} {filteredWeddings.filter(w => !isVirtualWedding(w)).length === 1 ? 'evento' : 'eventos'}
                       </span>
                     </div>
 
                     {filteredWeddings.filter(w => !isVirtualWedding(w)).length === 0 ? (
-                      <div className="p-8 text-center rounded-2xl bg-[#FAF7F5] border border-dashed border-[#EFE8E1] text-xs text-[#7D6F6B]">
+                      <div className="p-8 text-center rounded-2xl bg-[#F8F5F0] border border-dashed border-[#E7E1D8] text-xs text-[#6B6462]">
                         No hay eventos de Coordinación Viva la Bride con los filtros actuales.
                       </div>
                     ) : (
@@ -2080,13 +2080,13 @@ export const GeneralDashboard: React.FC = () => {
                             <div
                               key={w.id}
                               onClick={() => setCurrentWedding(w)}
-                              className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#ECD9D5]"
+                              className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#E7E1D8] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#ECD9D5]"
                             >
                               <div>
                                 <div className="flex items-start justify-between gap-2 mb-4">
                                   <div className="min-w-0 flex-1">
                                     <div className="mb-2">
-                                      <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#A86B60] bg-[#FAF3F0] px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
+                                      <span className="inline-flex items-center text-[10px] uppercase font-bold tracking-wider text-[#521F29] bg-[#FAF3F0] px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
                                         {w.package_type || w.event_type || 'Boda Completa'}
                                       </span>
                                     </div>
@@ -2100,7 +2100,7 @@ export const GeneralDashboard: React.FC = () => {
                                       <button
                                         type="button"
                                         onClick={(e) => handleOpenEditModal(e, w)}
-                                        className="p-1.5 text-stone-400 hover:text-[#A86B60] hover:bg-[#F7EDEB] rounded-lg transition opacity-80 group-hover:opacity-100"
+                                        className="p-1.5 text-stone-400 hover:text-[#521F29] hover:bg-[#F4EAEC] rounded-lg transition opacity-80 group-hover:opacity-100"
                                         title="Editar evento"
                                       >
                                         <Edit3 className="w-4 h-4" />
@@ -2120,7 +2120,7 @@ export const GeneralDashboard: React.FC = () => {
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-1.5 mb-3.5">
-                                  <span className="inline-flex items-center text-xs font-medium text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-3.5 py-1 rounded-full select-none">
+                                  <span className="inline-flex items-center text-xs font-medium text-[#521F29] bg-[#F4EAEC] border border-[#ECD9D5] px-3.5 py-1 rounded-full select-none">
                                     {countdownText}
                                   </span>
                                   {Boolean(w.has_whatsapp_rsvp) && (
@@ -2129,25 +2129,25 @@ export const GeneralDashboard: React.FC = () => {
                                     </span>
                                   )}
                                   {Boolean(w.has_layout_2d) && (
-                                    <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2.5 py-0.5 rounded-full select-none" title="Módulo Plano 2D Activo">
+                                    <span className="text-[10px] font-semibold text-[#521F29] bg-[#F4EAEC] border border-[#ECD9D5] px-2.5 py-0.5 rounded-full select-none" title="Módulo Plano 2D Activo">
                                       Plano 2D
                                     </span>
                                   )}
                                 </div>
 
-                                <div className="flex items-center space-x-1.5 text-xs text-[#7D6F6B] mb-5 truncate">
-                                  <MapPin className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                                <div className="flex items-center space-x-1.5 text-xs text-[#6B6462] mb-5 truncate">
+                                  <MapPin className="w-3.5 h-3.5 text-[#6E2E3A] shrink-0" />
                                   <span className="truncate">{venueName}</span>
                                 </div>
 
-                                <div className="w-full h-1.5 bg-[#F7EDEB] rounded-full overflow-hidden mb-2">
+                                <div className="w-full h-1.5 bg-[#F4EAEC] rounded-full overflow-hidden mb-2">
                                   <div
-                                    className="h-full bg-gradient-to-r from-[#C48B81] to-[#D8A69E] rounded-full transition-all duration-500"
+                                    className="h-full bg-gradient-to-r from-[#6E2E3A] to-[#D8A69E] rounded-full transition-all duration-500"
                                     style={{ width: `${Math.max(confirmedPct > 0 ? confirmedPct : 10, 4)}%` }}
                                   />
                                 </div>
 
-                                <div className="text-xs text-[#7D6F6B] mb-6 font-medium">
+                                <div className="text-xs text-[#6B6462] mb-6 font-medium">
                                   {confirmedPct > 0 ? (
                                     <span>{totalGuests} invitados · {confirmedPct}% confirmados</span>
                                   ) : (
@@ -2164,7 +2164,7 @@ export const GeneralDashboard: React.FC = () => {
                                         <div
                                           key={member.id || i}
                                           title={`${member.name} (${member.assigned_role || member.role})`}
-                                          className="w-7 h-7 rounded-full bg-[#F7EDEB] text-[#A86B60] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
+                                          className="w-7 h-7 rounded-full bg-[#F4EAEC] text-[#521F29] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
                                         >
                                           <span className="text-[11px] font-bold uppercase leading-none">
                                             {member.name?.trim()?.charAt(0) || 'V'}
@@ -2174,7 +2174,7 @@ export const GeneralDashboard: React.FC = () => {
                                       {w.team.length > 3 && (
                                         <div
                                           title={`+${w.team.length - 3} miembros adicionales`}
-                                          className="w-7 h-7 rounded-full bg-[#F2ECE7] text-[#7D6F6B] flex items-center justify-center border border-[#EFE8E1] shadow-2xs select-none shrink-0"
+                                          className="w-7 h-7 rounded-full bg-[#F2ECE7] text-[#6B6462] flex items-center justify-center border border-[#E7E1D8] shadow-2xs select-none shrink-0"
                                         >
                                           <span className="text-[10px] font-bold leading-none">
                                             +{w.team.length - 3}
@@ -2185,7 +2185,7 @@ export const GeneralDashboard: React.FC = () => {
                                   ) : (
                                     <div
                                       title="Viva la Bride"
-                                      className="w-7 h-7 rounded-full bg-[#F7EDEB] text-[#A86B60] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
+                                      className="w-7 h-7 rounded-full bg-[#F4EAEC] text-[#521F29] flex items-center justify-center border border-[#ECD9D5] shadow-2xs select-none shrink-0"
                                     >
                                       <span className="text-[11px] font-bold uppercase leading-none">V</span>
                                     </div>
@@ -2198,7 +2198,7 @@ export const GeneralDashboard: React.FC = () => {
                                     e.stopPropagation();
                                     setCurrentWedding(w);
                                   }}
-                                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold text-[#2B2826] bg-[#FFFFFF] hover:bg-[#F7EDEB] border border-[#EFE8E1] transition shadow-2xs group-hover:border-[#C48B81] group-hover:text-[#C48B81] cursor-pointer"
+                                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold text-[#1F1D1E] bg-[#FFFFFF] hover:bg-[#F4EAEC] border border-[#E7E1D8] transition shadow-2xs group-hover:border-[#6E2E3A] group-hover:text-[#6E2E3A] cursor-pointer"
                                 >
                                   <span>Abrir Boda</span>
                                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -2216,17 +2216,17 @@ export const GeneralDashboard: React.FC = () => {
                 {(serviceTierFilter === 'ALL' || serviceTierFilter === 'VIRTUAL') && (
                   <div className="pt-2">
                     {/* Encabezado Minimalista de Sección */}
-                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-2.5 mb-5">
-                      <h3 className="font-editorial text-xl text-[#2B2826]">
+                    <div className="flex items-center justify-between border-b border-[#E7E1D8] pb-2.5 mb-5">
+                      <h3 className="font-editorial text-xl text-[#1F1D1E]">
                         Planner Virtual
                       </h3>
-                      <span className="text-[11px] text-[#8A7E72] font-light">
+                      <span className="text-[11px] text-[#6B6462] font-light">
                         {filteredWeddings.filter(w => isVirtualWedding(w)).length} {filteredWeddings.filter(w => isVirtualWedding(w)).length === 1 ? 'evento' : 'eventos'}
                       </span>
                     </div>
 
                     {filteredWeddings.filter(w => isVirtualWedding(w)).length === 0 ? (
-                      <div className="p-8 text-center rounded-2xl bg-[#FAF7F5] border border-dashed border-[#EFE8E1] text-xs text-[#7D6F6B]">
+                      <div className="p-8 text-center rounded-2xl bg-[#F8F5F0] border border-dashed border-[#E7E1D8] text-xs text-[#6B6462]">
                         No hay eventos de Planner Virtual con los filtros actuales.
                       </div>
                     ) : (
@@ -2242,18 +2242,18 @@ export const GeneralDashboard: React.FC = () => {
                             <div
                               key={w.id}
                               onClick={() => setCurrentWedding(w)}
-                              className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#C48B81]/40"
+                              className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#E7E1D8] transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#6E2E3A]/40"
                             >
                               <div>
                                 <div className="flex items-start justify-between gap-2 mb-4">
                                   <div className="min-w-0 flex-1">
                                     <div className="mb-2 flex items-center gap-1.5">
                                       {Boolean(w.has_whatsapp_rsvp) || Boolean(w.has_layout_2d) ? (
-                                        <span className="inline-flex items-center text-[10px] uppercase font-semibold tracking-wider text-white bg-[#2B2826] px-2.5 py-0.5 rounded-full">
+                                        <span className="inline-flex items-center text-[10px] uppercase font-semibold tracking-wider text-white bg-[#1F1D1E] px-2.5 py-0.5 rounded-full">
                                           Lazo Pro
                                         </span>
                                       ) : (
-                                        <span className="inline-flex items-center text-[10px] uppercase font-semibold tracking-wider text-[#7D6F6B] bg-[#FAF7F5] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
+                                        <span className="inline-flex items-center text-[10px] uppercase font-semibold tracking-wider text-[#6B6462] bg-[#F8F5F0] px-2.5 py-0.5 rounded-full border border-[#E7E1D8]">
                                           Plan Esencial
                                         </span>
                                       )}
@@ -2268,7 +2268,7 @@ export const GeneralDashboard: React.FC = () => {
                                       <button
                                         type="button"
                                         onClick={(e) => handleOpenEditModal(e, w)}
-                                        className="p-1.5 text-stone-400 hover:text-[#A86B60] hover:bg-[#F7EDEB] rounded-lg transition opacity-80 group-hover:opacity-100"
+                                        className="p-1.5 text-stone-400 hover:text-[#521F29] hover:bg-[#F4EAEC] rounded-lg transition opacity-80 group-hover:opacity-100"
                                         title="Editar evento"
                                       >
                                         <Edit3 className="w-4 h-4" />
@@ -2288,7 +2288,7 @@ export const GeneralDashboard: React.FC = () => {
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-1.5 mb-3.5">
-                                  <span className="inline-flex items-center text-xs font-medium text-[#7D6F6B] bg-[#FAF7F5] border border-[#EFE8E1] px-3.5 py-1 rounded-full select-none">
+                                  <span className="inline-flex items-center text-xs font-medium text-[#6B6462] bg-[#F8F5F0] border border-[#E7E1D8] px-3.5 py-1 rounded-full select-none">
                                     {countdownText}
                                   </span>
                                   {Boolean(w.has_whatsapp_rsvp) && (
@@ -2297,25 +2297,25 @@ export const GeneralDashboard: React.FC = () => {
                                     </span>
                                   )}
                                   {Boolean(w.has_layout_2d) && (
-                                    <span className="text-[10px] font-semibold text-[#A86B60] bg-[#F7EDEB] border border-[#ECD9D5] px-2.5 py-0.5 rounded-full select-none" title="Módulo Plano 2D Activo">
+                                    <span className="text-[10px] font-semibold text-[#521F29] bg-[#F4EAEC] border border-[#ECD9D5] px-2.5 py-0.5 rounded-full select-none" title="Módulo Plano 2D Activo">
                                       Plano 2D
                                     </span>
                                   )}
                                 </div>
 
-                                <div className="flex items-center space-x-1.5 text-xs text-[#7D6F6B] mb-5 truncate">
-                                  <MapPin className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                                <div className="flex items-center space-x-1.5 text-xs text-[#6B6462] mb-5 truncate">
+                                  <MapPin className="w-3.5 h-3.5 text-[#6E2E3A] shrink-0" />
                                   <span className="truncate">{venueName}</span>
                                 </div>
 
-                                <div className="w-full h-1.5 bg-[#EFE8E1] rounded-full overflow-hidden mb-2">
+                                <div className="w-full h-1.5 bg-[#E7E1D8] rounded-full overflow-hidden mb-2">
                                   <div
-                                    className="h-full bg-[#7D6F6B] rounded-full transition-all duration-500"
+                                    className="h-full bg-[#6B6462] rounded-full transition-all duration-500"
                                     style={{ width: `${Math.max(confirmedPct > 0 ? confirmedPct : 10, 4)}%` }}
                                   />
                                 </div>
 
-                                <div className="text-xs text-[#7D6F6B] mb-6 font-medium">
+                                <div className="text-xs text-[#6B6462] mb-6 font-medium">
                                   {confirmedPct > 0 ? (
                                     <span>{totalGuests} invitados · {confirmedPct}% confirmados</span>
                                   ) : (
@@ -2325,7 +2325,7 @@ export const GeneralDashboard: React.FC = () => {
                               </div>
 
                               <div className="flex items-center justify-between pt-2">
-                                <span className="text-[11px] font-semibold text-[#7D6F6B] bg-[#FAF7F5] px-2.5 py-1 rounded-lg border border-[#EFE8E1]">
+                                <span className="text-[11px] font-semibold text-[#6B6462] bg-[#F8F5F0] px-2.5 py-1 rounded-lg border border-[#E7E1D8]">
                                   Lazo Suite
                                 </span>
 
@@ -2335,7 +2335,7 @@ export const GeneralDashboard: React.FC = () => {
                                     e.stopPropagation();
                                     setCurrentWedding(w);
                                   }}
-                                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold text-[#2B2826] bg-[#FFFFFF] hover:bg-[#FAF7F5] border border-[#EFE8E1] transition shadow-2xs group-hover:border-[#7D6F6B] group-hover:text-[#2B2826] cursor-pointer"
+                                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full text-xs font-semibold text-[#1F1D1E] bg-[#FFFFFF] hover:bg-[#F8F5F0] border border-[#E7E1D8] transition shadow-2xs group-hover:border-[#6B6462] group-hover:text-[#1F1D1E] cursor-pointer"
                                 >
                                   <span>Abrir Boda</span>
                                   <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
@@ -2353,21 +2353,21 @@ export const GeneralDashboard: React.FC = () => {
                 {serviceTierFilter === 'ARCHIVED' && (
                   <div>
                     {/* Encabezado de Sección */}
-                    <div className="flex items-center justify-between border-b border-[#EFE8E1] pb-3 mb-6">
+                    <div className="flex items-center justify-between border-b border-[#E7E1D8] pb-3 mb-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-2xl bg-[#F0ECE9] text-[#7D6F6B] flex items-center justify-center font-bold text-base shadow-2xs border border-[#E0D8D0]">
-                          <Archive className="w-4 h-4 text-[#7D6F6B]" />
+                        <div className="w-9 h-9 rounded-2xl bg-[#F0ECE9] text-[#6B6462] flex items-center justify-center font-bold text-base shadow-2xs border border-[#E0D8D0]">
+                          <Archive className="w-4 h-4 text-[#6B6462]" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-editorial text-2xl font-normal text-[#2B2826] tracking-tight">
+                            <h3 className="font-editorial text-2xl font-normal text-[#1F1D1E] tracking-tight">
                               Eventos Archivados y Cancelados
                             </h3>
-                            <span className="text-[10px] uppercase font-bold tracking-wider text-[#7D6F6B] bg-[#F0ECE9] px-2.5 py-0.5 rounded-full border border-[#E0D8D0]">
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-[#6B6462] bg-[#F0ECE9] px-2.5 py-0.5 rounded-full border border-[#E0D8D0]">
                               Histórico
                             </span>
                           </div>
-                          <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                          <p className="text-[11px] text-[#6B6462] mt-0.5">
                             Eventos cancelados o concluidos retirados del flujo de planeación activo
                           </p>
                         </div>
@@ -2375,8 +2375,8 @@ export const GeneralDashboard: React.FC = () => {
                     </div>
 
                     {filteredWeddings.length === 0 ? (
-                      <div className="bg-[#FFFFFF] rounded-3xl p-12 text-center border border-dashed border-[#EFE8E1]">
-                        <p className="text-[#7D6F6B] text-sm">No hay eventos archivados o cancelados que coincidan con la búsqueda.</p>
+                      <div className="bg-[#FFFFFF] rounded-3xl p-12 text-center border border-dashed border-[#E7E1D8]">
+                        <p className="text-[#6B6462] text-sm">No hay eventos archivados o cancelados que coincidan con la búsqueda.</p>
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -2388,7 +2388,7 @@ export const GeneralDashboard: React.FC = () => {
                             <div
                               key={w.id}
                               onClick={() => setCurrentWedding(w)}
-                              className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#EFE8E1] opacity-90 hover:opacity-100 transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#D1C7BD]"
+                              className="luxury-card bg-[#FFFFFF] rounded-3xl p-6 sm:p-7 border border-[#E7E1D8] opacity-90 hover:opacity-100 transition-all duration-300 flex flex-col justify-between group cursor-pointer hover:border-[#D1C7BD]"
                             >
                               <div>
                                 <div className="flex items-start justify-between gap-2 mb-4">
@@ -2403,11 +2403,11 @@ export const GeneralDashboard: React.FC = () => {
                                           Archivado
                                         </span>
                                       )}
-                                      <span className="inline-flex items-center text-[10px] uppercase font-semibold text-[#7D6F6B] bg-[#FAF7F5] px-2 py-0.5 rounded-full border border-[#EFE8E1]">
+                                      <span className="inline-flex items-center text-[10px] uppercase font-semibold text-[#6B6462] bg-[#F8F5F0] px-2 py-0.5 rounded-full border border-[#E7E1D8]">
                                         {w.package_type || w.event_type || 'Evento'}
                                       </span>
                                     </div>
-                                    <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2] text-[#2B2826]">
+                                    <div className="font-atteron text-3xl sm:text-[34px] font-normal leading-[1.2] text-[#1F1D1E]">
                                       {renderCoupleNames(w)}
                                     </div>
                                   </div>
@@ -2417,7 +2417,7 @@ export const GeneralDashboard: React.FC = () => {
                                       <button
                                         type="button"
                                         onClick={(e) => handleOpenEditModal(e, w)}
-                                        className="p-1.5 text-stone-400 hover:text-[#A86B60] hover:bg-[#F7EDEB] rounded-lg transition cursor-pointer"
+                                        className="p-1.5 text-stone-400 hover:text-[#521F29] hover:bg-[#F4EAEC] rounded-lg transition cursor-pointer"
                                         title="Editar estado o notas del evento"
                                       >
                                         <Edit3 className="w-4 h-4" />
@@ -2436,19 +2436,19 @@ export const GeneralDashboard: React.FC = () => {
                                   </div>
                                 </div>
 
-                                <div className="space-y-1.5 mb-4 text-xs text-[#7D6F6B]">
+                                <div className="space-y-1.5 mb-4 text-xs text-[#6B6462]">
                                   <div className="flex items-center space-x-1.5">
-                                    <Calendar className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                                    <Calendar className="w-3.5 h-3.5 text-[#6E2E3A] shrink-0" />
                                     <span>Fecha: {w.wedding_date || 'Sin fecha'}</span>
                                   </div>
                                   <div className="flex items-center space-x-1.5 truncate">
-                                    <MapPin className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
+                                    <MapPin className="w-3.5 h-3.5 text-[#6E2E3A] shrink-0" />
                                     <span className="truncate">{venueName}</span>
                                   </div>
                                 </div>
 
                                 {w.notes && (
-                                  <p className="text-xs text-[#7D6F6B] italic bg-[#FAF7F5] p-2.5 rounded-xl border border-[#EFE8E1] mb-4 line-clamp-2">
+                                  <p className="text-xs text-[#6B6462] italic bg-[#F8F5F0] p-2.5 rounded-xl border border-[#E7E1D8] mb-4 line-clamp-2">
                                     "{w.notes}"
                                   </p>
                                 )}
@@ -2458,7 +2458,7 @@ export const GeneralDashboard: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={(e) => handleReactivateWedding(e, w)}
-                                  className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#A86B60] bg-[#FAF3F0] hover:bg-[#F7EDEB] border border-[#ECD9D5] transition cursor-pointer"
+                                  className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-[#521F29] bg-[#FAF3F0] hover:bg-[#F4EAEC] border border-[#ECD9D5] transition cursor-pointer"
                                   title="Reactivar y mover a eventos activos"
                                 >
                                   <RefreshCw className="w-3 h-3" />
@@ -2471,7 +2471,7 @@ export const GeneralDashboard: React.FC = () => {
                                     e.stopPropagation();
                                     setCurrentWedding(w);
                                   }}
-                                  className="inline-flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#2B2826] bg-[#FFFFFF] hover:bg-[#FAF7F5] border border-[#EFE8E1] transition shadow-2xs group-hover:border-[#7D6F6B] cursor-pointer"
+                                  className="inline-flex items-center space-x-1 px-3.5 py-1.5 rounded-full text-xs font-semibold text-[#1F1D1E] bg-[#FFFFFF] hover:bg-[#F8F5F0] border border-[#E7E1D8] transition shadow-2xs group-hover:border-[#6B6462] cursor-pointer"
                                 >
                                   <span>Abrir Evento</span>
                                   <ArrowRight className="w-3.5 h-3.5" />
@@ -2500,13 +2500,13 @@ export const GeneralDashboard: React.FC = () => {
         {/* PESTAÑA: CALENDARIO GENERAL */}
         {activeTab === 'calendario' && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
+            <div className="flex items-center justify-between pb-4 border-b border-[#E7E1D8]">
               <div className="flex items-center space-x-3.5">
                 <div>
                   <h1 className="text-2xl font-serif font-bold text-[#332A28] tracking-tight">
                     Calendario General
                   </h1>
-                  <p className="text-xs text-[#7D6F6B] mt-0.5">
+                  <p className="text-xs text-[#6B6462] mt-0.5">
                     Visión unificada de citas planning, bodas, citas externas, open houses, listas de tareas y sincronización Google Calendar.
                   </p>
                 </div>
@@ -2523,7 +2523,7 @@ export const GeneralDashboard: React.FC = () => {
             <div className="flex items-center justify-end pb-1 md:hidden">
               <button
                 onClick={() => setActiveTab('weddings')}
-                className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
+                className="text-xs font-semibold text-[#6E2E3A] hover:underline cursor-pointer"
               >
                 ← Volver a Eventos
               </button>
@@ -2575,17 +2575,17 @@ export const GeneralDashboard: React.FC = () => {
               )}
 
               {/* Cabecera Principal */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EFE8E1]">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E1D8]">
                 <div>
                   <div className="flex items-center space-x-2.5">
                     <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#332A28]">
                       Usuarios & Accesos
                     </h2>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-[#F4EAEC] text-[#521F29] border border-[#ECD9D5]">
                       Control Total
                     </span>
                   </div>
-                  <p className="text-xs text-[#7D6F6B] mt-1">
+                  <p className="text-xs text-[#6B6462] mt-1">
                     Gestión centralizada de cuentas: Equipo Viva la Bride, Novios con Coordinación Presencial y Novios con Suite Digital Virtual.
                   </p>
                 </div>
@@ -2593,13 +2593,13 @@ export const GeneralDashboard: React.FC = () => {
                 <div className="flex items-center space-x-2.5">
                   <button
                     onClick={() => setActiveTab('weddings')}
-                    className="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] transition cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl text-xs font-semibold text-[#6B6462] hover:text-[#1F1D1E] hover:bg-[#F2ECE7] transition cursor-pointer"
                   >
                     ← Volver a Eventos
                   </button>
                   <button
                     onClick={handleOpenNewUser}
-                    className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                    className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Nuevo Usuario / Cuenta</span>
@@ -2613,20 +2613,20 @@ export const GeneralDashboard: React.FC = () => {
                   onClick={() => setUserFilterSegment(userFilterSegment === 'EQUIPO' ? 'ALL' : 'EQUIPO')}
                   className={`p-4 rounded-2xl border transition cursor-pointer ${
                     userFilterSegment === 'EQUIPO'
-                      ? 'bg-[#F7EDEB] border-[#C48B81] shadow-xs'
-                      : 'bg-white border-[#EFE8E1] hover:border-[#C48B81]/40 hover:bg-[#FAF7F5]'
+                      ? 'bg-[#F4EAEC] border-[#6E2E3A] shadow-xs'
+                      : 'bg-white border-[#E7E1D8] hover:border-[#6E2E3A]/40 hover:bg-[#F8F5F0]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#A86B60]">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-[#521F29]">
                       Equipo Viva la Bride
                     </span>
-                    <span className="w-2 h-2 rounded-full bg-[#C48B81]" />
+                    <span className="w-2 h-2 rounded-full bg-[#6E2E3A]" />
                   </div>
-                  <div className="text-2xl font-bold text-[#2B2826] mt-2">
+                  <div className="text-2xl font-bold text-[#1F1D1E] mt-2">
                     {teamUsers.length}
                   </div>
-                  <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                  <p className="text-[11px] text-[#6B6462] mt-0.5">
                     Admin, Coordinadoras y Staff en sitio
                   </p>
                 </div>
@@ -2636,7 +2636,7 @@ export const GeneralDashboard: React.FC = () => {
                   className={`p-4 rounded-2xl border transition cursor-pointer ${
                     userFilterSegment === 'NOVIOS_VLB'
                       ? 'bg-[#FBF6ED] border-[#C29B38] shadow-xs'
-                      : 'bg-white border-[#EFE8E1] hover:border-[#C29B38]/40 hover:bg-[#FAF7F5]'
+                      : 'bg-white border-[#E7E1D8] hover:border-[#C29B38]/40 hover:bg-[#F8F5F0]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -2645,10 +2645,10 @@ export const GeneralDashboard: React.FC = () => {
                     </span>
                     <span className="w-2 h-2 rounded-full bg-[#C29B38]" />
                   </div>
-                  <div className="text-2xl font-bold text-[#2B2826] mt-2">
+                  <div className="text-2xl font-bold text-[#1F1D1E] mt-2">
                     {noviosVlbUsers.length}
                   </div>
-                  <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                  <p className="text-[11px] text-[#6B6462] mt-0.5">
                     Coordinación activa en sitio + suite digital
                   </p>
                 </div>
@@ -2658,7 +2658,7 @@ export const GeneralDashboard: React.FC = () => {
                   className={`p-4 rounded-2xl border transition cursor-pointer ${
                     userFilterSegment === 'NOVIOS_VIRTUAL'
                       ? 'bg-[#F0F4F8] border-[#3A5A78] shadow-xs'
-                      : 'bg-white border-[#EFE8E1] hover:border-[#3A5A78]/40 hover:bg-[#FAF7F5]'
+                      : 'bg-white border-[#E7E1D8] hover:border-[#3A5A78]/40 hover:bg-[#F8F5F0]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -2667,33 +2667,33 @@ export const GeneralDashboard: React.FC = () => {
                     </span>
                     <span className="w-2 h-2 rounded-full bg-[#3A5A78]" />
                   </div>
-                  <div className="text-2xl font-bold text-[#2B2826] mt-2">
+                  <div className="text-2xl font-bold text-[#1F1D1E] mt-2">
                     {noviosVirtualUsers.length}
                   </div>
-                  <p className="text-[11px] text-[#7D6F6B] mt-0.5">
+                  <p className="text-[11px] text-[#6B6462] mt-0.5">
                     Suite digital autónoma (Lazo Studio)
                   </p>
                 </div>
               </div>
 
               {/* Contenedor Principal: Filtros y Tabla */}
-              <div className="luxury-card rounded-3xl p-5 sm:p-7 border border-[#EFE8E1] space-y-5">
+              <div className="luxury-card rounded-3xl p-5 sm:p-7 border border-[#E7E1D8] space-y-5">
                 {/* Barra de Filtro Segmentado y Buscador */}
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-[#F5EFEB]">
                   {/* Segmented Control Pills */}
-                  <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#FAF7F5] rounded-2xl border border-[#EFE8E1]">
+                  <div className="flex flex-wrap items-center gap-1.5 p-1 bg-[#F8F5F0] rounded-2xl border border-[#E7E1D8]">
                     <button
                       type="button"
                       onClick={() => setUserFilterSegment('ALL')}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
                         userFilterSegment === 'ALL'
-                          ? 'bg-[#2B2826] text-white shadow-2xs'
-                          : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                          ? 'bg-[#1F1D1E] text-white shadow-2xs'
+                          : 'text-[#6B6462] hover:text-[#1F1D1E]'
                       }`}
                     >
                       <span>Todos</span>
                       <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                        userFilterSegment === 'ALL' ? 'bg-white/20 text-white' : 'bg-[#EFE8E1] text-[#7D6F6B]'
+                        userFilterSegment === 'ALL' ? 'bg-white/20 text-white' : 'bg-[#E7E1D8] text-[#6B6462]'
                       }`}>
                         {usersList.length}
                       </span>
@@ -2704,13 +2704,13 @@ export const GeneralDashboard: React.FC = () => {
                       onClick={() => setUserFilterSegment('EQUIPO')}
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
                         userFilterSegment === 'EQUIPO'
-                          ? 'bg-[#C48B81] text-white shadow-2xs'
-                          : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                          ? 'bg-[#6E2E3A] text-white shadow-2xs'
+                          : 'text-[#6B6462] hover:text-[#1F1D1E]'
                       }`}
                     >
                       <span>Equipo VLB</span>
                       <span className={`px-1.5 py-0.2 rounded-full text-[10px] ${
-                        userFilterSegment === 'EQUIPO' ? 'bg-white/20 text-white' : 'bg-[#F7EDEB] text-[#A86B60]'
+                        userFilterSegment === 'EQUIPO' ? 'bg-white/20 text-white' : 'bg-[#F4EAEC] text-[#521F29]'
                       }`}>
                         {teamUsers.length}
                       </span>
@@ -2722,7 +2722,7 @@ export const GeneralDashboard: React.FC = () => {
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
                         userFilterSegment === 'NOVIOS_VLB'
                           ? 'bg-[#8E6D38] text-white shadow-2xs'
-                          : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                          : 'text-[#6B6462] hover:text-[#1F1D1E]'
                       }`}
                     >
                       <span>Novios VLB</span>
@@ -2739,7 +2739,7 @@ export const GeneralDashboard: React.FC = () => {
                       className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 ${
                         userFilterSegment === 'NOVIOS_VIRTUAL'
                           ? 'bg-[#3A5A78] text-white shadow-2xs'
-                          : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                          : 'text-[#6B6462] hover:text-[#1F1D1E]'
                       }`}
                     >
                       <span>Novios Virtuales</span>
@@ -2753,18 +2753,18 @@ export const GeneralDashboard: React.FC = () => {
 
                   {/* Buscador Rápido */}
                   <div className="relative min-w-[260px] sm:w-72">
-                    <Search className="w-4 h-4 text-[#7D6F6B] absolute left-3 top-1/2 -translate-y-1/2" />
+                    <Search className="w-4 h-4 text-[#6B6462] absolute left-3 top-1/2 -translate-y-1/2" />
                     <input
                       type="text"
                       value={userSearchQuery}
                       onChange={e => setUserSearchQuery(e.target.value)}
                       placeholder="Buscar por nombre, email, teléfono..."
-                      className="w-full pl-9 pr-3 py-2 bg-[#FAF7F5] border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] placeholder:text-[#7D6F6B]/70 focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                      className="w-full pl-9 pr-3 py-2 bg-[#F8F5F0] border border-[#E7E1D8] rounded-xl text-xs text-[#1F1D1E] placeholder:text-[#6B6462]/70 focus:outline-none focus:ring-2 focus:ring-[#6E2E3A]"
                     />
                     {userSearchQuery && (
                       <button
                         onClick={() => setUserSearchQuery('')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-[#6B6462] hover:text-[#1F1D1E] cursor-pointer"
                       >
                         ✕
                       </button>
@@ -2776,7 +2776,7 @@ export const GeneralDashboard: React.FC = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-[#EFE8E1] text-[11px] font-bold uppercase tracking-wider text-[#7D6F6B]">
+                      <tr className="border-b border-[#E7E1D8] text-[11px] font-bold uppercase tracking-wider text-[#6B6462]">
                         <th className="py-3 px-4">Usuario / Contacto</th>
                         <th className="py-3 px-4">Tipo & Segmento</th>
                         <th className="py-3 px-4">WhatsApp</th>
@@ -2787,7 +2787,7 @@ export const GeneralDashboard: React.FC = () => {
                     <tbody className="divide-y divide-[#F5EFEB] text-xs">
                       {filteredUsersList.length === 0 ? (
                         <tr>
-                          <td colSpan={5} className="py-10 text-center text-sm text-[#7D6F6B]">
+                          <td colSpan={5} className="py-10 text-center text-sm text-[#6B6462]">
                             No se encontraron usuarios en esta categoría o búsqueda.
                           </td>
                         </tr>
@@ -2800,20 +2800,20 @@ export const GeneralDashboard: React.FC = () => {
                             : [];
 
                           return (
-                            <tr key={u.id} className="hover:bg-[#FAF7F5]/80 transition">
+                            <tr key={u.id} className="hover:bg-[#F8F5F0]/80 transition">
                               {/* 1. Nombre & Avatar */}
-                              <td className="py-3.5 px-4 font-semibold text-[#2B2826]">
+                              <td className="py-3.5 px-4 font-semibold text-[#1F1D1E]">
                                 <div className="flex items-center space-x-3">
                                   {u.avatar_url ? (
                                     <img
                                       src={u.avatar_url}
                                       alt={u.name}
-                                      className="w-9 h-9 rounded-full object-cover border border-[#EFE8E1] shadow-2xs shrink-0"
+                                      className="w-9 h-9 rounded-full object-cover border border-[#E7E1D8] shadow-2xs shrink-0"
                                     />
                                   ) : (
                                     <div className={`w-9 h-9 rounded-full font-serif font-bold text-sm flex items-center justify-center shrink-0 border ${
                                       cat === 'EQUIPO'
-                                        ? 'bg-[#F7EDEB] text-[#A86B60] border-[#EEDAD6]'
+                                        ? 'bg-[#F4EAEC] text-[#521F29] border-[#E5D1D5]'
                                         : cat === 'NOVIOS_VLB'
                                         ? 'bg-[#FBF6ED] text-[#8E6D38] border-[#ECDDBF]'
                                         : 'bg-[#F0F4F8] text-[#3A5A78] border-[#D0E0EC]'
@@ -2822,10 +2822,10 @@ export const GeneralDashboard: React.FC = () => {
                                     </div>
                                   )}
                                   <div className="min-w-0">
-                                    <div className="font-semibold text-[#2B2826] truncate leading-snug flex items-center space-x-1.5">
+                                    <div className="font-semibold text-[#1F1D1E] truncate leading-snug flex items-center space-x-1.5">
                                       <span>{u.name}</span>
                                       {u.role === 'NOVIOS' && (
-                                        <span className="text-[9px] px-1.5 py-0.2 rounded font-medium bg-[#FAF7F5] border border-[#EFE8E1] text-[#8A7E72]">
+                                        <span className="text-[9px] px-1.5 py-0.2 rounded font-medium bg-[#F8F5F0] border border-[#E7E1D8] text-[#6B6462]">
                                           {u.salutation === 'NOVIO'
                                             ? 'Novio'
                                             : u.salutation === 'NOVIA'
@@ -2836,7 +2836,7 @@ export const GeneralDashboard: React.FC = () => {
                                         </span>
                                       )}
                                     </div>
-                                    <div className="text-[11px] text-[#7D6F6B] font-mono truncate">
+                                    <div className="text-[11px] text-[#6B6462] font-mono truncate">
                                       {u.email}
                                     </div>
                                   </div>
@@ -2850,8 +2850,8 @@ export const GeneralDashboard: React.FC = () => {
                                     u.role === 'ADMINISTRADOR'
                                       ? 'bg-stone-900 text-white border-stone-800'
                                       : u.role === 'COORDINADOR'
-                                      ? 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5]'
-                                      : 'bg-[#F5EFEB] text-[#7D6F6B] border-[#EFE8E1]'
+                                      ? 'bg-[#F4EAEC] text-[#521F29] border-[#ECD9D5]'
+                                      : 'bg-[#F5EFEB] text-[#6B6462] border-[#E7E1D8]'
                                   }`}>
                                     <span>{u.role === 'ADMINISTRADOR' ? 'Admin' : u.role === 'COORDINADOR' ? 'Coordinadora VLB' : 'Staff'}</span>
                                   </span>
@@ -2885,13 +2885,13 @@ export const GeneralDashboard: React.FC = () => {
                                     href={`https://wa.me/${u.phone.replace(/[^0-9]/g, '')}`}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center space-x-1.5 text-xs text-[#2B2826] hover:text-emerald-700 transition"
+                                    className="inline-flex items-center space-x-1.5 text-xs text-[#1F1D1E] hover:text-emerald-700 transition"
                                   >
                                     <Phone className="w-3.5 h-3.5 text-emerald-600" />
                                     <span>{u.phone}</span>
                                   </a>
                                 ) : (
-                                  <span className="text-[#7D6F6B] text-xs">—</span>
+                                  <span className="text-[#6B6462] text-xs">—</span>
                                 )}
                               </td>
 
@@ -2905,12 +2905,12 @@ export const GeneralDashboard: React.FC = () => {
                                         onClick={() => {
                                           setCurrentWedding(linkedWedding);
                                         }}
-                                        className="font-medium text-[#2B2826] hover:text-[#C48B81] hover:underline text-left transition flex items-center space-x-1 group cursor-pointer"
+                                        className="font-medium text-[#1F1D1E] hover:text-[#6E2E3A] hover:underline text-left transition flex items-center space-x-1 group cursor-pointer"
                                       >
                                         <span className="truncate max-w-[200px]">{linkedWedding.name}</span>
-                                        <ArrowRight className="w-3 h-3 text-[#C48B81] opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <ArrowRight className="w-3 h-3 text-[#6E2E3A] opacity-0 group-hover:opacity-100 transition-opacity" />
                                       </button>
-                                      <div className="text-[11px] text-[#7D6F6B] flex items-center space-x-2">
+                                      <div className="text-[11px] text-[#6B6462] flex items-center space-x-2">
                                         <span>{linkedWedding.wedding_date || 'Fecha por definir'}</span>
                                         {linkedWedding.has_whatsapp_rsvp && (
                                           <span className="text-[9px] px-1.5 py-0.2 bg-emerald-50 text-emerald-700 rounded-full border border-emerald-200">
@@ -2918,7 +2918,7 @@ export const GeneralDashboard: React.FC = () => {
                                           </span>
                                         )}
                                         {linkedWedding.has_layout_2d && (
-                                          <span className="text-[9px] px-1.5 py-0.2 bg-[#F7EDEB] text-[#A86B60] rounded-full border border-[#EEDAD6]">
+                                          <span className="text-[9px] px-1.5 py-0.2 bg-[#F4EAEC] text-[#521F29] rounded-full border border-[#E5D1D5]">
                                             Plano 2D
                                           </span>
                                         )}
@@ -2930,15 +2930,15 @@ export const GeneralDashboard: React.FC = () => {
                                     </span>
                                   )
                                 ) : u.role === 'ADMINISTRADOR' ? (
-                                  <span className="text-xs text-[#7D6F6B] italic">
+                                  <span className="text-xs text-[#6B6462] italic">
                                     Acceso total a todas las bodas
                                   </span>
                                 ) : assignedWeddingNames.length > 0 ? (
-                                  <div className="text-xs text-[#2B2826] font-medium max-w-[220px] truncate" title={assignedWeddingNames.join(', ')}>
+                                  <div className="text-xs text-[#1F1D1E] font-medium max-w-[220px] truncate" title={assignedWeddingNames.join(', ')}>
                                     {assignedWeddingNames.length} {assignedWeddingNames.length === 1 ? 'boda' : 'bodas'}: {assignedWeddingNames.join(', ')}
                                   </div>
                                 ) : (
-                                  <span className="text-[#7D6F6B] text-xs">Sin bodas asignadas</span>
+                                  <span className="text-[#6B6462] text-xs">Sin bodas asignadas</span>
                                 )}
                               </td>
 
@@ -2951,7 +2951,7 @@ export const GeneralDashboard: React.FC = () => {
                                       type="button"
                                       onClick={() => handleOpenUpgrade(u)}
                                       title="Upgradear servicio a Coordinación Presencial Viva la Bride"
-                                      className="inline-flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-[#C48B81] to-[#A86B60] hover:from-[#B3796F] hover:to-[#935B50] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                                      className="inline-flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-[#6E2E3A] to-[#521F29] hover:from-[#5A232E] hover:to-[#935B50] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
                                     >
                                       <Sparkles className="w-3.5 h-3.5" />
                                       <span>Cambiar a VLB</span>
@@ -2964,7 +2964,7 @@ export const GeneralDashboard: React.FC = () => {
                                       type="button"
                                       onClick={() => handleSwitchToVirtual(u)}
                                       title="Cambiar a Planner Virtual Autónomo"
-                                      className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] text-[#7D6F6B] hover:text-[#2B2826] bg-[#FAF7F5] hover:bg-[#F2ECE7] border border-[#EFE8E1] rounded-lg transition cursor-pointer"
+                                      className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] text-[#6B6462] hover:text-[#1F1D1E] bg-[#F8F5F0] hover:bg-[#F2ECE7] border border-[#E7E1D8] rounded-lg transition cursor-pointer"
                                     >
                                       <span>A Virtual</span>
                                     </button>
@@ -2975,7 +2975,7 @@ export const GeneralDashboard: React.FC = () => {
                                     onClick={() => handleResendWelcome(u)}
                                     disabled={sendingWelcomeId === u.id}
                                     title="Enviar o reenviar correo de bienvenida y accesos (con copia de respaldo a Lazo Studio Monterrey)"
-                                    className="inline-flex items-center space-x-1 text-[#C48B81] hover:text-[#A86B60] font-semibold px-2.5 py-1 rounded-lg hover:bg-[#FAF7F5] border border-[#EFE8E1] transition cursor-pointer"
+                                    className="inline-flex items-center space-x-1 text-[#6E2E3A] hover:text-[#521F29] font-semibold px-2.5 py-1 rounded-lg hover:bg-[#F8F5F0] border border-[#E7E1D8] transition cursor-pointer"
                                   >
                                     <Mail className="w-3.5 h-3.5" />
                                     <span>{sendingWelcomeId === u.id ? 'Enviando...' : 'Reenviar Acceso'}</span>
@@ -2984,7 +2984,7 @@ export const GeneralDashboard: React.FC = () => {
                                   <button
                                     type="button"
                                     onClick={() => handleOpenEditUser(u)}
-                                    className="inline-flex items-center space-x-1 text-[#7D6F6B] hover:text-[#2B2826] font-semibold px-2.5 py-1 rounded-lg hover:bg-stone-100 transition cursor-pointer"
+                                    className="inline-flex items-center space-x-1 text-[#6B6462] hover:text-[#1F1D1E] font-semibold px-2.5 py-1 rounded-lg hover:bg-stone-100 transition cursor-pointer"
                                   >
                                     <Edit3 className="w-3.5 h-3.5" />
                                     <span>Editar</span>
@@ -3035,17 +3035,17 @@ export const GeneralDashboard: React.FC = () => {
         return (
           <div className="space-y-6">
             {/* Header Principal de Plantillas */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#EFE8E1]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E7E1D8]">
               <div>
                 <div className="flex items-center gap-2.5">
-                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#2B2826]">
+                  <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#1F1D1E]">
                     Plantillas de Actividades
                   </h2>
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#F4EAEC] text-[#521F29] border border-[#ECD9D5]">
                     Lazo Studio
                   </span>
                 </div>
-                <p className="text-xs text-[#7D6F6B] mt-1">
+                <p className="text-xs text-[#6B6462] mt-1">
                   Consulta y personaliza rápidamente el checklist de cada tipo de evento antes de asignarlo.
                 </p>
               </div>
@@ -3056,11 +3056,11 @@ export const GeneralDashboard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowTemplateToolsDropdown(!showTemplateToolsDropdown)}
-                    className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#FAF7F5] border border-[#EFE8E1] rounded-full text-xs font-semibold text-[#2B2826] transition shadow-2xs cursor-pointer select-none"
+                    className="inline-flex items-center gap-2 px-3.5 py-2 bg-white hover:bg-[#F8F5F0] border border-[#E7E1D8] rounded-full text-xs font-semibold text-[#1F1D1E] transition shadow-2xs cursor-pointer select-none"
                   >
-                    <FileSpreadsheet className="w-3.5 h-3.5 text-[#C48B81]" />
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-[#6E2E3A]" />
                     <span>Herramientas Excel</span>
-                    <ChevronDown className={`w-3.5 h-3.5 text-[#C48B81] transition-transform duration-200 ${showTemplateToolsDropdown ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 text-[#6E2E3A] transition-transform duration-200 ${showTemplateToolsDropdown ? 'rotate-180' : ''}`} />
                   </button>
 
                   {showTemplateToolsDropdown && (
@@ -3069,21 +3069,21 @@ export const GeneralDashboard: React.FC = () => {
                         className="fixed inset-0 z-20"
                         onClick={() => setShowTemplateToolsDropdown(false)}
                       />
-                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#EFE8E1] py-1.5 z-30 transition">
+                      <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-[#E7E1D8] py-1.5 z-30 transition">
                         <button
                           type="button"
                           onClick={() => {
                             setShowTemplateToolsDropdown(false);
                             handleDownloadTemplatesExcel();
                           }}
-                          className="w-full text-left px-4 py-2.5 text-xs hover:bg-[#FAF7F5] text-[#2B2826] flex items-center gap-2 transition cursor-pointer"
+                          className="w-full text-left px-4 py-2.5 text-xs hover:bg-[#F8F5F0] text-[#1F1D1E] flex items-center gap-2 transition cursor-pointer"
                         >
-                          <Download className="w-3.5 h-3.5 text-[#C48B81]" />
+                          <Download className="w-3.5 h-3.5 text-[#6E2E3A]" />
                           <span>Descargar Excel</span>
                         </button>
 
-                        <label className="w-full text-left px-4 py-2.5 text-xs hover:bg-[#FAF7F5] text-[#2B2826] flex items-center gap-2 transition cursor-pointer">
-                          <Upload className="w-3.5 h-3.5 text-[#C48B81]" />
+                        <label className="w-full text-left px-4 py-2.5 text-xs hover:bg-[#F8F5F0] text-[#1F1D1E] flex items-center gap-2 transition cursor-pointer">
+                          <Upload className="w-3.5 h-3.5 text-[#6E2E3A]" />
                           <span>{importingExcel ? 'Cargando...' : 'Subir Excel'}</span>
                           <input
                             type="file"
@@ -3105,7 +3105,7 @@ export const GeneralDashboard: React.FC = () => {
                   type="button"
                   onClick={handleSyncTemplatesToWeddings}
                   disabled={syncingTemplates}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-semibold shadow-xs transition cursor-pointer"
                   title="Sincronizar cambios a eventos activos"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${syncingTemplates ? 'animate-spin' : ''}`} />
@@ -3123,7 +3123,7 @@ export const GeneralDashboard: React.FC = () => {
 
             {/* Selector Visual Rápido por Tipo de Evento (Cuadrícula de Tarjetas Limpias) */}
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#7D6F6B] mb-2.5">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-[#6B6462] mb-2.5">
                 Selecciona el tipo de evento a consultar:
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
@@ -3146,23 +3146,23 @@ export const GeneralDashboard: React.FC = () => {
                       }}
                       className={`p-3 rounded-2xl text-left border transition cursor-pointer flex flex-col justify-between select-none ${
                         active
-                          ? 'bg-white border-[#C48B81] shadow-md ring-2 ring-[#C48B81]/15'
-                          : 'bg-[#FAF7F5] border-[#EFE8E1] hover:bg-white hover:border-[#CCDACC]'
+                          ? 'bg-white border-[#6E2E3A] shadow-md ring-2 ring-[#6E2E3A]/15'
+                          : 'bg-[#F8F5F0] border-[#E7E1D8] hover:bg-white hover:border-[#CCDACC]'
                       }`}
                     >
                       <div>
                         <div className={`text-[10px] font-bold uppercase tracking-wider ${
-                          active ? 'text-[#C48B81]' : 'text-[#7D6F6B]'
+                          active ? 'text-[#6E2E3A]' : 'text-[#6B6462]'
                         }`}>
                           {opt.typeLabel}
                         </div>
-                        <div className="font-serif text-sm font-bold text-[#2B2826] mt-0.5 leading-snug">
+                        <div className="font-serif text-sm font-bold text-[#1F1D1E] mt-0.5 leading-snug">
                           {opt.name}
                         </div>
                       </div>
                       <div className="mt-2.5 flex items-center justify-between text-[11px]">
                         <span className={`px-2 py-0.5 rounded-full font-bold ${
-                          active ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#EFE8E1] text-[#7D6F6B]'
+                          active ? 'bg-[#F4EAEC] text-[#521F29]' : 'bg-[#E7E1D8] text-[#6B6462]'
                         }`}>
                           {count} {opt.key === 'Requisitos Ceremoniales' ? 'req.' : 'act.'}
                         </span>
@@ -3178,33 +3178,33 @@ export const GeneralDashboard: React.FC = () => {
 
             {/* PANEL ENFOCADO: 1. SI ES REQUISITOS CEREMONIALES */}
             {isCeremonial ? (
-              <div className="bg-white rounded-3xl border border-[#EFE8E1] p-5 sm:p-7 shadow-2xs space-y-6">
+              <div className="bg-white rounded-3xl border border-[#E7E1D8] p-5 sm:p-7 shadow-2xs space-y-6">
                 <div className="pb-4 border-b border-[#F2ECE7]">
                   <div className="flex items-center gap-3">
-                    <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826]">
+                    <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1F1D1E]">
                       Requisitos Ceremoniales
                     </h3>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#F7EDEB] text-[#A86B60]">
+                    <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#F4EAEC] text-[#521F29]">
                       {masterCivilReqs.length + masterReligiousReqs.length} requisitos
                     </span>
                   </div>
-                  <p className="text-xs text-[#7D6F6B] mt-1">
+                  <p className="text-xs text-[#6B6462] mt-1">
                     Documentación oficial de Registro Civil y requisitos eclesiásticos exclusivos para bodas y ceremonias.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Requisitos Ceremonia Civil */}
-                  <div className="p-5 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1]">
+                  <div className="p-5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8]">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-serif text-base font-bold text-[#2B2826]">
+                      <h4 className="font-serif text-base font-bold text-[#1F1D1E]">
                         Requisitos de Ceremonia Civil
                       </h4>
-                      <span className="text-[11px] font-semibold text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] font-semibold text-[#521F29] bg-[#F4EAEC] px-2 py-0.5 rounded-full">
                         {masterCivilReqs.length}
                       </span>
                     </div>
-                    <p className="text-xs text-[#7D6F6B] mb-3">
+                    <p className="text-xs text-[#6B6462] mb-3">
                       Documentación requerida para el acta de matrimonio ante el Juez.
                     </p>
 
@@ -3214,17 +3214,17 @@ export const GeneralDashboard: React.FC = () => {
                         placeholder="Nuevo requisito civil (ej. Exámenes prenupciales)..."
                         value={newMasterCivilReq}
                         onChange={e => setNewMasterCivilReq(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                        className="flex-1 px-3 py-2 border border-[#E7E1D8] rounded-xl text-xs bg-white text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
                       />
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-[#2B2826] hover:bg-[#1A1817] text-white text-xs font-semibold rounded-xl transition cursor-pointer shrink-0"
+                        className="px-4 py-2 bg-[#1F1D1E] hover:bg-[#1A1817] text-white text-xs font-semibold rounded-xl transition cursor-pointer shrink-0"
                       >
                         Agregar
                       </button>
                     </form>
 
-                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 divide-y divide-[#EFE8E1]">
+                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 divide-y divide-[#E7E1D8]">
                       {masterCivilReqs.map((req, idx) => (
                         <div key={idx} className="pt-2 first:pt-0 flex items-center justify-between gap-2 text-xs">
                           {editingCivilIdx === idx ? (
@@ -3233,19 +3233,19 @@ export const GeneralDashboard: React.FC = () => {
                                 type="text"
                                 value={editingCivilText}
                                 onChange={e => setEditingCivilText(e.target.value)}
-                                className="flex-1 px-2.5 py-1 border border-[#EFE8E1] rounded-lg text-xs bg-white text-[#2B2826]"
+                                className="flex-1 px-2.5 py-1 border border-[#E7E1D8] rounded-lg text-xs bg-white text-[#1F1D1E]"
                               />
                               <button
                                 type="button"
                                 onClick={() => handleSaveEditCivilReq(idx)}
-                                className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-[11px] font-semibold cursor-pointer"
+                                className="px-2.5 py-1 bg-[#1F1D1E] text-white rounded-lg text-[11px] font-semibold cursor-pointer"
                               >
                                 Guardar
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setEditingCivilIdx(null)}
-                                className="p-1 text-[#7D6F6B]"
+                                className="p-1 text-[#6B6462]"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
@@ -3253,8 +3253,8 @@ export const GeneralDashboard: React.FC = () => {
                           ) : (
                             <>
                               <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] shrink-0" />
-                                <span className="text-[#2B2826] font-medium leading-relaxed">{req}</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#6E2E3A] shrink-0" />
+                                <span className="text-[#1F1D1E] font-medium leading-relaxed">{req}</span>
                               </div>
                               <div className="flex items-center space-x-1 shrink-0">
                                 <button
@@ -3263,7 +3263,7 @@ export const GeneralDashboard: React.FC = () => {
                                     setEditingCivilIdx(idx);
                                     setEditingCivilText(req);
                                   }}
-                                  className="text-[#7D6F6B] hover:text-[#2B2826] p-1 rounded transition cursor-pointer"
+                                  className="text-[#6B6462] hover:text-[#1F1D1E] p-1 rounded transition cursor-pointer"
                                   title="Editar"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
@@ -3271,7 +3271,7 @@ export const GeneralDashboard: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveMasterCivilReq(idx)}
-                                  className="text-[#7D6F6B] hover:text-rose-600 p-1 rounded transition cursor-pointer"
+                                  className="text-[#6B6462] hover:text-rose-600 p-1 rounded transition cursor-pointer"
                                   title="Eliminar"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -3285,16 +3285,16 @@ export const GeneralDashboard: React.FC = () => {
                   </div>
 
                   {/* Requisitos Ceremonia Religiosa */}
-                  <div className="p-5 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1]">
+                  <div className="p-5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8]">
                     <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-serif text-base font-bold text-[#2B2826]">
+                      <h4 className="font-serif text-base font-bold text-[#1F1D1E]">
                         Requisitos de Ceremonia Religiosa
                       </h4>
-                      <span className="text-[11px] font-semibold text-[#A86B60] bg-[#F7EDEB] px-2 py-0.5 rounded-full">
+                      <span className="text-[11px] font-semibold text-[#521F29] bg-[#F4EAEC] px-2 py-0.5 rounded-full">
                         {masterReligiousReqs.length}
                       </span>
                     </div>
-                    <p className="text-xs text-[#7D6F6B] mb-3">
+                    <p className="text-xs text-[#6B6462] mb-3">
                       Requisitos eclesiásticos y trámites para matrimonio por la iglesia.
                     </p>
 
@@ -3304,17 +3304,17 @@ export const GeneralDashboard: React.FC = () => {
                         placeholder="Nuevo requisito religioso (ej. Fe de bautismo actualizada)..."
                         value={newMasterReligiousReq}
                         onChange={e => setNewMasterReligiousReq(e.target.value)}
-                        className="flex-1 px-3 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                        className="flex-1 px-3 py-2 border border-[#E7E1D8] rounded-xl text-xs bg-white text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
                       />
                       <button
                         type="submit"
-                        className="px-4 py-2 bg-[#2B2826] hover:bg-[#1A1817] text-white text-xs font-semibold rounded-xl transition cursor-pointer shrink-0"
+                        className="px-4 py-2 bg-[#1F1D1E] hover:bg-[#1A1817] text-white text-xs font-semibold rounded-xl transition cursor-pointer shrink-0"
                       >
                         Agregar
                       </button>
                     </form>
 
-                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 divide-y divide-[#EFE8E1]">
+                    <div className="space-y-1.5 max-h-72 overflow-y-auto pr-1 divide-y divide-[#E7E1D8]">
                       {masterReligiousReqs.map((req, idx) => (
                         <div key={idx} className="pt-2 first:pt-0 flex items-center justify-between gap-2 text-xs">
                           {editingReligiousIdx === idx ? (
@@ -3323,19 +3323,19 @@ export const GeneralDashboard: React.FC = () => {
                                 type="text"
                                 value={editingReligiousText}
                                 onChange={e => setEditingReligiousText(e.target.value)}
-                                className="flex-1 px-2.5 py-1 border border-[#EFE8E1] rounded-lg text-xs bg-white text-[#2B2826]"
+                                className="flex-1 px-2.5 py-1 border border-[#E7E1D8] rounded-lg text-xs bg-white text-[#1F1D1E]"
                               />
                               <button
                                 type="button"
                                 onClick={() => handleSaveEditReligiousReq(idx)}
-                                className="px-2.5 py-1 bg-[#2B2826] text-white rounded-lg text-[11px] font-semibold cursor-pointer"
+                                className="px-2.5 py-1 bg-[#1F1D1E] text-white rounded-lg text-[11px] font-semibold cursor-pointer"
                               >
                                 Guardar
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setEditingReligiousIdx(null)}
-                                className="p-1 text-[#7D6F6B]"
+                                className="p-1 text-[#6B6462]"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
@@ -3343,8 +3343,8 @@ export const GeneralDashboard: React.FC = () => {
                           ) : (
                             <>
                               <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] shrink-0" />
-                                <span className="text-[#2B2826] font-medium leading-relaxed">{req}</span>
+                                <span className="w-1.5 h-1.5 rounded-full bg-[#6E2E3A] shrink-0" />
+                                <span className="text-[#1F1D1E] font-medium leading-relaxed">{req}</span>
                               </div>
                               <div className="flex items-center space-x-1 shrink-0">
                                 <button
@@ -3353,7 +3353,7 @@ export const GeneralDashboard: React.FC = () => {
                                     setEditingReligiousIdx(idx);
                                     setEditingReligiousText(req);
                                   }}
-                                  className="text-[#7D6F6B] hover:text-[#2B2826] p-1 rounded transition cursor-pointer"
+                                  className="text-[#6B6462] hover:text-[#1F1D1E] p-1 rounded transition cursor-pointer"
                                   title="Editar"
                                 >
                                   <Edit3 className="w-3.5 h-3.5" />
@@ -3361,7 +3361,7 @@ export const GeneralDashboard: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleRemoveMasterReligiousReq(idx)}
-                                  className="text-[#7D6F6B] hover:text-rose-600 p-1 rounded transition cursor-pointer"
+                                  className="text-[#6B6462] hover:text-rose-600 p-1 rounded transition cursor-pointer"
                                   title="Eliminar"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -3377,19 +3377,19 @@ export const GeneralDashboard: React.FC = () => {
               </div>
             ) : (
               /* PANEL ENFOCADO: 2. PLANTILLA DEL EVENTO SELECCIONADO */
-              <div className="bg-white rounded-3xl border border-[#EFE8E1] p-5 sm:p-7 shadow-2xs space-y-4">
+              <div className="bg-white rounded-3xl border border-[#E7E1D8] p-5 sm:p-7 shadow-2xs space-y-4">
                 {/* Barra Superior de la Plantilla Activa */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F2ECE7]">
                   <div>
                     <div className="flex items-center gap-3">
-                      <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#2B2826]">
+                      <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#1F1D1E]">
                         {activeOption.name}
                       </h3>
-                      <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#F7EDEB] text-[#A86B60]">
+                      <span className="text-xs px-2.5 py-0.5 rounded-full font-semibold bg-[#F4EAEC] text-[#521F29]">
                         {currentTasksWithIdx.length} actividades
                       </span>
                     </div>
-                    <p className="text-xs text-[#7D6F6B] mt-1">
+                    <p className="text-xs text-[#6B6462] mt-1">
                       {activeOption.desc}
                     </p>
                   </div>
@@ -3397,19 +3397,19 @@ export const GeneralDashboard: React.FC = () => {
                   {/* Buscador interno y botón de agregar */}
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 sm:w-60">
-                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#7D6F6B]" />
+                      <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[#6B6462]" />
                       <input
                         type="text"
                         placeholder="Buscar actividad..."
                         value={templateSearchQuery}
                         onChange={e => setTemplateSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 bg-[#FAF7F5] border border-[#EFE8E1] rounded-full text-xs text-[#2B2826] placeholder-[#7D6F6B]/70 focus:outline-none focus:border-[#C48B81]"
+                        className="w-full pl-9 pr-3 py-2 bg-[#F8F5F0] border border-[#E7E1D8] rounded-full text-xs text-[#1F1D1E] placeholder-[#6B6462]/70 focus:outline-none focus:border-[#6E2E3A]"
                       />
                       {templateSearchQuery && (
                         <button
                           type="button"
                           onClick={() => setTemplateSearchQuery('')}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7D6F6B] hover:text-[#2B2826]"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#6B6462] hover:text-[#1F1D1E]"
                         >
                           <X className="w-3 h-3" />
                         </button>
@@ -3419,7 +3419,7 @@ export const GeneralDashboard: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowQuickAddActivity(!showQuickAddActivity)}
-                      className="px-4 py-2 bg-[#2B2826] hover:bg-[#1A1817] text-white rounded-full text-xs font-semibold transition cursor-pointer shrink-0 flex items-center gap-1.5 shadow-2xs"
+                      className="px-4 py-2 bg-[#1F1D1E] hover:bg-[#1A1817] text-white rounded-full text-xs font-semibold transition cursor-pointer shrink-0 flex items-center gap-1.5 shadow-2xs"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Nueva actividad</span>
@@ -3434,16 +3434,16 @@ export const GeneralDashboard: React.FC = () => {
                       handleAddMasterTask(e);
                       setShowQuickAddActivity(false);
                     }}
-                    className="p-4 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] transition"
+                    className="p-4 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] transition"
                   >
-                    <div className="text-xs font-semibold text-[#2B2826] mb-2.5">
+                    <div className="text-xs font-semibold text-[#1F1D1E] mb-2.5">
                       Agregar actividad a la plantilla de {activeOption.name}:
                     </div>
                     <div className="flex flex-col sm:flex-row gap-2.5">
                       <select
                         value={newMasterTask.category}
                         onChange={e => setNewMasterTask({ ...newMasterTask, category: e.target.value })}
-                        className="sm:w-1/3 px-3 py-2 bg-white border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                        className="sm:w-1/3 px-3 py-2 bg-white border border-[#E7E1D8] rounded-xl text-xs text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
                       >
                         {phasesForActive.map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
@@ -3454,20 +3454,20 @@ export const GeneralDashboard: React.FC = () => {
                         placeholder="Nombre de la actividad (ej. Degustación de banquete)..."
                         value={newMasterTask.title}
                         onChange={e => setNewMasterTask({ ...newMasterTask, title: e.target.value })}
-                        className="flex-1 px-3 py-2 bg-white border border-[#EFE8E1] rounded-xl text-xs text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                        className="flex-1 px-3 py-2 bg-white border border-[#E7E1D8] rounded-xl text-xs text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
                         autoFocus
                       />
                       <div className="flex items-center gap-2 shrink-0">
                         <button
                           type="submit"
-                          className="px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl transition cursor-pointer"
+                          className="px-4 py-2 bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-semibold rounded-xl transition cursor-pointer"
                         >
                           Guardar
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowQuickAddActivity(false)}
-                          className="px-3 py-2 bg-white border border-[#EFE8E1] text-[#7D6F6B] text-xs font-semibold rounded-xl hover:bg-[#F2ECE7] transition cursor-pointer"
+                          className="px-3 py-2 bg-white border border-[#E7E1D8] text-[#6B6462] text-xs font-semibold rounded-xl hover:bg-[#F2ECE7] transition cursor-pointer"
                         >
                           Cancelar
                         </button>
@@ -3477,12 +3477,12 @@ export const GeneralDashboard: React.FC = () => {
                 )}
 
                 {/* Fila de Resumen de Fases y Toggle de Expandir Todo */}
-                <div className="flex items-center justify-between py-2 text-xs text-[#7D6F6B]">
+                <div className="flex items-center justify-between py-2 text-xs text-[#6B6462]">
                   <span>Fases mensuales organizadas cronológicamente:</span>
                   <button
                     type="button"
                     onClick={handleToggleAllPhases}
-                    className="hover:text-[#2B2826] font-semibold underline decoration-[#C48B81]/40 transition cursor-pointer"
+                    className="hover:text-[#1F1D1E] font-semibold underline decoration-[#6E2E3A]/40 transition cursor-pointer"
                   >
                     {allPhasesExpanded ? 'Colapsar todas' : 'Expandir todas'}
                   </button>
@@ -3508,37 +3508,37 @@ export const GeneralDashboard: React.FC = () => {
                     return (
                       <div
                         key={phase}
-                        className="bg-white rounded-2xl border border-[#EFE8E1] overflow-hidden transition-all shadow-2xs"
+                        className="bg-white rounded-2xl border border-[#E7E1D8] overflow-hidden transition-all shadow-2xs"
                       >
                         <div
                           onClick={() => togglePhase(phase)}
-                          className="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-[#FAF7F5] transition select-none bg-[#FAF7F5]/50"
+                          className="p-3.5 sm:p-4 flex items-center justify-between cursor-pointer hover:bg-[#F8F5F0] transition select-none bg-[#F8F5F0]/50"
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-6 h-6 rounded-full flex items-center justify-center font-serif font-bold text-xs ${
-                              isOpen ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#F2ECE7] text-[#7D6F6B]'
+                              isOpen ? 'bg-[#F4EAEC] text-[#521F29]' : 'bg-[#F2ECE7] text-[#6B6462]'
                             }`}>
                               {phaseIdx + 1}
                             </div>
-                            <h4 className="font-serif text-sm sm:text-base font-bold text-[#2B2826]">
+                            <h4 className="font-serif text-sm sm:text-base font-bold text-[#1F1D1E]">
                               {phase}
                             </h4>
                           </div>
 
                           <div className="flex items-center gap-3">
                             <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
-                              phaseTasks.length > 0 ? 'bg-[#F7EDEB] text-[#A86B60]' : 'bg-[#F2ECE7] text-[#7D6F6B]'
+                              phaseTasks.length > 0 ? 'bg-[#F4EAEC] text-[#521F29]' : 'bg-[#F2ECE7] text-[#6B6462]'
                             }`}>
                               {phaseTasks.length} {phaseTasks.length === 1 ? 'actividad' : 'actividades'}
                             </span>
-                            <ChevronDown className={`w-4 h-4 text-[#7D6F6B] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+                            <ChevronDown className={`w-4 h-4 text-[#6B6462] transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                           </div>
                         </div>
 
                         {isOpen && (
                           <div className="px-4 py-2 border-t border-[#F2ECE7] divide-y divide-[#F2ECE7]">
                             {phaseTasks.length === 0 ? (
-                              <div className="py-3 text-center text-xs text-[#7D6F6B] italic">
+                              <div className="py-3 text-center text-xs text-[#6B6462] italic">
                                 No hay actividades en esta fase.
                               </div>
                             ) : (
@@ -3549,7 +3549,7 @@ export const GeneralDashboard: React.FC = () => {
                                       <select
                                         value={editingTaskDraft.category}
                                         onChange={e => setEditingTaskDraft({ ...editingTaskDraft, category: e.target.value })}
-                                        className="w-full sm:w-1/3 px-2.5 py-1.5 border border-[#EFE8E1] rounded-lg text-xs bg-[#FAF7F5] text-[#2B2826]"
+                                        className="w-full sm:w-1/3 px-2.5 py-1.5 border border-[#E7E1D8] rounded-lg text-xs bg-[#F8F5F0] text-[#1F1D1E]"
                                       >
                                         {phasesForActive.map(cat => (
                                           <option key={cat} value={cat}>{cat}</option>
@@ -3559,20 +3559,20 @@ export const GeneralDashboard: React.FC = () => {
                                         type="text"
                                         value={editingTaskDraft.title}
                                         onChange={e => setEditingTaskDraft({ ...editingTaskDraft, title: e.target.value })}
-                                        className="w-full sm:flex-1 px-2.5 py-1.5 border border-[#EFE8E1] rounded-lg text-xs bg-[#FAF7F5] text-[#2B2826]"
+                                        className="w-full sm:flex-1 px-2.5 py-1.5 border border-[#E7E1D8] rounded-lg text-xs bg-[#F8F5F0] text-[#1F1D1E]"
                                       />
                                       <div className="flex items-center gap-1.5">
                                         <button
                                           type="button"
                                           onClick={() => handleSaveEditMasterTask(originalIdx)}
-                                          className="px-3 py-1 bg-[#2B2826] text-white rounded-lg text-xs font-semibold cursor-pointer"
+                                          className="px-3 py-1 bg-[#1F1D1E] text-white rounded-lg text-xs font-semibold cursor-pointer"
                                         >
                                           Guardar
                                         </button>
                                         <button
                                           type="button"
                                           onClick={() => setEditingTaskIdx(null)}
-                                          className="p-1 text-[#7D6F6B] hover:text-[#2B2826]"
+                                          className="p-1 text-[#6B6462] hover:text-[#1F1D1E]"
                                         >
                                           <X className="w-3.5 h-3.5" />
                                         </button>
@@ -3581,8 +3581,8 @@ export const GeneralDashboard: React.FC = () => {
                                   ) : (
                                     <>
                                       <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81] shrink-0" />
-                                        <span className="text-[#2B2826] font-medium leading-relaxed">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-[#6E2E3A] shrink-0" />
+                                        <span className="text-[#1F1D1E] font-medium leading-relaxed">
                                           {item.title}
                                         </span>
                                       </div>
@@ -3590,7 +3590,7 @@ export const GeneralDashboard: React.FC = () => {
                                         <button
                                           type="button"
                                           onClick={() => handleStartEditMasterTask(originalIdx)}
-                                          className="text-[#7D6F6B] hover:text-[#2B2826] p-1.5 rounded-lg hover:bg-[#F2ECE7] transition cursor-pointer"
+                                          className="text-[#6B6462] hover:text-[#1F1D1E] p-1.5 rounded-lg hover:bg-[#F2ECE7] transition cursor-pointer"
                                           title="Editar actividad"
                                         >
                                           <Edit3 className="w-3.5 h-3.5" />
@@ -3598,7 +3598,7 @@ export const GeneralDashboard: React.FC = () => {
                                         <button
                                           type="button"
                                           onClick={() => handleRemoveMasterTask(originalIdx)}
-                                          className="text-[#7D6F6B] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                                          className="text-[#6B6462] hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition cursor-pointer"
                                           title="Eliminar actividad"
                                         >
                                           <Trash2 className="w-3.5 h-3.5" />
@@ -3624,16 +3624,16 @@ export const GeneralDashboard: React.FC = () => {
       {/* PESTAÑA: CATÁLOGOS */}
       {activeTab === 'catalogos' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
+          <div className="flex items-center justify-between pb-4 border-b border-[#E7E1D8]">
             <div className="flex items-center space-x-3.5">
               <div>
                 <h2 className="font-serif text-2xl font-bold text-[#332A28]">Catálogos Lazo Studio</h2>
-                <p className="text-xs text-[#7D6F6B] mt-0.5">Especialidades de proveedores y paquetes de reuniones de novios.</p>
+                <p className="text-xs text-[#6B6462] mt-0.5">Especialidades de proveedores y paquetes de reuniones de novios.</p>
               </div>
             </div>
             <button
               onClick={() => setActiveTab('weddings')}
-              className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#6E2E3A] hover:underline cursor-pointer"
             >
               ← Volver a Bodas
             </button>
@@ -3653,7 +3653,7 @@ export const GeneralDashboard: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#C48B81] text-white text-xs font-semibold rounded-xl hover:bg-[#A86B60] shadow-xs transition cursor-pointer"
+                  className="px-4 py-2 bg-[#6E2E3A] text-white text-xs font-semibold rounded-xl hover:bg-[#521F29] shadow-xs transition cursor-pointer"
                 >
                   Agregar
                 </button>
@@ -3685,42 +3685,42 @@ export const GeneralDashboard: React.FC = () => {
               </p>
 
               {/* Modalidad Digital Base fija */}
-              <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-[#FAF7F5] to-[#F7EDEB]/60 border border-[#ECD9D5]">
+              <div className="mt-4 p-4 rounded-2xl bg-gradient-to-br from-[#F8F5F0] to-[#F4EAEC]/60 border border-[#ECD9D5]">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-[#6E8C70]" />
-                    <span className="font-serif font-bold text-sm text-[#2B2826]">Planner Virtual Autónomo</span>
+                    <span className="font-serif font-bold text-sm text-[#1F1D1E]">Planner Virtual Autónomo</span>
                   </div>
-                  <span className="text-[10px] uppercase font-bold text-[#A86B60] bg-white px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
+                  <span className="text-[10px] uppercase font-bold text-[#521F29] bg-white px-2.5 py-0.5 rounded-full border border-[#ECD9D5]">
                     Modalidad Base SaaS
                   </span>
                 </div>
-                <p className="text-xs text-[#7D6F6B] mt-1.5 leading-relaxed">
+                <p className="text-xs text-[#6B6462] mt-1.5 leading-relaxed">
                   Para novios que solo compran el acceso a la plataforma digital. Incluye la suite completa de Checklist, Presupuesto, Invitados, Mesas, Proveedores y Cronograma (0 reuniones con equipo Lazo Studio).
                 </p>
-                <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-[#A86B60]">
+                <div className="mt-2.5 flex flex-wrap gap-1.5 text-[11px] text-[#521F29]">
                   <span className="bg-white/80 px-2 py-0.5 rounded-lg border border-[#ECD9D5]">✓ Suite digital completa</span>
                   <span className="bg-white/80 px-2 py-0.5 rounded-lg border border-[#ECD9D5]">✓ Sin reuniones incluidas</span>
                   <span className="bg-white/80 px-2 py-0.5 rounded-lg border border-[#ECD9D5]">✓ Upsell a Envío RSVP e Invitaciones</span>
                 </div>
               </div>
 
-              <div className="mt-5 pt-4 border-t border-[#EFE8E1]">
+              <div className="mt-5 pt-4 border-t border-[#E7E1D8]">
                 <div className="flex items-center justify-between mb-2">
-                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#2B2826]">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-[#1F1D1E]">
                     Paquetes de Coordinación Viva la Bride
                   </div>
-                  <span className="text-[11px] text-[#7D6F6B]">
+                  <span className="text-[11px] text-[#6B6462]">
                     Con reuniones 1 a 1 incluidas
                   </span>
                 </div>
-                <p className="text-xs text-[#7D6F6B] mb-3">
+                <p className="text-xs text-[#6B6462] mb-3">
                   Crea o personaliza los paquetes comerciales para clientes que contratan asesoría o coordinación presencial con Viva la Bride.
                 </p>
               </div>
 
-              <form onSubmit={handleAddPackage} className="space-y-2.5 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#EFE8E1]">
-                <div className="text-[10px] font-bold uppercase tracking-widest text-[#A86B60]">Crear Nuevo Paquete de Coordinación</div>
+              <form onSubmit={handleAddPackage} className="space-y-2.5 mb-5 p-4 rounded-2xl bg-[#F9F6F2] border border-[#E7E1D8]">
+                <div className="text-[10px] font-bold uppercase tracking-widest text-[#521F29]">Crear Nuevo Paquete de Coordinación</div>
                 <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
                   <div className="sm:col-span-5">
                     <input
@@ -3758,7 +3758,7 @@ export const GeneralDashboard: React.FC = () => {
                   <div className="sm:col-span-3">
                     <button
                       type="submit"
-                      className="w-full px-3 py-2 bg-[#C48B81] text-white text-xs font-semibold rounded-xl hover:bg-[#A86B60] shadow-xs transition cursor-pointer"
+                      className="w-full px-3 py-2 bg-[#6E2E3A] text-white text-xs font-semibold rounded-xl hover:bg-[#521F29] shadow-xs transition cursor-pointer"
                     >
                       + Añadir Paquete
                     </button>
@@ -3786,7 +3786,7 @@ export const GeneralDashboard: React.FC = () => {
                     {editingPkgIdx === idx ? (
                       <div className="space-y-2.5">
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#A86B60]">Editando Paquete</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#521F29]">Editando Paquete</span>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
                           <div className="sm:col-span-6">
@@ -3858,7 +3858,7 @@ export const GeneralDashboard: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleSaveEditPackage(idx)}
-                            className="px-4 py-1.5 rounded-xl bg-[#C48B81] text-white hover:bg-[#A86B60] text-xs font-semibold shadow-xs transition cursor-pointer"
+                            className="px-4 py-1.5 rounded-xl bg-[#6E2E3A] text-white hover:bg-[#521F29] text-xs font-semibold shadow-xs transition cursor-pointer"
                           >
                             Guardar Cambios
                           </button>
@@ -3870,7 +3870,7 @@ export const GeneralDashboard: React.FC = () => {
                           <div>
                             <div className="font-bold text-stone-900 text-sm">
                               {pkg.name}{' '}
-                              <span className="text-xs font-semibold text-[#A86B60] bg-[#EFE2DF] px-2 py-0.5 rounded-full ml-1">
+                              <span className="text-xs font-semibold text-[#521F29] bg-[#EFE2E5] px-2 py-0.5 rounded-full ml-1">
                                 {pkg.maxMeetings >= 999 ? 'Ilimitadas' : `${pkg.maxMeetings} reuniones`}
                               </span>
                             </div>
@@ -3899,7 +3899,7 @@ export const GeneralDashboard: React.FC = () => {
                           <ul className="mt-2.5 pt-2.5 border-t border-stone-200/80 space-y-1 text-[11px] text-stone-700">
                             {pkg.includes.map((inc, i) => (
                               <li key={i} className="flex items-start space-x-1.5">
-                                <span className="text-[#A86B60] font-bold">✓</span>
+                                <span className="text-[#521F29] font-bold">✓</span>
                                 <span>{inc}</span>
                               </li>
                             ))}
@@ -3918,16 +3918,16 @@ export const GeneralDashboard: React.FC = () => {
       {/* PESTAÑA: AJUSTES Y COPIAS DE SEGURIDAD */}
       {activeTab === 'ajustes' && user?.role === 'ADMINISTRADOR' && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-[#EFE8E1]">
+          <div className="flex items-center justify-between pb-4 border-b border-[#E7E1D8]">
             <div className="flex items-center space-x-3.5">
               <div>
                 <h2 className="font-serif text-2xl font-bold text-[#332A28]">Ajustes y Copias de Seguridad</h2>
-                <p className="text-xs text-[#7D6F6B] mt-0.5">Respaldo general del sistema, restauración de base de datos y auditoría global.</p>
+                <p className="text-xs text-[#6B6462] mt-0.5">Respaldo general del sistema, restauración de base de datos y auditoría global.</p>
               </div>
             </div>
             <button
               onClick={() => setActiveTab('weddings')}
-              className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
+              className="text-xs font-semibold text-[#6E2E3A] hover:underline cursor-pointer"
             >
               ← Volver a Eventos
             </button>
@@ -3949,7 +3949,7 @@ export const GeneralDashboard: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   onClick={handleDownloadBackup}
-                  className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
+                  className="inline-flex items-center space-x-2 px-4 py-2.5 bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                   <span>Descargar Copia de Seguridad</span>
@@ -4030,7 +4030,7 @@ export const GeneralDashboard: React.FC = () => {
                     className="w-12 h-12 rounded-full object-cover border border-[#CCDACC] shadow-2xs shrink-0"
                   />
                 ) : (
-                  <div className="w-12 h-12 rounded-full bg-[#EFE2DF] text-[#A86B60] font-serif font-bold text-lg flex items-center justify-center border border-[#EFE8E1] shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-[#EFE2E5] text-[#521F29] font-serif font-bold text-lg flex items-center justify-center border border-[#E7E1D8] shrink-0">
                     {userForm.name?.charAt(0)?.toUpperCase() || 'U'}
                   </div>
                 )}
@@ -4166,17 +4166,17 @@ export const GeneralDashboard: React.FC = () => {
               )}
 
               {!editingUser && (
-                <div className="p-3 bg-[#FAF7F4] border border-[#EFE8E1] rounded-xl text-xs space-y-1">
-                  <label className="flex items-center space-x-2 font-semibold text-[#2B2826] cursor-pointer">
+                <div className="p-3 bg-[#FAF7F4] border border-[#E7E1D8] rounded-xl text-xs space-y-1">
+                  <label className="flex items-center space-x-2 font-semibold text-[#1F1D1E] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={userForm.send_welcome_email}
                       onChange={e => setUserForm({ ...userForm, send_welcome_email: e.target.checked })}
-                      className="rounded border-[#C48B81] text-[#C48B81] focus:ring-[#C48B81]"
+                      className="rounded border-[#6E2E3A] text-[#6E2E3A] focus:ring-[#6E2E3A]"
                     />
                     <span>Enviar correo de bienvenida con credenciales de acceso</span>
                   </label>
-                  <p className="text-[11px] text-[#7D6F6B] pl-5">
+                  <p className="text-[11px] text-[#6B6462] pl-5">
                     Se enviará el correo editorial a la persona y una copia de respaldo automática a vivalabride.mex@gmail.com.
                   </p>
                 </div>
@@ -4192,7 +4192,7 @@ export const GeneralDashboard: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition cursor-pointer"
+                  className="px-5 py-2 text-xs font-semibold bg-[#6E2E3A] hover:bg-[#521F29] text-white rounded-xl shadow-xs transition cursor-pointer"
                 >
                   Guardar Usuario
                 </button>
@@ -4208,10 +4208,10 @@ export const GeneralDashboard: React.FC = () => {
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-stone-200 animate-in fade-in zoom-in-95 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">
               <div className="space-y-1">
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#C48B81]">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#6E2E3A]">
                   MIGRACIÓN DE SERVICIO
                 </span>
-                <h3 className="font-serif text-2xl font-bold text-[#2B2826]">
+                <h3 className="font-serif text-2xl font-bold text-[#1F1D1E]">
                   Cambiar a Coordinación VLB
                 </h3>
               </div>
@@ -4251,7 +4251,7 @@ export const GeneralDashboard: React.FC = () => {
                   required
                   value={upgradePackage}
                   onChange={e => setUpgradePackage(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs bg-white text-stone-900 focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs bg-white text-stone-900 focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                 >
                   <option value="Coordinación Viva la Bride">Coordinación Viva la Bride (General)</option>
                   <option value="Coordinación Integral">Coordinación Integral Viva la Bride</option>
@@ -4274,7 +4274,7 @@ export const GeneralDashboard: React.FC = () => {
                 <select
                   value={upgradeCoordinatorId}
                   onChange={e => setUpgradeCoordinatorId(e.target.value)}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs bg-white text-stone-900 focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs bg-white text-stone-900 focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                 >
                   <option value="">(Asignar coordinadora después)</option>
                   {usersList
@@ -4300,7 +4300,7 @@ export const GeneralDashboard: React.FC = () => {
                     type="checkbox"
                     checked={upgradeWhatsapp}
                     onChange={e => setUpgradeWhatsapp(e.target.checked)}
-                    className="rounded border-stone-300 text-[#C48B81]"
+                    className="rounded border-stone-300 text-[#6E2E3A]"
                   />
                   <div>
                     <span className="font-semibold">Confirmación por WhatsApp Automática</span>
@@ -4312,7 +4312,7 @@ export const GeneralDashboard: React.FC = () => {
                     type="checkbox"
                     checked={upgradeLayout}
                     onChange={e => setUpgradeLayout(e.target.checked)}
-                    className="rounded border-stone-300 text-[#C48B81]"
+                    className="rounded border-stone-300 text-[#6E2E3A]"
                   />
                   <div>
                     <span className="font-semibold">Plano de Mesas 2D Interactivo</span>
@@ -4333,7 +4333,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   type="submit"
                   disabled={upgradeLoading}
-                  className="inline-flex items-center space-x-1.5 px-5 py-2.5 bg-gradient-to-r from-[#C48B81] to-[#A86B60] hover:from-[#B3796F] hover:to-[#935B50] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer disabled:opacity-60"
+                  className="inline-flex items-center space-x-1.5 px-5 py-2.5 bg-gradient-to-r from-[#6E2E3A] to-[#521F29] hover:from-[#5A232E] hover:to-[#935B50] text-white text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer disabled:opacity-60"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span>{upgradeLoading ? 'Actualizando...' : 'Confirmar Upgrade a Viva la Bride'}</span>
@@ -4350,7 +4350,7 @@ export const GeneralDashboard: React.FC = () => {
           <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#A86B60]">Lazo Studio</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#521F29]">Lazo Studio</span>
                 <h3 className="font-serif text-2xl font-bold text-stone-900">Agregar Evento</h3>
               </div>
               <button
@@ -4379,7 +4379,7 @@ export const GeneralDashboard: React.FC = () => {
                     const autoName = getAutoEventName(newType, formData.partner_1_name, formData.partner_2_name);
                     setFormData({ ...formData, event_type: newType, name: autoName });
                   }}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs font-medium text-[#2B2826] bg-[#FAF8F5] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs font-medium text-[#1F1D1E] bg-[#F8F5F0] focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                 >
                   <option value="Boda Completa">Boda Completa</option>
                   <option value="Boda Civil">Boda Civil</option>
@@ -4409,7 +4409,7 @@ export const GeneralDashboard: React.FC = () => {
                   }
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                 />
               </div>
 
@@ -4435,7 +4435,7 @@ export const GeneralDashboard: React.FC = () => {
                       const autoName = getAutoEventName(formData.event_type, newP1, formData.partner_2_name);
                       setFormData({ ...formData, partner_1_name: newP1, name: autoName });
                     }}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -4457,7 +4457,7 @@ export const GeneralDashboard: React.FC = () => {
                       const autoName = getAutoEventName(formData.event_type, formData.partner_1_name, newP2);
                       setFormData({ ...formData, partner_2_name: newP2, name: autoName });
                     }}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
               </div>
@@ -4471,7 +4471,7 @@ export const GeneralDashboard: React.FC = () => {
                     required
                     value={formData.wedding_date}
                     onChange={e => setFormData({ ...formData, wedding_date: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -4480,7 +4480,7 @@ export const GeneralDashboard: React.FC = () => {
                     type="number"
                     value={formData.estimated_guests}
                     onChange={e => setFormData({ ...formData, estimated_guests: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
               </div>
@@ -4502,7 +4502,7 @@ export const GeneralDashboard: React.FC = () => {
                     }
                     value={formData.ceremony_venue}
                     onChange={e => setFormData({ ...formData, ceremony_venue: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -4520,13 +4520,13 @@ export const GeneralDashboard: React.FC = () => {
                     }
                     value={formData.reception_venue}
                     onChange={e => setFormData({ ...formData, reception_venue: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">
+                <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5">
                   Modalidad de Servicio / Paquete
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
@@ -4534,8 +4534,8 @@ export const GeneralDashboard: React.FC = () => {
                     onClick={() => setFormData({ ...formData, package_type: 'Planner Virtual' })}
                     className={`p-3 rounded-2xl border cursor-pointer transition flex flex-col justify-between ${
                       formData.package_type === 'Planner Virtual'
-                        ? 'bg-white border-[#C48B81] ring-2 ring-[#C48B81]/15 shadow-xs'
-                        : 'bg-[#FAF7F5] border-[#EFE8E1] hover:bg-white'
+                        ? 'bg-white border-[#6E2E3A] ring-2 ring-[#6E2E3A]/15 shadow-xs'
+                        : 'bg-[#F8F5F0] border-[#E7E1D8] hover:bg-white'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -4544,11 +4544,11 @@ export const GeneralDashboard: React.FC = () => {
                         name="create_service_tier"
                         checked={formData.package_type === 'Planner Virtual'}
                         onChange={() => setFormData({ ...formData, package_type: 'Planner Virtual' })}
-                        className="accent-[#C48B81]"
+                        className="accent-[#6E2E3A]"
                       />
-                      <span className="font-semibold text-xs text-[#2B2826]">Planner Virtual Autónomo</span>
+                      <span className="font-semibold text-xs text-[#1F1D1E]">Planner Virtual Autónomo</span>
                     </div>
-                    <p className="text-[11px] text-[#7D6F6B] mt-1 pl-5 leading-snug">
+                    <p className="text-[11px] text-[#6B6462] mt-1 pl-5 leading-snug">
                       Novios externos · Suite digital completa (0 reuniones con equipo)
                     </p>
                   </label>
@@ -4560,8 +4560,8 @@ export const GeneralDashboard: React.FC = () => {
                     }}
                     className={`p-3 rounded-2xl border cursor-pointer transition flex flex-col justify-between ${
                       formData.package_type !== 'Planner Virtual'
-                        ? 'bg-white border-[#C48B81] ring-2 ring-[#C48B81]/15 shadow-xs'
-                        : 'bg-[#FAF7F5] border-[#EFE8E1] hover:bg-white'
+                        ? 'bg-white border-[#6E2E3A] ring-2 ring-[#6E2E3A]/15 shadow-xs'
+                        : 'bg-[#F8F5F0] border-[#E7E1D8] hover:bg-white'
                     }`}
                   >
                     <div className="flex items-center gap-2">
@@ -4573,25 +4573,25 @@ export const GeneralDashboard: React.FC = () => {
                           const firstCoordPkg = meetingPackages.find(p => p.name !== 'Planner Virtual')?.name || 'Integral';
                           setFormData({ ...formData, package_type: firstCoordPkg });
                         }}
-                        className="accent-[#C48B81]"
+                        className="accent-[#6E2E3A]"
                       />
-                      <span className="font-semibold text-xs text-[#2B2826]">Coordinación Viva la Bride</span>
+                      <span className="font-semibold text-xs text-[#1F1D1E]">Coordinación Viva la Bride</span>
                     </div>
-                    <p className="text-[11px] text-[#7D6F6B] mt-1 pl-5 leading-snug">
+                    <p className="text-[11px] text-[#6B6462] mt-1 pl-5 leading-snug">
                       Clientes presenciales · Con sesiones 1 a 1 incluidas
                     </p>
                   </label>
                 </div>
 
                 {formData.package_type !== 'Planner Virtual' && (
-                  <div className="mt-2.5 p-3 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] animate-in fade-in duration-150">
-                    <label className="block text-[11px] font-bold uppercase text-[#7D6F6B] tracking-wider mb-1.5">
+                  <div className="mt-2.5 p-3 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] animate-in fade-in duration-150">
+                    <label className="block text-[11px] font-bold uppercase text-[#6B6462] tracking-wider mb-1.5">
                       Paquete de Coordinación Presencial:
                     </label>
                     <select
                       value={formData.package_type}
                       onChange={e => setFormData({ ...formData, package_type: e.target.value })}
-                      className="w-full px-3.5 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:border-[#C48B81] focus:outline-none"
+                      className="w-full px-3.5 py-2 border border-[#E7E1D8] rounded-xl text-xs bg-white text-[#1F1D1E] focus:border-[#6E2E3A] focus:outline-none"
                     >
                       {meetingPackages.filter(p => p.name !== 'Planner Virtual').length > 0 ? (
                         meetingPackages.filter(p => p.name !== 'Planner Virtual').map(p => (
@@ -4611,12 +4611,12 @@ export const GeneralDashboard: React.FC = () => {
                 )}
 
                 {/* Módulos y Servicios Adicionales (Add-ons Activables) */}
-                <div className="mt-3 p-3.5 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] space-y-2.5">
+                <div className="mt-3 p-3.5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase text-[#7D6F6B] tracking-wider">
+                    <span className="text-[11px] font-bold uppercase text-[#6B6462] tracking-wider">
                       Módulos Adicionales (Add-ons)
                     </span>
-                    <span className="text-[10px] text-[#A86B60] font-semibold bg-[#F7EDEB] px-2 py-0.5 rounded-full border border-[#ECD9D5]">
+                    <span className="text-[10px] text-[#521F29] font-semibold bg-[#F4EAEC] px-2 py-0.5 rounded-full border border-[#ECD9D5]">
                       Activación Flexible
                     </span>
                   </div>
@@ -4626,13 +4626,13 @@ export const GeneralDashboard: React.FC = () => {
                     <label className={`flex items-start justify-between p-2.5 rounded-xl border transition cursor-pointer ${
                       formData.has_whatsapp_rsvp
                         ? 'bg-white border-[#16A34A] ring-1 ring-[#16A34A]/20 shadow-2xs'
-                        : 'bg-white border-[#EFE8E1] hover:border-[#D1C7BD]'
+                        : 'bg-white border-[#E7E1D8] hover:border-[#D1C7BD]'
                     }`}>
                       <div className="min-w-0 pr-2">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-xs font-semibold text-[#2B2826]">RSVP WhatsApp</span>
+                          <span className="text-xs font-semibold text-[#1F1D1E]">RSVP WhatsApp</span>
                         </div>
-                        <p className="text-[10px] text-[#7D6F6B] leading-tight">
+                        <p className="text-[10px] text-[#6B6462] leading-tight">
                           Invitaciones y confirmaciones automáticas
                         </p>
                       </div>
@@ -4647,14 +4647,14 @@ export const GeneralDashboard: React.FC = () => {
                     {/* Add-on 2: Plano 2D Interactivo */}
                     <label className={`flex items-start justify-between p-2.5 rounded-xl border transition cursor-pointer ${
                       formData.has_layout_2d
-                        ? 'bg-white border-[#C48B81] ring-1 ring-[#C48B81]/20 shadow-2xs'
-                        : 'bg-white border-[#EFE8E1] hover:border-[#D1C7BD]'
+                        ? 'bg-white border-[#6E2E3A] ring-1 ring-[#6E2E3A]/20 shadow-2xs'
+                        : 'bg-white border-[#E7E1D8] hover:border-[#D1C7BD]'
                     }`}>
                       <div className="min-w-0 pr-2">
                         <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-xs font-semibold text-[#2B2826]">Plano 2D Layout</span>
+                          <span className="text-xs font-semibold text-[#1F1D1E]">Plano 2D Layout</span>
                         </div>
-                        <p className="text-[10px] text-[#7D6F6B] leading-tight">
+                        <p className="text-[10px] text-[#6B6462] leading-tight">
                           Distribución a escala y planimetría técnica
                         </p>
                       </div>
@@ -4662,18 +4662,18 @@ export const GeneralDashboard: React.FC = () => {
                         type="checkbox"
                         checked={formData.has_layout_2d}
                         onChange={e => setFormData({ ...formData, has_layout_2d: e.target.checked })}
-                        className="mt-1 h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
+                        className="mt-1 h-4 w-4 rounded text-[#6E2E3A] focus:ring-[#6E2E3A] accent-[#6E2E3A] cursor-pointer"
                       />
                     </label>
 
                     {/* Control de Envío RSVP para Novios */}
-                    <div className="sm:col-span-2 mt-1 p-2.5 rounded-xl border border-[#EFE8E1] bg-white">
+                    <div className="sm:col-span-2 mt-1 p-2.5 rounded-xl border border-[#E7E1D8] bg-white">
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 pr-3">
-                          <span className="text-xs font-semibold text-[#2B2826] block">
+                          <span className="text-xs font-semibold text-[#1F1D1E] block">
                             Permitir a los novios enviar RSVP por WhatsApp
                           </span>
-                          <span className="text-[10px] text-[#7D6F6B] leading-tight block mt-0.5">
+                          <span className="text-[10px] text-[#6B6462] leading-tight block mt-0.5">
                             {(formData.allow_novios_rsvp !== null ? formData.allow_novios_rsvp : formData.package_type === 'Planner Virtual')
                               ? '✓ Novios autorizados: Los novios pueden ver botones y enviar mensajes desde su panel.'
                               : '🔒 Exclusivo Coordinación & Admin: Solo la coordinadora y administradores envían y gestionan las confirmaciones (Recomendado).'}
@@ -4683,7 +4683,7 @@ export const GeneralDashboard: React.FC = () => {
                           type="checkbox"
                           checked={formData.allow_novios_rsvp !== null ? formData.allow_novios_rsvp : formData.package_type === 'Planner Virtual'}
                           onChange={e => setFormData({ ...formData, allow_novios_rsvp: e.target.checked })}
-                          className="h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
+                          className="h-4 w-4 rounded text-[#6E2E3A] focus:ring-[#6E2E3A] accent-[#6E2E3A] cursor-pointer"
                         />
                       </div>
                     </div>
@@ -4692,16 +4692,16 @@ export const GeneralDashboard: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">
+                <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5">
                   Asignación Inicial de Checklist
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-[#FAF8F5] border border-[#EFE8E1] rounded-2xl">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-3 bg-[#F8F5F0] border border-[#E7E1D8] rounded-2xl">
                   <label
                     onClick={() => setFormData({ ...formData, checklist_option: 'full' })}
                     className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${
                       formData.checklist_option === 'full'
-                        ? 'bg-white border-[#C48B81] shadow-xs'
-                        : 'bg-white/60 border-[#EFE8E1] hover:border-[#C48B81]/50'
+                        ? 'bg-white border-[#6E2E3A] shadow-xs'
+                        : 'bg-white/60 border-[#E7E1D8] hover:border-[#6E2E3A]/50'
                     }`}
                   >
                     <input
@@ -4709,13 +4709,13 @@ export const GeneralDashboard: React.FC = () => {
                       name="checklist_option"
                       checked={formData.checklist_option === 'full'}
                       onChange={() => setFormData({ ...formData, checklist_option: 'full' })}
-                      className="mt-0.5 accent-[#C48B81]"
+                      className="mt-0.5 accent-[#6E2E3A]"
                     />
                     <div>
-                      <div className="text-xs font-semibold text-[#2B2826]">
+                      <div className="text-xs font-semibold text-[#1F1D1E]">
                         Plantilla Completa Maestro
                       </div>
-                      <div className="text-[11px] text-[#8A7E72] mt-0.5 leading-snug">
+                      <div className="text-[11px] text-[#6B6462] mt-0.5 leading-snug">
                         Carga Checklist General y etapas operativas.
                       </div>
                     </div>
@@ -4725,8 +4725,8 @@ export const GeneralDashboard: React.FC = () => {
                     onClick={() => setFormData({ ...formData, checklist_option: 'empty' })}
                     className={`flex items-start gap-2.5 p-2.5 rounded-xl border cursor-pointer transition ${
                       formData.checklist_option === 'empty'
-                        ? 'bg-white border-[#C48B81] shadow-xs'
-                        : 'bg-white/60 border-[#EFE8E1] hover:border-[#C48B81]/50'
+                        ? 'bg-white border-[#6E2E3A] shadow-xs'
+                        : 'bg-white/60 border-[#E7E1D8] hover:border-[#6E2E3A]/50'
                     }`}
                   >
                     <input
@@ -4734,13 +4734,13 @@ export const GeneralDashboard: React.FC = () => {
                       name="checklist_option"
                       checked={formData.checklist_option === 'empty'}
                       onChange={() => setFormData({ ...formData, checklist_option: 'empty' })}
-                      className="mt-0.5 accent-[#C48B81]"
+                      className="mt-0.5 accent-[#6E2E3A]"
                     />
                     <div>
-                      <div className="text-xs font-semibold text-[#2B2826]">
+                      <div className="text-xs font-semibold text-[#1F1D1E]">
                         Checklist en Blanco
                       </div>
-                      <div className="text-[11px] text-[#8A7E72] mt-0.5 leading-snug">
+                      <div className="text-[11px] text-[#6B6462] mt-0.5 leading-snug">
                         Decidiré manualmente qué actividades asignar.
                       </div>
                     </div>
@@ -4755,7 +4755,7 @@ export const GeneralDashboard: React.FC = () => {
                   placeholder="Detalles de estilo, requerimientos o preferencias del evento..."
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                 />
               </div>
 
@@ -4770,7 +4770,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="px-6 py-2.5 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
+                  className="px-6 py-2.5 text-xs font-semibold bg-[#6E2E3A] hover:bg-[#521F29] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
                 >
                   {creating ? 'Guardando...' : 'Crear Evento'}
                 </button>
@@ -4786,7 +4786,7 @@ export const GeneralDashboard: React.FC = () => {
           <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-stone-200 animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-stone-100">
               <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#A86B60]">Lazo Studio</span>
+                <span className="text-[10px] uppercase font-bold tracking-widest text-[#521F29]">Lazo Studio</span>
                 <h3 className="font-serif text-2xl font-bold text-stone-900">Editar Datos del Evento</h3>
               </div>
               <button
@@ -4815,7 +4815,7 @@ export const GeneralDashboard: React.FC = () => {
                     const autoName = getAutoEventName(newType, editFormData.partner_1_name, editFormData.partner_2_name);
                     setEditFormData({ ...editFormData, event_type: newType, name: autoName });
                   }}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs font-medium text-[#2B2826] bg-[#FAF8F5] focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs font-medium text-[#1F1D1E] bg-[#F8F5F0] focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                 >
                   <option value="Boda Completa">Boda Completa</option>
                   <option value="Boda Civil">Boda Civil</option>
@@ -4836,7 +4836,7 @@ export const GeneralDashboard: React.FC = () => {
                   required
                   value={editFormData.name}
                   onChange={e => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                 />
               </div>
 
@@ -4857,7 +4857,7 @@ export const GeneralDashboard: React.FC = () => {
                       const autoName = getAutoEventName(editFormData.event_type, newP1, editFormData.partner_2_name);
                       setEditFormData({ ...editFormData, partner_1_name: newP1, name: autoName });
                     }}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -4874,7 +4874,7 @@ export const GeneralDashboard: React.FC = () => {
                       const autoName = getAutoEventName(editFormData.event_type, editFormData.partner_1_name, newP2);
                       setEditFormData({ ...editFormData, partner_2_name: newP2, name: autoName });
                     }}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
               </div>
@@ -4888,7 +4888,7 @@ export const GeneralDashboard: React.FC = () => {
                     required
                     value={editFormData.wedding_date}
                     onChange={e => setEditFormData({ ...editFormData, wedding_date: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -4897,7 +4897,7 @@ export const GeneralDashboard: React.FC = () => {
                     type="number"
                     value={editFormData.estimated_guests}
                     onChange={e => setEditFormData({ ...editFormData, estimated_guests: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
               </div>
@@ -4914,7 +4914,7 @@ export const GeneralDashboard: React.FC = () => {
                     type="text"
                     value={editFormData.ceremony_venue}
                     onChange={e => setEditFormData({ ...editFormData, ceremony_venue: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -4927,7 +4927,7 @@ export const GeneralDashboard: React.FC = () => {
                     type="text"
                     value={editFormData.reception_venue}
                     onChange={e => setEditFormData({ ...editFormData, reception_venue: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
               </div>
@@ -4940,7 +4940,7 @@ export const GeneralDashboard: React.FC = () => {
                     type="time"
                     value={editFormData.ceremony_time}
                     onChange={e => setEditFormData({ ...editFormData, ceremony_time: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -4949,7 +4949,7 @@ export const GeneralDashboard: React.FC = () => {
                     type="time"
                     value={editFormData.reception_time}
                     onChange={e => setEditFormData({ ...editFormData, reception_time: e.target.value })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   />
                 </div>
               </div>
@@ -4957,14 +4957,14 @@ export const GeneralDashboard: React.FC = () => {
               {/* Paquete y Estado */}
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">Modalidad de Servicio / Paquete</label>
+                  <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5">Modalidad de Servicio / Paquete</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                     <label
                       onClick={() => setEditFormData({ ...editFormData, package_type: 'Planner Virtual' })}
                       className={`p-2.5 rounded-xl border cursor-pointer transition flex items-center gap-2 ${
                         editFormData.package_type === 'Planner Virtual'
-                          ? 'bg-white border-[#C48B81] ring-1 ring-[#C48B81] shadow-2xs font-semibold text-[#2B2826]'
-                          : 'bg-[#FAF7F5] border-[#EFE8E1] text-[#7D6F6B]'
+                          ? 'bg-white border-[#6E2E3A] ring-1 ring-[#6E2E3A] shadow-2xs font-semibold text-[#1F1D1E]'
+                          : 'bg-[#F8F5F0] border-[#E7E1D8] text-[#6B6462]'
                       }`}
                     >
                       <input
@@ -4972,7 +4972,7 @@ export const GeneralDashboard: React.FC = () => {
                         name="edit_service_tier"
                         checked={editFormData.package_type === 'Planner Virtual'}
                         onChange={() => setEditFormData({ ...editFormData, package_type: 'Planner Virtual' })}
-                        className="accent-[#C48B81]"
+                        className="accent-[#6E2E3A]"
                       />
                       <span className="text-xs">Planner Virtual Autónomo</span>
                     </label>
@@ -4984,8 +4984,8 @@ export const GeneralDashboard: React.FC = () => {
                       }}
                       className={`p-2.5 rounded-xl border cursor-pointer transition flex items-center gap-2 ${
                         editFormData.package_type !== 'Planner Virtual'
-                          ? 'bg-white border-[#C48B81] ring-1 ring-[#C48B81] shadow-2xs font-semibold text-[#2B2826]'
-                          : 'bg-[#FAF7F5] border-[#EFE8E1] text-[#7D6F6B]'
+                          ? 'bg-white border-[#6E2E3A] ring-1 ring-[#6E2E3A] shadow-2xs font-semibold text-[#1F1D1E]'
+                          : 'bg-[#F8F5F0] border-[#E7E1D8] text-[#6B6462]'
                       }`}
                     >
                       <input
@@ -4996,7 +4996,7 @@ export const GeneralDashboard: React.FC = () => {
                           const firstCoord = meetingPackages.find(p => p.name !== 'Planner Virtual')?.name || 'Integral';
                           setEditFormData({ ...editFormData, package_type: firstCoord });
                         }}
-                        className="accent-[#C48B81]"
+                        className="accent-[#6E2E3A]"
                       />
                       <span className="text-xs">Coordinación Viva la Bride</span>
                     </label>
@@ -5007,7 +5007,7 @@ export const GeneralDashboard: React.FC = () => {
                       <select
                         value={editFormData.package_type}
                         onChange={e => setEditFormData({ ...editFormData, package_type: e.target.value })}
-                        className="w-full px-3.5 py-2 border border-[#EFE8E1] rounded-xl text-xs bg-white text-[#2B2826] focus:border-[#C48B81] focus:outline-none"
+                        className="w-full px-3.5 py-2 border border-[#E7E1D8] rounded-xl text-xs bg-white text-[#1F1D1E] focus:border-[#6E2E3A] focus:outline-none"
                       >
                         {meetingPackages.filter(p => p.name !== 'Planner Virtual').map(p => (
                           <option key={p.name} value={p.name}>
@@ -5019,12 +5019,12 @@ export const GeneralDashboard: React.FC = () => {
                   )}
 
                   {/* Módulos y Servicios Adicionales (Add-ons Activables) en Edición */}
-                  <div className="mt-3 p-3 rounded-2xl bg-[#FAF7F5] border border-[#EFE8E1] space-y-2.5">
+                  <div className="mt-3 p-3 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase text-[#7D6F6B] tracking-wider">
+                      <span className="text-[11px] font-bold uppercase text-[#6B6462] tracking-wider">
                         Módulos Adicionales (Add-ons)
                       </span>
-                      <span className="text-[10px] text-[#A86B60] font-semibold bg-[#F7EDEB] px-2 py-0.5 rounded-full border border-[#ECD9D5]">
+                      <span className="text-[10px] text-[#521F29] font-semibold bg-[#F4EAEC] px-2 py-0.5 rounded-full border border-[#ECD9D5]">
                         Activar con 1 Clic
                       </span>
                     </div>
@@ -5034,13 +5034,13 @@ export const GeneralDashboard: React.FC = () => {
                       <label className={`flex items-start justify-between p-2.5 rounded-xl border transition cursor-pointer ${
                         editFormData.has_whatsapp_rsvp
                           ? 'bg-white border-[#16A34A] ring-1 ring-[#16A34A]/20 shadow-2xs'
-                          : 'bg-white border-[#EFE8E1] hover:border-[#D1C7BD]'
+                          : 'bg-white border-[#E7E1D8] hover:border-[#D1C7BD]'
                       }`}>
                         <div className="min-w-0 pr-2">
                           <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-xs font-semibold text-[#2B2826]">RSVP WhatsApp</span>
+                            <span className="text-xs font-semibold text-[#1F1D1E]">RSVP WhatsApp</span>
                           </div>
-                          <p className="text-[10px] text-[#7D6F6B] leading-tight">
+                          <p className="text-[10px] text-[#6B6462] leading-tight">
                             Invitaciones y confirmaciones automáticas
                           </p>
                         </div>
@@ -5055,14 +5055,14 @@ export const GeneralDashboard: React.FC = () => {
                       {/* Add-on 2: Plano 2D Interactivo */}
                       <label className={`flex items-start justify-between p-2.5 rounded-xl border transition cursor-pointer ${
                         editFormData.has_layout_2d
-                          ? 'bg-white border-[#C48B81] ring-1 ring-[#C48B81]/20 shadow-2xs'
-                          : 'bg-white border-[#EFE8E1] hover:border-[#D1C7BD]'
+                          ? 'bg-white border-[#6E2E3A] ring-1 ring-[#6E2E3A]/20 shadow-2xs'
+                          : 'bg-white border-[#E7E1D8] hover:border-[#D1C7BD]'
                       }`}>
                         <div className="min-w-0 pr-2">
                           <div className="flex items-center gap-1.5 mb-0.5">
-                            <span className="text-xs font-semibold text-[#2B2826]">Plano 2D Layout</span>
+                            <span className="text-xs font-semibold text-[#1F1D1E]">Plano 2D Layout</span>
                           </div>
-                          <p className="text-[10px] text-[#7D6F6B] leading-tight">
+                          <p className="text-[10px] text-[#6B6462] leading-tight">
                             Distribución a escala y planimetría técnica
                           </p>
                         </div>
@@ -5070,18 +5070,18 @@ export const GeneralDashboard: React.FC = () => {
                           type="checkbox"
                           checked={editFormData.has_layout_2d}
                           onChange={e => setEditFormData({ ...editFormData, has_layout_2d: e.target.checked })}
-                          className="mt-1 h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
+                          className="mt-1 h-4 w-4 rounded text-[#6E2E3A] focus:ring-[#6E2E3A] accent-[#6E2E3A] cursor-pointer"
                         />
                       </label>
 
                       {/* Control de Envío RSVP para Novios */}
-                      <div className="sm:col-span-2 mt-1 p-2.5 rounded-xl border border-[#EFE8E1] bg-white">
+                      <div className="sm:col-span-2 mt-1 p-2.5 rounded-xl border border-[#E7E1D8] bg-white">
                         <div className="flex items-center justify-between">
                           <div className="min-w-0 pr-3">
-                            <span className="text-xs font-semibold text-[#2B2826] block">
+                            <span className="text-xs font-semibold text-[#1F1D1E] block">
                               Permitir a los novios enviar RSVP por WhatsApp
                             </span>
-                            <span className="text-[10px] text-[#7D6F6B] leading-tight block mt-0.5">
+                            <span className="text-[10px] text-[#6B6462] leading-tight block mt-0.5">
                               {(editFormData.allow_novios_rsvp !== null ? editFormData.allow_novios_rsvp : editFormData.package_type === 'Planner Virtual')
                                 ? '✓ Novios autorizados: Los novios pueden ver botones y enviar mensajes desde su panel.'
                                 : '🔒 Exclusivo Coordinación & Admin: Solo la coordinadora y administradores envían y gestionan las confirmaciones (Recomendado).'}
@@ -5091,7 +5091,7 @@ export const GeneralDashboard: React.FC = () => {
                             type="checkbox"
                             checked={editFormData.allow_novios_rsvp !== null ? editFormData.allow_novios_rsvp : editFormData.package_type === 'Planner Virtual'}
                             onChange={e => setEditFormData({ ...editFormData, allow_novios_rsvp: e.target.checked })}
-                            className="h-4 w-4 rounded text-[#C48B81] focus:ring-[#C48B81] accent-[#C48B81] cursor-pointer"
+                            className="h-4 w-4 rounded text-[#6E2E3A] focus:ring-[#6E2E3A] accent-[#6E2E3A] cursor-pointer"
                           />
                         </div>
                       </div>
@@ -5104,7 +5104,7 @@ export const GeneralDashboard: React.FC = () => {
                   <select
                     value={editFormData.status}
                     onChange={e => setEditFormData({ ...editFormData, status: e.target.value as any })}
-                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                    className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                   >
                     <option value="PLANNING">En Planeación</option>
                     <option value="UPCOMING">Próximo</option>
@@ -5121,7 +5121,7 @@ export const GeneralDashboard: React.FC = () => {
                   rows={2}
                   value={editFormData.notes}
                   onChange={e => setEditFormData({ ...editFormData, notes: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#C48B81] focus:outline-none"
+                  className="w-full px-3.5 py-2.5 border border-stone-300 rounded-xl text-xs focus:ring-2 focus:ring-[#6E2E3A] focus:outline-none"
                 />
               </div>
 
@@ -5136,7 +5136,7 @@ export const GeneralDashboard: React.FC = () => {
                 <button
                   type="submit"
                   disabled={savingEdit}
-                  className="px-6 py-2.5 text-xs font-semibold bg-[#C48B81] hover:bg-[#A86B60] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
+                  className="px-6 py-2.5 text-xs font-semibold bg-[#6E2E3A] hover:bg-[#521F29] text-white rounded-xl shadow-xs transition disabled:opacity-50 cursor-pointer"
                 >
                   {savingEdit ? 'Guardando...' : 'Guardar Cambios'}
                 </button>

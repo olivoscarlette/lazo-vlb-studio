@@ -324,10 +324,10 @@ export const BudgetView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#6B6462]">
             Finanzas & Ahorro
           </span>
-          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-1">
+          <h2 className="font-editorial text-3xl sm:text-4xl text-[#1F1D1E] mt-1">
             Presupuesto
           </h2>
         </div>
@@ -335,14 +335,14 @@ export const BudgetView: React.FC = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowQuoteModal(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-[#F8F5F0] text-[#1F1D1E] border border-[#E7E1D8] text-xs font-medium shadow-2xs transition cursor-pointer"
           >
-            <Scale className="w-3.5 h-3.5 text-[#C48B81]" />
+            <Scale className="w-3.5 h-3.5 text-[#6E2E3A]" />
             <span>Comparar Cotización</span>
           </button>
           <button
             onClick={() => setShowVendorModal(true)}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Proveedor</span>
@@ -351,7 +351,7 @@ export const BudgetView: React.FC = () => {
       </div>
 
       {/* 4 Sub-Tabs Pill */}
-      <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs overflow-x-auto max-w-full no-scrollbar">
+      <div className="flex items-center p-1 bg-white rounded-full border border-[#E7E1D8] w-fit shadow-2xs overflow-x-auto max-w-full no-scrollbar">
         {[
           { id: 'resumen', label: 'Ahorro y Meta' },
           { id: 'comparador', label: `Comparador (${quotes.length})` },
@@ -362,7 +362,7 @@ export const BudgetView: React.FC = () => {
             key={t.id}
             onClick={() => setSubTab(t.id as any)}
             className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition cursor-pointer ${
-              subTab === t.id ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+              subTab === t.id ? 'bg-[#1F1D1E] text-white' : 'text-[#6B6462] hover:text-[#1F1D1E]'
             }`}
           >
             {t.label}
@@ -374,20 +374,20 @@ export const BudgetView: React.FC = () => {
       {subTab === 'resumen' && (
         <div className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs">
-              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
+            <div className="bg-white rounded-2xl p-5 border border-[#E7E1D8] shadow-2xs">
+              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462]">
                 Presupuesto Meta
               </span>
-              <div className="font-editorial text-3xl text-[#2B2826] mt-1">{formatMXN(profile.budgetGoal)}</div>
-              <div className="mt-3 h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
-                <div className="h-full bg-[#C48B81] rounded-full" style={{ width: `${budgetUsedPct}%` }} />
+              <div className="font-editorial text-3xl text-[#1F1D1E] mt-1">{formatMXN(profile.budgetGoal)}</div>
+              <div className="mt-3 h-1.5 w-full bg-[#F8F5F0] rounded-full overflow-hidden">
+                <div className="h-full bg-[#6E2E3A] rounded-full" style={{ width: `${budgetUsedPct}%` }} />
               </div>
-              <p className="text-[11px] text-[#8A7E72] mt-1.5 font-light">
+              <p className="text-[11px] text-[#6B6462] mt-1.5 font-light">
                 {budgetUsedPct}% asignado ({formatMXN(totalContracted)})
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs">
+            <div className="bg-white rounded-2xl p-5 border border-[#E7E1D8] shadow-2xs">
               <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#577355]">
                 Total Liquidado
               </span>
@@ -397,39 +397,37 @@ export const BudgetView: React.FC = () => {
               </p>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs">
-              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A86B60]">
+            <div className="bg-white rounded-2xl p-5 border border-[#E7E1D8] shadow-2xs">
+              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#521F29]">
                 Por Liquidar
               </span>
-              <div className="font-editorial text-3xl text-[#A86B60] mt-1">{formatMXN(totalRemaining)}</div>
-              <p className="text-[11px] text-[#8A7E72] mt-2 font-light">
+              <div className="font-editorial text-3xl text-[#521F29] mt-1">{formatMXN(totalRemaining)}</div>
+              <p className="text-[11px] text-[#6B6462] mt-2 font-light">
                 En {vendors.length} {vendors.length === 1 ? 'proveedor' : 'proveedores'}
               </p>
             </div>
           </div>
 
           {/* Plan de Ahorro y Aportaciones Familiares */}
-          <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
+          <div className="bg-white rounded-3xl p-6 border border-[#E7E1D8] shadow-2xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
               <div>
-                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
-                  Plan de Ahorro &amp; Aportaciones
+                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6E2E3A]">
+                  Control de Estudio · Participantes
                 </span>
-                <h3 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
-                  {profile.eventType && !profile.eventType.toLowerCase().includes('boda')
-                    ? '¿Cómo se financia el evento?'
-                    : '¿Cómo se financia la boda?'}
+                <h3 className="font-editorial text-2xl text-[#1F1D1E] mt-0.5">
+                  Distribución de Inversión
                 </h3>
-                <p className="text-xs text-[#8A7E72] font-light mt-1">
-                  Lleva claridad sobre cuánto aporta cada persona y cuánto llevan ahorrado hoy. Haz clic en cualquier nombre para editarlo.
+                <p className="text-xs text-[#6B6462] font-light mt-1">
+                  Organiza los montos asignados y cubiertos por cada participante. Haz clic en cualquier nombre para editarlo.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={handleAddContribution}
-                className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#F3ECE6] border border-[#EFE8E1] text-[11px] font-medium text-[#2B2826] transition cursor-pointer shrink-0"
+                className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F8F5F0] hover:bg-[#F3ECE6] border border-[#E7E1D8] text-[11px] font-medium text-[#1F1D1E] transition cursor-pointer shrink-0"
               >
-                <Plus className="w-3 h-3 text-[#C48B81]" />
+                <Plus className="w-3 h-3 text-[#6E2E3A]" />
                 <span>Agregar aportante</span>
               </button>
             </div>
@@ -438,7 +436,7 @@ export const BudgetView: React.FC = () => {
               {contributions.map(c => {
                 const pct = c.pledged > 0 ? Math.min(100, Math.round((c.saved / c.pledged) * 100)) : 0;
                 return (
-                  <div key={c.id} className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFE8E1] space-y-3 group">
+                  <div key={c.id} className="bg-[#F8F5F0] rounded-2xl p-4 border border-[#E7E1D8] space-y-3 group">
                     <div className="flex items-center justify-between gap-2">
                       <input
                         type="text"
@@ -446,7 +444,7 @@ export const BudgetView: React.FC = () => {
                         onChange={e => handleUpdateContributionLabel(c.id, e.target.value)}
                         placeholder="Nombre del aportante"
                         title="Haz clic para editar el nombre"
-                        className="flex-1 min-w-0 font-medium text-sm text-[#2B2826] bg-transparent border-b border-transparent hover:border-[#D8CFC8] focus:border-[#C48B81] focus:bg-white focus:px-1.5 rounded-sm py-0.5 transition"
+                        className="flex-1 min-w-0 font-medium text-sm text-[#1F1D1E] bg-transparent border-b border-transparent hover:border-[#D8CFC8] focus:border-[#6E2E3A] focus:bg-white focus:px-1.5 rounded-sm py-0.5 transition"
                       />
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-[11px] font-medium text-[#577355]">{pct}%</span>
@@ -455,7 +453,7 @@ export const BudgetView: React.FC = () => {
                             type="button"
                             onClick={() => handleDeleteContribution(c.id)}
                             title="Eliminar aportante"
-                            className="p-1 rounded-full text-[#8A7E72] hover:text-rose-600 hover:bg-white opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                            className="p-1 rounded-full text-[#6B6462] hover:text-rose-600 hover:bg-white opacity-0 group-hover:opacity-100 transition cursor-pointer"
                           >
                             <Trash2 className="w-3 h-3" />
                           </button>
@@ -467,21 +465,21 @@ export const BudgetView: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] text-[#8A7E72] block">Meta</label>
+                        <label className="text-[10px] text-[#6B6462] block">Meta</label>
                         <input
                           type="number"
                           value={c.pledged}
                           onChange={e => handleUpdateContribution(c.id, 'pledged', Number(e.target.value))}
-                          className="w-full mt-0.5 px-2.5 py-1.5 rounded-xl bg-white border border-[#EFE8E1] text-xs"
+                          className="w-full mt-0.5 px-2.5 py-1.5 rounded-xl bg-white border border-[#E7E1D8] text-xs"
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-[#8A7E72] block">Ahorrado</label>
+                        <label className="text-[10px] text-[#6B6462] block">Ahorrado</label>
                         <input
                           type="number"
                           value={c.saved}
                           onChange={e => handleUpdateContribution(c.id, 'saved', Number(e.target.value))}
-                          className="w-full mt-0.5 px-2.5 py-1.5 rounded-xl bg-white border border-[#EFE8E1] text-xs"
+                          className="w-full mt-0.5 px-2.5 py-1.5 rounded-xl bg-white border border-[#E7E1D8] text-xs"
                         />
                       </div>
                     </div>
@@ -497,17 +495,17 @@ export const BudgetView: React.FC = () => {
       {subTab === 'comparador' && (
         <div className="space-y-4">
           {quotes.length === 0 ? (
-            <div className="bg-white rounded-3xl p-10 text-center border border-[#EFE8E1] space-y-3">
-              <div className="w-12 h-12 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">
+            <div className="bg-white rounded-3xl p-10 text-center border border-[#E7E1D8] space-y-3">
+              <div className="w-12 h-12 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] flex items-center justify-center mx-auto text-[#6E2E3A]">
                 <Scale className="w-5 h-5" />
               </div>
-              <h3 className="font-editorial text-2xl text-[#2B2826]">Compara antes de firmar</h3>
-              <p className="text-xs text-[#8A7E72] max-w-md mx-auto font-light leading-relaxed">
+              <h3 className="font-editorial text-2xl text-[#1F1D1E]">Compara antes de firmar</h3>
+              <p className="text-xs text-[#6B6462] max-w-md mx-auto font-light leading-relaxed">
                 Guarda hasta 3 cotizaciones por categoría (fotógrafo, banquete, flores) para ver pros, contras y precios lado a lado antes de elegir.
               </p>
               <button
                 onClick={() => setShowQuoteModal(true)}
-                className="mt-2 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#C48B81] text-white text-xs font-medium cursor-pointer"
+                className="mt-2 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#6E2E3A] text-white text-xs font-medium cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar primera cotización</span>
@@ -516,22 +514,22 @@ export const BudgetView: React.FC = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {quotes.map(q => (
-                <div key={q.id} className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-4">
+                <div key={q.id} className="bg-white rounded-2xl p-5 border border-[#E7E1D8] shadow-2xs flex flex-col justify-between space-y-4">
                   <div className="space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#FAF8F5] text-[#7D6F6B] border border-[#EFE8E1]">
+                      <span className="text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#F8F5F0] text-[#6B6462] border border-[#E7E1D8]">
                         {q.category}
                       </span>
                       <button
                         onClick={() => updateWedding(prev => ({ ...prev, quotes: prev.quotes.filter(x => x.id !== q.id) }))}
-                        className="text-[#8A7E72]/50 hover:text-rose-600 p-1 cursor-pointer"
+                        className="text-[#6B6462]/50 hover:text-rose-600 p-1 cursor-pointer"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                     <div>
-                      <h4 className="font-editorial text-xl text-[#2B2826]">{q.vendorName}</h4>
-                      <div className="font-editorial text-2xl text-[#C48B81] mt-0.5">{formatMXN(q.price)}</div>
+                      <h4 className="font-editorial text-xl text-[#1F1D1E]">{q.vendorName}</h4>
+                      <div className="font-editorial text-2xl text-[#6E2E3A] mt-0.5">{formatMXN(q.price)}</div>
                     </div>
                     {q.includes && (
                       <p className="text-xs text-[#5A524C] font-light leading-relaxed">{q.includes}</p>
@@ -542,7 +540,7 @@ export const BudgetView: React.FC = () => {
                       </div>
                     )}
                     {q.cons && (
-                      <div className="text-[11px] bg-[#F7EDEB]/70 text-[#A86B60] p-2.5 rounded-xl">
+                      <div className="text-[11px] bg-[#F4EAEC]/70 text-[#521F29] p-2.5 rounded-xl">
                         <strong>· A considerar:</strong> {q.cons}
                       </div>
                     )}
@@ -550,9 +548,9 @@ export const BudgetView: React.FC = () => {
 
                   <button
                     onClick={() => handleHireQuote(q)}
-                    className="w-full py-2.5 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    className="w-full py-2.5 rounded-full bg-[#1F1D1E] hover:bg-[#181514] text-white text-xs font-medium inline-flex items-center justify-center gap-1.5 transition cursor-pointer"
                   >
-                    <Check className="w-3.5 h-3.5 text-[#C48B81]" />
+                    <Check className="w-3.5 h-3.5 text-[#6E2E3A]" />
                     <span>Elegir y pasar a Contratados</span>
                   </button>
                 </div>
@@ -566,17 +564,17 @@ export const BudgetView: React.FC = () => {
       {subTab === 'proveedores' && (
         <div className="space-y-6">
           {vendors.length === 0 ? (
-            <div className="bg-white rounded-3xl p-10 text-center border border-[#EFE8E1] space-y-3">
-              <div className="w-12 h-12 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">
+            <div className="bg-white rounded-3xl p-10 text-center border border-[#E7E1D8] space-y-3">
+              <div className="w-12 h-12 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] flex items-center justify-center mx-auto text-[#6E2E3A]">
                 <Sparkles className="w-5 h-5" />
               </div>
-              <h3 className="font-editorial text-2xl text-[#2B2826]">Tu equipo de ensueño comienza aquí</h3>
-              <p className="text-xs text-[#8A7E72] max-w-md mx-auto font-light">
+              <h3 className="font-editorial text-2xl text-[#1F1D1E]">Tu equipo de ensueño comienza aquí</h3>
+              <p className="text-xs text-[#6B6462] max-w-md mx-auto font-light">
                 Agrega a tus proveedores confirmados para llevar tus anticipos, saldos y fechas límite en orden.
               </p>
               <button
                 onClick={() => setShowVendorModal(true)}
-                className="mt-2 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#C48B81] text-white text-xs font-medium cursor-pointer"
+                className="mt-2 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#6E2E3A] text-white text-xs font-medium cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar primer proveedor</span>
@@ -592,14 +590,14 @@ export const BudgetView: React.FC = () => {
                     <div
                       key={v.id}
                       onClick={() => openVendorDetail(v, false)}
-                      className="bg-white rounded-2xl p-5 border border-[#EFE8E1] hover:border-[#C48B81]/70 shadow-2xs space-y-3.5 transition cursor-pointer group"
+                      className="bg-white rounded-2xl p-5 border border-[#E7E1D8] hover:border-[#6E2E3A]/70 shadow-2xs space-y-3.5 transition cursor-pointer group"
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <span className="text-[10px] uppercase tracking-wider text-[#8A7E72] font-semibold">
+                          <span className="text-[10px] uppercase tracking-wider text-[#6B6462] font-semibold">
                             {v.category}
                           </span>
-                          <h4 className="font-editorial text-xl text-[#2B2826] group-hover:text-[#A86B60] transition-colors">
+                          <h4 className="font-editorial text-xl text-[#1F1D1E] group-hover:text-[#521F29] transition-colors">
                             {v.name}
                           </h4>
                         </div>
@@ -617,7 +615,7 @@ export const BudgetView: React.FC = () => {
                           )}
                           <button
                             onClick={() => openVendorDetail(v, false)}
-                            className="p-2 rounded-full text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer"
+                            className="p-2 rounded-full text-[#6B6462] hover:text-[#1F1D1E] hover:bg-[#F8F5F0] transition cursor-pointer"
                             title="Ver detalle y editar"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
@@ -628,7 +626,7 @@ export const BudgetView: React.FC = () => {
                                 updateWedding(prev => ({ ...prev, vendors: prev.vendors.filter(x => x.id !== v.id) }));
                               }
                             }}
-                            className="p-2 rounded-full text-[#8A7E72]/50 hover:text-rose-600 cursor-pointer"
+                            className="p-2 rounded-full text-[#6B6462]/50 hover:text-rose-600 cursor-pointer"
                             title="Eliminar proveedor"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -636,27 +634,27 @@ export const BudgetView: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full bg-[#F8F5F0] rounded-full overflow-hidden">
                         <div className="h-full bg-[#577355] rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 text-xs bg-[#FAF8F5] p-3 rounded-xl">
+                      <div className="grid grid-cols-3 gap-2 text-xs bg-[#F8F5F0] p-3 rounded-xl">
                         <div>
-                          <span className="text-[10px] text-[#8A7E72] block">Total</span>
-                          <strong className="text-[#2B2826]">{formatMXN(v.totalCost)}</strong>
+                          <span className="text-[10px] text-[#6B6462] block">Total</span>
+                          <strong className="text-[#1F1D1E]">{formatMXN(v.totalCost)}</strong>
                         </div>
                         <div>
                           <span className="text-[10px] text-[#577355] block">Pagado</span>
                           <strong className="text-[#455C44]">{formatMXN(v.paidAmount)}</strong>
                         </div>
                         <div>
-                          <span className="text-[10px] text-[#A86B60] block">Restante</span>
-                          <strong className="text-[#A86B60]">{formatMXN(rem)}</strong>
+                          <span className="text-[10px] text-[#521F29] block">Restante</span>
+                          <strong className="text-[#521F29]">{formatMXN(rem)}</strong>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between pt-1">
-                        <span className="text-[11px] text-[#8A7E72] font-light">
+                        <span className="text-[11px] text-[#6B6462] font-light">
                           {v.nextDueDate ? `Próximo pago: ${formatShortDate(v.nextDueDate)}` : 'Sin fecha límite'}
                         </span>
                         <button
@@ -664,7 +662,7 @@ export const BudgetView: React.FC = () => {
                             e.stopPropagation();
                             openVendorDetail(v, true);
                           }}
-                          className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium cursor-pointer transition"
+                          className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#1F1D1E] border border-[#E7E1D8] text-xs font-medium cursor-pointer transition"
                         >
                           <Wallet className="w-3 h-3 text-[#577355]" />
                           <span>+ Abonar</span>
@@ -676,27 +674,27 @@ export const BudgetView: React.FC = () => {
               </div>
 
               {/* Historial Global de Pagos */}
-              <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
+              <div className="bg-white rounded-3xl p-6 border border-[#E7E1D8] shadow-2xs space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
+                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6B6462]">
                       Bitácora de Liquidación
                     </span>
-                    <h3 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                    <h3 className="font-editorial text-2xl text-[#1F1D1E] mt-0.5">
                       Historial de Pagos
                     </h3>
                   </div>
-                  <span className="text-xs text-[#8A7E72] font-light">
+                  <span className="text-xs text-[#6B6462] font-light">
                     {allPayments.length} {allPayments.length === 1 ? 'pago' : 'pagos'}
                   </span>
                 </div>
 
                 {allPayments.length === 0 ? (
-                  <p className="text-xs text-[#8A7E72] text-center py-6 font-light bg-[#FAF8F5] rounded-2xl">
+                  <p className="text-xs text-[#6B6462] text-center py-6 font-light bg-[#F8F5F0] rounded-2xl">
                     Aún no has registrado pagos. Haz clic en <strong>+ Abonar</strong> en cualquier proveedor para llevar tu historial.
                   </p>
                 ) : (
-                  <div className="divide-y divide-[#FAF8F5]">
+                  <div className="divide-y divide-[#F8F5F0]">
                     {allPayments.map(p => (
                       <div
                         key={p.id}
@@ -704,17 +702,17 @@ export const BudgetView: React.FC = () => {
                           const target = vendors.find(v => v.id === p.vendorId);
                           if (target) openVendorDetail(target, false);
                         }}
-                        className="py-3 flex items-center justify-between gap-3 hover:bg-[#FAF8F5]/60 px-2 rounded-xl transition cursor-pointer"
+                        className="py-3 flex items-center justify-between gap-3 hover:bg-[#F8F5F0]/60 px-2 rounded-xl transition cursor-pointer"
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className="w-8 h-8 rounded-full bg-[#E5EDE6] text-[#384C3A] flex items-center justify-center shrink-0">
                             <Receipt className="w-3.5 h-3.5" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-[#2B2826] truncate">
-                              {p.vendorName} <span className="text-[#8A7E72] font-light">· {p.concept}</span>
+                            <p className="text-sm font-medium text-[#1F1D1E] truncate">
+                              {p.vendorName} <span className="text-[#6B6462] font-light">· {p.concept}</span>
                             </p>
-                            <p className="text-[11px] text-[#8A7E72] font-light">
+                            <p className="text-[11px] text-[#6B6462] font-light">
                               {p.date ? formatShortDate(p.date) : 'Sin fecha'} · {p.method}
                             </p>
                           </div>
@@ -734,13 +732,13 @@ export const BudgetView: React.FC = () => {
 
       {/* SUB-TAB 4: CONTRATOS Y COMPROBANTES */}
       {subTab === 'archivos' && (
-        <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
+        <div className="bg-white rounded-3xl p-6 border border-[#E7E1D8] shadow-2xs space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="font-editorial text-2xl text-[#2B2826]">Contratos & Comprobantes</h3>
-              <p className="text-xs text-[#8A7E72] font-light">Guarda tus contratos y recibos de pago en orden.</p>
+              <h3 className="font-editorial text-2xl text-[#1F1D1E]">Contratos & Comprobantes</h3>
+              <p className="text-xs text-[#6B6462] font-light">Guarda tus contratos y recibos de pago en orden.</p>
             </div>
-            <label className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium cursor-pointer shrink-0 transition">
+            <label className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium cursor-pointer shrink-0 transition">
               <Upload className="w-3.5 h-3.5" />
               <span>Subir</span>
               <input type="file" onChange={handleUploadFileRef} className="hidden" />
@@ -748,31 +746,31 @@ export const BudgetView: React.FC = () => {
           </div>
 
           {files.length === 0 ? (
-            <p className="text-xs text-[#8A7E72] text-center py-8 font-light">
+            <p className="text-xs text-[#6B6462] text-center py-8 font-light">
               Aún no has guardado contratos o comprobantes.
             </p>
           ) : (
-            <div className="divide-y divide-[#FAF8F5]">
+            <div className="divide-y divide-[#F8F5F0]">
               {files.map(f => (
                 <div
                   key={f.id}
                   onClick={() => setPreviewFile(f)}
-                  className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-[#FAF8F5]/70 rounded-xl transition cursor-pointer group"
+                  className="py-3 px-2 flex items-center justify-between gap-3 hover:bg-[#F8F5F0]/70 rounded-xl transition cursor-pointer group"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <FileCheck className="w-4 h-4 text-[#C48B81] shrink-0" />
+                    <FileCheck className="w-4 h-4 text-[#6E2E3A] shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-[#2B2826] group-hover:text-[#A86B60] transition truncate">
+                      <p className="text-sm font-medium text-[#1F1D1E] group-hover:text-[#521F29] transition truncate">
                         {f.name}
                       </p>
-                      <p className="text-[11px] text-[#8A7E72] font-light">{f.category} · {f.date}</p>
+                      <p className="text-[11px] text-[#6B6462] font-light">{f.category} · {f.date}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                     <button
                       type="button"
                       onClick={() => setPreviewFile(f)}
-                      className="p-1.5 rounded-full text-[#8A7E72] hover:text-[#2B2826] hover:bg-white transition cursor-pointer"
+                      className="p-1.5 rounded-full text-[#6B6462] hover:text-[#1F1D1E] hover:bg-white transition cursor-pointer"
                       title="Ver vista previa"
                     >
                       <Eye className="w-3.5 h-3.5" />
@@ -780,7 +778,7 @@ export const BudgetView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => updateWedding(prev => ({ ...prev, files: prev.files.filter(x => x.id !== f.id) }))}
-                      className="p-1.5 rounded-full text-[#8A7E72]/50 hover:text-rose-600 cursor-pointer"
+                      className="p-1.5 rounded-full text-[#6B6462]/50 hover:text-rose-600 cursor-pointer"
                       title="Eliminar archivo"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -805,7 +803,7 @@ export const BudgetView: React.FC = () => {
           <div className="space-y-4">
             {previewFile.dataUrl ? (
               previewFile.mimeType?.startsWith('image/') || /\.(jpg|jpeg|png|webp|gif)$/i.test(previewFile.name) ? (
-                <div className="bg-[#FAF8F5] rounded-2xl border border-[#EFE8E1] p-3 flex items-center justify-center max-h-[65vh] overflow-auto">
+                <div className="bg-[#F8F5F0] rounded-2xl border border-[#E7E1D8] p-3 flex items-center justify-center max-h-[65vh] overflow-auto">
                   <img
                     src={previewFile.dataUrl}
                     alt={previewFile.name}
@@ -813,7 +811,7 @@ export const BudgetView: React.FC = () => {
                   />
                 </div>
               ) : previewFile.mimeType === 'application/pdf' || /\.pdf$/i.test(previewFile.name) ? (
-                <div className="bg-[#FAF8F5] rounded-2xl border border-[#EFE8E1] overflow-hidden h-[65vh]">
+                <div className="bg-[#F8F5F0] rounded-2xl border border-[#E7E1D8] overflow-hidden h-[65vh]">
                   <iframe
                     src={previewFile.dataUrl}
                     title={previewFile.name}
@@ -821,27 +819,27 @@ export const BudgetView: React.FC = () => {
                   />
                 </div>
               ) : (
-                <div className="bg-[#FAF8F5] rounded-2xl border border-[#EFE8E1] p-10 text-center space-y-2">
-                  <FileCheck className="w-8 h-8 text-[#C48B81] mx-auto" />
-                  <p className="text-sm text-[#2B2826] font-medium">Vista previa no disponible para este formato</p>
-                  <p className="text-xs text-[#8A7E72] font-light">Puedes descargarlo directamente para abrirlo en tu dispositivo.</p>
+                <div className="bg-[#F8F5F0] rounded-2xl border border-[#E7E1D8] p-10 text-center space-y-2">
+                  <FileCheck className="w-8 h-8 text-[#6E2E3A] mx-auto" />
+                  <p className="text-sm text-[#1F1D1E] font-medium">Vista previa no disponible para este formato</p>
+                  <p className="text-xs text-[#6B6462] font-light">Puedes descargarlo directamente para abrirlo en tu dispositivo.</p>
                 </div>
               )
             ) : (
-              <div className="bg-[#FAF8F5] rounded-2xl border border-[#EFE8E1] p-10 text-center space-y-2">
-                <FileCheck className="w-8 h-8 text-[#C48B81] mx-auto" />
-                <p className="text-sm text-[#2B2826] font-medium">Archivo de referencia sin vista previa cargada</p>
-                <p className="text-xs text-[#8A7E72] font-light max-w-sm mx-auto">
+              <div className="bg-[#F8F5F0] rounded-2xl border border-[#E7E1D8] p-10 text-center space-y-2">
+                <FileCheck className="w-8 h-8 text-[#6E2E3A] mx-auto" />
+                <p className="text-sm text-[#1F1D1E] font-medium">Archivo de referencia sin vista previa cargada</p>
+                <p className="text-xs text-[#6B6462] font-light max-w-sm mx-auto">
                   Sube un archivo nuevo (imagen o PDF) desde el botón <strong>Subir</strong> para verlo en vista previa completa aquí.
                 </p>
               </div>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#FAF8F5]">
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#F8F5F0]">
               <button
                 type="button"
                 onClick={() => setPreviewFile(null)}
-                className="px-4 py-2 text-xs text-[#8A7E72] hover:text-[#2B2826] cursor-pointer"
+                className="px-4 py-2 text-xs text-[#6B6462] hover:text-[#1F1D1E] cursor-pointer"
               >
                 Cerrar
               </button>
@@ -849,9 +847,9 @@ export const BudgetView: React.FC = () => {
                 <a
                   href={previewFile.dataUrl}
                   download={previewFile.name}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium transition"
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#1F1D1E] hover:bg-[#181514] text-white text-xs font-medium transition"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <Download className="w-3.5 h-3.5 text-[#6E2E3A]" />
                   <span>Descargar</span>
                 </a>
               )}
@@ -878,22 +876,22 @@ export const BudgetView: React.FC = () => {
               /* Modo Edición del Proveedor */
               <form onSubmit={handleSaveVendorEdit} className="space-y-3">
                 <div>
-                  <label className="text-[11px] text-[#7D6F6B] block mb-1">Nombre del proveedor *</label>
+                  <label className="text-[11px] text-[#6B6462] block mb-1">Nombre del proveedor *</label>
                   <input
                     type="text"
                     required
                     value={editVendorDraft.name}
                     onChange={e => setEditVendorDraft({ ...editVendorDraft, name: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] text-[#7D6F6B] block mb-1">Categoría</label>
+                    <label className="text-[11px] text-[#6B6462] block mb-1">Categoría</label>
                     <select
                       value={editVendorDraft.category}
                       onChange={e => setEditVendorDraft({ ...editVendorDraft, category: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                      className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
                     >
                       {VENDOR_CATEGORIES.map(c => (
                         <option key={c}>{c}</option>
@@ -901,56 +899,56 @@ export const BudgetView: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="text-[11px] text-[#7D6F6B] block mb-1">WhatsApp</label>
+                    <label className="text-[11px] text-[#6B6462] block mb-1">WhatsApp</label>
                     <input
                       type="tel"
                       value={editVendorDraft.phone}
                       onChange={e => setEditVendorDraft({ ...editVendorDraft, phone: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                      className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] text-[#7D6F6B] block mb-1">Costo Total (MXN)</label>
+                    <label className="text-[11px] text-[#6B6462] block mb-1">Costo Total (MXN)</label>
                     <input
                       type="number"
                       required
                       value={editVendorDraft.totalCost}
                       onChange={e => setEditVendorDraft({ ...editVendorDraft, totalCost: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                      className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] text-[#7D6F6B] block mb-1">Próxima fecha límite</label>
+                    <label className="text-[11px] text-[#6B6462] block mb-1">Próxima fecha límite</label>
                     <input
                       type="date"
                       value={editVendorDraft.nextDueDate}
                       onChange={e => setEditVendorDraft({ ...editVendorDraft, nextDueDate: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                      className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
                     />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[11px] text-[#7D6F6B] block mb-1">Notas y qué incluye</label>
+                  <label className="text-[11px] text-[#6B6462] block mb-1">Notas y qué incluye</label>
                   <textarea
                     rows={3}
                     value={editVendorDraft.notes}
                     onChange={e => setEditVendorDraft({ ...editVendorDraft, notes: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <button
                     type="button"
                     onClick={() => setIsEditingVendor(false)}
-                    className="px-4 py-2 text-xs text-[#8A7E72] cursor-pointer"
+                    className="px-4 py-2 text-xs text-[#6B6462] cursor-pointer"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 rounded-full bg-[#C48B81] text-white text-xs font-medium cursor-pointer"
+                    className="px-5 py-2 rounded-full bg-[#6E2E3A] text-white text-xs font-medium cursor-pointer"
                   >
                     Guardar Cambios
                   </button>
@@ -974,8 +972,8 @@ export const BudgetView: React.FC = () => {
                       </a>
                     )}
                     {selectedVendor.nextDueDate && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[11px] text-[#7D6F6B]">
-                        <Calendar className="w-3 h-3 text-[#C48B81]" />
+                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] text-[11px] text-[#6B6462]">
+                        <Calendar className="w-3 h-3 text-[#6E2E3A]" />
                         <span>Límite: {formatShortDate(selectedVendor.nextDueDate)}</span>
                       </span>
                     )}
@@ -984,27 +982,27 @@ export const BudgetView: React.FC = () => {
                   <button
                     type="button"
                     onClick={startEditSelectedVendor}
-                    className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+                    className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#1F1D1E] border border-[#E7E1D8] text-xs font-medium transition cursor-pointer"
                   >
-                    <Edit3 className="w-3 h-3 text-[#C48B81]" />
+                    <Edit3 className="w-3 h-3 text-[#6E2E3A]" />
                     <span>Editar</span>
                   </button>
                 </div>
 
                 {/* Financial Summary Box */}
-                <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFE8E1] space-y-3">
+                <div className="bg-[#F8F5F0] rounded-2xl p-4 border border-[#E7E1D8] space-y-3">
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
-                      <span className="text-[10px] uppercase tracking-wider text-[#8A7E72] block">Total</span>
-                      <span className="font-editorial text-xl text-[#2B2826]">{formatMXN(selectedVendor.totalCost)}</span>
+                      <span className="text-[10px] uppercase tracking-wider text-[#6B6462] block">Total</span>
+                      <span className="font-editorial text-xl text-[#1F1D1E]">{formatMXN(selectedVendor.totalCost)}</span>
                     </div>
                     <div>
                       <span className="text-[10px] uppercase tracking-wider text-[#577355] block">Pagado</span>
                       <span className="font-editorial text-xl text-[#455C44]">{formatMXN(selectedVendor.paidAmount)}</span>
                     </div>
                     <div>
-                      <span className="text-[10px] uppercase tracking-wider text-[#A86B60] block">Restante</span>
-                      <span className="font-editorial text-xl text-[#A86B60]">
+                      <span className="text-[10px] uppercase tracking-wider text-[#521F29] block">Restante</span>
+                      <span className="font-editorial text-xl text-[#521F29]">
                         {formatMXN(Math.max(0, selectedVendor.totalCost - selectedVendor.paidAmount))}
                       </span>
                     </div>
@@ -1021,8 +1019,8 @@ export const BudgetView: React.FC = () => {
 
                 {/* Notes / Package details */}
                 {selectedVendor.notes && (
-                  <div className="text-xs text-[#5A524C] bg-[#FAF8F5]/60 p-3.5 rounded-2xl border border-[#EFE8E1] font-light leading-relaxed">
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8A7E72] block mb-1">
+                  <div className="text-xs text-[#5A524C] bg-[#F8F5F0]/60 p-3.5 rounded-2xl border border-[#E7E1D8] font-light leading-relaxed">
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-[#6B6462] block mb-1">
                       Detalles y Notas
                     </span>
                     {selectedVendor.notes}
@@ -1030,13 +1028,13 @@ export const BudgetView: React.FC = () => {
                 )}
 
                 {/* Per-Vendor Payment History */}
-                <div className="space-y-3 pt-2 border-t border-[#FAF8F5]">
+                <div className="space-y-3 pt-2 border-t border-[#F8F5F0]">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-editorial text-lg text-[#2B2826]">Pagos registrados</h4>
+                    <h4 className="font-editorial text-lg text-[#1F1D1E]">Pagos registrados</h4>
                     <button
                       type="button"
                       onClick={() => setShowAddPaymentForm(!showAddPaymentForm)}
-                      className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium transition cursor-pointer"
+                      className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium transition cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>Registrar Pago</span>
@@ -1044,10 +1042,10 @@ export const BudgetView: React.FC = () => {
                   </div>
 
                   {showAddPaymentForm && (
-                    <form onSubmit={handleRecordPayment} className="bg-[#FAF8F5] p-4 rounded-2xl border border-[#EFE8E1] space-y-3">
+                    <form onSubmit={handleRecordPayment} className="bg-[#F8F5F0] p-4 rounded-2xl border border-[#E7E1D8] space-y-3">
                       <div className="grid grid-cols-2 gap-2.5">
                         <div>
-                          <label className="text-[10px] text-[#7D6F6B] block mb-1">Monto (MXN) *</label>
+                          <label className="text-[10px] text-[#6B6462] block mb-1">Monto (MXN) *</label>
                           <input
                             type="number"
                             required
@@ -1055,16 +1053,16 @@ export const BudgetView: React.FC = () => {
                             placeholder="10000"
                             value={paymentDraft.amount}
                             onChange={e => setPaymentDraft({ ...paymentDraft, amount: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE8E1] text-xs"
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#E7E1D8] text-xs"
                           />
                         </div>
                         <div>
-                          <label className="text-[10px] text-[#7D6F6B] block mb-1">Fecha</label>
+                          <label className="text-[10px] text-[#6B6462] block mb-1">Fecha</label>
                           <input
                             type="date"
                             value={paymentDraft.date}
                             onChange={e => setPaymentDraft({ ...paymentDraft, date: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE8E1] text-xs"
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-[#E7E1D8] text-xs"
                           />
                         </div>
                       </div>
@@ -1074,12 +1072,12 @@ export const BudgetView: React.FC = () => {
                           placeholder="Concepto (ej. Anticipo 2)"
                           value={paymentDraft.concept}
                           onChange={e => setPaymentDraft({ ...paymentDraft, concept: e.target.value })}
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE8E1] text-xs"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#E7E1D8] text-xs"
                         />
                         <select
                           value={paymentDraft.method}
                           onChange={e => setPaymentDraft({ ...paymentDraft, method: e.target.value as any })}
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#EFE8E1] text-xs"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-[#E7E1D8] text-xs"
                         >
                           <option value="Transferencia">Transferencia</option>
                           <option value="Tarjeta">Tarjeta</option>
@@ -1091,13 +1089,13 @@ export const BudgetView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setShowAddPaymentForm(false)}
-                          className="px-3 py-1.5 text-xs text-[#8A7E72] cursor-pointer"
+                          className="px-3 py-1.5 text-xs text-[#6B6462] cursor-pointer"
                         >
                           Cancelar
                         </button>
                         <button
                           type="submit"
-                          className="px-4 py-1.5 rounded-full bg-[#2B2826] text-white text-xs font-medium cursor-pointer"
+                          className="px-4 py-1.5 rounded-full bg-[#1F1D1E] text-white text-xs font-medium cursor-pointer"
                         >
                           Guardar Pago
                         </button>
@@ -1115,19 +1113,19 @@ export const BudgetView: React.FC = () => {
 
                     if (vendorPayments.length === 0) {
                       return (
-                        <p className="text-xs text-[#8A7E72] text-center py-4 font-light bg-[#FAF8F5]/60 rounded-xl">
+                        <p className="text-xs text-[#6B6462] text-center py-4 font-light bg-[#F8F5F0]/60 rounded-xl">
                           Sin pagos registrados todavía para este proveedor.
                         </p>
                       );
                     }
 
                     return (
-                      <div className="divide-y divide-[#FAF8F5]">
+                      <div className="divide-y divide-[#F8F5F0]">
                         {vendorPayments.map(p => (
                           <div key={p.id} className="py-2.5 flex items-center justify-between gap-3">
                             <div>
-                              <p className="text-xs font-medium text-[#2B2826]">{p.concept}</p>
-                              <p className="text-[11px] text-[#8A7E72] font-light">
+                              <p className="text-xs font-medium text-[#1F1D1E]">{p.concept}</p>
+                              <p className="text-[11px] text-[#6B6462] font-light">
                                 {p.date ? formatShortDate(p.date) : 'Sin fecha'} · {p.method}
                               </p>
                             </div>
@@ -1137,7 +1135,7 @@ export const BudgetView: React.FC = () => {
                                 <button
                                   type="button"
                                   onClick={() => handleDeletePayment(selectedVendor.id, p.id)}
-                                  className="p-1 text-[#8A7E72]/40 hover:text-rose-600 cursor-pointer"
+                                  className="p-1 text-[#6B6462]/40 hover:text-rose-600 cursor-pointer"
                                   title="Eliminar pago"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -1165,11 +1163,11 @@ export const BudgetView: React.FC = () => {
         <form onSubmit={handleSaveQuote} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] text-[#7D6F6B] block mb-1">Categoría</label>
+              <label className="text-[11px] text-[#6B6462] block mb-1">Categoría</label>
               <select
                 value={quoteForm.category}
                 onChange={e => setQuoteForm({ ...quoteForm, category: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
               >
                 {VENDOR_CATEGORIES.map(c => (
                   <option key={c}>{c}</option>
@@ -1177,14 +1175,14 @@ export const BudgetView: React.FC = () => {
               </select>
             </div>
             <div>
-              <label className="text-[11px] text-[#7D6F6B] block mb-1">Precio (MXN)</label>
+              <label className="text-[11px] text-[#6B6462] block mb-1">Precio (MXN)</label>
               <input
                 type="number"
                 required
                 placeholder="45000"
                 value={quoteForm.price}
                 onChange={e => setQuoteForm({ ...quoteForm, price: e.target.value })}
-                className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
               />
             </div>
           </div>
@@ -1194,34 +1192,34 @@ export const BudgetView: React.FC = () => {
             placeholder="Nombre del proveedor *"
             value={quoteForm.vendorName}
             onChange={e => setQuoteForm({ ...quoteForm, vendorName: e.target.value })}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm"
+            className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm"
           />
           <textarea
             rows={2}
             placeholder="¿Qué incluye el paquete?"
             value={quoteForm.includes}
             onChange={e => setQuoteForm({ ...quoteForm, includes: e.target.value })}
-            className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+            className="w-full px-3.5 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
           />
           <input
             type="text"
             placeholder="✓ Lo que me encantó (Pros)"
             value={quoteForm.pros}
             onChange={e => setQuoteForm({ ...quoteForm, pros: e.target.value })}
-            className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+            className="w-full px-3.5 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
           />
           <input
             type="text"
             placeholder="· A considerar (Contras)"
             value={quoteForm.cons}
             onChange={e => setQuoteForm({ ...quoteForm, cons: e.target.value })}
-            className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+            className="w-full px-3.5 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
           />
           <div className="flex justify-end gap-2 pt-3">
-            <button type="button" onClick={() => setShowQuoteModal(false)} className="px-4 py-2 text-xs text-[#8A7E72] cursor-pointer">
+            <button type="button" onClick={() => setShowQuoteModal(false)} className="px-4 py-2 text-xs text-[#6B6462] cursor-pointer">
               Cancelar
             </button>
-            <button type="submit" className="px-5 py-2 rounded-full bg-[#C48B81] text-white text-xs font-medium cursor-pointer">
+            <button type="submit" className="px-5 py-2 rounded-full bg-[#6E2E3A] text-white text-xs font-medium cursor-pointer">
               Guardar
             </button>
           </div>
@@ -1241,13 +1239,13 @@ export const BudgetView: React.FC = () => {
             placeholder="Nombre del proveedor *"
             value={vendorForm.name}
             onChange={e => setVendorForm({ ...vendorForm, name: e.target.value })}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm"
+            className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm"
           />
           <div className="grid grid-cols-2 gap-3">
             <select
               value={vendorForm.category}
               onChange={e => setVendorForm({ ...vendorForm, category: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+              className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
             >
               {VENDOR_CATEGORIES.map(c => (
                 <option key={c}>{c}</option>
@@ -1258,7 +1256,7 @@ export const BudgetView: React.FC = () => {
               placeholder="WhatsApp (+52...)"
               value={vendorForm.phone}
               onChange={e => setVendorForm({ ...vendorForm, phone: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+              className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -1268,23 +1266,23 @@ export const BudgetView: React.FC = () => {
               placeholder="Costo total (MXN)"
               value={vendorForm.totalCost}
               onChange={e => setVendorForm({ ...vendorForm, totalCost: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+              className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
             />
             <input
               type="number"
               placeholder="Anticipo pagado"
               value={vendorForm.paidAmount}
               onChange={e => setVendorForm({ ...vendorForm, paidAmount: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+              className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
             />
           </div>
           <div>
-            <label className="text-[11px] text-[#7D6F6B] block mb-1">Próxima fecha límite de pago</label>
+            <label className="text-[11px] text-[#6B6462] block mb-1">Próxima fecha límite de pago</label>
             <input
               type="date"
               value={vendorForm.nextDueDate}
               onChange={e => setVendorForm({ ...vendorForm, nextDueDate: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+              className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
             />
           </div>
           <textarea
@@ -1292,13 +1290,13 @@ export const BudgetView: React.FC = () => {
             placeholder="Notas o qué incluye el contrato (opcional)"
             value={vendorForm.notes}
             onChange={e => setVendorForm({ ...vendorForm, notes: e.target.value })}
-            className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+            className="w-full px-3.5 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
           />
           <div className="flex justify-end gap-2 pt-3">
-            <button type="button" onClick={() => setShowVendorModal(false)} className="px-4 py-2 text-xs text-[#8A7E72] cursor-pointer">
+            <button type="button" onClick={() => setShowVendorModal(false)} className="px-4 py-2 text-xs text-[#6B6462] cursor-pointer">
               Cancelar
             </button>
-            <button type="submit" className="px-5 py-2 rounded-full bg-[#C48B81] text-white text-xs font-medium cursor-pointer">
+            <button type="submit" className="px-5 py-2 rounded-full bg-[#6E2E3A] text-white text-xs font-medium cursor-pointer">
               Guardar Proveedor
             </button>
           </div>

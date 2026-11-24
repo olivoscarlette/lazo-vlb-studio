@@ -457,10 +457,10 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#6B6462]">
             Cortesía & Asistencia
           </span>
-          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-1">
+          <h2 className="font-editorial text-3xl sm:text-4xl text-[#1F1D1E] mt-1">
             Invitados & Mesas
           </h2>
         </div>
@@ -472,17 +472,17 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                 <button
                   type="button"
                   onClick={() => exportFloorPlanPdf(profile, tables, guests, defaultFloorElements)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#F8F5F0] text-[#1F1D1E] border border-[#E7E1D8] text-xs font-medium shadow-2xs transition cursor-pointer"
                   title="Descargar Plano 2D y Mesas en PDF"
                 >
-                  <Download className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <Download className="w-3.5 h-3.5 text-[#6E2E3A]" />
                   <span>PDF Plano</span>
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setShowTableModal(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Nueva Mesa</span>
@@ -504,11 +504,11 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                 <button
                   type="button"
                   onClick={() => setShowToolsMenu(!showToolsMenu)}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#E5D5CE] text-xs font-medium shadow-2xs transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#F8F5F0] text-[#1F1D1E] border border-[#E5D5CE] text-xs font-medium shadow-2xs transition cursor-pointer"
                 >
-                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <SlidersHorizontal className="w-3.5 h-3.5 text-[#6E2E3A]" />
                   <span>Herramientas</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-[#8A7E72] transition-transform ${showToolsMenu ? 'rotate-180' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-[#6B6462] transition-transform ${showToolsMenu ? 'rotate-180' : ''}`} />
                 </button>
 
                 {showToolsMenu && (
@@ -517,33 +517,33 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                       className="fixed inset-0 z-30"
                       onClick={() => setShowToolsMenu(false)}
                     />
-                    <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-3xl shadow-xl border border-[#EFE8E1] p-2 z-40">
-                      <div className="px-3 py-2 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#8A7E72]">
+                    <div className="absolute left-0 sm:left-auto sm:right-0 mt-2 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-3xl shadow-xl border border-[#E7E1D8] p-2 z-40">
+                      <div className="px-3 py-2 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6B6462]">
                         Archivos y Listas
                       </div>
 
-                      <div className="divide-y divide-[#FAF8F5]">
+                      <div className="divide-y divide-[#F8F5F0]">
                         <button
                           type="button"
                           onClick={handleExportConfirmedTablesExcel}
-                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#FAF8F5] rounded-2xl transition cursor-pointer"
+                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#F8F5F0] rounded-2xl transition cursor-pointer"
                         >
-                          <FileSpreadsheet className="w-4 h-4 text-[#C48B81] mt-0.5 shrink-0" />
+                          <FileSpreadsheet className="w-4 h-4 text-[#6E2E3A] mt-0.5 shrink-0" />
                           <div>
-                            <p className="text-xs font-semibold text-[#2B2826]">Asistencia y Mesas (Excel)</p>
-                            <p className="text-[11px] text-[#8A7E72] font-light">Confirmados en orden A–Z con mesa</p>
+                            <p className="text-xs font-semibold text-[#1F1D1E]">Asistencia y Mesas (Excel)</p>
+                            <p className="text-[11px] text-[#6B6462] font-light">Confirmados en orden A–Z con mesa</p>
                           </div>
                         </button>
 
                         <button
                           type="button"
                           onClick={handleExportFullExcel}
-                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#FAF8F5] rounded-2xl transition cursor-pointer"
+                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#F8F5F0] rounded-2xl transition cursor-pointer"
                         >
-                          <Download className="w-4 h-4 text-[#7D6F6B] mt-0.5 shrink-0" />
+                          <Download className="w-4 h-4 text-[#6B6462] mt-0.5 shrink-0" />
                           <div>
-                            <p className="text-xs font-semibold text-[#2B2826]">Lista Completa (.xlsx)</p>
-                            <p className="text-[11px] text-[#8A7E72] font-light">Todos los invitados y estatus</p>
+                            <p className="text-xs font-semibold text-[#1F1D1E]">Lista Completa (.xlsx)</p>
+                            <p className="text-[11px] text-[#6B6462] font-light">Todos los invitados y estatus</p>
                           </div>
                         </button>
 
@@ -553,42 +553,42 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                             setShowToolsMenu(false);
                             exportGuestsPdf(profile, guests, tables);
                           }}
-                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#FAF8F5] rounded-2xl transition cursor-pointer"
+                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#F8F5F0] rounded-2xl transition cursor-pointer"
                         >
-                          <FileText className="w-4 h-4 text-[#7D6F6B] mt-0.5 shrink-0" />
+                          <FileText className="w-4 h-4 text-[#6B6462] mt-0.5 shrink-0" />
                           <div>
-                            <p className="text-xs font-semibold text-[#2B2826]">Descargar Lista en PDF</p>
-                            <p className="text-[11px] text-[#8A7E72] font-light">Formato editorial con alergias</p>
+                            <p className="text-xs font-semibold text-[#1F1D1E]">Descargar Lista en PDF</p>
+                            <p className="text-[11px] text-[#6B6462] font-light">Formato editorial con alergias</p>
                           </div>
                         </button>
 
                         <button
                           type="button"
                           onClick={handleDownloadTemplate}
-                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#FAF8F5] rounded-2xl transition cursor-pointer"
+                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#F8F5F0] rounded-2xl transition cursor-pointer"
                         >
-                          <Download className="w-4 h-4 text-[#C48B81] mt-0.5 shrink-0" />
+                          <Download className="w-4 h-4 text-[#6E2E3A] mt-0.5 shrink-0" />
                           <div>
-                            <p className="text-xs font-semibold text-[#2B2826]">Descargar plantilla vacía</p>
-                            <p className="text-[11px] text-[#8A7E72] font-light">Formato oficial para importar</p>
+                            <p className="text-xs font-semibold text-[#1F1D1E]">Descargar plantilla vacía</p>
+                            <p className="text-[11px] text-[#6B6462] font-light">Formato oficial para importar</p>
                           </div>
                         </button>
 
                         <button
                           type="button"
                           onClick={() => excelInputRef.current?.click()}
-                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#FAF8F5] rounded-2xl transition cursor-pointer"
+                          className="w-full px-3 py-2.5 flex items-start gap-3 text-left hover:bg-[#F8F5F0] rounded-2xl transition cursor-pointer"
                         >
-                          <Upload className="w-4 h-4 text-[#C48B81] mt-0.5 shrink-0" />
+                          <Upload className="w-4 h-4 text-[#6E2E3A] mt-0.5 shrink-0" />
                           <div>
-                            <p className="text-xs font-semibold text-[#2B2826]">Importar archivo Excel</p>
-                            <p className="text-[11px] text-[#8A7E72] font-light">Cargar lista desde archivo (.xlsx / .csv)</p>
+                            <p className="text-xs font-semibold text-[#1F1D1E]">Importar archivo Excel</p>
+                            <p className="text-[11px] text-[#6B6462] font-light">Cargar lista desde archivo (.xlsx / .csv)</p>
                           </div>
                         </button>
                       </div>
 
-                      <div className="mt-1 pt-2 border-t border-[#EFE8E1]">
-                        <div className="px-3 pb-1 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A86B60]">
+                      <div className="mt-1 pt-2 border-t border-[#E7E1D8]">
+                        <div className="px-3 pb-1 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#521F29]">
                           Zona de Gestión
                         </div>
                         <button
@@ -611,7 +611,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
               <button
                 type="button"
                 onClick={openAddGuest}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Nuevo Invitado</span>
@@ -622,11 +622,11 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
       </div>
 
       {/* Sub-Tabs Pill */}
-      <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
+      <div className="flex items-center p-1 bg-white rounded-full border border-[#E7E1D8] w-fit shadow-2xs">
         <button
           onClick={() => setSubTab('lista')}
           className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-            subTab === 'lista' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+            subTab === 'lista' ? 'bg-[#1F1D1E] text-white' : 'text-[#6B6462] hover:text-[#1F1D1E]'
           }`}
         >
           Lista ({totalPasses} pases)
@@ -634,7 +634,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
         <button
           onClick={() => setSubTab('mesas')}
           className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-            subTab === 'mesas' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+            subTab === 'mesas' ? 'bg-[#1F1D1E] text-white' : 'text-[#6B6462] hover:text-[#1F1D1E]'
           }`}
         >
           Mesas ({tables.length})
@@ -645,7 +645,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
       {subTab === 'lista' && (
         <div className="space-y-4">
           {importFeedback && (
-            <div className="bg-[#FAF8F5] border border-[#C48B81]/50 rounded-2xl px-4 py-3 text-xs text-[#2B2826] font-medium">
+            <div className="bg-[#F8F5F0] border border-[#6E2E3A]/50 rounded-2xl px-4 py-3 text-xs text-[#1F1D1E] font-medium">
               {importFeedback}
             </div>
           )}
@@ -661,10 +661,10 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
           {/* 4 Clickable KPI Filter Cards (Zero Redundancy) */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { key: 'TODOS' as const, label: 'Total', value: totalPasses, sub: 'Personas', color: 'text-[#2B2826]' },
+              { key: 'TODOS' as const, label: 'Total', value: totalPasses, sub: 'Personas', color: 'text-[#1F1D1E]' },
               { key: 'Confirmado' as const, label: 'Confirmados', value: confirmedPasses, sub: 'Asistirán', color: 'text-[#455C44]' },
-              { key: 'Pendiente' as const, label: 'Pendientes', value: pendingPasses, sub: 'Por confirmar', color: 'text-[#2B2826]' },
-              { key: 'No asistirá' as const, label: 'Declinados', value: declinedPasses, sub: 'No asistirán', color: 'text-[#A86B60]' }
+              { key: 'Pendiente' as const, label: 'Pendientes', value: pendingPasses, sub: 'Por confirmar', color: 'text-[#1F1D1E]' },
+              { key: 'No asistirá' as const, label: 'Declinados', value: declinedPasses, sub: 'No asistirán', color: 'text-[#521F29]' }
             ].map(kpi => {
               const active = statusFilter === kpi.key;
               return (
@@ -674,17 +674,17 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                   className={`text-left rounded-2xl p-4 border transition cursor-pointer ${
                     active
                       ? 'bg-white border-[#E5D5CE] shadow-sm'
-                      : 'bg-[#FAF8F5] border-[#EFE8E1] hover:bg-white/70'
+                      : 'bg-[#F8F5F0] border-[#E7E1D8] hover:bg-white/70'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-[0.15em] font-semibold text-[#8A7E72]">
+                    <span className="text-[10px] uppercase tracking-[0.15em] font-semibold text-[#6B6462]">
                       {kpi.label}
                     </span>
-                    {active && <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]" />}
+                    {active && <span className="w-1.5 h-1.5 rounded-full bg-[#6E2E3A]" />}
                   </div>
                   <div className={`font-editorial text-3xl mt-1 ${kpi.color}`}>{kpi.value}</div>
-                  <div className="text-[11px] text-[#8A7E72] font-light">{kpi.sub}</div>
+                  <div className="text-[11px] text-[#6B6462] font-light">{kpi.sub}</div>
                 </button>
               );
             })}
@@ -692,29 +692,29 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
 
           {/* Clean Search Input */}
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#8A7E72]" />
+            <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#6B6462]" />
             <input
               type="text"
               placeholder="Buscar invitado por nombre..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+              className="w-full pl-10 pr-4 py-2.5 rounded-full bg-white border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
             />
           </div>
 
           {/* Mobile-First Guest Cards */}
           {filteredGuests.length === 0 ? (
-            <div className="bg-white rounded-3xl p-10 text-center border border-[#EFE8E1] space-y-3">
-              <div className="w-12 h-12 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">
+            <div className="bg-white rounded-3xl p-10 text-center border border-[#E7E1D8] space-y-3">
+              <div className="w-12 h-12 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] flex items-center justify-center mx-auto text-[#6E2E3A]">
                 <Users className="w-5 h-5" />
               </div>
-              <h3 className="font-editorial text-2xl text-[#2B2826]">Tu lista de invitados</h3>
-              <p className="text-xs text-[#8A7E72] max-w-sm mx-auto font-light">
+              <h3 className="font-editorial text-2xl text-[#1F1D1E]">Tu lista de invitados</h3>
+              <p className="text-xs text-[#6B6462] max-w-sm mx-auto font-light">
                 Agrega a tus invitados para llevar pases, alergias y confirmar asistencia con 1 clic por WhatsApp.
               </p>
               <button
                 onClick={openAddGuest}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#C48B81] text-white text-xs font-medium cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#6E2E3A] text-white text-xs font-medium cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar primer invitado</span>
@@ -728,18 +728,18 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                   <div
                     key={g.id}
                     onClick={() => openEditGuest(g)}
-                    className="bg-white rounded-2xl p-4 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition cursor-pointer group"
+                    className="bg-white rounded-2xl p-4 border border-[#E7E1D8] hover:border-[#6E2E3A]/60 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition cursor-pointer group"
                   >
                     <div className="min-w-0 space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-medium text-sm text-[#2B2826] group-hover:text-[#A86B60] transition-colors">
+                        <span className="font-medium text-sm text-[#1F1D1E] group-hover:text-[#521F29] transition-colors">
                           {g.name}
                         </span>
-                        <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[#5A524C]">
+                        <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] text-[#5A524C]">
                           {g.passes} {g.passes === 1 ? 'lugar' : 'lugares'}
                         </span>
                         {assignedTable && (
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60]">
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F4EAEC] text-[#521F29]">
                             {assignedTable.name}
                           </span>
                         )}
@@ -750,7 +750,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                         )}
                       </div>
                       {g.dietary && (
-                        <p className="text-[11px] text-[#8A7E72] font-light">{g.dietary}</p>
+                        <p className="text-[11px] text-[#6B6462] font-light">{g.dietary}</p>
                       )}
                     </div>
 
@@ -762,8 +762,8 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                           g.status === 'Confirmado'
                             ? 'bg-[#E5EDE6] text-[#384C3A] border-[#D0DDD1]'
                             : g.status === 'No asistirá'
-                            ? 'bg-[#FAF4F3] text-[#A86B60] border-[#EEDAD6]'
-                            : 'bg-[#FAF8F5] text-[#7D6F6B] border-[#EFE8E1]'
+                            ? 'bg-[#FAF4F3] text-[#521F29] border-[#E5D1D5]'
+                            : 'bg-[#F8F5F0] text-[#6B6462] border-[#E7E1D8]'
                         }`}
                       >
                         <option value="Pendiente">Pendiente</option>
@@ -785,7 +785,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
 
                       <button
                         onClick={() => updateWedding(prev => ({ ...prev, guests: prev.guests.filter(x => x.id !== g.id) }))}
-                        className="p-2 rounded-full text-[#8A7E72]/50 hover:text-rose-600 cursor-pointer"
+                        className="p-2 rounded-full text-[#6B6462]/50 hover:text-rose-600 cursor-pointer"
                         title="Eliminar"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -803,22 +803,22 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
       {subTab === 'mesas' && (
         <div className="space-y-4">
           <div className="flex items-center justify-end">
-            <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] shadow-2xs">
+            <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#E7E1D8] shadow-2xs">
               <button
                 type="button"
                 onClick={() => setTablesView('plano')}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${
-                  tablesView === 'plano' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                  tablesView === 'plano' ? 'bg-[#1F1D1E] text-white' : 'text-[#6B6462] hover:text-[#1F1D1E]'
                 }`}
               >
-                {canUseLayout2D ? <MapIcon className="w-3.5 h-3.5" /> : <Lock className="w-3 h-3 text-[#C48B81]" />}
+                {canUseLayout2D ? <MapIcon className="w-3.5 h-3.5" /> : <Lock className="w-3 h-3 text-[#6E2E3A]" />}
                 <span>Plano 2D</span>
               </button>
               <button
                 type="button"
                 onClick={() => setTablesView('tarjetas')}
                 className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${
-                  tablesView === 'tarjetas' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                  tablesView === 'tarjetas' ? 'bg-[#1F1D1E] text-white' : 'text-[#6B6462] hover:text-[#1F1D1E]'
                 }`}
               >
                 <LayoutList className="w-3.5 h-3.5" />
@@ -828,15 +828,15 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
           </div>
 
           {tablesView === 'plano' && !canUseLayout2D ? (
-            <div className="bg-white rounded-3xl p-10 text-center border border-[#EFE8E1] shadow-2xs space-y-3">
-              <div className="w-12 h-12 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">
+            <div className="bg-white rounded-3xl p-10 text-center border border-[#E7E1D8] shadow-2xs space-y-3">
+              <div className="w-12 h-12 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] flex items-center justify-center mx-auto text-[#6E2E3A]">
                 <Lock className="w-5 h-5" />
               </div>
-              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81] block">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#6E2E3A] block">
                 Exclusivo Lazo Pro
               </span>
-              <h3 className="font-editorial text-2xl text-[#2B2826]">Plano 2D Interactivo de Mesas</h3>
-              <p className="text-xs text-[#8A7E72] max-w-md mx-auto font-light leading-relaxed">
+              <h3 className="font-editorial text-2xl text-[#1F1D1E]">Plano 2D Interactivo de Mesas</h3>
+              <p className="text-xs text-[#6B6462] max-w-md mx-auto font-light leading-relaxed">
                 Diseña tu salón en 2D con mesas redondas, imperiales y serpentina, pista de baile, alberca y elementos a escala, además de envío automatizado de invitaciones por WhatsApp.
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
@@ -844,7 +844,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                   href={buildVlbWhatsAppUrl(profile, 'Subir a Lazo Pro (Plano 2D + Envío Automatizado RSVP)')}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium transition"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium transition"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Activar Lazo Pro por WhatsApp</span>
@@ -852,7 +852,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                 <button
                   type="button"
                   onClick={() => setTablesView('tarjetas')}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#1F1D1E] border border-[#E7E1D8] text-xs font-medium cursor-pointer"
                 >
                   <span>Volver a Vista Lista</span>
                 </button>
@@ -882,28 +882,28 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                 const unassigned = guests.filter(g => !g.tableId && g.status !== 'No asistirá');
 
                 return (
-                  <div key={table.id} className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs space-y-3.5">
-                    <div className="flex items-center justify-between pb-3 border-b border-[#FAF8F5]">
+                  <div key={table.id} className="bg-white rounded-2xl p-5 border border-[#E7E1D8] shadow-2xs space-y-3.5">
+                    <div className="flex items-center justify-between pb-3 border-b border-[#F8F5F0]">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center text-[#C48B81]">
+                        <div className="w-9 h-9 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] flex items-center justify-center text-[#6E2E3A]">
                           <Armchair className="w-4 h-4" />
                         </div>
                         <div>
-                          <h4 className="font-editorial text-lg text-[#2B2826]">{table.name}</h4>
-                          <span className="text-[11px] text-[#8A7E72] font-light">{table.shape}</span>
+                          <h4 className="font-editorial text-lg text-[#1F1D1E]">{table.name}</h4>
+                          <span className="text-[11px] text-[#6B6462] font-light">{table.shape}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`text-xs px-2.5 py-0.5 rounded-full border ${
                           usedSeats > table.capacity
                             ? 'bg-rose-50 text-rose-700 border-rose-200'
-                            : 'bg-[#FAF8F5] text-[#5A524C] border-[#EFE8E1]'
+                            : 'bg-[#F8F5F0] text-[#5A524C] border-[#E7E1D8]'
                         }`}>
                           {usedSeats} / {table.capacity}
                         </span>
                         <button
                           onClick={() => handleDeleteTable(table.id)}
-                          className="text-[#8A7E72]/50 hover:text-rose-600 p-1 cursor-pointer"
+                          className="text-[#6B6462]/50 hover:text-rose-600 p-1 cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -911,15 +911,15 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                     </div>
 
                     {seatedGuests.length === 0 ? (
-                      <p className="text-xs text-[#8A7E72] italic font-light py-2">Sin invitados asignados aún.</p>
+                      <p className="text-xs text-[#6B6462] italic font-light py-2">Sin invitados asignados aún.</p>
                     ) : (
                       <div className="space-y-1.5">
                         {seatedGuests.map(g => (
-                          <div key={g.id} className="flex items-center justify-between text-xs bg-[#FAF8F5] px-3 py-2 rounded-xl">
-                            <span className="text-[#2B2826]">{g.name} ({g.passes})</span>
+                          <div key={g.id} className="flex items-center justify-between text-xs bg-[#F8F5F0] px-3 py-2 rounded-xl">
+                            <span className="text-[#1F1D1E]">{g.name} ({g.passes})</span>
                             <button
                               onClick={() => handleAssignTable(g.id, '')}
-                              className="text-[11px] text-[#A86B60] hover:underline cursor-pointer"
+                              className="text-[11px] text-[#521F29] hover:underline cursor-pointer"
                             >
                               Quitar
                             </button>
@@ -932,7 +932,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                       <select
                         value=""
                         onChange={e => e.target.value && handleAssignTable(e.target.value, table.id)}
-                        className="w-full px-3 py-2 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#5A524C] cursor-pointer focus:outline-none"
+                        className="w-full px-3 py-2 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] text-xs text-[#5A524C] cursor-pointer focus:outline-none"
                       >
                         <option value="">+ Sentar invitado en esta mesa...</option>
                         {unassigned.map(g => (
@@ -964,30 +964,30 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
         <form onSubmit={handleSaveGuest} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">Nombre *</label>
+              <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5">Nombre *</label>
               <input
                 type="text"
                 required
                 autoFocus
                 value={guestForm.firstName}
                 onChange={e => setGuestForm({ ...guestForm, firstName: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#EFE8E1] text-sm text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#E7E1D8] text-sm text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">Apellido *</label>
+              <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5">Apellido *</label>
               <input
                 type="text"
                 required
                 value={guestForm.lastName}
                 onChange={e => setGuestForm({ ...guestForm, lastName: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#EFE8E1] text-sm text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#E7E1D8] text-sm text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">
+            <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5">
               WhatsApp / Teléfono (con código de país) *
             </label>
             <input
@@ -995,31 +995,31 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
               required
               value={guestForm.phone}
               onChange={e => setGuestForm({ ...guestForm, phone: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#EFE8E1] text-sm text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#E7E1D8] text-sm text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-xs font-semibold text-[#2B2826] mb-1.5"># Acompañantes</label>
+              <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5"># Acompañantes</label>
               <input
                 type="number"
                 min={0}
                 value={guestForm.companions}
                 onChange={e => setGuestForm({ ...guestForm, companions: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#EFE8E1] text-sm text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#E7E1D8] text-sm text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
               />
-              <span className="block text-[11px] text-[#8A7E72] mt-1 font-light">
+              <span className="block text-[11px] text-[#6B6462] mt-1 font-light">
                 Total: {1 + Math.max(0, Number(guestForm.companions) || 0)}{' '}
                 {1 + Math.max(0, Number(guestForm.companions) || 0) === 1 ? 'lugar' : 'lugares'}
               </span>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">Estatus</label>
+              <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5">Estatus</label>
               <select
                 value={guestForm.status}
                 onChange={e => setGuestForm({ ...guestForm, status: e.target.value as GuestStatus })}
-                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#EFE8E1] text-sm text-[#2B2826] focus:outline-none focus:border-[#C48B81] cursor-pointer"
+                className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#E7E1D8] text-sm text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A] cursor-pointer"
               >
                 <option value="Pendiente">Pendiente</option>
                 <option value="Confirmado">Confirmado</option>
@@ -1029,25 +1029,25 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">Mesa Asignada</label>
-            <div className="w-full px-4 py-2.5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-between gap-2 text-xs">
-              <span className="font-medium text-[#A86B60]">
+            <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5">Mesa Asignada</label>
+            <div className="w-full px-4 py-2.5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] flex items-center justify-between gap-2 text-xs">
+              <span className="font-medium text-[#521F29]">
                 {guestForm.tableId
                   ? tables.find(t => t.id === guestForm.tableId)?.name || 'Mesa asignada'
                   : 'Sin mesa asignada'}
               </span>
-              <span className="italic text-[#8A7E72] font-light">(Asignar en pestaña Mesas)</span>
+              <span className="italic text-[#6B6462] font-light">(Asignar en pestaña Mesas)</span>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#2B2826] mb-1.5">Observaciones</label>
+            <label className="block text-xs font-semibold text-[#1F1D1E] mb-1.5">Observaciones</label>
             <textarea
               rows={3}
               placeholder="Restricciones alimentarias, detalles de transporte, etc."
               value={guestForm.dietary}
               onChange={e => setGuestForm({ ...guestForm, dietary: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#EFE8E1] text-sm text-[#2B2826] placeholder:text-[#8A7E72]/60 focus:outline-none focus:border-[#C48B81]"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-white border border-[#E7E1D8] text-sm text-[#1F1D1E] placeholder:text-[#6B6462]/60 focus:outline-none focus:border-[#6E2E3A]"
             />
           </div>
 
@@ -1058,13 +1058,13 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                 setShowGuestModal(false);
                 setEditingGuestId(null);
               }}
-              className="px-4 py-2.5 text-xs font-medium text-[#5A524C] hover:text-[#2B2826] cursor-pointer"
+              className="px-4 py-2.5 text-xs font-medium text-[#5A524C] hover:text-[#1F1D1E] cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-7 py-2.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-semibold uppercase tracking-widest shadow-2xs transition cursor-pointer"
+              className="px-7 py-2.5 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-semibold uppercase tracking-widest shadow-2xs transition cursor-pointer"
             >
               Guardar
             </button>
@@ -1086,7 +1086,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
             placeholder="Ej. Mesa 2 · Amigos"
             value={tableForm.name}
             onChange={e => setTableForm({ ...tableForm, name: e.target.value })}
-            className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm"
+            className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm"
           />
           <div className="grid grid-cols-2 gap-3">
             <select
@@ -1099,7 +1099,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                   capacity: nextShape === 'Serpentina (S)' ? '16' : tableForm.capacity
                 });
               }}
-              className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+              className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
             >
               <option value="Redonda">Redonda</option>
               <option value="Rectangular">Rectangular</option>
@@ -1111,14 +1111,14 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
               min={2}
               value={tableForm.capacity}
               onChange={e => setTableForm({ ...tableForm, capacity: e.target.value })}
-              className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+              className="w-full px-3 py-2 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs"
             />
           </div>
           <div className="flex justify-end gap-2 pt-3">
-            <button type="button" onClick={() => setShowTableModal(false)} className="px-4 py-2 text-xs text-[#8A7E72] cursor-pointer">
+            <button type="button" onClick={() => setShowTableModal(false)} className="px-4 py-2 text-xs text-[#6B6462] cursor-pointer">
               Cancelar
             </button>
-            <button type="submit" className="px-5 py-2 rounded-full bg-[#C48B81] text-white text-xs font-medium cursor-pointer">
+            <button type="submit" className="px-5 py-2 rounded-full bg-[#6E2E3A] text-white text-xs font-medium cursor-pointer">
               Crear Mesa
             </button>
           </div>

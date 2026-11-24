@@ -163,7 +163,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
   return (
     <div className="space-y-6">
-      {/* 1. Editorial Hero Cover */}
+      {/* 1. Asymmetric Haute Couture Split Hero (Atelier Burdeos + Fotografía Editorial) */}
       {(() => {
         const savedFit = profile.coverFitMode || 'cover';
         const useCrispFrame = savedFit === 'contain';
@@ -173,264 +173,352 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             profile: { ...prev.profile, coverFitMode: nextMode }
           }));
         };
-        return (
-      <div className="relative rounded-3xl overflow-hidden border border-[#EFE8E1] shadow-sm bg-[#181514]">
-        <div className="relative h-64 sm:h-80 w-full overflow-hidden">
-          {useCrispFrame ? (
-            <>
-              {/* Atmospheric blurred backdrop so vertical photos never stretch or pixelate */}
-              <img
-                src={profile.coverPhoto}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-65 brightness-75"
-                style={{ objectPosition: `50% ${profile.coverPositionY}%` }}
-              />
-              <img
-                src={profile.coverPhoto}
-                alt="Portada del evento"
-                onLoad={e => {
-                  const img = e.currentTarget;
-                  setCoverIsPortrait(img.naturalHeight > img.naturalWidth * 1.15);
-                }}
-                className="relative z-[1] w-full h-full object-contain contrast-[1.03] saturate-[1.04] transition-all duration-300"
-              />
-            </>
-          ) : (
-            <img
-              src={profile.coverPhoto}
-              alt="Portada del evento"
-              onLoad={e => {
-                const img = e.currentTarget;
-                setCoverIsPortrait(img.naturalHeight > img.naturalWidth * 1.15);
-              }}
-              className="w-full h-full object-cover contrast-[1.03] saturate-[1.04] transition-all duration-300"
-              style={{ objectPosition: `50% ${profile.coverPositionY}%` }}
-            />
-          )}
-          <div className="absolute inset-0 z-[2] bg-gradient-to-t from-[#181514]/75 via-[#181514]/25 to-[#181514]/15 pointer-events-none" />
+        const progressPct = checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0;
+        const tablesCount = (wedding.tables || []).length;
 
-          {/* Top-right cover controls */}
-          <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5">
-            {isRepositioning ? (
-              <div className="flex items-center gap-1 bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20 text-white text-[11px]">
+        return (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Left 5 cols: Signature Deep Burgundy Editorial Card */}
+            <div className="lg:col-span-5 rounded-3xl bg-[#5A232E] text-white p-6 sm:p-8 flex flex-col justify-between shadow-sm relative overflow-hidden min-h-[250px] sm:min-h-[290px]">
+              <div className="pointer-events-none absolute -top-20 -right-20 w-56 h-56 rounded-full bg-white/5 blur-2xl" />
+
+              <div className="relative z-10 space-y-2.5">
+                <span className="inline-block text-[10px] sm:text-[11px] uppercase tracking-[0.24em] text-[#E6CCD1] font-medium">
+                  {(profile.eventType || 'Boda').toUpperCase()} · {formatShortDate(profile.weddingDate).toUpperCase()}
+                </span>
+
+                <h1 className="font-editorial text-4xl sm:text-5xl leading-[1.08] tracking-tight text-white">
+                  {hasPartner2 ? (
+                    <>
+                      {profile.partner1} <span className="text-[#D9B6BC] font-light">&amp;</span> {profile.partner2}
+                    </>
+                  ) : (
+                    profile.partner1
+                  )}
+                </h1>
+
+                <p className="text-xs uppercase tracking-[0.2em] text-white/75 pt-1">
+                  {days} días para el evento
+                </p>
+              </div>
+
+              {/* Integrated 3-Metric Architectural Strip inside Burgundy Card */}
+              <div className="relative z-10 mt-6 pt-5 border-t border-white/15 grid grid-cols-3 gap-2">
                 <button
                   type="button"
-                  onClick={() => setPersistedFitMode(useCrispFrame ? 'cover' : 'contain')}
-                  className="px-2 py-0.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-[10px] font-medium cursor-pointer"
-                  title="Alternar entre rellenar todo el banner o mantener nitidez sin recortar"
+                  onClick={() => onNavigate('invitados')}
+                  className="text-left group cursor-pointer"
                 >
-                  {useCrispFrame ? 'Rellenar' : 'Ajuste nítido'}
+                  <div className="font-editorial text-2xl sm:text-3xl text-white group-hover:text-[#E6CCD1] transition">
+                    {confirmedPasses}
+                  </div>
+                  <div className="text-[11px] text-white/70 mt-0.5">Confirmados</div>
                 </button>
-                {!useCrispFrame && (
-                  <>
-                    <button onClick={() => nudgeCover(-10)} className="p-1 hover:text-[#C48B81] cursor-pointer" title="Subir">
-                      <ChevronUp className="w-3.5 h-3.5" />
-                    </button>
-                    <button onClick={() => nudgeCover(10)} className="p-1 hover:text-[#C48B81] cursor-pointer" title="Bajar">
-                      <ChevronDown className="w-3.5 h-3.5" />
-                    </button>
-                  </>
-                )}
+
                 <button
-                  onClick={() => setIsRepositioning(false)}
-                  className="ml-1 px-2 py-0.5 rounded-full bg-[#C48B81] text-white font-medium cursor-pointer"
+                  type="button"
+                  onClick={() => onNavigate('invitados')}
+                  className="text-left border-l border-white/15 pl-3 group cursor-pointer"
                 >
-                  Listo
+                  <div className="font-editorial text-2xl sm:text-3xl text-white group-hover:text-[#E6CCD1] transition">
+                    {tablesCount}
+                  </div>
+                  <div className="text-[11px] text-white/70 mt-0.5">Mesas 2D</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => onNavigate('checklist')}
+                  className="text-left border-l border-white/15 pl-3 group cursor-pointer"
+                >
+                  <div className="font-editorial text-2xl sm:text-3xl text-white group-hover:text-[#E6CCD1] transition">
+                    {progressPct}%
+                  </div>
+                  <div className="text-[11px] text-white/70 mt-0.5">Listo</div>
                 </button>
               </div>
-            ) : (
-              <>
-                <button
-                  type="button"
-                  onClick={openEditProfile}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md text-white text-[11px] border border-white/20 transition cursor-pointer"
-                >
-                  <Pencil className="w-3 h-3" />
-                  <span className="hidden sm:inline">{isNonWedding ? 'Editar Evento' : 'Editar Boda'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsRepositioning(true)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md text-white text-[11px] border border-white/20 transition cursor-pointer"
-                >
-                  <Move className="w-3 h-3" />
-                  <span className="hidden sm:inline">Encuadrar</span>
-                </button>
-                <label className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md text-white text-[11px] border border-white/20 transition cursor-pointer">
-                  <Camera className="w-3 h-3" />
-                  <span className="hidden sm:inline">{uploadingCover ? 'Subiendo...' : 'Cambiar Foto'}</span>
-                  <input type="file" accept="image/*" onChange={handleCoverUpload} disabled={uploadingCover} className="hidden" />
-                </label>
-              </>
-            )}
-          </div>
+            </div>
 
-          {/* Centered Event / Couple Title & Glassmorphic Countdown */}
-          <div className="absolute inset-0 z-[5] flex flex-col items-center justify-center text-center text-white px-5 pointer-events-none">
-            {isNonWedding && profile.eventType && (
-              <span className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-[#E5B7AE] font-medium mb-2 drop-shadow-xs">
-                {profile.eventType}
-              </span>
-            )}
-            <h1 className="font-editorial text-4xl sm:text-6xl tracking-wide drop-shadow-sm">
-              {hasPartner2 ? (
+            {/* Right 7 cols: Full-bleed Celebration Photograph */}
+            <div className="lg:col-span-7 relative rounded-3xl overflow-hidden border border-[#E7E1D8] shadow-sm bg-[#1F1D1E] min-h-[230px] sm:min-h-[290px]">
+              {useCrispFrame ? (
                 <>
-                  {profile.partner1.toUpperCase()} <span className="italic font-normal text-[#E5B7AE]">&amp;</span> {profile.partner2.toUpperCase()}
+                  <img
+                    src={profile.coverPhoto}
+                    alt=""
+                    aria-hidden="true"
+                    className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-65 brightness-75"
+                    style={{ objectPosition: `50% ${profile.coverPositionY}%` }}
+                  />
+                  <img
+                    src={profile.coverPhoto}
+                    alt="Portada del evento"
+                    onLoad={e => {
+                      const img = e.currentTarget;
+                      setCoverIsPortrait(img.naturalHeight > img.naturalWidth * 1.15);
+                    }}
+                    className="relative z-[1] w-full h-full object-contain contrast-[1.03] saturate-[1.04] transition-all duration-300"
+                  />
                 </>
               ) : (
-                profile.partner1.toUpperCase()
+                <img
+                  src={profile.coverPhoto}
+                  alt="Portada del evento"
+                  onLoad={e => {
+                    const img = e.currentTarget;
+                    setCoverIsPortrait(img.naturalHeight > img.naturalWidth * 1.15);
+                  }}
+                  className="w-full h-full object-cover contrast-[1.03] saturate-[1.04] transition-all duration-300"
+                  style={{ objectPosition: `50% ${profile.coverPositionY}%` }}
+                />
               )}
-            </h1>
-            <div className="mt-4 inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[11px] sm:text-xs tracking-wider">
-              <span>✨ FALTAN {days} DÍAS</span>
-              <span className="opacity-50">·</span>
-              <span>{formatShortDate(profile.weddingDate)}</span>
+
+              {/* Discreet top-right controls */}
+              <div className="absolute top-3.5 right-3.5 z-10 flex items-center gap-1.5">
+                {isRepositioning ? (
+                  <div className="flex items-center gap-1 bg-[#1F1D1E]/85 px-2.5 py-1 rounded-full border border-white/20 text-white text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setPersistedFitMode(useCrispFrame ? 'cover' : 'contain')}
+                      className="px-2 py-0.5 rounded-full bg-white/15 hover:bg-white/25 text-white text-[10px] font-medium cursor-pointer"
+                    >
+                      {useCrispFrame ? 'Rellenar' : 'Ajuste nítido'}
+                    </button>
+                    {!useCrispFrame && (
+                      <>
+                        <button onClick={() => nudgeCover(-10)} className="p-1 hover:text-[#D9B6BC] cursor-pointer" title="Subir">
+                          <ChevronUp className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => nudgeCover(10)} className="p-1 hover:text-[#D9B6BC] cursor-pointer" title="Bajar">
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => setIsRepositioning(false)}
+                      className="ml-1 px-2.5 py-0.5 rounded-full bg-[#6E2E3A] text-white font-medium cursor-pointer"
+                    >
+                      Listo
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={openEditProfile}
+                      title={isNonWedding ? 'Editar Evento' : 'Editar Boda'}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white/90 hover:bg-white text-[#1F1D1E] text-[11px] font-medium shadow-xs transition cursor-pointer"
+                    >
+                      <Pencil className="w-3 h-3 text-[#6E2E3A]" />
+                      <span className="hidden sm:inline">Editar</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsRepositioning(true)}
+                      title="Encuadrar foto"
+                      className="p-2 rounded-full bg-white/90 hover:bg-white text-[#1F1D1E] shadow-xs transition cursor-pointer"
+                    >
+                      <Move className="w-3.5 h-3.5 text-[#6E2E3A]" />
+                    </button>
+                    <label
+                      title="Cambiar foto"
+                      className="p-2 rounded-full bg-white/90 hover:bg-white text-[#1F1D1E] shadow-xs transition cursor-pointer"
+                    >
+                      <Camera className="w-3.5 h-3.5 text-[#6E2E3A]" />
+                      <input type="file" accept="image/*" onChange={handleCoverUpload} disabled={uploadingCover} className="hidden" />
+                    </label>
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
         );
       })()}
 
-      {/* Sub-Tabs inside Mi Boda: Resumen vs Moodboard & Look */}
-      <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
+      {/* Sub-Tabs inside Mi Evento: Resumen vs Moodboard & Look */}
+      <div className="flex items-center gap-6 border-b border-[#E7E1D8]">
         <button
           onClick={() => setSubTab('resumen')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-            subTab === 'resumen' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+          className={`pb-2.5 text-xs tracking-wide border-b-2 transition cursor-pointer ${
+            subTab === 'resumen'
+              ? 'border-[#6E2E3A] text-[#6E2E3A] font-medium'
+              : 'border-transparent text-[#6B6462] hover:text-[#1F1D1E]'
           }`}
         >
-          Resumen
+          Resumen del Estudio
         </button>
         <button
           onClick={() => setSubTab('estilo')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-            subTab === 'estilo' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+          className={`pb-2.5 text-xs tracking-wide border-b-2 transition cursor-pointer ${
+            subTab === 'estilo'
+              ? 'border-[#6E2E3A] text-[#6E2E3A] font-medium'
+              : 'border-transparent text-[#6B6462] hover:text-[#1F1D1E]'
           }`}
         >
-          Moodboard & Look
+          Moodboard &amp; Dirección Visual
         </button>
       </div>
 
       {subTab === 'resumen' ? (
-        <div className="space-y-6">
-          {/* 2. Three Editorial Metrics */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <button
-              onClick={() => onNavigate('invitados')}
-              className="text-left bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs hover:border-[#C48B81]/60 transition cursor-pointer"
-            >
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
-                01 / Asistencia
-              </span>
-              <div className="font-editorial text-3xl text-[#2B2826] mt-2">
-                {confirmedPasses} <span className="text-base text-[#8A7E72] font-light">/ {totalPasses || profile.estimatedGuests}</span>
+        <div className="space-y-5">
+          {/* 2. Architectural 2-Column Studio Grid: Plano 2D del Salón + Próximos Pasos */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            {/* Left: Live Mini Schematic Preview of Plano 2D del Salón */}
+            <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-[#E7E1D8] shadow-2xs flex flex-col justify-between space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#6E2E3A]">
+                    Arquitectura de Salón
+                  </span>
+                  <h2 className="font-editorial text-2xl text-[#1F1D1E] mt-0.5">
+                    Plano 2D del Salón
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('invitados')}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-[#6E2E3A] hover:text-[#521F29] cursor-pointer shrink-0"
+                >
+                  <span>Abrir Plano 2D</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <p className="text-xs text-[#8A7E72] mt-1 font-light">
-                {totalPasses > 0 ? 'Invitados confirmados' : 'Empieza tu lista de invitados'}
-              </p>
-            </button>
 
-            <button
-              onClick={() => onNavigate('presupuesto')}
-              className="text-left bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs hover:border-[#C48B81]/60 transition cursor-pointer"
-            >
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
-                02 / Presupuesto
-              </span>
-              <div className="font-editorial text-3xl text-[#2B2826] mt-2">
-                {totalContracted > 0 ? formatMXN(totalPaid) : 'Por iniciar'}
-              </div>
-              <p className="text-xs text-[#8A7E72] mt-1 font-light">
-                Meta: {formatMXN(profile.budgetGoal)}
-              </p>
-            </button>
-
-            <button
-              onClick={() => onNavigate('checklist')}
-              className="text-left bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs hover:border-[#C48B81]/60 transition cursor-pointer"
-            >
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#8A7E72]">
-                03 / Tu Avance
-              </span>
-              <div className="font-editorial text-3xl text-[#2B2826] mt-2">
-                {checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0}%
-              </div>
-              <p className="text-xs text-[#8A7E72] mt-1 font-light">
-                {completedCount} de {checklist.length} pasos listos
-              </p>
-            </button>
-          </div>
-
-          {/* 3. Focus of the Month (Only 3 tasks) */}
-          <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
-                  Paso a paso · Sin abrumarte
-                </span>
-                <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
-                  Tus 3 prioridades ahora
-                </h2>
-              </div>
+              {/* Crisp SVG Architectural Mini Floor Plan */}
               <button
-                onClick={() => onNavigate('checklist')}
-                className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer"
+                type="button"
+                onClick={() => onNavigate('invitados')}
+                className="w-full rounded-2xl border border-[#E7E1D8] bg-[#F8F5F0] p-4 hover:border-[#6E2E3A]/50 transition cursor-pointer text-left"
+                title="Abrir editor de Plano 2D"
               >
-                <span>Ver todo</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <svg viewBox="0 0 360 175" className="w-full h-40">
+                  <rect x="6" y="6" width="348" height="163" rx="6" fill="#FFFFFF" stroke="#1F1D1E" strokeWidth="1.2" />
+                  {/* Subtle dance floor & DJ */}
+                  <rect x="148" y="42" width="64" height="90" rx="2" fill="#F8F5F0" stroke="#D8D0C5" strokeWidth="0.9" strokeDasharray="3 2" />
+                  <text x="180" y="90" textAnchor="middle" fontSize="8" fill="#6B6462" letterSpacing="1.6">PISTA</text>
+                  {/* Schematic tables */}
+                  {[
+                    { cx: 56, cy: 52 },
+                    { cx: 112, cy: 52 },
+                    { cx: 56, cy: 122 },
+                    { cx: 112, cy: 122 },
+                    { cx: 248, cy: 52 },
+                    { cx: 304, cy: 52 },
+                    { cx: 248, cy: 122 },
+                    { cx: 304, cy: 122 }
+                  ].map((pos, idx) => (
+                    <g key={idx}>
+                      <circle
+                        cx={pos.cx}
+                        cy={pos.cy}
+                        r="16"
+                        fill={idx === 0 || idx === 5 ? '#5A232E' : '#F8F5F0'}
+                        stroke={idx === 0 || idx === 5 ? '#5A232E' : '#6B6462'}
+                        strokeWidth="1"
+                      />
+                      <text
+                        x={pos.cx}
+                        y={pos.cy + 3}
+                        textAnchor="middle"
+                        fontSize="8"
+                        fill={idx === 0 || idx === 5 ? '#FFFFFF' : '#1F1D1E'}
+                      >
+                        {idx + 1}
+                      </text>
+                    </g>
+                  ))}
+                </svg>
+                <div className="mt-2.5 flex items-center justify-between text-[11px] text-[#6B6462]">
+                  <span>
+                    {(wedding.tables || []).length} mesas configuradas · {totalPasses || profile.estimatedGuests} lugares
+                  </span>
+                  <span className="font-medium text-[#6E2E3A]">
+                    {totalContracted > 0 ? `Liquidado: ${formatMXN(totalPaid)}` : 'Ver distribución'}
+                  </span>
+                </div>
               </button>
             </div>
 
-            {nextTasks.length === 0 ? (
-              <div className="py-6 text-center text-xs text-[#577355] bg-[#FAF8F5] rounded-2xl">
-                ¡Increíble! Tienes todas tus tareas completadas.
+            {/* Right: Próximos Pasos */}
+            <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-[#E7E1D8] shadow-2xs flex flex-col justify-between space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#6E2E3A]">
+                    Operación &amp; Avance
+                  </span>
+                  <h2 className="font-editorial text-2xl text-[#1F1D1E] mt-0.5">
+                    Próximos Pasos
+                  </h2>
+                </div>
+                <button
+                  onClick={() => onNavigate('checklist')}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-[#6E2E3A] hover:text-[#521F29] cursor-pointer"
+                >
+                  <span>Ver todo</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
               </div>
-            ) : (
-              <div className="divide-y divide-[#FAF8F5]">
-                {nextTasks.map(task => (
-                  <div
-                    key={task.id}
-                    onClick={() => toggleTask(task.id)}
-                    className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#FAF8F5]/60 px-2 rounded-xl transition"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-5 h-5 rounded-full border border-[#D8CFC8] bg-white flex items-center justify-center shrink-0 hover:border-[#C48B81]">
-                        {task.completed && <CheckCircle2 className="w-4 h-4 text-[#577355]" />}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm text-[#2B2826] truncate">{task.title}</p>
-                        <p className="text-[11px] text-[#8A7E72] font-light">
-                          {task.category} · Ideal antes del {formatShortDate(task.dueDate)}
-                        </p>
+
+              {nextTasks.length === 0 ? (
+                <div className="py-10 text-center text-xs text-[#577355] bg-[#F8F5F0] rounded-2xl">
+                  ¡Increíble! Tienes todos los pasos completados.
+                </div>
+              ) : (
+                <div className="divide-y divide-[#E7E1D8]/70 flex-1">
+                  {nextTasks.map(task => (
+                    <div
+                      key={task.id}
+                      onClick={() => toggleTask(task.id)}
+                      className="py-3.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#F8F5F0]/70 px-2 rounded-xl transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-5 h-5 rounded-full border border-[#6E2E3A]/40 bg-white flex items-center justify-center shrink-0 hover:border-[#6E2E3A]">
+                          {task.completed && <CheckCircle2 className="w-4 h-4 text-[#6E2E3A]" />}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm text-[#1F1D1E] truncate">{task.title}</p>
+                          <p className="text-[11px] text-[#6B6462] font-light">
+                            {task.category} · {formatShortDate(task.dueDate)}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+              )}
+
+              <div className="pt-3 border-t border-[#E7E1D8]/70 flex items-center justify-between text-[11px] text-[#6B6462]">
+                <span>{completedCount} de {checklist.length} pasos listos</span>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('presupuesto')}
+                  className="font-medium text-[#1F1D1E] hover:text-[#6E2E3A] cursor-pointer"
+                >
+                  Finanzas: {totalContracted > 0 ? formatMXN(totalPaid) : 'Por iniciar'} →
+                </button>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* 4. Subtle Editorial VLB Coordination Offer (ONLY for Virtual Novios) */}
+          {/* 3. Subtle Editorial VLB Coordination Offer (ONLY for Virtual Novios) */}
           {flags.isVirtualNovios && (
-            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EEDAD6] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E5D1D5] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
+                <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6E2E3A]">
                   <Sparkles className="w-3 h-3" />
-                  <span>Viva la Bride · Coordinación</span>
+                  <span>Viva la Bride · Dirección Presencial</span>
                 </span>
-                <h3 className="font-editorial text-xl text-[#2B2826]">
-                  ¿Prefieres disfrutar tu boda sin preocuparte por la logística?
+                <h3 className="font-editorial text-xl text-[#1F1D1E]">
+                  ¿Prefieres disfrutar tu evento sin preocuparte por la logística?
                 </h3>
-                <p className="text-xs text-[#7D6F6B] font-light max-w-xl">
+                <p className="text-xs text-[#6B6462] font-light max-w-xl">
                   Nuestro equipo puede acompañarte con Coordinación del Día, Plan Integral o Exclusivo usando todo lo que ya organizaste aquí en Lazo.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowVlbModal(true)}
-                className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium shadow-2xs transition cursor-pointer shrink-0"
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full bg-[#1F1D1E] hover:bg-[#181514] text-white text-xs font-medium shadow-2xs transition cursor-pointer shrink-0"
               >
                 <span>Conocer Paquetes</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -441,10 +529,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
       ) : (
         /* MOODBOARD & LOOK (Emotional heart of Mi Boda) */
         <div className="space-y-5">
-          <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-5">
+          <div className="bg-white rounded-3xl p-6 border border-[#E7E1D8] shadow-2xs space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81] flex items-center gap-1.5">
+                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6E2E3A] flex items-center gap-1.5">
                   <span>Concepto Visual & Paleta</span>
                   <Pencil className="w-2.5 h-2.5 opacity-60" />
                 </span>
@@ -453,7 +541,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   value={style.vibe}
                   placeholder="Escribe el estilo de tu boda..."
                   onChange={e => updateWedding(prev => ({ ...prev, style: { ...prev.style, vibe: e.target.value } }))}
-                  className="block w-full font-editorial text-xl text-[#2B2826] mt-0.5 bg-transparent focus:outline-none border-b border-transparent hover:border-[#EFE8E1] focus:border-[#C48B81] transition pb-0.5"
+                  className="block w-full font-editorial text-xl text-[#1F1D1E] mt-0.5 bg-transparent focus:outline-none border-b border-transparent hover:border-[#E7E1D8] focus:border-[#6E2E3A] transition pb-0.5"
                 />
               </div>
 
@@ -461,7 +549,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 {style.palette.map((c, idx) => (
                   <div key={idx} className="relative group flex flex-col items-center gap-1">
                     <label
-                      className="w-9 h-9 rounded-full border border-[#EFE8E1] shadow-2xs cursor-pointer transition-transform hover:scale-105 block overflow-hidden"
+                      className="w-9 h-9 rounded-full border border-[#E7E1D8] shadow-2xs cursor-pointer transition-transform hover:scale-105 block overflow-hidden"
                       style={{ backgroundColor: c.hex }}
                       title="Haz clic para cambiar este color"
                     >
@@ -495,7 +583,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                             }
                           }))
                         }
-                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white border border-[#EFE8E1] text-[#8A7E72] hover:text-rose-600 shadow-2xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white border border-[#E7E1D8] text-[#6B6462] hover:text-rose-600 shadow-2xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
                         title="Quitar color"
                       >
                         <X className="w-2.5 h-2.5" />
@@ -516,7 +604,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                           }
                         }));
                       }}
-                      className="w-16 text-center text-[10px] text-[#8A7E72] bg-transparent border-b border-transparent hover:border-[#EFE8E1] focus:border-[#C48B81] focus:text-[#2B2826]"
+                      className="w-16 text-center text-[10px] text-[#6B6462] bg-transparent border-b border-transparent hover:border-[#E7E1D8] focus:border-[#6E2E3A] focus:text-[#1F1D1E]"
                       title="Editar nombre del color"
                     />
                   </div>
@@ -537,10 +625,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     className="flex flex-col items-center gap-1 group cursor-pointer"
                     title="Agregar color a la paleta"
                   >
-                    <span className="w-9 h-9 rounded-full border border-dashed border-[#D8CFC8] bg-[#FAF8F5] group-hover:border-[#C48B81] flex items-center justify-center text-[#8A7E72] group-hover:text-[#C48B81] transition">
+                    <span className="w-9 h-9 rounded-full border border-dashed border-[#D8CFC8] bg-[#F8F5F0] group-hover:border-[#6E2E3A] flex items-center justify-center text-[#6B6462] group-hover:text-[#6E2E3A] transition">
                       <Plus className="w-3.5 h-3.5" />
                     </span>
-                    <span className="text-[10px] text-[#8A7E72]">Agregar</span>
+                    <span className="text-[10px] text-[#6B6462]">Agregar</span>
                   </button>
                 )}
               </div>
@@ -548,7 +636,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {style.photos.map(p => (
-                <div key={p.id} className="relative group rounded-2xl overflow-hidden border border-[#EFE8E1] aspect-[4/5] bg-[#FAF8F5]">
+                <div key={p.id} className="relative group rounded-2xl overflow-hidden border border-[#E7E1D8] aspect-[4/5] bg-[#F8F5F0]">
                   <img src={p.url} alt={p.caption} className="w-full h-full object-cover" />
                   <button
                     onClick={() =>
@@ -564,8 +652,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
               ))}
 
-              <label className="rounded-2xl border border-dashed border-[#D8CFC8] bg-[#FAF8F5] hover:bg-[#F3ECE6] aspect-[4/5] flex flex-col items-center justify-center gap-2 text-[#8A7E72] cursor-pointer transition">
-                <Upload className="w-5 h-5 text-[#C48B81]" />
+              <label className="rounded-2xl border border-dashed border-[#D8CFC8] bg-[#F8F5F0] hover:bg-[#F3ECE6] aspect-[4/5] flex flex-col items-center justify-center gap-2 text-[#6B6462] cursor-pointer transition">
+                <Upload className="w-5 h-5 text-[#6E2E3A]" />
                 <span className="text-xs font-medium">Subir inspiración</span>
                 <input type="file" accept="image/*" onChange={handleUploadMoodPhoto} className="hidden" />
               </label>
@@ -573,8 +661,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs space-y-2">
-              <h3 className="font-editorial text-lg text-[#2B2826]">Look de {profile.partner1}</h3>
+            <div className="bg-white rounded-2xl p-5 border border-[#E7E1D8] shadow-2xs space-y-2">
+              <h3 className="font-editorial text-lg text-[#1F1D1E]">Look de {profile.partner1}</h3>
               <textarea
                 rows={3}
                 placeholder={
@@ -584,11 +672,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 }
                 value={style.brideLook}
                 onChange={e => updateWedding(prev => ({ ...prev, style: { ...prev.style, brideLook: e.target.value } }))}
-                className="w-full p-3 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                className="w-full p-3 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
               />
             </div>
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs space-y-2">
-              <h3 className="font-editorial text-lg text-[#2B2826]">
+            <div className="bg-white rounded-2xl p-5 border border-[#E7E1D8] shadow-2xs space-y-2">
+              <h3 className="font-editorial text-lg text-[#1F1D1E]">
                 {isNonWedding || !hasPartner2 ? 'Notas de Inspiración & Decoración' : `Look de ${profile.partner2}`}
               </h3>
               <textarea
@@ -600,7 +688,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 }
                 value={style.groomLook}
                 onChange={e => updateWedding(prev => ({ ...prev, style: { ...prev.style, groomLook: e.target.value } }))}
-                className="w-full p-3 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                className="w-full p-3 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-xs focus:outline-none focus:border-[#6E2E3A]"
               />
             </div>
           </div>
@@ -618,7 +706,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         <form onSubmit={handleSaveProfile} className="space-y-3.5">
           {isNonWedding ? (
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Nombre del Festejado / Evento *
               </label>
               <input
@@ -626,13 +714,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 required
                 value={profileForm.partner1}
                 onChange={e => setProfileForm({ ...profileForm, partner1: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                   Novia / Pareja 1 *
                 </label>
                 <input
@@ -640,11 +728,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   required
                   value={profileForm.partner1}
                   onChange={e => setProfileForm({ ...profileForm, partner1: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
                 />
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+                <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                   Novio / Pareja 2 (opcional)
                 </label>
                 <input
@@ -652,7 +740,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   placeholder="Agregar cuando gustes"
                   value={profileForm.partner2}
                   onChange={e => setProfileForm({ ...profileForm, partner2: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
                 />
               </div>
             </div>
@@ -660,7 +748,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 {isNonWedding ? 'Fecha del Evento *' : 'Fecha de la Boda *'}
               </label>
               <input
@@ -668,11 +756,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 required
                 value={profileForm.weddingDate}
                 onChange={e => setProfileForm({ ...profileForm, weddingDate: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Sede / Ciudad
               </label>
               <input
@@ -680,14 +768,14 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 placeholder="Ej. Monterrey, Hacienda..."
                 value={profileForm.city}
                 onChange={e => setProfileForm({ ...profileForm, city: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Invitados Estimados
               </label>
               <input
@@ -695,11 +783,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 min={1}
                 value={profileForm.estimatedGuests}
                 onChange={e => setProfileForm({ ...profileForm, estimatedGuests: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#8A7E72] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
                 Meta Presupuesto (MXN)
               </label>
               <input
@@ -707,7 +795,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 min={0}
                 value={profileForm.budgetGoal}
                 onChange={e => setProfileForm({ ...profileForm, budgetGoal: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
               />
             </div>
           </div>
@@ -716,13 +804,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
             <button
               type="button"
               onClick={() => setShowEditProfile(false)}
-              className="px-4 py-2 text-xs text-[#8A7E72] cursor-pointer"
+              className="px-4 py-2 text-xs text-[#6B6462] cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-6 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium cursor-pointer"
+              className="px-6 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium cursor-pointer"
             >
               Guardar Cambios
             </button>
