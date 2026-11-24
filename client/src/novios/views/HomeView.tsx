@@ -186,11 +186,11 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         const tablesCount = (wedding.tables || []).length;
 
         return (
-          <div className="bg-white rounded-[2rem] border border-[#EFE8E1] shadow-xs overflow-hidden">
+          <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-[#EFE8E1] shadow-xs overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12">
-              {/* Left 6 cols: Airy Light Editorial Panel */}
-              <div className="lg:col-span-6 p-6 sm:p-9 flex flex-col justify-between bg-gradient-to-br from-white via-[#FCF9F6] to-[#F7EDEB]/40">
-                <div className="space-y-3">
+              {/* Left 5 cols (Desktop) / Bottom (Mobile): Airy Light Editorial Panel */}
+              <div className="order-2 lg:order-1 lg:col-span-5 p-5 sm:p-8 lg:p-10 flex flex-col justify-between bg-gradient-to-br from-white via-[#FCF9F6] to-[#F7EDEB]/40">
+                <div className="space-y-2.5 sm:space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
                       {(profile.eventType || 'Boda').toUpperCase()}
@@ -205,7 +205,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     )}
                   </div>
 
-                  <h1 className="font-editorial text-4xl sm:text-[2.85rem] leading-[1.08] text-[#2B2826]">
+                  <h1 className="font-editorial text-3xl sm:text-4xl lg:text-[2.95rem] leading-[1.08] text-[#2B2826]">
                     {hasPartner2 ? (
                       <>
                         {profile.partner1} <span className="text-[#C48B81] font-light">&amp;</span> {profile.partner2}
@@ -216,8 +216,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   </h1>
 
                   <div className="flex flex-wrap items-center gap-2 pt-1">
-                    <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-[#F7EDEB] text-[#A86B60] text-xs font-medium border border-[#EEDAD6]/70">
-                      <span>✨ Faltan {days} días</span>
+                    <span className="inline-flex items-center px-3.5 py-1 rounded-full bg-[#F7EDEB] text-[#A86B60] text-xs font-medium border border-[#EEDAD6]/70">
+                      {days === 0 ? 'Hoy es el gran día' : days === 1 ? 'Falta 1 día' : `Faltan ${days} días`}
                     </span>
                     {profile.city && (
                       <span className="inline-flex items-center px-3 py-1 rounded-full bg-[#FAF8F5] text-[#7D6F6B] text-xs border border-[#EFE8E1]">
@@ -228,13 +228,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
 
                 {/* Clean 4-Metric Horizontal Strip */}
-                <div className="mt-7 pt-5 border-t border-[#EFE8E1] grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="mt-6 lg:mt-8 pt-5 border-t border-[#EFE8E1] grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
                   <button
                     type="button"
                     onClick={() => onNavigate('invitados')}
                     className="text-left group cursor-pointer"
                   >
-                    <div className="font-editorial text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition">
+                    <div className="font-editorial text-2xl lg:text-[1.65rem] text-[#2B2826] group-hover:text-[#C48B81] transition">
                       {confirmedPasses}
                     </div>
                     <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">Confirmados</div>
@@ -245,7 +245,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     onClick={() => onNavigate('invitados')}
                     className="text-left group cursor-pointer"
                   >
-                    <div className="font-editorial text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition">
+                    <div className="font-editorial text-2xl lg:text-[1.65rem] text-[#2B2826] group-hover:text-[#C48B81] transition">
                       {tablesCount}
                     </div>
                     <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">Mesas</div>
@@ -256,7 +256,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     onClick={() => onNavigate('presupuesto')}
                     className="text-left group cursor-pointer"
                   >
-                    <div className="font-editorial text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition truncate">
+                    <div className="font-editorial text-2xl lg:text-[1.65rem] text-[#2B2826] group-hover:text-[#C48B81] transition truncate">
                       {totalPaid > 0 ? formatMXN(totalPaid) : '$0'}
                     </div>
                     <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">Liquidado</div>
@@ -267,7 +267,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     onClick={() => onNavigate('checklist')}
                     className="text-left group cursor-pointer"
                   >
-                    <div className="font-editorial text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition">
+                    <div className="font-editorial text-2xl lg:text-[1.65rem] text-[#2B2826] group-hover:text-[#C48B81] transition">
                       {progressPct}%
                     </div>
                     <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">Avance</div>
@@ -275,8 +275,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
               </div>
 
-              {/* Right 6 cols: Clean Luminous Celebration Photograph */}
-              <div className="lg:col-span-6 relative bg-[#FAF8F5] min-h-[240px] sm:min-h-[300px] overflow-hidden">
+              {/* Right 7 cols (Desktop) / Top (Mobile): Wide Luminous Celebration Photograph */}
+              <div className="order-1 lg:order-2 lg:col-span-7 relative bg-[#FAF8F5] h-[220px] sm:h-[290px] lg:h-auto lg:min-h-[340px] overflow-hidden">
                 {useCrispFrame ? (
                   <>
                     <img
