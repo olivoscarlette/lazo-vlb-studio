@@ -186,113 +186,64 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
         const tablesCount = (wedding.tables || []).length;
 
         return (
-          <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-[#EFE8E1] shadow-xs overflow-hidden">
+          <div className="bg-white rounded-[1.5rem] sm:rounded-[1.75rem] border border-[#EFE8E1] shadow-2xs overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12">
-              {/* Left 5 cols (Desktop) / Bottom (Mobile): Sculptural Editorial Panel */}
-              <div className="order-2 lg:order-1 lg:col-span-5 p-5 sm:p-7 lg:p-8 flex flex-col justify-center gap-6 bg-gradient-to-br from-white via-[#FCF9F6] to-[#F7EDEB]/45">
-                <div>
-                  {/* Quiet Event Type Eyebrow */}
-                  <div className="flex items-center gap-3">
-                    <span className="h-px w-6 bg-[#C48B81]/70" />
-                    <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.26em] font-medium text-[#B3786E]">
-                      {(profile.eventType || 'Boda').toUpperCase()}
-                    </span>
-                  </div>
-
-                  {/* Protagonist Event / Couple Title */}
-                  <h1 className="font-editorial text-4xl sm:text-[2.85rem] lg:text-[3.25rem] leading-[1.04] tracking-[-0.015em] text-[#2B2826] mt-3">
-                    {hasPartner2 ? (
-                      <>
-                        {profile.partner1}{' '}
-                        <span className="text-[#C48B81] font-light">&amp;</span>{' '}
-                        {profile.partner2}
-                      </>
-                    ) : (
-                      profile.partner1
-                    )}
-                  </h1>
-
-                  {/* Sculptural Editorial Countdown + Date & Venue */}
-                  <div className="mt-5 flex items-center gap-4 sm:gap-5">
-                    <div className="font-editorial text-[2.95rem] sm:text-[3.35rem] leading-none text-[#C48B81] tracking-[-0.02em] shrink-0">
-                      {days === 0 ? '¡Hoy!' : days}
-                    </div>
-                    <div className="h-10 w-px bg-[#E5D7CE] shrink-0" />
-                    <div className="min-w-0 space-y-0.5">
-                      <div className="text-[10.5px] sm:text-[11px] uppercase tracking-[0.22em] font-semibold text-[#2B2826]">
-                        {days === 0
-                          ? isNonWedding
-                            ? 'Es tu gran celebración'
-                            : 'Es el gran día'
-                          : days === 1
-                            ? isNonWedding
-                              ? 'Día para tu celebración'
-                              : 'Día para el gran día'
-                            : isNonWedding
-                              ? 'Días para tu celebración'
-                              : 'Días para el gran día'}
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-[13px] text-[#7D6F6B] font-light">
-                        {profile.weddingDate && <span>{formatShortDate(profile.weddingDate)}</span>}
-                        {profile.weddingDate && profile.city && (
-                          <span className="text-[#D4BEB7]">·</span>
-                        )}
-                        {profile.city && <span className="truncate">{profile.city}</span>}
-                      </div>
-                    </div>
-                  </div>
+              {/* Left 5 cols (Desktop) / Bottom (Mobile): Pure Emotional Hero (Zero Redundant KPIs) */}
+              <div className="order-2 lg:order-1 lg:col-span-5 p-6 sm:p-9 lg:p-11 flex flex-col justify-center bg-gradient-to-br from-white via-[#FCF9F6] to-[#F7EDEB]/40">
+                {/* Quiet Event Type Eyebrow */}
+                <div className="flex items-center gap-3">
+                  <span className="h-px w-7 bg-[#C48B81]/75" />
+                  <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.26em] font-medium text-[#B3786E]">
+                    {(profile.eventType || 'Boda').toUpperCase()}
+                  </span>
                 </div>
 
-                {/* Tactile 4-Tile KPI Strip */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('invitados')}
-                    className="text-left group cursor-pointer rounded-2xl bg-[#FAF8F5] hover:bg-white border border-[#EFE8E1] hover:border-[#C48B81]/50 px-3.5 py-2.5 transition"
-                  >
-                    <div className="font-editorial text-xl lg:text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition">
-                      {confirmedPasses}
-                    </div>
-                    <div className="text-[10.5px] text-[#7D6F6B] font-light mt-0.5">Confirmados</div>
-                  </button>
+                {/* Protagonist Event / Couple Title */}
+                <h1 className="font-editorial text-4xl sm:text-[3.1rem] lg:text-[3.55rem] leading-[1.04] tracking-[-0.015em] text-[#2B2826] mt-4">
+                  {hasPartner2 ? (
+                    <>
+                      {profile.partner1}{' '}
+                      <span className="text-[#C48B81] font-light">&amp;</span>{' '}
+                      {profile.partner2}
+                    </>
+                  ) : (
+                    profile.partner1
+                  )}
+                </h1>
 
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('invitados')}
-                    className="text-left group cursor-pointer rounded-2xl bg-[#FAF8F5] hover:bg-white border border-[#EFE8E1] hover:border-[#C48B81]/50 px-3.5 py-2.5 transition"
-                  >
-                    <div className="font-editorial text-xl lg:text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition">
-                      {tablesCount}
+                {/* Sculptural Editorial Countdown + Date & Venue */}
+                <div className="mt-7 pt-6 border-t border-[#EFE8E1] flex items-center gap-5">
+                  <div className="font-editorial text-[3.25rem] sm:text-[3.75rem] leading-none text-[#C48B81] tracking-[-0.02em] shrink-0">
+                    {days === 0 ? '¡Hoy!' : days}
+                  </div>
+                  <div className="h-11 w-px bg-[#E5D7CE] shrink-0" />
+                  <div className="min-w-0 space-y-1">
+                    <div className="text-[10.5px] sm:text-[11px] uppercase tracking-[0.22em] font-semibold text-[#2B2826]">
+                      {days === 0
+                        ? isNonWedding
+                          ? 'Es tu gran celebración'
+                          : 'Es el gran día'
+                        : days === 1
+                          ? isNonWedding
+                            ? 'Día para tu celebración'
+                            : 'Día para el gran día'
+                          : isNonWedding
+                            ? 'Días para tu celebración'
+                            : 'Días para el gran día'}
                     </div>
-                    <div className="text-[10.5px] text-[#7D6F6B] font-light mt-0.5">Mesas</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('presupuesto')}
-                    className="text-left group cursor-pointer rounded-2xl bg-[#FAF8F5] hover:bg-white border border-[#EFE8E1] hover:border-[#C48B81]/50 px-3.5 py-2.5 transition"
-                  >
-                    <div className="font-editorial text-xl lg:text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition truncate">
-                      {totalPaid > 0 ? formatMXN(totalPaid) : '$0'}
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-[13px] text-[#7D6F6B] font-light">
+                      {profile.weddingDate && <span>{formatShortDate(profile.weddingDate)}</span>}
+                      {profile.weddingDate && profile.city && (
+                        <span className="text-[#D4BEB7]">·</span>
+                      )}
+                      {profile.city && <span className="truncate">{profile.city}</span>}
                     </div>
-                    <div className="text-[10.5px] text-[#7D6F6B] font-light mt-0.5">Liquidado</div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('checklist')}
-                    className="text-left group cursor-pointer rounded-2xl bg-[#FAF8F5] hover:bg-white border border-[#EFE8E1] hover:border-[#C48B81]/50 px-3.5 py-2.5 transition"
-                  >
-                    <div className="font-editorial text-xl lg:text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition">
-                      {progressPct}%
-                    </div>
-                    <div className="text-[10.5px] text-[#7D6F6B] font-light mt-0.5">Avance</div>
-                  </button>
+                  </div>
                 </div>
               </div>
 
               {/* Right 7 cols (Desktop) / Top (Mobile): Wide Luminous Celebration Photograph */}
-              <div className="order-1 lg:order-2 lg:col-span-7 relative bg-[#FAF8F5] h-[220px] sm:h-[280px] lg:h-auto lg:min-h-[300px] overflow-hidden">
+              <div className="order-1 lg:order-2 lg:col-span-7 relative bg-[#FAF8F5] h-[220px] sm:h-[280px] lg:h-auto lg:min-h-[320px] overflow-hidden">
                 {useCrispFrame ? (
                   <>
                     <img
@@ -413,285 +364,273 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
       </div>
 
       {subTab === 'resumen' ? (
-        <div className="space-y-5">
-          {/* 2. Real-Data 3-Column Bridal Studio Grid: Checklist (or Minuto a Minuto when 100% done) · Control Financiero · Asistencia */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
-            {/* Col 1–4: Checklist (switches automatically to Minuto a Minuto once all checklist steps are completed) */}
+        <div className="space-y-6">
+          {/* 2. Asymmetric Editorial Magazine Spread: Left 7 cols Checklist/Minuto a Minuto · Right 5 cols Unified Finance & Attendance */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            {/* LEFT 7 COLS: Próximos Pasos (auto-switches to Minuto a Minuto when 100% done) */}
             {checklist.length > 0 && nextTasks.length === 0 ? (
-              <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-4">
-                <div className="flex items-start justify-between gap-2">
+              <div className="lg:col-span-7 bg-white rounded-[1.75rem] p-6 sm:p-8 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-6">
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#577355]">
+                    <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#577355]">
                       Checklist 100% listo · El Gran Día
                     </span>
-                    <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                    <h2 className="font-editorial text-2xl sm:text-[1.75rem] text-[#2B2826] mt-1">
                       Minuto a Minuto
                     </h2>
                   </div>
                   <button
                     type="button"
                     onClick={() => onNavigate('midia')}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer shrink-0"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer shrink-0 pt-1"
                   >
-                    <span>Ver todo</span>
+                    <span>Abrir cronograma</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {(wedding.timeline || []).length === 0 ? (
-                  <div className="py-10 text-center text-xs text-[#7D6F6B] bg-[#FAF8F5] rounded-2xl px-4">
+                  <div className="py-12 text-center text-xs sm:text-sm text-[#7D6F6B] bg-[#FAF8F5] rounded-2xl px-6">
                     Aún no hay momentos cargados en tu itinerario. Agrégalos para coordinar el gran día.
                   </div>
                 ) : (
-                  <div className="divide-y divide-[#FAF8F5] flex-1">
-                    {(wedding.timeline || []).slice(0, 4).map(item => (
+                  <div className="divide-y divide-[#F3EDE7] flex-1">
+                    {(wedding.timeline || []).slice(0, 5).map(item => (
                       <button
                         key={item.id}
                         type="button"
                         onClick={() => onNavigate('midia')}
-                        className="w-full text-left py-2.5 flex items-center gap-3 hover:bg-[#FAF8F5] px-2 -mx-2 rounded-xl transition cursor-pointer"
+                        className="w-full text-left py-3.5 flex items-center justify-between gap-4 hover:bg-[#FAF8F5] px-3 -mx-3 rounded-xl transition cursor-pointer"
                       >
-                        <span className="text-xs font-semibold text-[#A86B60] bg-[#F7EDEB] px-2.5 py-1 rounded-full shrink-0">
-                          {item.time || '--:--'}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm text-[#2B2826] truncate">{item.title}</p>
-                          {item.location && (
-                            <p className="text-[11px] text-[#7D6F6B] font-light truncate">
-                              {item.location}
-                            </p>
-                          )}
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <span className="text-xs font-semibold text-[#A86B60] bg-[#F7EDEB] px-3 py-1 rounded-full shrink-0">
+                            {item.time || '--:--'}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm sm:text-[15px] text-[#2B2826]">{item.title}</p>
+                            {item.location && (
+                              <p className="text-xs text-[#7D6F6B] font-light mt-0.5">
+                                {item.location}
+                              </p>
+                            )}
+                          </div>
                         </div>
+                        <ArrowRight className="w-3.5 h-3.5 text-[#D0BEB6] shrink-0" />
                       </button>
                     ))}
                   </div>
                 )}
 
-                <div className="pt-3 border-t border-[#EFE8E1]/70 flex items-center justify-between text-xs text-[#7D6F6B]">
-                  <span>{(wedding.timeline || []).length} momentos en itinerario</span>
+                <div className="pt-4 border-t border-[#EFE8E1] flex items-center justify-between text-xs text-[#7D6F6B]">
+                  <span>{(wedding.timeline || []).length} momentos programados</span>
                   <button
                     type="button"
                     onClick={() => onNavigate('midia')}
                     className="font-medium text-[#2B2826] hover:text-[#C48B81] transition cursor-pointer"
                   >
-                    Abrir cronograma →
+                    Ver itinerario completo →
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-4">
-                <div className="flex items-start justify-between">
+              <div className="lg:col-span-7 bg-white rounded-[1.75rem] p-6 sm:p-8 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-6">
+                <div className="flex items-start justify-between gap-4">
                   <div>
-                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
+                    <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
                       Checklist
                     </span>
-                    <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                    <h2 className="font-editorial text-2xl sm:text-[1.75rem] text-[#2B2826] mt-1">
                       Próximos Pasos
                     </h2>
                   </div>
                   <button
                     type="button"
                     onClick={() => onNavigate('checklist')}
-                    className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer shrink-0 pt-1"
                   >
-                    <span>Ver todo</span>
+                    <span>Ver checklist</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 {nextTasks.length === 0 ? (
-                  <div className="py-10 text-center text-xs text-[#7D6F6B] bg-[#FAF8F5] rounded-2xl">
-                    Agrega tus primeros pendientes en el checklist.
+                  <div className="py-12 text-center text-xs sm:text-sm text-[#7D6F6B] bg-[#FAF8F5] rounded-2xl px-6">
+                    Agrega tus primeros pendientes en el checklist para comenzar.
                   </div>
                 ) : (
-                  <div className="divide-y divide-[#FAF8F5] flex-1">
+                  <div className="divide-y divide-[#F3EDE7] flex-1">
                     {nextTasks.map(task => (
                       <div
                         key={task.id}
                         onClick={() => toggleTask(task.id)}
-                        className="py-2.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#FAF8F5] px-2 -mx-2 rounded-xl transition"
+                        className="py-3.5 flex items-center justify-between gap-4 cursor-pointer hover:bg-[#FAF8F5] px-3 -mx-3 rounded-xl transition group"
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-5 h-5 rounded-full border border-[#C48B81]/50 bg-white flex items-center justify-center shrink-0 hover:border-[#C48B81]">
+                        <div className="flex items-center gap-3.5 min-w-0">
+                          <div className="w-5 h-5 rounded-full border border-[#C48B81]/55 bg-white flex items-center justify-center shrink-0 group-hover:border-[#C48B81] transition">
                             {task.completed && <CheckCircle2 className="w-4 h-4 text-[#577355]" />}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm text-[#2B2826] truncate">{task.title}</p>
-                            <p className="text-[11px] text-[#7D6F6B] font-light truncate">
-                              {task.category} · {formatShortDate(task.dueDate)}
+                            <p className="text-sm sm:text-[15px] text-[#2B2826] leading-snug">
+                              {task.title}
+                            </p>
+                            <p className="text-xs text-[#7D6F6B] font-light mt-0.5">
+                              {task.category}
                             </p>
                           </div>
                         </div>
+                        <span className="text-[11px] text-[#9A8B84] font-light shrink-0 hidden sm:inline">
+                          {formatShortDate(task.dueDate)}
+                        </span>
                       </div>
                     ))}
                   </div>
                 )}
 
-                <div className="pt-3 border-t border-[#EFE8E1]/70 flex items-center justify-between text-xs text-[#7D6F6B]">
-                  <span>{completedCount} de {checklist.length} completadas</span>
-                  <span className="font-medium text-[#577355]">
-                    {checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0}% listo
-                  </span>
+                <div className="pt-4 border-t border-[#EFE8E1] space-y-2.5">
+                  <div className="flex items-center justify-between text-xs text-[#7D6F6B]">
+                    <span>{completedCount} de {checklist.length} pasos completados</span>
+                    <span className="font-medium text-[#577355]">
+                      {checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0}% listo
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#577355] rounded-full transition-all duration-500"
+                      style={{
+                        width: `${
+                          checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0
+                        }%`
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Col 5–8: Control Financiero */}
-            <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-5">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
-                    Control Financiero
-                  </span>
-                  <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
-                    Presupuesto
-                  </h2>
+            {/* RIGHT 5 COLS: Single Unified Editorial Panel (Control Financiero + Asistencia & Mesas separated by a fine hairline) */}
+            <div className="lg:col-span-5 bg-white rounded-[1.75rem] border border-[#EFE8E1] shadow-2xs divide-y divide-[#EFE8E1] flex flex-col justify-between">
+              {/* Top Section: Control Financiero */}
+              <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+                      Control Financiero
+                    </span>
+                    <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                      Presupuesto
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('presupuesto')}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer shrink-0 pt-1"
+                  >
+                    <span>Abrir</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('presupuesto')}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer shrink-0"
-                >
-                  <span>Abrir</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
 
-              <div className="space-y-3">
-                <div className="flex items-baseline justify-between gap-2">
-                  <div className="font-editorial text-3xl text-[#2B2826] truncate">
-                    {formatMXN(totalPaid)}{' '}
-                    <span className="text-xs sm:text-sm text-[#7D6F6B] font-light">
-                      liquidado
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="font-editorial text-3xl text-[#2B2826]">
+                      {formatMXN(totalPaid)}{' '}
+                      <span className="text-xs sm:text-sm text-[#7D6F6B] font-light">
+                        liquidado
+                      </span>
+                    </div>
+                    <span className="text-xs font-medium text-[#A86B60]">
+                      {totalContracted > 0
+                        ? Math.min(100, Math.round((totalPaid / totalContracted) * 100))
+                        : 0}%
                     </span>
                   </div>
-                  <span className="text-xs font-medium text-[#A86B60] shrink-0">
-                    {totalContracted > 0 ? Math.min(100, Math.round((totalPaid / totalContracted) * 100)) : 0}%
-                  </span>
-                </div>
 
-                <div className="h-2 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#C48B81] rounded-full transition-all"
-                    style={{
-                      width: `${
-                        totalContracted > 0
-                          ? Math.min(100, Math.round((totalPaid / totalContracted) * 100))
-                          : 0
-                      }%`
-                    }}
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 pt-1">
-                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
-                    <div className="font-editorial text-sm sm:text-base text-[#2B2826] truncate">
-                      {formatMXN(profile.budgetGoal)}
-                    </div>
-                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Meta</div>
+                  <div className="h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#C48B81] rounded-full transition-all"
+                      style={{
+                        width: `${
+                          totalContracted > 0
+                            ? Math.min(100, Math.round((totalPaid / totalContracted) * 100))
+                            : 0
+                        }%`
+                      }}
+                    />
                   </div>
-                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
-                    <div className="font-editorial text-sm sm:text-base text-[#2B2826] truncate">
-                      {formatMXN(totalContracted)}
-                    </div>
-                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Contratado</div>
-                  </div>
-                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
-                    <div className="font-editorial text-sm sm:text-base text-[#A86B60] truncate">
-                      {formatMXN(Math.max(0, totalContracted - totalPaid))}
-                    </div>
-                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Por liquidar</div>
-                  </div>
-                </div>
-              </div>
 
-              <div className="pt-3 border-t border-[#EFE8E1]/70 flex items-center justify-between text-xs text-[#7D6F6B]">
-                <span>
-                  {vendors.length} {vendors.length === 1 ? 'proveedor' : 'proveedores'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('presupuesto')}
-                  className="font-medium text-[#2B2826] hover:text-[#C48B81] transition cursor-pointer"
-                >
-                  Gestionar pagos →
-                </button>
-              </div>
-            </div>
-
-            {/* Col 9–12: Asistencia & Acomodo */}
-            <div className="md:col-span-2 lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-5">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
-                    Asistencia &amp; Acomodo
-                  </span>
-                  <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
-                    Invitados &amp; Mesas
-                  </h2>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('invitados')}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer shrink-0"
-                >
-                  <span>Abrir</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Real Attendance Progress Bar */}
-              <div className="space-y-3">
-                <div className="flex items-baseline justify-between">
-                  <div className="font-editorial text-3xl text-[#2B2826]">
-                    {confirmedPasses}{' '}
-                    <span className="text-xs sm:text-sm text-[#7D6F6B] font-light">
-                      de {totalPasses || profile.estimatedGuests} confirmados
+                  <div className="flex flex-wrap items-center justify-between gap-y-1 text-xs text-[#7D6F6B] pt-1">
+                    <span>Meta {formatMXN(profile.budgetGoal)}</span>
+                    <span>
+                      Por liquidar{' '}
+                      <strong className="font-medium text-[#2B2826]">
+                        {formatMXN(Math.max(0, totalContracted - totalPaid))}
+                      </strong>
                     </span>
                   </div>
-                  <span className="text-xs font-medium text-[#577355]">
-                    {totalPasses > 0 ? Math.round((confirmedPasses / totalPasses) * 100) : 0}%
-                  </span>
-                </div>
-
-                <div className="h-2 w-full bg-[#FAF8F5] rounded-full overflow-hidden flex">
-                  <div
-                    className="h-full bg-[#577355] transition-all"
-                    style={{ width: `${totalPasses > 0 ? Math.round((confirmedPasses / totalPasses) * 100) : 0}%` }}
-                  />
-                  <div
-                    className="h-full bg-[#E5B7AE] transition-all"
-                    style={{ width: `${totalPasses > 0 ? Math.round((pendingPasses / totalPasses) * 100) : 0}%` }}
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 pt-1">
-                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
-                    <div className="font-editorial text-lg text-[#455C44]">{confirmedPasses}</div>
-                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Confirmados</div>
-                  </div>
-                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
-                    <div className="font-editorial text-lg text-[#2B2826]">{pendingPasses}</div>
-                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Pendientes</div>
-                  </div>
-                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
-                    <div className="font-editorial text-lg text-[#A86B60]">{declinedPasses}</div>
-                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Declinados</div>
-                  </div>
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-[#EFE8E1]/70 flex items-center justify-between text-xs text-[#7D6F6B]">
-                <span>
-                  {(wedding.tables || []).length} mesas · {seatedPasses} sentados
-                </span>
-                <button
-                  type="button"
-                  onClick={() => onNavigate('invitados')}
-                  className="font-medium text-[#2B2826] hover:text-[#C48B81] transition cursor-pointer"
-                >
-                  Plano 2D →
-                </button>
+              {/* Bottom Section: Asistencia & Acomodo */}
+              <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+                      Asistencia &amp; Acomodo
+                    </span>
+                    <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                      Invitados &amp; Mesas
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('invitados')}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer shrink-0 pt-1"
+                  >
+                    <span>Plano 2D</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <div className="font-editorial text-3xl text-[#2B2826]">
+                      {confirmedPasses}{' '}
+                      <span className="text-xs sm:text-sm text-[#7D6F6B] font-light">
+                        de {totalPasses || profile.estimatedGuests} confirmados
+                      </span>
+                    </div>
+                    <span className="text-xs font-medium text-[#577355]">
+                      {totalPasses > 0 ? Math.round((confirmedPasses / totalPasses) * 100) : 0}%
+                    </span>
+                  </div>
+
+                  <div className="h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden flex">
+                    <div
+                      className="h-full bg-[#577355] transition-all"
+                      style={{
+                        width: `${totalPasses > 0 ? Math.round((confirmedPasses / totalPasses) * 100) : 0}%`
+                      }}
+                    />
+                    <div
+                      className="h-full bg-[#E5B7AE] transition-all"
+                      style={{
+                        width: `${totalPasses > 0 ? Math.round((pendingPasses / totalPasses) * 100) : 0}%`
+                      }}
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-y-1 text-xs text-[#7D6F6B] pt-1">
+                    <span>
+                      {pendingPasses} pendientes · {declinedPasses} declinados
+                    </span>
+                    <span>
+                      <strong className="font-medium text-[#2B2826]">
+                        {(wedding.tables || []).length} mesas
+                      </strong>{' '}
+                      · {seatedPasses} sentados
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
