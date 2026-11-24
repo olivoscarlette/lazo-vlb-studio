@@ -3925,12 +3925,23 @@ export const GeneralDashboard: React.FC = () => {
                 <p className="text-xs text-[#7D6F6B] mt-0.5">Respaldo general del sistema, restauración de base de datos y auditoría global.</p>
               </div>
             </div>
-            <button
-              onClick={() => setActiveTab('weddings')}
-              className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
-            >
-              ← Volver a Eventos
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = '/?preview_landing=1';
+                }}
+                className="px-3.5 py-1.5 rounded-full bg-[#2B2826] hover:bg-[#191716] text-white text-xs font-medium transition cursor-pointer"
+              >
+                Ver Vista Previa de Portada →
+              </button>
+              <button
+                onClick={() => setActiveTab('weddings')}
+                className="text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
+              >
+                ← Volver a Eventos
+              </button>
+            </div>
           </div>
 
           {/* Códigos de Descuento / Cupones MercadoPago */}
