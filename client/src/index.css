@@ -330,7 +330,8 @@ table tbody tr:hover {
 }
 
 /* LAZO Editorial Utilities & Clean Warm Focus */
-.font-editorial {
+.font-editorial,
+.font-editorial * {
   font-family: 'Marcellus', Georgia, serif !important;
   letter-spacing: 0.005em;
 }
