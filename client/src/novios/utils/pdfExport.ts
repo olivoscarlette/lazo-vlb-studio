@@ -28,7 +28,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
   <title>${escapeHtml(title)} — ${escapeHtml(couple)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Prata&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Tenor+Sans&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
     @page { margin: 16mm; size: auto; }
@@ -50,7 +50,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       margin-bottom: 24px;
     }
     .brand {
-      font-family: 'Prata', Georgia, serif;
+      font-family: 'Tenor Sans', 'Inter', sans-serif;
       letter-spacing: 0.28em;
       font-size: 13px;
       color: #521F29;
@@ -58,7 +58,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       margin-bottom: 6px;
     }
     .title {
-      font-family: 'Prata', Georgia, serif;
+      font-family: 'Tenor Sans', 'Inter', sans-serif;
       font-size: 28px;
       font-weight: 400;
       margin: 0;
@@ -78,7 +78,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
     }
     .meta strong {
       display: block;
-      font-family: 'Prata', Georgia, serif;
+      font-family: 'Tenor Sans', 'Inter', sans-serif;
       font-size: 15px;
       font-weight: 400;
       color: #1F1D1E;
@@ -104,7 +104,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       font-weight: 600;
     }
     .kpi-val {
-      font-family: 'Prata', Georgia, serif;
+      font-family: 'Tenor Sans', 'Inter', sans-serif;
       font-size: 24px;
       margin-top: 4px;
       color: #1F1D1E;
@@ -149,7 +149,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       page-break-inside: avoid;
     }
     .timeline-time {
-      font-family: 'Prata', Georgia, serif;
+      font-family: 'Tenor Sans', 'Inter', sans-serif;
       font-size: 17px;
       color: #6E2E3A;
       width: 68px;
@@ -188,7 +188,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       margin-bottom: 8px;
     }
     .table-card-title {
-      font-family: 'Prata', Georgia, serif;
+      font-family: 'Tenor Sans', 'Inter', sans-serif;
       font-size: 15px;
       color: #1F1D1E;
     }

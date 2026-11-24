@@ -307,47 +307,47 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
         </div>
       </section>
 
-      {/* ==================== 3. EDITORIAL MANIFESTO STRIP ==================== */}
+      {/* ==================== 3. ARCHITECTURAL STUDIO STRIP ==================== */}
       <section className="border-y border-[#E7E1D8] bg-white">
         <div className="max-w-5xl mx-auto px-5 py-12 sm:py-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
           <div>
-            <span className="font-editorial text-3xl text-[#6E2E3A]">117</span>
+            <span className="font-editorial text-3xl text-[#6E2E3A]">Plano 2D</span>
             <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#1F1D1E] mt-1">
-              Pasos reales de planeación
+              Arquitectura real de tu salón
             </p>
             <p className="text-xs text-[#6B6462] font-light mt-1.5 leading-relaxed">
-              Checklist maestro calculado automáticamente según la fecha exacta de tu boda.
+              Diseña mesas redondas, imperiales y serpentinas, pista, DJ y barras a escala y descarga el plano listo para montaje.
             </p>
           </div>
           <div>
-            <span className="font-editorial text-3xl text-[#6E2E3A]">0</span>
+            <span className="font-editorial text-3xl text-[#6E2E3A]">Hasta 3</span>
             <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#1F1D1E] mt-1">
-              Anuncios ni ruido visual
+              Eventos en una misma cuenta
             </p>
             <p className="text-xs text-[#6B6462] font-light mt-1.5 leading-relaxed">
-              Un espacio privado, sereno y editorial — sin publicidad invasiva ni directorios que te distraigan.
+              Organiza tu despedida, civil, boda o cualquier celebración social desde un solo estudio privado.
             </p>
           </div>
           <div>
             <span className="font-editorial text-3xl text-[#6E2E3A]">1 clic</span>
             <p className="text-xs uppercase tracking-[0.16em] font-semibold text-[#1F1D1E] mt-1">
-              PDFs listos para tu salón
+              PDFs listos para tu montaje
             </p>
             <p className="text-xs text-[#6B6462] font-light mt-1.5 leading-relaxed">
-              Descarga tu lista de invitados con alergias, tu plano 2D de mesas y tu itinerario del Gran Día.
+              Exporta tu plano 2D de mesas, lista de invitados con alergias e itinerario minuto a minuto para proveedores y salón.
             </p>
           </div>
         </div>
       </section>
 
-      {/* ==================== 4. VISUAL FEATURE SHOWCASE (5 PILLARS) ==================== */}
+      {/* ==================== 4. VISUAL FEATURE SHOWCASE (6 PILLARS) ==================== */}
       <section id="experiencia-lazo" className="max-w-6xl mx-auto px-5 py-16 sm:py-24 space-y-12">
         <div className="max-w-2xl">
           <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#6E2E3A]">
-            Todo en un solo lugar
+            Estudio Integral de Eventos
           </span>
           <h2 className="font-editorial text-3xl sm:text-5xl text-[#1F1D1E] mt-2 leading-tight">
-            Diseñado para disfrutar el proceso, no sufrirlo.
+            Arquitectura, invitados y logística en un solo lugar.
           </h2>
         </div>
 
@@ -355,39 +355,39 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenLogin }) => {
           {[
             {
               num: '01',
-              title: 'Mi Boda & Moodboard',
-              desc: 'Tu portada personalizada, cuenta regresiva, prioridades del mes, paleta de colores editable, tablero de inspiración y look de novios.',
-              pill: 'Visión & Estilo'
+              title: 'Plano 2D Interactivo',
+              desc: 'Acomoda mesas redondas, imperiales y serpentina en S; agrega pista, DJ, barras o alberca, gíralos, ajusta medidas y descarga en PDF.',
+              pill: 'Exclusivo Lazo Pro'
             },
             {
               num: '02',
-              title: 'Presupuesto & Proveedores',
-              desc: 'Meta de ahorro con aportaciones familiares, comparador de 3 cotizaciones lado a lado, historial de cada abono y vista previa de contratos.',
-              pill: 'Finanzas Claras'
-            },
-            {
-              num: '03',
-              title: 'Invitados & Confirmaciones',
-              desc: 'Control exacto de pases, alergias y restricciones. Confirmación 1-clic por WhatsApp o envío automatizado en tiempo real en Lazo Pro.',
+              title: 'Invitados & WhatsApp RSVP',
+              desc: 'Control exacto de pases, alergias y asignación de mesa. Confirmación 1-clic o envío automatizado con entrega de número de mesa el día del evento.',
               pill: 'Asistencia'
             },
             {
+              num: '03',
+              title: 'Dirección Visual & Moodboard',
+              desc: 'Tablero de inspiración, paleta cromática editable y notas de estilo y decoración para alinear a todos tus proveedores.',
+              pill: 'Diseño'
+            },
+            {
               num: '04',
-              title: 'Checklist por Etapas',
-              desc: 'Resalta automáticamente tu etapa actual según los meses que faltan para tu boda para que sepas qué toca hoy sin abrumarte.',
-              pill: 'Fechas Reales'
+              title: 'Finanzas & Contratos',
+              desc: 'Control de inversión, proveedores contratados, historial de abonos, próximos vencimientos y carpeta centralizada de contratos.',
+              pill: 'Administración'
             },
             {
               num: '05',
-              title: 'El Gran Día & Ceremonias',
-              desc: 'Itinerario minuto a minuto editable con descarga en PDF, además de módulos completos opcionales para Ceremonia Civil y Religiosa.',
+              title: 'Operación del Evento',
+              desc: 'Itinerario minuto a minuto editable con exportación a PDF y módulos opcionales de Ceremonia Civil y Religiosa cuando es boda.',
               pill: 'Logística'
             },
             {
               num: '06',
-              title: 'Plano 2D Interactivo',
-              desc: 'Acomoda mesas redondas, imperiales y serpentina en S; agrega pista, DJ, alberca o espejos, gíralos, cambia su tamaño y descarga en PDF.',
-              pill: 'Exclusivo Lazo Pro'
+              title: 'Ruta de Planeación',
+              desc: 'Organización por etapas con seguimiento claro del avance para coordinar cada entrega antes de tu evento.',
+              pill: 'Seguimiento'
             }
           ].map(card => (
             <div
