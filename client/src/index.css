@@ -182,17 +182,17 @@
    CHIPS, BADGES Y PILLS ANTI-EMPALME (Web & Mobile)
    Garantiza que ningún chip se rompa en dos líneas ni se empalme con el borde
    ========================================================================== */
-span[class*="rounded-full"],
-span[class*="rounded-md"],
-span[class*="rounded-xl"],
-.badge,
-.chip,
-.pill,
-[class*="rounded-full"][class*="px-"] {
+span[class*="rounded-full"]:not(.hidden),
+span[class*="rounded-md"]:not(.hidden),
+span[class*="rounded-xl"]:not(.hidden),
+.badge:not(.hidden),
+.chip:not(.hidden),
+.pill:not(.hidden),
+[class*="rounded-full"][class*="px-"]:not(.hidden) {
   white-space: nowrap !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   line-height: 1.25 !important;
   flex-shrink: 0;
   vertical-align: middle;
