@@ -824,8 +824,10 @@ const AppContent: React.FC = () => {
     return <LoginView onBack={() => setShowLogin(false)} />;
   }
 
-  // Bloqueo temporal: solo ADMINISTRADOR puede entrar mientras se renueva el concepto
-  if (user.role !== 'ADMINISTRADOR') {
+  // Bloqueo temporal: solo ADMINISTRADOR y cuentas autorizadas de prueba pueden entrar mientras se renueva el concepto
+  const privateAccessAllowedEmails = new Set(['scarlette.olivorq@gmail.com']);
+  const normalizedCurrentEmail = String(user.email || '').toLowerCase().trim();
+  if (user.role !== 'ADMINISTRADOR' && !privateAccessAllowedEmails.has(normalizedCurrentEmail)) {
     return (
       <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center px-5 py-12 text-center">
         <div className="bg-white rounded-[2rem] border border-[#EFE8E1] shadow-sm max-w-md w-full px-8 py-12 space-y-5">

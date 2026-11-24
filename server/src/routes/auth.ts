@@ -62,8 +62,10 @@ router.post('/login', (req, res) => {
 
   loginAttempts.delete(rateKey);
 
-  // Bloqueo temporal: solo ADMINISTRADOR puede iniciar sesión
-  if (user.role !== 'ADMINISTRADOR') {
+  // Bloqueo temporal: solo ADMINISTRADOR y cuentas autorizadas de prueba pueden iniciar sesión
+  const PRIVATE_ACCESS_ALLOWED_EMAILS = new Set(['scarlette.olivorq@gmail.com']);
+  const normalizedUserEmail = String(user.email || '').toLowerCase().trim();
+  if (user.role !== 'ADMINISTRADOR' && !PRIVATE_ACCESS_ALLOWED_EMAILS.has(normalizedUserEmail)) {
     return res.status(403).json({
       error: 'La plataforma se encuentra en actualización privada. Acceso temporalmente reservado a administración.'
     });
