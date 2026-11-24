@@ -45,7 +45,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
   return (
     <div
-      className={`min-h-screen bg-[#F7F3EE] flex flex-col items-center justify-center px-5 py-10 relative overflow-hidden transition-all duration-300 ease-out ${
+      className={`min-h-screen bg-[#F2EAE3] flex flex-col items-center justify-center px-5 py-10 relative overflow-hidden transition-all duration-300 ease-out ${
         exiting ? 'opacity-0 scale-[1.02]' : 'opacity-100 scale-100'
       }`}
     >
@@ -172,11 +172,11 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           transform: rotateX(-172deg);
         }
         .lazo-cotton-paper {
-          background-color: #FAF6F0;
+          background-color: #FFFDF9;
           background-image:
-            radial-gradient(circle at 20% 15%, rgba(255,255,255,0.75) 0%, transparent 55%),
-            radial-gradient(circle at 85% 90%, rgba(226,210,198,0.32) 0%, transparent 55%),
-            url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+            radial-gradient(circle at 20% 15%, rgba(255,255,255,0.9) 0%, transparent 55%),
+            radial-gradient(circle at 85% 90%, rgba(226,210,198,0.22) 0%, transparent 55%),
+            url("data:image/svg+xml,%3Csvg viewBox='0 0 240 240' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
         }
       `}</style>
 
@@ -217,17 +217,17 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           >
             {/* Soft blush-ivory inner envelope liner visible when flap opens */}
             <div
-              className={`absolute inset-0 rounded-[4px] bg-gradient-to-b from-[#F3E4E0] to-[#F8EFEA] border border-[#E5D7CC] transition-opacity duration-500 ${
+              className={`absolute inset-0 rounded-[4px] bg-gradient-to-b from-[#F3E4E0] to-[#F8EFEA] border border-[#E5D7CC] z-0 transition-opacity duration-500 ${
                 stage === 'opening' ? 'opacity-100' : 'opacity-0'
               }`}
             />
 
-            {/* Inner stationery card rising out of the envelope pocket */}
+            {/* Inner stationery card rising cleanly OUT of the envelope pocket (behind front pocket, in front of open flap) */}
             <div
-              className={`absolute left-[6%] right-[6%] top-[8%] bottom-[10%] rounded-[3px] bg-[#FFFEFC] border border-[#EAE0D7] shadow-[0_18px_40px_-14px_rgba(43,40,38,0.18)] flex flex-col items-center justify-center px-6 transition-all duration-700 ease-out z-10 ${
+              className={`absolute left-[7%] right-[7%] top-[10%] bottom-[12%] rounded-[3px] bg-[#FFFEFC] border border-[#EAE0D7] shadow-[0_18px_40px_-14px_rgba(43,40,38,0.16)] flex flex-col items-center justify-center px-6 transition-all duration-700 delay-150 ease-out ${
                 stage === 'opening'
-                  ? '-translate-y-24 opacity-100 scale-100'
-                  : 'translate-y-2 opacity-0 scale-95'
+                  ? '-translate-y-28 opacity-100 scale-100 z-20'
+                  : 'translate-y-4 opacity-0 scale-95 z-10'
               }`}
             >
               <img
@@ -243,8 +243,8 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
             {/* Cotton-paper envelope body — crisp tailored corners (rounded-[4px]) */}
             <div
-              className={`lazo-cotton-paper relative w-full h-full rounded-[4px] border border-[#E4D9CE] shadow-[0_32px_68px_-22px_rgba(43,40,38,0.22),0_8px_20px_-8px_rgba(43,40,38,0.08)] overflow-hidden transition-opacity duration-500 ${
-                stage === 'opening' ? 'opacity-35' : 'opacity-100'
+              className={`lazo-cotton-paper relative w-full h-full rounded-[4px] border border-[#E2D5C9] shadow-[0_38px_76px_-22px_rgba(43,40,38,0.26),0_12px_26px_-10px_rgba(43,40,38,0.12)] overflow-hidden transition-opacity duration-500 z-10 ${
+                stage === 'opening' ? 'opacity-45' : 'opacity-100'
               }`}
             >
               {/* Delicate tailored paper seams (ultra-soft cotton tone shifts, NO harsh email X) */}
@@ -255,16 +255,16 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
               >
                 <defs>
                   <linearGradient id="lazoLeftPocket" x1="0" y1="0" x2="1" y2="0.5">
-                    <stop offset="0%" stopColor="#F5EFE7" />
-                    <stop offset="100%" stopColor="#FAF6F0" />
+                    <stop offset="0%" stopColor="#F8F3EC" />
+                    <stop offset="100%" stopColor="#FFFDF9" />
                   </linearGradient>
                   <linearGradient id="lazoRightPocket" x1="1" y1="0" x2="0" y2="0.5">
-                    <stop offset="0%" stopColor="#F2EAE1" />
-                    <stop offset="100%" stopColor="#F9F4EE" />
+                    <stop offset="0%" stopColor="#F5EEE6" />
+                    <stop offset="100%" stopColor="#FDFBF7" />
                   </linearGradient>
                   <linearGradient id="lazoBottomPocket" x1="0.5" y1="1" x2="0.5" y2="0">
-                    <stop offset="0%" stopColor="#FCF9F5" />
-                    <stop offset="100%" stopColor="#F6EFE8" />
+                    <stop offset="0%" stopColor="#FFFFFF" />
+                    <stop offset="100%" stopColor="#F9F4EE" />
                   </linearGradient>
                 </defs>
 
@@ -287,22 +287,12 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
                   strokeWidth="0.9"
                 />
               </svg>
-
-              {/* Subtle letterpress recipient line near bottom */}
-              <div className="absolute bottom-5 sm:bottom-6 inset-x-0 z-20 text-center pointer-events-none">
-                <p className="text-[9.5px] uppercase tracking-[0.28em] text-[#A2938B] mb-1">
-                  Para
-                </p>
-                <p className="font-editorial text-lg sm:text-[1.2rem] text-[#2B2826]/90 tracking-[0.01em]">
-                  {recipientLabel}
-                </p>
-              </div>
             </div>
 
-            {/* Deep European Pointed V-Flap with realistic soft studio shadow */}
+            {/* Deep European Pointed V-Flap with realistic soft studio shadow (drops behind card once opened) */}
             <div
-              className={`lazo-flap-3d absolute inset-x-0 top-0 h-[62%] z-30 pointer-events-none ${
-                stage === 'opening' ? 'lazo-flap-open' : ''
+              className={`lazo-flap-3d absolute inset-x-0 top-0 h-[62%] pointer-events-none ${
+                stage === 'opening' ? 'lazo-flap-open z-0' : 'z-30'
               }`}
             >
               <svg
@@ -353,11 +343,11 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
 
           {/* Subtle editorial prompt */}
           <p
-            className={`mt-8 text-[10.5px] uppercase tracking-[0.26em] text-[#9A8B83] transition-opacity duration-300 ${
+            className={`mt-8 text-[10.5px] uppercase tracking-[0.28em] text-[#8F8078] transition-opacity duration-300 ${
               stage === 'opening' ? 'opacity-0' : 'opacity-100'
             }`}
           >
-            Toca el sello de lacre para abrir
+            Toca para abrir
           </p>
         </div>
       )}
