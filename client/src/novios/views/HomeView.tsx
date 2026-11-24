@@ -193,7 +193,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 {/* Quiet Event Type Eyebrow */}
                 <div className="flex items-center gap-3">
                   <span className="h-px w-7 bg-[#C48B81]/75" />
-                  <span className="text-[10px] sm:text-[11px] uppercase tracking-[0.26em] font-medium text-[#B3786E]">
+                  <span className="text-[11px] sm:text-xs uppercase tracking-[0.22em] font-medium text-[#B3786E]">
                     {(profile.eventType || 'Boda').toUpperCase()}
                   </span>
                 </div>
@@ -216,9 +216,9 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   <div className="font-editorial text-[3.25rem] sm:text-[3.75rem] leading-none text-[#C48B81] tracking-[-0.02em] shrink-0">
                     {days === 0 ? '¡Hoy!' : days}
                   </div>
-                  <div className="h-11 w-px bg-[#E5D7CE] shrink-0" />
+                  <div className="h-12 w-px bg-[#E5D7CE] shrink-0" />
                   <div className="min-w-0 space-y-1">
-                    <div className="text-[10.5px] sm:text-[11px] uppercase tracking-[0.22em] font-semibold text-[#2B2826]">
+                    <div className="text-xs sm:text-[13px] uppercase tracking-[0.18em] font-semibold text-[#2B2826]">
                       {days === 0
                         ? isNonWedding
                           ? 'Es tu gran celebración'
@@ -231,7 +231,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                             ? 'Días para tu celebración'
                             : 'Días para el gran día'}
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-[13px] text-[#7D6F6B] font-light">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm sm:text-[15px] text-[#6E605C] font-light">
                       {profile.weddingDate && <span>{formatShortDate(profile.weddingDate)}</span>}
                       {profile.weddingDate && profile.city && (
                         <span className="text-[#D4BEB7]">·</span>
@@ -340,23 +340,23 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
       })()}
 
       {/* Sub-Tabs inside Mi Evento: Resumen vs Moodboard & Dirección Visual */}
-      <div className="flex items-center gap-6 border-b border-[#EFE8E1]">
+      <div className="flex items-center gap-7 border-b border-[#EFE8E1]">
         <button
           onClick={() => setSubTab('resumen')}
-          className={`pb-2.5 text-xs tracking-wide border-b-2 transition cursor-pointer ${
+          className={`pb-3 text-sm tracking-[0.01em] border-b-2 transition cursor-pointer ${
             subTab === 'resumen'
               ? 'border-[#C48B81] text-[#A86B60] font-medium'
-              : 'border-transparent text-[#7D6F6B] hover:text-[#2B2826]'
+              : 'border-transparent text-[#6E605C] hover:text-[#2B2826]'
           }`}
         >
           Resumen
         </button>
         <button
           onClick={() => setSubTab('estilo')}
-          className={`pb-2.5 text-xs tracking-wide border-b-2 transition cursor-pointer ${
+          className={`pb-3 text-sm tracking-[0.01em] border-b-2 transition cursor-pointer ${
             subTab === 'estilo'
               ? 'border-[#C48B81] text-[#A86B60] font-medium'
-              : 'border-transparent text-[#7D6F6B] hover:text-[#2B2826]'
+              : 'border-transparent text-[#6E605C] hover:text-[#2B2826]'
           }`}
         >
           Moodboard &amp; Look

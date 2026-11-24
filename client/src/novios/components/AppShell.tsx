@@ -151,7 +151,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
     <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] flex flex-col">
       {/* Top Minimalist Header */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5] pt-[env(safe-area-inset-top)] border-b border-[#EFE8E1]">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 h-[68px] flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => onSelectTab('inicio')}
@@ -161,22 +161,22 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
             <img
               src="/lazo-logo.png"
               alt="Lazo — Studio Planning"
-              className="h-9 sm:h-10 w-auto object-contain select-none"
+              className="h-10 sm:h-11 w-auto object-contain select-none"
             />
           </button>
 
           {/* Desktop Minimalist Underlined Atelier Nav */}
-          <nav className="hidden md:flex items-center gap-6 h-full">
+          <nav className="hidden md:flex items-center gap-8 h-full">
             {TABS.map(tab => {
               const active = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => onSelectTab(tab.id)}
-                  className={`h-full inline-flex items-center px-1 text-[13px] tracking-wide border-b-2 transition cursor-pointer ${
+                  className={`h-full inline-flex items-center px-1 text-[14.5px] tracking-[0.01em] border-b-2 transition cursor-pointer ${
                     active
                       ? 'border-[#C48B81] text-[#C48B81] font-medium'
-                      : 'border-transparent text-[#7D6F6B] hover:text-[#2B2826]'
+                      : 'border-transparent text-[#6E605C] hover:text-[#2B2826]'
                   }`}
                 >
                   {tab.label}
@@ -191,7 +191,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
                 <button
                   type="button"
                   onClick={() => setEventsOpen(prev => !prev)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#2B2826] shadow-2xs transition cursor-pointer max-w-[190px]"
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF8F5] border border-[#EFE8E1] text-[13px] text-[#2B2826] shadow-2xs transition cursor-pointer max-w-[200px]"
                   title="Mis Eventos"
                 >
                   <Sparkles className="w-3 h-3 text-[#C48B81] shrink-0" />
