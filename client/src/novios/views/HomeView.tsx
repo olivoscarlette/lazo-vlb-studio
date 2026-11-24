@@ -414,10 +414,213 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
       {subTab === 'resumen' ? (
         <div className="space-y-5">
-          {/* 2. Real-Data 3-Column Bridal Studio Bento Grid (Everything visible above the fold on laptop) */}
+          {/* 2. Real-Data 3-Column Bridal Studio Grid: Checklist (or Minuto a Minuto when 100% done) · Control Financiero · Asistencia */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
-            {/* Col 1–4: Real Invitados & Mesas Status Card */}
+            {/* Col 1–4: Checklist (switches automatically to Minuto a Minuto once all checklist steps are completed) */}
+            {checklist.length > 0 && nextTasks.length === 0 ? (
+              <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#577355]">
+                      Checklist 100% listo · El Gran Día
+                    </span>
+                    <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                      Minuto a Minuto
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('midia')}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer shrink-0"
+                  >
+                    <span>Ver todo</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {(wedding.timeline || []).length === 0 ? (
+                  <div className="py-10 text-center text-xs text-[#7D6F6B] bg-[#FAF8F5] rounded-2xl px-4">
+                    Aún no hay momentos cargados en tu itinerario. Agrégalos para coordinar el gran día.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[#FAF8F5] flex-1">
+                    {(wedding.timeline || []).slice(0, 4).map(item => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => onNavigate('midia')}
+                        className="w-full text-left py-2.5 flex items-center gap-3 hover:bg-[#FAF8F5] px-2 -mx-2 rounded-xl transition cursor-pointer"
+                      >
+                        <span className="text-xs font-semibold text-[#A86B60] bg-[#F7EDEB] px-2.5 py-1 rounded-full shrink-0">
+                          {item.time || '--:--'}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm text-[#2B2826] truncate">{item.title}</p>
+                          {item.location && (
+                            <p className="text-[11px] text-[#7D6F6B] font-light truncate">
+                              {item.location}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                <div className="pt-3 border-t border-[#EFE8E1]/70 flex items-center justify-between text-xs text-[#7D6F6B]">
+                  <span>{(wedding.timeline || []).length} momentos en itinerario</span>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('midia')}
+                    className="font-medium text-[#2B2826] hover:text-[#C48B81] transition cursor-pointer"
+                  >
+                    Abrir cronograma →
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
+                      Checklist
+                    </span>
+                    <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                      Próximos Pasos
+                    </h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('checklist')}
+                    className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer"
+                  >
+                    <span>Ver todo</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {nextTasks.length === 0 ? (
+                  <div className="py-10 text-center text-xs text-[#7D6F6B] bg-[#FAF8F5] rounded-2xl">
+                    Agrega tus primeros pendientes en el checklist.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-[#FAF8F5] flex-1">
+                    {nextTasks.map(task => (
+                      <div
+                        key={task.id}
+                        onClick={() => toggleTask(task.id)}
+                        className="py-2.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#FAF8F5] px-2 -mx-2 rounded-xl transition"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-5 h-5 rounded-full border border-[#C48B81]/50 bg-white flex items-center justify-center shrink-0 hover:border-[#C48B81]">
+                            {task.completed && <CheckCircle2 className="w-4 h-4 text-[#577355]" />}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm text-[#2B2826] truncate">{task.title}</p>
+                            <p className="text-[11px] text-[#7D6F6B] font-light truncate">
+                              {task.category} · {formatShortDate(task.dueDate)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="pt-3 border-t border-[#EFE8E1]/70 flex items-center justify-between text-xs text-[#7D6F6B]">
+                  <span>{completedCount} de {checklist.length} completadas</span>
+                  <span className="font-medium text-[#577355]">
+                    {checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0}% listo
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Col 5–8: Control Financiero */}
             <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-5">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
+                    Control Financiero
+                  </span>
+                  <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                    Presupuesto
+                  </h2>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('presupuesto')}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer shrink-0"
+                >
+                  <span>Abrir</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-baseline justify-between gap-2">
+                  <div className="font-editorial text-3xl text-[#2B2826] truncate">
+                    {formatMXN(totalPaid)}{' '}
+                    <span className="text-xs sm:text-sm text-[#7D6F6B] font-light">
+                      liquidado
+                    </span>
+                  </div>
+                  <span className="text-xs font-medium text-[#A86B60] shrink-0">
+                    {totalContracted > 0 ? Math.min(100, Math.round((totalPaid / totalContracted) * 100)) : 0}%
+                  </span>
+                </div>
+
+                <div className="h-2 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#C48B81] rounded-full transition-all"
+                    style={{
+                      width: `${
+                        totalContracted > 0
+                          ? Math.min(100, Math.round((totalPaid / totalContracted) * 100))
+                          : 0
+                      }%`
+                    }}
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 pt-1">
+                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
+                    <div className="font-editorial text-sm sm:text-base text-[#2B2826] truncate">
+                      {formatMXN(profile.budgetGoal)}
+                    </div>
+                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Meta</div>
+                  </div>
+                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
+                    <div className="font-editorial text-sm sm:text-base text-[#2B2826] truncate">
+                      {formatMXN(totalContracted)}
+                    </div>
+                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Contratado</div>
+                  </div>
+                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
+                    <div className="font-editorial text-sm sm:text-base text-[#A86B60] truncate">
+                      {formatMXN(Math.max(0, totalContracted - totalPaid))}
+                    </div>
+                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Por liquidar</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#EFE8E1]/70 flex items-center justify-between text-xs text-[#7D6F6B]">
+                <span>
+                  {vendors.length} {vendors.length === 1 ? 'proveedor' : 'proveedores'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => onNavigate('presupuesto')}
+                  className="font-medium text-[#2B2826] hover:text-[#C48B81] transition cursor-pointer"
+                >
+                  Gestionar pagos →
+                </button>
+              </div>
+            </div>
+
+            {/* Col 9–12: Asistencia & Acomodo */}
+            <div className="md:col-span-2 lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-5">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
@@ -490,133 +693,6 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   Plano 2D →
                 </button>
               </div>
-            </div>
-
-            {/* Col 5–8: Próximos Pasos */}
-            <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
-                    Checklist
-                  </span>
-                  <h2 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
-                    Próximos Pasos
-                  </h2>
-                </div>
-                <button
-                  onClick={() => onNavigate('checklist')}
-                  className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer"
-                >
-                  <span>Ver todo</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {nextTasks.length === 0 ? (
-                <div className="py-10 text-center text-xs text-[#577355] bg-[#FAF8F5] rounded-2xl">
-                  ¡Increíble! Tienes todos los pasos completados.
-                </div>
-              ) : (
-                <div className="divide-y divide-[#FAF8F5] flex-1">
-                  {nextTasks.map(task => (
-                    <div
-                      key={task.id}
-                      onClick={() => toggleTask(task.id)}
-                      className="py-2.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#FAF8F5] px-2 -mx-2 rounded-xl transition"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-5 h-5 rounded-full border border-[#C48B81]/50 bg-white flex items-center justify-center shrink-0 hover:border-[#C48B81]">
-                          {task.completed && <CheckCircle2 className="w-4 h-4 text-[#577355]" />}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm text-[#2B2826] truncate">{task.title}</p>
-                          <p className="text-[11px] text-[#7D6F6B] font-light truncate">
-                            {task.category} · {formatShortDate(task.dueDate)}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="pt-3 border-t border-[#EFE8E1]/70 flex items-center justify-between text-xs text-[#7D6F6B]">
-                <span>{completedCount} de {checklist.length} completadas</span>
-                <span className="font-medium text-[#577355]">
-                  {checklist.length > 0 ? Math.round((completedCount / checklist.length) * 100) : 0}% listo
-                </span>
-              </div>
-            </div>
-
-            {/* Col 9–12: Stacked Control Financiero + El Gran Día */}
-            <div className="md:col-span-2 lg:col-span-4 flex flex-col gap-5">
-              <button
-                type="button"
-                onClick={() => onNavigate('presupuesto')}
-                className="flex-1 text-left bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition flex flex-col justify-between gap-4 cursor-pointer"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
-                      Control Financiero
-                    </span>
-                    <div className="font-editorial text-2xl text-[#2B2826] mt-0.5">
-                      {totalContracted > 0 ? formatMXN(totalPaid) : 'Presupuesto'}
-                    </div>
-                    <p className="text-xs text-[#7D6F6B] font-light mt-0.5">
-                      {totalContracted > 0
-                        ? `Liquidado de ${formatMXN(totalContracted)} contratado`
-                        : `Meta definida: ${formatMXN(profile.budgetGoal)}`}
-                    </p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-[#C48B81] shrink-0 mt-1" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-[#C48B81] rounded-full transition-all"
-                      style={{
-                        width: `${
-                          totalContracted > 0
-                            ? Math.min(100, Math.round((totalPaid / totalContracted) * 100))
-                            : 0
-                        }%`
-                      }}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between text-[11px] text-[#7D6F6B]">
-                    <span>
-                      {vendors.length} {vendors.length === 1 ? 'proveedor' : 'proveedores'}
-                    </span>
-                    <span>Meta {formatMXN(profile.budgetGoal)}</span>
-                  </div>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => onNavigate('midia')}
-                className="flex-1 text-left bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition flex flex-col justify-between gap-3 cursor-pointer"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
-                      El Gran Día
-                    </span>
-                    <div className="font-editorial text-2xl text-[#2B2826] mt-0.5">
-                      {(wedding.timeline || []).length} momentos
-                    </div>
-                    <p className="text-xs text-[#7D6F6B] font-light mt-0.5">
-                      Itinerario minuto a minuto y logística descargable en PDF
-                    </p>
-                  </div>
-                  <ArrowRight className="w-4 h-4 text-[#C48B81] shrink-0 mt-1" />
-                </div>
-                <div className="pt-2 border-t border-[#EFE8E1]/70 text-xs font-medium text-[#2B2826]">
-                  Abrir cronograma →
-                </div>
-              </button>
             </div>
           </div>
 
