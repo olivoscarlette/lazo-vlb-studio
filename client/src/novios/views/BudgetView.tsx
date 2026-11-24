@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Plus, Trash2, Check, MessageSquare, Scale, Wallet, Sparkles, Upload, FileCheck, Edit3, Calendar, Receipt, Eye, Download
+  Plus, Trash2, Check, MessageSquare, Scale, Wallet, Sparkles, Upload, FileCheck, Edit3, Calendar, Receipt, Eye, Download, ArrowRight
 } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
 import { formatMXN, formatShortDate } from '../data/seedWedding';
@@ -69,6 +69,8 @@ export const BudgetView: React.FC = () => {
 
   // File Preview Modal
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const [editingGoal, setEditingGoal] = useState(false);
+  const [goalDraft, setGoalDraft] = useState('');
 
   if (!wedding) return null;
 
@@ -324,8 +326,8 @@ export const BudgetView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#7D6F6B]">
-            Finanzas & Ahorro
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
+            Control Financiero
           </span>
           <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-1">
             Presupuesto
@@ -338,7 +340,7 @@ export const BudgetView: React.FC = () => {
             className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
           >
             <Scale className="w-3.5 h-3.5 text-[#C48B81]" />
-            <span>Comparar Cotización</span>
+            <span>Nueva Cotización</span>
           </button>
           <button
             onClick={() => setShowVendorModal(true)}
@@ -350,8 +352,8 @@ export const BudgetView: React.FC = () => {
         </div>
       </div>
 
-      {/* 4 Sub-Tabs Pill */}
-      <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs overflow-x-auto max-w-full no-scrollbar">
+      {/* Minimalist Underlined Sub-Tabs */}
+      <div className="flex items-center gap-6 border-b border-[#EFE8E1] overflow-x-auto max-w-full no-scrollbar">
         {[
           { id: 'resumen', label: 'Resumen' },
           { id: 'comparador', label: `Cotizaciones (${quotes.length})` },
@@ -361,8 +363,10 @@ export const BudgetView: React.FC = () => {
           <button
             key={t.id}
             onClick={() => setSubTab(t.id as any)}
-            className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition cursor-pointer ${
-              subTab === t.id ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+            className={`pb-2.5 text-xs tracking-wide whitespace-nowrap border-b-2 transition cursor-pointer ${
+              subTab === t.id
+                ? 'border-[#C48B81] text-[#A86B60] font-medium'
+                : 'border-transparent text-[#7D6F6B] hover:text-[#2B2826]'
             }`}
           >
             {t.label}
@@ -371,44 +375,289 @@ export const BudgetView: React.FC = () => {
       </div>
 
       {/* SUB-TAB 1: RESUMEN FINANCIERO */}
-      {subTab === 'resumen' && (
-        <div className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs">
-              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#7D6F6B]">
-                Presupuesto Meta
-              </span>
-              <div className="font-editorial text-3xl text-[#2B2826] mt-1">{formatMXN(profile.budgetGoal)}</div>
-              <div className="mt-3 h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
-                <div className="h-full bg-[#C48B81] rounded-full" style={{ width: `${budgetUsedPct}%` }} />
+      {subTab === 'resumen' && (() => {
+        const paidPct = totalContracted > 0 ? Math.min(100, Math.round((totalPaid / totalContracted) * 100)) : 0;
+        const availableBudget = profile.budgetGoal - totalContracted;
+
+        // Category breakdown
+        const catMap = new Map<string, { total: number; paid: number; count: number }>();
+        vendors.forEach(v => {
+          const cat = v.category || 'Otro';
+          const prev = catMap.get(cat) || { total: 0, paid: 0, count: 0 };
+          catMap.set(cat, {
+            total: prev.total + (v.totalCost || 0),
+            paid: prev.paid + (v.paidAmount || 0),
+            count: prev.count + 1
+          });
+        });
+        const categoryBreakdown = Array.from(catMap.entries())
+          .map(([category, info]) => ({ category, ...info }))
+          .sort((a, b) => b.total - a.total);
+
+        // Upcoming open balances
+        const pendingVendors = vendors
+          .filter(v => (v.totalCost || 0) > (v.paidAmount || 0))
+          .sort((a, b) => (a.nextDueDate || '9999-12-31').localeCompare(b.nextDueDate || '9999-12-31'));
+
+        return (
+          <div className="space-y-5">
+            {/* 3 Executive KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#7D6F6B]">
+                    Presupuesto Meta
+                  </span>
+                  {!editingGoal && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGoalDraft(String(profile.budgetGoal || 0));
+                        setEditingGoal(true);
+                      }}
+                      className="p-1 rounded-full text-[#7D6F6B] hover:text-[#C48B81] hover:bg-[#FAF8F5] transition cursor-pointer"
+                      title="Editar presupuesto meta"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
+                {editingGoal ? (
+                  <form
+                    onSubmit={e => {
+                      e.preventDefault();
+                      const val = Math.max(0, Number(goalDraft) || 0);
+                      updateWedding(prev => ({ ...prev, profile: { ...prev.profile, budgetGoal: val } }));
+                      setEditingGoal(false);
+                    }}
+                    className="flex items-center gap-2 mt-2"
+                  >
+                    <input
+                      type="number"
+                      min={0}
+                      autoFocus
+                      value={goalDraft}
+                      onChange={e => setGoalDraft(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-xl bg-[#FAF8F5] border border-[#C48B81] text-sm font-medium text-[#2B2826]"
+                    />
+                    <button
+                      type="submit"
+                      className="p-2 rounded-xl bg-[#2B2826] text-white cursor-pointer shrink-0"
+                      title="Guardar"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                    </button>
+                  </form>
+                ) : (
+                  <div className="font-editorial text-3xl text-[#2B2826] mt-1.5">
+                    {formatMXN(profile.budgetGoal)}
+                  </div>
+                )}
+
+                <div className="mt-3.5 h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
+                  <div className="h-full bg-[#C48B81] rounded-full transition-all" style={{ width: `${budgetUsedPct}%` }} />
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[11px] text-[#7D6F6B] font-light">
+                  <span>{budgetUsedPct}% contratado</span>
+                  <span>
+                    {availableBudget >= 0
+                      ? `Disponible: ${formatMXN(availableBudget)}`
+                      : `Excedido: ${formatMXN(Math.abs(availableBudget))}`}
+                  </span>
+                </div>
               </div>
-              <p className="text-[11px] text-[#7D6F6B] mt-1.5 font-light">
-                {budgetUsedPct}% asignado ({formatMXN(totalContracted)})
-              </p>
+
+              <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between">
+                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#577355]">
+                  Total Liquidado
+                </span>
+                <div className="font-editorial text-3xl text-[#455C44] mt-1.5">{formatMXN(totalPaid)}</div>
+                <div className="mt-3.5 h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
+                  <div className="h-full bg-[#577355] rounded-full transition-all" style={{ width: `${paidPct}%` }} />
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[11px] text-[#577355] font-light">
+                  <span>{paidPct}% pagado</span>
+                  <span>Contratado: {formatMXN(totalContracted)}</span>
+                </div>
+              </div>
+
+              <div className="bg-[#2B2826] text-white rounded-3xl p-5 sm:p-6 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-[#C48B81]/15 blur-2xl" />
+                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#E5B7AE]">
+                  Saldo Por Liquidar
+                </span>
+                <div className="font-editorial text-3xl text-white mt-1.5">{formatMXN(totalRemaining)}</div>
+                <div className="mt-4 pt-3 border-t border-white/15 flex items-center justify-between text-[11px] text-white/75">
+                  <span>
+                    {pendingVendors.length} de {vendors.length} proveedores con saldo
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSubTab('proveedores')}
+                    className="inline-flex items-center gap-1 text-[#E5B7AE] hover:text-white font-medium cursor-pointer"
+                  >
+                    <span>Ver</span>
+                    <ArrowRight className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs">
-              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#577355]">
-                Total Liquidado
-              </span>
-              <div className="font-editorial text-3xl text-[#455C44] mt-1">{formatMXN(totalPaid)}</div>
-              <p className="text-[11px] text-[#577355] mt-2 font-light">
-                Contratado: {formatMXN(totalContracted)}
-              </p>
-            </div>
+            {/* 2-Column Studio Financial Insights */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              {/* Left: Category Breakdown */}
+              <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
+                      Inversión por Rubro
+                    </span>
+                    <h3 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                      Desglose por Categoría
+                    </h3>
+                  </div>
+                  <span className="text-[11px] text-[#7D6F6B] font-light">
+                    {categoryBreakdown.length} {categoryBreakdown.length === 1 ? 'rubro' : 'rubros'}
+                  </span>
+                </div>
 
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs">
-              <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#A86B60]">
-                Por Liquidar
-              </span>
-              <div className="font-editorial text-3xl text-[#A86B60] mt-1">{formatMXN(totalRemaining)}</div>
-              <p className="text-[11px] text-[#7D6F6B] mt-2 font-light">
-                En {vendors.length} {vendors.length === 1 ? 'proveedor' : 'proveedores'}
-              </p>
+                {categoryBreakdown.length === 0 ? (
+                  <div className="py-10 text-center space-y-2 bg-[#FAF8F5] rounded-2xl border border-dashed border-[#EFE8E1]">
+                    <p className="text-xs text-[#7D6F6B]">Aún no tienes proveedores contratados.</p>
+                    <button
+                      type="button"
+                      onClick={() => setShowVendorModal(true)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-[#C48B81] hover:underline cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Agregar primer proveedor</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3.5 pt-1">
+                    {categoryBreakdown.map(item => {
+                      const share = totalContracted > 0 ? Math.round((item.total / totalContracted) * 100) : 0;
+                      const catPaidPct = item.total > 0 ? Math.min(100, Math.round((item.paid / item.total) * 100)) : 0;
+                      return (
+                        <div key={item.category} className="space-y-1.5">
+                          <div className="flex items-center justify-between gap-2 text-xs">
+                            <span className="font-medium text-[#2B2826] truncate">
+                              {item.category}{' '}
+                              <span className="text-[11px] text-[#7D6F6B] font-light">({item.count})</span>
+                            </span>
+                            <span className="text-[#2B2826] font-medium shrink-0">
+                              {formatMXN(item.total)}{' '}
+                              <span className="text-[11px] text-[#7D6F6B] font-light">· {share}%</span>
+                            </span>
+                          </div>
+                          <div className="h-2 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-[#C48B81] rounded-full transition-all"
+                              style={{ width: `${Math.max(share, 3)}%` }}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-[#7D6F6B] font-light">
+                            <span>Pagado: {formatMXN(item.paid)} ({catPaidPct}%)</span>
+                            <span>Resta: {formatMXN(Math.max(0, item.total - item.paid))}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Pending Balances & Recent Payments */}
+              <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-5">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
+                        Calendario de Saldos
+                      </span>
+                      <h3 className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                        Próximos Pagos
+                      </h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSubTab('proveedores')}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer"
+                    >
+                      <span>Ver todos</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  {pendingVendors.length === 0 ? (
+                    <div className="py-8 text-center text-xs text-[#577355] bg-[#FAF8F5] rounded-2xl">
+                      {vendors.length === 0
+                        ? 'Registra tus proveedores contratados para llevar el control de tus pagos.'
+                        : '¡Excelente! No tienes saldos pendientes por liquidar.'}
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-[#FAF8F5]">
+                      {pendingVendors.slice(0, 5).map(v => {
+                        const rem = Math.max(0, (v.totalCost || 0) - (v.paidAmount || 0));
+                        return (
+                          <button
+                            key={v.id}
+                            type="button"
+                            onClick={() => openVendorDetail(v)}
+                            className="w-full py-3 px-2 -mx-2 rounded-xl hover:bg-[#FAF8F5] flex items-center justify-between gap-3 text-left transition cursor-pointer"
+                          >
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-[#2B2826] truncate">{v.name}</div>
+                              <div className="text-[11px] text-[#7D6F6B] font-light flex items-center gap-1.5 mt-0.5">
+                                <span>{v.category}</span>
+                                {v.nextDueDate && (
+                                  <>
+                                    <span>·</span>
+                                    <span className="inline-flex items-center gap-1">
+                                      <Calendar className="w-3 h-3 text-[#C48B81]" />
+                                      {formatShortDate(v.nextDueDate)}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <div className="text-sm font-semibold text-[#A86B60]">{formatMXN(rem)}</div>
+                              <div className="text-[10px] text-[#7D6F6B]">por liquidar</div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Recent Payments Mini Strip */}
+                {allPayments.length > 0 && (
+                  <div className="pt-4 border-t border-[#EFE8E1] space-y-2.5">
+                    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-semibold text-[#577355]">
+                      <Receipt className="w-3.5 h-3.5" />
+                      <span>Últimos abonos registrados</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {allPayments.slice(0, 3).map(p => (
+                        <div key={p.id} className="flex items-center justify-between text-xs">
+                          <span className="text-[#2B2826] truncate pr-2">
+                            {p.vendorName}{' '}
+                            <span className="text-[#7D6F6B] font-light">· {p.concept}</span>
+                          </span>
+                          <span className="font-medium text-[#455C44] shrink-0">+{formatMXN(p.amount)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* SUB-TAB 2: COMPARADOR DE COTIZACIONES */}
       {subTab === 'comparador' && (
