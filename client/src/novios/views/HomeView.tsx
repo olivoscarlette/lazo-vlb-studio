@@ -662,29 +662,34 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
           )}
         </div>
       ) : (
-        /* MOODBOARD & LOOK (Emotional heart of Mi Boda) */
-        <div className="space-y-5">
-          <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex-1 min-w-0">
-                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81] flex items-center gap-1.5">
-                  <span>Concepto Visual & Paleta</span>
-                  <Pencil className="w-2.5 h-2.5 opacity-60" />
+        /* MOODBOARD & LOOK (Luxury Atelier Pantone & Masonry Lookbook) */
+        <div className="space-y-6">
+          <div className="bg-white rounded-[1.75rem] p-6 sm:p-8 lg:p-10 border border-[#EFE8E1] shadow-2xs space-y-8">
+            {/* Editorial Moodboard Header + Pantone Swatch Bar */}
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-7 border-b border-[#EFE8E1]">
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81] flex items-center gap-1.5">
+                  <span>Dirección Visual &amp; Paleta</span>
+                  <Pencil className="w-3 h-3 opacity-60" />
                 </span>
                 <input
                   type="text"
                   value={style.vibe}
-                  placeholder="Escribe el estilo de tu boda..."
+                  placeholder="Nombre del concepto (ej. Cherry Pink, Jardín Toscano)..."
                   onChange={e => updateWedding(prev => ({ ...prev, style: { ...prev.style, vibe: e.target.value } }))}
-                  className="block w-full font-editorial text-xl text-[#2B2826] mt-0.5 bg-transparent focus:outline-none border-b border-transparent hover:border-[#EFE8E1] focus:border-[#C48B81] transition pb-0.5"
+                  className="block w-full font-editorial text-3xl sm:text-4xl text-[#2B2826] bg-transparent focus:outline-none border-b border-transparent hover:border-[#EFE8E1] focus:border-[#C48B81] transition pb-1"
                 />
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 shrink-0">
+              {/* Pantone-style Luxury Color Swatch Cards */}
+              <div className="flex flex-wrap items-end gap-2.5 sm:gap-3 shrink-0">
                 {style.palette.map((c, idx) => (
-                  <div key={idx} className="relative group flex flex-col items-center gap-1">
+                  <div
+                    key={idx}
+                    className="relative group w-[74px] sm:w-[82px] rounded-xl bg-white border border-[#EAE0D7] shadow-2xs overflow-hidden transition hover:-translate-y-0.5"
+                  >
                     <label
-                      className="w-9 h-9 rounded-full border border-[#EFE8E1] shadow-2xs cursor-pointer transition-transform hover:scale-105 block overflow-hidden"
+                      className="block w-full h-11 sm:h-12 cursor-pointer"
                       style={{ backgroundColor: c.hex }}
                       title="Haz clic para cambiar este color"
                     >
@@ -718,30 +723,35 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                             }
                           }))
                         }
-                        className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-white border border-[#EFE8E1] text-[#7D6F6B] hover:text-rose-600 shadow-2xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                        className="absolute top-1 right-1 w-4 h-4 rounded-full bg-white/90 text-[#2B2826] hover:text-rose-600 shadow-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer"
                         title="Quitar color"
                       >
                         <X className="w-2.5 h-2.5" />
                       </button>
                     )}
-                    <input
-                      type="text"
-                      value={c.name}
-                      onChange={e => {
-                        const nextName = e.target.value;
-                        updateWedding(prev => ({
-                          ...prev,
-                          style: {
-                            ...prev.style,
-                            palette: prev.style.palette.map((item, i) =>
-                              i === idx ? { ...item, name: nextName } : item
-                            )
-                          }
-                        }));
-                      }}
-                      className="w-16 text-center text-[10px] text-[#7D6F6B] bg-transparent border-b border-transparent hover:border-[#EFE8E1] focus:border-[#C48B81] focus:text-[#2B2826]"
-                      title="Editar nombre del color"
-                    />
+                    <div className="px-1.5 py-1.5 bg-white text-center">
+                      <input
+                        type="text"
+                        value={c.name}
+                        onChange={e => {
+                          const nextName = e.target.value;
+                          updateWedding(prev => ({
+                            ...prev,
+                            style: {
+                              ...prev.style,
+                              palette: prev.style.palette.map((item, i) =>
+                                i === idx ? { ...item, name: nextName } : item
+                              )
+                            }
+                          }));
+                        }}
+                        className="w-full text-center text-[10.5px] font-medium text-[#2B2826] bg-transparent border-b border-transparent hover:border-[#EFE8E1] focus:border-[#C48B81] leading-tight"
+                        title="Editar nombre del color"
+                      />
+                      <div className="text-[9px] uppercase tracking-wider text-[#9A8B84] mt-0.5 font-mono">
+                        {c.hex}
+                      </div>
+                    </div>
                   </div>
                 ))}
 
@@ -757,49 +767,80 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                         }
                       }))
                     }
-                    className="flex flex-col items-center gap-1 group cursor-pointer"
+                    className="w-[74px] sm:w-[82px] h-[86px] sm:h-[90px] rounded-xl border border-dashed border-[#D8CFC8] bg-[#FAF8F5] hover:bg-[#F5EFEB] hover:border-[#C48B81] flex flex-col items-center justify-center gap-1.5 text-[#7D6F6B] hover:text-[#C48B81] transition cursor-pointer"
                     title="Agregar color a la paleta"
                   >
-                    <span className="w-9 h-9 rounded-full border border-dashed border-[#D8CFC8] bg-[#FAF8F5] group-hover:border-[#C48B81] flex items-center justify-center text-[#7D6F6B] group-hover:text-[#C48B81] transition">
-                      <Plus className="w-3.5 h-3.5" />
-                    </span>
-                    <span className="text-[10px] text-[#7D6F6B]">Agregar</span>
+                    <Plus className="w-4 h-4" />
+                    <span className="text-[10px] font-medium">Color</span>
                   </button>
                 )}
+
+                <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium shadow-2xs transition cursor-pointer ml-1 self-center">
+                  <Upload className="w-3.5 h-3.5 text-[#E5B7AE]" />
+                  <span>Subir foto</span>
+                  <input type="file" accept="image/*" onChange={handleUploadMoodPhoto} className="hidden" />
+                </label>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {style.photos.map(p => (
-                <div key={p.id} className="relative group rounded-2xl overflow-hidden border border-[#EFE8E1] aspect-[4/5] bg-[#FAF8F5]">
-                  <img src={p.url} alt={p.caption} className="w-full h-full object-cover" />
-                  <button
-                    onClick={() =>
-                      updateWedding(prev => ({
-                        ...prev,
-                        style: { ...prev.style, photos: prev.style.photos.filter(x => x.id !== p.id) }
-                      }))
-                    }
-                    className="absolute top-2 right-2 p-1.5 rounded-full bg-black/50 text-white opacity-0 group-hover:opacity-100 transition cursor-pointer"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+            {/* Organic Masonry Editorial Lookbook */}
+            {style.photos.length === 0 ? (
+              <label className="rounded-2xl border border-dashed border-[#D8CFC8] bg-[#FAF8F5] hover:bg-[#F5EFEB] py-16 px-6 flex flex-col items-center justify-center gap-3 text-center text-[#7D6F6B] cursor-pointer transition">
+                <div className="w-12 h-12 rounded-full bg-white border border-[#EFE8E1] flex items-center justify-center">
+                  <Upload className="w-5 h-5 text-[#C48B81]" />
                 </div>
-              ))}
-
-              <label className="rounded-2xl border border-dashed border-[#D8CFC8] bg-[#FAF8F5] hover:bg-[#F3ECE6] aspect-[4/5] flex flex-col items-center justify-center gap-2 text-[#7D6F6B] cursor-pointer transition">
-                <Upload className="w-5 h-5 text-[#C48B81]" />
-                <span className="text-xs font-medium">Subir inspiración</span>
+                <div>
+                  <div className="font-editorial text-xl text-[#2B2826]">Tu Moodboard Editorial</div>
+                  <p className="text-xs text-[#7D6F6B] font-light mt-1">
+                    Sube referencias de flores, mesa, vestido, iluminación o papelería para dar vida a tu visión.
+                  </p>
+                </div>
                 <input type="file" accept="image/*" onChange={handleUploadMoodPhoto} className="hidden" />
               </label>
-            </div>
+            ) : (
+              <div className="columns-2 md:columns-3 gap-4 space-y-4">
+                {style.photos.map(p => (
+                  <div
+                    key={p.id}
+                    className="break-inside-avoid relative group rounded-2xl overflow-hidden border border-[#EFE8E1] bg-[#FAF8F5] shadow-2xs"
+                  >
+                    <img
+                      src={p.url}
+                      alt={p.caption || 'Inspiración del evento'}
+                      className="w-full h-auto object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateWedding(prev => ({
+                          ...prev,
+                          style: { ...prev.style, photos: prev.style.photos.filter(x => x.id !== p.id) }
+                        }))
+                      }
+                      className="absolute top-2.5 right-2.5 p-2 rounded-full bg-white/90 text-[#2B2826] hover:text-rose-600 shadow-sm opacity-0 group-hover:opacity-100 transition cursor-pointer"
+                      title="Eliminar foto"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs space-y-2">
-              <h3 className="font-editorial text-lg text-[#2B2826]">Look de {profile.partner1}</h3>
+          {/* Editorial Styling & Creative Direction Notes */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="bg-white rounded-[1.5rem] p-6 border border-[#EFE8E1] shadow-2xs space-y-3">
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
+                  Estilismo
+                </span>
+                <h3 className="font-editorial text-xl text-[#2B2826] mt-0.5">
+                  Look de {profile.partner1}
+                </h3>
+              </div>
               <textarea
-                rows={3}
+                rows={4}
                 placeholder={
                   isNonWedding || !hasPartner2
                     ? 'Vestido o outfit, peinado, maquillaje, accesorios, zapatos...'
@@ -807,15 +848,20 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 }
                 value={style.brideLook}
                 onChange={e => updateWedding(prev => ({ ...prev, style: { ...prev.style, brideLook: e.target.value } }))}
-                className="w-full p-3 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                className="w-full p-4 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm leading-relaxed focus:outline-none focus:border-[#C48B81]"
               />
             </div>
-            <div className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs space-y-2">
-              <h3 className="font-editorial text-lg text-[#2B2826]">
-                {isNonWedding || !hasPartner2 ? 'Notas de Inspiración & Decoración' : `Look de ${profile.partner2}`}
-              </h3>
+            <div className="bg-white rounded-[1.5rem] p-6 border border-[#EFE8E1] shadow-2xs space-y-3">
+              <div>
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
+                  {isNonWedding || !hasPartner2 ? 'Dirección Creativa' : 'Estilismo'}
+                </span>
+                <h3 className="font-editorial text-xl text-[#2B2826] mt-0.5">
+                  {isNonWedding || !hasPartner2 ? 'Notas de Inspiración & Decoración' : `Look de ${profile.partner2}`}
+                </h3>
+              </div>
               <textarea
-                rows={3}
+                rows={4}
                 placeholder={
                   isNonWedding || !hasPartner2
                     ? 'Flores, montaje, detalles especiales, dress code, música o ideas clave...'
@@ -823,7 +869,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 }
                 value={style.groomLook}
                 onChange={e => updateWedding(prev => ({ ...prev, style: { ...prev.style, groomLook: e.target.value } }))}
-                className="w-full p-3 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                className="w-full p-4 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm leading-relaxed focus:outline-none focus:border-[#C48B81]"
               />
             </div>
           </div>
