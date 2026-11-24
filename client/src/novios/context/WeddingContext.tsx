@@ -20,7 +20,8 @@ import {
 import {
   createInitialWeddingState,
   DEFAULT_COVER_PHOTOS,
-  generateChecklistForDate
+  generateChecklistForDate,
+  computeSmartTaskDueDate
 } from '../data/seedWedding';
 
 const CURRENT_STUDIO_VERSION = 2;
@@ -238,19 +239,27 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
   const dbTasks: any[] = seed.tasks || [];
   const checklist: ChecklistItem[] =
     dbTasks.length > 0
-      ? dbTasks.map((c: any) => ({
-          id: String(c.id),
-          title: c.title || 'Tarea',
-          category: c.category || '12 - 16 meses',
-          monthsBefore: 0,
-          dueDate: c.due_date || weddingDate,
-          completed: String(c.status || '').toLowerCase().includes('complet'),
-          owner:
-            c.responsible === 'Novia' || c.responsible === 'Novio'
-              ? c.responsible
-              : 'Ambos',
-          notes: c.notes || ''
-        }))
+      ? dbTasks.map((c: any) => {
+          const cat = c.category || '12 - 16 meses';
+          const rawDue = typeof c.due_date === 'string' ? c.due_date.trim() : '';
+          const computedDue =
+            !rawDue || rawDue === weddingDate
+              ? computeSmartTaskDueDate(cat, weddingDate)
+              : rawDue;
+          return {
+            id: String(c.id),
+            title: c.title || 'Tarea',
+            category: cat,
+            monthsBefore: 0,
+            dueDate: computedDue,
+            completed: String(c.status || '').toLowerCase().includes('complet'),
+            owner:
+              c.responsible === 'Novia' || c.responsible === 'Novio'
+                ? c.responsible
+                : 'Ambos',
+            notes: c.notes || ''
+          };
+        })
       : generateChecklistForDate(weddingDate);
 
   // 6. Timeline (exact table: timeline_events with column `activity`)

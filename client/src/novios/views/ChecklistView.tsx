@@ -234,14 +234,14 @@ export const ChecklistView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div className="space-y-5 sm:space-y-6">
+      {/* Header — compact single row on mobile & desktop */}
+      <div className="flex items-end justify-between gap-3">
         <div>
-          <span className="text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
-            Paso a Paso · Fechas Reales Calculadas
+          <span className="text-[10.5px] sm:text-[11px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
+            Paso a Paso · Fechas Calculadas
           </span>
-          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-1">
+          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-0.5">
             Checklist
           </h2>
         </div>
@@ -249,61 +249,45 @@ export const ChecklistView: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowNewModal(true)}
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-[13px] font-medium shadow-2xs transition cursor-pointer self-start sm:self-auto focus:outline-none"
+          className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs sm:text-[13px] font-medium shadow-2xs transition cursor-pointer shrink-0 focus:outline-none"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           <span>Nueva Tarea</span>
         </button>
       </div>
 
-      {/* 2-Column Luxury Editorial Planner Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* LEFT SIDEBAR (4 cols): Sculptural Progress + Stage Navigator */}
-        <aside className="lg:col-span-4 lg:sticky lg:top-24 bg-white rounded-[1.75rem] border border-[#EFE8E1] shadow-2xs divide-y divide-[#EFE8E1] overflow-hidden">
-          {/* Progress Summary */}
-          <div className="p-6 space-y-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <span className="text-[10.5px] uppercase tracking-[0.22em] font-semibold text-[#C48B81]">
-                  Avance de Planeación
+      {/* 2-Column Editorial Planner on Laptop / Zero-Redundancy Compact Stack on Mobile */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start">
+        {/* LEFT SIDEBAR (4 cols): Compact Progress + Desktop-only Stage Navigator (hidden on mobile to avoid duplicating accordions) */}
+        <aside className="lg:col-span-4 lg:sticky lg:top-24 bg-white rounded-[1.5rem] sm:rounded-[1.75rem] border border-[#EFE8E1] shadow-2xs divide-y divide-[#EFE8E1] overflow-hidden">
+          {/* Progress Summary — ultra-clean, zero duplicate counters */}
+          <div className="p-4 sm:p-6 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-baseline gap-2">
+                <span className="font-editorial text-3xl sm:text-5xl text-[#2B2826] leading-none">
+                  {pct}%
                 </span>
-                <div className="flex items-baseline gap-2 mt-1.5">
-                  <span className="font-editorial text-5xl text-[#2B2826] leading-none">
-                    {pct}%
-                  </span>
-                  <span className="text-sm text-[#7D6F6B] font-light">listo</span>
-                </div>
+                <span className="text-xs sm:text-sm text-[#7D6F6B] font-light">completado</span>
               </div>
               <span className="text-xs text-[#577355] bg-[#EBF2EC] px-3 py-1 rounded-full font-medium shrink-0">
-                {completedCount} / {checklist.length}
+                {completedCount} de {checklist.length}
               </span>
             </div>
 
-            <div className="h-2 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
+            <div className="h-1.5 sm:h-2 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#C48B81] rounded-full transition-all duration-500"
                 style={{ width: `${pct}%` }}
               />
             </div>
-
-            <div className="grid grid-cols-2 gap-2.5 pt-1">
-              <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] px-3.5 py-2.5">
-                <div className="font-editorial text-xl text-[#2B2826]">{pendingCount}</div>
-                <div className="text-[11px] text-[#7D6F6B] font-light">Pendientes</div>
-              </div>
-              <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] px-3.5 py-2.5">
-                <div className="font-editorial text-xl text-[#A86B60]">{thisMonthCount}</div>
-                <div className="text-[11px] text-[#7D6F6B] font-light">Este mes</div>
-              </div>
-            </div>
           </div>
 
-          {/* Stage Quick-Jump Navigator */}
+          {/* Stage Quick-Jump Navigator (Desktop only so mobile never duplicates the accordions below) */}
           {allStagesSummary.length > 1 && (
-            <div className="p-5 sm:p-6 space-y-2">
+            <div className="hidden lg:block p-6 space-y-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10.5px] uppercase tracking-[0.2em] font-semibold text-[#7D6F6B]">
-                  Etapas
+                  Ir a etapa
                 </span>
                 {selectedStage && (
                   <button

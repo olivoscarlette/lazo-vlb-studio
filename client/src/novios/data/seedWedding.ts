@@ -37,6 +37,7 @@ function subtractMonths(dateStr: string, months: number): string {
 }
 
 export const CHECKLIST_STAGE_ORDER = [
+  'Concepto y Temática',
   '12 - 16 meses',
   '10 - 11 meses',
   '8 - 9 meses',
@@ -45,11 +46,79 @@ export const CHECKLIST_STAGE_ORDER = [
   '2 - 3 meses',
   '1 mes',
   '15 días',
+  'Semana del evento',
   '1 semana',
   'Look & Kit Novia',
   'Look Novio',
   'Mis Tareas'
 ] as const;
+
+const STAGE_DAYS_BEFORE: Record<string, number> = {
+  '12 - 16 meses': 390,
+  '10 - 11 meses': 315,
+  '8 - 9 meses': 255,
+  '6 - 7 meses': 195,
+  '4 - 5 meses': 135,
+  'Concepto y Temática': 95,
+  '2 - 3 meses': 70,
+  '1 mes': 30,
+  '15 días': 15,
+  'Semana del evento': 5,
+  '1 semana': 5,
+  'Look & Kit Novia': 45,
+  'Look Novio': 45
+};
+
+/**
+ * Computes a realistic due date for a checklist task based on its stage and the event date.
+ * If the event is closer than the ideal stage window (e.g., an event 18 days away),
+ * proportionally scales dates between today and the event date so tasks never pile up on the event day itself.
+ */
+export function computeSmartTaskDueDate(category: string, weddingDate: string): string {
+  if (!weddingDate) return new Date().toISOString().split('T')[0];
+  const eventDate = new Date(weddingDate + 'T12:00:00');
+  if (Number.isNaN(eventDate.getTime())) return weddingDate;
+
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const daysRemaining = Math.round((eventDate.getTime() - today.getTime()) / 86400000);
+
+  const idealDaysBefore = STAGE_DAYS_BEFORE[category] ?? 21;
+
+  // If event is in the past, just subtract idealDaysBefore from eventDate
+  if (daysRemaining <= 1) {
+    const d = new Date(eventDate.getTime() - Math.min(idealDaysBefore, 7) * 86400000);
+    return d.toISOString().split('T')[0];
+  }
+
+  // If we have plenty of time, use the true ideal offset before the event
+  if (daysRemaining > idealDaysBefore + 2) {
+    const d = new Date(eventDate.getTime() - idealDaysBefore * 86400000);
+    return d.toISOString().split('T')[0];
+  }
+
+  // Near-term event: proportionally map stages across today -> (eventDate - 2 days)
+  const stageFractionFromStart: Record<string, number> = {
+    '12 - 16 meses': 0.1,
+    '10 - 11 meses': 0.15,
+    '8 - 9 meses': 0.2,
+    '6 - 7 meses': 0.25,
+    '4 - 5 meses': 0.3,
+    'Concepto y Temática': 0.18,
+    '2 - 3 meses': 0.38,
+    '1 mes': 0.62,
+    '15 días': 0.72,
+    'Semana del evento': 0.85,
+    '1 semana': 0.85,
+    'Look & Kit Novia': 0.55,
+    'Look Novio': 0.55
+  };
+  const frac = stageFractionFromStart[category] ?? 0.5;
+  const usableWindow = Math.max(1, daysRemaining - 2);
+  const offsetFromToday = Math.max(1, Math.min(usableWindow, Math.round(usableWindow * frac)));
+  const scaled = new Date(today.getTime() + offsetFromToday * 86400000);
+  return scaled.toISOString().split('T')[0];
+}
 
 const MASTER_WEDDING_TASKS: Array<{
   title: string;
