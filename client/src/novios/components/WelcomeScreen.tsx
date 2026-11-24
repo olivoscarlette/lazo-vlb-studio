@@ -115,7 +115,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           <img
             src="/lazo-logo.png"
             alt="LAZO — Studio Planning"
-            className="h-11 sm:h-13 w-auto object-contain select-none"
+            className="h-14 sm:h-16 lg:h-[4.5rem] w-auto object-contain select-none"
           />
         </div>
 
