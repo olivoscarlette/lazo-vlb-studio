@@ -9,8 +9,7 @@ interface WelcomeScreenProps {
   onEnter: () => void;
 }
 
-const DEFAULT_EDITORIAL_BW_PHOTO =
-  'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1920&q=85';
+const WELCOME_SIGNATURE_PHOTO = '/lazo-welcome-hands.jpg';
 
 export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   profile,
@@ -25,10 +24,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
   );
   const hasPartner2 = Boolean(profile.partner2 && profile.partner2.trim());
 
-  const backgroundPhoto =
-    profile.coverPhoto && profile.coverPhoto.trim()
-      ? profile.coverPhoto
-      : DEFAULT_EDITORIAL_BW_PHOTO;
+  const backgroundPhoto = WELCOME_SIGNATURE_PHOTO;
 
   const handleEnter = () => {
     setExiting(true);
@@ -93,23 +89,23 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
         }
       `}</style>
 
-      {/* Authentic Real Documentary Wedding Photograph in Editorial Black & White with Soft Silk Transparency */}
+      {/* Signature Editorial Photograph in Soft B&W with Luminous Silk Transparency */}
       <img
         src={backgroundPhoto}
         alt=""
         aria-hidden="true"
-        className="lazo-cinema-drift absolute inset-0 w-full h-full object-cover object-center grayscale contrast-[1.06] opacity-[0.26] select-none pointer-events-none"
+        className="lazo-cinema-drift absolute inset-0 w-full h-full object-cover object-center grayscale contrast-[1.08] opacity-[0.34] select-none pointer-events-none"
         draggable={false}
       />
 
-      {/* Luminous Ivory-Silk Translucent Veil — soft editorial atmosphere & effortless readability */}
+      {/* Luminous Ivory-Silk Translucent Veil — lets the hands shine softly while keeping text crisp */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(250,248,245,0.82)_0%,rgba(250,248,245,0.48)_58%,rgba(244,235,231,0.72)_100%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(250,248,245,0.68)_0%,rgba(250,248,245,0.40)_60%,rgba(244,235,231,0.62)_100%)]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#FAF8F5]/75 via-transparent to-[#FAF8F5]/85"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#FAF8F5]/70 via-transparent to-[#FAF8F5]/80"
       />
 
       {/* Subtle top spacing / masthead */}
