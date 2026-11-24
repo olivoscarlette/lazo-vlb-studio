@@ -342,6 +342,7 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
     style: existingStudio?.style || base.style,
     quotes: existingStudio?.quotes || base.quotes,
     contributions: existingStudio?.contributions || base.contributions,
+    handoverItems: Array.isArray(existingStudio?.handoverItems) ? existingStudio.handoverItems : [],
     guests,
     tables,
     floorElements,

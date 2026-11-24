@@ -179,6 +179,20 @@ export interface FileItem {
   mimeType?: string;
 }
 
+export interface HandoverItem {
+  id: string;
+  name: string;
+  category: string;
+  qtyDelivered: string;
+  deliveredNotes?: string;
+  receivedByStaff: boolean;
+  receivedAt?: string;
+  returnedToCouple: boolean;
+  qtyReturned?: string;
+  returnedToWhom?: string;
+  returnNotes?: string;
+}
+
 export interface WeddingState {
   onboarded: boolean;
   profile: WeddingProfile;
@@ -193,4 +207,5 @@ export interface WeddingState {
   ceremonies: CeremonyDetails;
   style: StyleBoard;
   files: FileItem[];
+  handoverItems?: HandoverItem[];
 }

@@ -1,4 +1,4 @@
-import { FloorElement, GuestItem, TableItem, TimelineItem, WeddingProfile } from '../types/lazo';
+import { FloorElement, GuestItem, HandoverItem, TableItem, TimelineItem, WeddingProfile } from '../types/lazo';
 import { formatShortDate } from '../data/seedWedding';
 
 function escapeHtml(str: string): string {
@@ -590,6 +590,77 @@ export function exportFloorPlanPdf(
   openPrintablePdf(
     'Plano 2D & Distribución de Mesas',
     'Acomodo del salón y listado de invitados por mesa para banquete y coordinación',
+    profile,
+    body
+  );
+}
+
+export function exportHandoverPdf(profile: WeddingProfile, items: HandoverItem[]) {
+  const receivedCount = items.filter(i => i.receivedByStaff).length;
+  const returnedCount = items.filter(i => i.returnedToCouple).length;
+
+  const rows = items.length
+    ? items
+        .map(
+          item => `
+        <tr>
+          <td>
+            <strong>${escapeHtml(item.name)}</strong>
+            <div style="font-size:10px;color:#7D6F6B;margin-top:2px">${escapeHtml(item.category)}</div>
+          </td>
+          <td>
+            <div>${escapeHtml(item.qtyDelivered || '1')}</div>
+            ${item.deliveredNotes ? `<div style="font-size:10px;color:#7D6F6B;margin-top:2px">${escapeHtml(item.deliveredNotes)}</div>` : ''}
+            <div style="font-size:10px;margin-top:3px;color:${item.receivedByStaff ? '#455C44' : '#A86B60'}">
+              ${item.receivedByStaff ? '✓ Recibido por coordinación' : '○ Pendiente de entrega'}
+            </div>
+          </td>
+          <td>
+            <div>${escapeHtml(item.qtyReturned || (item.returnedToCouple ? 'Devuelto completo' : '—'))}</div>
+            ${item.returnedToWhom ? `<div style="font-size:10px;color:#2B2826;margin-top:2px"><strong>A:</strong> ${escapeHtml(item.returnedToWhom)}</div>` : ''}
+            ${item.returnNotes ? `<div style="font-size:10px;color:#7D6F6B;margin-top:2px">${escapeHtml(item.returnNotes)}</div>` : ''}
+            <div style="font-size:10px;margin-top:3px;color:${item.returnedToCouple ? '#455C44' : '#7D6F6B'}">
+              ${item.returnedToCouple ? '✓ Entregado al cierre' : '○ Pendiente de devolución'}
+            </div>
+          </td>
+        </tr>`
+        )
+        .join('')
+    : `<tr><td colspan="3" style="text-align:center;color:#7D6F6B;padding:24px">Sin artículos registrados todavía.</td></tr>`;
+
+  const body = `
+    <div style="display:flex;gap:12px;margin-bottom:18px">
+      <div style="flex:1;border:1px solid #EFE8E1;border-radius:12px;padding:12px 14px;background:#FAF8F5">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#7D6F6B">Recepción previa</div>
+        <div style="font-family:'Marcellus',Georgia,serif;font-size:20px;color:#2B2826;margin-top:2px">${receivedCount} de ${items.length} recibidos</div>
+      </div>
+      <div style="flex:1;border:1px solid #EFE8E1;border-radius:12px;padding:12px 14px;background:#FAF8F5">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:#7D6F6B">Devolución al cierre</div>
+        <div style="font-family:'Marcellus',Georgia,serif;font-size:20px;color:#2B2826;margin-top:2px">${returnedCount} de ${items.length} devueltos</div>
+      </div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:30%">Artículo</th>
+          <th style="width:35%">Entrega a Coordinación</th>
+          <th style="width:35%">Devolución / Sobrante al Cierre</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:36px;margin-top:42px;page-break-inside:avoid">
+      <div style="border-top:1px solid #C48B81;padding-top:8px;text-align:center;font-size:10px;color:#7D6F6B">
+        Firma de Conformidad · Recepción previa
+      </div>
+      <div style="border-top:1px solid #C48B81;padding-top:8px;text-align:center;font-size:10px;color:#7D6F6B">
+        Firma de Conformidad · Devolución al cierre del evento
+      </div>
+    </div>`;
+
+  openPrintablePdf(
+    'Control de Artículos & Entregas',
+    'Respaldo de recepción previa al evento y devolución de sobrantes al cierre',
     profile,
     body
   );

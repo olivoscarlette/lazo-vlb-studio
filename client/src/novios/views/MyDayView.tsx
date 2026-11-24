@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Plus, Trash2, Clock, MapPin, Pencil, Download, Sparkles } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
 import { CeremoniesSection } from '../components/CeremoniesSection';
+import { HandoverSection } from '../components/HandoverSection';
 import { Modal } from '../components/Modal';
 import { VlbCoordinationModal } from '../components/VlbCoordinationModal';
 import { TimelineItem } from '../types/lazo';
@@ -9,7 +10,7 @@ import { exportTimelinePdf } from '../utils/pdfExport';
 
 export const MyDayView: React.FC = () => {
   const { wedding, flags, updateWedding } = useWedding();
-  const [subTab, setSubTab] = useState<'itinerario' | 'ceremonias'>('itinerario');
+  const [subTab, setSubTab] = useState<'itinerario' | 'entregas' | 'ceremonias'>('itinerario');
   const [showVlbModal, setShowVlbModal] = useState(false);
 
   // Add / Edit Timeline Modal
@@ -25,8 +26,9 @@ export const MyDayView: React.FC = () => {
   if (!wedding) return null;
 
   const { profile, timeline, ceremonies } = wedding;
+  const handoverItems = wedding.handoverItems || [];
   const isNonWedding = Boolean(profile.eventType && !profile.eventType.toLowerCase().includes('boda'));
-  const activeSubTab = isNonWedding ? 'itinerario' : subTab;
+  const activeSubTab = isNonWedding && subTab === 'ceremonias' ? 'itinerario' : subTab;
 
   const openAddEvent = () => {
     setEditingEventId(null);
@@ -130,28 +132,51 @@ export const MyDayView: React.FC = () => {
         )}
       </div>
 
-      {/* 2 Clean Sub-Tabs: Itinerario + Ceremonias (Ceremonias solo en bodas) */}
-      {!isNonWedding && (
-        <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
-          <button
-            type="button"
-            onClick={() => setSubTab('itinerario')}
-            className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-              activeSubTab === 'itinerario' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
-            }`}
-          >
-            Itinerario ({timeline.length})
-          </button>
+      {/* Clean Sub-Tabs: Itinerario · Artículos & Entregas · Ceremonias (Ceremonias solo en bodas) */}
+      <div className="flex flex-wrap items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs gap-1">
+        <button
+          type="button"
+          onClick={() => setSubTab('itinerario')}
+          className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
+            activeSubTab === 'itinerario' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+          }`}
+        >
+          Minuto a Minuto ({timeline.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setSubTab('entregas')}
+          className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
+            activeSubTab === 'entregas' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+          }`}
+        >
+          Artículos &amp; Entregas ({handoverItems.length})
+        </button>
+        {!isNonWedding && (
           <button
             type="button"
             onClick={() => setSubTab('ceremonias')}
-            className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-              activeSubTab === 'ceremonias' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+            className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
+              activeSubTab === 'ceremonias' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
             }`}
           >
             Ceremonias
           </button>
-        </div>
+        )}
+      </div>
+
+      {/* SUB-TAB 2: CONTROL DE ARTÍCULOS & ENTREGAS (Recepción previa + Devolución al cierre) */}
+      {activeSubTab === 'entregas' && (
+        <HandoverSection
+          profile={profile}
+          items={handoverItems}
+          onChange={nextItems =>
+            updateWedding(prev => ({
+              ...prev,
+              handoverItems: nextItems
+            }))
+          }
+        />
       )}
 
       {/* SUB-TAB 1: ITINERARIO EDITABLE */}
