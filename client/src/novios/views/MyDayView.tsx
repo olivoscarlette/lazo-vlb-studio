@@ -100,10 +100,10 @@ export const MyDayView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#6B6462]">
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#7D6F6B]">
             Logística del Evento
           </span>
-          <h2 className="font-editorial text-3xl sm:text-4xl text-[#1F1D1E] mt-1">
+          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-1">
             El Gran Día
           </h2>
         </div>
@@ -113,15 +113,15 @@ export const MyDayView: React.FC = () => {
             <button
               type="button"
               onClick={() => exportTimelinePdf(profile, timeline)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#F8F5F0] text-[#1F1D1E] border border-[#E7E1D8] text-xs font-medium shadow-2xs transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
             >
-              <Download className="w-3.5 h-3.5 text-[#6E2E3A]" />
+              <Download className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>PDF</span>
             </button>
             <button
               type="button"
               onClick={openAddEvent}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Agregar Momento</span>
@@ -132,12 +132,12 @@ export const MyDayView: React.FC = () => {
 
       {/* 2 Clean Sub-Tabs: Itinerario + Ceremonias (Ceremonias solo en bodas) */}
       {!isNonWedding && (
-        <div className="flex items-center p-1 bg-white rounded-full border border-[#E7E1D8] w-fit shadow-2xs">
+        <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
           <button
             type="button"
             onClick={() => setSubTab('itinerario')}
             className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-              activeSubTab === 'itinerario' ? 'bg-[#1F1D1E] text-white' : 'text-[#6B6462] hover:text-[#1F1D1E]'
+              activeSubTab === 'itinerario' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
             }`}
           >
             Itinerario ({timeline.length})
@@ -146,7 +146,7 @@ export const MyDayView: React.FC = () => {
             type="button"
             onClick={() => setSubTab('ceremonias')}
             className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-              activeSubTab === 'ceremonias' ? 'bg-[#1F1D1E] text-white' : 'text-[#6B6462] hover:text-[#1F1D1E]'
+              activeSubTab === 'ceremonias' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
             }`}
           >
             Ceremonias
@@ -157,47 +157,47 @@ export const MyDayView: React.FC = () => {
       {/* SUB-TAB 1: ITINERARIO EDITABLE */}
       {activeSubTab === 'itinerario' && (
         <div className="space-y-4">
-        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E7E1D8] shadow-2xs">
+        <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs">
           {timeline.length === 0 ? (
             <div className="py-10 text-center space-y-3">
-              <p className="font-editorial text-xl text-[#1F1D1E]">Arma tu minuto a minuto</p>
-              <p className="text-xs text-[#6B6462] font-light max-w-sm mx-auto">
+              <p className="font-editorial text-xl text-[#2B2826]">Arma tu minuto a minuto</p>
+              <p className="text-xs text-[#7D6F6B] font-light max-w-sm mx-auto">
                 Registra cada momento del día para compartirlo en PDF con tu fotógrafo, DJ, banquete y familia.
               </p>
               <button
                 type="button"
                 onClick={openAddEvent}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#6E2E3A] text-white text-xs font-medium cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#C48B81] text-white text-xs font-medium cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Agregar primer momento</span>
               </button>
             </div>
           ) : (
-            <div className="divide-y divide-[#F8F5F0]">
+            <div className="divide-y divide-[#FAF8F5]">
               {timeline.map(item => (
                 <div
                   key={item.id}
                   onClick={() => openEditEvent(item)}
-                  className="py-4 px-2 rounded-2xl flex items-start justify-between gap-4 group hover:bg-[#F8F5F0]/70 transition cursor-pointer"
+                  className="py-4 px-2 rounded-2xl flex items-start justify-between gap-4 group hover:bg-[#FAF8F5]/70 transition cursor-pointer"
                 >
                   <div className="flex items-start gap-4 min-w-0 flex-1">
-                    <span className="font-editorial text-lg text-[#6E2E3A] w-16 shrink-0 flex items-center gap-1">
+                    <span className="font-editorial text-lg text-[#C48B81] w-16 shrink-0 flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 opacity-60" />
                       {item.time}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[#1F1D1E] group-hover:text-[#521F29] transition-colors">
+                      <p className="text-sm font-medium text-[#2B2826] group-hover:text-[#A86B60] transition-colors">
                         {item.title}
                       </p>
                       {item.location && (
-                        <p className="text-xs text-[#6B6462] font-light flex items-center gap-1 mt-0.5">
-                          <MapPin className="w-3 h-3 text-[#6E2E3A]" />
+                        <p className="text-xs text-[#7D6F6B] font-light flex items-center gap-1 mt-0.5">
+                          <MapPin className="w-3 h-3 text-[#C48B81]" />
                           {item.location}
                         </p>
                       )}
                       {item.notes && (
-                        <p className="text-xs text-[#521F29] italic font-light mt-1">
+                        <p className="text-xs text-[#A86B60] italic font-light mt-1">
                           {item.notes}
                         </p>
                       )}
@@ -211,7 +211,7 @@ export const MyDayView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => openEditEvent(item)}
-                      className="p-2 rounded-full text-[#6B6462] hover:text-[#1F1D1E] hover:bg-white transition cursor-pointer"
+                      className="p-2 rounded-full text-[#7D6F6B] hover:text-[#2B2826] hover:bg-white transition cursor-pointer"
                       title="Editar momento"
                     >
                       <Pencil className="w-3.5 h-3.5" />
@@ -219,7 +219,7 @@ export const MyDayView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleDeleteEvent(item.id)}
-                      className="p-2 rounded-full text-[#6B6462]/40 sm:opacity-0 sm:group-hover:opacity-100 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
+                      className="p-2 rounded-full text-[#7D6F6B]/40 sm:opacity-0 sm:group-hover:opacity-100 hover:text-rose-600 hover:bg-rose-50 transition cursor-pointer"
                       title="Eliminar momento"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -232,16 +232,16 @@ export const MyDayView: React.FC = () => {
         </div>
 
         {flags.isVirtualNovios && (
-          <div className="bg-[#F8F5F0] rounded-2xl p-4 sm:p-5 border border-[#E5D1D5] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="bg-[#FAF8F5] rounded-2xl p-4 sm:p-5 border border-[#EEDAD6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-full bg-[#F4EAEC] border border-[#E5D1D5] flex items-center justify-center text-[#6E2E3A] shrink-0 mt-0.5">
+              <div className="w-8 h-8 rounded-full bg-[#F7EDEB] border border-[#EEDAD6] flex items-center justify-center text-[#C48B81] shrink-0 mt-0.5">
                 <Sparkles className="w-3.5 h-3.5" />
               </div>
               <div>
-                <p className="text-xs font-medium text-[#1F1D1E]">
+                <p className="text-xs font-medium text-[#2B2826]">
                   ¿Quién va a operar este minuto a minuto el día de tu boda?
                 </p>
-                <p className="text-[11px] text-[#6B6462] font-light mt-0.5">
+                <p className="text-[11px] text-[#7D6F6B] font-light mt-0.5">
                   Deja la coordinación de proveedores, montaje y tiempos en manos de Viva la Bride.
                 </p>
               </div>
@@ -249,7 +249,7 @@ export const MyDayView: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowVlbModal(true)}
-              className="px-4 py-2 rounded-full bg-white hover:bg-[#F4EAEC] text-[#521F29] border border-[#E5D1D5] text-xs font-medium transition cursor-pointer shrink-0 self-start sm:self-auto"
+              className="px-4 py-2 rounded-full bg-white hover:bg-[#F7EDEB] text-[#A86B60] border border-[#EEDAD6] text-xs font-medium transition cursor-pointer shrink-0 self-start sm:self-auto"
             >
               Cotizar Coordinación
             </button>
@@ -284,7 +284,7 @@ export const MyDayView: React.FC = () => {
         <form onSubmit={handleSaveEvent} className="space-y-3.5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
                 Hora *
               </label>
               <input
@@ -292,11 +292,11 @@ export const MyDayView: React.FC = () => {
                 required
                 value={eventForm.time}
                 onChange={e => setEventForm({ ...eventForm, time: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
               />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
                 Actividad *
               </label>
               <input
@@ -306,13 +306,13 @@ export const MyDayView: React.FC = () => {
                 placeholder="Ej. Entrada de Novios y Primer Baile"
                 value={eventForm.title}
                 onChange={e => setEventForm({ ...eventForm, title: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
+            <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
               Lugar / Espacio
             </label>
             <input
@@ -320,12 +320,12 @@ export const MyDayView: React.FC = () => {
               placeholder="Ej. Jardín Principal, Terraza, Capilla..."
               value={eventForm.location}
               onChange={e => setEventForm({ ...eventForm, location: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
             />
           </div>
 
           <div>
-            <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
+            <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
               Notas / Responsable
             </label>
             <textarea
@@ -333,7 +333,7 @@ export const MyDayView: React.FC = () => {
               placeholder="Ej. Avisar a DJ 5 min antes, entra foto y video, entregar bengalas..."
               value={eventForm.notes}
               onChange={e => setEventForm({ ...eventForm, notes: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
             />
           </div>
 
@@ -358,13 +358,13 @@ export const MyDayView: React.FC = () => {
                   setShowEventModal(false);
                   setEditingEventId(null);
                 }}
-                className="px-4 py-2 text-xs text-[#6B6462] cursor-pointer"
+                className="px-4 py-2 text-xs text-[#7D6F6B] cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium cursor-pointer"
+                className="px-5 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium cursor-pointer"
               >
                 Guardar
               </button>

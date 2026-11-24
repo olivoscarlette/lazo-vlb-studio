@@ -36,7 +36,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       margin: 0;
       padding: 28px 32px;
       font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-      color: #1F1D1E;
+      color: #2B2826;
       background: #FFFFFF;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -46,14 +46,14 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       justify-content: space-between;
       align-items: flex-end;
       padding-bottom: 16px;
-      border-bottom: 1px solid #E7E1D8;
+      border-bottom: 1px solid #EFE8E1;
       margin-bottom: 24px;
     }
     .brand {
       font-family: 'Tenor Sans', 'Inter', sans-serif;
       letter-spacing: 0.28em;
       font-size: 13px;
-      color: #521F29;
+      color: #A86B60;
       text-transform: uppercase;
       margin-bottom: 6px;
     }
@@ -62,12 +62,12 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       font-size: 28px;
       font-weight: 400;
       margin: 0;
-      color: #1F1D1E;
+      color: #2B2826;
       line-height: 1.15;
     }
     .subtitle {
       font-size: 12px;
-      color: #6B6462;
+      color: #7D6F6B;
       margin-top: 4px;
       font-weight: 300;
     }
@@ -81,7 +81,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       font-family: 'Tenor Sans', 'Inter', sans-serif;
       font-size: 15px;
       font-weight: 400;
-      color: #1F1D1E;
+      color: #2B2826;
       margin-bottom: 2px;
     }
     .kpi-grid {
@@ -91,8 +91,8 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       margin-bottom: 20px;
     }
     .kpi {
-      background: #F8F5F0;
-      border: 1px solid #E7E1D8;
+      background: #FAF8F5;
+      border: 1px solid #EFE8E1;
       border-radius: 14px;
       padding: 12px 14px;
     }
@@ -100,14 +100,14 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 0.14em;
-      color: #6B6462;
+      color: #7D6F6B;
       font-weight: 600;
     }
     .kpi-val {
       font-family: 'Tenor Sans', 'Inter', sans-serif;
       font-size: 24px;
       margin-top: 4px;
-      color: #1F1D1E;
+      color: #2B2826;
     }
     table {
       width: 100%;
@@ -119,10 +119,10 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 0.14em;
-      color: #6B6462;
+      color: #7D6F6B;
       padding: 10px 10px;
-      border-bottom: 1px solid #E7E1D8;
-      background: #F8F5F0;
+      border-bottom: 1px solid #EFE8E1;
+      background: #FAF8F5;
     }
     td {
       padding: 10px 10px;
@@ -135,12 +135,12 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       border-radius: 999px;
       font-size: 10px;
       font-weight: 500;
-      border: 1px solid #E7E1D8;
-      background: #F8F5F0;
+      border: 1px solid #EFE8E1;
+      background: #FAF8F5;
       color: #5A524C;
     }
     .pill-ok { background: #E5EDE6; border-color: #D0DDD1; color: #384C3A; }
-    .pill-no { background: #FAF4F3; border-color: #E5D1D5; color: #521F29; }
+    .pill-no { background: #FAF4F3; border-color: #EEDAD6; color: #A86B60; }
     .timeline-row {
       display: flex;
       gap: 18px;
@@ -151,15 +151,15 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
     .timeline-time {
       font-family: 'Tenor Sans', 'Inter', sans-serif;
       font-size: 17px;
-      color: #6E2E3A;
+      color: #C48B81;
       width: 68px;
       flex-shrink: 0;
     }
-    .timeline-title { font-size: 14px; font-weight: 500; color: #1F1D1E; }
-    .timeline-sub { font-size: 11px; color: #6B6462; margin-top: 2px; }
-    .timeline-notes { font-size: 11px; color: #521F29; font-style: italic; margin-top: 3px; }
+    .timeline-title { font-size: 14px; font-weight: 500; color: #2B2826; }
+    .timeline-sub { font-size: 11px; color: #7D6F6B; margin-top: 2px; }
+    .timeline-notes { font-size: 11px; color: #A86B60; font-style: italic; margin-top: 3px; }
     .svg-box {
-      border: 1px solid #E7E1D8;
+      border: 1px solid #EFE8E1;
       border-radius: 18px;
       background: #FCFBF9;
       padding: 12px;
@@ -173,7 +173,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       gap: 12px;
     }
     .table-card {
-      border: 1px solid #E7E1D8;
+      border: 1px solid #EFE8E1;
       border-radius: 14px;
       padding: 12px 14px;
       background: #FFFFFF;
@@ -183,29 +183,29 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      border-bottom: 1px solid #F8F5F0;
+      border-bottom: 1px solid #FAF8F5;
       padding-bottom: 6px;
       margin-bottom: 8px;
     }
     .table-card-title {
       font-family: 'Tenor Sans', 'Inter', sans-serif;
       font-size: 15px;
-      color: #1F1D1E;
+      color: #2B2826;
     }
-    .table-card-meta { font-size: 10px; color: #6B6462; }
+    .table-card-meta { font-size: 10px; color: #7D6F6B; }
     .guest-line {
       display: flex;
       justify-content: space-between;
       font-size: 11px;
       padding: 3px 0;
-      color: #1F1D1E;
+      color: #2B2826;
     }
     .footer {
       margin-top: 26px;
       padding-top: 12px;
-      border-top: 1px solid #E7E1D8;
+      border-top: 1px solid #EFE8E1;
       font-size: 10px;
-      color: #6B6462;
+      color: #7D6F6B;
       display: flex;
       justify-content: space-between;
     }
@@ -220,7 +220,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       padding: 8px 16px;
       border-radius: 999px;
       border: none;
-      background: #6E2E3A;
+      background: #C48B81;
       color: white;
       font-family: 'Outfit', sans-serif;
       font-size: 12px;
@@ -282,7 +282,7 @@ export function exportTimelinePdf(profile: WeddingProfile, timeline: TimelineIte
         </div>`
         )
         .join('')
-    : '<p style="font-size:12px;color:#6B6462;font-style:italic">Sin momentos registrados aún.</p>';
+    : '<p style="font-size:12px;color:#7D6F6B;font-style:italic">Sin momentos registrados aún.</p>';
 
   openPrintablePdf(
     'Itinerario del Gran Día',
@@ -305,7 +305,7 @@ export function exportGuestsPdf(profile: WeddingProfile, guests: GuestItem[], ta
       <div class="kpi"><div class="kpi-label">Total Pases</div><div class="kpi-val">${total}</div></div>
       <div class="kpi"><div class="kpi-label">Confirmados</div><div class="kpi-val" style="color:#455C44">${confirmed}</div></div>
       <div class="kpi"><div class="kpi-label">Pendientes</div><div class="kpi-val">${pending}</div></div>
-      <div class="kpi"><div class="kpi-label">Declinados</div><div class="kpi-val" style="color:#521F29">${declined}</div></div>
+      <div class="kpi"><div class="kpi-label">Declinados</div><div class="kpi-val" style="color:#A86B60">${declined}</div></div>
     </div>`;
 
   const rows = guests
@@ -339,7 +339,7 @@ export function exportGuestsPdf(profile: WeddingProfile, guests: GuestItem[], ta
         </tr>
       </thead>
       <tbody>
-        ${rows || '<tr><td colspan="6" style="text-align:center;color:#6B6462;padding:24px">Sin invitados registrados</td></tr>'}
+        ${rows || '<tr><td colspan="6" style="text-align:center;color:#7D6F6B;padding:24px">Sin invitados registrados</td></tr>'}
       </tbody>
     </table>`;
 
@@ -366,11 +366,11 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
       if (el.type === 'pista') {
         fill = '#F5EFEA';
         stroke = '#D2C2B6';
-        textColor = '#6B6462';
+        textColor = '#7D6F6B';
         dash = 'stroke-dasharray="5 4"';
       } else if (el.type === 'dj') {
-        fill = '#1F1D1E';
-        stroke = '#1F1D1E';
+        fill = '#2B2826';
+        stroke = '#2B2826';
         textColor = '#FFFFFF';
       } else if (el.tone === 'nature') {
         fill = '#E5EDE6';
@@ -381,7 +381,7 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
         stroke = '#C5DCE8';
         textColor = '#355A6E';
       } else if (el.tone === 'accent') {
-        fill = '#F4EAEC';
+        fill = '#F7EDEB';
         stroke = '#E6CFCB';
         textColor = '#8F554B';
       }
@@ -422,8 +422,8 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           <g transform="translate(${x}, ${y})">
             ${chairs}
             <circle cx="0" cy="0" r="38" fill="#FFFFFF" stroke="#E5DDD5" stroke-width="1.4" />
-            <text x="0" y="-2" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#1F1D1E">${escapeHtml(table.name)}</text>
-            <text x="0" y="11" text-anchor="middle" font-family="Outfit, sans-serif" font-size="8.5" font-weight="600" fill="#6B6462">${used}/${cap}</text>
+            <text x="0" y="-2" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#2B2826">${escapeHtml(table.name)}</text>
+            <text x="0" y="11" text-anchor="middle" font-family="Outfit, sans-serif" font-size="8.5" font-weight="600" fill="#7D6F6B">${used}/${cap}</text>
           </g>`;
       }
 
@@ -488,8 +488,8 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
             ${topChairs}
             ${bottomChairs}
             <g transform="rotate(${-rot})">
-              <rect x="-36" y="-10" width="72" height="20" rx="10" fill="#FFFFFF" stroke="#E7E1D8" stroke-width="1" />
-              <text x="0" y="3" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9" font-weight="500" fill="#1F1D1E">${escapeHtml(table.name)} · ${used}/${cap}</text>
+              <rect x="-36" y="-10" width="72" height="20" rx="10" fill="#FFFFFF" stroke="#EFE8E1" stroke-width="1" />
+              <text x="0" y="3" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9" font-weight="500" fill="#2B2826">${escapeHtml(table.name)} · ${used}/${cap}</text>
             </g>
           </g>`;
       }
@@ -521,8 +521,8 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           ${bottomChairs}
           <rect x="${-tw / 2}" y="${-th / 2}" width="${tw}" height="${th}" rx="11" fill="#FFFFFF" stroke="#E5DDD5" stroke-width="1.4" />
           <g transform="rotate(${-rot})">
-            <text x="0" y="-2" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#1F1D1E">${escapeHtml(table.name)}</text>
-            <text x="0" y="11" text-anchor="middle" font-family="Outfit, sans-serif" font-size="8.5" font-weight="600" fill="#6B6462">${used}/${cap}</text>
+            <text x="0" y="-2" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#2B2826">${escapeHtml(table.name)}</text>
+            <text x="0" y="11" text-anchor="middle" font-family="Outfit, sans-serif" font-size="8.5" font-weight="600" fill="#7D6F6B">${used}/${cap}</text>
           </g>
         </g>`;
     })
@@ -559,12 +559,12 @@ export function exportFloorPlanPdf(
             .map(
               g => `
             <div class="guest-line">
-              <span>${escapeHtml(g.name)}${g.dietary ? ` <em style="color:#521F29">(${escapeHtml(g.dietary)})</em>` : ''}</span>
-              <span style="color:#6B6462">${g.passes} ${g.passes === 1 ? 'lugar' : 'lugares'}</span>
+              <span>${escapeHtml(g.name)}${g.dietary ? ` <em style="color:#A86B60">(${escapeHtml(g.dietary)})</em>` : ''}</span>
+              <span style="color:#7D6F6B">${g.passes} ${g.passes === 1 ? 'lugar' : 'lugares'}</span>
             </div>`
             )
             .join('')
-        : '<div style="font-size:11px;color:#6B6462;font-style:italic">Sin invitados asignados</div>';
+        : '<div style="font-size:11px;color:#7D6F6B;font-style:italic">Sin invitados asignados</div>';
 
       return `
         <div class="table-card">
@@ -580,7 +580,7 @@ export function exportFloorPlanPdf(
   const body = `
     <div class="svg-box">
       ${svg}
-      <div style="margin-top:8px;font-size:10px;color:#6B6462;display:flex;justify-content:center;gap:16px">
+      <div style="margin-top:8px;font-size:10px;color:#7D6F6B;display:flex;justify-content:center;gap:16px">
         <span>● Verde: Lugar ocupado</span>
         <span>○ Blanco: Lugar libre</span>
       </div>

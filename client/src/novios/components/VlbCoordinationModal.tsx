@@ -118,20 +118,20 @@ export const VlbCoordinationModal: React.FC<VlbCoordinationModalProps> = ({
               key={pkg.id}
               className={`rounded-3xl p-5 border flex flex-col justify-between space-y-4 ${
                 pkg.dark
-                  ? 'bg-[#1F1D1E] text-white border-[#1F1D1E]'
-                  : 'bg-[#F8F5F0] text-[#1F1D1E] border-[#E7E1D8]'
+                  ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                  : 'bg-[#FAF8F5] text-[#2B2826] border-[#EFE8E1]'
               }`}
             >
               <div className="space-y-3">
                 <div className="flex items-center justify-between gap-2">
-                  <h4 className={`font-editorial text-2xl ${pkg.dark ? 'text-white' : 'text-[#1F1D1E]'}`}>
+                  <h4 className={`font-editorial text-2xl ${pkg.dark ? 'text-white' : 'text-[#2B2826]'}`}>
                     {pkg.name}
                   </h4>
                   <span
                     className={`text-[10px] uppercase tracking-wider font-semibold px-2.5 py-0.5 rounded-full border whitespace-nowrap ${
                       pkg.dark
-                        ? 'bg-[#6E2E3A]/20 text-[#D9B6BC] border-[#6E2E3A]/30'
-                        : 'bg-white text-[#521F29] border-[#E7E1D8]'
+                        ? 'bg-[#C48B81]/20 text-[#E5B7AE] border-[#C48B81]/30'
+                        : 'bg-white text-[#A86B60] border-[#EFE8E1]'
                     }`}
                   >
                     {pkg.tag}
@@ -141,7 +141,7 @@ export const VlbCoordinationModal: React.FC<VlbCoordinationModalProps> = ({
                 <div>
                   <span
                     className={`text-[10px] uppercase tracking-[0.16em] font-semibold block mb-1.5 ${
-                      pkg.dark ? 'text-[#6E2E3A]' : 'text-[#6B6462]'
+                      pkg.dark ? 'text-[#C48B81]' : 'text-[#7D6F6B]'
                     }`}
                   >
                     Previo a tu Gran Día
@@ -149,7 +149,7 @@ export const VlbCoordinationModal: React.FC<VlbCoordinationModalProps> = ({
                   <ul className={`space-y-1 text-xs ${pkg.dark ? 'text-white/85' : 'text-[#5A524C]'}`}>
                     {pkg.previo.map(item => (
                       <li key={item} className="flex items-start gap-1.5">
-                        <Check className="w-3.5 h-3.5 text-[#6E2E3A] mt-0.5 shrink-0" />
+                        <Check className="w-3.5 h-3.5 text-[#C48B81] mt-0.5 shrink-0" />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -159,7 +159,7 @@ export const VlbCoordinationModal: React.FC<VlbCoordinationModalProps> = ({
                 <div>
                   <span
                     className={`text-[10px] uppercase tracking-[0.16em] font-semibold block mb-1.5 ${
-                      pkg.dark ? 'text-[#6E2E3A]' : 'text-[#6B6462]'
+                      pkg.dark ? 'text-[#C48B81]' : 'text-[#7D6F6B]'
                     }`}
                   >
                     El Gran Día
@@ -181,8 +181,8 @@ export const VlbCoordinationModal: React.FC<VlbCoordinationModalProps> = ({
                 rel="noreferrer"
                 className={`w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-full text-xs font-medium transition ${
                   pkg.dark
-                    ? 'bg-[#6E2E3A] hover:bg-[#5A232E] text-white'
-                    : 'bg-white hover:bg-[#E7E1D8] text-[#1F1D1E] border border-[#E7E1D8]'
+                    ? 'bg-[#C48B81] hover:bg-[#2B2826] text-white'
+                    : 'bg-white hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1]'
                 }`}
               >
                 <MessageSquare className="w-3.5 h-3.5" />
@@ -192,8 +192,8 @@ export const VlbCoordinationModal: React.FC<VlbCoordinationModalProps> = ({
           ))}
         </div>
 
-        <div className="flex items-center justify-center gap-2 text-[11px] text-[#6B6462] pt-1 font-light">
-          <Sparkles className="w-3.5 h-3.5 text-[#6E2E3A]" />
+        <div className="flex items-center justify-center gap-2 text-[11px] text-[#7D6F6B] pt-1 font-light">
+          <Sparkles className="w-3.5 h-3.5 text-[#C48B81]" />
           <span>Al contratar tu coordinación, se desbloquea automáticamente tu agenda de Reuniones en Lazo.</span>
         </div>
       </div>

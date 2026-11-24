@@ -63,20 +63,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
   const getRoleBadgeStyle = (role: UserRole) => {
     switch (role) {
       case 'ADMINISTRADOR':
-        return 'bg-[#6E2E3A] text-[#FFFFFF] border-[#6E2E3A] shadow-2xs';
+        return 'bg-[#C48B81] text-[#FFFFFF] border-[#C48B81] shadow-2xs';
       case 'COORDINADOR':
-        return 'bg-[#F4EAEC] text-[#521F29] border-[#E5D1D5]';
+        return 'bg-[#F7EDEB] text-[#A86B60] border-[#EEDAD6]';
       case 'STAFF':
-        return 'bg-[#F8F5F0] text-[#1F1D1E] border-[#E7E1D8]';
+        return 'bg-[#FAF8F5] text-[#2B2826] border-[#EFE8E1]';
       case 'NOVIOS':
-        return 'bg-[#F8F5F0] text-[#6E2E3A] border-[#E5D1D5]';
+        return 'bg-[#FAF8F5] text-[#C48B81] border-[#EEDAD6]';
     }
   };
 
   const showHamburger = Boolean(user.role !== 'NOVIOS' && (currentWedding || user.role !== 'ADMINISTRADOR'));
 
   return (
-    <header className="sticky top-0 z-50 bg-[#F8F5F0] pt-[env(safe-area-inset-top)] border-b border-[#E7E1D8] transition-all">
+    <header className="sticky top-0 z-50 bg-[#FAF8F5] pt-[env(safe-area-inset-top)] border-b border-[#EFE8E1] transition-all">
       <div className="w-full px-2.5 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-[72px]">
           {/* Left: Hamburger Menu Button + Brand Logo */}
@@ -85,10 +85,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               <button
                 onClick={onToggleSidebar}
                 aria-label="Mostrar menú lateral"
-                className="inline-flex lg:hidden items-center space-x-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#E7E1D8] bg-[#FFFFFF] hover:bg-[#F5EFEB] text-[#1F1D1E] transition shadow-xs cursor-pointer shrink-0"
+                className="inline-flex lg:hidden items-center space-x-1.5 p-1.5 sm:px-3 sm:py-2 rounded-xl border border-[#EFE8E1] bg-[#FFFFFF] hover:bg-[#F5EFEB] text-[#2B2826] transition shadow-xs cursor-pointer shrink-0"
                 title="Mostrar menú lateral"
               >
-                <PanelLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#6E2E3A]" />
+                <PanelLeft className="w-4 h-4 sm:w-5 sm:h-5 text-[#C48B81]" />
                 <span className="text-sm font-semibold hidden md:inline">
                   Menú
                 </span>
@@ -118,18 +118,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
               <div className="relative ml-1 sm:ml-2">
                 <button
                   onClick={() => setShowWeddingMenu(!showWeddingMenu)}
-                  className="hidden sm:flex items-center space-x-2 text-sm font-medium text-[#1F1D1E] bg-[#FFFFFF] hover:bg-[#F8F5F0] px-4 py-2 rounded-full border border-[#E7E1D8] transition shadow-xs"
+                  className="hidden sm:flex items-center space-x-2 text-sm font-medium text-[#2B2826] bg-[#FFFFFF] hover:bg-[#FAF8F5] px-4 py-2 rounded-full border border-[#EFE8E1] transition shadow-xs"
                 >
-                  <Building2 className="w-4 h-4 text-[#6E2E3A]" />
+                  <Building2 className="w-4 h-4 text-[#C48B81]" />
                   <span className="truncate max-w-[180px]">
                     {currentWedding.name}
                   </span>
-                  <ChevronDown className="w-4 h-4 text-[#6B6462]" />
+                  <ChevronDown className="w-4 h-4 text-[#7D6F6B]" />
                 </button>
 
                 {showWeddingMenu && (
-                  <div className="absolute left-0 mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-lg border border-[#E7E1D8] py-2 z-50">
-                    <div className="px-4 py-2 text-xs font-semibold text-[#6B6462] uppercase tracking-wider">
+                  <div className="absolute left-0 mt-2 w-72 bg-[#FFFFFF] rounded-2xl shadow-lg border border-[#EFE8E1] py-2 z-50">
+                    <div className="px-4 py-2 text-xs font-semibold text-[#7D6F6B] uppercase tracking-wider">
                       Bodas Asignadas
                     </div>
                     {user.role === 'ADMINISTRADOR' && (
@@ -138,8 +138,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                           setCurrentWedding(null);
                           setShowWeddingMenu(false);
                         }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#F8F5F0] flex items-center justify-between ${
-                          !currentWedding ? 'bg-[#EFE2E5]/70 text-[#521F29] font-semibold' : 'text-[#332A28]'
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#FAF8F5] flex items-center justify-between ${
+                          !currentWedding ? 'bg-[#EFE2DF]/70 text-[#A86B60] font-semibold' : 'text-[#332A28]'
                         }`}
                       >
                         <span>Dashboard General (Todas)</span>
@@ -152,13 +152,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                           setCurrentWedding(w);
                           setShowWeddingMenu(false);
                         }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#F8F5F0] flex items-center justify-between ${
-                          currentWedding?.id === w.id ? 'bg-[#EFE2E5]/80 text-[#521F29] font-semibold' : 'text-[#332A28]'
+                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#FAF8F5] flex items-center justify-between ${
+                          currentWedding?.id === w.id ? 'bg-[#EFE2DF]/80 text-[#A86B60] font-semibold' : 'text-[#332A28]'
                         }`}
                       >
                         <div>
                           <div className="font-medium text-[#332A28]">{w.name}</div>
-                          <div className="text-xs text-[#6B6462]">{w.wedding_date}</div>
+                          <div className="text-xs text-[#7D6F6B]">{w.wedding_date}</div>
                         </div>
                         {currentWedding?.id === w.id && (
                           <CheckCircle2 className="w-4 h-4 text-[#6E8C70]" />
@@ -186,10 +186,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                     setGeneralDashboardTab('calendario');
                   }
                 }}
-                className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#F8F5F0] hover:bg-[#F3ECE2] text-[#1F1D1E] border border-[#E7E1D8] transition shadow-2xs cursor-pointer shrink-0"
+                className="hidden sm:inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] transition shadow-2xs cursor-pointer shrink-0"
                 title="Abrir Calendario General"
               >
-                <Calendar className="w-3.5 h-3.5 text-[#6E2E3A]" />
+                <Calendar className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>Calendario General</span>
               </button>
             )}
@@ -209,11 +209,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                   className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
                     activeModule === 'lazo'
                       ? 'bg-[#FFFFFF] text-[#332A28] shadow-xs'
-                      : 'text-[#6B6462] hover:text-[#332A28]'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
                   }`}
                   title="Ir al inicio de Lazo Planning (Home)"
                 >
-                  <Heart className="w-3.5 h-3.5 text-[#6E2E3A]" />
+                  <Heart className="w-3.5 h-3.5 text-[#C48B81]" />
                   <span className="hidden md:inline">Lazo Planning</span>
                   <span className="md:hidden">Lazo</span>
                 </button>
@@ -224,7 +224,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                   className={`flex items-center space-x-1 sm:space-x-1.5 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
                     activeModule === 'vlb'
                       ? 'bg-[#9C665C] text-[#FFFFFF] shadow-xs'
-                      : 'text-[#6B6462] hover:text-[#332A28]'
+                      : 'text-[#7D6F6B] hover:text-[#332A28]'
                   }`}
                   title="Atelier Viva la Bride (Papelería & Stands)"
                 >
@@ -248,21 +248,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             <div className="relative shrink-0">
               <button
                 onClick={() => setShowNotifMenu(!showNotifMenu)}
-                className="relative p-1.5 sm:p-2.5 text-[#6B6462] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer"
+                className="relative p-1.5 sm:p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer"
                 title="Notificaciones"
               >
                 <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
                 {unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-[#6E2E3A] rounded-full" />
+                  <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-[#C48B81] rounded-full" />
                 )}
               </button>
 
               {showNotifMenu && (
-                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#E7E1D8] py-2 z-50">
+                <div className="absolute right-0 mt-2 w-72 sm:w-80 bg-[#FFFFFF] rounded-2xl shadow-xl border border-[#EFE8E1] py-2 z-50">
                   <div className="px-4 py-2.5 border-b border-[#F7F3EE] flex items-center justify-between">
                     <span className="font-serif text-lg font-semibold text-[#332A28]">Notificaciones</span>
                     {unreadCount > 0 && (
-                      <span className="text-xs bg-[#EFE2E5] text-[#521F29] px-2.5 py-0.5 rounded-full font-medium">
+                      <span className="text-xs bg-[#EFE2DF] text-[#A86B60] px-2.5 py-0.5 rounded-full font-medium">
                         {unreadCount} nuevas
                       </span>
                     )}
@@ -279,7 +279,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                           <div className="text-xs font-bold text-[#332A28] truncate">
                             Alertas en tu pantalla
                           </div>
-                          <div className="text-[10px] text-[#6B6462] leading-tight">
+                          <div className="text-[10px] text-[#7D6F6B] leading-tight">
                             Recibe avisos al firmar contratos o confirmar invitados
                           </div>
                         </div>
@@ -327,7 +327,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                   )}
                   <div className="max-h-72 overflow-y-auto divide-y divide-[#F7F3EE]">
                     {notifications.length === 0 ? (
-                      <div className="p-5 text-center text-sm text-[#6B6462]">
+                      <div className="p-5 text-center text-sm text-[#7D6F6B]">
                         No hay notificaciones pendientes.
                       </div>
                     ) : (
@@ -338,20 +338,20 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                             await navigateToNotification(n);
                             setShowNotifMenu(false);
                           }}
-                          className={`p-3.5 text-sm cursor-pointer hover:bg-[#F8F5F0] transition group ${!n.read ? 'bg-[#EFE2E5]/40' : ''}`}
+                          className={`p-3.5 text-sm cursor-pointer hover:bg-[#FAF8F5] transition group ${!n.read ? 'bg-[#EFE2DF]/40' : ''}`}
                         >
                           <div className="flex items-center justify-between gap-1">
-                            <div className="font-semibold text-[#332A28] mb-0.5 group-hover:text-[#6E2E3A] transition">
+                            <div className="font-semibold text-[#332A28] mb-0.5 group-hover:text-[#C48B81] transition">
                               {n.title}
                             </div>
-                            <span className="text-[10px] text-[#6E2E3A] font-semibold opacity-0 group-hover:opacity-100 transition shrink-0">
+                            <span className="text-[10px] text-[#C48B81] font-semibold opacity-0 group-hover:opacity-100 transition shrink-0">
                               Ver en LAZO →
                             </span>
                           </div>
-                          <div className="text-xs text-[#6B6462] leading-snug">{n.message}</div>
-                          <div className="flex items-center justify-between text-[11px] text-[#6B6462] mt-1.5 pt-1 border-t border-[#F7F3EE]">
+                          <div className="text-xs text-[#7D6F6B] leading-snug">{n.message}</div>
+                          <div className="flex items-center justify-between text-[11px] text-[#7D6F6B] mt-1.5 pt-1 border-t border-[#F7F3EE]">
                             <span>{new Date(n.created_at).toLocaleDateString('es-MX')}</span>
-                            <span className="text-[#6E2E3A] font-semibold text-[11px] underline underline-offset-2">
+                            <span className="text-[#C48B81] font-semibold text-[11px] underline underline-offset-2">
                               Ir a la sección →
                             </span>
                           </div>
@@ -364,7 +364,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
             </div>
 
             {/* User Profile Pill & Logout */}
-            <div className="flex items-center pl-1.5 sm:pl-3 border-l border-[#E7E1D8] space-x-1 sm:space-x-2.5 shrink-0">
+            <div className="flex items-center pl-1.5 sm:pl-3 border-l border-[#EFE8E1] space-x-1 sm:space-x-2.5 shrink-0">
               {/* Clickable Avatar */}
               <div
                 onClick={() => setShowProfileModal(true)}
@@ -375,14 +375,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                   <img
                     src={user.avatar_url}
                     alt={user.name}
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#6E2E3A] transition"
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition"
                   />
                 ) : (
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EFE2E5] text-[#521F29] font-serif font-bold text-xs sm:text-sm flex items-center justify-center border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#6E2E3A] transition">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#EFE2DF] text-[#A86B60] font-serif font-bold text-xs sm:text-sm flex items-center justify-center border border-[#CCDACC] shadow-2xs group-hover:ring-2 group-hover:ring-[#C48B81] transition">
                     {user.name.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <span className="absolute -top-0.5 -right-0.5 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#6E8C70] border-2 border-[#F8F5F0]" title="En línea" />
+                <span className="absolute -top-0.5 -right-0.5 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-[#6E8C70] border-2 border-[#FAF8F5]" title="En línea" />
               </div>
 
               <div
@@ -390,14 +390,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, sidebarOpen }) 
                 className="hidden lg:block text-right cursor-pointer group"
                 title="Editar mi perfil y contraseña"
               >
-                <div className="text-sm font-semibold text-[#332A28] leading-tight group-hover:text-[#6E2E3A] transition">{user.name}</div>
-                <div className="text-xs text-[#6B6462] leading-tight">{user.email}</div>
+                <div className="text-sm font-semibold text-[#332A28] leading-tight group-hover:text-[#C48B81] transition">{user.name}</div>
+                <div className="text-xs text-[#7D6F6B] leading-tight">{user.email}</div>
               </div>
 
               <button
                 onClick={logout}
                 title="Cerrar sesión"
-                className="p-1.5 sm:p-2.5 text-[#6B6462] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer shrink-0"
+                className="p-1.5 sm:p-2.5 text-[#7D6F6B] hover:text-[#332A28] hover:bg-[#F7F3EE] rounded-full transition cursor-pointer shrink-0"
               >
                 <LogOut className="w-4 h-4" />
               </button>

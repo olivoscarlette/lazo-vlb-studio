@@ -50,14 +50,14 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
 
   if (loading || !wedding) {
     return (
-      <div className="min-h-[60vh] bg-[#F8F5F0] flex flex-col items-center justify-center text-[#1F1D1E]">
-        <div className="w-10 h-10 rounded-full border-2 border-[#E7E1D8] border-t-[#6E2E3A] animate-spin mb-4" />
+      <div className="min-h-[60vh] bg-[#FAF8F5] flex flex-col items-center justify-center text-[#2B2826]">
+        <div className="w-10 h-10 rounded-full border-2 border-[#EFE8E1] border-t-[#C48B81] animate-spin mb-4" />
         <img
           src="/lazo-logo.png"
           alt="Lazo"
           className="h-9 w-auto object-contain mb-1"
         />
-        <span className="text-[11px] text-[#6B6462] uppercase tracking-[0.22em] mt-1">
+        <span className="text-[11px] text-[#7D6F6B] uppercase tracking-[0.22em] mt-1">
           Cargando información de la boda...
         </span>
       </div>
@@ -79,7 +79,7 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
     return (
       <div className="max-w-5xl mx-auto space-y-4 pb-12">
         <div className="flex justify-end">
-          <span className="text-[11px] text-[#6B6462] font-light">
+          <span className="text-[11px] text-[#7D6F6B] font-light">
             {saving ? 'Guardando cambios...' : '✓ Sincronizado en tiempo real con Novios'}
           </span>
         </div>

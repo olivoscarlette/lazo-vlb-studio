@@ -23,7 +23,7 @@ const STATUS_META: Record<string, { label: string; badgeClass: string }> = {
   },
   PROPUESTA: {
     label: 'Elige un horario',
-    badgeClass: 'bg-[#F4EAEC] text-[#521F29] border-[#E5D1D5]'
+    badgeClass: 'bg-[#F7EDEB] text-[#A86B60] border-[#EEDAD6]'
   },
   PROGRAMADA: {
     label: 'Confirmada',
@@ -35,7 +35,7 @@ const STATUS_META: Record<string, { label: string; badgeClass: string }> = {
   },
   REALIZADA: {
     label: 'Realizada',
-    badgeClass: 'bg-[#F8F5F0] text-[#6B6462] border-[#E7E1D8]'
+    badgeClass: 'bg-[#FAF8F5] text-[#7D6F6B] border-[#EFE8E1]'
   },
   CANCELADA: {
     label: 'Cancelada',
@@ -168,10 +168,10 @@ export const NoviosReunionesView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#6B6462]">
+          <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#7D6F6B]">
             Coordinación Viva la Bride
           </span>
-          <h2 className="font-editorial text-3xl sm:text-4xl text-[#1F1D1E] mt-1">
+          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-1">
             Reuniones
           </h2>
         </div>
@@ -179,7 +179,7 @@ export const NoviosReunionesView: React.FC = () => {
         <button
           type="button"
           onClick={() => setShowRequestModal(true)}
-          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium shadow-2xs transition cursor-pointer self-start sm:self-auto"
+          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium shadow-2xs transition cursor-pointer self-start sm:self-auto"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Solicitar Reunión</span>
@@ -188,33 +188,33 @@ export const NoviosReunionesView: React.FC = () => {
 
       {/* Coordination Package Card (Collapsible) */}
       {packageInfo && (
-        <div className="bg-white rounded-3xl border border-[#E7E1D8] shadow-2xs overflow-hidden">
+        <div className="bg-white rounded-3xl border border-[#EFE8E1] shadow-2xs overflow-hidden">
           <button
             type="button"
             onClick={() => setShowPackageDetails(!showPackageDetails)}
-            className="w-full px-5 sm:px-6 py-4 flex items-center justify-between gap-3 bg-[#F8F5F0]/70 hover:bg-[#F8F5F0] transition cursor-pointer text-left"
+            className="w-full px-5 sm:px-6 py-4 flex items-center justify-between gap-3 bg-[#FAF8F5]/70 hover:bg-[#FAF8F5] transition cursor-pointer text-left"
           >
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#F4EAEC] border border-[#E5D1D5] flex items-center justify-center text-[#6E2E3A] shrink-0">
+              <div className="w-9 h-9 rounded-full bg-[#F7EDEB] border border-[#EEDAD6] flex items-center justify-center text-[#C48B81] shrink-0">
                 <Sparkles className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#6E2E3A] block">
+                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#C48B81] block">
                   Tu Paquete de Coordinación
                 </span>
-                <p className="font-editorial text-lg text-[#1F1D1E] leading-tight">
+                <p className="font-editorial text-lg text-[#2B2826] leading-tight">
                   {(packageInfo as any).title || currentWedding?.package_type || 'Coordinación Viva la Bride'}
                 </p>
               </div>
             </div>
-            <span className="inline-flex items-center gap-1 text-xs text-[#6B6462]">
+            <span className="inline-flex items-center gap-1 text-xs text-[#7D6F6B]">
               <span className="hidden sm:inline">{showPackageDetails ? 'Ocultar' : 'Ver detalles'}</span>
               {showPackageDetails ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
             </span>
           </button>
 
           {showPackageDetails && (
-            <div className="px-5 sm:px-6 py-4 border-t border-[#F8F5F0] space-y-2.5 text-xs text-[#5A524C]">
+            <div className="px-5 sm:px-6 py-4 border-t border-[#FAF8F5] space-y-2.5 text-xs text-[#5A524C]">
               {packageInfo.description && (
                 <p className="font-light leading-relaxed">{packageInfo.description}</p>
               )}
@@ -235,22 +235,22 @@ export const NoviosReunionesView: React.FC = () => {
 
       {/* Meetings List */}
       {loading ? (
-        <div className="bg-white rounded-3xl p-12 text-center border border-[#E7E1D8] text-xs text-[#6B6462]">
+        <div className="bg-white rounded-3xl p-12 text-center border border-[#EFE8E1] text-xs text-[#7D6F6B]">
           Cargando tus reuniones...
         </div>
       ) : meetings.length === 0 ? (
-        <div className="bg-white rounded-3xl p-10 text-center border border-[#E7E1D8] shadow-2xs space-y-3">
-          <div className="w-12 h-12 rounded-full bg-[#F8F5F0] border border-[#E7E1D8] flex items-center justify-center mx-auto text-[#6E2E3A]">
+        <div className="bg-white rounded-3xl p-10 text-center border border-[#EFE8E1] shadow-2xs space-y-3">
+          <div className="w-12 h-12 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">
             <CalendarDays className="w-5 h-5" />
           </div>
-          <h3 className="font-editorial text-2xl text-[#1F1D1E]">Agenda tu próxima sesión</h3>
-          <p className="text-xs text-[#6B6462] max-w-sm mx-auto font-light">
+          <h3 className="font-editorial text-2xl text-[#2B2826]">Agenda tu próxima sesión</h3>
+          <p className="text-xs text-[#7D6F6B] max-w-sm mx-auto font-light">
             Solicita una reunión con tu equipo de Viva la Bride cuando necesites revisar proveedores, avances o detalles de tu boda.
           </p>
           <button
             type="button"
             onClick={() => setShowRequestModal(true)}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Solicitar primera reunión</span>
@@ -261,20 +261,20 @@ export const NoviosReunionesView: React.FC = () => {
           {/* Upcoming & Active Requests */}
           {upcomingMeetings.length > 0 && (
             <div className="space-y-3">
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6B6462] px-1">
+              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#7D6F6B] px-1">
                 Próximas Reuniones & Solicitudes
               </span>
               {upcomingMeetings.map(m => {
                 const meta = STATUS_META[m.status] || {
                   label: m.status,
-                  badgeClass: 'bg-[#F8F5F0] text-[#6B6462] border-[#E7E1D8]'
+                  badgeClass: 'bg-[#FAF8F5] text-[#7D6F6B] border-[#EFE8E1]'
                 };
                 const proposed = parseProposedSlots((m as any).proposed_slots);
 
                 return (
                   <div
                     key={m.id}
-                    className="bg-white rounded-3xl p-5 sm:p-6 border border-[#E7E1D8] shadow-2xs space-y-4"
+                    className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs space-y-4"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                       <div className="space-y-1">
@@ -282,20 +282,20 @@ export const NoviosReunionesView: React.FC = () => {
                           <span className={`text-[10px] uppercase tracking-wider font-semibold px-2.5 py-0.5 rounded-full border ${meta.badgeClass}`}>
                             {meta.label}
                           </span>
-                          <span className="text-xs text-[#6B6462] inline-flex items-center gap-1">
-                            <CalendarDays className="w-3.5 h-3.5 text-[#6E2E3A]" />
+                          <span className="text-xs text-[#7D6F6B] inline-flex items-center gap-1">
+                            <CalendarDays className="w-3.5 h-3.5 text-[#C48B81]" />
                             {formatShortDate(m.date)}
                           </span>
                           {m.time && (
-                            <span className="text-xs text-[#6B6462] inline-flex items-center gap-1">
-                              <Clock className="w-3.5 h-3.5 text-[#6E2E3A]" />
+                            <span className="text-xs text-[#7D6F6B] inline-flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-[#C48B81]" />
                               {m.time} hrs
                             </span>
                           )}
                         </div>
-                        <h3 className="font-editorial text-xl text-[#1F1D1E]">{m.title}</h3>
+                        <h3 className="font-editorial text-xl text-[#2B2826]">{m.title}</h3>
                         {m.notes && (
-                          <p className="text-xs text-[#6B6462] font-light">{m.notes}</p>
+                          <p className="text-xs text-[#7D6F6B] font-light">{m.notes}</p>
                         )}
                       </div>
 
@@ -305,7 +305,7 @@ export const NoviosReunionesView: React.FC = () => {
                             href={(m as any).meet_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#1F1D1E] hover:bg-[#181514] text-white text-xs font-medium transition"
+                            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium transition"
                           >
                             <Video className="w-3.5 h-3.5" />
                             <span>Unirme</span>
@@ -315,9 +315,9 @@ export const NoviosReunionesView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => setViewingMeeting(m)}
-                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#F8F5F0] hover:bg-[#E7E1D8] text-[#5A524C] border border-[#E7E1D8] text-xs font-medium transition cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
                         >
-                          <FileText className="w-3.5 h-3.5 text-[#6E2E3A]" />
+                          <FileText className="w-3.5 h-3.5 text-[#C48B81]" />
                           <span>Detalles</span>
                         </button>
                       </div>
@@ -325,8 +325,8 @@ export const NoviosReunionesView: React.FC = () => {
 
                     {/* Proposed Alternative Slots (if VLB sent 2 options) */}
                     {m.status === 'PROPUESTA' && proposed.length > 0 && (
-                      <div className="pt-3 border-t border-[#F8F5F0] space-y-2.5">
-                        <p className="text-xs font-medium text-[#521F29]">
+                      <div className="pt-3 border-t border-[#FAF8F5] space-y-2.5">
+                        <p className="text-xs font-medium text-[#A86B60]">
                           Tu equipo VLB propuso estas opciones de horario — elige la que mejor te funcione:
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -335,17 +335,17 @@ export const NoviosReunionesView: React.FC = () => {
                               key={idx}
                               type="button"
                               onClick={() => handleSelectProposedSlot(m.id, slot)}
-                              className="text-left p-3.5 rounded-2xl bg-[#F8F5F0] hover:bg-[#F4EAEC] border border-[#E7E1D8] hover:border-[#6E2E3A] transition cursor-pointer flex items-center justify-between gap-2"
+                              className="text-left p-3.5 rounded-2xl bg-[#FAF8F5] hover:bg-[#F7EDEB] border border-[#EFE8E1] hover:border-[#C48B81] transition cursor-pointer flex items-center justify-between gap-2"
                             >
                               <div>
-                                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#6E2E3A] block">
+                                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#C48B81] block">
                                   {slot.note || `Opción ${idx + 1}`}
                                 </span>
-                                <span className="text-sm font-medium text-[#1F1D1E]">
+                                <span className="text-sm font-medium text-[#2B2826]">
                                   {formatShortDate(slot.date)} · {slot.time} hrs
                                 </span>
                               </div>
-                              <span className="px-3 py-1 rounded-full bg-white border border-[#E7E1D8] text-[11px] font-medium text-[#1F1D1E]">
+                              <span className="px-3 py-1 rounded-full bg-white border border-[#EFE8E1] text-[11px] font-medium text-[#2B2826]">
                                 Elegir
                               </span>
                             </button>
@@ -362,24 +362,24 @@ export const NoviosReunionesView: React.FC = () => {
           {/* Past Meetings & Agreements */}
           {pastMeetings.length > 0 && (
             <div className="space-y-3">
-              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#6B6462] px-1">
+              <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#7D6F6B] px-1">
                 Historial & Minutas ({pastMeetings.length})
               </span>
-              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#E7E1D8] shadow-2xs divide-y divide-[#F8F5F0]">
+              <div className="bg-white rounded-3xl p-4 sm:p-5 border border-[#EFE8E1] shadow-2xs divide-y divide-[#FAF8F5]">
                 {pastMeetings.map(m => {
                   const meta = STATUS_META[m.status] || {
                     label: m.status,
-                    badgeClass: 'bg-[#F8F5F0] text-[#6B6462] border-[#E7E1D8]'
+                    badgeClass: 'bg-[#FAF8F5] text-[#7D6F6B] border-[#EFE8E1]'
                   };
                   return (
                     <div
                       key={m.id}
                       onClick={() => setViewingMeeting(m)}
-                      className="py-3.5 px-2 rounded-2xl flex items-center justify-between gap-3 hover:bg-[#F8F5F0]/70 transition cursor-pointer"
+                      className="py-3.5 px-2 rounded-2xl flex items-center justify-between gap-3 hover:bg-[#FAF8F5]/70 transition cursor-pointer"
                     >
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-[#1F1D1E] truncate">{m.title}</p>
-                        <p className="text-[11px] text-[#6B6462] font-light mt-0.5">
+                        <p className="text-sm font-medium text-[#2B2826] truncate">{m.title}</p>
+                        <p className="text-[11px] text-[#7D6F6B] font-light mt-0.5">
                           {formatShortDate(m.date)} · {m.time} hrs
                         </p>
                       </div>
@@ -387,7 +387,7 @@ export const NoviosReunionesView: React.FC = () => {
                         <span className={`text-[10px] px-2.5 py-0.5 rounded-full border font-medium ${meta.badgeClass}`}>
                           {meta.label}
                         </span>
-                        <ChevronRight className="w-4 h-4 text-[#6B6462]" />
+                        <ChevronRight className="w-4 h-4 text-[#7D6F6B]" />
                       </div>
                     </div>
                   );
@@ -413,7 +413,7 @@ export const NoviosReunionesView: React.FC = () => {
             </div>
           )}
           <div>
-            <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
+            <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
               Tema de la reunión *
             </label>
             <input
@@ -423,13 +423,13 @@ export const NoviosReunionesView: React.FC = () => {
               placeholder="Ej. Revisión de presupuesto y proveedores"
               value={form.title}
               onChange={e => setForm({ ...form, title: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
+              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
                 Fecha deseada *
               </label>
               <input
@@ -437,11 +437,11 @@ export const NoviosReunionesView: React.FC = () => {
                 required
                 value={form.date}
                 onChange={e => setForm({ ...form, date: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
               />
             </div>
             <div>
-              <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
+              <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
                 Hora *
               </label>
               <input
@@ -449,13 +449,13 @@ export const NoviosReunionesView: React.FC = () => {
                 required
                 value={form.time}
                 onChange={e => setForm({ ...form, time: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
               />
             </div>
           </div>
 
           <div>
-            <label className="text-[11px] uppercase tracking-wider text-[#6B6462] block mb-1">
+            <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
               Dudas o puntos a tratar (opcional)
             </label>
             <textarea
@@ -463,7 +463,7 @@ export const NoviosReunionesView: React.FC = () => {
               placeholder="Cuéntanos qué temas te gustaría revisar en esta sesión..."
               value={form.notes}
               onChange={e => setForm({ ...form, notes: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] text-sm focus:border-[#6E2E3A]"
+              className="w-full px-3.5 py-2.5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
             />
           </div>
 
@@ -471,14 +471,14 @@ export const NoviosReunionesView: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowRequestModal(false)}
-              className="px-4 py-2 text-xs text-[#6B6462] cursor-pointer"
+              className="px-4 py-2 text-xs text-[#7D6F6B] cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="px-6 py-2 rounded-full bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-medium cursor-pointer disabled:opacity-60"
+              className="px-6 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium cursor-pointer disabled:opacity-60"
             >
               {submitting ? 'Enviando...' : 'Enviar Solicitud'}
             </button>
@@ -505,7 +505,7 @@ export const NoviosReunionesView: React.FC = () => {
                 href={(viewingMeeting as any).meet_url}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#1F1D1E] text-white font-medium"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#2B2826] text-white font-medium"
               >
                 <Video className="w-3.5 h-3.5" />
                 <span>Abrir enlace de videollamada</span>
@@ -514,34 +514,34 @@ export const NoviosReunionesView: React.FC = () => {
             )}
 
             {viewingMeeting.notes && (
-              <div className="bg-[#F8F5F0] rounded-2xl p-4 border border-[#E7E1D8]">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#6B6462] block mb-1">
+              <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFE8E1]">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#7D6F6B] block mb-1">
                   Notas
                 </span>
-                <p className="whitespace-pre-line leading-relaxed text-[#1F1D1E]">{viewingMeeting.notes}</p>
+                <p className="whitespace-pre-line leading-relaxed text-[#2B2826]">{viewingMeeting.notes}</p>
               </div>
             )}
 
             {viewingMeeting.agreements && (
-              <div className="bg-[#F8F5F0] rounded-2xl p-4 border border-[#E7E1D8]">
+              <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFE8E1]">
                 <span className="text-[10px] uppercase tracking-wider font-semibold text-[#577355] block mb-1">
                   Acuerdos
                 </span>
-                <p className="whitespace-pre-line leading-relaxed text-[#1F1D1E]">{viewingMeeting.agreements}</p>
+                <p className="whitespace-pre-line leading-relaxed text-[#2B2826]">{viewingMeeting.agreements}</p>
               </div>
             )}
 
             {viewingMeeting.pending_tasks && (
-              <div className="bg-[#F8F5F0] rounded-2xl p-4 border border-[#E7E1D8]">
-                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#6E2E3A] block mb-1">
+              <div className="bg-[#FAF8F5] rounded-2xl p-4 border border-[#EFE8E1]">
+                <span className="text-[10px] uppercase tracking-wider font-semibold text-[#C48B81] block mb-1">
                   Pendientes
                 </span>
-                <p className="whitespace-pre-line leading-relaxed text-[#1F1D1E]">{viewingMeeting.pending_tasks}</p>
+                <p className="whitespace-pre-line leading-relaxed text-[#2B2826]">{viewingMeeting.pending_tasks}</p>
               </div>
             )}
 
             {!viewingMeeting.notes && !viewingMeeting.agreements && !viewingMeeting.pending_tasks && (
-              <p className="text-center py-6 text-[#6B6462] italic font-light">
+              <p className="text-center py-6 text-[#7D6F6B] italic font-light">
                 Aún no hay acuerdos ni notas registradas para esta sesión.
               </p>
             )}

@@ -125,13 +125,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isOpen && (
         <div
           onClick={onClose}
-          className="fixed inset-0 bg-[#1F1D1E]/40 z-40 backdrop-blur-xs lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-[#2B2826]/40 z-40 backdrop-blur-xs lg:hidden transition-opacity duration-300"
         />
       )}
 
       {/* Sidebar: Responsive dockable on desktop (Full or Icon Rail), slide-over drawer on mobile */}
       <aside
-        className={`bg-[#F8F5F0] text-[#1F1D1E] border-r border-[#E7E1D8] flex flex-col transition-all duration-300 ease-in-out shrink-0 ${
+        className={`bg-[#FAF8F5] text-[#2B2826] border-r border-[#EFE8E1] flex flex-col transition-all duration-300 ease-in-out shrink-0 ${
           // Mobile classes: Fixed drawer from left-0
           `fixed top-0 bottom-0 left-0 w-80 max-w-[85vw] h-full shadow-2xl z-50 lg:shadow-none ${
             isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0 pointer-events-none'
@@ -143,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         }`}
       >
         {/* Header: Full mode or Icon Rail toggle */}
-        <div className={`border-b border-[#E7E1D8] bg-[#F8F5F0] shrink-0 flex items-center transition-all ${
+        <div className={`border-b border-[#EFE8E1] bg-[#FAF8F5] shrink-0 flex items-center transition-all ${
           isOpen ? 'px-4 py-3 sm:py-3.5 justify-between gap-2' : 'p-2.5 justify-center'
         }`}>
           {isOpen ? (
@@ -154,21 +154,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     setCurrentWedding(null);
                     if (window.innerWidth < 1024) onClose();
                   }}
-                  className="flex items-center space-x-1.5 text-xs font-semibold text-[#6B6462] hover:text-[#6E2E3A] transition cursor-pointer truncate max-w-[80%]"
+                  className="flex items-center space-x-1.5 text-xs font-semibold text-[#7D6F6B] hover:text-[#C48B81] transition cursor-pointer truncate max-w-[80%]"
                   title="Volver a la lista de bodas"
                 >
-                  <ChevronLeft className="w-4 h-4 shrink-0 text-[#6E2E3A]" />
+                  <ChevronLeft className="w-4 h-4 shrink-0 text-[#C48B81]" />
                   <span className="truncate">Volver al Dashboard</span>
                 </button>
               ) : (
-                <span className="text-xs font-semibold tracking-wider uppercase text-[#6E2E3A] truncate">
+                <span className="text-xs font-semibold tracking-wider uppercase text-[#C48B81] truncate">
                   Espacio Boda
                 </span>
               )}
 
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-xl text-[#6B6462] hover:text-[#1F1D1E] hover:bg-[#F2ECE7] transition cursor-pointer shrink-0"
+                className="p-1.5 rounded-xl text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#F2ECE7] transition cursor-pointer shrink-0"
                 title="Cerrar menú lateral"
                 aria-label="Cerrar menú lateral"
               >
@@ -179,11 +179,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
           ) : (
             <button
               onClick={onToggle || onClose}
-              className="p-2 rounded-xl text-[#6B6462] hover:text-[#6E2E3A] hover:bg-[#F2ECE7] transition cursor-pointer"
+              className="p-2 rounded-xl text-[#7D6F6B] hover:text-[#C48B81] hover:bg-[#F2ECE7] transition cursor-pointer"
               title="Expandir menú lateral"
               aria-label="Expandir menú lateral"
             >
-              <PanelLeft className="w-5 h-5 text-[#6E2E3A]" />
+              <PanelLeft className="w-5 h-5 text-[#C48B81]" />
             </button>
           )}
         </div>
@@ -203,7 +203,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {section.title}
                   </div>
                 ) : sIdx > 0 ? (
-                  <div className="my-1.5 mx-auto w-6 border-t border-[#E7E1D8]" />
+                  <div className="my-1.5 mx-auto w-6 border-t border-[#EFE8E1]" />
                 ) : null}
 
                 {visibleItems.map(item => {
@@ -221,11 +221,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           : 'justify-center p-2.5 rounded-xl'
                       } ${
                         active
-                          ? 'bg-[#F4EAEC] text-[#521F29] font-semibold border border-[#E5D1D5]/80 shadow-2xs'
-                          : 'text-[#5E524E] hover:bg-[#F5EFEB] hover:text-[#1F1D1E] font-medium'
+                          ? 'bg-[#F7EDEB] text-[#A86B60] font-semibold border border-[#EEDAD6]/80 shadow-2xs'
+                          : 'text-[#5E524E] hover:bg-[#F5EFEB] hover:text-[#2B2826] font-medium'
                       }`}
                     >
-                      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#6E2E3A]' : 'text-[#8A7E7A]'}`} />
+                      <Icon className={`w-4 h-4 shrink-0 ${active ? 'text-[#C48B81]' : 'text-[#8A7E7A]'}`} />
                       {isOpen && <span className="truncate">{item.label}</span>}
                     </button>
                   );
@@ -238,7 +238,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Footer with Wedding Day Mode Toggle */}
         {onToggleWeddingDayMode && (user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR') && (
-          <div className="p-2 border-t border-[#E7E1D8] bg-[#F8F5F0]">
+          <div className="p-2 border-t border-[#EFE8E1] bg-[#FAF8F5]">
             <button
               onClick={onToggleWeddingDayMode}
               title={weddingDayMode ? 'Ver Planeación Completa' : 'Activar Modo Día de Boda'}
@@ -246,22 +246,22 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 isOpen ? 'px-3 space-x-2' : 'p-2'
               } ${
                 weddingDayMode
-                  ? 'bg-white text-[#1F1D1E] border border-[#E7E1D8] hover:bg-[#F8F5F0] shadow-2xs'
-                  : 'bg-[#6E2E3A]/10 text-[#6E2E3A] hover:bg-[#6E2E3A]/20 border border-[#6E2E3A]/25'
+                  ? 'bg-white text-[#2B2826] border border-[#EFE8E1] hover:bg-[#FAF8F5] shadow-2xs'
+                  : 'bg-[#C48B81]/10 text-[#C48B81] hover:bg-[#C48B81]/20 border border-[#C48B81]/25'
               }`}
             >
-              <Sparkles className="w-3.5 h-3.5 text-[#6E2E3A] shrink-0" />
+              <Sparkles className="w-3.5 h-3.5 text-[#C48B81] shrink-0" />
               {isOpen && <span>{weddingDayMode ? 'Ver Planeación Completa' : 'Modo Día de Boda'}</span>}
             </button>
           </div>
         )}
 
         {/* Brand Footer */}
-        <div className={`border-t border-[#E7E1D8] bg-[#F8F5F0] flex items-center shrink-0 ${
+        <div className={`border-t border-[#EFE8E1] bg-[#FAF8F5] flex items-center shrink-0 ${
           isOpen ? 'px-4 py-2.5 justify-between' : 'p-2.5 justify-center'
         }`}>
-          {isOpen && <span className="text-[11px] font-medium text-[#6B6462]">LAZO STUDIO</span>}
-          <span className="w-2 h-2 rounded-full bg-[#6E2E3A]" title="Espacio activo" />
+          {isOpen && <span className="text-[11px] font-medium text-[#7D6F6B]">LAZO STUDIO</span>}
+          <span className="w-2 h-2 rounded-full bg-[#C48B81]" title="Espacio activo" />
         </div>
       </aside>
     </>

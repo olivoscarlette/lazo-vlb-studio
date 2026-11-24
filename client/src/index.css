@@ -2,24 +2,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Tenor+Sans&display=swap');
 
 :root {
-  /* Paleta Firma LAZO Atelier: Marfil Porcelana, Burdeos Vino Profundo y Grafito */
-  --lazo-rose: #6E2E3A;
-  --lazo-rose-dark: #521F29;
-  --lazo-rose-light: #9A5563;
-  --lazo-blush: #F4EAEC;
-  --lazo-blush-border: #E5D1D5;
+  /* Paleta Principal LAZO: Dusty Rose / Blush Satin & Marfil Cálido */
+  --lazo-rose: #C48B81;
+  --lazo-rose-dark: #A86B60;
+  --lazo-rose-light: #D9A59B;
+  --lazo-blush: #F7EDEB;
+  --lazo-blush-border: #EEDAD6;
 
   /* Alias de compatibilidad para tokens existentes */
-  --lazo-green: #6E2E3A;
-  --lazo-green-dark: #521F29;
+  --lazo-green: #C48B81;
+  --lazo-green-dark: #A86B60;
   --lazo-sage: #D5DFD6;
 
-  --lazo-cream: #F8F5F0;
-  --lazo-beige: #F1ECE4;
-  --lazo-sand: #E7E1D8;
+  --lazo-cream: #FAF7F5;
+  --lazo-beige: #F5EFEB;
+  --lazo-sand: #EFE8E1;
 
-  --lazo-text: #1F1D1E;
-  --lazo-text-secondary: #6B6462;
+  --lazo-text: #2B2826;
+  --lazo-text-secondary: #7D6F6B;
 
   --lazo-white: #FFFFFF;
 
@@ -34,19 +34,19 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-novios: 'Tenor Sans', 'Inter', -apple-system, sans-serif;
 
-  /* Explicit LAZO Atelier Design System Tokens */
-  --color-lazo-rose: #6E2E3A;
-  --color-lazo-rose-dark: #521F29;
-  --color-lazo-rose-light: #9A5563;
-  --color-lazo-blush: #F4EAEC;
-  --color-lazo-green: #6E2E3A;
-  --color-lazo-green-dark: #521F29;
+  /* Explicit LAZO Design System Tokens */
+  --color-lazo-rose: #C48B81;
+  --color-lazo-rose-dark: #A86B60;
+  --color-lazo-rose-light: #D9A59B;
+  --color-lazo-blush: #F7EDEB;
+  --color-lazo-green: #C48B81;
+  --color-lazo-green-dark: #A86B60;
   --color-lazo-sage: #D5DFD6;
-  --color-lazo-cream: #F8F5F0;
-  --color-lazo-beige: #F1ECE4;
-  --color-lazo-sand: #E7E1D8;
-  --color-lazo-text: #1F1D1E;
-  --color-lazo-text-secondary: #6B6462;
+  --color-lazo-cream: #FAF7F5;
+  --color-lazo-beige: #F5EFEB;
+  --color-lazo-sand: #EFE8E1;
+  --color-lazo-text: #2B2826;
+  --color-lazo-text-secondary: #7D6F6B;
   --color-lazo-white: #FFFFFF;
 
   /* Harmonize neutral/stone scale to Warm Alabaster & Cream Palette */

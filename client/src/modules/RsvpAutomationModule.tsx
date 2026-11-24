@@ -146,7 +146,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
 
   if (loading || !weddingData) {
     return (
-      <div className="py-20 text-center text-[#6B6462] text-sm">
+      <div className="py-20 text-center text-[#7D6F6B] text-sm">
         Cargando programación de RSVP y envíos...
       </div>
     );
@@ -163,13 +163,13 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
       {/* Encabezado Editorial */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2">
         <div>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#6B6462]">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#7D6F6B]">
             Agencia & Operación · Envíos Meta API
           </span>
-          <h1 className="font-editorial text-3xl sm:text-4xl text-[#1F1D1E] mt-1 leading-tight">
+          <h1 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-1 leading-tight">
             Programación RSVP &amp; Mesas
           </h1>
-          <p className="text-xs sm:text-sm text-[#6B6462] mt-1">
+          <p className="text-xs sm:text-sm text-[#7D6F6B] mt-1">
             Configura los mensajes programados por WhatsApp (recordatorio 7 días antes y asignación de mesa el día del evento) y la invitación formal de la boda.
           </p>
         </div>
@@ -177,25 +177,25 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
         <button
           type="button"
           onClick={() => onNavigateTab('invitados')}
-          className="self-start sm:self-auto px-4 py-2.5 bg-[#1F1D1E] hover:bg-[#1E1B19] text-white text-xs font-semibold rounded-full transition shadow-2xs flex items-center gap-2 cursor-pointer shrink-0"
+          className="self-start sm:self-auto px-4 py-2.5 bg-[#2B2826] hover:bg-[#1E1B19] text-white text-xs font-semibold rounded-full transition shadow-2xs flex items-center gap-2 cursor-pointer shrink-0"
         >
           <span>Ir a Invitados &amp; RSVP</span>
-          <ArrowRight className="w-3.5 h-3.5 text-[#D9B6BC]" />
+          <ArrowRight className="w-3.5 h-3.5 text-[#E5B7AE]" />
         </button>
       </div>
 
       {/* 1. Envíos Automáticos Programados por WhatsApp (7 Días Antes & Día del Evento) */}
-      <div className="luxury-card rounded-[28px] p-6 sm:p-8 border border-[#E7E1D8] bg-white shadow-xs">
+      <div className="luxury-card rounded-[28px] p-6 sm:p-8 border border-[#EFE8E1] bg-white shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-[#F5EFEB]">
           <div>
-            <div className="flex items-center space-x-2 text-xs font-semibold text-[#521F29] uppercase tracking-wider">
-              <Clock className="w-4 h-4 text-[#6E2E3A]" />
+            <div className="flex items-center space-x-2 text-xs font-semibold text-[#A86B60] uppercase tracking-wider">
+              <Clock className="w-4 h-4 text-[#C48B81]" />
               <span>Difusiones Automatizadas por WhatsApp</span>
             </div>
-            <h2 className="font-editorial text-2xl sm:text-3xl text-[#1F1D1E] mt-1">
+            <h2 className="font-editorial text-2xl sm:text-3xl text-[#2B2826] mt-1">
               Recordatorio 7 Días Antes &amp; Mesas Día del Evento
             </h2>
-            <p className="text-xs sm:text-sm text-[#6B6462] mt-1 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#7D6F6B] mt-1 leading-relaxed">
               Mensajes programados que se disparan automáticamente a los invitados confirmados para compartir la ubicación, dress code y su asignación de mesa.
             </p>
           </div>
@@ -203,7 +203,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
           <button
             type="button"
             onClick={() => setShowBroadcastModal(true)}
-            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs cursor-pointer shrink-0 self-start sm:self-center"
+            className="inline-flex items-center space-x-2 px-5 py-2.5 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs cursor-pointer shrink-0 self-start sm:self-center"
           >
             <Clock className="w-4 h-4" />
             <span>Configurar &amp; Programar</span>
@@ -212,7 +212,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6">
           {/* Card 1: Recordatorio 7 Días */}
-          <div className="p-5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] flex flex-col justify-between space-y-4">
+          <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] flex flex-col justify-between space-y-4">
             <div>
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#EBDCC5]/50 text-[#8A6332]">
@@ -226,13 +226,13 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
               <h3 className="font-editorial text-lg text-[#332A28] mt-2.5">
                 Ubicación, Dress Code y Horarios
               </h3>
-              <p className="text-xs text-[#6B6462] mt-1 leading-relaxed">
+              <p className="text-xs text-[#7D6F6B] mt-1 leading-relaxed">
                 Envía el recordatorio editorial formal con templo, recepción, dress code y mapas a todos los invitados que tengan estatus <strong>Confirmado</strong>.
               </p>
             </div>
 
-            <div className="pt-3 border-t border-[#E7E1D8]/60 flex items-center justify-between">
-              <span className="text-[11px] text-[#6B6462]">
+            <div className="pt-3 border-t border-[#EFE8E1]/60 flex items-center justify-between">
+              <span className="text-[11px] text-[#7D6F6B]">
                 Estatus:{' '}
                 <strong className="text-[#332A28]">
                   {weddingData?.reminder_7days_status === 'SENT' ? 'Enviado ✓' : 'Programado'}
@@ -241,7 +241,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
               <button
                 type="button"
                 onClick={() => setShowBroadcastModal(true)}
-                className="text-xs font-bold text-[#6E2E3A] hover:underline cursor-pointer"
+                className="text-xs font-bold text-[#C48B81] hover:underline cursor-pointer"
               >
                 Editar texto u hora →
               </button>
@@ -249,7 +249,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
           </div>
 
           {/* Card 2: Mesa Día del Evento */}
-          <div className="p-5 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] flex flex-col justify-between space-y-4">
+          <div className="p-5 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] flex flex-col justify-between space-y-4">
             <div>
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-[#E4ECE5] text-[#2B5235]">
@@ -263,14 +263,14 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
               <h3 className="font-editorial text-lg text-[#332A28] mt-2.5">
                 Asignación de Mesa y Bienvenida
               </h3>
-              <p className="text-xs text-[#6B6462] mt-1 leading-relaxed">
+              <p className="text-xs text-[#7D6F6B] mt-1 leading-relaxed">
                 El día de la boda entrega el número y nombre de mesa asignada a los confirmados para que lleguen directamente a su lugar con el equipo{' '}
                 {isPlannerVirtual ? 'de recepción' : 'Viva la Bride'}.
               </p>
             </div>
 
-            <div className="pt-3 border-t border-[#E7E1D8]/60 flex items-center justify-between">
-              <span className="text-[11px] text-[#6B6462]">
+            <div className="pt-3 border-t border-[#EFE8E1]/60 flex items-center justify-between">
+              <span className="text-[11px] text-[#7D6F6B]">
                 Estatus:{' '}
                 <strong className="text-[#332A28]">
                   {weddingData?.dayof_seating_status === 'SENT' ? 'Enviado ✓' : 'Programado'}
@@ -279,7 +279,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
               <button
                 type="button"
                 onClick={() => setShowBroadcastModal(true)}
-                className="text-xs font-bold text-[#6E2E3A] hover:underline cursor-pointer"
+                className="text-xs font-bold text-[#C48B81] hover:underline cursor-pointer"
               >
                 Editar texto u hora →
               </button>
@@ -289,17 +289,17 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
       </div>
 
       {/* 2. Invitación Formal & Flujo Automatizado de RSVP */}
-      <div className="luxury-card rounded-[28px] p-6 sm:p-8 border border-[#E7E1D8] bg-white shadow-xs">
+      <div className="luxury-card rounded-[28px] p-6 sm:p-8 border border-[#EFE8E1] bg-white shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-[#F5EFEB]">
           <div>
-            <div className="flex items-center space-x-2 text-xs font-semibold text-[#521F29] uppercase tracking-wider">
-              <Sparkles className="w-4 h-4 text-[#6E2E3A]" />
+            <div className="flex items-center space-x-2 text-xs font-semibold text-[#A86B60] uppercase tracking-wider">
+              <Sparkles className="w-4 h-4 text-[#C48B81]" />
               <span>RSVP Interactivo &amp; Invitación Digital</span>
             </div>
-            <h2 className="font-editorial text-2xl sm:text-3xl text-[#1F1D1E] mt-1">
+            <h2 className="font-editorial text-2xl sm:text-3xl text-[#2B2826] mt-1">
               Invitación de la Boda &amp; Bot de WhatsApp
             </h2>
-            <p className="text-xs sm:text-sm text-[#6B6462] mt-1 leading-relaxed">
+            <p className="text-xs sm:text-sm text-[#7D6F6B] mt-1 leading-relaxed">
               Configura cómo reciben tus invitados la invitación formal (PDF o Enlace Canva/Web) y supervisa el flujo de confirmación automática.
             </p>
           </div>
@@ -312,7 +312,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
             <button
               type="button"
               onClick={() => onNavigateTab('invitados')}
-              className="px-4 py-2 bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs flex items-center space-x-1.5 cursor-pointer"
+              className="px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs flex items-center space-x-1.5 cursor-pointer"
             >
               <span>Enviar a Invitados</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -343,7 +343,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
           {/* Columna Izquierda: Configuración de la Invitación */}
           <div className="lg:col-span-7 space-y-5">
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#6B6462] mb-2">
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#7D6F6B] mb-2">
                 Tipo de Invitación Formal
               </label>
               <div className="grid grid-cols-2 gap-3">
@@ -352,22 +352,22 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
                   onClick={() => setWeddingData({ ...weddingData, invitation_type: 'LINK' })}
                   className={`p-3.5 rounded-2xl border text-left transition flex items-center space-x-3 cursor-pointer ${
                     (weddingData.invitation_type || 'LINK') === 'LINK'
-                      ? 'bg-[#F4EAEC] border-[#6E2E3A] text-[#1F1D1E] shadow-2xs'
-                      : 'bg-[#F8F5F0] border-[#E7E1D8] text-[#6B6462] hover:bg-white'
+                      ? 'bg-[#F7EDEB] border-[#C48B81] text-[#2B2826] shadow-2xs'
+                      : 'bg-[#FAF8F5] border-[#EFE8E1] text-[#7D6F6B] hover:bg-white'
                   }`}
                 >
                   <div
                     className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
                       (weddingData.invitation_type || 'LINK') === 'LINK'
-                        ? 'bg-white text-[#6E2E3A]'
-                        : 'bg-white text-[#6B6462]'
+                        ? 'bg-white text-[#C48B81]'
+                        : 'bg-white text-[#7D6F6B]'
                     }`}
                   >
                     <LinkIcon className="w-4 h-4" />
                   </div>
                   <div>
                     <div className="text-xs font-bold">Enlace Digital</div>
-                    <div className="text-[11px] text-[#6B6462] opacity-80">Canva, microsite o web</div>
+                    <div className="text-[11px] text-[#7D6F6B] opacity-80">Canva, microsite o web</div>
                   </div>
                 </button>
 
@@ -376,30 +376,30 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
                   onClick={() => setWeddingData({ ...weddingData, invitation_type: 'PDF' })}
                   className={`p-3.5 rounded-2xl border text-left transition flex items-center space-x-3 cursor-pointer ${
                     weddingData.invitation_type === 'PDF'
-                      ? 'bg-[#F4EAEC] border-[#6E2E3A] text-[#1F1D1E] shadow-2xs'
-                      : 'bg-[#F8F5F0] border-[#E7E1D8] text-[#6B6462] hover:bg-white'
+                      ? 'bg-[#F7EDEB] border-[#C48B81] text-[#2B2826] shadow-2xs'
+                      : 'bg-[#FAF8F5] border-[#EFE8E1] text-[#7D6F6B] hover:bg-white'
                   }`}
                 >
                   <div
                     className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
                       weddingData.invitation_type === 'PDF'
-                        ? 'bg-white text-[#6E2E3A]'
-                        : 'bg-white text-[#6B6462]'
+                        ? 'bg-white text-[#C48B81]'
+                        : 'bg-white text-[#7D6F6B]'
                     }`}
                   >
                     <FileText className="w-4 h-4" />
                   </div>
                   <div>
                     <div className="text-xs font-bold">Archivo PDF</div>
-                    <div className="text-[11px] text-[#6B6462] opacity-80">Documento adjunto oficial</div>
+                    <div className="text-[11px] text-[#7D6F6B] opacity-80">Documento adjunto oficial</div>
                   </div>
                 </button>
               </div>
             </div>
 
             {(weddingData.invitation_type || 'LINK') === 'LINK' ? (
-              <div className="p-4 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] space-y-2">
-                <label className="block text-xs font-bold text-[#1F1D1E]">
+              <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-2">
+                <label className="block text-xs font-bold text-[#2B2826]">
                   URL de la Invitación Web o Canva
                 </label>
                 <div className="flex items-center space-x-2">
@@ -408,27 +408,27 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
                     placeholder="https://www.canva.com/design/... o https://laboda.com"
                     value={weddingData.invitation_url || ''}
                     onChange={e => setWeddingData({ ...weddingData, invitation_url: e.target.value })}
-                    className="flex-1 px-3.5 py-2.5 text-xs bg-white border border-[#E7E1D8] rounded-xl text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
+                    className="flex-1 px-3.5 py-2.5 text-xs bg-white border border-[#EFE8E1] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
                   />
                   {weddingData.invitation_url && (
                     <a
                       href={weddingData.invitation_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="p-2.5 rounded-xl bg-white border border-[#E7E1D8] text-[#6B6462] hover:text-[#6E2E3A] transition shadow-2xs shrink-0"
+                      className="p-2.5 rounded-xl bg-white border border-[#EFE8E1] text-[#7D6F6B] hover:text-[#C48B81] transition shadow-2xs shrink-0"
                       title="Probar enlace en nueva pestaña"
                     >
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   )}
                 </div>
-                <p className="text-[11px] text-[#6B6462] leading-relaxed">
+                <p className="text-[11px] text-[#7D6F6B] leading-relaxed">
                   El bot enviará este enlace directamente al invitado en WhatsApp con vista previa para que pueda abrir su invitación con 1 toque.
                 </p>
               </div>
             ) : (
-              <div className="p-4 rounded-2xl bg-[#F8F5F0] border border-[#E7E1D8] space-y-3">
-                <label className="block text-xs font-bold text-[#1F1D1E]">
+              <div className="p-4 rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] space-y-3">
+                <label className="block text-xs font-bold text-[#2B2826]">
                   Archivo PDF de la Invitación
                 </label>
                 {weddingData.invitation_pdf_url ? (
@@ -436,7 +436,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
                     <div className="flex items-center space-x-2.5 min-w-0">
                       <FileText className="w-5 h-5 text-[#25D366] shrink-0" />
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-[#1F1D1E] truncate">
+                        <div className="text-xs font-bold text-[#2B2826] truncate">
                           {weddingData.invitation_pdf_filename || 'Invitacion_Boda.pdf'}
                         </div>
                         <div className="text-[10px] text-[#354B38] font-medium">
@@ -449,7 +449,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
                         href={weddingData.invitation_pdf_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-2.5 py-1.5 text-[11px] font-semibold bg-[#F8F5F0] hover:bg-[#F3ECE2] text-[#1F1D1E] border border-[#E7E1D8] rounded-lg transition"
+                        className="px-2.5 py-1.5 text-[11px] font-semibold bg-[#FAF8F5] hover:bg-[#F3ECE2] text-[#2B2826] border border-[#EFE8E1] rounded-lg transition"
                       >
                         Ver PDF
                       </a>
@@ -464,15 +464,15 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
                     </div>
                   </div>
                 ) : (
-                  <div className="text-center py-4 px-3 border-2 border-dashed border-[#E7E1D8] rounded-xl bg-white">
+                  <div className="text-center py-4 px-3 border-2 border-dashed border-[#EFE8E1] rounded-xl bg-white">
                     <FileText className="w-8 h-8 mx-auto text-[#C7B6A6] mb-2" />
-                    <p className="text-xs text-[#1F1D1E] font-semibold">
+                    <p className="text-xs text-[#2B2826] font-semibold">
                       Aún no has subido el archivo PDF
                     </p>
-                    <p className="text-[11px] text-[#6B6462] mt-0.5 mb-3">
+                    <p className="text-[11px] text-[#7D6F6B] mt-0.5 mb-3">
                       Sube el PDF diseñado de la boda (máximo 25 MB).
                     </p>
-                    <label className="inline-flex items-center space-x-2 px-4 py-2 bg-[#6E2E3A] hover:bg-[#521F29] text-white text-xs font-bold rounded-xl cursor-pointer transition shadow-2xs">
+                    <label className="inline-flex items-center space-x-2 px-4 py-2 bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-bold rounded-xl cursor-pointer transition shadow-2xs">
                       {uploadingPdf ? (
                         <>
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -496,7 +496,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
                 )}
                 {weddingData.invitation_pdf_url && (
                   <div className="pt-1">
-                    <label className="inline-flex items-center space-x-1.5 text-xs text-[#6E2E3A] hover:underline cursor-pointer font-semibold">
+                    <label className="inline-flex items-center space-x-1.5 text-xs text-[#C48B81] hover:underline cursor-pointer font-semibold">
                       <Upload className="w-3 h-3" />
                       <span>{uploadingPdf ? 'Reemplazando...' : 'Reemplazar por otro PDF'}</span>
                       <input
@@ -514,7 +514,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="block text-xs font-bold text-[#1F1D1E] mb-1">
+                <label className="block text-xs font-bold text-[#2B2826] mb-1">
                   Código de Vestimenta
                 </label>
                 <input
@@ -522,26 +522,26 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
                   placeholder="Ej. Formal Riguroso, Playa Elegante"
                   value={weddingData.dress_code || ''}
                   onChange={e => setWeddingData({ ...weddingData, dress_code: e.target.value })}
-                  className="w-full px-3.5 py-2.5 text-xs bg-[#F8F5F0] border border-[#E7E1D8] rounded-xl text-[#1F1D1E] focus:outline-none focus:border-[#6E2E3A]"
+                  className="w-full px-3.5 py-2.5 text-xs bg-[#FAF8F5] border border-[#EFE8E1] rounded-xl text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-[#1F1D1E] mb-1">
+                <label className="block text-xs font-bold text-[#2B2826] mb-1">
                   Restricción de Edad
                 </label>
                 <div
                   onClick={() => setWeddingData({ ...weddingData, no_children: !weddingData.no_children })}
                   className={`px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between cursor-pointer transition ${
                     weddingData.no_children
-                      ? 'bg-[#F4EAEC] border-[#6E2E3A] text-[#521F29]'
-                      : 'bg-[#F8F5F0] border-[#E7E1D8] text-[#6B6462]'
+                      ? 'bg-[#F7EDEB] border-[#C48B81] text-[#A86B60]'
+                      : 'bg-[#FAF8F5] border-[#EFE8E1] text-[#7D6F6B]'
                   }`}
                 >
                   <span>Solo Adultos (No Niños)</span>
                   <div
                     className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                      weddingData.no_children ? 'bg-[#6E2E3A] border-[#6E2E3A] text-white' : 'border-[#C7B6A6]'
+                      weddingData.no_children ? 'bg-[#C48B81] border-[#C48B81] text-white' : 'border-[#C7B6A6]'
                     }`}
                   >
                     {weddingData.no_children && <Check className="w-3 h-3" />}
@@ -555,7 +555,7 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
                 type="button"
                 onClick={handleSaveInvitationSettings}
                 disabled={savingSettings}
-                className="px-5 py-2.5 bg-[#1F1D1E] hover:bg-[#1E1B19] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs cursor-pointer disabled:opacity-40"
+                className="px-5 py-2.5 bg-[#2B2826] hover:bg-[#1E1B19] text-white text-xs font-bold uppercase tracking-wider rounded-xl transition shadow-2xs cursor-pointer disabled:opacity-40"
               >
                 {savingSettings ? 'Guardando...' : 'Guardar Configuración'}
               </button>
@@ -563,45 +563,45 @@ export const RsvpAutomationModule: React.FC<RsvpAutomationModuleProps> = ({ onNa
           </div>
 
           {/* Columna Derecha: Flujo Visual del Bot */}
-          <div className="lg:col-span-5 bg-[#F8F5F0] border border-[#E7E1D8] rounded-2xl p-5 sm:p-6 space-y-4">
-            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#6B6462]">
-              <Bot className="w-4 h-4 text-[#6E2E3A]" />
+          <div className="lg:col-span-5 bg-[#FAF8F5] border border-[#EFE8E1] rounded-2xl p-5 sm:p-6 space-y-4">
+            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#7D6F6B]">
+              <Bot className="w-4 h-4 text-[#C48B81]" />
               <span>Flujo Conversacional Oficial</span>
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3.5 bg-white border border-[#E7E1D8] rounded-xl space-y-1">
+              <div className="p-3.5 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#1F1D1E]">1. Invitación Inicial</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F4EAEC] text-[#521F29] font-semibold">
+                  <span className="font-bold text-[#2B2826]">1. Invitación Inicial</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60] font-semibold">
                     Meta Template
                   </span>
                 </div>
-                <p className="text-[11px] text-[#6B6462]">
+                <p className="text-[11px] text-[#7D6F6B]">
                   Envía la invitación personalizada formal con botones: <strong>[Confirmar Asistencia]</strong> y <strong>[No podré asistir]</strong>.
                 </p>
               </div>
 
-              <div className="p-3.5 bg-white border border-[#E7E1D8] rounded-xl space-y-1">
+              <div className="p-3.5 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#1F1D1E]">2. Validación de Asistentes</span>
+                  <span className="font-bold text-[#2B2826]">2. Validación de Asistentes</span>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#E5EDE6] text-[#4B634D] font-semibold">
                     Interactivo
                   </span>
                 </div>
-                <p className="text-[11px] text-[#6B6462]">
+                <p className="text-[11px] text-[#7D6F6B]">
                   Si tiene 2+ pases: <em>"¿Confirmas la asistencia de todas las personas?"</em> con botones <strong>[Asistiremos todos]</strong> o <strong>[Modificar número]</strong>.
                 </p>
               </div>
 
-              <div className="p-3.5 bg-white border border-[#E7E1D8] rounded-xl space-y-1">
+              <div className="p-3.5 bg-white border border-[#EFE8E1] rounded-xl space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#1F1D1E]">3. Ficha Final &amp; Entrega</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F4EAEC] text-[#521F29] font-semibold">
+                  <span className="font-bold text-[#2B2826]">3. Ficha Final &amp; Entrega</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#A86B60] font-semibold">
                     PDF o Enlace
                   </span>
                 </div>
-                <p className="text-[11px] text-[#6B6462]">
+                <p className="text-[11px] text-[#7D6F6B]">
                   Entrega la confirmación formal (ceremonia, recepción, dress code, pases confirmados) y adjunta el <strong>archivo PDF</strong> o <strong>enlace Canva</strong>.
                 </p>
               </div>
