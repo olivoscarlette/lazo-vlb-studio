@@ -132,8 +132,19 @@ export const MyDayView: React.FC = () => {
         )}
       </div>
 
-      {/* Clean Sub-Tabs: Itinerario · Artículos & Entregas · Ceremonias (Ceremonias solo en bodas) */}
+      {/* Clean Sub-Tabs: Ceremonias (solo bodas) · Minuto a Minuto · Artículos & Entregas */}
       <div className="flex flex-wrap items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs gap-1">
+        {!isNonWedding && (
+          <button
+            type="button"
+            onClick={() => setSubTab('ceremonias')}
+            className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
+              activeSubTab === 'ceremonias' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+            }`}
+          >
+            Ceremonias
+          </button>
+        )}
         <button
           type="button"
           onClick={() => setSubTab('itinerario')}
@@ -152,17 +163,6 @@ export const MyDayView: React.FC = () => {
         >
           Artículos &amp; Entregas ({handoverItems.length})
         </button>
-        {!isNonWedding && (
-          <button
-            type="button"
-            onClick={() => setSubTab('ceremonias')}
-            className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
-              activeSubTab === 'ceremonias' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
-            }`}
-          >
-            Ceremonias
-          </button>
-        )}
       </div>
 
       {/* SUB-TAB 2: CONTROL DE ARTÍCULOS & ENTREGAS (Recepción previa + Devolución al cierre) */}
