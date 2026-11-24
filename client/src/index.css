@@ -167,8 +167,15 @@
     background-color: var(--lazo-white);
     border-color: var(--lazo-sand);
     color: var(--lazo-text);
-    font-size: 0.875rem !important; /* 14px */
+    font-size: 0.875rem !important; /* 14px en escritorio */
     line-height: 1.5 !important;
+  }
+
+  /* Evita el auto-zoom molesto de iOS Safari al enfocar inputs en celular */
+  @media (max-width: 768px) {
+    input, select, textarea {
+      font-size: 16px !important;
+    }
   }
 
   input:focus, select:focus, textarea:focus {
