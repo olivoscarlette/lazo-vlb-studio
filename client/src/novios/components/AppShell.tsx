@@ -151,7 +151,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
     <div className="min-h-screen bg-[#FAF8F5] text-[#2B2826] flex flex-col">
       {/* Top Minimalist Header */}
       <header className="sticky top-0 z-40 bg-[#FAF8F5] pt-[env(safe-area-inset-top)] border-b border-[#EFE8E1]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-10 h-16 flex items-center justify-between gap-4">
           <button
             type="button"
             onClick={() => onSelectTab('inicio')}
@@ -308,7 +308,7 @@ export const AppShell: React.FC<AppShellProps> = ({ activeTab, onSelectTab, chil
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-7 pb-24 md:pb-12">
+      <main className="flex-1 max-w-[1440px] w-full mx-auto px-4 sm:px-6 lg:px-10 pt-4 sm:pt-6 pb-24 md:pb-10">
         {children}
       </main>
 

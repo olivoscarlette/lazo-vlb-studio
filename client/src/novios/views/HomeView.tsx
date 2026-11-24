@@ -189,7 +189,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
           <div className="bg-white rounded-[1.5rem] sm:rounded-[2rem] border border-[#EFE8E1] shadow-xs overflow-hidden">
             <div className="grid grid-cols-1 lg:grid-cols-12">
               {/* Left 5 cols (Desktop) / Bottom (Mobile): Sculptural Editorial Panel */}
-              <div className="order-2 lg:order-1 lg:col-span-5 p-6 sm:p-8 lg:p-10 flex flex-col justify-between bg-gradient-to-br from-white via-[#FCF9F6] to-[#F7EDEB]/45">
+              <div className="order-2 lg:order-1 lg:col-span-5 p-5 sm:p-7 lg:p-8 flex flex-col justify-center gap-6 bg-gradient-to-br from-white via-[#FCF9F6] to-[#F7EDEB]/45">
                 <div>
                   {/* Quiet Event Type Eyebrow */}
                   <div className="flex items-center gap-3">
@@ -200,7 +200,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   </div>
 
                   {/* Protagonist Event / Couple Title */}
-                  <h1 className="font-editorial text-4xl sm:text-[2.95rem] lg:text-[3.4rem] leading-[1.04] tracking-[-0.015em] text-[#2B2826] mt-3.5">
+                  <h1 className="font-editorial text-4xl sm:text-[2.85rem] lg:text-[3.25rem] leading-[1.04] tracking-[-0.015em] text-[#2B2826] mt-3">
                     {hasPartner2 ? (
                       <>
                         {profile.partner1}{' '}
@@ -212,13 +212,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     )}
                   </h1>
 
-                  {/* Sculptural Editorial Countdown + Date & Venue (Zero Generic Pills) */}
-                  <div className="mt-6 flex items-center gap-5">
-                    <div className="font-editorial text-[3.1rem] sm:text-[3.5rem] leading-none text-[#C48B81] tracking-[-0.02em] shrink-0">
+                  {/* Sculptural Editorial Countdown + Date & Venue */}
+                  <div className="mt-5 flex items-center gap-4 sm:gap-5">
+                    <div className="font-editorial text-[2.95rem] sm:text-[3.35rem] leading-none text-[#C48B81] tracking-[-0.02em] shrink-0">
                       {days === 0 ? '¡Hoy!' : days}
                     </div>
-                    <div className="h-11 w-px bg-[#E5D7CE] shrink-0" />
-                    <div className="min-w-0 space-y-1">
+                    <div className="h-10 w-px bg-[#E5D7CE] shrink-0" />
+                    <div className="min-w-0 space-y-0.5">
                       <div className="text-[10.5px] sm:text-[11px] uppercase tracking-[0.22em] font-semibold text-[#2B2826]">
                         {days === 0
                           ? isNonWedding
@@ -243,56 +243,56 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                {/* Clean 4-Metric Horizontal Strip */}
-                <div className="mt-7 lg:mt-9 pt-5 border-t border-[#EFE8E1] grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-4">
+                {/* Tactile 4-Tile KPI Strip */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
                   <button
                     type="button"
                     onClick={() => onNavigate('invitados')}
-                    className="text-left group cursor-pointer"
+                    className="text-left group cursor-pointer rounded-2xl bg-[#FAF8F5] hover:bg-white border border-[#EFE8E1] hover:border-[#C48B81]/50 px-3.5 py-2.5 transition"
                   >
-                    <div className="font-editorial text-2xl lg:text-[1.65rem] text-[#2B2826] group-hover:text-[#C48B81] transition">
+                    <div className="font-editorial text-xl lg:text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition">
                       {confirmedPasses}
                     </div>
-                    <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">Confirmados</div>
+                    <div className="text-[10.5px] text-[#7D6F6B] font-light mt-0.5">Confirmados</div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => onNavigate('invitados')}
-                    className="text-left group cursor-pointer"
+                    className="text-left group cursor-pointer rounded-2xl bg-[#FAF8F5] hover:bg-white border border-[#EFE8E1] hover:border-[#C48B81]/50 px-3.5 py-2.5 transition"
                   >
-                    <div className="font-editorial text-2xl lg:text-[1.65rem] text-[#2B2826] group-hover:text-[#C48B81] transition">
+                    <div className="font-editorial text-xl lg:text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition">
                       {tablesCount}
                     </div>
-                    <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">Mesas</div>
+                    <div className="text-[10.5px] text-[#7D6F6B] font-light mt-0.5">Mesas</div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => onNavigate('presupuesto')}
-                    className="text-left group cursor-pointer"
+                    className="text-left group cursor-pointer rounded-2xl bg-[#FAF8F5] hover:bg-white border border-[#EFE8E1] hover:border-[#C48B81]/50 px-3.5 py-2.5 transition"
                   >
-                    <div className="font-editorial text-2xl lg:text-[1.65rem] text-[#2B2826] group-hover:text-[#C48B81] transition truncate">
+                    <div className="font-editorial text-xl lg:text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition truncate">
                       {totalPaid > 0 ? formatMXN(totalPaid) : '$0'}
                     </div>
-                    <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">Liquidado</div>
+                    <div className="text-[10.5px] text-[#7D6F6B] font-light mt-0.5">Liquidado</div>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => onNavigate('checklist')}
-                    className="text-left group cursor-pointer"
+                    className="text-left group cursor-pointer rounded-2xl bg-[#FAF8F5] hover:bg-white border border-[#EFE8E1] hover:border-[#C48B81]/50 px-3.5 py-2.5 transition"
                   >
-                    <div className="font-editorial text-2xl lg:text-[1.65rem] text-[#2B2826] group-hover:text-[#C48B81] transition">
+                    <div className="font-editorial text-xl lg:text-2xl text-[#2B2826] group-hover:text-[#C48B81] transition">
                       {progressPct}%
                     </div>
-                    <div className="text-[11px] text-[#7D6F6B] font-light mt-0.5">Avance</div>
+                    <div className="text-[10.5px] text-[#7D6F6B] font-light mt-0.5">Avance</div>
                   </button>
                 </div>
               </div>
 
               {/* Right 7 cols (Desktop) / Top (Mobile): Wide Luminous Celebration Photograph */}
-              <div className="order-1 lg:order-2 lg:col-span-7 relative bg-[#FAF8F5] h-[220px] sm:h-[290px] lg:h-auto lg:min-h-[340px] overflow-hidden">
+              <div className="order-1 lg:order-2 lg:col-span-7 relative bg-[#FAF8F5] h-[220px] sm:h-[280px] lg:h-auto lg:min-h-[300px] overflow-hidden">
                 {useCrispFrame ? (
                   <>
                     <img
@@ -414,10 +414,10 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
 
       {subTab === 'resumen' ? (
         <div className="space-y-5">
-          {/* 2. Real-Data 2-Column Bridal Studio Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            {/* Left: Real Invitados & Mesas Status Card */}
-            <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-5">
+          {/* 2. Real-Data 3-Column Bridal Studio Bento Grid (Everything visible above the fold on laptop) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5">
+            {/* Col 1–4: Real Invitados & Mesas Status Card */}
+            <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-5">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
@@ -442,8 +442,8 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 <div className="flex items-baseline justify-between">
                   <div className="font-editorial text-3xl text-[#2B2826]">
                     {confirmedPasses}{' '}
-                    <span className="text-sm text-[#7D6F6B] font-light">
-                      de {totalPasses || profile.estimatedGuests} lugares confirmados
+                    <span className="text-xs sm:text-sm text-[#7D6F6B] font-light">
+                      de {totalPasses || profile.estimatedGuests} confirmados
                     </span>
                   </div>
                   <span className="text-xs font-medium text-[#577355]">
@@ -463,17 +463,17 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 pt-1">
-                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-3 text-center">
+                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
                     <div className="font-editorial text-lg text-[#455C44]">{confirmedPasses}</div>
-                    <div className="text-[10px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Confirmados</div>
+                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Confirmados</div>
                   </div>
-                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-3 text-center">
+                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
                     <div className="font-editorial text-lg text-[#2B2826]">{pendingPasses}</div>
-                    <div className="text-[10px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Pendientes</div>
+                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Pendientes</div>
                   </div>
-                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-3 text-center">
+                  <div className="rounded-2xl bg-[#FAF8F5] border border-[#EFE8E1] p-2.5 text-center">
                     <div className="font-editorial text-lg text-[#A86B60]">{declinedPasses}</div>
-                    <div className="text-[10px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Declinados</div>
+                    <div className="text-[9.5px] text-[#7D6F6B] uppercase tracking-wider mt-0.5">Declinados</div>
                   </div>
                 </div>
               </div>
@@ -487,13 +487,13 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   onClick={() => onNavigate('invitados')}
                   className="font-medium text-[#2B2826] hover:text-[#C48B81] transition cursor-pointer"
                 >
-                  Gestionar mesas y plano →
+                  Plano 2D →
                 </button>
               </div>
             </div>
 
-            {/* Right: Próximos Pasos */}
-            <div className="lg:col-span-6 bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-4">
+            {/* Col 5–8: Próximos Pasos */}
+            <div className="lg:col-span-4 bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs flex flex-col justify-between space-y-4">
               <div className="flex items-start justify-between">
                 <div>
                   <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
@@ -507,7 +507,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   onClick={() => onNavigate('checklist')}
                   className="inline-flex items-center gap-1 text-xs font-medium text-[#C48B81] hover:text-[#A86B60] cursor-pointer"
                 >
-                  <span>Ver checklist</span>
+                  <span>Ver todo</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -522,7 +522,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                     <div
                       key={task.id}
                       onClick={() => toggleTask(task.id)}
-                      className="py-3 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#FAF8F5] px-2 -mx-2 rounded-xl transition"
+                      className="py-2.5 flex items-center justify-between gap-3 cursor-pointer hover:bg-[#FAF8F5] px-2 -mx-2 rounded-xl transition"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-5 h-5 rounded-full border border-[#C48B81]/50 bg-white flex items-center justify-center shrink-0 hover:border-[#C48B81]">
@@ -530,7 +530,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                         </div>
                         <div className="min-w-0">
                           <p className="text-sm text-[#2B2826] truncate">{task.title}</p>
-                          <p className="text-[11px] text-[#7D6F6B] font-light">
+                          <p className="text-[11px] text-[#7D6F6B] font-light truncate">
                             {task.category} · {formatShortDate(task.dueDate)}
                           </p>
                         </div>
@@ -547,47 +547,77 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                 </span>
               </div>
             </div>
-          </div>
 
-          {/* 3. Compact Quick Access Strip: Presupuesto + Itinerario */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <button
-              type="button"
-              onClick={() => onNavigate('presupuesto')}
-              className="text-left bg-white rounded-2xl p-5 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition flex items-center justify-between gap-4 cursor-pointer"
-            >
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
-                  Control Financiero
-                </span>
-                <div className="font-editorial text-xl text-[#2B2826] mt-1">
-                  {totalContracted > 0 ? `${formatMXN(totalPaid)} liquidado` : 'Presupuesto por iniciar'}
+            {/* Col 9–12: Stacked Control Financiero + El Gran Día */}
+            <div className="md:col-span-2 lg:col-span-4 flex flex-col gap-5">
+              <button
+                type="button"
+                onClick={() => onNavigate('presupuesto')}
+                className="flex-1 text-left bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition flex flex-col justify-between gap-4 cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
+                      Control Financiero
+                    </span>
+                    <div className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                      {totalContracted > 0 ? formatMXN(totalPaid) : 'Presupuesto'}
+                    </div>
+                    <p className="text-xs text-[#7D6F6B] font-light mt-0.5">
+                      {totalContracted > 0
+                        ? `Liquidado de ${formatMXN(totalContracted)} contratado`
+                        : `Meta definida: ${formatMXN(profile.budgetGoal)}`}
+                    </p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-[#C48B81] shrink-0 mt-1" />
                 </div>
-                <p className="text-xs text-[#7D6F6B] font-light mt-0.5">
-                  {vendors.length} {vendors.length === 1 ? 'proveedor' : 'proveedores'} · Meta {formatMXN(profile.budgetGoal)}
-                </p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-[#C48B81] shrink-0" />
-            </button>
 
-            <button
-              type="button"
-              onClick={() => onNavigate('midia')}
-              className="text-left bg-white rounded-2xl p-5 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition flex items-center justify-between gap-4 cursor-pointer"
-            >
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.18em] font-semibold text-[#C48B81]">
-                  El Gran Día
-                </span>
-                <div className="font-editorial text-xl text-[#2B2826] mt-1">
-                  {(wedding.timeline || []).length} momentos en itinerario
+                <div className="space-y-1.5">
+                  <div className="h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-[#C48B81] rounded-full transition-all"
+                      style={{
+                        width: `${
+                          totalContracted > 0
+                            ? Math.min(100, Math.round((totalPaid / totalContracted) * 100))
+                            : 0
+                        }%`
+                      }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-[#7D6F6B]">
+                    <span>
+                      {vendors.length} {vendors.length === 1 ? 'proveedor' : 'proveedores'}
+                    </span>
+                    <span>Meta {formatMXN(profile.budgetGoal)}</span>
+                  </div>
                 </div>
-                <p className="text-xs text-[#7D6F6B] font-light mt-0.5">
-                  Minuto a minuto y logística descargable en PDF
-                </p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-[#C48B81] shrink-0" />
-            </button>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onNavigate('midia')}
+                className="flex-1 text-left bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] hover:border-[#C48B81]/60 shadow-2xs transition flex flex-col justify-between gap-3 cursor-pointer"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#C48B81]">
+                      El Gran Día
+                    </span>
+                    <div className="font-editorial text-2xl text-[#2B2826] mt-0.5">
+                      {(wedding.timeline || []).length} momentos
+                    </div>
+                    <p className="text-xs text-[#7D6F6B] font-light mt-0.5">
+                      Itinerario minuto a minuto y logística descargable en PDF
+                    </p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-[#C48B81] shrink-0 mt-1" />
+                </div>
+                <div className="pt-2 border-t border-[#EFE8E1]/70 text-xs font-medium text-[#2B2826]">
+                  Abrir cronograma →
+                </div>
+              </button>
+            </div>
           </div>
 
           {/* 4. Subtle Editorial VLB Coordination Offer (ONLY for Virtual Novios) */}
