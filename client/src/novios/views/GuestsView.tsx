@@ -166,6 +166,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
   const activeTables = isCivilLayout ? civilTables : tables;
   const activeFloorElements = isCivilLayout ? civilFloorElements : defaultFloorElements;
   const activeFloorPlanUrl = isCivilLayout ? (profile.civilFloorPlanUrl || '') : (profile.floorPlanUrl || '');
+  const activeFloorPlanUrl2 = isCivilLayout ? (profile.civilFloorPlanUrl2 || '') : (profile.floorPlanUrl2 || '');
   const activeLayoutGuests: GuestItem[] = isCivilLayout
     ? guests
         .filter(g => g.isInvitedCivil)
@@ -1056,6 +1057,22 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                   profile: isCivilLayout
                     ? { ...prev.profile, civilFloorPlanUrl: nextUrl }
                     : { ...prev.profile, floorPlanUrl: nextUrl }
+                }))
+              }
+              floorPlanUrl2={activeFloorPlanUrl2}
+              onFloorPlan2Change={nextUrl =>
+                updateWedding(prev => ({
+                  ...prev,
+                  profile: isCivilLayout
+                    ? { ...prev.profile, civilFloorPlanUrl2: nextUrl }
+                    : { ...prev.profile, floorPlanUrl2: nextUrl }
+                }))
+              }
+              dualLayout={profile.floorPlanDualLayout || 'side-by-side'}
+              onDualLayoutChange={mode =>
+                updateWedding(prev => ({
+                  ...prev,
+                  profile: { ...prev.profile, floorPlanDualLayout: mode }
                 }))
               }
               tables={activeTables}

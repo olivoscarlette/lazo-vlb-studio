@@ -93,7 +93,10 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
     coverPositionY: existingStudio?.profile?.coverPositionY ?? parsePositionY(w.cover_photo_position),
     coverFitMode: existingStudio?.profile?.coverFitMode || 'auto',
     floorPlanUrl: w.floor_plan_url || existingStudio?.profile?.floorPlanUrl || '',
+    floorPlanUrl2: existingStudio?.profile?.floorPlanUrl2 || '',
     civilFloorPlanUrl: existingStudio?.profile?.civilFloorPlanUrl || '',
+    civilFloorPlanUrl2: existingStudio?.profile?.civilFloorPlanUrl2 || '',
+    floorPlanDualLayout: existingStudio?.profile?.floorPlanDualLayout || 'side-by-side',
     partnerInviteCode: `LAZO-${String(w.id || '0000').slice(-4).toUpperCase()}`,
     welcomeSeen: Boolean(existingStudio?.profile?.welcomeSeen)
   };

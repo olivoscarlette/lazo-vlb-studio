@@ -13,7 +13,10 @@ export interface WeddingProfile {
   coverPositionY: number; // 0 to 100
   coverFitMode?: 'auto' | 'cover' | 'contain';
   floorPlanUrl?: string;
+  floorPlanUrl2?: string;
   civilFloorPlanUrl?: string;
+  civilFloorPlanUrl2?: string;
+  floorPlanDualLayout?: 'side-by-side' | 'stacked';
   partnerInviteCode: string;
   welcomeSeen?: boolean;
 }

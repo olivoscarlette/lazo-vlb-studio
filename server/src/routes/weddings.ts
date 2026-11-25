@@ -697,12 +697,16 @@ router.post('/:weddingId/floor-plan-file', authenticateToken, requireWeddingAcce
   const floorPlanUrl = `/uploads/floorplans/${file.filename}`;
   const originalFilename = file.originalname;
   const isCivil = String(req.body?.event_type || req.query?.event_type || '').toLowerCase() === 'civil';
+  const isSlot2 = String(req.body?.slot || req.query?.slot || '') === '2';
 
-  if (isCivil) {
-    logAudit(weddingId, user.id, user.name, 'SUBIR_PLANO_BASE', 'WEDDING', weddingId, `Plano base Boda Civil subido: ${originalFilename}`);
+  if (isCivil || isSlot2) {
+    const label = isCivil
+      ? `Plano base Boda Civil${isSlot2 ? ' (Espacio 2)' : ''} subido: ${originalFilename}`
+      : `Plano base (Espacio 2) subido: ${originalFilename}`;
+    logAudit(weddingId, user.id, user.name, 'SUBIR_PLANO_BASE', 'WEDDING', weddingId, label);
     return res.json({
       success: true,
-      message: 'Plano base de Boda Civil guardado exitosamente.',
+      message: 'Plano base guardado exitosamente.',
       floor_plan_url: floorPlanUrl,
       floor_plan_filename: originalFilename
     });
@@ -745,10 +749,11 @@ router.delete('/:weddingId/floor-plan-file', authenticateToken, requireWeddingAc
   const { weddingId } = req.params;
   const user = req.user!;
   const isCivil = String(req.query?.event_type || req.body?.event_type || '').toLowerCase() === 'civil';
+  const isSlot2 = String(req.query?.slot || req.body?.slot || '') === '2';
 
-  if (isCivil) {
-    logAudit(weddingId, user.id, user.name, 'ELIMINAR_PLANO_BASE', 'WEDDING', weddingId, `Plano base Boda Civil removido`);
-    return res.json({ success: true, message: 'Plano base de Boda Civil removido.' });
+  if (isCivil || isSlot2) {
+    logAudit(weddingId, user.id, user.name, 'ELIMINAR_PLANO_BASE', 'WEDDING', weddingId, `Plano base${isCivil ? ' Boda Civil' : ''}${isSlot2 ? ' (Espacio 2)' : ''} removido`);
+    return res.json({ success: true, message: 'Plano base removido.' });
   }
 
   const existing = db.prepare('SELECT floor_plan_url FROM weddings WHERE id = ?').get(weddingId) as any;

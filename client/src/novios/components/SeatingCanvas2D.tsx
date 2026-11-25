@@ -20,6 +20,10 @@ interface SeatingCanvas2DProps {
   eventType?: 'principal' | 'civil';
   floorPlanUrl?: string;
   onFloorPlanChange?: (nextUrl: string) => void;
+  floorPlanUrl2?: string;
+  onFloorPlan2Change?: (nextUrl: string) => void;
+  dualLayout?: 'side-by-side' | 'stacked';
+  onDualLayoutChange?: (mode: 'side-by-side' | 'stacked') => void;
   tables: TableItem[];
   guests: GuestItem[];
   floorElements: FloorElement[];
@@ -45,6 +49,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   eventType = 'principal',
   floorPlanUrl = '',
   onFloorPlanChange,
+  floorPlanUrl2 = '',
+  onFloorPlan2Change,
+  dualLayout = 'side-by-side',
+  onDualLayoutChange,
   tables,
   guests,
   floorElements,
@@ -63,6 +71,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const floorPlanInputRef = useRef<HTMLInputElement>(null);
+  const floorPlanInput2Ref = useRef<HTMLInputElement>(null);
   const [zoom, setZoom] = useState(0.8);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [floorPlanOpacity, setFloorPlanOpacity] = useState(0.55);
@@ -334,8 +343,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isFullscreen]);
 
-  // Upload Venue Floor Plan (PDF or Image)
-  const handleUploadFloorPlan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Upload Venue Floor Plan (PDF or Image) for slot 1 or slot 2
+  const handleUploadFloorPlan = async (e: React.ChangeEvent<HTMLInputElement>, slot: 1 | 2 = 1) => {
     const file = e.target.files?.[0];
     if (!file) return;
     e.target.value = '';
@@ -355,14 +364,15 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
         const ia = new Uint8Array(ab);
         for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
         uploadBlob = new Blob([ab], { type: 'image/png' });
-        uploadFilename = file.name.replace(/\.pdf$/i, '') + '_plano.png';
+        uploadFilename = file.name.replace(/\.pdf$/i, '') + `_plano${slot === 2 ? '2' : ''}.png`;
       }
 
       if (weddingId && authToken) {
         const formData = new FormData();
         formData.append('floor_plan_file', uploadBlob, uploadFilename);
         formData.append('event_type', eventType);
-        const res = await fetch(`/api/weddings/${weddingId}/floor-plan-file?event_type=${eventType}`, {
+        formData.append('slot', String(slot));
+        const res = await fetch(`/api/weddings/${weddingId}/floor-plan-file?event_type=${eventType}&slot=${slot}`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${authToken}` },
           body: formData
@@ -370,12 +380,20 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || 'No se pudo subir el plano.');
         if (data.floor_plan_url) {
-          onFloorPlanChange?.(data.floor_plan_url);
+          if (slot === 2) {
+            onFloorPlan2Change?.(data.floor_plan_url);
+          } else {
+            onFloorPlanChange?.(data.floor_plan_url);
+          }
           setFloorPlanVisible(true);
         }
       } else {
         const localUrl = URL.createObjectURL(uploadBlob);
-        onFloorPlanChange?.(localUrl);
+        if (slot === 2) {
+          onFloorPlan2Change?.(localUrl);
+        } else {
+          onFloorPlanChange?.(localUrl);
+        }
         setFloorPlanVisible(true);
       }
     } catch (err: any) {
@@ -385,16 +403,22 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     }
   };
 
-  const handleRemoveFloorPlan = async () => {
+  const handleRemoveFloorPlan = async (slot: 1 | 2 = 1) => {
+    const label = slot === 2 ? 'el Plano 2 (Espacio 2)' : 'el Plano 1';
+    if (!confirm(`¿Quitar ${label} de fondo? Tus mesas y elementos no se borrarán.`)) return;
     if (weddingId && authToken) {
       try {
-        await fetch(`/api/weddings/${weddingId}/floor-plan-file?event_type=${eventType}`, {
+        await fetch(`/api/weddings/${weddingId}/floor-plan-file?event_type=${eventType}&slot=${slot}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${authToken}` }
         });
       } catch {}
     }
-    onFloorPlanChange?.('');
+    if (slot === 2) {
+      onFloorPlan2Change?.('');
+    } else {
+      onFloorPlanChange?.('');
+    }
   };
 
   // Render chairs around a table in 2D
@@ -855,24 +879,47 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             <span>+ Otro</span>
           </button>
 
-          {/* Upload Venue Floor Plan (PDF / Image) */}
+          {/* Upload Venue Floor Plan 1 (PDF / Image) */}
           <button
             type="button"
             disabled={uploadingFloorPlan}
             onClick={() => floorPlanInputRef.current?.click()}
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#F7EDEB] hover:bg-[#EFE0DC] text-[#8E5348] border border-[#E5CFCB] text-[11px] font-medium transition cursor-pointer disabled:opacity-60"
-            title="Sube el plano del salón en PDF o imagen para colocar tus mesas encima"
+            title="Sube el plano del Espacio 1 en PDF o imagen para colocar tus mesas encima"
           >
             <Upload className="w-3.5 h-3.5" />
-            <span>{uploadingFloorPlan ? 'Cargando plano...' : floorPlanUrl ? 'Cambiar plano PDF' : 'Plano PDF / Img'}</span>
+            <span>{uploadingFloorPlan ? 'Cargando...' : floorPlanUrl ? 'Plano 1' : 'Plano PDF / Img'}</span>
           </button>
           <input
             ref={floorPlanInputRef}
             type="file"
             accept=".pdf,application/pdf,image/*"
-            onChange={handleUploadFloorPlan}
+            onChange={e => handleUploadFloorPlan(e, 1)}
             className="hidden"
           />
+
+          {/* Upload Venue Floor Plan 2 (Optional Second Space PDF / Image) */}
+          {floorPlanUrl && onFloorPlan2Change && (
+            <>
+              <button
+                type="button"
+                disabled={uploadingFloorPlan}
+                onClick={() => floorPlanInput2Ref.current?.click()}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white hover:bg-[#F7EDEB] text-[#8E5348] border border-[#E5CFCB] text-[11px] font-medium transition cursor-pointer disabled:opacity-60"
+                title="Sube un segundo plano PDF o imagen si el lugar tiene 2 espacios"
+              >
+                <Upload className="w-3 h-3" />
+                <span>{floorPlanUrl2 ? 'Plano 2' : '+ Plano 2'}</span>
+              </button>
+              <input
+                ref={floorPlanInput2Ref}
+                type="file"
+                accept=".pdf,application/pdf,image/*"
+                onChange={e => handleUploadFloorPlan(e, 2)}
+                className="hidden"
+              />
+            </>
+          )}
         </div>
 
         {/* Zoom + Unassigned pill */}
@@ -954,8 +1001,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <div className="px-4 py-2.5 border-b border-[#FAF8F5] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#7D6F6B] font-light shrink-0">
             <span>Arrastra mesas, mueve el plano con mouse o trackpad (2 dedos)</span>
             <div className="flex items-center gap-3">
-              {floorPlanUrl && (
-                <div className="flex items-center gap-2 bg-[#FAF8F5] border border-[#EFE8E1] rounded-full px-2.5 py-0.5">
+              {(floorPlanUrl || floorPlanUrl2) && (
+                <div className="flex flex-wrap items-center gap-2 bg-[#FAF8F5] border border-[#EFE8E1] rounded-full px-2.5 py-0.5">
                   <FileImage className="w-3 h-3 text-[#C48B81]" />
                   <input
                     type="range"
@@ -965,24 +1012,48 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     value={floorPlanOpacity}
                     onChange={e => setFloorPlanOpacity(parseFloat(e.target.value))}
                     className="w-16 accent-[#C48B81] cursor-pointer"
-                    title="Opacidad del plano"
+                    title="Opacidad de los planos"
                   />
+                  {floorPlanUrl && floorPlanUrl2 && onDualLayoutChange && (
+                    <button
+                      type="button"
+                      onClick={() => onDualLayoutChange(dualLayout === 'side-by-side' ? 'stacked' : 'side-by-side')}
+                      className="text-[10px] font-medium text-[#5A524C] hover:text-[#2B2826] px-1.5 py-0.5 rounded-full bg-white border border-[#EFE8E1] cursor-pointer"
+                      title="Cambiar acomodo de los 2 planos"
+                    >
+                      {dualLayout === 'side-by-side' ? 'Lado a lado' : 'Arriba / Abajo'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setFloorPlanVisible(v => !v)}
                     className="text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
-                    title={floorPlanVisible ? 'Ocultar plano' : 'Mostrar plano'}
+                    title={floorPlanVisible ? 'Ocultar planos' : 'Mostrar planos'}
                   >
                     {floorPlanVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleRemoveFloorPlan}
-                    className="text-[#7D6F6B] hover:text-rose-600 cursor-pointer"
-                    title="Quitar plano del venue"
-                  >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
+                  {floorPlanUrl && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFloorPlan(1)}
+                      className="inline-flex items-center gap-0.5 text-[10px] text-[#7D6F6B] hover:text-rose-600 cursor-pointer"
+                      title="Quitar Plano 1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      {floorPlanUrl2 && <span>1</span>}
+                    </button>
+                  )}
+                  {floorPlanUrl2 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveFloorPlan(2)}
+                      className="inline-flex items-center gap-0.5 text-[10px] text-[#7D6F6B] hover:text-rose-600 cursor-pointer"
+                      title="Quitar Plano 2"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>2</span>
+                    </button>
+                  )}
                 </div>
               )}
               <span className="inline-flex items-center gap-1">
@@ -1024,15 +1095,47 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 }}
                 className="relative"
               >
-                {/* Uploaded Venue Floor Plan Background (PDF rendered to PNG or Image) */}
-                {floorPlanUrl && floorPlanVisible && (
-                  <img
-                    src={floorPlanUrl}
-                    alt="Plano base del venue"
-                    draggable={false}
-                    style={{ opacity: floorPlanOpacity }}
-                    className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none z-[1]"
-                  />
+                {/* Uploaded Venue Floor Plan Background (1 or 2 spaces: PDF rendered to PNG or Image) */}
+                {floorPlanVisible && (floorPlanUrl || floorPlanUrl2) && (
+                  floorPlanUrl && floorPlanUrl2 ? (
+                    <div
+                      style={{ opacity: floorPlanOpacity }}
+                      className={`absolute inset-0 w-full h-full grid pointer-events-none select-none z-[1] ${
+                        dualLayout === 'stacked' ? 'grid-rows-2' : 'grid-cols-2'
+                      }`}
+                    >
+                      <div
+                        className={`relative w-full h-full flex items-center justify-center p-2 ${
+                          dualLayout === 'stacked'
+                            ? 'border-b border-dashed border-[#D8CFC8]'
+                            : 'border-r border-dashed border-[#D8CFC8]'
+                        }`}
+                      >
+                        <img
+                          src={floorPlanUrl}
+                          alt="Plano base Espacio 1"
+                          draggable={false}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="relative w-full h-full flex items-center justify-center p-2">
+                        <img
+                          src={floorPlanUrl2}
+                          alt="Plano base Espacio 2"
+                          draggable={false}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <img
+                      src={floorPlanUrl || floorPlanUrl2}
+                      alt="Plano base del venue"
+                      draggable={false}
+                      style={{ opacity: floorPlanOpacity }}
+                      className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none z-[1]"
+                    />
+                  )
                 )}
                 {/* Draggable Floor Elements (Pista, DJ, Barra, Entrada, Otros) */}
                 {floorElements.map(el => {
