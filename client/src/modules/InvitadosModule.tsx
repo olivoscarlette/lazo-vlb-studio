@@ -1384,7 +1384,7 @@ export const InvitadosModule: React.FC = () => {
               <span>Boda Principal</span>
               {principalDate && <span className="text-[10px] opacity-80 font-sans font-normal hidden sm:inline">({principalDate})</span>}
               <span className={`text-[10px] font-sans px-2 py-0.5 rounded-full ${eventTarget === 'principal' ? 'bg-white/20 text-white' : 'bg-[#EFE8DE] text-[#6D5A43]'}`}>
-                {principalSummary?.total ?? summary.total}
+                {principalSummary?.confirmed_places ?? summary.confirmed_places ?? 0} confirmados
               </span>
             </button>
 
@@ -1400,7 +1400,7 @@ export const InvitadosModule: React.FC = () => {
               <span>Boda Civil</span>
               {civilDate && <span className="text-[10px] opacity-80 font-sans font-normal hidden sm:inline">({civilDate})</span>}
               <span className={`text-[10px] font-sans px-2 py-0.5 rounded-full ${eventTarget === 'civil' ? 'bg-white/20 text-white' : 'bg-[#EFE8DE] text-[#6D5A43]'}`}>
-                {civilSummary?.total ?? 0}
+                {civilSummary?.confirmed_places ?? 0} confirmados
               </span>
             </button>
           </div>
