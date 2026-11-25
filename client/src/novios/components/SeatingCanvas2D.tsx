@@ -1,7 +1,7 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   RotateCw, Trash2, ZoomIn, ZoomOut, Plus, Minus, Music, Wine, Sparkles, DoorOpen, Users, Shapes,
-  MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, FileImage
+  MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, Minimize2, FileImage, Crosshair
 } from 'lucide-react';
 import { FloorElement, GuestItem, TableItem } from '../types/lazo';
 import { Modal } from './Modal';
@@ -34,8 +34,8 @@ interface SeatingCanvas2DProps {
   onOpenNewTable: () => void;
 }
 
-const CANVAS_W = 1100;
-const CANVAS_H = 820;
+const CANVAS_W = 1400;
+const CANVAS_H = 1000;
 
 export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   weddingId,
@@ -59,7 +59,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const floorPlanInputRef = useRef<HTMLInputElement>(null);
-  const [zoom, setZoom] = useState(0.85);
+  const [zoom, setZoom] = useState(0.8);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [floorPlanOpacity, setFloorPlanOpacity] = useState(0.55);
   const [floorPlanVisible, setFloorPlanVisible] = useState(true);
   const [uploadingFloorPlan, setUploadingFloorPlan] = useState(false);
@@ -292,11 +293,20 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   };
 
   const handleResetView = () => {
-    setZoom(0.85);
+    setZoom(0.8);
     if (viewportRef.current) {
       viewportRef.current.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFullscreen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isFullscreen]);
 
   // Upload Venue Floor Plan (PDF or Image)
   const handleUploadFloorPlan = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -655,7 +665,13 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div
+      className={
+        isFullscreen
+          ? 'fixed inset-0 z-[100] bg-[#FAF8F5] p-3 sm:p-5 flex flex-col gap-3 overflow-hidden'
+          : 'space-y-4'
+      }
+    >
       {/* Top Studio Toolbar */}
       <div className="bg-white rounded-2xl p-3 border border-[#EFE8E1] shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
         <div className="flex flex-wrap items-center gap-1.5">
@@ -761,9 +777,28 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               className="p-1 text-[#7D6F6B] hover:text-[#2B2826] border-l border-[#EFE8E1] ml-0.5 pl-1.5 cursor-pointer"
               title="Centrar vista"
             >
-              <Maximize2 className="w-3 h-3" />
+              <Crosshair className="w-3.5 h-3.5" />
             </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setIsFullscreen(v => !v)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            title={isFullscreen ? 'Salir de pantalla completa (Esc)' : 'Expandir plano a pantalla completa'}
+          >
+            {isFullscreen ? (
+              <>
+                <Minimize2 className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span className="hidden sm:inline">Salir</span>
+              </>
+            ) : (
+              <>
+                <Maximize2 className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span className="hidden sm:inline">Expandir</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
@@ -773,11 +808,19 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
         </div>
       )}
 
-      {/* Main 2D Canvas + Inspector Split */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+      {/* Main 2D Canvas + Slim Inspector Split */}
+      <div
+        className={`grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_310px] gap-4 ${
+          isFullscreen ? 'flex-1 min-h-0 items-stretch' : 'items-start'
+        }`}
+      >
         {/* 2D Floor Plan Canvas */}
-        <div className="lg:col-span-2 bg-white rounded-3xl border border-[#EFE8E1] shadow-2xs overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[#FAF8F5] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#7D6F6B] font-light">
+        <div
+          className={`bg-white rounded-3xl border border-[#EFE8E1] shadow-2xs overflow-hidden flex flex-col ${
+            isFullscreen ? 'h-full min-h-0' : ''
+          }`}
+        >
+          <div className="px-4 py-2.5 border-b border-[#FAF8F5] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#7D6F6B] font-light shrink-0">
             <span>Arrastra mesas, mueve el plano con mouse o trackpad (2 dedos)</span>
             <div className="flex items-center gap-3">
               {floorPlanUrl && (
@@ -826,9 +869,9 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             onPointerMove={handleViewportPointerMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
-            className={`overflow-auto h-[540px] sm:h-[640px] p-3 bg-[#FAF8F5] ${
-              panning ? 'cursor-grabbing' : 'cursor-grab'
-            }`}
+            className={`overflow-auto p-3 bg-[#FAF8F5] ${
+              isFullscreen ? 'flex-1 min-h-0' : 'h-[600px] sm:h-[74vh] sm:min-h-[640px]'
+            } ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
           >
             <div
               ref={canvasRef}
