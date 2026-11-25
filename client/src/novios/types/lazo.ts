@@ -97,7 +97,7 @@ export interface FloorElement {
   height: number;
   rotation?: number;
   shape?: 'rect' | 'circle' | 'curve-path' | 'arch' | 'line' | 'ceremony';
-  tone?: 'neutral' | 'nature' | 'water' | 'accent';
+  tone?: 'neutral' | 'nature' | 'water' | 'accent' | 'stone';
 }
 
 export interface ChecklistItem {

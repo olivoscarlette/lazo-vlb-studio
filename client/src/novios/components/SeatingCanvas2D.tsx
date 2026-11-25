@@ -1029,6 +1029,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       ? 'bg-[#EBF4F8]/95 border-[#C5DCE8] text-[#355A6E]'
                       : el.tone === 'accent'
                       ? 'bg-[#F7EDEB]/95 border-[#E6CFCB] text-[#8F554B]'
+                      : el.tone === 'stone'
+                      ? 'bg-[#ECECEB]/90 border-[#CED0CE] text-[#4D5053]'
                       : 'bg-[#FAF3E8]/90 border-[#E8D7B8] text-[#7C5824]';
 
                   const svgStroke =
@@ -1038,6 +1040,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       ? '#5B849B'
                       : el.tone === 'accent'
                       ? '#B87B71'
+                      : el.tone === 'stone'
+                      ? '#6D7278'
                       : '#6E7A82';
                   const svgFill =
                     el.tone === 'nature'
@@ -1046,6 +1050,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       ? 'rgba(235, 244, 248, 0.45)'
                       : el.tone === 'accent'
                       ? 'rgba(247, 237, 235, 0.45)'
+                      : el.tone === 'stone'
+                      ? 'rgba(229, 231, 233, 0.5)'
                       : 'rgba(245, 239, 234, 0.35)';
 
                   return (
@@ -1789,6 +1795,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
                 >
                   <option value="neutral">Arena / Neutro</option>
+                  <option value="stone">Gris Claro / Construcción</option>
                   <option value="nature">Verde Jardín / Árbol</option>
                   <option value="water">Azul Agua / Alberca</option>
                   <option value="accent">Rosa Empolvado</option>
