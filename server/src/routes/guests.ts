@@ -545,7 +545,8 @@ router.get('/:weddingId/guests/template', authenticateToken, requireWeddingAcces
 // POST /api/weddings/:weddingId/guests/import - Import guests from Excel/CSV safely
 router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
-  const { guests } = req.body;
+  const { guests, target_event } = req.body;
+  const targetEventNorm = String(target_event || '').toLowerCase().trim();
 
   if (!Array.isArray(guests) || guests.length === 0) {
     return res.status(400).json({ error: 'No se recibieron filas para importar o el formato es incorrecto.' });
@@ -559,11 +560,12 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
     // Handle both uppercase headers and lowercase equivalents
     const firstName = (row['NOMBRE'] || row['Nombre'] || row['nombre'] || row['first_name'] || '').toString().trim();
     const lastName = (row['APELLIDO'] || row['Apellido'] || row['apellido'] || row['last_name'] || '').toString().trim();
-    const phone = (row['WHATSAPP'] || row['Whatsapp'] || row['whatsapp'] || row['TELEFONO'] || row['phone'] || '').toString().trim();
+    const phone = (row['WHATSAPP'] || row['Whatsapp'] || row['whatsapp'] || row['TELEFONO'] || row['Teléfono'] || row['CONTACTO'] || row['Contacto'] || row['phone'] || '').toString().trim();
     const companionsRaw = row['ACOMPAÑANTES'] ?? row['Acompañantes'] ?? row['acompañantes'] ?? row['companion_count'] ?? 0;
     const priorityRaw = (row['PRIORIDAD'] || row['Prioridad'] || row['prioridad'] || row['priority'] || 'Media').toString().trim();
-    const statusRaw = (row['ESTATUS'] || row['Estatus'] || row['estatus'] || row['status'] || row['ESTATUS BODA'] || row['Estatus Boda'] || 'Pendiente de confirmar').toString().trim();
-    const statusCivilRaw = (row['ESTATUS CIVIL'] || row['Estatus Civil'] || row['estatus civil'] || row['status_civil'] || 'Pendiente de confirmar').toString().trim();
+    const statusRaw = (row['ESTATUS'] || row['Estatus'] || row['estatus'] || row['ESTADO'] || row['Estado'] || row['status'] || row['ESTATUS BODA'] || row['Estatus Boda'] || 'Pendiente de confirmar').toString().trim();
+    const statusCivilExplicit = (row['ESTATUS CIVIL'] || row['Estatus Civil'] || row['estatus civil'] || row['status_civil'] || '').toString().trim();
+    const statusCivilRaw = statusCivilExplicit || (targetEventNorm === 'civil' ? statusRaw : 'Pendiente de confirmar');
     const eventRaw = (row['EVENTO'] || row['Evento'] || row['evento'] || row['EVENTOS'] || row['event'] || '').toString().trim().toLowerCase();
     const tableRaw = (row['MESA'] || row['Mesa'] || row['mesa'] || row['table'] || '').toString().trim();
     const observations = (row['OBSERVACIONES'] || row['Observaciones'] || row['observaciones'] || row['observations'] || '').toString().trim();
@@ -611,8 +613,8 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
       statusCivil = 'No asistirá';
     }
 
-    let isInvitedPrincipal = 1;
-    let isInvitedCivil = 0;
+    let isInvitedPrincipal = targetEventNorm === 'civil' ? 0 : 1;
+    let isInvitedCivil = targetEventNorm === 'civil' ? 1 : 0;
     if (eventRaw) {
       if (eventRaw.includes('ambos') || eventRaw.includes('dos') || eventRaw.includes('tod')) {
         isInvitedPrincipal = 1;

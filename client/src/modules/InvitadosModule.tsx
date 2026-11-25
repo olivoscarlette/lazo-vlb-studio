@@ -749,7 +749,7 @@ export const InvitadosModule: React.FC = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ guests: importRows })
+        body: JSON.stringify({ guests: importRows, target_event: eventTarget })
       });
       const data = await res.json();
       if (!res.ok) {
