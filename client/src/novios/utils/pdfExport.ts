@@ -31,15 +31,37 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Marcellus&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; }
-    @page { margin: 16mm; size: auto; }
+    @page { margin: 12mm; size: auto; }
     body {
       margin: 0;
-      padding: 28px 32px;
+      padding: 20px 24px;
       font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
       color: #2B2826;
       background: #FFFFFF;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
+    }
+    @media print {
+      body { padding: 0; }
+      .header { margin-bottom: 12px; padding-bottom: 10px; }
+      .svg-box {
+        padding: 8px;
+        margin-bottom: 14px;
+        page-break-before: avoid;
+        break-before: avoid;
+        page-break-inside: avoid;
+        break-inside: avoid;
+      }
+      .svg-box svg {
+        max-height: 190mm !important;
+        width: auto !important;
+        max-width: 100% !important;
+      }
+    }
+    @media print and (orientation: landscape) {
+      .svg-box svg {
+        max-height: 138mm !important;
+      }
     }
     .header {
       display: flex;
@@ -711,7 +733,7 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
     .join('');
 
   return `
-    <svg viewBox="${vbX} ${vbY} ${vbW} ${vbH}" width="100%" style="max-height:560px;display:block;margin:0 auto">
+    <svg viewBox="${vbX} ${vbY} ${vbW} ${vbH}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:auto;max-height:520px;display:block;margin:0 auto">
       <defs>
         <pattern id="dotGrid" width="20" height="20" patternUnits="userSpaceOnUse">
           <circle cx="2" cy="2" r="1" fill="#DDD4CB" />
