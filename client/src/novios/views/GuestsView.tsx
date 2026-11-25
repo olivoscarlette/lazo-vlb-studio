@@ -12,11 +12,15 @@ import { SeatingCanvas2D } from '../components/SeatingCanvas2D';
 import { exportFloorPlanPdf, exportGuestsPdf } from '../utils/pdfExport';
 import { buildVlbWhatsAppUrl } from '../components/VlbCoordinationModal';
 
-export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ initialSubTab }) => {
+export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly?: boolean }> = ({
+  initialSubTab,
+  mesasOnly = false
+}) => {
   const { wedding, flags, updateWedding } = useWedding();
   const { currentWedding, token } = useAuth();
   const canUseLayout2D = flags.isAdmin || !flags.isVirtualNovios || flags.hasLayout2d || flags.hasWhatsappRsvp;
-  const [subTab, setSubTab] = useState<'lista' | 'mesas'>(initialSubTab || 'lista');
+  const [subTabState, setSubTab] = useState<'lista' | 'mesas'>(mesasOnly ? 'mesas' : (initialSubTab || 'lista'));
+  const subTab = mesasOnly ? 'mesas' : subTabState;
   const [tablesView, setTablesView] = useState<'plano' | 'tarjetas'>(canUseLayout2D ? 'plano' : 'tarjetas');
   const [statusFilter, setStatusFilter] = useState<'TODOS' | GuestStatus>('TODOS');
   const [search, setSearch] = useState('');
@@ -462,21 +466,45 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3.5">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#7D6F6B]">
-            Cortesía & Asistencia
+            {mesasOnly ? 'Distribución & Plano 2D' : 'Cortesía & Asistencia'}
           </span>
-          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-1">
-            Invitados & Mesas
+          <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-0.5">
+            {mesasOnly ? 'Acomodo de Mesas' : 'Invitados & Mesas'}
           </h2>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {subTab === 'mesas' ? (
             <>
+              {mesasOnly && (
+                <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => setTablesView('plano')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition cursor-pointer ${
+                      tablesView === 'plano' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                    }`}
+                  >
+                    {canUseLayout2D ? <MapIcon className="w-3.5 h-3.5" /> : <Lock className="w-3 h-3 text-[#C48B81]" />}
+                    <span>Plano 2D</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTablesView('tarjetas')}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition cursor-pointer ${
+                      tablesView === 'tarjetas' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                    }`}
+                  >
+                    <LayoutList className="w-3.5 h-3.5" />
+                    <span>Vista Lista</span>
+                  </button>
+                </div>
+              )}
               {canUseLayout2D && (
                 <button
                   type="button"
@@ -630,25 +658,54 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
         </div>
       </div>
 
-      {/* Sub-Tabs Pill */}
-      <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
-        <button
-          onClick={() => setSubTab('lista')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-            subTab === 'lista' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
-          }`}
-        >
-          Lista ({totalPasses} pases)
-        </button>
-        <button
-          onClick={() => setSubTab('mesas')}
-          className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
-            subTab === 'mesas' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
-          }`}
-        >
-          Mesas ({tables.length})
-        </button>
-      </div>
+      {/* Sub-Tabs Pill (only shown when not mesasOnly) */}
+      {!mesasOnly && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs">
+            <button
+              onClick={() => setSubTab('lista')}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+                subTab === 'lista' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+              }`}
+            >
+              Lista ({totalPasses} pases)
+            </button>
+            <button
+              onClick={() => setSubTab('mesas')}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+                subTab === 'mesas' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+              }`}
+            >
+              Mesas ({tables.length})
+            </button>
+          </div>
+
+          {subTab === 'mesas' && (
+            <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setTablesView('plano')}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${
+                  tablesView === 'plano' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                }`}
+              >
+                {canUseLayout2D ? <MapIcon className="w-3.5 h-3.5" /> : <Lock className="w-3 h-3 text-[#C48B81]" />}
+                <span>Plano 2D</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTablesView('tarjetas')}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${
+                  tablesView === 'tarjetas' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                }`}
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                <span>Vista Lista</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* SUB-TAB 1: LISTA DE INVITADOS */}
       {subTab === 'lista' && (
@@ -810,32 +867,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
 
       {/* SUB-TAB 2: MESAS — PLANO 2D INTERACTIVO + VISTA LISTA */}
       {subTab === 'mesas' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-end">
-            <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] shadow-2xs">
-              <button
-                type="button"
-                onClick={() => setTablesView('plano')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${
-                  tablesView === 'plano' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                }`}
-              >
-                {canUseLayout2D ? <MapIcon className="w-3.5 h-3.5" /> : <Lock className="w-3 h-3 text-[#C48B81]" />}
-                <span>Plano 2D</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTablesView('tarjetas')}
-                className={`inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-medium transition cursor-pointer ${
-                  tablesView === 'tarjetas' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                }`}
-              >
-                <LayoutList className="w-3.5 h-3.5" />
-                <span>Vista Lista</span>
-              </button>
-            </div>
-          </div>
-
+        <div className="space-y-3">
           {tablesView === 'plano' && !canUseLayout2D ? (
             <div className="bg-white rounded-3xl p-10 text-center border border-[#EFE8E1] shadow-2xs space-y-3">
               <div className="w-12 h-12 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">

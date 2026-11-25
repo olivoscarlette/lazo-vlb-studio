@@ -68,7 +68,12 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
     <>
       {activeTab === 'inicio' && <HomeView onNavigate={handleSelectTab} />}
       {activeTab === 'presupuesto' && <BudgetView />}
-      {activeTab === 'invitados' && <GuestsView initialSubTab={initialGuestsSubTab} />}
+      {activeTab === 'invitados' && (
+        <GuestsView
+          initialSubTab={initialGuestsSubTab}
+          mesasOnly={embedded && initialGuestsSubTab === 'mesas'}
+        />
+      )}
       {activeTab === 'checklist' && <ChecklistView />}
       {activeTab === 'midia' && <MyDayView />}
       {activeTab === 'reuniones' && <NoviosReunionesView />}
@@ -77,7 +82,7 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
 
   if (embedded) {
     return (
-      <div className="max-w-5xl mx-auto space-y-4 pb-12">
+      <div className="max-w-[1440px] mx-auto space-y-2 pb-10">
         <div className="flex justify-end">
           <span className="text-[11px] text-[#7D6F6B] font-light">
             {saving ? 'Guardando cambios...' : '✓ Sincronizado en tiempo real con Novios'}

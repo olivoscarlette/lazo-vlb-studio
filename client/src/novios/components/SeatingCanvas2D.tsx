@@ -779,12 +779,12 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       }
     >
       {/* Top Studio Toolbar */}
-      <div className="bg-white rounded-2xl p-3 border border-[#EFE8E1] shadow-2xs flex flex-wrap items-center justify-between gap-2.5">
+      <div className="bg-white rounded-2xl p-2.5 border border-[#EFE8E1] shadow-2xs flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
             onClick={onOpenNewTable}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-[11px] font-medium transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Mesa</span>
@@ -792,7 +792,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <button
             type="button"
             onClick={() => onAddElement('pista')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-[11px] font-medium transition cursor-pointer"
           >
             <Sparkles className="w-3 h-3 text-[#C48B81]" />
             <span>+ Pista</span>
@@ -800,7 +800,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <button
             type="button"
             onClick={() => onAddElement('dj')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-[11px] font-medium transition cursor-pointer"
           >
             <Music className="w-3 h-3 text-[#C48B81]" />
             <span>+ DJ</span>
@@ -808,7 +808,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <button
             type="button"
             onClick={() => onAddElement('barra')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-[11px] font-medium transition cursor-pointer"
           >
             <Wine className="w-3 h-3 text-[#C48B81]" />
             <span>+ Barra</span>
@@ -816,7 +816,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <button
             type="button"
             onClick={() => onAddElement('entrada')}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-[11px] font-medium transition cursor-pointer"
           >
             <DoorOpen className="w-3 h-3 text-[#C48B81]" />
             <span>+ Entrada</span>
@@ -824,7 +824,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <button
             type="button"
             onClick={() => setShowOtherModal(true)}
-            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#D8CFC8] text-xs font-medium transition cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#D8CFC8] text-[11px] font-medium transition cursor-pointer"
           >
             <Shapes className="w-3 h-3 text-[#C48B81]" />
             <span>+ Otro</span>
@@ -835,7 +835,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             type="button"
             disabled={uploadingFloorPlan}
             onClick={() => floorPlanInputRef.current?.click()}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F7EDEB] hover:bg-[#EFE0DC] text-[#8E5348] border border-[#E5CFCB] text-xs font-medium transition cursor-pointer disabled:opacity-60"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-[#F7EDEB] hover:bg-[#EFE0DC] text-[#8E5348] border border-[#E5CFCB] text-[11px] font-medium transition cursor-pointer disabled:opacity-60"
             title="Sube el plano del salón en PDF o imagen para colocar tus mesas encima"
           >
             <Upload className="w-3.5 h-3.5" />
