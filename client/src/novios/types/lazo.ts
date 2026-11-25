@@ -12,6 +12,7 @@ export interface WeddingProfile {
   coverPhoto: string;
   coverPositionY: number; // 0 to 100
   coverFitMode?: 'auto' | 'cover' | 'contain';
+  floorPlanUrl?: string;
   partnerInviteCode: string;
   welcomeSeen?: boolean;
 }

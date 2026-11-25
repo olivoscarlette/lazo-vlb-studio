@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useWedding } from '../context/WeddingContext';
+import { useAuth } from '../../context/AuthContext';
 import { FloorElement, GuestItem, GuestStatus, TableItem } from '../types/lazo';
 import { Modal } from '../components/Modal';
 import { SeatingCanvas2D } from '../components/SeatingCanvas2D';
@@ -13,6 +14,7 @@ import { buildVlbWhatsAppUrl } from '../components/VlbCoordinationModal';
 
 export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ initialSubTab }) => {
   const { wedding, flags, updateWedding } = useWedding();
+  const { currentWedding, token } = useAuth();
   const canUseLayout2D = flags.isAdmin || !flags.isVirtualNovios || flags.hasLayout2d || flags.hasWhatsappRsvp;
   const [subTab, setSubTab] = useState<'lista' | 'mesas'>(initialSubTab || 'lista');
   const [tablesView, setTablesView] = useState<'plano' | 'tarjetas'>(canUseLayout2D ? 'plano' : 'tarjetas');
@@ -860,6 +862,15 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
             </div>
           ) : tablesView === 'plano' ? (
             <SeatingCanvas2D
+              weddingId={currentWedding?.id}
+              authToken={token}
+              floorPlanUrl={profile.floorPlanUrl || ''}
+              onFloorPlanChange={nextUrl =>
+                updateWedding(prev => ({
+                  ...prev,
+                  profile: { ...prev.profile, floorPlanUrl: nextUrl }
+                }))
+              }
               tables={tables}
               guests={guests}
               floorElements={defaultFloorElements}

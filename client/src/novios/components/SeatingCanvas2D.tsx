@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import {
   RotateCw, Trash2, ZoomIn, ZoomOut, Plus, Minus, Music, Wine, Sparkles, DoorOpen, Users, Shapes,
-  MoveDiagonal2, MoveHorizontal, MoveVertical
+  MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, FileImage
 } from 'lucide-react';
 import { FloorElement, GuestItem, TableItem } from '../types/lazo';
 import { Modal } from './Modal';
@@ -15,6 +15,10 @@ interface CustomElementPayload {
 }
 
 interface SeatingCanvas2DProps {
+  weddingId?: string;
+  authToken?: string | null;
+  floorPlanUrl?: string;
+  onFloorPlanChange?: (nextUrl: string) => void;
   tables: TableItem[];
   guests: GuestItem[];
   floorElements: FloorElement[];
@@ -30,10 +34,14 @@ interface SeatingCanvas2DProps {
   onOpenNewTable: () => void;
 }
 
-const CANVAS_W = 720;
-const CANVAS_H = 500;
+const CANVAS_W = 1100;
+const CANVAS_H = 820;
 
 export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
+  weddingId,
+  authToken,
+  floorPlanUrl = '',
+  onFloorPlanChange,
   tables,
   guests,
   floorElements,
@@ -48,8 +56,20 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   onDeleteElement,
   onOpenNewTable
 }) => {
+  const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [zoom, setZoom] = useState(1);
+  const floorPlanInputRef = useRef<HTMLInputElement>(null);
+  const [zoom, setZoom] = useState(0.85);
+  const [floorPlanOpacity, setFloorPlanOpacity] = useState(0.55);
+  const [floorPlanVisible, setFloorPlanVisible] = useState(true);
+  const [uploadingFloorPlan, setUploadingFloorPlan] = useState(false);
+  const [floorPlanError, setFloorPlanError] = useState<string | null>(null);
+  const [panning, setPanning] = useState<{
+    startX: number;
+    startY: number;
+    scrollLeft: number;
+    scrollTop: number;
+  } | null>(null);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(tables[0]?.id || null);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [showOtherModal, setShowOtherModal] = useState(false);
@@ -234,6 +254,110 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     setDragging(null);
     setResizing(null);
     setRotating(null);
+    setPanning(null);
+  };
+
+  // Pan empty canvas with mouse/trackpad click-and-drag
+  const handleCanvasPointerDown = (e: React.PointerEvent) => {
+    if (dragging || resizing || rotating) return;
+    const vp = viewportRef.current;
+    if (!vp) return;
+    setSelectedElementId(null);
+    setPanning({
+      startX: e.clientX,
+      startY: e.clientY,
+      scrollLeft: vp.scrollLeft,
+      scrollTop: vp.scrollTop
+    });
+  };
+
+  const handleViewportPointerMove = (e: React.PointerEvent) => {
+    if (panning && viewportRef.current) {
+      const dx = e.clientX - panning.startX;
+      const dy = e.clientY - panning.startY;
+      viewportRef.current.scrollLeft = panning.scrollLeft - dx;
+      viewportRef.current.scrollTop = panning.scrollTop - dy;
+      return;
+    }
+    handlePointerMove(e);
+  };
+
+  // Pinch-to-zoom on MacBook trackpad or Ctrl+Wheel (normal two-finger scroll pans natively!)
+  const handleViewportWheel = (e: React.WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      setZoom(z => Math.max(0.45, Math.min(1.6, Number((z + delta).toFixed(2)))));
+    }
+  };
+
+  const handleResetView = () => {
+    setZoom(0.85);
+    if (viewportRef.current) {
+      viewportRef.current.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Upload Venue Floor Plan (PDF or Image)
+  const handleUploadFloorPlan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setFloorPlanError(null);
+    setUploadingFloorPlan(true);
+    try {
+      let uploadBlob: Blob = file;
+      let uploadFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+
+      if (isPdf) {
+        const buffer = await file.arrayBuffer();
+        const { convertPdfPageToImage } = await import('../../utils/pdfToImage');
+        const result = await convertPdfPageToImage(buffer, 1, 2.0);
+        const byteString = atob(result.dataUrl.split(',')[1]);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+        uploadBlob = new Blob([ab], { type: 'image/png' });
+        uploadFilename = file.name.replace(/\.pdf$/i, '') + '_plano.png';
+      }
+
+      if (weddingId && authToken) {
+        const formData = new FormData();
+        formData.append('floor_plan_file', uploadBlob, uploadFilename);
+        const res = await fetch(`/api/weddings/${weddingId}/floor-plan-file`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${authToken}` },
+          body: formData
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'No se pudo subir el plano.');
+        if (data.floor_plan_url) {
+          onFloorPlanChange?.(data.floor_plan_url);
+          setFloorPlanVisible(true);
+        }
+      } else {
+        const localUrl = URL.createObjectURL(uploadBlob);
+        onFloorPlanChange?.(localUrl);
+        setFloorPlanVisible(true);
+      }
+    } catch (err: any) {
+      setFloorPlanError(err?.message || 'Error al procesar el archivo. Intenta con PDF, PNG o JPG.');
+    } finally {
+      setUploadingFloorPlan(false);
+    }
+  };
+
+  const handleRemoveFloorPlan = async () => {
+    if (weddingId && authToken) {
+      try {
+        await fetch(`/api/weddings/${weddingId}/floor-plan-file`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${authToken}` }
+        });
+      } catch {}
+    }
+    onFloorPlanChange?.('');
   };
 
   // Render chairs around a table in 2D
@@ -583,6 +707,25 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             <Shapes className="w-3 h-3 text-[#C48B81]" />
             <span>+ Otro</span>
           </button>
+
+          {/* Upload Venue Floor Plan (PDF / Image) */}
+          <button
+            type="button"
+            disabled={uploadingFloorPlan}
+            onClick={() => floorPlanInputRef.current?.click()}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#F7EDEB] hover:bg-[#EFE0DC] text-[#8E5348] border border-[#E5CFCB] text-xs font-medium transition cursor-pointer disabled:opacity-60"
+            title="Sube el plano del salón en PDF o imagen para colocar tus mesas encima"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>{uploadingFloorPlan ? 'Cargando plano...' : floorPlanUrl ? 'Cambiar plano PDF' : 'Plano PDF / Img'}</span>
+          </button>
+          <input
+            ref={floorPlanInputRef}
+            type="file"
+            accept=".pdf,application/pdf,image/*"
+            onChange={handleUploadFloorPlan}
+            className="hidden"
+          />
         </div>
 
         {/* Zoom + Unassigned pill */}
@@ -595,7 +738,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <div className="inline-flex items-center bg-[#FAF8F5] rounded-full border border-[#EFE8E1] p-0.5">
             <button
               type="button"
-              onClick={() => setZoom(z => Math.max(0.65, Number((z - 0.1).toFixed(2))))}
+              onClick={() => setZoom(z => Math.max(0.45, Number((z - 0.1).toFixed(2))))}
               className="p-1 text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
               title="Alejar"
             >
@@ -606,23 +749,68 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </span>
             <button
               type="button"
-              onClick={() => setZoom(z => Math.min(1.3, Number((z + 0.1).toFixed(2))))}
+              onClick={() => setZoom(z => Math.min(1.6, Number((z + 0.1).toFixed(2))))}
               className="p-1 text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
               title="Acercar"
             >
               <ZoomIn className="w-3.5 h-3.5" />
             </button>
+            <button
+              type="button"
+              onClick={handleResetView}
+              className="p-1 text-[#7D6F6B] hover:text-[#2B2826] border-l border-[#EFE8E1] ml-0.5 pl-1.5 cursor-pointer"
+              title="Centrar vista"
+            >
+              <Maximize2 className="w-3 h-3" />
+            </button>
           </div>
         </div>
       </div>
+
+      {floorPlanError && (
+        <div className="px-4 py-2 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
+          {floorPlanError}
+        </div>
+      )}
 
       {/* Main 2D Canvas + Inspector Split */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
         {/* 2D Floor Plan Canvas */}
         <div className="lg:col-span-2 bg-white rounded-3xl border border-[#EFE8E1] shadow-2xs overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-[#FAF8F5] flex items-center justify-between text-[11px] text-[#7D6F6B] font-light">
-            <span>Arrastra mesas o elementos para diseñar tu salón</span>
+          <div className="px-4 py-2.5 border-b border-[#FAF8F5] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#7D6F6B] font-light">
+            <span>Arrastra mesas, mueve el plano con mouse o trackpad (2 dedos)</span>
             <div className="flex items-center gap-3">
+              {floorPlanUrl && (
+                <div className="flex items-center gap-2 bg-[#FAF8F5] border border-[#EFE8E1] rounded-full px-2.5 py-0.5">
+                  <FileImage className="w-3 h-3 text-[#C48B81]" />
+                  <input
+                    type="range"
+                    min={0.15}
+                    max={1}
+                    step={0.05}
+                    value={floorPlanOpacity}
+                    onChange={e => setFloorPlanOpacity(parseFloat(e.target.value))}
+                    className="w-16 accent-[#C48B81] cursor-pointer"
+                    title="Opacidad del plano"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFloorPlanVisible(v => !v)}
+                    className="text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
+                    title={floorPlanVisible ? 'Ocultar plano' : 'Mostrar plano'}
+                  >
+                    {floorPlanVisible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemoveFloorPlan}
+                    className="text-[#7D6F6B] hover:text-rose-600 cursor-pointer"
+                    title="Quitar plano del venue"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
               <span className="inline-flex items-center gap-1">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#577355]" /> Ocupado
               </span>
@@ -632,22 +820,26 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </div>
           </div>
 
-          <div className="overflow-auto p-3 bg-[#FAF8F5]">
+          <div
+            ref={viewportRef}
+            onWheel={handleViewportWheel}
+            onPointerMove={handleViewportPointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+            className={`overflow-auto h-[540px] sm:h-[640px] p-3 bg-[#FAF8F5] ${
+              panning ? 'cursor-grabbing' : 'cursor-grab'
+            }`}
+          >
             <div
               ref={canvasRef}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerLeave={handlePointerUp}
-              onClick={() => {
-                setSelectedElementId(null);
-              }}
+              onPointerDown={handleCanvasPointerDown}
               style={{
                 width: CANVAS_W * zoom,
                 height: CANVAS_H * zoom,
                 backgroundImage: 'radial-gradient(#DDD4CB 1px, transparent 1px)',
                 backgroundSize: `${20 * zoom}px ${20 * zoom}px`
               }}
-              className="relative mx-auto rounded-2xl bg-[#FCFBF9] border border-[#EFE8E1] select-none touch-none overflow-hidden"
+              className="relative mx-auto rounded-2xl bg-[#FCFBF9] border border-[#EFE8E1] select-none overflow-hidden"
             >
               <div
                 style={{
@@ -658,6 +850,16 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 }}
                 className="relative"
               >
+                {/* Uploaded Venue Floor Plan Background (PDF rendered to PNG or Image) */}
+                {floorPlanUrl && floorPlanVisible && (
+                  <img
+                    src={floorPlanUrl}
+                    alt="Plano base del venue"
+                    draggable={false}
+                    style={{ opacity: floorPlanOpacity }}
+                    className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none z-[1]"
+                  />
+                )}
                 {/* Draggable Floor Elements (Pista, DJ, Barra, Entrada, Otros) */}
                 {floorElements.map(el => {
                   const isSel = selectedElementId === el.id;
