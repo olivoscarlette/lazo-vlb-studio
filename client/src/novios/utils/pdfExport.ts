@@ -373,12 +373,21 @@ export function exportGuestsPdf(profile: WeddingProfile, guests: GuestItem[], ta
   );
 }
 
+interface BgImageRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 interface FloorPlanBgOptions {
   floorPlanUrl?: string;
   floorPlanUrl2?: string;
   dualLayout?: 'side-by-side' | 'stacked';
   floorPlanOpacity?: number;
   floorPlanVisible?: boolean;
+  bgRect1?: BgImageRect;
+  bgRect2?: BgImageRect;
 }
 
 function toAbsoluteUrl(url?: string): string {
@@ -450,24 +459,29 @@ function buildFloorPlanSvg(
 
   let bgSvg = '';
   if (bgUrl1 && bgUrl2) {
-    if (dualLayout === 'stacked') {
-      bgSvg = `
-        <g opacity="${bgOpacity}">
-          <image href="${escapeHtml(bgUrl1)}" x="8" y="8" width="${CANVAS_W - 16}" height="${CANVAS_H / 2 - 16}" preserveAspectRatio="xMidYMid meet" />
-          <line x1="0" y1="${CANVAS_H / 2}" x2="${CANVAS_W}" y2="${CANVAS_H / 2}" stroke="#D8CFC8" stroke-width="1.5" stroke-dasharray="6 5" />
-          <image href="${escapeHtml(bgUrl2)}" x="8" y="${CANVAS_H / 2 + 8}" width="${CANVAS_W - 16}" height="${CANVAS_H / 2 - 16}" preserveAspectRatio="xMidYMid meet" />
-        </g>`;
-    } else {
-      bgSvg = `
-        <g opacity="${bgOpacity}">
-          <image href="${escapeHtml(bgUrl1)}" x="8" y="8" width="${CANVAS_W / 2 - 16}" height="${CANVAS_H - 16}" preserveAspectRatio="xMidYMid meet" />
-          <line x1="${CANVAS_W / 2}" y1="0" x2="${CANVAS_W / 2}" y2="${CANVAS_H}" stroke="#D8CFC8" stroke-width="1.5" stroke-dasharray="6 5" />
-          <image href="${escapeHtml(bgUrl2)}" x="${CANVAS_W / 2 + 8}" y="8" width="${CANVAS_W / 2 - 16}" height="${CANVAS_H - 16}" preserveAspectRatio="xMidYMid meet" />
-        </g>`;
-    }
+    const r1 = bg?.bgRect1;
+    const r2 = bg?.bgRect2;
+    const img1Tag = r1
+      ? `<image href="${escapeHtml(bgUrl1)}" x="${r1.x.toFixed(1)}" y="${r1.y.toFixed(1)}" width="${r1.width.toFixed(1)}" height="${r1.height.toFixed(1)}" preserveAspectRatio="xMidYMid meet" />`
+      : dualLayout === 'stacked'
+      ? `<image href="${escapeHtml(bgUrl1)}" x="8" y="8" width="${CANVAS_W - 16}" height="${CANVAS_H / 2 - 16}" preserveAspectRatio="xMidYMid meet" />`
+      : `<image href="${escapeHtml(bgUrl1)}" x="8" y="8" width="${CANVAS_W / 2 - 16}" height="${CANVAS_H - 16}" preserveAspectRatio="xMidYMid meet" />`;
+    const img2Tag = r2
+      ? `<image href="${escapeHtml(bgUrl2)}" x="${r2.x.toFixed(1)}" y="${r2.y.toFixed(1)}" width="${r2.width.toFixed(1)}" height="${r2.height.toFixed(1)}" preserveAspectRatio="xMidYMid meet" />`
+      : dualLayout === 'stacked'
+      ? `<image href="${escapeHtml(bgUrl2)}" x="8" y="${CANVAS_H / 2 + 8}" width="${CANVAS_W - 16}" height="${CANVAS_H / 2 - 16}" preserveAspectRatio="xMidYMid meet" />`
+      : `<image href="${escapeHtml(bgUrl2)}" x="${CANVAS_W / 2 + 8}" y="8" width="${CANVAS_W / 2 - 16}" height="${CANVAS_H - 16}" preserveAspectRatio="xMidYMid meet" />`;
+    const dividerTag =
+      dualLayout === 'stacked'
+        ? `<line x1="0" y1="${CANVAS_H / 2}" x2="${CANVAS_W}" y2="${CANVAS_H / 2}" stroke="#D8CFC8" stroke-width="1.5" stroke-dasharray="6 5" />`
+        : `<line x1="${CANVAS_W / 2}" y1="0" x2="${CANVAS_W / 2}" y2="${CANVAS_H}" stroke="#D8CFC8" stroke-width="1.5" stroke-dasharray="6 5" />`;
+    bgSvg = `<g opacity="${bgOpacity}">${img1Tag}${dividerTag}${img2Tag}</g>`;
   } else if (bgUrl1 || bgUrl2) {
     const singleUrl = bgUrl1 || bgUrl2;
-    bgSvg = `<image href="${escapeHtml(singleUrl)}" x="0" y="0" width="${CANVAS_W}" height="${CANVAS_H}" opacity="${bgOpacity}" preserveAspectRatio="xMidYMid meet" />`;
+    const r1 = bg?.bgRect1;
+    bgSvg = r1
+      ? `<image href="${escapeHtml(singleUrl)}" x="${r1.x.toFixed(1)}" y="${r1.y.toFixed(1)}" width="${r1.width.toFixed(1)}" height="${r1.height.toFixed(1)}" opacity="${bgOpacity}" preserveAspectRatio="xMidYMid meet" />`
+      : `<image href="${escapeHtml(singleUrl)}" x="0" y="0" width="${CANVAS_W}" height="${CANVAS_H}" opacity="${bgOpacity}" preserveAspectRatio="xMidYMid meet" />`;
   }
 
   const elementsSvg = floorElements
@@ -948,6 +962,8 @@ export function exportFloorPlanPdf(
     dualLayout?: 'side-by-side' | 'stacked';
     floorPlanOpacity?: number;
     floorPlanVisible?: boolean;
+    bgRect1?: BgImageRect;
+    bgRect2?: BgImageRect;
   }
 ) {
   const svg = buildFloorPlanSvg(tables, guests, floorElements, {
@@ -955,7 +971,9 @@ export function exportFloorPlanPdf(
     floorPlanUrl2: options?.floorPlanUrl2 ?? profile.floorPlanUrl2,
     dualLayout: options?.dualLayout ?? profile.floorPlanDualLayout,
     floorPlanOpacity: options?.floorPlanOpacity,
-    floorPlanVisible: options?.floorPlanVisible
+    floorPlanVisible: options?.floorPlanVisible,
+    bgRect1: options?.bgRect1,
+    bgRect2: options?.bgRect2
   });
   const printProfile: WeddingProfile = options?.eventDate
     ? { ...profile, weddingDate: options.eventDate }

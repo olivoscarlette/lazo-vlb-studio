@@ -1693,6 +1693,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               className="relative mx-auto rounded-2xl bg-[#FCFBF9] border border-[#EFE8E1] select-none overflow-hidden"
             >
               <div
+                data-floorplan-canvas="true"
                 style={{
                   width: CANVAS_W,
                   height: CANVAS_H,
@@ -1718,6 +1719,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         }`}
                       >
                         <img
+                          data-floorplan-img="1"
                           src={floorPlanUrl}
                           alt="Plano base Espacio 1"
                           draggable={false}
@@ -1726,6 +1728,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       </div>
                       <div className="relative w-full h-full min-h-0 min-w-0 overflow-hidden flex items-center justify-center p-2">
                         <img
+                          data-floorplan-img="2"
                           src={floorPlanUrl2}
                           alt="Plano base Espacio 2"
                           draggable={false}
@@ -1735,6 +1738,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     </div>
                   ) : (
                     <img
+                      data-floorplan-img="1"
                       src={floorPlanUrl || floorPlanUrl2}
                       alt="Plano base del venue"
                       draggable={false}

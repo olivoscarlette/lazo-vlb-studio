@@ -931,7 +931,24 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
               {canUseLayout2D && (
                 <button
                   type="button"
-                  onClick={() =>
+                  onClick={() => {
+                    // Measure exact rendered rects of background floor plans inside the live 1400x1000 canvas
+                    const measureBgRect = (slot: '1' | '2') => {
+                      const cvEl = document.querySelector('[data-floorplan-canvas="true"]');
+                      const imgEl = document.querySelector(`[data-floorplan-img="${slot}"]`);
+                      if (!cvEl || !imgEl) return undefined;
+                      const cvR = cvEl.getBoundingClientRect();
+                      const imR = imgEl.getBoundingClientRect();
+                      if (cvR.width <= 0 || cvR.height <= 0 || imR.width <= 0 || imR.height <= 0) return undefined;
+                      const sx = 1400 / cvR.width;
+                      const sy = 1000 / cvR.height;
+                      return {
+                        x: (imR.left - cvR.left) * sx,
+                        y: (imR.top - cvR.top) * sy,
+                        width: imR.width * sx,
+                        height: imR.height * sy
+                      };
+                    };
                     exportFloorPlanPdf(
                       profile,
                       activeTables,
@@ -944,10 +961,12 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                         floorPlanUrl2: activeFloorPlanUrl2,
                         dualLayout: profile.floorPlanDualLayout || 'side-by-side',
                         floorPlanOpacity,
-                        floorPlanVisible
+                        floorPlanVisible,
+                        bgRect1: measureBgRect('1'),
+                        bgRect2: measureBgRect('2')
                       }
-                    )
-                  }
+                    );
+                  }}
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
                   title="Descargar Plano 2D y Mesas en PDF"
                 >
