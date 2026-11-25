@@ -133,7 +133,8 @@ export const TableSeatModal: React.FC<TableSeatModalProps> = ({
   const cap = Math.max(1, table.capacity || 10);
   const slots = useMemo(() => buildSeatSlots(table, seatedGuests), [table, seatedGuests]);
   const isRectLike = table.shape === 'Rectangular' || table.shape === 'Imperial';
-  const useHeadSeats = isRectLike && cap >= 6 && table.headSeats !== false;
+  const sidesMode: 'both' | 'top' | 'bottom' = table.seatSides || (cap <= 2 ? 'top' : 'both');
+  const useHeadSeats = isRectLike && cap >= 6 && table.headSeats !== false && sidesMode === 'both';
 
   const commitSlotKeys = (nextKeys: Array<string | null>) => {
     onUpdateTable(table.id, { seatAssignments: nextKeys });
@@ -267,12 +268,15 @@ export const TableSeatModal: React.FC<TableSeatModalProps> = ({
       return { coords, body: { kind: 'serpentine' as const } };
     }
 
-    // Rectangular or Imperial (with optional head seats / cabeceras)
+    // Rectangular or Imperial (with optional head seats / cabeceras & 1-sided seating)
     const isNovios = cap <= 2;
     const remaining = useHeadSeats ? cap - 2 : cap;
-    const topN = isNovios ? cap : Math.ceil(remaining / 2);
-    const bottomN = isNovios ? 0 : remaining - topN;
-    const w = isNovios ? 140 : Math.min(238, Math.max(150, topN * 36));
+    const topN =
+      sidesMode === 'top' ? remaining : sidesMode === 'bottom' ? 0 : Math.ceil(remaining / 2);
+    const bottomN =
+      sidesMode === 'bottom' ? remaining : sidesMode === 'top' ? 0 : remaining - topN;
+    const maxLongSide = Math.max(1, topN, bottomN);
+    const w = isNovios ? 140 : Math.min(256, Math.max(150, maxLongSide * 34));
     const h = isNovios ? 64 : table.shape === 'Imperial' ? 84 : 74;
     const halfW = w / 2;
     const halfH = h / 2;
@@ -296,7 +300,7 @@ export const TableSeatModal: React.FC<TableSeatModalProps> = ({
     }
 
     return { coords, body: { kind: 'rect' as const, w, h } };
-  }, [table.shape, cap, useHeadSeats]);
+  }, [table.shape, cap, useHeadSeats, sidesMode]);
 
   const rot = table.rotation || 0;
 
@@ -324,9 +328,33 @@ export const TableSeatModal: React.FC<TableSeatModalProps> = ({
             />
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Seating sides toggle for Rectangular / Imperial */}
+            {isRectLike && (
+              <div className="inline-flex items-center bg-[#FAF8F5] p-0.5 rounded-full border border-[#EFE8E1]">
+                {([
+                  { id: 'both', label: 'Ambos lados' },
+                  { id: 'top', label: 'Arriba' },
+                  { id: 'bottom', label: 'Abajo' }
+                ] as const).map(opt => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => onUpdateTable(table.id, { seatSides: opt.id })}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                      sidesMode === opt.id
+                        ? 'bg-[#2B2826] text-white'
+                        : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Cabeceras toggle for Rectangular / Imperial */}
-            {isRectLike && cap >= 6 && (
+            {isRectLike && cap >= 6 && sidesMode === 'both' && (
               <button
                 type="button"
                 onClick={() => onUpdateTable(table.id, { headSeats: !useHeadSeats })}

@@ -827,15 +827,19 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       );
     }
 
-    // Rectangular or Imperial (with optional head seats / cabeceras)
+    // Rectangular or Imperial (with optional head seats / cabeceras & 1-sided seating)
     const rot = table.rotation || 0;
     const isVertical = rot % 180 === 90;
     const isNovios = cap <= 2;
-    const useHeadSeats = !isNovios && cap >= 6 && table.headSeats !== false;
+    const sidesMode: 'both' | 'top' | 'bottom' = table.seatSides || (isNovios ? 'top' : 'both');
+    const useHeadSeats = !isNovios && cap >= 6 && table.headSeats !== false && sidesMode === 'both';
     const remaining = useHeadSeats ? cap - 2 : cap;
-    const topCount = isNovios ? cap : Math.ceil(remaining / 2);
-    const bottomCount = isNovios ? 0 : remaining - topCount;
-    const w = isNovios ? 92 : Math.max(126, topCount * 25);
+    const topCount =
+      sidesMode === 'top' ? remaining : sidesMode === 'bottom' ? 0 : Math.ceil(remaining / 2);
+    const bottomCount =
+      sidesMode === 'bottom' ? remaining : sidesMode === 'top' ? 0 : remaining - topCount;
+    const maxLongSide = Math.max(1, topCount, bottomCount);
+    const w = isNovios ? 92 : Math.max(126, maxLongSide * 25);
     const h = isNovios ? 44 : table.shape === 'Imperial' ? 58 : 50;
 
     // Seat indices clockwise: top (0..topCount-1), right head (topCount), bottom (right->left), left head (cap-1)
@@ -876,9 +880,11 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           }}
         >
           {/* Top row chairs */}
-          <div className="absolute -top-5 inset-x-2 flex justify-around">
-            {Array.from({ length: topCount }).map((_, i) => renderChairCircle(i, `t_${i}`))}
-          </div>
+          {topCount > 0 && (
+            <div className="absolute -top-5 inset-x-2 flex justify-around">
+              {Array.from({ length: topCount }).map((_, i) => renderChairCircle(i, `t_${i}`))}
+            </div>
+          )}
 
           {/* Right head seat (cabecera derecha) */}
           {useHeadSeats && (
@@ -1870,8 +1876,38 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     </div>
                   </div>
 
+                  {(selectedTable.shape === 'Rectangular' || selectedTable.shape === 'Imperial') && (
+                    <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
+                      <span className="text-xs font-medium text-[#5A524C]">Sillas en</span>
+                      <div className="inline-flex items-center bg-white p-0.5 rounded-full border border-[#EFE8E1]">
+                        {([
+                          { id: 'both', label: 'Ambos' },
+                          { id: 'top', label: 'Arriba' },
+                          { id: 'bottom', label: 'Abajo' }
+                        ] as const).map(opt => {
+                          const currentSides =
+                            selectedTable.seatSides || (selectedTable.capacity <= 2 ? 'top' : 'both');
+                          const active = currentSides === opt.id;
+                          return (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => onUpdateTable(selectedTable.id, { seatSides: opt.id })}
+                              className={`px-2 py-1 rounded-full text-[10px] font-medium transition cursor-pointer ${
+                                active ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {(selectedTable.shape === 'Rectangular' || selectedTable.shape === 'Imperial') &&
-                    selectedTable.capacity >= 6 && (
+                    selectedTable.capacity >= 6 &&
+                    (selectedTable.seatSides || 'both') === 'both' && (
                       <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
                         <span className="text-xs font-medium text-[#5A524C]">Cabeceras</span>
                         <div className="inline-flex items-center bg-white p-0.5 rounded-full border border-[#EFE8E1]">

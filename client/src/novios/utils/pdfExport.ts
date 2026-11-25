@@ -698,13 +698,17 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           </g>`;
       }
 
-      // Rectangular / Imperial (respects headSeats / cabeceras)
+      // Rectangular / Imperial (respects headSeats / cabeceras & seatSides)
       const isNovios = cap <= 2;
-      const useHeadSeats = !isNovios && cap >= 6 && table.headSeats !== false;
+      const sidesMode: 'both' | 'top' | 'bottom' = table.seatSides || (isNovios ? 'top' : 'both');
+      const useHeadSeats = !isNovios && cap >= 6 && table.headSeats !== false && sidesMode === 'both';
       const remaining = useHeadSeats ? cap - 2 : cap;
-      const topCount = isNovios ? cap : Math.ceil(remaining / 2);
-      const bottomCount = isNovios ? 0 : remaining - topCount;
-      const tw = isNovios ? 92 : Math.max(122, topCount * 24);
+      const topCount =
+        sidesMode === 'top' ? remaining : sidesMode === 'bottom' ? 0 : Math.ceil(remaining / 2);
+      const bottomCount =
+        sidesMode === 'bottom' ? remaining : sidesMode === 'top' ? 0 : remaining - topCount;
+      const maxLongSide = Math.max(1, topCount, bottomCount);
+      const tw = isNovios ? 92 : Math.max(122, maxLongSide * 24);
       const th = isNovios ? 44 : table.shape === 'Imperial' ? 58 : 50;
       const topChairs = Array.from({ length: topCount })
         .map((_, i) => {
