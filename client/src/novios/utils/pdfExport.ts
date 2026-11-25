@@ -750,9 +750,16 @@ export function exportFloorPlanPdf(
   profile: WeddingProfile,
   tables: TableItem[],
   guests: GuestItem[],
-  floorElements: FloorElement[]
+  floorElements: FloorElement[],
+  options?: { eventLabel?: string; eventDate?: string }
 ) {
   const svg = buildFloorPlanSvg(tables, guests, floorElements);
+  const printProfile: WeddingProfile = options?.eventDate
+    ? { ...profile, weddingDate: options.eventDate }
+    : profile;
+  const pdfTitle = options?.eventLabel
+    ? `Plano 2D & Distribución de Mesas — ${options.eventLabel}`
+    : 'Plano 2D & Distribución de Mesas';
 
   const cards = tables
     .map(table => {
@@ -792,9 +799,9 @@ export function exportFloorPlanPdf(
     <div class="tables-grid">${cards}</div>`;
 
   openPrintablePdf(
-    'Plano 2D & Distribución de Mesas',
+    pdfTitle,
     'Acomodo del salón y listado de invitados por mesa para banquete y coordinación',
-    profile,
+    printProfile,
     body
   );
 }

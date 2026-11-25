@@ -93,6 +93,7 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
     coverPositionY: existingStudio?.profile?.coverPositionY ?? parsePositionY(w.cover_photo_position),
     coverFitMode: existingStudio?.profile?.coverFitMode || 'auto',
     floorPlanUrl: w.floor_plan_url || existingStudio?.profile?.floorPlanUrl || '',
+    civilFloorPlanUrl: existingStudio?.profile?.civilFloorPlanUrl || '',
     partnerInviteCode: `LAZO-${String(w.id || '0000').slice(-4).toUpperCase()}`,
     welcomeSeen: Boolean(existingStudio?.profile?.welcomeSeen)
   };
@@ -100,6 +101,9 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
   const base = createInitialWeddingState(profile);
 
   // 1. Guests (exact columns: first_name, last_name, phone, companion_count, status, table_id, observations, dietary_requirements)
+  const existingGuestsMap = new Map<string, GuestItem>(
+    (existingStudio?.guests || []).map(sg => [String(sg.id), sg])
+  );
   const guests: GuestItem[] = (seed.guests || []).map((g: any) => {
     const fn = (g.first_name || '').trim();
     const ln = (g.last_name || '').trim();
@@ -110,17 +114,31 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
       : rawStatus.includes('no asist') || rawStatus.includes('declin') || rawStatus.includes('cancel')
       ? 'No asistirá'
       : 'Pendiente';
+    const rawStatusCivil = String(g.status_civil || '').toLowerCase();
+    const statusCivil: GuestStatus = rawStatusCivil.includes('confirmado') && !rawStatusCivil.includes('pendiente')
+      ? 'Confirmado'
+      : rawStatusCivil.includes('no asist') || rawStatusCivil.includes('declin') || rawStatusCivil.includes('cancel')
+      ? 'No asistirá'
+      : 'Pendiente';
     const notesParts = [g.dietary_requirements, g.observations].filter(Boolean).join(' · ');
+    const prevGuest = existingGuestsMap.get(String(g.id));
+    const defaultPasses = Math.max(1, 1 + Number(g.companion_count || 0));
+    const passesCivil = Number(g.confirmed_places_civil) > 0 ? Number(g.confirmed_places_civil) : defaultPasses;
     return {
       id: String(g.id),
       name: fullName,
       firstName: fn || undefined,
       lastName: ln || undefined,
       phone: g.phone || '',
-      passes: Math.max(1, 1 + Number(g.companion_count || 0)),
+      passes: defaultPasses,
       status,
       dietary: notesParts,
       tableId: g.table_id ? String(g.table_id) : undefined,
+      civilTableId: prevGuest?.civilTableId || undefined,
+      isInvitedPrincipal: g.is_invited_principal === undefined ? true : Boolean(g.is_invited_principal),
+      isInvitedCivil: Boolean(g.is_invited_civil),
+      statusCivil,
+      passesCivil,
       side: 'Ambos',
       whatsappStatus: g.whatsapp_status || undefined
     };
@@ -365,6 +383,8 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
     guests,
     tables,
     floorElements,
+    civilTables: Array.isArray(existingStudio?.civilTables) ? existingStudio.civilTables : [],
+    civilFloorElements: Array.isArray(existingStudio?.civilFloorElements) ? existingStudio.civilFloorElements : [],
     vendors,
     checklist,
     timeline,

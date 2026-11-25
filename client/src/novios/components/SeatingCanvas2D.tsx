@@ -17,6 +17,7 @@ interface CustomElementPayload {
 interface SeatingCanvas2DProps {
   weddingId?: string;
   authToken?: string | null;
+  eventType?: 'principal' | 'civil';
   floorPlanUrl?: string;
   onFloorPlanChange?: (nextUrl: string) => void;
   tables: TableItem[];
@@ -41,6 +42,7 @@ const CANVAS_H = 1000;
 export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   weddingId,
   authToken,
+  eventType = 'principal',
   floorPlanUrl = '',
   onFloorPlanChange,
   tables,
@@ -113,6 +115,12 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const totalUnassignedPasses = unassignedGuests.reduce((s, g) => s + g.passes, 0);
 
   const prevTableCountRef = useRef(tables.length);
+  useEffect(() => {
+    setSelectedTableId(tables[0]?.id || null);
+    setSelectedElementId(null);
+    prevTableCountRef.current = tables.length;
+  }, [eventType]);
+
   useEffect(() => {
     if (tables.length > prevTableCountRef.current) {
       const newest = tables[tables.length - 1];
@@ -353,7 +361,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       if (weddingId && authToken) {
         const formData = new FormData();
         formData.append('floor_plan_file', uploadBlob, uploadFilename);
-        const res = await fetch(`/api/weddings/${weddingId}/floor-plan-file`, {
+        formData.append('event_type', eventType);
+        const res = await fetch(`/api/weddings/${weddingId}/floor-plan-file?event_type=${eventType}`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${authToken}` },
           body: formData
@@ -379,7 +388,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const handleRemoveFloorPlan = async () => {
     if (weddingId && authToken) {
       try {
-        await fetch(`/api/weddings/${weddingId}/floor-plan-file`, {
+        await fetch(`/api/weddings/${weddingId}/floor-plan-file?event_type=${eventType}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${authToken}` }
         });

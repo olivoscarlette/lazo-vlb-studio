@@ -10,6 +10,7 @@ import { FloorElement, GuestItem, GuestStatus, TableItem } from '../types/lazo';
 import { Modal } from '../components/Modal';
 import { SeatingCanvas2D } from '../components/SeatingCanvas2D';
 import { exportFloorPlanPdf, exportGuestsPdf } from '../utils/pdfExport';
+import { formatShortDate } from '../data/seedWedding';
 import { buildVlbWhatsAppUrl } from '../components/VlbCoordinationModal';
 
 export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly?: boolean }> = ({
@@ -21,6 +22,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
   const canUseLayout2D = flags.isAdmin || !flags.isVirtualNovios || flags.hasLayout2d || flags.hasWhatsappRsvp;
   const [subTabState, setSubTab] = useState<'lista' | 'mesas'>(mesasOnly ? 'mesas' : (initialSubTab || 'lista'));
   const subTab = mesasOnly ? 'mesas' : subTabState;
+  const [layoutEvent, setLayoutEvent] = useState<'principal' | 'civil'>('principal');
   const [tablesView, setTablesView] = useState<'plano' | 'tarjetas'>(canUseLayout2D ? 'plano' : 'tarjetas');
   const [statusFilter, setStatusFilter] = useState<'TODOS' | GuestStatus>('TODOS');
   const [search, setSearch] = useState('');
@@ -147,19 +149,53 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
     }));
   };
 
+  const hasCivilLayout = Boolean(
+    wedding.ceremonies.civilEnabled ||
+      guests.some(g => g.isInvitedCivil) ||
+      (wedding.civilTables && wedding.civilTables.length > 0)
+  );
+  const isCivilLayout = hasCivilLayout && layoutEvent === 'civil';
+  const civilTables = wedding.civilTables ?? [];
+  const civilFloorElements = wedding.civilFloorElements ?? [];
+
+  const defaultFloorElements: FloorElement[] = wedding.floorElements ?? [
+    { id: 'el_pista', type: 'pista', label: 'Pista de Baile', x: 360, y: 265, width: 148, height: 148 },
+    { id: 'el_dj', type: 'dj', label: 'DJ / Escenario', x: 360, y: 430, width: 150, height: 48 }
+  ];
+
+  const activeTables = isCivilLayout ? civilTables : tables;
+  const activeFloorElements = isCivilLayout ? civilFloorElements : defaultFloorElements;
+  const activeFloorPlanUrl = isCivilLayout ? (profile.civilFloorPlanUrl || '') : (profile.floorPlanUrl || '');
+  const activeLayoutGuests: GuestItem[] = isCivilLayout
+    ? guests
+        .filter(g => g.isInvitedCivil)
+        .map(g => ({
+          ...g,
+          tableId: g.civilTableId,
+          status: g.statusCivil || 'Pendiente',
+          passes: g.passesCivil || g.passes
+        }))
+    : guests.filter(g => g.isInvitedPrincipal !== false);
+
   const handleAssignTable = (guestId: string, tableId: string) => {
     updateWedding(prev => ({
       ...prev,
-      guests: prev.guests.map(g => (g.id === guestId ? { ...g, tableId: tableId || undefined } : g))
+      guests: prev.guests.map(g =>
+        g.id === guestId
+          ? isCivilLayout
+            ? { ...g, civilTableId: tableId || undefined }
+            : { ...g, tableId: tableId || undefined }
+          : g
+      )
     }));
   };
 
   const handleSaveTable = (e: React.FormEvent) => {
     e.preventDefault();
     if (!tableForm.name.trim()) return;
-    const idx = tables.length;
+    const idx = activeTables.length;
     const newT: TableItem = {
-      id: `tbl_${Date.now()}`,
+      id: `${isCivilLayout ? 'ctbl' : 'tbl'}_${Date.now()}`,
       name: tableForm.name.trim(),
       shape: tableForm.shape,
       capacity: Math.max(2, Number(tableForm.capacity) || 10),
@@ -167,44 +203,62 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
       y: 320 + (idx % 4) * 36,
       rotation: 0
     };
-    updateWedding(prev => ({ ...prev, tables: [...prev.tables, newT] }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? { ...prev, civilTables: [...(prev.civilTables ?? []), newT] }
+        : { ...prev, tables: [...prev.tables, newT] }
+    );
     setTableForm({ name: '', shape: 'Redonda', capacity: '10' });
     setShowTableModal(false);
   };
 
   const handleMoveTable = (id: string, x: number, y: number) => {
-    updateWedding(prev => ({
-      ...prev,
-      tables: prev.tables.map(t => (t.id === id ? { ...t, x, y } : t))
-    }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? { ...prev, civilTables: (prev.civilTables ?? []).map(t => (t.id === id ? { ...t, x, y } : t)) }
+        : { ...prev, tables: prev.tables.map(t => (t.id === id ? { ...t, x, y } : t)) }
+    );
   };
 
   const handleRotateTable = (id: string) => {
-    updateWedding(prev => ({
-      ...prev,
-      tables: prev.tables.map(t => (t.id === id ? { ...t, rotation: ((t.rotation || 0) + 45) % 360 } : t))
-    }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? {
+            ...prev,
+            civilTables: (prev.civilTables ?? []).map(t =>
+              t.id === id ? { ...t, rotation: ((t.rotation || 0) + 45) % 360 } : t
+            )
+          }
+        : {
+            ...prev,
+            tables: prev.tables.map(t => (t.id === id ? { ...t, rotation: ((t.rotation || 0) + 45) % 360 } : t))
+          }
+    );
   };
 
   const handleUpdateTable = (id: string, patch: Partial<TableItem>) => {
-    updateWedding(prev => ({
-      ...prev,
-      tables: prev.tables.map(t => (t.id === id ? { ...t, ...patch } : t))
-    }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? { ...prev, civilTables: (prev.civilTables ?? []).map(t => (t.id === id ? { ...t, ...patch } : t)) }
+        : { ...prev, tables: prev.tables.map(t => (t.id === id ? { ...t, ...patch } : t)) }
+    );
   };
 
   const handleDeleteTable = (id: string) => {
-    updateWedding(prev => ({
-      ...prev,
-      tables: prev.tables.filter(t => t.id !== id),
-      guests: prev.guests.map(g => (g.tableId === id ? { ...g, tableId: undefined } : g))
-    }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? {
+            ...prev,
+            civilTables: (prev.civilTables ?? []).filter(t => t.id !== id),
+            guests: prev.guests.map(g => (g.civilTableId === id ? { ...g, civilTableId: undefined } : g))
+          }
+        : {
+            ...prev,
+            tables: prev.tables.filter(t => t.id !== id),
+            guests: prev.guests.map(g => (g.tableId === id ? { ...g, tableId: undefined } : g))
+          }
+    );
   };
-
-  const defaultFloorElements: FloorElement[] = wedding.floorElements ?? [
-    { id: 'el_pista', type: 'pista', label: 'Pista de Baile', x: 360, y: 265, width: 148, height: 148 },
-    { id: 'el_dj', type: 'dj', label: 'DJ / Escenario', x: 360, y: 430, width: 150, height: 48 }
-  ];
 
   const handleAddFloorElement = (
     type: FloorElement['type'],
@@ -218,7 +272,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
     };
     const newEl: FloorElement = custom
       ? {
-          id: `el_${Date.now()}`,
+          id: `${isCivilLayout ? 'cel' : 'el'}_${Date.now()}`,
           type: 'otro',
           label: custom.label,
           x: 360,
@@ -229,7 +283,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
           tone: custom.tone || 'neutral'
         }
       : {
-          id: `el_${Date.now()}`,
+          id: `${isCivilLayout ? 'cel' : 'el'}_${Date.now()}`,
           type,
           label: config[type as Exclude<FloorElement['type'], 'otro'>].label,
           x: 360,
@@ -237,47 +291,74 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
           width: config[type as Exclude<FloorElement['type'], 'otro'>].w,
           height: config[type as Exclude<FloorElement['type'], 'otro'>].h
         };
-    updateWedding(prev => ({
-      ...prev,
-      floorElements: [...(prev.floorElements ?? defaultFloorElements), newEl]
-    }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? { ...prev, civilFloorElements: [...(prev.civilFloorElements ?? []), newEl] }
+        : { ...prev, floorElements: [...(prev.floorElements ?? defaultFloorElements), newEl] }
+    );
   };
 
   const handleMoveFloorElement = (id: string, x: number, y: number) => {
-    updateWedding(prev => ({
-      ...prev,
-      floorElements: (prev.floorElements ?? defaultFloorElements).map(el =>
-        el.id === id ? { ...el, x, y } : el
-      )
-    }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? {
+            ...prev,
+            civilFloorElements: (prev.civilFloorElements ?? []).map(el => (el.id === id ? { ...el, x, y } : el))
+          }
+        : {
+            ...prev,
+            floorElements: (prev.floorElements ?? defaultFloorElements).map(el =>
+              el.id === id ? { ...el, x, y } : el
+            )
+          }
+    );
   };
 
   const handleResizeFloorElement = (id: string, width: number, height: number) => {
     const safeW = Math.max(24, Math.min(1300, Math.round(width)));
     const safeH = Math.max(16, Math.min(920, Math.round(height)));
-    updateWedding(prev => ({
-      ...prev,
-      floorElements: (prev.floorElements ?? defaultFloorElements).map(el =>
-        el.id === id ? { ...el, width: safeW, height: safeH } : el
-      )
-    }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? {
+            ...prev,
+            civilFloorElements: (prev.civilFloorElements ?? []).map(el =>
+              el.id === id ? { ...el, width: safeW, height: safeH } : el
+            )
+          }
+        : {
+            ...prev,
+            floorElements: (prev.floorElements ?? defaultFloorElements).map(el =>
+              el.id === id ? { ...el, width: safeW, height: safeH } : el
+            )
+          }
+    );
   };
 
   const handleRotateFloorElement = (id: string, rotation: number) => {
     const norm = ((Math.round(rotation) % 360) + 360) % 360;
-    updateWedding(prev => ({
-      ...prev,
-      floorElements: (prev.floorElements ?? defaultFloorElements).map(el =>
-        el.id === id ? { ...el, rotation: norm } : el
-      )
-    }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? {
+            ...prev,
+            civilFloorElements: (prev.civilFloorElements ?? []).map(el =>
+              el.id === id ? { ...el, rotation: norm } : el
+            )
+          }
+        : {
+            ...prev,
+            floorElements: (prev.floorElements ?? defaultFloorElements).map(el =>
+              el.id === id ? { ...el, rotation: norm } : el
+            )
+          }
+    );
   };
 
   const handleDeleteFloorElement = (id: string) => {
-    updateWedding(prev => ({
-      ...prev,
-      floorElements: (prev.floorElements ?? defaultFloorElements).filter(el => el.id !== id)
-    }));
+    updateWedding(prev =>
+      isCivilLayout
+        ? { ...prev, civilFloorElements: (prev.civilFloorElements ?? []).filter(el => el.id !== id) }
+        : { ...prev, floorElements: (prev.floorElements ?? defaultFloorElements).filter(el => el.id !== id) }
+    );
   };
 
   const buildWhatsAppLink = (g: GuestItem) => {
@@ -508,7 +589,20 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
               {canUseLayout2D && (
                 <button
                   type="button"
-                  onClick={() => exportFloorPlanPdf(profile, tables, guests, defaultFloorElements)}
+                  onClick={() =>
+                    exportFloorPlanPdf(
+                      profile,
+                      activeTables,
+                      activeLayoutGuests,
+                      activeFloorElements,
+                      hasCivilLayout
+                        ? {
+                            eventLabel: isCivilLayout ? 'Boda Civil' : 'Boda Principal',
+                            eventDate: isCivilLayout ? wedding.ceremonies.civilDate : profile.weddingDate
+                          }
+                        : undefined
+                    )
+                  }
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
                   title="Descargar Plano 2D y Mesas en PDF"
                 >
@@ -868,6 +962,57 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
       {/* SUB-TAB 2: MESAS — PLANO 2D INTERACTIVO + VISTA LISTA */}
       {subTab === 'mesas' && (
         <div className="space-y-3">
+          {/* Dual-event layout selector (Boda Principal vs Boda Civil) */}
+          {hasCivilLayout && (
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-white px-3 py-2 rounded-2xl border border-[#EFE8E1] shadow-2xs">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setLayoutEvent('principal')}
+                  className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer border ${
+                    !isCivilLayout
+                      ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                      : 'bg-white text-[#5A524C] border-[#EFE8E1] hover:border-[#C48B81]'
+                  }`}
+                >
+                  <span>Boda Principal</span>
+                  {profile.weddingDate && (
+                    <span className={`text-[11px] font-light ${!isCivilLayout ? 'text-[#DDD4CB]' : 'text-[#8A7E72]'}`}>
+                      ({formatShortDate(profile.weddingDate)})
+                    </span>
+                  )}
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${!isCivilLayout ? 'bg-white/15 text-white' : 'bg-[#FAF8F5] text-[#5A524C]'}`}>
+                    {tables.length} {tables.length === 1 ? 'mesa' : 'mesas'}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLayoutEvent('civil')}
+                  className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer border ${
+                    isCivilLayout
+                      ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                      : 'bg-white text-[#5A524C] border-[#EFE8E1] hover:border-[#C48B81]'
+                  }`}
+                >
+                  <span>Boda Civil</span>
+                  {wedding.ceremonies.civilDate && (
+                    <span className={`text-[11px] font-light ${isCivilLayout ? 'text-[#DDD4CB]' : 'text-[#8A7E72]'}`}>
+                      ({formatShortDate(wedding.ceremonies.civilDate)})
+                    </span>
+                  )}
+                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${isCivilLayout ? 'bg-white/15 text-white' : 'bg-[#FAF8F5] text-[#5A524C]'}`}>
+                    {civilTables.length} {civilTables.length === 1 ? 'mesa' : 'mesas'}
+                  </span>
+                </button>
+              </div>
+              <span className="text-[11px] text-[#7D6F6B] font-light hidden sm:inline">
+                {isCivilLayout
+                  ? `Plano independiente de Boda Civil · ${activeLayoutGuests.length} invitados en lista`
+                  : `Plano independiente de Boda Principal · ${activeLayoutGuests.length} invitados en lista`}
+              </span>
+            </div>
+          )}
+
           {tablesView === 'plano' && !canUseLayout2D ? (
             <div className="bg-white rounded-3xl p-10 text-center border border-[#EFE8E1] shadow-2xs space-y-3">
               <div className="w-12 h-12 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] flex items-center justify-center mx-auto text-[#C48B81]">
@@ -903,16 +1048,19 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
             <SeatingCanvas2D
               weddingId={currentWedding?.id}
               authToken={token}
-              floorPlanUrl={profile.floorPlanUrl || ''}
+              eventType={isCivilLayout ? 'civil' : 'principal'}
+              floorPlanUrl={activeFloorPlanUrl}
               onFloorPlanChange={nextUrl =>
                 updateWedding(prev => ({
                   ...prev,
-                  profile: { ...prev.profile, floorPlanUrl: nextUrl }
+                  profile: isCivilLayout
+                    ? { ...prev.profile, civilFloorPlanUrl: nextUrl }
+                    : { ...prev.profile, floorPlanUrl: nextUrl }
                 }))
               }
-              tables={tables}
-              guests={guests}
-              floorElements={defaultFloorElements}
+              tables={activeTables}
+              guests={activeLayoutGuests}
+              floorElements={activeFloorElements}
               onMoveTable={handleMoveTable}
               onRotateTable={handleRotateTable}
               onUpdateTable={handleUpdateTable}
@@ -927,10 +1075,10 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {tables.map(table => {
-                const seatedGuests = guests.filter(g => g.tableId === table.id);
+              {activeTables.map(table => {
+                const seatedGuests = activeLayoutGuests.filter(g => g.tableId === table.id);
                 const usedSeats = seatedGuests.reduce((s, g) => s + g.passes, 0);
-                const unassigned = guests.filter(g => !g.tableId && g.status !== 'No asistirá');
+                const unassigned = activeLayoutGuests.filter(g => !g.tableId && g.status !== 'No asistirá');
 
                 return (
                   <div key={table.id} className="bg-white rounded-2xl p-5 border border-[#EFE8E1] shadow-2xs space-y-3.5">

@@ -13,6 +13,7 @@ export interface WeddingProfile {
   coverPositionY: number; // 0 to 100
   coverFitMode?: 'auto' | 'cover' | 'contain';
   floorPlanUrl?: string;
+  civilFloorPlanUrl?: string;
   partnerInviteCode: string;
   welcomeSeen?: boolean;
 }
@@ -72,6 +73,11 @@ export interface GuestItem {
   status: GuestStatus;
   dietary?: string;
   tableId?: string;
+  civilTableId?: string;
+  isInvitedPrincipal?: boolean;
+  isInvitedCivil?: boolean;
+  statusCivil?: GuestStatus;
+  passesCivil?: number;
   side: 'Novia' | 'Novio' | 'Ambos';
   whatsappStatus?: string;
 }
@@ -206,6 +212,8 @@ export interface WeddingState {
   guests: GuestItem[];
   tables: TableItem[];
   floorElements?: FloorElement[];
+  civilTables?: TableItem[];
+  civilFloorElements?: FloorElement[];
   checklist: ChecklistItem[];
   timeline: TimelineItem[];
   ceremonies: CeremonyDetails;

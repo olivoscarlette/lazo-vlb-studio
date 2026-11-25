@@ -696,6 +696,17 @@ router.post('/:weddingId/floor-plan-file', authenticateToken, requireWeddingAcce
   const now = new Date().toISOString();
   const floorPlanUrl = `/uploads/floorplans/${file.filename}`;
   const originalFilename = file.originalname;
+  const isCivil = String(req.body?.event_type || req.query?.event_type || '').toLowerCase() === 'civil';
+
+  if (isCivil) {
+    logAudit(weddingId, user.id, user.name, 'SUBIR_PLANO_BASE', 'WEDDING', weddingId, `Plano base Boda Civil subido: ${originalFilename}`);
+    return res.json({
+      success: true,
+      message: 'Plano base de Boda Civil guardado exitosamente.',
+      floor_plan_url: floorPlanUrl,
+      floor_plan_filename: originalFilename
+    });
+  }
 
   // Remove old file if it was a local uploaded floor plan
   const existing = db.prepare('SELECT floor_plan_url FROM weddings WHERE id = ?').get(weddingId) as any;
@@ -733,6 +744,12 @@ router.post('/:weddingId/floor-plan-file', authenticateToken, requireWeddingAcce
 router.delete('/:weddingId/floor-plan-file', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
   const user = req.user!;
+  const isCivil = String(req.query?.event_type || req.body?.event_type || '').toLowerCase() === 'civil';
+
+  if (isCivil) {
+    logAudit(weddingId, user.id, user.name, 'ELIMINAR_PLANO_BASE', 'WEDDING', weddingId, `Plano base Boda Civil removido`);
+    return res.json({ success: true, message: 'Plano base de Boda Civil removido.' });
+  }
 
   const existing = db.prepare('SELECT floor_plan_url FROM weddings WHERE id = ?').get(weddingId) as any;
   if (existing?.floor_plan_url && existing.floor_plan_url.startsWith('/uploads/floorplans/')) {
