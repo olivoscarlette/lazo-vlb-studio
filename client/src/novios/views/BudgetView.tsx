@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Plus, Trash2, Check, MessageSquare, Scale, Wallet, Sparkles, Upload, FileCheck, Edit3, Calendar, Receipt, Eye, Download, ArrowRight, UserCheck
+  Plus, Trash2, Check, MessageSquare, Scale, Wallet, Sparkles, Upload, FileCheck, Edit3, Calendar, Receipt, Eye, Download, ArrowRight, UserCheck, LayoutGrid, List
 } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
 import { useAuth } from '../../context/AuthContext';
@@ -24,6 +24,21 @@ export const BudgetView: React.FC = () => {
   const { user } = useAuth();
   const isInternalTeam = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR' || user?.role === 'STAFF';
   const [subTab, setSubTab] = useState<'resumen' | 'comparador' | 'proveedores' | 'archivos'>('resumen');
+  const [vendorsViewMode, setVendorsViewMode] = useState<'cards' | 'list'>(() => {
+    try {
+      return localStorage.getItem('lazo_budget_vendors_view') === 'list' ? 'list' : 'cards';
+    } catch {
+      return 'cards';
+    }
+  });
+  const handleSetVendorsView = (mode: 'cards' | 'list') => {
+    setVendorsViewMode(mode);
+    try {
+      localStorage.setItem('lazo_budget_vendors_view', mode);
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   // New Quote Modal
   const [showQuoteModal, setShowQuoteModal] = useState(false);
@@ -758,6 +773,40 @@ export const BudgetView: React.FC = () => {
             </div>
           ) : (
             <>
+              {/* Selector de vista: Tarjetas vs Lista */}
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-xs text-[#7D6F6B] font-light">
+                  {vendors.length} {vendors.length === 1 ? 'proveedor contratado' : 'proveedores contratados'}
+                </span>
+                <div className="inline-flex items-center bg-white border border-[#EFE8E1] rounded-full p-1 shadow-2xs">
+                  <button
+                    type="button"
+                    onClick={() => handleSetVendorsView('cards')}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+                      vendorsViewMode === 'cards'
+                        ? 'bg-[#2B2826] text-white shadow-2xs'
+                        : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                    }`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span>Tarjetas</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetVendorsView('list')}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer ${
+                      vendorsViewMode === 'list'
+                        ? 'bg-[#2B2826] text-white shadow-2xs'
+                        : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                    }`}
+                  >
+                    <List className="w-3.5 h-3.5" />
+                    <span>Lista</span>
+                  </button>
+                </div>
+              </div>
+
+              {vendorsViewMode === 'cards' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {vendors.map(v => {
                   const rem = Math.max(0, v.totalCost - v.paidAmount);
@@ -857,6 +906,123 @@ export const BudgetView: React.FC = () => {
                   );
                 })}
               </div>
+              ) : (
+              /* Vista Lista (Tabla compacta) */
+              <div className="bg-white rounded-3xl border border-[#EFE8E1] shadow-2xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-[#EFE8E1] bg-[#FAF8F5]/70 text-[10px] uppercase tracking-[0.14em] text-[#7D6F6B] font-semibold">
+                        <th className="py-3.5 pl-5 pr-3">Proveedor</th>
+                        <th className="py-3.5 px-3">Categoría</th>
+                        <th className="py-3.5 px-3 text-right">Total</th>
+                        <th className="py-3.5 px-3 text-right">Pagado</th>
+                        <th className="py-3.5 px-3 text-right">Restante</th>
+                        <th className="py-3.5 px-3">Próximo pago</th>
+                        <th className="py-3.5 pl-3 pr-5 text-right">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#FAF8F5] text-xs">
+                      {vendors.map(v => {
+                        const rem = Math.max(0, v.totalCost - v.paidAmount);
+                        const pct = v.totalCost > 0 ? Math.min(100, Math.round((v.paidAmount / v.totalCost) * 100)) : 0;
+                        return (
+                          <tr
+                            key={v.id}
+                            onClick={() => openVendorDetail(v, false)}
+                            className="hover:bg-[#FAF8F5]/75 transition cursor-pointer group"
+                          >
+                            <td className="py-3.5 pl-5 pr-3">
+                              <div className="font-editorial text-base text-[#2B2826] group-hover:text-[#A86B60] transition-colors leading-snug">
+                                {v.name}
+                              </div>
+                              {isInternalTeam && v.teamResponsible && (
+                                <div
+                                  className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[10px] font-medium max-w-[260px]"
+                                  title="Nota interna del equipo (no visible para novios)"
+                                >
+                                  <UserCheck className="w-3 h-3 shrink-0" />
+                                  <span className="truncate">Equipo: {v.teamResponsible}</span>
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-3 whitespace-nowrap">
+                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[10px] uppercase tracking-wider text-[#7D6F6B] font-medium">
+                                {v.category}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-3 text-right font-medium text-[#2B2826] whitespace-nowrap">
+                              {formatMXN(v.totalCost)}
+                            </td>
+                            <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                              <div className="font-medium text-[#455C44]">{formatMXN(v.paidAmount)}</div>
+                              <div className="mt-1 h-1 w-16 ml-auto bg-[#FAF8F5] rounded-full overflow-hidden">
+                                <div className="h-full bg-[#577355] rounded-full" style={{ width: `${pct}%` }} />
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                              {rem === 0 && v.totalCost > 0 ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#E5EDE6] text-[#384C3A] text-[10px] font-medium">
+                                  Liquidado
+                                </span>
+                              ) : (
+                                <span className="font-medium text-[#A86B60]">{formatMXN(rem)}</span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-3 text-[11px] text-[#7D6F6B] font-light whitespace-nowrap">
+                              {v.nextDueDate ? formatShortDate(v.nextDueDate) : 'Sin fecha'}
+                            </td>
+                            <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                              <div className="inline-flex items-center justify-end gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => openVendorDetail(v, true)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-[11px] font-medium cursor-pointer transition"
+                                >
+                                  <Wallet className="w-3 h-3 text-[#577355]" />
+                                  <span>Abonar</span>
+                                </button>
+                                {v.phone && (
+                                  <a
+                                    href={`https://wa.me/${v.phone.replace(/\D/g, '')}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="p-1.5 rounded-full bg-[#E5EDE6] text-[#384C3A] hover:opacity-80 transition"
+                                    title="Escribir por WhatsApp"
+                                  >
+                                    <MessageSquare className="w-3.5 h-3.5" />
+                                  </a>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => openVendorDetail(v, false)}
+                                  className="p-1.5 rounded-full text-[#7D6F6B] hover:text-[#2B2826] hover:bg-[#FAF8F5] transition cursor-pointer"
+                                  title="Ver detalle y editar"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (confirm(`¿Eliminar a ${v.name}?`)) {
+                                      updateWedding(prev => ({ ...prev, vendors: prev.vendors.filter(x => x.id !== v.id) }));
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-full text-[#7D6F6B]/50 hover:text-rose-600 cursor-pointer"
+                                  title="Eliminar proveedor"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              )}
 
               {/* Historial Global de Pagos */}
               <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
