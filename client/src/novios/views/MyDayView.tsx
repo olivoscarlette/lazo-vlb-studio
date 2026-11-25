@@ -6,7 +6,7 @@ import { HandoverSection } from '../components/HandoverSection';
 import { Modal } from '../components/Modal';
 import { VlbCoordinationModal } from '../components/VlbCoordinationModal';
 import { TimelineItem } from '../types/lazo';
-import { exportTimelinePdf } from '../utils/pdfExport';
+import { exportTimelinePdf, sortTimelineItems } from '../utils/pdfExport';
 
 export const MyDayView: React.FC = () => {
   const { wedding, flags, updateWedding } = useWedding();
@@ -40,7 +40,7 @@ export const MyDayView: React.FC = () => {
         civilTimeline.length > 0)
   );
   const isCivilTimeline = hasCivilTimeline && timelineEvent === 'civil';
-  const activeTimeline = isCivilTimeline ? civilTimeline : timeline;
+  const activeTimeline = sortTimelineItems(isCivilTimeline ? civilTimeline : timeline);
 
   const formatShortDate = (raw?: string) => {
     if (!raw) return '';
@@ -80,8 +80,8 @@ export const MyDayView: React.FC = () => {
     if (editingEventId) {
       updateWedding(prev => {
         const list = isCivilTimeline ? prev.civilTimeline ?? [] : prev.timeline;
-        const nextList = list
-          .map(item =>
+        const nextList = sortTimelineItems(
+          list.map(item =>
             item.id === editingEventId
               ? {
                   ...item,
@@ -92,7 +92,7 @@ export const MyDayView: React.FC = () => {
                 }
               : item
           )
-          .sort((a, b) => a.time.localeCompare(b.time));
+        );
         return isCivilTimeline ? { ...prev, civilTimeline: nextList } : { ...prev, timeline: nextList };
       });
     } else {
@@ -105,7 +105,7 @@ export const MyDayView: React.FC = () => {
       };
       updateWedding(prev => {
         const list = isCivilTimeline ? prev.civilTimeline ?? [] : prev.timeline;
-        const nextList = [...list, nextItem].sort((a, b) => a.time.localeCompare(b.time));
+        const nextList = sortTimelineItems([...list, nextItem]);
         return isCivilTimeline ? { ...prev, civilTimeline: nextList } : { ...prev, timeline: nextList };
       });
     }
@@ -316,8 +316,8 @@ export const MyDayView: React.FC = () => {
                   className="py-4 px-2 rounded-2xl flex items-start justify-between gap-4 group hover:bg-[#FAF8F5]/70 transition cursor-pointer"
                 >
                   <div className="flex items-start gap-4 min-w-0 flex-1">
-                    <span className="font-editorial text-lg text-[#C48B81] w-16 shrink-0 flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 opacity-60" />
+                    <span className="font-editorial text-lg text-[#C48B81] w-20 shrink-0 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 opacity-60 shrink-0" />
                       {item.time}
                     </span>
                     <div className="min-w-0 flex-1">

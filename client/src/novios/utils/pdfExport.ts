@@ -288,12 +288,25 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
   win.document.close();
 }
 
+export function sortTimelineItems<T extends { time: string }>(items: T[]): T[] {
+  const toEventMinutes = (time: string) => {
+    const m = /^(\d{1,2}):(\d{2})/.exec((time || '').trim());
+    if (!m) return 9999;
+    const h = Number(m[1]);
+    const min = Number(m[2]);
+    // Treat 00:00–05:59 as late-night continuation of the same event day (after 23:59)
+    const adjustedH = h < 6 ? h + 24 : h;
+    return adjustedH * 60 + min;
+  };
+  return [...items].sort((a, b) => toEventMinutes(a.time) - toEventMinutes(b.time));
+}
+
 export function exportTimelinePdf(
   profile: WeddingProfile,
   timeline: TimelineItem[],
   options?: { eventLabel?: string; eventDate?: string; eventVenue?: string }
 ) {
-  const sorted = [...timeline].sort((a, b) => a.time.localeCompare(b.time));
+  const sorted = sortTimelineItems(timeline);
   const rows = sorted.length
     ? sorted
         .map(
