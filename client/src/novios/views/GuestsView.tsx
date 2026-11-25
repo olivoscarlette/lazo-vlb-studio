@@ -208,7 +208,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
 
   const handleAddFloorElement = (
     type: FloorElement['type'],
-    custom?: { label: string; width: number; height: number; shape?: 'rect' | 'circle'; tone?: FloorElement['tone'] }
+    custom?: { label: string; width: number; height: number; shape?: FloorElement['shape']; tone?: FloorElement['tone'] }
   ) => {
     const config: Record<Exclude<FloorElement['type'], 'otro'>, { label: string; w: number; h: number }> = {
       pista: { label: 'Pista de Baile', w: 148, h: 148 },

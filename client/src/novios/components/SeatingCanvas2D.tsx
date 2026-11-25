@@ -10,7 +10,7 @@ interface CustomElementPayload {
   label: string;
   width: number;
   height: number;
-  shape?: 'rect' | 'circle';
+  shape?: FloorElement['shape'];
   tone?: FloorElement['tone'];
 }
 
@@ -78,7 +78,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const [showOtherModal, setShowOtherModal] = useState(false);
   const [customEl, setCustomEl] = useState({
     label: '',
-    shape: 'rect' as 'rect' | 'square' | 'circle',
+    shape: 'rect' as 'rect' | 'square' | 'circle' | 'curve-path' | 'arch' | 'line' | 'ceremony',
     tone: 'neutral' as NonNullable<FloorElement['tone']>
   });
   const [dragging, setDragging] = useState<{
@@ -1012,6 +1012,11 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 {/* Draggable Floor Elements (Pista, DJ, Barra, Entrada, Otros) */}
                 {floorElements.map(el => {
                   const isSel = selectedElementId === el.id;
+                  const isSvgShape =
+                    el.shape === 'curve-path' ||
+                    el.shape === 'arch' ||
+                    el.shape === 'line' ||
+                    el.shape === 'ceremony';
                   const shapeClass = el.shape === 'circle' ? 'rounded-full' : 'rounded-2xl';
                   const toneClass =
                     el.type === 'pista'
@@ -1026,6 +1031,23 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       ? 'bg-[#F7EDEB]/95 border-[#E6CFCB] text-[#8F554B]'
                       : 'bg-[#FAF3E8]/90 border-[#E8D7B8] text-[#7C5824]';
 
+                  const svgStroke =
+                    el.tone === 'nature'
+                      ? '#5A7B5E'
+                      : el.tone === 'water'
+                      ? '#5B849B'
+                      : el.tone === 'accent'
+                      ? '#B87B71'
+                      : '#6E7A82';
+                  const svgFill =
+                    el.tone === 'nature'
+                      ? 'rgba(229, 237, 230, 0.35)'
+                      : el.tone === 'water'
+                      ? 'rgba(235, 244, 248, 0.45)'
+                      : el.tone === 'accent'
+                      ? 'rgba(247, 237, 235, 0.45)'
+                      : 'rgba(245, 239, 234, 0.35)';
+
                   return (
                     <div
                       key={el.id}
@@ -1038,11 +1060,130 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         height: el.height,
                         transform: `translate(-50%, -50%) rotate(${el.rotation || 0}deg)`
                       }}
-                      className={`group absolute ${shapeClass} border flex items-center justify-center text-center px-2 cursor-grab active:cursor-grabbing transition-shadow ${toneClass} ${
-                        isSel ? 'ring-4 ring-[#C48B81]/25 z-20' : 'z-[5]'
+                      className={`group absolute flex items-center justify-center text-center cursor-grab active:cursor-grabbing transition-shadow ${
+                        isSvgShape
+                          ? isSel
+                            ? 'rounded-xl border border-dashed border-[#C48B81]/80 bg-[#C48B81]/[0.03] z-20'
+                            : 'border border-transparent z-[5]'
+                          : `${shapeClass} border px-2 ${toneClass} ${
+                              isSel ? 'ring-4 ring-[#C48B81]/25 z-20' : 'z-[5]'
+                            }`
                       }`}
                     >
-                      <span className="text-[10px] uppercase tracking-[0.14em] font-semibold pointer-events-none leading-tight">
+                      {el.shape === 'curve-path' && (
+                        <svg
+                          viewBox="0 0 240 160"
+                          preserveAspectRatio="none"
+                          className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+                        >
+                          {/* Subtle curved road fill */}
+                          <path
+                            d="M 8 88 Q 148 88 148 8 L 228 8 Q 228 148 8 148 Z"
+                            fill={svgFill}
+                          />
+                          {/* Inner curve border */}
+                          <path
+                            d="M 8 88 Q 148 88 148 8"
+                            fill="none"
+                            stroke={svgStroke}
+                            strokeWidth="3.2"
+                            strokeLinecap="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                          {/* Outer curve border */}
+                          <path
+                            d="M 8 148 Q 228 148 228 8"
+                            fill="none"
+                            stroke={svgStroke}
+                            strokeWidth="3.2"
+                            strokeLinecap="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        </svg>
+                      )}
+
+                      {el.shape === 'arch' && (
+                        <svg
+                          viewBox="0 0 200 100"
+                          preserveAspectRatio="none"
+                          className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+                        >
+                          <path
+                            d="M 8 92 Q 100 -10 192 92"
+                            fill="none"
+                            stroke={svgStroke}
+                            strokeWidth="3.2"
+                            strokeLinecap="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        </svg>
+                      )}
+
+                      {el.shape === 'line' && (
+                        <svg
+                          viewBox="0 0 200 24"
+                          preserveAspectRatio="none"
+                          className="absolute inset-0 w-full h-full pointer-events-none overflow-visible"
+                        >
+                          <line
+                            x1="4"
+                            y1="12"
+                            x2="196"
+                            y2="12"
+                            stroke={svgStroke}
+                            strokeWidth="3.2"
+                            strokeLinecap="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        </svg>
+                      )}
+
+                      {el.shape === 'ceremony' && (
+                        <svg
+                          viewBox="0 0 180 150"
+                          preserveAspectRatio="xMidYMid meet"
+                          className="absolute inset-0 w-full h-full pointer-events-none"
+                        >
+                          {/* Altar / Judge table */}
+                          <rect x="62" y="8" width="56" height="16" rx="3" fill={svgFill} stroke={svgStroke} strokeWidth="1.6" />
+                          <circle cx="90" cy="34" r="7" fill="none" stroke={svgStroke} strokeWidth="1.4" />
+                          {/* Left & Right chair blocks (4 rows x 4 seats each side) */}
+                          {[0, 1, 2, 3].map(row =>
+                            [0, 1, 2, 3].map(col => (
+                              <React.Fragment key={`cer_${row}_${col}`}>
+                                <rect
+                                  x={12 + col * 16}
+                                  y={52 + row * 20}
+                                  width="11"
+                                  height="11"
+                                  rx="2"
+                                  fill="#FFFFFF"
+                                  stroke={svgStroke}
+                                  strokeWidth="1.3"
+                                />
+                                <rect
+                                  x={106 + col * 16}
+                                  y={52 + row * 20}
+                                  width="11"
+                                  height="11"
+                                  rx="2"
+                                  fill="#FFFFFF"
+                                  stroke={svgStroke}
+                                  strokeWidth="1.3"
+                                />
+                              </React.Fragment>
+                            ))
+                          )}
+                        </svg>
+                      )}
+
+                      <span
+                        className={`text-[10px] uppercase tracking-[0.14em] font-semibold pointer-events-none leading-tight ${
+                          isSvgShape
+                            ? 'relative z-[2] px-2 py-0.5 rounded-full bg-white/85 text-[#5A524C] shadow-2xs'
+                            : ''
+                        }`}
+                      >
                         {el.label}
                       </span>
 
@@ -1548,6 +1689,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </span>
             <div className="flex flex-wrap gap-2">
               {[
+                { label: 'Curvatura / Camino', w: 220, h: 150, shape: 'curve-path' as const, tone: 'neutral' as const },
+                { label: 'Arco / Curva', w: 160, h: 72, shape: 'arch' as const, tone: 'neutral' as const },
+                { label: 'Muro / Línea', w: 180, h: 24, shape: 'line' as const, tone: 'neutral' as const },
+                { label: 'Ceremonia / Civil', w: 170, h: 140, shape: 'ceremony' as const, tone: 'accent' as const },
                 { label: 'Stand de Bienvenida', w: 120, h: 42, shape: 'rect' as const, tone: 'accent' as const },
                 { label: 'Espejo', w: 72, h: 36, shape: 'rect' as const, tone: 'accent' as const },
                 { label: 'Árbol', w: 66, h: 66, shape: 'circle' as const, tone: 'nature' as const },
@@ -1589,6 +1734,14 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   ? { width: 74, height: 74, shape: 'circle' as const }
                   : customEl.shape === 'square'
                   ? { width: 92, height: 92, shape: 'rect' as const }
+                  : customEl.shape === 'curve-path'
+                  ? { width: 220, height: 150, shape: 'curve-path' as const }
+                  : customEl.shape === 'arch'
+                  ? { width: 160, height: 72, shape: 'arch' as const }
+                  : customEl.shape === 'line'
+                  ? { width: 180, height: 24, shape: 'line' as const }
+                  : customEl.shape === 'ceremony'
+                  ? { width: 170, height: 140, shape: 'ceremony' as const }
                   : { width: 128, height: 48, shape: 'rect' as const };
               onAddElement('otro', {
                 label: customEl.label.trim(),
@@ -1622,6 +1775,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   <option value="rect">Rectangular</option>
                   <option value="square">Cuadrado</option>
                   <option value="circle">Circular</option>
+                  <option value="curve-path">Curvatura / Camino curvo</option>
+                  <option value="arch">Arco / Curva simple</option>
+                  <option value="line">Línea / Muro recto</option>
+                  <option value="ceremony">Ceremonia / Sillas</option>
                 </select>
               </div>
               <div>
