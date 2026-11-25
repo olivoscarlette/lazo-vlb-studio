@@ -957,6 +957,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                       {
                         eventLabel: hasCivilLayout ? (isCivilLayout ? 'Boda Civil' : 'Boda Principal') : undefined,
                         eventDate: hasCivilLayout ? (isCivilLayout ? wedding.ceremonies.civilDate : profile.weddingDate) : undefined,
+                        eventVenue: hasCivilLayout ? (isCivilLayout ? (wedding.ceremonies.civilVenue || profile.city) : profile.city) : undefined,
                         floorPlanUrl: activeFloorPlanUrl,
                         floorPlanUrl2: activeFloorPlanUrl2,
                         dualLayout: profile.floorPlanDualLayout || 'side-by-side',

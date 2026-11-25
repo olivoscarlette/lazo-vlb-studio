@@ -19,7 +19,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
 
   const couple = `${profile.partner1 || 'Novia'} & ${profile.partner2 || 'Novio'}`;
   const dateLabel = profile.weddingDate ? formatShortDate(profile.weddingDate) : '';
-  const metaLine = [couple, dateLabel, profile.city].filter(Boolean).join(' · ');
+  const metaLine = [dateLabel, profile.city].filter(Boolean).join(' · ');
 
   const html = `<!doctype html>
 <html lang="es">
@@ -689,18 +689,77 @@ function buildFloorPlanSvg(
       }
 
       if (el.shape === 'note') {
-        const lines = (el.label || 'Nota').split('\n').filter((_, i) => i < 12);
-        const startY = -el.height / 2 + 16;
-        const tspans = lines
+        const padX = 10;
+        const padY = 10;
+        const lineHeight = 13;
+        const innerW = Math.max(24, el.width - padX * 2);
+        const maxChars = Math.max(6, Math.floor(innerW / 5.6));
+        const maxLines = Math.max(1, Math.floor((el.height - padY * 2 + 2) / lineHeight));
+
+        const wrappedLines: string[] = [];
+        const paragraphs = (el.label || 'Nota').split('\n');
+        for (const para of paragraphs) {
+          const trimmed = para.trim();
+          if (!trimmed) {
+            wrappedLines.push('');
+            continue;
+          }
+          const words = trimmed.split(/\s+/);
+          let current = '';
+          for (const word of words) {
+            if (!current) {
+              if (word.length <= maxChars) {
+                current = word;
+              } else {
+                for (let i = 0; i < word.length; i += maxChars) {
+                  const chunk = word.slice(i, i + maxChars);
+                  if (i + maxChars < word.length) {
+                    wrappedLines.push(chunk);
+                  } else {
+                    current = chunk;
+                  }
+                }
+              }
+            } else if (current.length + 1 + word.length <= maxChars) {
+              current += ' ' + word;
+            } else {
+              wrappedLines.push(current);
+              if (word.length <= maxChars) {
+                current = word;
+              } else {
+                current = '';
+                for (let i = 0; i < word.length; i += maxChars) {
+                  const chunk = word.slice(i, i + maxChars);
+                  if (i + maxChars < word.length) {
+                    wrappedLines.push(chunk);
+                  } else {
+                    current = chunk;
+                  }
+                }
+              }
+            }
+          }
+          if (current) wrappedLines.push(current);
+        }
+
+        const visibleLines = wrappedLines.slice(0, maxLines);
+        const startY = -el.height / 2 + padY + 8;
+        const clipId = `note-clip-${String(el.id).replace(/[^a-zA-Z0-9_-]/g, '')}`;
+        const tspans = visibleLines
           .map(
             (line, idx) =>
-              `<tspan x="${(-el.width / 2 + 10).toFixed(1)}" dy="${idx === 0 ? 0 : 13}">${escapeHtml(line)}</tspan>`
+              `<tspan x="${(-el.width / 2 + padX).toFixed(1)}" dy="${idx === 0 ? 0 : lineHeight}">${escapeHtml(line || ' ')}</tspan>`
           )
           .join('');
         return `
           <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <defs>
+              <clipPath id="${clipId}">
+                <rect x="${(-el.width / 2 + 4).toFixed(1)}" y="${(-el.height / 2 + 4).toFixed(1)}" width="${Math.max(8, el.width - 8).toFixed(1)}" height="${Math.max(8, el.height - 8).toFixed(1)}" rx="8" />
+              </clipPath>
+            </defs>
             <rect x="${-el.width / 2}" y="${-el.height / 2}" width="${el.width}" height="${el.height}" rx="10" fill="#FFFDF4" stroke="#E5D9B6" stroke-width="1.2" />
-            <text y="${startY.toFixed(1)}" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#4A4238">${tspans}</text>
+            <text y="${startY.toFixed(1)}" clip-path="url(#${clipId})" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#4A4238">${tspans}</text>
           </g>`;
       }
 
@@ -957,6 +1016,7 @@ export function exportFloorPlanPdf(
   options?: {
     eventLabel?: string;
     eventDate?: string;
+    eventVenue?: string;
     floorPlanUrl?: string;
     floorPlanUrl2?: string;
     dualLayout?: 'side-by-side' | 'stacked';
@@ -975,9 +1035,11 @@ export function exportFloorPlanPdf(
     bgRect1: options?.bgRect1,
     bgRect2: options?.bgRect2
   });
-  const printProfile: WeddingProfile = options?.eventDate
-    ? { ...profile, weddingDate: options.eventDate }
-    : profile;
+  const printProfile: WeddingProfile = {
+    ...profile,
+    ...(options?.eventDate ? { weddingDate: options.eventDate } : {}),
+    ...(options?.eventVenue ? { city: options.eventVenue } : {})
+  };
   const pdfTitle = options?.eventLabel
     ? `Plano 2D & Distribución de Mesas — ${options.eventLabel}`
     : 'Plano 2D & Distribución de Mesas';
