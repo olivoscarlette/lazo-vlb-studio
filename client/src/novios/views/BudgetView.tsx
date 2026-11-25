@@ -963,20 +963,18 @@ export const BudgetView: React.FC = () => {
                 })}
               </div>
               ) : (
-              /* Vista Lista (Tabla compacta) */
+              /* Vista Lista (Tabla compacta sin recorte horizontal) */
               <div className="bg-white rounded-3xl border border-[#EFE8E1] shadow-2xs overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="border-b border-[#EFE8E1] bg-[#FAF8F5]/70 text-[10px] uppercase tracking-[0.14em] text-[#7D6F6B] font-semibold">
-                        <th className="py-3.5 pl-5 pr-3">Proveedor</th>
-                        <th className="py-3.5 px-3">Categoría</th>
-                        <th className="py-3.5 px-3">Participa en</th>
-                        <th className="py-3.5 px-3 text-right">Total</th>
-                        <th className="py-3.5 px-3 text-right">Pagado</th>
-                        <th className="py-3.5 px-3 text-right">Restante</th>
-                        <th className="py-3.5 px-3">Próximo pago</th>
-                        <th className="py-3.5 pl-3 pr-5 text-right">Acciones</th>
+                        <th className="py-3 pl-5 pr-2.5">Proveedor</th>
+                        <th className="py-3 px-2.5">Participa en</th>
+                        <th className="py-3 px-2.5 text-right">Total</th>
+                        <th className="py-3 px-2.5 text-right">Pagado</th>
+                        <th className="py-3 px-2.5 text-right">Restante</th>
+                        <th className="py-3 pl-2.5 pr-5 text-right">Acciones</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#FAF8F5] text-xs">
@@ -989,59 +987,63 @@ export const BudgetView: React.FC = () => {
                             onClick={() => openVendorDetail(v, false)}
                             className="hover:bg-[#FAF8F5]/75 transition cursor-pointer group"
                           >
-                            <td className="py-3.5 pl-5 pr-3">
+                            <td className="py-3 pl-5 pr-2.5 min-w-[200px]">
                               <div className="font-editorial text-base text-[#2B2826] group-hover:text-[#A86B60] transition-colors leading-snug">
                                 {v.name}
                               </div>
-                              {isInternalTeam && v.teamResponsible && (
-                                <div
-                                  className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[10px] font-medium max-w-[260px]"
-                                  title="Nota interna del equipo (no visible para novios)"
-                                >
-                                  <UserCheck className="w-3 h-3 shrink-0" />
-                                  <span className="truncate">Equipo: {v.teamResponsible}</span>
-                                </div>
-                              )}
+                              <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                <span className="text-[10px] uppercase tracking-wider text-[#7D6F6B] font-medium">
+                                  {v.category}
+                                </span>
+                                {isInternalTeam && v.teamResponsible && (
+                                  <div
+                                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[10px] font-medium max-w-[220px]"
+                                    title="Nota interna del equipo (no visible para novios)"
+                                  >
+                                    <UserCheck className="w-3 h-3 shrink-0" />
+                                    <span className="truncate">Equipo: {v.teamResponsible}</span>
+                                  </div>
+                                )}
+                              </div>
                             </td>
-                            <td className="py-3.5 px-3 whitespace-nowrap">
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[10px] uppercase tracking-wider text-[#7D6F6B] font-medium">
-                                {v.category}
-                              </span>
-                            </td>
-                            <td className="py-3.5 px-3 whitespace-nowrap">
+                            <td className="py-3 px-2.5">
                               <div className="inline-flex flex-wrap items-center gap-1">
                                 {(v.locations && v.locations.length > 0 ? v.locations : ['RECEPCIÓN']).map(loc => (
                                   <span
                                     key={loc}
-                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider ${getLocationBadgeClass(loc)}`}
+                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider whitespace-nowrap ${getLocationBadgeClass(loc)}`}
                                   >
                                     {loc}
                                   </span>
                                 ))}
                               </div>
                             </td>
-                            <td className="py-3.5 px-3 text-right font-medium text-[#2B2826] whitespace-nowrap">
+                            <td className="py-3 px-2.5 text-right font-medium text-[#2B2826] whitespace-nowrap">
                               {formatMXN(v.totalCost)}
                             </td>
-                            <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                            <td className="py-3 px-2.5 text-right whitespace-nowrap">
                               <div className="font-medium text-[#455C44]">{formatMXN(v.paidAmount)}</div>
-                              <div className="mt-1 h-1 w-16 ml-auto bg-[#FAF8F5] rounded-full overflow-hidden">
+                              <div className="mt-1 h-1 w-12 ml-auto bg-[#FAF8F5] rounded-full overflow-hidden">
                                 <div className="h-full bg-[#577355] rounded-full" style={{ width: `${pct}%` }} />
                               </div>
                             </td>
-                            <td className="py-3.5 px-3 text-right whitespace-nowrap">
-                              {rem === 0 && v.totalCost > 0 ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#E5EDE6] text-[#384C3A] text-[10px] font-medium">
-                                  Liquidado
-                                </span>
-                              ) : (
-                                <span className="font-medium text-[#A86B60]">{formatMXN(rem)}</span>
+                            <td className="py-3 px-2.5 text-right whitespace-nowrap">
+                              <div>
+                                {rem === 0 && v.totalCost > 0 ? (
+                                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#E5EDE6] text-[#384C3A] text-[10px] font-medium">
+                                    Liquidado
+                                  </span>
+                                ) : (
+                                  <span className="font-medium text-[#A86B60]">{formatMXN(rem)}</span>
+                                )}
+                              </div>
+                              {v.nextDueDate && (
+                                <div className="text-[10px] text-[#7D6F6B] font-light mt-0.5">
+                                  {formatShortDate(v.nextDueDate)}
+                                </div>
                               )}
                             </td>
-                            <td className="py-3.5 px-3 text-[11px] text-[#7D6F6B] font-light whitespace-nowrap">
-                              {v.nextDueDate ? formatShortDate(v.nextDueDate) : 'Sin fecha'}
-                            </td>
-                            <td className="py-3.5 pl-3 pr-5 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>
+                            <td className="py-3 pl-2.5 pr-5 text-right whitespace-nowrap" onClick={e => e.stopPropagation()}>
                               <div className="inline-flex items-center justify-end gap-1">
                                 <button
                                   type="button"
