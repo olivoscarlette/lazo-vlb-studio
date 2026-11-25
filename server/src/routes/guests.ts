@@ -364,9 +364,12 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
   const newCompCount = companion_count !== undefined ? Math.max(0, parseInt(companion_count, 10) || 0) : guest.companion_count;
   const newObs = observations !== undefined ? (observations ? observations.trim() : null) : guest.observations;
   const newDiet = dietary_requirements !== undefined ? (dietary_requirements ? dietary_requirements.trim() : null) : guest.dietary_requirements;
+  const compChanged = companion_count !== undefined && newCompCount !== guest.companion_count;
   const newConfirmedPlaces = confirmed_places !== undefined
     ? parseInt(confirmed_places, 10)
-    : (newStatus === 'Confirmado' && (!guest.confirmed_places || guest.confirmed_places === 0) ? (1 + newCompCount) : guest.confirmed_places);
+    : (newStatus === 'Confirmado' && (compChanged || !guest.confirmed_places || guest.confirmed_places === 0)
+        ? (1 + newCompCount)
+        : guest.confirmed_places);
 
   const newInvPrincipal = is_invited_principal !== undefined
     ? (is_invited_principal === false || is_invited_principal === 0 ? 0 : 1)
@@ -377,7 +380,9 @@ router.put('/:weddingId/guests/:guestId', authenticateToken, requireWeddingAcces
   const newStatusCivil = status_civil !== undefined ? status_civil : (guest.status_civil || 'Pendiente de confirmar');
   const newConfPlacesCivil = confirmed_places_civil !== undefined
     ? parseInt(confirmed_places_civil, 10)
-    : (newStatusCivil === 'Confirmado' && (!guest.confirmed_places_civil || guest.confirmed_places_civil === 0) ? (1 + newCompCount) : (guest.confirmed_places_civil || 0));
+    : (newStatusCivil === 'Confirmado' && (compChanged || !guest.confirmed_places_civil || guest.confirmed_places_civil === 0)
+        ? (1 + newCompCount)
+        : (guest.confirmed_places_civil || 0));
 
   const now = new Date().toISOString();
 
