@@ -630,10 +630,10 @@ export const ProveedoresPagosModule: React.FC = () => {
                         {v.contact_person && (
                           <div className="text-[11px] text-[#8A7E72] whitespace-nowrap mt-0.5">Contacto: {v.contact_person}</div>
                         )}
-                        {v.team_responsible && (
+                        {!isNovios && v.team_responsible && (
                           <div
                             className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[10px] font-medium max-w-[260px]"
-                            title={`Responsable del equipo: ${v.team_responsible}`}
+                            title={`Nota interna · Responsable del equipo: ${v.team_responsible}`}
                           >
                             <UserCheck className="w-3 h-3 shrink-0" />
                             <span className="truncate">{v.team_responsible}</span>
@@ -913,18 +913,23 @@ export const ProveedoresPagosModule: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#2B2826] uppercase tracking-wider mb-1">
-                  Responsable del Equipo (quién habla con este proveedor)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Ej. Scarlette — confirmar horarios de montaje y accesos"
-                  value={vendorForm.team_responsible}
-                  onChange={e => setVendorForm({ ...vendorForm, team_responsible: e.target.value })}
-                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
-                />
-              </div>
+              {!isNovios && (
+                <div>
+                  <label className="flex items-center gap-1.5 text-xs font-bold text-[#2B2826] uppercase tracking-wider mb-1">
+                    <span>Responsable del Equipo (quién habla con este proveedor)</span>
+                    <span className="text-[10px] font-medium normal-case tracking-normal px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43]">
+                      Nota interna
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Scarlette — confirmar horarios de montaje y accesos"
+                    value={vendorForm.team_responsible}
+                    onChange={e => setVendorForm({ ...vendorForm, team_responsible: e.target.value })}
+                    className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-xs font-bold text-[#2B2826] uppercase tracking-wider mb-1">Notas del Contrato / Servicios</label>

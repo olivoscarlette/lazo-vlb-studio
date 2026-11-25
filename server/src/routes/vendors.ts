@@ -18,12 +18,16 @@ router.get('/:weddingId/vendors', authenticateToken, requireWeddingAccess, (req,
 
   let totalCostoReal = 0;
   let totalPagado = 0;
+  const isNoviosUser = req.user?.role === 'NOVIOS';
 
   for (const v of vendors) {
     try {
       v.locations = JSON.parse(v.locations);
     } catch {
       v.locations = [];
+    }
+    if (isNoviosUser) {
+      delete v.team_responsible;
     }
     v.saldo_restante = Math.max(0, (v.costo_real || 0) - (v.total_pagado || 0));
     totalCostoReal += (v.costo_real || 0);
@@ -67,7 +71,8 @@ router.post('/:weddingId/vendors', authenticateToken, requireWeddingAccess, (req
   const locArray = Array.isArray(locations) ? locations : ['RECEPCIÓN'];
   const cost = Math.max(0, parseFloat(costo_real) || 0);
   const dueDate = payment_due_date ? payment_due_date.trim() : null;
-  const teamResp = team_responsible ? String(team_responsible).trim() : null;
+  const isNoviosUser = req.user?.role === 'NOVIOS';
+  const teamResp = !isNoviosUser && team_responsible ? String(team_responsible).trim() : null;
 
   db.prepare(`
     INSERT INTO vendors (id, wedding_id, name, phone, type, locations, costo_real, payment_due_date, contact_person, team_responsible, notes, created_at, updated_at)
@@ -99,7 +104,10 @@ router.put('/:weddingId/vendors/:vendorId', authenticateToken, requireWeddingAcc
   const locArray = locations !== undefined ? (Array.isArray(locations) ? locations : [locations]) : JSON.parse(vendor.locations);
   const cost = costo_real !== undefined ? Math.max(0, parseFloat(costo_real) || 0) : vendor.costo_real;
   const dueDate = payment_due_date !== undefined ? (payment_due_date ? payment_due_date.trim() : null) : vendor.payment_due_date;
-  const teamResp = team_responsible !== undefined ? (team_responsible ? String(team_responsible).trim() : null) : vendor.team_responsible;
+  const isNoviosUser = req.user?.role === 'NOVIOS';
+  const teamResp = isNoviosUser
+    ? vendor.team_responsible
+    : (team_responsible !== undefined ? (team_responsible ? String(team_responsible).trim() : null) : vendor.team_responsible);
 
   db.prepare(`
     UPDATE vendors SET

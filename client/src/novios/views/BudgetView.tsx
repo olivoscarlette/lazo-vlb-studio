@@ -3,6 +3,7 @@ import {
   Plus, Trash2, Check, MessageSquare, Scale, Wallet, Sparkles, Upload, FileCheck, Edit3, Calendar, Receipt, Eye, Download, ArrowRight, UserCheck
 } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
+import { useAuth } from '../../context/AuthContext';
 import { formatMXN, formatShortDate } from '../data/seedWedding';
 import { FileItem, PaymentRecord, QuoteOption, VendorItem } from '../types/lazo';
 import { Modal } from '../components/Modal';
@@ -20,6 +21,8 @@ const VENDOR_CATEGORIES = [
 
 export const BudgetView: React.FC = () => {
   const { wedding, updateWedding } = useWedding();
+  const { user } = useAuth();
+  const isInternalTeam = user?.role === 'ADMINISTRADOR' || user?.role === 'COORDINADOR' || user?.role === 'STAFF';
   const [subTab, setSubTab] = useState<'resumen' | 'comparador' | 'proveedores' | 'archivos'>('resumen');
 
   // New Quote Modal
@@ -773,10 +776,13 @@ export const BudgetView: React.FC = () => {
                           <h4 className="font-editorial text-xl text-[#2B2826] group-hover:text-[#A86B60] transition-colors">
                             {v.name}
                           </h4>
-                          {v.teamResponsible && (
-                            <div className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[11px] font-medium max-w-full">
+                          {isInternalTeam && v.teamResponsible && (
+                            <div
+                              className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[11px] font-medium max-w-full"
+                              title="Nota interna del equipo (no visible para novios)"
+                            >
                               <UserCheck className="w-3 h-3 shrink-0" />
-                              <span className="truncate">Responsable: {v.teamResponsible}</span>
+                              <span className="truncate">Equipo: {v.teamResponsible}</span>
                             </div>
                           )}
                         </div>
@@ -1108,16 +1114,21 @@ export const BudgetView: React.FC = () => {
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="text-[11px] text-[#7D6F6B] block mb-1">Responsable del equipo (quién habla con el proveedor)</label>
-                  <input
-                    type="text"
-                    placeholder="Ej. Scarlette — confirmar horarios de montaje y accesos"
-                    value={editVendorDraft.teamResponsible}
-                    onChange={e => setEditVendorDraft({ ...editVendorDraft, teamResponsible: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
-                  />
-                </div>
+                {isInternalTeam && (
+                  <div>
+                    <label className="text-[11px] text-[#7D6F6B] flex items-center gap-1.5 mb-1">
+                      <span>Responsable del equipo (quién habla con el proveedor)</span>
+                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43]">Nota interna</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ej. Scarlette — confirmar horarios de montaje y accesos"
+                      value={editVendorDraft.teamResponsible}
+                      onChange={e => setEditVendorDraft({ ...editVendorDraft, teamResponsible: e.target.value })}
+                      className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="text-[11px] text-[#7D6F6B] block mb-1">Notas y qué incluye</label>
                   <textarea
@@ -1206,13 +1217,13 @@ export const BudgetView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Team Responsible */}
-                {selectedVendor.teamResponsible && (
+                {/* Team Responsible (Internal Note Only) */}
+                {isInternalTeam && selectedVendor.teamResponsible && (
                   <div className="flex items-start gap-2.5 text-xs text-[#8A4D43] bg-[#F7EDEB]/70 p-3.5 rounded-2xl border border-[#ECD9D5] leading-relaxed">
                     <UserCheck className="w-4 h-4 shrink-0 mt-0.5 text-[#C48B81]" />
                     <div>
                       <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8A4D43] block mb-0.5">
-                        Responsable del equipo
+                        Responsable del equipo · Nota interna
                       </span>
                       <span className="text-[#2B2826] font-normal">{selectedVendor.teamResponsible}</span>
                     </div>
@@ -1487,16 +1498,21 @@ export const BudgetView: React.FC = () => {
               className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
             />
           </div>
-          <div>
-            <label className="text-[11px] text-[#7D6F6B] block mb-1">Responsable del equipo (quién habla con el proveedor)</label>
-            <input
-              type="text"
-              placeholder="Ej. Scarlette — confirmar horarios de montaje"
-              value={vendorForm.teamResponsible}
-              onChange={e => setVendorForm({ ...vendorForm, teamResponsible: e.target.value })}
-              className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
-            />
-          </div>
+          {isInternalTeam && (
+            <div>
+              <label className="text-[11px] text-[#7D6F6B] flex items-center gap-1.5 mb-1">
+                <span>Responsable del equipo (quién habla con el proveedor)</span>
+                <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43]">Nota interna</span>
+              </label>
+              <input
+                type="text"
+                placeholder="Ej. Scarlette — confirmar horarios de montaje"
+                value={vendorForm.teamResponsible}
+                onChange={e => setVendorForm({ ...vendorForm, teamResponsible: e.target.value })}
+                className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+              />
+            </div>
+          )}
           <textarea
             rows={2}
             placeholder="Notas o qué incluye el contrato (opcional)"

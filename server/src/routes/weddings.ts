@@ -1004,8 +1004,26 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
     console.error('auto-recover payments err:', recoverErr);
   }
 
+  const isNoviosViewer = req.user?.role === 'NOVIOS';
+  const safeVendors = isNoviosViewer
+    ? vendors.map((v: any) => {
+        const { team_responsible: _omit, ...rest } = v;
+        return rest;
+      })
+    : vendors;
+  const safeStudio =
+    isNoviosViewer && studio && Array.isArray(studio.vendors)
+      ? {
+          ...studio,
+          vendors: studio.vendors.map((v: any) => {
+            const { teamResponsible: _omit, ...rest } = v;
+            return rest;
+          })
+        }
+      : studio;
+
   return res.json({
-    studio,
+    studio: safeStudio,
     wedding: {
       id: wedding.id,
       name: wedding.name,
@@ -1028,7 +1046,7 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       guests,
       tables,
       layoutElements,
-      vendors,
+      vendors: safeVendors,
       payments,
       tasks,
       timeline,
@@ -1227,22 +1245,31 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
         const keepVendorIds = new Set<string>();
         const keepPaymentIds = new Set<string>();
 
+        const isNoviosEditor = req.user?.role === 'NOVIOS';
         for (const v of studio.vendors) {
           const isVirtualOrphanBucket = String(v.id) === 'v_general_payments';
           const vid = isVirtualOrphanBucket ? 'v_general_payments' : resolveUniqueId('vendors', String(v.id));
           if (!isVirtualOrphanBucket) {
             keepVendorIds.add(vid);
             if (existingVendorIds.has(vid)) {
-              db.prepare(`
-                UPDATE vendors
-                SET name = ?, phone = ?, type = ?, costo_real = ?, payment_due_date = ?, team_responsible = ?, notes = ?, updated_at = ?
-                WHERE id = ? AND wedding_id = ?
-              `).run(v.name || 'Proveedor', v.phone || '', v.category || 'Otro', Number(v.totalCost) || 0, v.nextDueDate || null, v.teamResponsible ? String(v.teamResponsible).trim() : null, v.notes || '', now, vid, weddingId);
+              if (isNoviosEditor) {
+                db.prepare(`
+                  UPDATE vendors
+                  SET name = ?, phone = ?, type = ?, costo_real = ?, payment_due_date = ?, notes = ?, updated_at = ?
+                  WHERE id = ? AND wedding_id = ?
+                `).run(v.name || 'Proveedor', v.phone || '', v.category || 'Otro', Number(v.totalCost) || 0, v.nextDueDate || null, v.notes || '', now, vid, weddingId);
+              } else {
+                db.prepare(`
+                  UPDATE vendors
+                  SET name = ?, phone = ?, type = ?, costo_real = ?, payment_due_date = ?, team_responsible = ?, notes = ?, updated_at = ?
+                  WHERE id = ? AND wedding_id = ?
+                `).run(v.name || 'Proveedor', v.phone || '', v.category || 'Otro', Number(v.totalCost) || 0, v.nextDueDate || null, v.teamResponsible ? String(v.teamResponsible).trim() : null, v.notes || '', now, vid, weddingId);
+              }
             } else {
               db.prepare(`
                 INSERT OR IGNORE INTO vendors (id, wedding_id, name, phone, type, locations, costo_real, payment_due_date, team_responsible, notes, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-              `).run(vid, weddingId, v.name || 'Proveedor', v.phone || '', v.category || 'Otro', '["Recepción"]', Number(v.totalCost) || 0, v.nextDueDate || null, v.teamResponsible ? String(v.teamResponsible).trim() : null, v.notes || '', now, now);
+              `).run(vid, weddingId, v.name || 'Proveedor', v.phone || '', v.category || 'Otro', '["Recepción"]', Number(v.totalCost) || 0, v.nextDueDate || null, !isNoviosEditor && v.teamResponsible ? String(v.teamResponsible).trim() : null, v.notes || '', now, now);
             }
           }
 
