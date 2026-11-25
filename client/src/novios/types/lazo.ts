@@ -83,7 +83,8 @@ export interface TableItem {
   capacity: number;
   x?: number;
   y?: number;
-  rotation?: number; // 0 or 90
+  rotation?: number; // 0, 45, 90...
+  scale?: number; // 0.5 to 1.8 (visual size multiplier)
 }
 
 export interface FloorElement {

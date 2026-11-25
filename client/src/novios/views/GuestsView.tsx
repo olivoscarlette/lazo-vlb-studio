@@ -182,6 +182,13 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
     }));
   };
 
+  const handleUpdateTable = (id: string, patch: Partial<TableItem>) => {
+    updateWedding(prev => ({
+      ...prev,
+      tables: prev.tables.map(t => (t.id === id ? { ...t, ...patch } : t))
+    }));
+  };
+
   const handleDeleteTable = (id: string) => {
     updateWedding(prev => ({
       ...prev,
@@ -876,6 +883,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
               floorElements={defaultFloorElements}
               onMoveTable={handleMoveTable}
               onRotateTable={handleRotateTable}
+              onUpdateTable={handleUpdateTable}
               onDeleteTable={handleDeleteTable}
               onAssignGuest={handleAssignTable}
               onAddElement={handleAddFloorElement}

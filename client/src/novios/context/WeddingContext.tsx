@@ -135,6 +135,7 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
           if (rawType.includes('serpent') || rawType.includes('espiral')) shape = 'Serpentina (S)';
           else if (rawType.includes('imperial') || rawType.includes('novio')) shape = 'Imperial';
           else if (rawType.includes('rect')) shape = 'Rectangular';
+          const prevTableMeta = (existingStudio?.tables || []).find(st => String(st.id) === String(t.id));
           return {
             id: String(t.id),
             name: t.name || `Mesa ${idx + 1}`,
@@ -142,7 +143,8 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
             capacity: Math.max(2, Number(t.capacity) || 10),
             x: typeof t.x === 'number' ? t.x : 150 + (idx % 3) * 200,
             y: typeof t.y === 'number' ? t.y : 120 + Math.floor(idx / 3) * 155,
-            rotation: Number(t.rotation) || 0
+            rotation: Number(t.rotation) || 0,
+            scale: typeof prevTableMeta?.scale === 'number' ? prevTableMeta.scale : 1
           };
         })
       : base.tables;

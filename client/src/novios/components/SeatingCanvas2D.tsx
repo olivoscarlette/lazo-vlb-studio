@@ -24,6 +24,7 @@ interface SeatingCanvas2DProps {
   floorElements: FloorElement[];
   onMoveTable: (id: string, x: number, y: number) => void;
   onRotateTable: (id: string) => void;
+  onUpdateTable: (id: string, patch: Partial<TableItem>) => void;
   onDeleteTable: (id: string) => void;
   onAssignGuest: (guestId: string, tableId: string) => void;
   onAddElement: (type: FloorElement['type'], custom?: CustomElementPayload) => void;
@@ -47,6 +48,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   floorElements,
   onMoveTable,
   onRotateTable,
+  onUpdateTable,
   onDeleteTable,
   onAssignGuest,
   onAddElement,
@@ -590,10 +592,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     const rot = table.rotation || 0;
     const isVertical = rot % 180 === 90;
     const isNovios = cap <= 2;
-    const w = isNovios ? 92 : 122;
-    const h = isNovios ? 44 : 52;
     const topCount = isNovios ? cap : Math.ceil(cap / 2);
     const bottomCount = isNovios ? 0 : cap - topCount;
+    const w = isNovios ? 92 : Math.max(122, topCount * 24);
+    const h = isNovios ? 44 : table.shape === 'Imperial' ? 58 : 50;
 
     return (
       <div
@@ -1019,6 +1021,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     .filter(g => g.tableId === table.id)
                     .reduce((s, g) => s + g.passes, 0);
 
+                  const tableScale = typeof table.scale === 'number' ? table.scale : 1;
+
                   return (
                     <div
                       key={table.id}
@@ -1026,7 +1030,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       style={{
                         left: coords.x,
                         top: coords.y,
-                        transform: 'translate(-50%, -50%)'
+                        transform: `translate(-50%, -50%) scale(${tableScale})`
                       }}
                       className="absolute cursor-grab active:cursor-grabbing z-10"
                     >
@@ -1040,7 +1044,11 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
         </div>
 
         {/* Right Side Inspector: Selected Table or Floor Element Controls */}
-        <div className="bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-2xs space-y-4">
+        <div
+          className={`bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-2xs space-y-4 overflow-y-auto ${
+            isFullscreen ? 'h-full max-h-full' : 'lg:max-h-[74vh]'
+          }`}
+        >
           {selectedElement && !selectedTable ? (
             <div className="space-y-4">
               <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#FAF8F5]">
@@ -1175,23 +1183,28 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             const seated = guests.filter(g => g.tableId === selectedTable.id);
             const usedSeats = seated.reduce((s, g) => s + g.passes, 0);
             const isOver = usedSeats > selectedTable.capacity;
+            const currentScale = typeof selectedTable.scale === 'number' ? selectedTable.scale : 1;
 
             return (
               <>
                 <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#FAF8F5]">
-                  <div>
+                  <div className="min-w-0 flex-1">
                     <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#C48B81]">
                       {selectedTable.shape}
                     </span>
-                    <h4 className="font-editorial text-xl text-[#2B2826] leading-tight">
-                      {selectedTable.name}
-                    </h4>
+                    <input
+                      type="text"
+                      value={selectedTable.name}
+                      onChange={e => onUpdateTable(selectedTable.id, { name: e.target.value })}
+                      className="block w-full font-editorial text-xl text-[#2B2826] leading-tight bg-transparent border-b border-transparent hover:border-[#EFE8E1] focus:border-[#C48B81] focus:outline-none py-0.5 transition"
+                      aria-label="Nombre de la mesa"
+                    />
                     <span className={`text-xs font-medium ${isOver ? 'text-rose-600' : 'text-[#577355]'}`}>
                       {usedSeats} de {selectedTable.capacity} lugares ocupados
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     {selectedTable.shape !== 'Redonda' && (
                       <button
                         type="button"
@@ -1214,6 +1227,129 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
+                </div>
+
+                {/* Table Design Controls: Shape, Capacity, Size, Rotation */}
+                <div className="space-y-2.5 pb-3 border-b border-[#FAF8F5]">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.14em] text-[#7D6F6B] font-semibold block mb-1.5">
+                      Forma de la mesa
+                    </span>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {(['Redonda', 'Rectangular', 'Imperial', 'Serpentina (S)'] as TableItem['shape'][]).map(shape => {
+                        const active = selectedTable.shape === shape;
+                        return (
+                          <button
+                            key={shape}
+                            type="button"
+                            onClick={() => onUpdateTable(selectedTable.id, { shape })}
+                            className={`px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition cursor-pointer ${
+                              active
+                                ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                                : 'bg-[#FAF8F5] text-[#5A524C] border-[#EFE8E1] hover:border-[#C48B81]'
+                            }`}
+                          >
+                            {shape === 'Serpentina (S)' ? 'Serpentina' : shape}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
+                    <span className="text-xs font-medium text-[#5A524C]">Lugares</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateTable(selectedTable.id, {
+                            capacity: Math.max(2, (selectedTable.capacity || 10) - 1)
+                          })
+                        }
+                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="text-xs font-semibold text-[#2B2826] w-8 text-center">
+                        {selectedTable.capacity}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateTable(selectedTable.id, {
+                            capacity: Math.min(30, (selectedTable.capacity || 10) + 1)
+                          })
+                        }
+                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
+                    <span className="text-xs font-medium text-[#5A524C]">Tamaño</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateTable(selectedTable.id, {
+                            scale: Math.max(0.5, Number((currentScale - 0.1).toFixed(2)))
+                          })
+                        }
+                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <span className="text-xs font-semibold text-[#2B2826] w-10 text-center">
+                        {Math.round(currentScale * 100)}%
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onUpdateTable(selectedTable.id, {
+                            scale: Math.min(1.8, Number((currentScale + 0.1).toFixed(2)))
+                          })
+                        }
+                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {selectedTable.shape !== 'Redonda' && (
+                    <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
+                      <span className="text-xs font-medium text-[#5A524C]">Rotación</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateTable(selectedTable.id, {
+                              rotation: (((selectedTable.rotation || 0) - 45) % 360 + 360) % 360
+                            })
+                          }
+                          className="px-2 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] text-[11px] font-medium text-[#5A524C] cursor-pointer"
+                        >
+                          -45°
+                        </button>
+                        <span className="text-xs font-semibold text-[#2B2826] w-9 text-center">
+                          {selectedTable.rotation || 0}°
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateTable(selectedTable.id, {
+                              rotation: ((selectedTable.rotation || 0) + 45) % 360
+                            })
+                          }
+                          className="px-2 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] text-[11px] font-medium text-[#5A524C] cursor-pointer"
+                        >
+                          +45°
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Seated Guests */}
