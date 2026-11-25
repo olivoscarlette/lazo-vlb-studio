@@ -19,6 +19,16 @@ const VENDOR_CATEGORIES = [
   'Otro'
 ];
 
+const VENDOR_LOCATIONS = ['IGLESIA', 'CIVIL', 'RECEPCIÓN', 'OTRO'] as const;
+
+const getLocationBadgeClass = (loc: string) => {
+  const upper = loc.toUpperCase();
+  if (upper === 'CIVIL') return 'bg-[#F7EDEB] text-[#A86B60] border border-[#ECD9D5]';
+  if (upper === 'IGLESIA') return 'bg-[#FAF3E8] text-[#7C5824] border border-[#E8D7B8]';
+  if (upper === 'OTRO') return 'bg-[#F3EFEA] text-[#6B615A] border border-[#E6DFD6]';
+  return 'bg-[#FAF8F5] text-[#5A524C] border border-[#EFE8E1]';
+};
+
 export const BudgetView: React.FC = () => {
   const { wedding, updateWedding } = useWedding();
   const { user } = useAuth();
@@ -31,6 +41,7 @@ export const BudgetView: React.FC = () => {
       return 'cards';
     }
   });
+  const [vendorLocationFilter, setVendorLocationFilter] = useState<'TODAS' | 'IGLESIA' | 'CIVIL' | 'RECEPCIÓN' | 'OTRO'>('TODAS');
   const handleSetVendorsView = (mode: 'cards' | 'list') => {
     setVendorsViewMode(mode);
     try {
@@ -61,6 +72,7 @@ export const BudgetView: React.FC = () => {
     totalCost: '',
     paidAmount: '',
     nextDueDate: '',
+    locations: ['RECEPCIÓN'] as string[],
     teamResponsible: '',
     notes: ''
   });
@@ -74,6 +86,7 @@ export const BudgetView: React.FC = () => {
     phone: '',
     totalCost: '',
     nextDueDate: '',
+    locations: ['RECEPCIÓN'] as string[],
     teamResponsible: '',
     notes: ''
   });
@@ -233,12 +246,13 @@ export const BudgetView: React.FC = () => {
       totalCost: Number(vendorForm.totalCost) || 0,
       paidAmount: initialPaid,
       nextDueDate: vendorForm.nextDueDate,
+      locations: vendorForm.locations.length > 0 ? vendorForm.locations : ['RECEPCIÓN'],
       teamResponsible: vendorForm.teamResponsible.trim(),
       notes: vendorForm.notes.trim(),
       payments: initialPayments
     };
     updateWedding(prev => ({ ...prev, vendors: [newV, ...prev.vendors] }));
-    setVendorForm({ name: '', category: 'Locación y Banquete', phone: '', totalCost: '', paidAmount: '', nextDueDate: '', teamResponsible: '', notes: '' });
+    setVendorForm({ name: '', category: 'Locación y Banquete', phone: '', totalCost: '', paidAmount: '', nextDueDate: '', locations: ['RECEPCIÓN'], teamResponsible: '', notes: '' });
     setShowVendorModal(false);
     setSubTab('proveedores');
   };
@@ -263,6 +277,7 @@ export const BudgetView: React.FC = () => {
       phone: selectedVendor.phone || '',
       totalCost: String(selectedVendor.totalCost || ''),
       nextDueDate: selectedVendor.nextDueDate || '',
+      locations: selectedVendor.locations && selectedVendor.locations.length > 0 ? selectedVendor.locations : ['RECEPCIÓN'],
       teamResponsible: selectedVendor.teamResponsible || '',
       notes: selectedVendor.notes || ''
     });
@@ -284,6 +299,7 @@ export const BudgetView: React.FC = () => {
               phone: editVendorDraft.phone.trim(),
               totalCost: Number(editVendorDraft.totalCost) || 0,
               nextDueDate: editVendorDraft.nextDueDate,
+              locations: editVendorDraft.locations.length > 0 ? editVendorDraft.locations : ['RECEPCIÓN'],
               teamResponsible: editVendorDraft.teamResponsible.trim(),
               notes: editVendorDraft.notes.trim()
             }
@@ -773,11 +789,37 @@ export const BudgetView: React.FC = () => {
             </div>
           ) : (
             <>
-              {/* Selector de vista: Tarjetas vs Lista */}
-              <div className="flex items-center justify-between gap-3">
-                <span className="text-xs text-[#7D6F6B] font-light">
-                  {vendors.length} {vendors.length === 1 ? 'proveedor contratado' : 'proveedores contratados'}
-                </span>
+              {/* Selector de filtro por etapa + vista: Tarjetas vs Lista */}
+              {(() => {
+                const visibleVendors = vendorLocationFilter === 'TODAS'
+                  ? vendors
+                  : vendors.filter(v => (v.locations && v.locations.length > 0 ? v.locations : ['RECEPCIÓN']).includes(vendorLocationFilter));
+                return (
+                  <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {(['TODAS', ...VENDOR_LOCATIONS] as const).map(loc => {
+                    const active = vendorLocationFilter === loc;
+                    const count = loc === 'TODAS'
+                      ? vendors.length
+                      : vendors.filter(v => (v.locations && v.locations.length > 0 ? v.locations : ['RECEPCIÓN']).includes(loc)).length;
+                    return (
+                      <button
+                        key={loc}
+                        type="button"
+                        onClick={() => setVendorLocationFilter(loc)}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition cursor-pointer border ${
+                          active
+                            ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                            : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:text-[#2B2826]'
+                        }`}
+                      >
+                        <span>{loc === 'TODAS' ? 'Todas' : loc.charAt(0) + loc.slice(1).toLowerCase()}</span>
+                        <span className={`text-[10px] ${active ? 'text-[#C48B81]' : 'text-[#7D6F6B]/70'}`}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
                 <div className="inline-flex items-center bg-white border border-[#EFE8E1] rounded-full p-1 shadow-2xs">
                   <button
                     type="button"
@@ -806,9 +848,13 @@ export const BudgetView: React.FC = () => {
                 </div>
               </div>
 
-              {vendorsViewMode === 'cards' ? (
+              {visibleVendors.length === 0 ? (
+                <div className="bg-white rounded-3xl p-8 text-center border border-[#EFE8E1] text-xs text-[#7D6F6B]">
+                  No hay proveedores asignados a esta etapa todavía.
+                </div>
+              ) : vendorsViewMode === 'cards' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {vendors.map(v => {
+                {visibleVendors.map(v => {
                   const rem = Math.max(0, v.totalCost - v.paidAmount);
                   const pct = v.totalCost > 0 ? Math.min(100, Math.round((v.paidAmount / v.totalCost) * 100)) : 0;
                   return (
@@ -825,15 +871,25 @@ export const BudgetView: React.FC = () => {
                           <h4 className="font-editorial text-xl text-[#2B2826] group-hover:text-[#A86B60] transition-colors">
                             {v.name}
                           </h4>
-                          {isInternalTeam && v.teamResponsible && (
-                            <div
-                              className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[11px] font-medium max-w-full"
-                              title="Nota interna del equipo (no visible para novios)"
-                            >
-                              <UserCheck className="w-3 h-3 shrink-0" />
-                              <span className="truncate">Equipo: {v.teamResponsible}</span>
-                            </div>
-                          )}
+                          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                            {(v.locations && v.locations.length > 0 ? v.locations : ['RECEPCIÓN']).map(loc => (
+                              <span
+                                key={loc}
+                                className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider ${getLocationBadgeClass(loc)}`}
+                              >
+                                {loc}
+                              </span>
+                            ))}
+                            {isInternalTeam && v.teamResponsible && (
+                              <div
+                                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[11px] font-medium max-w-full"
+                                title="Nota interna del equipo (no visible para novios)"
+                              >
+                                <UserCheck className="w-3 h-3 shrink-0" />
+                                <span className="truncate">Equipo: {v.teamResponsible}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                           {v.phone && (
@@ -915,6 +971,7 @@ export const BudgetView: React.FC = () => {
                       <tr className="border-b border-[#EFE8E1] bg-[#FAF8F5]/70 text-[10px] uppercase tracking-[0.14em] text-[#7D6F6B] font-semibold">
                         <th className="py-3.5 pl-5 pr-3">Proveedor</th>
                         <th className="py-3.5 px-3">Categoría</th>
+                        <th className="py-3.5 px-3">Participa en</th>
                         <th className="py-3.5 px-3 text-right">Total</th>
                         <th className="py-3.5 px-3 text-right">Pagado</th>
                         <th className="py-3.5 px-3 text-right">Restante</th>
@@ -923,7 +980,7 @@ export const BudgetView: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#FAF8F5] text-xs">
-                      {vendors.map(v => {
+                      {visibleVendors.map(v => {
                         const rem = Math.max(0, v.totalCost - v.paidAmount);
                         const pct = v.totalCost > 0 ? Math.min(100, Math.round((v.paidAmount / v.totalCost) * 100)) : 0;
                         return (
@@ -950,6 +1007,18 @@ export const BudgetView: React.FC = () => {
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[10px] uppercase tracking-wider text-[#7D6F6B] font-medium">
                                 {v.category}
                               </span>
+                            </td>
+                            <td className="py-3.5 px-3 whitespace-nowrap">
+                              <div className="inline-flex flex-wrap items-center gap-1">
+                                {(v.locations && v.locations.length > 0 ? v.locations : ['RECEPCIÓN']).map(loc => (
+                                  <span
+                                    key={loc}
+                                    className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider ${getLocationBadgeClass(loc)}`}
+                                  >
+                                    {loc}
+                                  </span>
+                                ))}
+                              </div>
                             </td>
                             <td className="py-3.5 px-3 text-right font-medium text-[#2B2826] whitespace-nowrap">
                               {formatMXN(v.totalCost)}
@@ -1023,6 +1092,9 @@ export const BudgetView: React.FC = () => {
                 </div>
               </div>
               )}
+                  </>
+                );
+              })()}
 
               {/* Historial Global de Pagos */}
               <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
@@ -1280,6 +1352,34 @@ export const BudgetView: React.FC = () => {
                     />
                   </div>
                 </div>
+                <div>
+                  <label className="text-[11px] text-[#7D6F6B] block mb-1.5">¿Dónde participa?</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {VENDOR_LOCATIONS.map(loc => {
+                      const checked = editVendorDraft.locations.includes(loc);
+                      return (
+                        <button
+                          key={loc}
+                          type="button"
+                          onClick={() => {
+                            const next = checked
+                              ? editVendorDraft.locations.filter(x => x !== loc)
+                              : [...editVendorDraft.locations, loc];
+                            setEditVendorDraft({ ...editVendorDraft, locations: next.length > 0 ? next : [loc] });
+                          }}
+                          className={`px-2.5 py-2 rounded-xl text-[11px] font-medium border transition cursor-pointer flex items-center justify-center gap-1 ${
+                            checked
+                              ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                              : 'bg-[#FAF8F5] text-[#5A524C] border-[#EFE8E1] hover:border-[#C48B81]'
+                          }`}
+                        >
+                          <span>{loc.charAt(0) + loc.slice(1).toLowerCase()}</span>
+                          {checked && <Check className="w-3 h-3 text-[#C48B81]" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
                 {isInternalTeam && (
                   <div>
                     <label className="text-[11px] text-[#7D6F6B] flex items-center gap-1.5 mb-1">
@@ -1343,6 +1443,14 @@ export const BudgetView: React.FC = () => {
                         <span>Límite: {formatShortDate(selectedVendor.nextDueDate)}</span>
                       </span>
                     )}
+                    {(selectedVendor.locations && selectedVendor.locations.length > 0 ? selectedVendor.locations : ['RECEPCIÓN']).map(loc => (
+                      <span
+                        key={loc}
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${getLocationBadgeClass(loc)}`}
+                      >
+                        {loc}
+                      </span>
+                    ))}
                   </div>
 
                   <button
@@ -1663,6 +1771,34 @@ export const BudgetView: React.FC = () => {
               onChange={e => setVendorForm({ ...vendorForm, nextDueDate: e.target.value })}
               className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
             />
+          </div>
+          <div>
+            <label className="text-[11px] text-[#7D6F6B] block mb-1.5">¿Dónde participa?</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {VENDOR_LOCATIONS.map(loc => {
+                const checked = vendorForm.locations.includes(loc);
+                return (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => {
+                      const next = checked
+                        ? vendorForm.locations.filter(x => x !== loc)
+                        : [...vendorForm.locations, loc];
+                      setVendorForm({ ...vendorForm, locations: next.length > 0 ? next : [loc] });
+                    }}
+                    className={`px-2.5 py-2 rounded-xl text-[11px] font-medium border transition cursor-pointer flex items-center justify-center gap-1 ${
+                      checked
+                        ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                        : 'bg-[#FAF8F5] text-[#5A524C] border-[#EFE8E1] hover:border-[#C48B81]'
+                    }`}
+                  >
+                    <span>{loc.charAt(0) + loc.slice(1).toLowerCase()}</span>
+                    {checked && <Check className="w-3 h-3 text-[#C48B81]" />}
+                  </button>
+                );
+              })}
+            </div>
           </div>
           {isInternalTeam && (
             <div>

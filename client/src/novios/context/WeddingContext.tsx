@@ -197,6 +197,19 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
         };
       });
     const paidAmount = vPayments.reduce((sum, p) => sum + p.amount, 0);
+    let parsedLocations: string[] = ['RECEPCIÓN'];
+    try {
+      const raw = typeof v.locations === 'string' ? JSON.parse(v.locations) : v.locations;
+      if (Array.isArray(raw) && raw.length > 0) {
+        parsedLocations = raw.map((loc: any) => {
+          const upper = String(loc || '').trim().toUpperCase();
+          if (upper === 'RECEPCION') return 'RECEPCIÓN';
+          return upper || 'RECEPCIÓN';
+        });
+      }
+    } catch {
+      parsedLocations = ['RECEPCIÓN'];
+    }
     return {
       id: String(v.id),
       name: v.name || 'Proveedor',
@@ -205,6 +218,7 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
       totalCost: Number(v.costo_real) || 0,
       paidAmount,
       nextDueDate: v.payment_due_date || '',
+      locations: parsedLocations,
       teamResponsible: v.team_responsible || '',
       notes: v.notes || '',
       payments: vPayments

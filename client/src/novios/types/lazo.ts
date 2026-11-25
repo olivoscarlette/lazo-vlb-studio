@@ -54,6 +54,7 @@ export interface VendorItem {
   paidAmount: number;
   nextDueDate: string;
   contractName?: string;
+  locations?: string[];
   teamResponsible?: string;
   notes?: string;
   payments?: PaymentRecord[];
