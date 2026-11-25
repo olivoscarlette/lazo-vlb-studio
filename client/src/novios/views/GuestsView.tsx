@@ -253,8 +253,8 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
   };
 
   const handleResizeFloorElement = (id: string, width: number, height: number) => {
-    const safeW = Math.max(40, Math.min(380, Math.round(width)));
-    const safeH = Math.max(32, Math.min(340, Math.round(height)));
+    const safeW = Math.max(24, Math.min(1300, Math.round(width)));
+    const safeH = Math.max(16, Math.min(920, Math.round(height)));
     updateWedding(prev => ({
       ...prev,
       floorElements: (prev.floorElements ?? defaultFloorElements).map(el =>

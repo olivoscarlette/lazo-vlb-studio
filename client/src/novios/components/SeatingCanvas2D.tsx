@@ -223,17 +223,17 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       const dy = -rawDx * Math.sin(rad) + rawDy * Math.cos(rad);
       if (resizing.isCircle) {
         const delta = resizing.handle === 'e' ? dx : resizing.handle === 's' ? dy : (dx + dy) / 2;
-        const nextSize = Math.max(40, Math.min(340, Math.round(resizing.startW + delta * 2)));
+        const nextSize = Math.max(32, Math.min(800, Math.round(resizing.startW + delta * 2)));
         onResizeElement(resizing.id, nextSize, nextSize);
       } else {
         const nextW =
           resizing.handle === 's'
             ? resizing.startW
-            : Math.max(48, Math.min(380, Math.round(resizing.startW + dx * 2)));
+            : Math.max(24, Math.min(1300, Math.round(resizing.startW + dx * 2)));
         const nextH =
           resizing.handle === 'e'
             ? resizing.startH
-            : Math.max(32, Math.min(340, Math.round(resizing.startH + dy * 2)));
+            : Math.max(16, Math.min(920, Math.round(resizing.startH + dy * 2)));
         onResizeElement(resizing.id, nextW, nextH);
       }
       return;
