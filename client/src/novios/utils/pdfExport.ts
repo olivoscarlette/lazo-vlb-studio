@@ -352,8 +352,44 @@ export function exportGuestsPdf(profile: WeddingProfile, guests: GuestItem[], ta
 }
 
 function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElements: FloorElement[]): string {
-  const W = 720;
-  const H = 500;
+  const CANVAS_W = 1400;
+  const CANVAS_H = 1000;
+
+  // Compute smart bounding box around all tables & elements so the print fits cleanly with zero clipping
+  let minX = CANVAS_W;
+  let minY = CANVAS_H;
+  let maxX = 0;
+  let maxY = 0;
+
+  const includeBounds = (cx: number, cy: number, halfW: number, halfH: number) => {
+    minX = Math.min(minX, cx - halfW);
+    minY = Math.min(minY, cy - halfH);
+    maxX = Math.max(maxX, cx + halfW);
+    maxY = Math.max(maxY, cy + halfH);
+  };
+
+  floorElements.forEach(el => {
+    const diag = Math.hypot(el.width, el.height) / 2;
+    const isRotated = (el.rotation || 0) % 180 !== 0;
+    includeBounds(el.x, el.y, isRotated ? diag : el.width / 2, isRotated ? diag : el.height / 2);
+  });
+
+  tables.forEach((table, idx) => {
+    const x = Math.max(70, Math.min(CANVAS_W - 70, typeof table.x === 'number' ? table.x : 140 + (idx % 5) * 210));
+    const y = Math.max(70, Math.min(CANVAS_H - 70, typeof table.y === 'number' ? table.y : 120 + (Math.floor(idx / 5) % 5) * 165));
+    const sc = typeof table.scale === 'number' ? table.scale : 1;
+    const pad = (table.shape === 'Serpentina (S)' ? 145 : 95) * sc;
+    includeBounds(x, y, pad, pad);
+  });
+
+  const pad = 48;
+  const hasItems = floorElements.length > 0 || tables.length > 0;
+  const vbX = hasItems ? Math.max(0, Math.floor(minX - pad)) : 0;
+  const vbY = hasItems ? Math.max(0, Math.floor(minY - pad)) : 0;
+  const vbMaxX = hasItems ? Math.min(CANVAS_W, Math.ceil(maxX + pad)) : CANVAS_W;
+  const vbMaxY = hasItems ? Math.min(CANVAS_H, Math.ceil(maxY + pad)) : CANVAS_H;
+  const vbW = Math.max(360, vbMaxX - vbX);
+  const vbH = Math.max(260, vbMaxY - vbY);
 
   const elementsSvg = floorElements
     .map(el => {
@@ -384,6 +420,97 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
         fill = '#F7EDEB';
         stroke = '#E6CFCB';
         textColor = '#8F554B';
+      } else if (el.tone === 'stone') {
+        fill = '#ECECEB';
+        stroke = '#CED0CE';
+        textColor = '#4D5053';
+      }
+
+      const svgStroke =
+        el.tone === 'nature'
+          ? '#5A7B5E'
+          : el.tone === 'water'
+          ? '#5B849B'
+          : el.tone === 'accent'
+          ? '#B87B71'
+          : el.tone === 'stone'
+          ? '#6D7278'
+          : '#6E7A82';
+      const svgFill =
+        el.tone === 'nature'
+          ? 'rgba(229, 237, 230, 0.35)'
+          : el.tone === 'water'
+          ? 'rgba(235, 244, 248, 0.45)'
+          : el.tone === 'accent'
+          ? 'rgba(247, 237, 235, 0.45)'
+          : el.tone === 'stone'
+          ? 'rgba(229, 231, 233, 0.5)'
+          : 'rgba(245, 239, 234, 0.35)';
+
+      if (el.shape === 'curve-path') {
+        const sx = el.width / 240;
+        const sy = el.height / 160;
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
+              <path d="M 8 88 Q 148 88 148 8 L 228 8 Q 228 148 8 148 Z" fill="${svgFill}" />
+              <path d="M 8 88 Q 148 88 148 8" fill="none" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+              <path d="M 8 148 Q 228 148 228 8" fill="none" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+            </g>
+            <text x="0" y="3" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9" font-weight="600" letter-spacing="1.2" fill="#5A524C">
+              ${escapeHtml(el.label.toUpperCase())}
+            </text>
+          </g>`;
+      }
+
+      if (el.shape === 'arch') {
+        const sx = el.width / 200;
+        const sy = el.height / 100;
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
+              <path d="M 8 92 Q 100 -10 192 92" fill="none" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+            </g>
+            <text x="0" y="3" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9" font-weight="600" letter-spacing="1.2" fill="#5A524C">
+              ${escapeHtml(el.label.toUpperCase())}
+            </text>
+          </g>`;
+      }
+
+      if (el.shape === 'line') {
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <line x1="${-el.width / 2 + 4}" y1="0" x2="${el.width / 2 - 4}" y2="0" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" />
+            <text x="0" y="-6" text-anchor="middle" font-family="Outfit, sans-serif" font-size="8.5" font-weight="600" letter-spacing="1.2" fill="#5A524C">
+              ${escapeHtml(el.label.toUpperCase())}
+            </text>
+          </g>`;
+      }
+
+      if (el.shape === 'ceremony') {
+        const sc = Math.min(el.width / 180, el.height / 150);
+        const seats = [0, 1, 2, 3]
+          .map(row =>
+            [0, 1, 2, 3]
+              .map(
+                col =>
+                  `<rect x="${12 + col * 16}" y="${52 + row * 20}" width="11" height="11" rx="2" fill="#FFFFFF" stroke="${svgStroke}" stroke-width="1.3" />` +
+                  `<rect x="${106 + col * 16}" y="${52 + row * 20}" width="11" height="11" rx="2" fill="#FFFFFF" stroke="${svgStroke}" stroke-width="1.3" />`
+              )
+              .join('')
+          )
+          .join('');
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <g transform="scale(${sc.toFixed(4)}) translate(-90, -75)">
+              <rect x="62" y="8" width="56" height="16" rx="3" fill="${svgFill}" stroke="${svgStroke}" stroke-width="1.6" />
+              <circle cx="90" cy="34" r="7" fill="none" stroke="${svgStroke}" stroke-width="1.4" />
+              ${seats}
+            </g>
+            <text x="0" y="3" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9" font-weight="600" letter-spacing="1.2" fill="#5A524C">
+              ${escapeHtml(el.label.toUpperCase())}
+            </text>
+          </g>`;
       }
 
       const shapeMarkup = isCircle
@@ -402,9 +529,10 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
 
   const tablesSvg = tables
     .map((table, idx) => {
-      const x = table.x ?? 140 + (idx % 3) * 210;
-      const y = table.y ?? 120 + Math.floor(idx / 3) * 165;
+      const x = Math.max(70, Math.min(CANVAS_W - 70, typeof table.x === 'number' ? table.x : 140 + (idx % 5) * 210));
+      const y = Math.max(70, Math.min(CANVAS_H - 70, typeof table.y === 'number' ? table.y : 120 + (Math.floor(idx / 5) % 5) * 165));
       const rot = table.rotation || 0;
+      const sc = typeof table.scale === 'number' ? table.scale : 1;
       const cap = Math.max(1, table.capacity);
       const used = guests.filter(g => g.tableId === table.id).reduce((s, g) => s + g.passes, 0);
 
@@ -419,11 +547,65 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           })
           .join('');
         return `
-          <g transform="translate(${x}, ${y})">
+          <g transform="translate(${x}, ${y}) scale(${sc})">
             ${chairs}
             <circle cx="0" cy="0" r="38" fill="#FFFFFF" stroke="#E5DDD5" stroke-width="1.4" />
             <text x="0" y="-2" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#2B2826">${escapeHtml(table.name)}</text>
             <text x="0" y="11" text-anchor="middle" font-family="Outfit, sans-serif" font-size="8.5" font-weight="600" fill="#7D6F6B">${used}/${cap}</text>
+          </g>`;
+      }
+
+      if (table.shape === 'Cuadrada') {
+        const base = Math.floor(cap / 4);
+        const extra = cap % 4;
+        const topCount = base + (extra >= 1 ? 1 : 0);
+        const bottomCount = base + (extra >= 2 ? 1 : 0);
+        const rightCount = base + (extra >= 3 ? 1 : 0);
+        const leftCount = base;
+        const maxPerSide = Math.max(2, topCount, bottomCount, rightCount, leftCount);
+        const side = Math.max(76, maxPerSide * 28);
+        const half = side / 2;
+
+        const topChairs = Array.from({ length: topCount })
+          .map((_, i) => {
+            const cx = -half + ((i + 0.5) / topCount) * side;
+            const filled = i < used;
+            return `<rect x="${(cx - 6).toFixed(1)}" y="${(-half - 14).toFixed(1)}" width="12" height="9" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
+          })
+          .join('');
+        const rightChairs = Array.from({ length: rightCount })
+          .map((_, i) => {
+            const cy = -half + ((i + 0.5) / rightCount) * side;
+            const filled = topCount + i < used;
+            return `<rect x="${(half + 5).toFixed(1)}" y="${(cy - 6).toFixed(1)}" width="9" height="12" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
+          })
+          .join('');
+        const bottomChairs = Array.from({ length: bottomCount })
+          .map((_, i) => {
+            const cx = -half + ((i + 0.5) / bottomCount) * side;
+            const filled = topCount + rightCount + i < used;
+            return `<rect x="${(cx - 6).toFixed(1)}" y="${(half + 5).toFixed(1)}" width="12" height="9" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
+          })
+          .join('');
+        const leftChairs = Array.from({ length: leftCount })
+          .map((_, i) => {
+            const cy = -half + ((i + 0.5) / leftCount) * side;
+            const filled = topCount + rightCount + bottomCount + i < used;
+            return `<rect x="${(-half - 14).toFixed(1)}" y="${(cy - 6).toFixed(1)}" width="9" height="12" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
+          })
+          .join('');
+
+        return `
+          <g transform="translate(${x}, ${y}) scale(${sc}) rotate(${rot})">
+            ${topChairs}
+            ${rightChairs}
+            ${bottomChairs}
+            ${leftChairs}
+            <rect x="${-half}" y="${-half}" width="${side}" height="${side}" rx="11" fill="#FFFFFF" stroke="#E5DDD5" stroke-width="1.4" />
+            <g transform="rotate(${-rot})">
+              <text x="0" y="-2" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#2B2826">${escapeHtml(table.name)}</text>
+              <text x="0" y="11" text-anchor="middle" font-family="Outfit, sans-serif" font-size="8.5" font-weight="600" fill="#7D6F6B">${used}/${cap}</text>
+            </g>
           </g>`;
       }
 
@@ -482,7 +664,7 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           })
           .join('');
         return `
-          <g transform="translate(${x}, ${y}) rotate(${rot})">
+          <g transform="translate(${x}, ${y}) scale(${sc}) rotate(${rot})">
             <path d="${dPath}" fill="none" stroke="#E5DDD5" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" />
             <path d="${dPath}" fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" stroke-linejoin="round" />
             ${topChairs}
@@ -496,10 +678,10 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
 
       // Rectangular / Imperial
       const isNovios = cap <= 2;
-      const tw = isNovios ? 92 : 122;
-      const th = isNovios ? 44 : 52;
       const topCount = isNovios ? cap : Math.ceil(cap / 2);
       const bottomCount = isNovios ? 0 : cap - topCount;
+      const tw = isNovios ? 92 : Math.max(122, topCount * 24);
+      const th = isNovios ? 44 : table.shape === 'Imperial' ? 58 : 50;
       const topChairs = Array.from({ length: topCount })
         .map((_, i) => {
           const cx = -tw / 2 + ((i + 0.5) / topCount) * tw;
@@ -516,7 +698,7 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
         .join('');
 
       return `
-        <g transform="translate(${x}, ${y}) rotate(${rot})">
+        <g transform="translate(${x}, ${y}) scale(${sc}) rotate(${rot})">
           ${topChairs}
           ${bottomChairs}
           <rect x="${-tw / 2}" y="${-th / 2}" width="${tw}" height="${th}" rx="11" fill="#FFFFFF" stroke="#E5DDD5" stroke-width="1.4" />
@@ -529,14 +711,14 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
     .join('');
 
   return `
-    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-height:430px;display:block;margin:0 auto">
+    <svg viewBox="${vbX} ${vbY} ${vbW} ${vbH}" width="100%" style="max-height:560px;display:block;margin:0 auto">
       <defs>
         <pattern id="dotGrid" width="20" height="20" patternUnits="userSpaceOnUse">
           <circle cx="2" cy="2" r="1" fill="#DDD4CB" />
         </pattern>
       </defs>
-      <rect width="${W}" height="${H}" rx="16" fill="#FCFBF9" />
-      <rect width="${W}" height="${H}" rx="16" fill="url(#dotGrid)" />
+      <rect x="${vbX}" y="${vbY}" width="${vbW}" height="${vbH}" rx="16" fill="#FCFBF9" />
+      <rect x="${vbX}" y="${vbY}" width="${vbW}" height="${vbH}" rx="16" fill="url(#dotGrid)" />
       ${elementsSvg}
       ${tablesSvg}
     </svg>`;
