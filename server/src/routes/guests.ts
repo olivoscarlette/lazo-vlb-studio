@@ -568,18 +568,19 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
     const tableRaw = (row['MESA'] || row['Mesa'] || row['mesa'] || row['table'] || '').toString().trim();
     const observations = (row['OBSERVACIONES'] || row['Observaciones'] || row['observaciones'] || row['observations'] || '').toString().trim();
 
-    if (!firstName) {
+    let resolvedFirstName = firstName;
+    let resolvedLastName = lastName;
+
+    if (!resolvedFirstName) {
       errors.push({ row: rowNum, error: 'El campo NOMBRE es obligatorio.', data: row });
       return;
     }
-    if (!lastName) {
-      errors.push({ row: rowNum, error: 'El campo APELLIDO es obligatorio.', data: row });
-      return;
+    if (!resolvedLastName && resolvedFirstName.includes(' ')) {
+      const parts = resolvedFirstName.split(/\s+/);
+      resolvedFirstName = parts[0];
+      resolvedLastName = parts.slice(1).join(' ');
     }
-    if (!phone) {
-      errors.push({ row: rowNum, error: 'El campo WHATSAPP / TELÉFONO es obligatorio.', data: row });
-      return;
-    }
+    const resolvedPhone = phone || '';
 
     let companions = parseInt(companionsRaw, 10);
     if (isNaN(companions) || companions < 0) {
@@ -626,9 +627,9 @@ router.post('/:weddingId/guests/import', authenticateToken, requireWeddingAccess
     }
 
     validRows.push({
-      first_name: firstName,
-      last_name: lastName,
-      phone,
+      first_name: resolvedFirstName,
+      last_name: resolvedLastName,
+      phone: resolvedPhone,
       companion_count: companions,
       priority,
       status,
