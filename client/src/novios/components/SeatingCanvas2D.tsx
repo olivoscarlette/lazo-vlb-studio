@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   RotateCw, Trash2, ZoomIn, ZoomOut, Plus, Minus, Music, Wine, Sparkles, DoorOpen, Users, Shapes,
-  MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, Minimize2, FileImage, Crosshair, Lock
+  MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, Minimize2, FileImage, Crosshair, Lock, Copy, Armchair
 } from 'lucide-react';
 import { FloorElement, GuestItem, TableItem } from '../types/lazo';
 import { Modal } from './Modal';
@@ -31,12 +31,14 @@ interface SeatingCanvas2DProps {
   onMoveTable: (id: string, x: number, y: number) => void;
   onRotateTable: (id: string) => void;
   onUpdateTable: (id: string, patch: Partial<TableItem>) => void;
+  onDuplicateTable?: (table: TableItem) => void;
   onDeleteTable: (id: string) => void;
   onAssignGuest: (guestId: string, tableId: string) => void;
   onAddElement: (type: FloorElement['type'], custom?: CustomElementPayload) => void;
   onMoveElement: (id: string, x: number, y: number) => void;
   onResizeElement: (id: string, width: number, height: number) => void;
   onRotateElement: (id: string, rotation: number) => void;
+  onDuplicateElement?: (el: FloorElement) => void;
   onDeleteElement: (id: string) => void;
   onOpenNewTable: () => void;
 }
@@ -60,12 +62,14 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   onMoveTable,
   onRotateTable,
   onUpdateTable,
+  onDuplicateTable,
   onDeleteTable,
   onAssignGuest,
   onAddElement,
   onMoveElement,
   onResizeElement,
   onRotateElement,
+  onDuplicateElement,
   onDeleteElement,
   onOpenNewTable
 }) => {
@@ -91,9 +95,15 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const [showOtherModal, setShowOtherModal] = useState(false);
   const [customEl, setCustomEl] = useState({
     label: '',
-    shape: 'rect' as 'rect' | 'square' | 'circle' | 'curve-path' | 'arch' | 'line' | 'ceremony',
+    shape: 'rect' as 'rect' | 'square' | 'circle' | 'curve-path' | 'arch' | 'line' | 'ceremony' | 'sofa' | 'armchair' | 'chair' | 'cocktail',
     tone: 'neutral' as NonNullable<FloorElement['tone']>
   });
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    kind: 'canvas' | 'table' | 'element';
+    targetId?: string;
+  } | null>(null);
   const [dragging, setDragging] = useState<{
     kind: 'table' | 'element';
     id: string;
@@ -401,19 +411,49 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     handlePointerMove(e);
   };
 
-  // Pinch-to-zoom on MacBook trackpad or Ctrl+Wheel (normal two-finger scroll pans natively!)
-  const handleViewportWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
+  // Non-passive wheel listener: effortless mouse-wheel zoom + trackpad pinch zoom
+  useEffect(() => {
+    const vp = viewportRef.current;
+    if (!vp) return;
+    const onNativeWheel = (e: WheelEvent) => {
+      // Shift+wheel scrolls horizontally/vertically; otherwise wheel zooms smoothly!
+      if (e.shiftKey) return;
+      // Trackpad two-finger diagonal/horizontal pan stays native when deltaX != 0 and not pinching
+      if (!e.ctrlKey && !e.metaKey && Math.abs(e.deltaX) > 2) return;
       e.preventDefault();
-      const delta = e.deltaY < 0 ? 0.08 : -0.08;
-      setZoom(z => Math.max(0.45, Math.min(1.6, Number((z + delta).toFixed(2)))));
-    }
-  };
+      const step = e.ctrlKey || e.metaKey ? 0.06 : 0.08;
+      const delta = e.deltaY < 0 ? step : -step;
+      setZoom(z => Math.max(0.35, Math.min(2.0, Number((z + delta).toFixed(2)))));
+    };
+    vp.addEventListener('wheel', onNativeWheel, { passive: false });
+    return () => vp.removeEventListener('wheel', onNativeWheel);
+  }, []);
+
+  // Close context menu on any outside click or Escape
+  useEffect(() => {
+    if (!contextMenu) return;
+    const close = () => setContextMenu(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setContextMenu(null);
+    };
+    window.addEventListener('click', close);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('click', close);
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [contextMenu]);
 
   const handleResetView = () => {
-    setZoom(0.8);
-    if (viewportRef.current) {
-      viewportRef.current.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+    const vp = viewportRef.current;
+    if (vp) {
+      const fitW = (vp.clientWidth - 28) / CANVAS_W;
+      const fitH = (vp.clientHeight - 28) / CANVAS_H;
+      const fit = Math.max(0.35, Math.min(1.1, Number(Math.min(fitW, fitH).toFixed(2))));
+      setZoom(fit);
+      vp.scrollTo({ left: 0, top: 0, behavior: 'smooth' });
+    } else {
+      setZoom(0.65);
     }
   };
 
@@ -1055,7 +1095,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <div className="inline-flex items-center bg-[#FAF8F5] rounded-full border border-[#EFE8E1] p-0.5">
             <button
               type="button"
-              onClick={() => setZoom(z => Math.max(0.45, Number((z - 0.1).toFixed(2))))}
+              onClick={() => setZoom(z => Math.max(0.35, Number((z - 0.1).toFixed(2))))}
               className="p-1 text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
               title="Alejar"
             >
@@ -1066,7 +1106,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </span>
             <button
               type="button"
-              onClick={() => setZoom(z => Math.min(1.6, Number((z + 0.1).toFixed(2))))}
+              onClick={() => setZoom(z => Math.min(2.0, Number((z + 0.1).toFixed(2))))}
               className="p-1 text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer"
               title="Acercar"
             >
@@ -1076,7 +1116,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               type="button"
               onClick={handleResetView}
               className="p-1 text-[#7D6F6B] hover:text-[#2B2826] border-l border-[#EFE8E1] ml-0.5 pl-1.5 cursor-pointer"
-              title="Centrar vista"
+              title="Ver plano completo"
             >
               <Crosshair className="w-3.5 h-3.5" />
             </button>
@@ -1190,7 +1230,6 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
 
           <div
             ref={viewportRef}
-            onWheel={handleViewportWheel}
             onPointerMove={handleViewportPointerMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
@@ -1201,6 +1240,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             <div
               ref={canvasRef}
               onPointerDown={handleCanvasPointerDown}
+              onContextMenu={e => {
+                e.preventDefault();
+                setContextMenu({ x: e.clientX, y: e.clientY, kind: 'canvas' });
+              }}
               style={{
                 width: CANVAS_W * zoom,
                 height: CANVAS_H * zoom,
@@ -1228,7 +1271,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       }`}
                     >
                       <div
-                        className={`relative w-full h-full flex items-center justify-center p-2 ${
+                        className={`relative w-full h-full min-h-0 min-w-0 overflow-hidden flex items-center justify-center p-2 ${
                           dualLayout === 'stacked'
                             ? 'border-b border-dashed border-[#D8CFC8]'
                             : 'border-r border-dashed border-[#D8CFC8]'
@@ -1238,15 +1281,15 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                           src={floorPlanUrl}
                           alt="Plano base Espacio 1"
                           draggable={false}
-                          className="w-full h-full object-contain"
+                          className="max-w-full max-h-full w-auto h-auto object-contain"
                         />
                       </div>
-                      <div className="relative w-full h-full flex items-center justify-center p-2">
+                      <div className="relative w-full h-full min-h-0 min-w-0 overflow-hidden flex items-center justify-center p-2">
                         <img
                           src={floorPlanUrl2}
                           alt="Plano base Espacio 2"
                           draggable={false}
-                          className="w-full h-full object-contain"
+                          className="max-w-full max-h-full w-auto h-auto object-contain"
                         />
                       </div>
                     </div>
@@ -1267,7 +1310,11 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     el.shape === 'curve-path' ||
                     el.shape === 'arch' ||
                     el.shape === 'line' ||
-                    el.shape === 'ceremony';
+                    el.shape === 'ceremony' ||
+                    el.shape === 'sofa' ||
+                    el.shape === 'armchair' ||
+                    el.shape === 'chair' ||
+                    el.shape === 'cocktail';
                   const shapeClass = el.shape === 'circle' ? 'rounded-full' : 'rounded-2xl';
                   const toneClass =
                     el.type === 'pista'
@@ -1309,6 +1356,13 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     <div
                       key={el.id}
                       onPointerDown={e => handlePointerDownItem(e, 'element', el.id, el.x, el.y)}
+                      onContextMenu={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedElementId(el.id);
+                        setSelectedTableId(null);
+                        setContextMenu({ x: e.clientX, y: e.clientY, kind: 'element', targetId: el.id });
+                      }}
                       onClick={e => e.stopPropagation()}
                       style={{
                         left: el.x,
@@ -1434,9 +1488,51 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         </svg>
                       )}
 
+                      {el.shape === 'sofa' && (
+                        <svg viewBox="0 0 140 60" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none">
+                          {/* Backrest */}
+                          <rect x="6" y="4" width="128" height="14" rx="6" fill={svgFill} stroke={svgStroke} strokeWidth="2" />
+                          {/* Left & Right Armrests */}
+                          <rect x="4" y="14" width="14" height="40" rx="5" fill={svgFill} stroke={svgStroke} strokeWidth="2" />
+                          <rect x="122" y="14" width="14" height="40" rx="5" fill={svgFill} stroke={svgStroke} strokeWidth="2" />
+                          {/* 3 Seat Cushions */}
+                          <rect x="20" y="18" width="32" height="36" rx="5" fill="#FFFFFF" stroke={svgStroke} strokeWidth="1.6" />
+                          <rect x="54" y="18" width="32" height="36" rx="5" fill="#FFFFFF" stroke={svgStroke} strokeWidth="1.6" />
+                          <rect x="88" y="18" width="32" height="36" rx="5" fill="#FFFFFF" stroke={svgStroke} strokeWidth="1.6" />
+                        </svg>
+                      )}
+
+                      {el.shape === 'armchair' && (
+                        <svg viewBox="0 0 64 60" preserveAspectRatio="xMidYMid meet" className="absolute inset-0 w-full h-full pointer-events-none">
+                          <rect x="6" y="4" width="52" height="14" rx="6" fill={svgFill} stroke={svgStroke} strokeWidth="2" />
+                          <rect x="4" y="14" width="12" height="40" rx="5" fill={svgFill} stroke={svgStroke} strokeWidth="2" />
+                          <rect x="48" y="14" width="12" height="40" rx="5" fill={svgFill} stroke={svgStroke} strokeWidth="2" />
+                          <rect x="18" y="18" width="28" height="36" rx="5" fill="#FFFFFF" stroke={svgStroke} strokeWidth="1.6" />
+                        </svg>
+                      )}
+
+                      {el.shape === 'chair' && (
+                        <svg viewBox="0 0 40 40" preserveAspectRatio="xMidYMid meet" className="absolute inset-0 w-full h-full pointer-events-none">
+                          <rect x="5" y="4" width="30" height="8" rx="4" fill={svgFill} stroke={svgStroke} strokeWidth="2" />
+                          <rect x="7" y="12" width="26" height="23" rx="5" fill="#FFFFFF" stroke={svgStroke} strokeWidth="1.8" />
+                        </svg>
+                      )}
+
+                      {el.shape === 'cocktail' && (
+                        <svg viewBox="0 0 80 80" preserveAspectRatio="xMidYMid meet" className="absolute inset-0 w-full h-full pointer-events-none">
+                          <circle cx="40" cy="40" r="18" fill="#FFFFFF" stroke={svgStroke} strokeWidth="2" />
+                          <circle cx="40" cy="11" r="7" fill={svgFill} stroke={svgStroke} strokeWidth="1.6" />
+                          <circle cx="69" cy="40" r="7" fill={svgFill} stroke={svgStroke} strokeWidth="1.6" />
+                          <circle cx="40" cy="69" r="7" fill={svgFill} stroke={svgStroke} strokeWidth="1.6" />
+                          <circle cx="11" cy="40" r="7" fill={svgFill} stroke={svgStroke} strokeWidth="1.6" />
+                        </svg>
+                      )}
+
                       <span
                         className={`text-[10px] uppercase tracking-[0.14em] font-semibold pointer-events-none leading-tight ${
-                          isSvgShape
+                          el.shape === 'chair' || el.shape === 'armchair' || el.shape === 'cocktail'
+                            ? 'hidden'
+                            : isSvgShape
                             ? 'relative z-[2] px-2 py-0.5 rounded-full bg-white/85 text-[#5A524C] shadow-2xs'
                             : ''
                         }`}
@@ -1530,6 +1626,13 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     <div
                       key={table.id}
                       onPointerDown={e => handlePointerDownItem(e, 'table', table.id, coords.x, coords.y)}
+                      onContextMenu={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setSelectedTableId(table.id);
+                        setSelectedElementId(null);
+                        setContextMenu({ x: e.clientX, y: e.clientY, kind: 'table', targetId: table.id });
+                      }}
                       onDoubleClick={e => {
                         e.stopPropagation();
                         setSelectedTableId(table.id);
@@ -2089,6 +2192,204 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           })()}
         </div>
       </div>
+      {/* Right-Click Context Menu */}
+      {contextMenu && (
+        <div
+          style={{
+            left: Math.min(contextMenu.x, typeof window !== 'undefined' ? window.innerWidth - 230 : contextMenu.x),
+            top: Math.min(contextMenu.y, typeof window !== 'undefined' ? window.innerHeight - 240 : contextMenu.y)
+          }}
+          onClick={e => e.stopPropagation()}
+          className="fixed z-[140] w-56 bg-white rounded-2xl border border-[#EFE8E1] shadow-xl py-1.5 text-xs text-[#2B2826]"
+        >
+          {contextMenu.kind === 'table' && (() => {
+            const t = tables.find(x => x.id === contextMenu.targetId);
+            if (!t) return null;
+            return (
+              <>
+                <div className="px-3 py-1 text-[10px] uppercase tracking-wider font-semibold text-[#7D6F6B] border-b border-[#FAF8F5]">
+                  {t.name}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSeatModalTableId(t.id);
+                    setContextMenu(null);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+                >
+                  <Maximize2 className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>Abrir asiento por asiento</span>
+                </button>
+                {onDuplicateTable && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDuplicateTable(t);
+                      setContextMenu(null);
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-[#7D6F6B]" />
+                    <span>Duplicar mesa</span>
+                  </button>
+                )}
+                {t.shape !== 'Redonda' && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUpdateTable(t.id, { rotation: ((t.rotation || 0) + 90) % 360 });
+                      setContextMenu(null);
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+                  >
+                    <RotateCw className="w-3.5 h-3.5 text-[#7D6F6B]" />
+                    <span>Rotar 90°</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onUpdateTable(t.id, { locked: !t.locked });
+                    setContextMenu(null);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+                >
+                  <Lock className="w-3.5 h-3.5 text-[#7D6F6B]" />
+                  <span>{t.locked ? 'Desbloquear posición' : 'Bloquear posición'}</span>
+                </button>
+                <div className="my-1 border-t border-[#FAF8F5]" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDeleteTable(t.id);
+                    setSelectedTableId(null);
+                    setContextMenu(null);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-rose-50 text-rose-600 flex items-center gap-2 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Eliminar mesa</span>
+                </button>
+              </>
+            );
+          })()}
+
+          {contextMenu.kind === 'element' && (() => {
+            const el = floorElements.find(x => x.id === contextMenu.targetId);
+            if (!el) return null;
+            return (
+              <>
+                <div className="px-3 py-1 text-[10px] uppercase tracking-wider font-semibold text-[#7D6F6B] border-b border-[#FAF8F5] truncate">
+                  {el.label}
+                </div>
+                {onDuplicateElement && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onDuplicateElement(el);
+                      setContextMenu(null);
+                    }}
+                    className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-[#C48B81]" />
+                    <span>Duplicar elemento</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    onRotateElement(el.id, (el.rotation || 0) + 45);
+                    setContextMenu(null);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+                >
+                  <RotateCw className="w-3.5 h-3.5 text-[#7D6F6B]" />
+                  <span>Rotar 45°</span>
+                </button>
+                <div className="my-1 border-t border-[#FAF8F5]" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDeleteElement(el.id);
+                    setSelectedElementId(null);
+                    setContextMenu(null);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-rose-50 text-rose-600 flex items-center gap-2 cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Eliminar elemento</span>
+                </button>
+              </>
+            );
+          })()}
+
+          {contextMenu.kind === 'canvas' && (
+            <>
+              <div className="px-3 py-1 text-[10px] uppercase tracking-wider font-semibold text-[#7D6F6B] border-b border-[#FAF8F5]">
+                Agregar al plano
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  onOpenNewTable();
+                  setContextMenu(null);
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span>Nueva Mesa</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onAddElement('otro', { label: 'Sillón / Sofá', width: 120, height: 52, shape: 'sofa', tone: 'neutral' });
+                  setContextMenu(null);
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+              >
+                <Armchair className="w-3.5 h-3.5 text-[#7D6F6B]" />
+                <span>Sillón / Sofá</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onAddElement('otro', { label: 'Silla', width: 34, height: 34, shape: 'chair', tone: 'neutral' });
+                  setContextMenu(null);
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+              >
+                <Armchair className="w-3.5 h-3.5 text-[#7D6F6B]" />
+                <span>Silla individual</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowOtherModal(true);
+                  setContextMenu(null);
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+              >
+                <Shapes className="w-3.5 h-3.5 text-[#C48B81]" />
+                <span>Más elementos...</span>
+              </button>
+              <div className="my-1 border-t border-[#FAF8F5]" />
+              <button
+                type="button"
+                onClick={() => {
+                  handleResetView();
+                  setContextMenu(null);
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+              >
+                <Crosshair className="w-3.5 h-3.5 text-[#7D6F6B]" />
+                <span>Ver plano completo</span>
+              </button>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Enlarged Seat-by-Seat Table Modal */}
       {seatModalTableId && (() => {
         const modalTable = tables.find(t => t.id === seatModalTableId);
@@ -2124,6 +2425,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </span>
             <div className="flex flex-wrap gap-2">
               {[
+                { label: 'Sillón / Sofá', w: 120, h: 52, shape: 'sofa' as const, tone: 'neutral' as const },
+                { label: 'Butaca', w: 54, h: 50, shape: 'armchair' as const, tone: 'neutral' as const },
+                { label: 'Silla', w: 34, h: 34, shape: 'chair' as const, tone: 'neutral' as const },
+                { label: 'Periquera', w: 68, h: 68, shape: 'cocktail' as const, tone: 'accent' as const },
                 { label: 'Curvatura / Camino', w: 220, h: 150, shape: 'curve-path' as const, tone: 'neutral' as const },
                 { label: 'Arco / Curva', w: 160, h: 72, shape: 'arch' as const, tone: 'neutral' as const },
                 { label: 'Muro / Línea', w: 180, h: 24, shape: 'line' as const, tone: 'neutral' as const },
@@ -2177,6 +2482,14 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   ? { width: 180, height: 24, shape: 'line' as const }
                   : customEl.shape === 'ceremony'
                   ? { width: 170, height: 140, shape: 'ceremony' as const }
+                  : customEl.shape === 'sofa'
+                  ? { width: 120, height: 52, shape: 'sofa' as const }
+                  : customEl.shape === 'armchair'
+                  ? { width: 54, height: 50, shape: 'armchair' as const }
+                  : customEl.shape === 'chair'
+                  ? { width: 34, height: 34, shape: 'chair' as const }
+                  : customEl.shape === 'cocktail'
+                  ? { width: 68, height: 68, shape: 'cocktail' as const }
                   : { width: 128, height: 48, shape: 'rect' as const };
               onAddElement('otro', {
                 label: customEl.label.trim(),
@@ -2214,6 +2527,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   <option value="arch">Arco / Curva simple</option>
                   <option value="line">Línea / Muro recto</option>
                   <option value="ceremony">Ceremonia / Sillas</option>
+                  <option value="sofa">Sillón / Sofá (3 plazas)</option>
+                  <option value="armchair">Butaca / Sillón individual</option>
+                  <option value="chair">Silla individual</option>
+                  <option value="cocktail">Periquera / Mesa alta</option>
                 </select>
               </div>
               <div>

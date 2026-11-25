@@ -535,6 +535,60 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           </g>`;
       }
 
+      if (el.shape === 'sofa') {
+        const sx = el.width / 140;
+        const sy = el.height / 60;
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
+              <rect x="6" y="4" width="128" height="14" rx="6" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
+              <rect x="4" y="14" width="14" height="40" rx="5" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
+              <rect x="122" y="14" width="14" height="40" rx="5" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
+              <rect x="20" y="18" width="32" height="36" rx="5" fill="#FFFFFF" stroke="${svgStroke}" stroke-width="1.6" />
+              <rect x="54" y="18" width="32" height="36" rx="5" fill="#FFFFFF" stroke="${svgStroke}" stroke-width="1.6" />
+              <rect x="88" y="18" width="32" height="36" rx="5" fill="#FFFFFF" stroke="${svgStroke}" stroke-width="1.6" />
+            </g>
+          </g>`;
+      }
+
+      if (el.shape === 'armchair') {
+        const sx = el.width / 64;
+        const sy = el.height / 60;
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
+              <rect x="6" y="4" width="52" height="14" rx="6" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
+              <rect x="4" y="14" width="12" height="40" rx="5" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
+              <rect x="48" y="14" width="12" height="40" rx="5" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
+              <rect x="18" y="18" width="28" height="36" rx="5" fill="#FFFFFF" stroke="${svgStroke}" stroke-width="1.6" />
+            </g>
+          </g>`;
+      }
+
+      if (el.shape === 'chair') {
+        const sx = el.width / 40;
+        const sy = el.height / 40;
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
+              <rect x="5" y="4" width="30" height="8" rx="4" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
+              <rect x="7" y="12" width="26" height="23" rx="5" fill="#FFFFFF" stroke="${svgStroke}" stroke-width="1.8" />
+            </g>
+          </g>`;
+      }
+
+      if (el.shape === 'cocktail') {
+        const sc = Math.min(el.width, el.height) / 80;
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot}) scale(${sc.toFixed(4)})">
+            <circle cx="0" cy="0" r="18" fill="#FFFFFF" stroke="${svgStroke}" stroke-width="2" />
+            <circle cx="0" cy="-29" r="7" fill="${svgFill}" stroke="${svgStroke}" stroke-width="1.6" />
+            <circle cx="29" cy="0" r="7" fill="${svgFill}" stroke="${svgStroke}" stroke-width="1.6" />
+            <circle cx="0" cy="29" r="7" fill="${svgFill}" stroke="${svgStroke}" stroke-width="1.6" />
+            <circle cx="-29" cy="0" r="7" fill="${svgFill}" stroke="${svgStroke}" stroke-width="1.6" />
+          </g>`;
+      }
+
       const shapeMarkup = isCircle
         ? `<circle cx="0" cy="0" r="${el.width / 2}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" />`
         : `<rect x="${-el.width / 2}" y="${-el.height / 2}" width="${el.width}" height="${el.height}" rx="14" fill="${fill}" stroke="${stroke}" stroke-width="1.2" ${dash} />`;

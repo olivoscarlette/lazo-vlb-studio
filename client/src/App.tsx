@@ -665,15 +665,8 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
 const AppContent: React.FC = () => {
   const { user, loading, currentWedding, setCurrentWedding, activeModule, setActiveModule, setGeneralDashboardTab } = useAuth();
 
-  // Initialize sidebar state: default open on desktop (>=1024px), closed on mobile
-  const [sidebarOpen, setSidebarOpen] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('lazo_sidebar_open');
-      if (saved !== null) return saved === 'true';
-      return window.innerWidth >= 1024;
-    }
-    return true;
-  });
+  // Always start with the sidebar closed on page load/reload
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [activeToast, setActiveToast] = useState<{ title: string; body?: string; link?: string; tag?: string } | null>(null);
   const [checkoutVerifying, setCheckoutVerifying] = useState(false);

@@ -261,6 +261,37 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
     );
   };
 
+  const handleDuplicateTable = (table: TableItem) => {
+    const copy: TableItem = {
+      ...table,
+      id: `${isCivilLayout ? 'ctbl' : 'tbl'}_${Date.now()}`,
+      name: `${table.name} (copia)`,
+      x: Math.min(1320, (table.x ?? 420) + 40),
+      y: Math.min(920, (table.y ?? 320) + 40),
+      locked: false,
+      seatAssignments: []
+    };
+    updateWedding(prev =>
+      isCivilLayout
+        ? { ...prev, civilTables: [...(prev.civilTables ?? []), copy] }
+        : { ...prev, tables: [...prev.tables, copy] }
+    );
+  };
+
+  const handleDuplicateFloorElement = (el: FloorElement) => {
+    const copy: FloorElement = {
+      ...el,
+      id: `${isCivilLayout ? 'cel' : 'el'}_${Date.now()}`,
+      x: Math.min(1320, el.x + 36),
+      y: Math.min(920, el.y + 36)
+    };
+    updateWedding(prev =>
+      isCivilLayout
+        ? { ...prev, civilFloorElements: [...(prev.civilFloorElements ?? []), copy] }
+        : { ...prev, floorElements: [...(prev.floorElements ?? defaultFloorElements), copy] }
+    );
+  };
+
   const handleAddFloorElement = (
     type: FloorElement['type'],
     custom?: { label: string; width: number; height: number; shape?: FloorElement['shape']; tone?: FloorElement['tone'] }
@@ -1081,12 +1112,14 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
               onMoveTable={handleMoveTable}
               onRotateTable={handleRotateTable}
               onUpdateTable={handleUpdateTable}
+              onDuplicateTable={handleDuplicateTable}
               onDeleteTable={handleDeleteTable}
               onAssignGuest={handleAssignTable}
               onAddElement={handleAddFloorElement}
               onMoveElement={handleMoveFloorElement}
               onResizeElement={handleResizeFloorElement}
               onRotateElement={handleRotateFloorElement}
+              onDuplicateElement={handleDuplicateFloorElement}
               onDeleteElement={handleDeleteFloorElement}
               onOpenNewTable={() => setShowTableModal(true)}
             />

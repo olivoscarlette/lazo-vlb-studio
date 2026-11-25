@@ -111,7 +111,7 @@ export interface FloorElement {
   width: number;
   height: number;
   rotation?: number;
-  shape?: 'rect' | 'circle' | 'curve-path' | 'arch' | 'line' | 'ceremony';
+  shape?: 'rect' | 'circle' | 'curve-path' | 'arch' | 'line' | 'ceremony' | 'sofa' | 'armchair' | 'chair' | 'cocktail';
   tone?: 'neutral' | 'nature' | 'water' | 'accent' | 'stone';
 }
 
