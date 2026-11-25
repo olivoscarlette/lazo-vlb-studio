@@ -112,10 +112,26 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const unassignedGuests = guests.filter(g => !g.tableId && g.status !== 'No asistirá');
   const totalUnassignedPasses = unassignedGuests.reduce((s, g) => s + g.passes, 0);
 
-  const getTableCoords = (t: TableItem, idx: number) => ({
-    x: t.x ?? 140 + (idx % 3) * 210,
-    y: t.y ?? 120 + Math.floor(idx / 3) * 165
-  });
+  const prevTableCountRef = useRef(tables.length);
+  useEffect(() => {
+    if (tables.length > prevTableCountRef.current) {
+      const newest = tables[tables.length - 1];
+      if (newest) {
+        setSelectedTableId(newest.id);
+        setSelectedElementId(null);
+      }
+    }
+    prevTableCountRef.current = tables.length;
+  }, [tables]);
+
+  const getTableCoords = (t: TableItem, idx: number) => {
+    const rawX = typeof t.x === 'number' ? t.x : 140 + (idx % 5) * 210;
+    const rawY = typeof t.y === 'number' ? t.y : 120 + (Math.floor(idx / 5) % 5) * 165;
+    return {
+      x: Math.max(70, Math.min(CANVAS_W - 70, rawX)),
+      y: Math.max(70, Math.min(CANVAS_H - 70, rawY))
+    };
+  };
 
   const getCanvasPoint = (e: React.PointerEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();

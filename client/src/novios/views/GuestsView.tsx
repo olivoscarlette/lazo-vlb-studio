@@ -163,8 +163,8 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
       name: tableForm.name.trim(),
       shape: tableForm.shape,
       capacity: Math.max(2, Number(tableForm.capacity) || 10),
-      x: 150 + (idx % 3) * 200,
-      y: 120 + Math.floor(idx / 3) * 155,
+      x: 420 + (idx % 5) * 36,
+      y: 320 + (idx % 4) * 36,
       rotation: 0
     };
     updateWedding(prev => ({ ...prev, tables: [...prev.tables, newT] }));
