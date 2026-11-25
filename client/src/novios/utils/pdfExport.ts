@@ -589,6 +589,34 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           </g>`;
       }
 
+      if (el.shape === 'door') {
+        const sx = el.width / 64;
+        const sy = el.height / 64;
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
+              <line x1="6" y1="58" x2="6" y2="8" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" />
+              <path d="M 6 8 A 50 50 0 0 1 56 58" fill="none" stroke="${svgStroke}" stroke-width="1.6" stroke-dasharray="4 3" />
+              <line x1="2" y1="58" x2="58" y2="58" stroke="${svgStroke}" stroke-width="1.4" opacity="0.45" />
+            </g>
+          </g>`;
+      }
+
+      if (el.shape === 'double-door') {
+        const sx = el.width / 110;
+        const sy = el.height / 60;
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
+              <line x1="6" y1="54" x2="6" y2="8" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" />
+              <path d="M 6 8 A 46 46 0 0 1 52 54" fill="none" stroke="${svgStroke}" stroke-width="1.5" stroke-dasharray="4 3" />
+              <line x1="104" y1="54" x2="104" y2="8" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" />
+              <path d="M 104 8 A 46 46 0 0 0 58 54" fill="none" stroke="${svgStroke}" stroke-width="1.5" stroke-dasharray="4 3" />
+              <line x1="2" y1="54" x2="108" y2="54" stroke="${svgStroke}" stroke-width="1.4" opacity="0.45" />
+            </g>
+          </g>`;
+      }
+
       const shapeMarkup = isCircle
         ? `<circle cx="0" cy="0" r="${el.width / 2}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" />`
         : `<rect x="${-el.width / 2}" y="${-el.height / 2}" width="${el.width}" height="${el.height}" rx="14" fill="${fill}" stroke="${stroke}" stroke-width="1.2" ${dash} />`;

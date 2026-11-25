@@ -295,6 +295,75 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
     );
   };
 
+  const handleBatchMove = (moves: {
+    tables: Array<{ id: string; x: number; y: number }>;
+    elements: Array<{ id: string; x: number; y: number }>;
+  }) => {
+    const tMap = new Map(moves.tables.map(m => [m.id, m]));
+    const eMap = new Map(moves.elements.map(m => [m.id, m]));
+    updateWedding(prev =>
+      isCivilLayout
+        ? {
+            ...prev,
+            civilTables: (prev.civilTables ?? []).map(t => {
+              const m = tMap.get(t.id);
+              return m ? { ...t, x: m.x, y: m.y } : t;
+            }),
+            civilFloorElements: (prev.civilFloorElements ?? []).map(el => {
+              const m = eMap.get(el.id);
+              return m ? { ...el, x: m.x, y: m.y } : el;
+            })
+          }
+        : {
+            ...prev,
+            tables: prev.tables.map(t => {
+              const m = tMap.get(t.id);
+              return m ? { ...t, x: m.x, y: m.y } : t;
+            }),
+            floorElements: (prev.floorElements ?? defaultFloorElements).map(el => {
+              const m = eMap.get(el.id);
+              return m ? { ...el, x: m.x, y: m.y } : el;
+            })
+          }
+    );
+  };
+
+  const handleBatchPaste = (payload: { tables: TableItem[]; elements: FloorElement[] }) => {
+    updateWedding(prev =>
+      isCivilLayout
+        ? {
+            ...prev,
+            civilTables: [...(prev.civilTables ?? []), ...payload.tables],
+            civilFloorElements: [...(prev.civilFloorElements ?? []), ...payload.elements]
+          }
+        : {
+            ...prev,
+            tables: [...prev.tables, ...payload.tables],
+            floorElements: [...(prev.floorElements ?? defaultFloorElements), ...payload.elements]
+          }
+    );
+  };
+
+  const handleBatchDelete = (payload: { tableIds: string[]; elementIds: string[] }) => {
+    const tSet = new Set(payload.tableIds);
+    const eSet = new Set(payload.elementIds);
+    updateWedding(prev =>
+      isCivilLayout
+        ? {
+            ...prev,
+            civilTables: (prev.civilTables ?? []).filter(t => !tSet.has(t.id)),
+            civilFloorElements: (prev.civilFloorElements ?? []).filter(el => !eSet.has(el.id)),
+            guests: prev.guests.map(g => (g.civilTableId && tSet.has(g.civilTableId) ? { ...g, civilTableId: undefined } : g))
+          }
+        : {
+            ...prev,
+            tables: prev.tables.filter(t => !tSet.has(t.id)),
+            floorElements: (prev.floorElements ?? defaultFloorElements).filter(el => !eSet.has(el.id)),
+            guests: prev.guests.map(g => (g.tableId && tSet.has(g.tableId) ? { ...g, tableId: undefined } : g))
+          }
+    );
+  };
+
   const handleAddFloorElement = (
     type: FloorElement['type'],
     custom?: { label: string; width: number; height: number; shape?: FloorElement['shape']; tone?: FloorElement['tone'] }
@@ -1305,6 +1374,9 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
               onRotateElement={handleRotateFloorElement}
               onDuplicateElement={handleDuplicateFloorElement}
               onDeleteElement={handleDeleteFloorElement}
+              onBatchMove={handleBatchMove}
+              onBatchPaste={handleBatchPaste}
+              onBatchDelete={handleBatchDelete}
               onOpenNewTable={() => setShowTableModal(true)}
             />
           ) : (

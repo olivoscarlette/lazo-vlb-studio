@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   RotateCw, Trash2, ZoomIn, ZoomOut, Plus, Minus, Music, Wine, Sparkles, DoorOpen, Users, Shapes,
-  MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, Minimize2, FileImage, Crosshair, Lock, Copy, Armchair
+  MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, Minimize2, FileImage, Crosshair, Lock, Copy, Armchair,
+  MousePointer2, Hand, ClipboardPaste
 } from 'lucide-react';
 import { FloorElement, GuestItem, TableItem } from '../types/lazo';
 import { Modal } from './Modal';
@@ -40,6 +41,12 @@ interface SeatingCanvas2DProps {
   onRotateElement: (id: string, rotation: number) => void;
   onDuplicateElement?: (el: FloorElement) => void;
   onDeleteElement: (id: string) => void;
+  onBatchMove?: (moves: {
+    tables: Array<{ id: string; x: number; y: number }>;
+    elements: Array<{ id: string; x: number; y: number }>;
+  }) => void;
+  onBatchPaste?: (payload: { tables: TableItem[]; elements: FloorElement[] }) => void;
+  onBatchDelete?: (payload: { tableIds: string[]; elementIds: string[] }) => void;
   onOpenNewTable: () => void;
 }
 
@@ -71,6 +78,9 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   onRotateElement,
   onDuplicateElement,
   onDeleteElement,
+  onBatchMove,
+  onBatchPaste,
+  onBatchDelete,
   onOpenNewTable
 }) => {
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -92,10 +102,21 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const [selectedTableId, setSelectedTableId] = useState<string | null>(tables[0]?.id || null);
   const [seatModalTableId, setSeatModalTableId] = useState<string | null>(null);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [multiSelected, setMultiSelected] = useState<string[]>([]); // keys: "table:<id>" | "element:<id>"
+  const [canvasTool, setCanvasTool] = useState<'pan' | 'select'>('pan');
+  const [marquee, setMarquee] = useState<{ startX: number; startY: number; currX: number; currY: number } | null>(null);
+  const [clipboard, setClipboard] = useState<{ tables: TableItem[]; elements: FloorElement[] } | null>(null);
+  const [copyToast, setCopyToast] = useState<string | null>(null);
+  const [groupDrag, setGroupDrag] = useState<{
+    startX: number;
+    startY: number;
+    initialTables: Array<{ id: string; x: number; y: number }>;
+    initialElements: Array<{ id: string; x: number; y: number }>;
+  } | null>(null);
   const [showOtherModal, setShowOtherModal] = useState(false);
   const [customEl, setCustomEl] = useState({
     label: '',
-    shape: 'rect' as 'rect' | 'square' | 'circle' | 'curve-path' | 'arch' | 'line' | 'ceremony' | 'sofa' | 'armchair' | 'chair' | 'cocktail',
+    shape: 'rect' as 'rect' | 'square' | 'circle' | 'curve-path' | 'arch' | 'line' | 'ceremony' | 'sofa' | 'armchair' | 'chair' | 'cocktail' | 'door' | 'double-door',
     tone: 'neutral' as NonNullable<FloorElement['tone']>
   });
   const [contextMenu, setContextMenu] = useState<{
@@ -186,6 +207,129 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     };
   };
 
+  const showQuickToast = (msg: string) => {
+    setCopyToast(msg);
+    setTimeout(() => setCopyToast(prev => (prev === msg ? null : prev)), 1800);
+  };
+
+  const getActiveSelectedKeys = (): string[] => {
+    if (multiSelected.length > 0) return multiSelected;
+    if (selectedTableId) return [`table:${selectedTableId}`];
+    if (selectedElementId) return [`element:${selectedElementId}`];
+    return [];
+  };
+
+  const handleCopySelection = () => {
+    const keys = getActiveSelectedKeys();
+    if (keys.length === 0) return;
+    const copiedTables: TableItem[] = [];
+    const copiedElements: FloorElement[] = [];
+    for (const k of keys) {
+      if (k.startsWith('table:')) {
+        const id = k.slice(6);
+        const t = tables.find(x => x.id === id);
+        if (t) copiedTables.push(JSON.parse(JSON.stringify(t)));
+      } else if (k.startsWith('element:')) {
+        const id = k.slice(8);
+        const el = floorElements.find(x => x.id === id);
+        if (el) copiedElements.push(JSON.parse(JSON.stringify(el)));
+      }
+    }
+    const total = copiedTables.length + copiedElements.length;
+    if (total === 0) return;
+    setClipboard({ tables: copiedTables, elements: copiedElements });
+    showQuickToast(total === 1 ? '1 elemento copiado (⌘V / Ctrl+V para pegar)' : `${total} elementos copiados (⌘V / Ctrl+V para pegar)`);
+  };
+
+  const handlePasteClipboard = () => {
+    if (!clipboard || !onBatchPaste) return;
+    const stamp = Date.now();
+    const newTables: TableItem[] = clipboard.tables.map((t, i) => ({
+      ...JSON.parse(JSON.stringify(t)),
+      id: `${eventType === 'civil' ? 'ctbl' : 'tbl'}_${stamp}_${i}`,
+      name: `${t.name}`,
+      x: Math.min(CANVAS_W - 70, (t.x ?? 420) + 34),
+      y: Math.min(CANVAS_H - 70, (t.y ?? 320) + 34),
+      locked: false,
+      seatAssignments: []
+    }));
+    const newElements: FloorElement[] = clipboard.elements.map((el, i) => ({
+      ...JSON.parse(JSON.stringify(el)),
+      id: `${eventType === 'civil' ? 'cel' : 'el'}_${stamp}_${i}`,
+      x: Math.min(CANVAS_W - 55, el.x + 34),
+      y: Math.min(CANVAS_H - 45, el.y + 34)
+    }));
+    if (newTables.length === 0 && newElements.length === 0) return;
+    onBatchPaste({ tables: newTables, elements: newElements });
+
+    // Select the newly pasted items so she can drag them right into place!
+    const nextKeys = [
+      ...newTables.map(t => `table:${t.id}`),
+      ...newElements.map(el => `element:${el.id}`)
+    ];
+    if (nextKeys.length > 1) {
+      setMultiSelected(nextKeys);
+      setSelectedTableId(null);
+      setSelectedElementId(null);
+    } else if (newTables.length === 1) {
+      setMultiSelected([]);
+      setSelectedTableId(newTables[0].id);
+      setSelectedElementId(null);
+    } else if (newElements.length === 1) {
+      setMultiSelected([]);
+      setSelectedElementId(newElements[0].id);
+      setSelectedTableId(null);
+    }
+    // Offset clipboard slightly so repeated Cmd+V cascades nicely
+    setClipboard({ tables: newTables, elements: newElements });
+    showQuickToast(nextKeys.length === 1 ? 'Pegado' : `${nextKeys.length} elementos pegados`);
+  };
+
+  const handleDeleteSelection = () => {
+    const keys = getActiveSelectedKeys();
+    if (keys.length === 0) return;
+    const tableIds = keys.filter(k => k.startsWith('table:')).map(k => k.slice(6));
+    const elementIds = keys.filter(k => k.startsWith('element:')).map(k => k.slice(8));
+    if (onBatchDelete) {
+      onBatchDelete({ tableIds, elementIds });
+    } else {
+      tableIds.forEach(id => onDeleteTable(id));
+      elementIds.forEach(id => onDeleteElement(id));
+    }
+    setMultiSelected([]);
+    setSelectedTableId(null);
+    setSelectedElementId(null);
+  };
+
+  // Keyboard shortcuts: Cmd/Ctrl+C, Cmd/Ctrl+V, Delete/Backspace, Escape
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'c') {
+        if (getActiveSelectedKeys().length > 0) {
+          e.preventDefault();
+          handleCopySelection();
+        }
+      } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'v') {
+        if (clipboard) {
+          e.preventDefault();
+          handlePasteClipboard();
+        }
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && multiSelected.length > 0) {
+        e.preventDefault();
+        handleDeleteSelection();
+      } else if (e.key === 'Escape') {
+        setMultiSelected([]);
+        setMarquee(null);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  });
+
   const handlePointerDownItem = (
     e: React.PointerEvent,
     kind: 'table' | 'element',
@@ -194,6 +338,53 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     currY: number
   ) => {
     e.stopPropagation();
+    const itemKey = `${kind}:${id}`;
+
+    // Shift+Click toggles item in multi-selection
+    if (e.shiftKey) {
+      setMultiSelected(prev => {
+        const base = prev.length > 0
+          ? prev
+          : selectedTableId
+          ? [`table:${selectedTableId}`]
+          : selectedElementId
+          ? [`element:${selectedElementId}`]
+          : [];
+        return base.includes(itemKey) ? base.filter(k => k !== itemKey) : [...base, itemKey];
+      });
+      setSelectedTableId(null);
+      setSelectedElementId(null);
+      return;
+    }
+
+    // If clicking an item that is already part of a multi-selection, start group drag!
+    if (multiSelected.length > 1 && multiSelected.includes(itemKey)) {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      const pt = getCanvasPoint(e);
+      const initialTables = multiSelected
+        .filter(k => k.startsWith('table:'))
+        .map(k => {
+          const tid = k.slice(6);
+          const idx = tables.findIndex(t => t.id === tid);
+          const t = tables[idx];
+          if (!t || t.locked) return null;
+          const c = getTableCoords(t, idx);
+          return { id: t.id, x: c.x, y: c.y };
+        })
+        .filter(Boolean) as Array<{ id: string; x: number; y: number }>;
+      const initialElements = multiSelected
+        .filter(k => k.startsWith('element:'))
+        .map(k => {
+          const el = floorElements.find(x => x.id === k.slice(8));
+          return el ? { id: el.id, x: el.x, y: el.y } : null;
+        })
+        .filter(Boolean) as Array<{ id: string; x: number; y: number }>;
+      setGroupDrag({ startX: pt.x, startY: pt.y, initialTables, initialElements });
+      return;
+    }
+
+    // Normal single-item select & drag
+    setMultiSelected([]);
     if (kind === 'table') {
       setSelectedTableId(id);
       setSelectedElementId(null);
@@ -371,6 +562,41 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   };
 
   const handlePointerUp = () => {
+    if (marquee) {
+      const minX = Math.min(marquee.startX, marquee.currX);
+      const maxX = Math.max(marquee.startX, marquee.currX);
+      const minY = Math.min(marquee.startY, marquee.currY);
+      const maxY = Math.max(marquee.startY, marquee.currY);
+      if (maxX - minX > 6 || maxY - minY > 6) {
+        const hits: string[] = [];
+        tables.forEach((t, idx) => {
+          const c = getTableCoords(t, idx);
+          if (c.x >= minX && c.x <= maxX && c.y >= minY && c.y <= maxY) {
+            hits.push(`table:${t.id}`);
+          }
+        });
+        floorElements.forEach(el => {
+          if (el.x >= minX && el.x <= maxX && el.y >= minY && el.y <= maxY) {
+            hits.push(`element:${el.id}`);
+          }
+        });
+        if (hits.length === 1) {
+          setMultiSelected([]);
+          if (hits[0].startsWith('table:')) {
+            setSelectedTableId(hits[0].slice(6));
+            setSelectedElementId(null);
+          } else {
+            setSelectedElementId(hits[0].slice(8));
+            setSelectedTableId(null);
+          }
+        } else {
+          setMultiSelected(hits);
+          setSelectedTableId(null);
+          setSelectedElementId(null);
+        }
+      }
+      setMarquee(null);
+    }
     if (rotating && !rotating.moved) {
       // Single click on rotate handle rotates by +45°
       onRotateElement(rotating.id, rotating.startRotation + 45);
@@ -379,6 +605,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       onUpdateTable(rotatingTable.id, { rotation: (rotatingTable.startRotation + 45) % 360 });
     }
     setDragging(null);
+    setGroupDrag(null);
     setResizing(null);
     setRotating(null);
     setScalingTable(null);
@@ -386,12 +613,19 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     setPanning(null);
   };
 
-  // Pan empty canvas with mouse/trackpad click-and-drag
+  // Pan empty canvas OR drag marquee selection box (when in 'select' mode or holding Shift)
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
-    if (dragging || resizing || rotating || scalingTable || rotatingTable) return;
+    if (e.button !== 0) return;
+    if (dragging || groupDrag || resizing || rotating || scalingTable || rotatingTable) return;
+    if (canvasTool === 'select' || e.shiftKey) {
+      const pt = getCanvasPoint(e);
+      setMarquee({ startX: pt.x, startY: pt.y, currX: pt.x, currY: pt.y });
+      return;
+    }
     const vp = viewportRef.current;
     if (!vp) return;
     setSelectedElementId(null);
+    setMultiSelected([]);
     setPanning({
       startX: e.clientX,
       startY: e.clientY,
@@ -401,6 +635,33 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   };
 
   const handleViewportPointerMove = (e: React.PointerEvent) => {
+    if (marquee) {
+      const pt = getCanvasPoint(e);
+      setMarquee(prev => (prev ? { ...prev, currX: pt.x, currY: pt.y } : null));
+      return;
+    }
+    if (groupDrag) {
+      const pt = getCanvasPoint(e);
+      const dx = pt.x - groupDrag.startX;
+      const dy = pt.y - groupDrag.startY;
+      const nextTables = groupDrag.initialTables.map(t => ({
+        id: t.id,
+        x: Math.max(55, Math.min(CANVAS_W - 55, Math.round(t.x + dx))),
+        y: Math.max(45, Math.min(CANVAS_H - 45, Math.round(t.y + dy)))
+      }));
+      const nextElements = groupDrag.initialElements.map(el => ({
+        id: el.id,
+        x: Math.max(45, Math.min(CANVAS_W - 45, Math.round(el.x + dx))),
+        y: Math.max(35, Math.min(CANVAS_H - 35, Math.round(el.y + dy)))
+      }));
+      if (onBatchMove) {
+        onBatchMove({ tables: nextTables, elements: nextElements });
+      } else {
+        nextTables.forEach(t => onMoveTable(t.id, t.x, t.y));
+        nextElements.forEach(el => onMoveElement(el.id, el.x, el.y));
+      }
+      return;
+    }
     if (panning && viewportRef.current) {
       const dx = e.clientX - panning.startX;
       const dy = e.clientY - panning.startY;
@@ -1085,8 +1346,34 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           )}
         </div>
 
-        {/* Zoom + Unassigned pill */}
-        <div className="flex items-center gap-2">
+        {/* Zoom + Tool Mode + Unassigned pill */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Pan vs Multi-Select Box Mode */}
+          <div className="inline-flex items-center bg-[#FAF8F5] rounded-full border border-[#EFE8E1] p-0.5">
+            <button
+              type="button"
+              onClick={() => setCanvasTool('pan')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium transition cursor-pointer ${
+                canvasTool === 'pan' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+              }`}
+              title="Modo Mover plano (arrastra el fondo para moverte)"
+            >
+              <Hand className="w-3 h-3" />
+              <span>Mover</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setCanvasTool('select')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium transition cursor-pointer ${
+                canvasTool === 'select' ? 'bg-[#2B2826] text-white' : 'text-[#7D6F6B] hover:text-[#2B2826]'
+              }`}
+              title="Modo Selección múltiple (arrastra un recuadro para seleccionar varias cosas y copiar/pegar)"
+            >
+              <MousePointer2 className="w-3 h-3" />
+              <span>Seleccionar</span>
+            </button>
+          </div>
+
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF8F5] border border-[#EFE8E1] text-[11px] text-[#7D6F6B]">
             <Users className="w-3 h-3 text-[#C48B81]" />
             <span>{totalUnassignedPasses} sin mesa</span>
@@ -1162,7 +1449,50 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           }`}
         >
           <div className="px-4 py-2.5 border-b border-[#FAF8F5] flex flex-wrap items-center justify-between gap-2 text-[11px] text-[#7D6F6B] font-light shrink-0">
-            <span>Arrastra mesas, mueve el plano con mouse o trackpad (2 dedos)</span>
+            {multiSelected.length > 0 ? (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-semibold text-[#2B2826]">
+                  {multiSelected.length} seleccionados
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopySelection}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] text-[11px] font-medium cursor-pointer"
+                >
+                  <Copy className="w-3 h-3 text-[#C48B81]" />
+                  <span>Copiar (⌘C)</span>
+                </button>
+                {clipboard && (
+                  <button
+                    type="button"
+                    onClick={handlePasteClipboard}
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#2B2826] text-white text-[11px] font-medium cursor-pointer"
+                  >
+                    <ClipboardPaste className="w-3 h-3 text-[#C48B81]" />
+                    <span>Pegar (⌘V)</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleDeleteSelection}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[11px] font-medium cursor-pointer"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Eliminar</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMultiSelected([])}
+                  className="text-[11px] text-[#7D6F6B] hover:text-[#2B2826] underline cursor-pointer"
+                >
+                  Limpiar
+                </button>
+              </div>
+            ) : copyToast ? (
+              <span className="font-medium text-[#577355]">{copyToast}</span>
+            ) : (
+              <span>Rueda = zoom · Arrastra o Shift+Arrastra para seleccionar varios · Clic derecho = menú</span>
+            )}
             <div className="flex items-center gap-3">
               {(floorPlanUrl || floorPlanUrl2) && (
                 <div className="flex flex-wrap items-center gap-2 bg-[#FAF8F5] border border-[#EFE8E1] rounded-full px-2.5 py-0.5">
@@ -1235,7 +1565,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             onPointerLeave={handlePointerUp}
             className={`overflow-auto p-3 bg-[#FAF8F5] ${
               isFullscreen ? 'flex-1 min-h-0' : 'h-[600px] sm:h-[74vh] sm:min-h-[640px]'
-            } ${panning ? 'cursor-grabbing' : 'cursor-grab'}`}
+            } ${canvasTool === 'select' ? 'cursor-crosshair' : panning ? 'cursor-grabbing' : 'cursor-grab'}`}
           >
             <div
               ref={canvasRef}
@@ -1305,7 +1635,9 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 )}
                 {/* Draggable Floor Elements (Pista, DJ, Barra, Entrada, Otros) */}
                 {floorElements.map(el => {
-                  const isSel = selectedElementId === el.id;
+                  const isMultiSel = multiSelected.includes(`element:${el.id}`);
+                  const isSel = selectedElementId === el.id || isMultiSel;
+                  const isCompactEl = el.width < 64 || el.height < 64;
                   const isSvgShape =
                     el.shape === 'curve-path' ||
                     el.shape === 'arch' ||
@@ -1314,7 +1646,9 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     el.shape === 'sofa' ||
                     el.shape === 'armchair' ||
                     el.shape === 'chair' ||
-                    el.shape === 'cocktail';
+                    el.shape === 'cocktail' ||
+                    el.shape === 'door' ||
+                    el.shape === 'double-door';
                   const shapeClass = el.shape === 'circle' ? 'rounded-full' : 'rounded-2xl';
                   const toneClass =
                     el.type === 'pista'
@@ -1528,9 +1862,27 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         </svg>
                       )}
 
+                      {el.shape === 'door' && (
+                        <svg viewBox="0 0 64 64" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
+                          <line x1="6" y1="58" x2="6" y2="8" stroke={svgStroke} strokeWidth="3.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                          <path d="M 6 8 A 50 50 0 0 1 56 58" fill="none" stroke={svgStroke} strokeWidth="1.6" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
+                          <line x1="2" y1="58" x2="58" y2="58" stroke={svgStroke} strokeWidth="1.4" opacity="0.45" vectorEffect="non-scaling-stroke" />
+                        </svg>
+                      )}
+
+                      {el.shape === 'double-door' && (
+                        <svg viewBox="0 0 110 60" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none overflow-visible">
+                          <line x1="6" y1="54" x2="6" y2="8" stroke={svgStroke} strokeWidth="3.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                          <path d="M 6 8 A 46 46 0 0 1 52 54" fill="none" stroke={svgStroke} strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
+                          <line x1="104" y1="54" x2="104" y2="8" stroke={svgStroke} strokeWidth="3.2" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+                          <path d="M 104 8 A 46 46 0 0 0 58 54" fill="none" stroke={svgStroke} strokeWidth="1.5" strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
+                          <line x1="2" y1="54" x2="108" y2="54" stroke={svgStroke} strokeWidth="1.4" opacity="0.45" vectorEffect="non-scaling-stroke" />
+                        </svg>
+                      )}
+
                       <span
                         className={`text-[10px] uppercase tracking-[0.14em] font-semibold pointer-events-none leading-tight ${
-                          el.shape === 'chair' || el.shape === 'armchair' || el.shape === 'cocktail'
+                          el.shape === 'chair' || el.shape === 'armchair' || el.shape === 'cocktail' || el.shape === 'door' || el.shape === 'double-door'
                             ? 'hidden'
                             : isSvgShape
                             ? 'relative z-[2] px-2 py-0.5 rounded-full bg-white/85 text-[#5A524C] shadow-2xs'
@@ -1540,37 +1892,41 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         {el.label}
                       </span>
 
-                      {/* Top-center Rotate Handle (only when selected) */}
-                      {isSel && el.shape !== 'circle' && (
+                      {/* Top-center Rotate Handle (compact & pushed outside on small elements) */}
+                      {isSel && !isMultiSel && el.shape !== 'circle' && (
                         <>
                           <span className="absolute -top-3 left-1/2 -translate-x-1/2 w-px h-3 bg-[#C48B81]/70 pointer-events-none" />
                           <button
                             type="button"
                             onPointerDown={e => handlePointerDownRotate(e, el)}
                             onClick={e => e.stopPropagation()}
-                            className="absolute -top-9 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-white border border-[#C48B81] text-[#A86B60] shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing"
+                            className={`absolute left-1/2 -translate-x-1/2 rounded-full bg-white border border-[#C48B81] text-[#A86B60] shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing ${
+                              isCompactEl ? '-top-7 w-4 h-4' : '-top-9 w-6 h-6'
+                            }`}
                             title="Arrastra para girar o haz clic para rotar 45°"
                           >
-                            <RotateCw className="w-3 h-3" />
+                            <RotateCw className={isCompactEl ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
                           </button>
                         </>
                       )}
 
-                      {/* Diagonal Resize Arrow Handle (only when selected) */}
-                      {isSel && (
+                      {/* Diagonal Resize Arrow Handle (pushed outside on small elements so it never covers them) */}
+                      {isSel && !isMultiSel && (
                         <button
                           type="button"
                           onPointerDown={e => handlePointerDownResize(e, el, 'se')}
                           onClick={e => e.stopPropagation()}
-                          className="absolute -bottom-2.5 -right-2.5 w-6 h-6 rounded-full bg-white border border-[#C48B81] text-[#A86B60] shadow-sm flex items-center justify-center cursor-nwse-resize"
+                          className={`absolute rounded-full bg-white border border-[#C48B81] text-[#A86B60] shadow-sm flex items-center justify-center cursor-nwse-resize ${
+                            isCompactEl ? '-bottom-3.5 -right-3.5 w-4 h-4' : '-bottom-2.5 -right-2.5 w-6 h-6'
+                          }`}
                           title="Arrastra para cambiar tamaño"
                         >
-                          <MoveDiagonal2 className="w-3 h-3" />
+                          <MoveDiagonal2 className={isCompactEl ? 'w-2.5 h-2.5' : 'w-3 h-3'} />
                         </button>
                       )}
 
-                      {/* Horizontal & Vertical Resize Arrows for non-circle elements when selected */}
-                      {isSel && el.shape !== 'circle' && (
+                      {/* Horizontal & Vertical Resize Arrows (only for larger non-circle elements so tiny chairs stay clean) */}
+                      {isSel && !isMultiSel && !isCompactEl && el.shape !== 'circle' && (
                         <>
                           <button
                             type="button"
@@ -1593,7 +1949,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         </>
                       )}
 
-                      {isSel && (
+                      {isSel && !isMultiSel && !isCompactEl && (
                         <button
                           type="button"
                           onPointerDown={e => e.stopPropagation()}
@@ -1619,6 +1975,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   const usedSeats = seatedHere.reduce((s, g) => s + g.passes, 0);
 
                   const tableScale = typeof table.scale === 'number' ? table.scale : 1;
+                  const isMultiSelTable = multiSelected.includes(`table:${table.id}`);
                   const isSelTable = selectedTableId === table.id;
                   const invScale = 1 / Math.max(0.5, tableScale);
 
@@ -1629,8 +1986,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       onContextMenu={e => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setSelectedTableId(table.id);
-                        setSelectedElementId(null);
+                        if (!isMultiSelTable) {
+                          setSelectedTableId(table.id);
+                          setSelectedElementId(null);
+                        }
                         setContextMenu({ x: e.clientX, y: e.clientY, kind: 'table', targetId: table.id });
                       }}
                       onDoubleClick={e => {
@@ -1644,7 +2003,9 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         top: coords.y,
                         transform: `translate(-50%, -50%) scale(${tableScale})`
                       }}
-                      className={`absolute ${table.locked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${isSelTable ? 'z-20' : 'z-10'}`}
+                      className={`absolute ${table.locked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${
+                        isSelTable || isMultiSelTable ? 'z-20' : 'z-10'
+                      } ${isMultiSelTable ? 'ring-4 ring-[#C48B81]/35 rounded-2xl' : ''}`}
                       title="Doble clic para abrir en grande y asignar asiento por asiento"
                     >
                       {renderTableShape(table, usedSeats, seatedHere)}
@@ -1705,6 +2066,19 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     </div>
                   );
                 })}
+
+                {/* Marquee Multi-Selection Rectangle */}
+                {marquee && (
+                  <div
+                    style={{
+                      left: Math.min(marquee.startX, marquee.currX),
+                      top: Math.min(marquee.startY, marquee.currY),
+                      width: Math.abs(marquee.currX - marquee.startX),
+                      height: Math.abs(marquee.currY - marquee.startY)
+                    }}
+                    className="absolute z-30 border-2 border-dashed border-[#C48B81] bg-[#C48B81]/10 rounded-lg pointer-events-none"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -2329,6 +2703,19 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               <div className="px-3 py-1 text-[10px] uppercase tracking-wider font-semibold text-[#7D6F6B] border-b border-[#FAF8F5]">
                 Agregar al plano
               </div>
+              {clipboard && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handlePasteClipboard();
+                    setContextMenu(null);
+                  }}
+                  className="w-full px-3 py-2 text-left hover:bg-[#F7EDEB] text-[#8E5348] font-medium flex items-center gap-2 cursor-pointer"
+                >
+                  <ClipboardPaste className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>Pegar ({clipboard.tables.length + clipboard.elements.length})</span>
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -2425,6 +2812,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </span>
             <div className="flex flex-wrap gap-2">
               {[
+                { label: 'Puerta', w: 58, h: 58, shape: 'door' as const, tone: 'stone' as const },
+                { label: 'Puerta Doble', w: 100, h: 56, shape: 'double-door' as const, tone: 'stone' as const },
                 { label: 'Sillón / Sofá', w: 120, h: 52, shape: 'sofa' as const, tone: 'neutral' as const },
                 { label: 'Butaca', w: 54, h: 50, shape: 'armchair' as const, tone: 'neutral' as const },
                 { label: 'Silla', w: 34, h: 34, shape: 'chair' as const, tone: 'neutral' as const },
@@ -2490,6 +2879,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   ? { width: 34, height: 34, shape: 'chair' as const }
                   : customEl.shape === 'cocktail'
                   ? { width: 68, height: 68, shape: 'cocktail' as const }
+                  : customEl.shape === 'door'
+                  ? { width: 58, height: 58, shape: 'door' as const }
+                  : customEl.shape === 'double-door'
+                  ? { width: 100, height: 56, shape: 'double-door' as const }
                   : { width: 128, height: 48, shape: 'rect' as const };
               onAddElement('otro', {
                 label: customEl.label.trim(),
@@ -2531,6 +2924,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   <option value="armchair">Butaca / Sillón individual</option>
                   <option value="chair">Silla individual</option>
                   <option value="cocktail">Periquera / Mesa alta</option>
+                  <option value="door">Puerta arquitectónica</option>
+                  <option value="double-door">Puerta doble</option>
                 </select>
               </div>
               <div>
