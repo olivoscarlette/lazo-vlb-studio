@@ -94,6 +94,9 @@ export interface TableItem {
   y?: number;
   rotation?: number; // 0, 45, 90...
   scale?: number; // 0.5 to 1.8 (visual size multiplier)
+  headSeats?: boolean; // cabeceras on left/right ends (Rectangular/Imperial)
+  locked?: boolean; // prevent accidental drag on canvas
+  seatAssignments?: Array<string | null>; // exact seat index -> `${guestId}::${passIndex}`
 }
 
 export interface FloorElement {

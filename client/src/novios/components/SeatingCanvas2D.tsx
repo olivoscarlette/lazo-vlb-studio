@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   RotateCw, Trash2, ZoomIn, ZoomOut, Plus, Minus, Music, Wine, Sparkles, DoorOpen, Users, Shapes,
-  MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, Minimize2, FileImage, Crosshair
+  MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, Minimize2, FileImage, Crosshair, Lock
 } from 'lucide-react';
 import { FloorElement, GuestItem, TableItem } from '../types/lazo';
 import { Modal } from './Modal';
+import { TableSeatModal, buildSeatSlots } from './TableSeatModal';
 
 interface CustomElementPayload {
   label: string;
@@ -85,6 +86,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     scrollTop: number;
   } | null>(null);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(tables[0]?.id || null);
+  const [seatModalTableId, setSeatModalTableId] = useState<string | null>(null);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [showOtherModal, setShowOtherModal] = useState(false);
   const [customEl, setCustomEl] = useState({
@@ -182,6 +184,15 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     currY: number
   ) => {
     e.stopPropagation();
+    if (kind === 'table') {
+      setSelectedTableId(id);
+      setSelectedElementId(null);
+      const targetTable = tables.find(t => t.id === id);
+      if (targetTable?.locked) return;
+    } else {
+      setSelectedElementId(id);
+      setSelectedTableId(null);
+    }
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     const pt = getCanvasPoint(e);
     setDragging({
@@ -190,13 +201,6 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       offsetX: pt.x - currX,
       offsetY: pt.y - currY
     });
-    if (kind === 'table') {
-      setSelectedTableId(id);
-      setSelectedElementId(null);
-    } else {
-      setSelectedElementId(id);
-      setSelectedTableId(null);
-    }
   };
 
   const handlePointerDownResize = (
@@ -500,35 +504,39 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     }
   };
 
-  // Render chairs around a table in 2D
-  const renderTableShape = (table: TableItem, usedSeats: number) => {
+  // Render chairs around a table in 2D (with initials + optional head seats)
+  const renderTableShape = (table: TableItem, usedSeats: number, seatedGuests: GuestItem[]) => {
     const cap = Math.max(1, table.capacity);
     const isSelected = selectedTableId === table.id;
     const isOver = usedSeats > cap;
+    const slots = buildSeatSlots(table, seatedGuests);
 
     if (table.shape === 'Redonda') {
       const tableSize = 76;
-      const radius = 50;
+      const radius = 52;
       return (
-        <div className="relative flex items-center justify-center" style={{ width: 120, height: 120 }}>
-          {/* Chairs in a circle */}
+        <div className="relative flex items-center justify-center" style={{ width: 126, height: 126 }}>
+          {/* Chairs in a circle with guest initials */}
           {Array.from({ length: cap }).map((_, i) => {
             const angle = (i / cap) * Math.PI * 2 - Math.PI / 2;
             const cx = Math.cos(angle) * radius;
             const cy = Math.sin(angle) * radius;
-            const filled = i < usedSeats;
+            const slot = slots[i];
+            const filled = Boolean(slot?.seatKey);
             return (
               <span
                 key={i}
                 style={{
                   transform: `translate(${cx}px, ${cy}px)`
                 }}
-                className={`absolute w-3.5 h-3.5 rounded-full border transition-colors ${
+                className={`absolute w-4 h-4 rounded-full border transition-colors flex items-center justify-center text-[6px] font-bold leading-none ${
                   filled
-                    ? 'bg-[#577355] border-[#455C44]'
-                    : 'bg-white border-[#D8CFC8]'
+                    ? 'bg-[#E5EDE6] border-[#577355] text-[#2E4630]'
+                    : 'bg-white border-[#D8CFC8] text-transparent'
                 }`}
-              />
+              >
+                {filled ? slot.initials : ''}
+              </span>
             );
           })}
 
@@ -819,21 +827,46 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       );
     }
 
-    // Rectangular or Imperial
+    // Rectangular or Imperial (with optional head seats / cabeceras)
     const rot = table.rotation || 0;
     const isVertical = rot % 180 === 90;
     const isNovios = cap <= 2;
-    const topCount = isNovios ? cap : Math.ceil(cap / 2);
-    const bottomCount = isNovios ? 0 : cap - topCount;
-    const w = isNovios ? 92 : Math.max(122, topCount * 24);
+    const useHeadSeats = !isNovios && cap >= 6 && table.headSeats !== false;
+    const remaining = useHeadSeats ? cap - 2 : cap;
+    const topCount = isNovios ? cap : Math.ceil(remaining / 2);
+    const bottomCount = isNovios ? 0 : remaining - topCount;
+    const w = isNovios ? 92 : Math.max(126, topCount * 25);
     const h = isNovios ? 44 : table.shape === 'Imperial' ? 58 : 50;
+
+    // Seat indices clockwise: top (0..topCount-1), right head (topCount), bottom (right->left), left head (cap-1)
+    const rightHeadIdx = useHeadSeats ? topCount : -1;
+    const bottomStartIdx = useHeadSeats ? topCount + 1 : topCount;
+    const leftHeadIdx = useHeadSeats ? cap - 1 : -1;
+
+    const renderChairCircle = (slotIdx: number, key: string) => {
+      const slot = slots[slotIdx];
+      const filled = Boolean(slot?.seatKey);
+      return (
+        <span
+          key={key}
+          style={{ transform: `rotate(${-rot}deg)` }}
+          className={`w-4 h-4 rounded-full border flex items-center justify-center text-[6px] font-bold leading-none ${
+            filled
+              ? 'bg-[#E5EDE6] border-[#577355] text-[#2E4630]'
+              : 'bg-white border-[#D8CFC8] text-transparent'
+          }`}
+        >
+          {filled ? slot.initials : ''}
+        </span>
+      );
+    };
 
     return (
       <div
         className="relative flex items-center justify-center transition-transform"
         style={{
-          width: isVertical ? h + 38 : w + 30,
-          height: isVertical ? w + 30 : h + 38
+          width: isVertical ? h + 44 : w + (useHeadSeats ? 48 : 30),
+          height: isVertical ? w + (useHeadSeats ? 48 : 30) : h + 44
         }}
       >
         <div
@@ -843,28 +876,30 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           }}
         >
           {/* Top row chairs */}
-          <div className="absolute -top-4 inset-x-2 flex justify-around">
-            {Array.from({ length: topCount }).map((_, i) => (
-              <span
-                key={`t_${i}`}
-                className={`w-3.5 h-2.5 rounded-full border ${
-                  i < usedSeats ? 'bg-[#577355] border-[#455C44]' : 'bg-white border-[#D8CFC8]'
-                }`}
-              />
-            ))}
+          <div className="absolute -top-5 inset-x-2 flex justify-around">
+            {Array.from({ length: topCount }).map((_, i) => renderChairCircle(i, `t_${i}`))}
           </div>
+
+          {/* Right head seat (cabecera derecha) */}
+          {useHeadSeats && (
+            <div className="absolute -right-5 top-1/2 -translate-y-1/2">
+              {renderChairCircle(rightHeadIdx, 'hr')}
+            </div>
+          )}
 
           {/* Bottom row chairs */}
           {bottomCount > 0 && (
-            <div className="absolute -bottom-4 inset-x-2 flex justify-around">
-              {Array.from({ length: bottomCount }).map((_, i) => (
-                <span
-                  key={`b_${i}`}
-                  className={`w-3.5 h-2.5 rounded-full border ${
-                    topCount + i < usedSeats ? 'bg-[#577355] border-[#455C44]' : 'bg-white border-[#D8CFC8]'
-                  }`}
-                />
-              ))}
+            <div className="absolute -bottom-5 inset-x-2 flex justify-around">
+              {Array.from({ length: bottomCount }).map((_, i) =>
+                renderChairCircle(bottomStartIdx + (bottomCount - 1 - i), `b_${i}`)
+              )}
+            </div>
+          )}
+
+          {/* Left head seat (cabecera izquierda) */}
+          {useHeadSeats && (
+            <div className="absolute -left-5 top-1/2 -translate-y-1/2">
+              {renderChairCircle(leftHeadIdx, 'hl')}
             </div>
           )}
 
@@ -1473,9 +1508,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 {/* Draggable 2D Tables */}
                 {tables.map((table, idx) => {
                   const coords = getTableCoords(table, idx);
-                  const usedSeats = guests
-                    .filter(g => g.tableId === table.id)
-                    .reduce((s, g) => s + g.passes, 0);
+                  const seatedHere = guests.filter(g => g.tableId === table.id);
+                  const usedSeats = seatedHere.reduce((s, g) => s + g.passes, 0);
 
                   const tableScale = typeof table.scale === 'number' ? table.scale : 1;
                   const isSelTable = selectedTableId === table.id;
@@ -1485,15 +1519,29 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     <div
                       key={table.id}
                       onPointerDown={e => handlePointerDownItem(e, 'table', table.id, coords.x, coords.y)}
+                      onDoubleClick={e => {
+                        e.stopPropagation();
+                        setSelectedTableId(table.id);
+                        setSeatModalTableId(table.id);
+                      }}
                       onClick={e => e.stopPropagation()}
                       style={{
                         left: coords.x,
                         top: coords.y,
                         transform: `translate(-50%, -50%) scale(${tableScale})`
                       }}
-                      className={`absolute cursor-grab active:cursor-grabbing ${isSelTable ? 'z-20' : 'z-10'}`}
+                      className={`absolute ${table.locked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${isSelTable ? 'z-20' : 'z-10'}`}
+                      title="Doble clic para abrir en grande y asignar asiento por asiento"
                     >
-                      {renderTableShape(table, usedSeats)}
+                      {renderTableShape(table, usedSeats, seatedHere)}
+                      {table.locked && (
+                        <span
+                          style={{ transform: `scale(${invScale})` }}
+                          className="absolute -top-2 -left-2 w-5 h-5 rounded-full bg-[#2B2826] text-[#C48B81] flex items-center justify-center shadow-sm pointer-events-none"
+                        >
+                          <Lock className="w-2.5 h-2.5" />
+                        </span>
+                      )}
 
                       {/* On-canvas Rotate Handle (top center) */}
                       {isSelTable && table.shape !== 'Redonda' && (
@@ -1734,6 +1782,16 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   </div>
                 </div>
 
+                {/* Prominent CTA: Open Big Seat-by-Seat Modal */}
+                <button
+                  type="button"
+                  onClick={() => setSeatModalTableId(selectedTable.id)}
+                  className="w-full py-2.5 px-3.5 rounded-2xl bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium inline-flex items-center justify-center gap-2 transition cursor-pointer shadow-2xs"
+                >
+                  <Maximize2 className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>Abrir mesa en grande (asiento por asiento)</span>
+                </button>
+
                 {/* Table Design Controls: Shape, Capacity, Size, Rotation */}
                 <div className="space-y-2.5 pb-3 border-b border-[#FAF8F5]">
                   <div>
@@ -1933,6 +1991,25 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           })()}
         </div>
       </div>
+      {/* Enlarged Seat-by-Seat Table Modal */}
+      {seatModalTableId && (() => {
+        const modalTable = tables.find(t => t.id === seatModalTableId);
+        if (!modalTable) return null;
+        return (
+          <TableSeatModal
+            table={modalTable}
+            guests={guests}
+            onClose={() => setSeatModalTableId(null)}
+            onUpdateTable={onUpdateTable}
+            onAssignGuest={onAssignGuest}
+            onDeleteTable={id => {
+              onDeleteTable(id);
+              setSelectedTableId(null);
+            }}
+          />
+        );
+      })()}
+
       {/* Modal: Agregar Otro Elemento al Plano 2D */}
       <Modal
         isOpen={showOtherModal}

@@ -166,7 +166,10 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
             x: typeof t.x === 'number' ? t.x : 150 + (idx % 3) * 200,
             y: typeof t.y === 'number' ? t.y : 120 + Math.floor(idx / 3) * 155,
             rotation: Number(t.rotation) || 0,
-            scale: typeof prevTableMeta?.scale === 'number' ? prevTableMeta.scale : 1
+            scale: typeof prevTableMeta?.scale === 'number' ? prevTableMeta.scale : 1,
+            headSeats: prevTableMeta?.headSeats,
+            locked: Boolean(prevTableMeta?.locked),
+            seatAssignments: Array.isArray(prevTableMeta?.seatAssignments) ? prevTableMeta.seatAssignments : undefined
           };
         })
       : base.tables;
