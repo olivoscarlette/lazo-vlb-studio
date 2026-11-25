@@ -29,6 +29,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
   const [showToolsMenu, setShowToolsMenu] = useState(false);
   const [showVersionsMenu, setShowVersionsMenu] = useState(false);
   const [newVersionName, setNewVersionName] = useState('');
+  const [activeSnapshotId, setActiveSnapshotId] = useState<string | null>(null);
   const [activeVersionName, setActiveVersionName] = useState<string | null>(null);
   const [importFeedback, setImportFeedback] = useState<string | null>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
@@ -366,7 +367,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
 
   const handleAddFloorElement = (
     type: FloorElement['type'],
-    custom?: { label: string; width: number; height: number; shape?: FloorElement['shape']; tone?: FloorElement['tone'] }
+    custom?: { label: string; width: number; height: number; shape?: FloorElement['shape']; tone?: FloorElement['tone']; x?: number; y?: number }
   ) => {
     const config: Record<Exclude<FloorElement['type'], 'otro'>, { label: string; w: number; h: number }> = {
       pista: { label: 'Pista de Baile', w: 148, h: 148 },
@@ -374,27 +375,30 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
       barra: { label: 'Barra de Bebidas', w: 136, h: 48 },
       entrada: { label: 'Entrada Principal', w: 130, h: 42 }
     };
-    const newEl: FloorElement = custom
-      ? {
-          id: `${isCivilLayout ? 'cel' : 'el'}_${Date.now()}`,
-          type: 'otro',
-          label: custom.label,
-          x: 360,
-          y: 220,
-          width: custom.width,
-          height: custom.height,
-          shape: custom.shape || 'rect',
-          tone: custom.tone || 'neutral'
-        }
-      : {
-          id: `${isCivilLayout ? 'cel' : 'el'}_${Date.now()}`,
-          type,
-          label: config[type as Exclude<FloorElement['type'], 'otro'>].label,
-          x: 360,
-          y: 190,
-          width: config[type as Exclude<FloorElement['type'], 'otro'>].w,
-          height: config[type as Exclude<FloorElement['type'], 'otro'>].h
-        };
+    const spawnX = Math.max(45, Math.min(1355, Math.round(custom?.x ?? 420)));
+    const spawnY = Math.max(35, Math.min(965, Math.round(custom?.y ?? 260)));
+    const newEl: FloorElement =
+      type === 'otro' && custom
+        ? {
+            id: `${isCivilLayout ? 'cel' : 'el'}_${Date.now()}`,
+            type: 'otro',
+            label: custom.label,
+            x: spawnX,
+            y: spawnY,
+            width: custom.width,
+            height: custom.height,
+            shape: custom.shape || 'rect',
+            tone: custom.tone || 'neutral'
+          }
+        : {
+            id: `${isCivilLayout ? 'cel' : 'el'}_${Date.now()}`,
+            type,
+            label: config[type as Exclude<FloorElement['type'], 'otro'>].label,
+            x: spawnX,
+            y: spawnY,
+            width: config[type as Exclude<FloorElement['type'], 'otro'>].w,
+            height: config[type as Exclude<FloorElement['type'], 'otro'>].h
+          };
     updateWedding(prev =>
       isCivilLayout
         ? { ...prev, civilFloorElements: [...(prev.civilFloorElements ?? []), newEl] }
@@ -469,75 +473,114 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
   const currentEventKey: 'principal' | 'civil' = isCivilLayout ? 'civil' : 'principal';
   const eventSnapshots = (wedding.layoutSnapshots ?? []).filter(s => s.eventType === currentEventKey);
 
-  const handleSaveSnapshot = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    const defaultLabel = `${isCivilLayout ? 'Boda Civil' : 'Boda Principal'} v${eventSnapshots.length + 1}`;
-    const name = newVersionName.trim() || defaultLabel;
+  const buildCurrentSnapshotData = () => {
     const guestTableMap: Record<string, string> = {};
     for (const g of activeLayoutGuests) {
       if (g.tableId) guestTableMap[g.id] = g.tableId;
     }
-    const snap: LayoutSnapshot = {
-      id: `snap_${Date.now()}`,
-      name,
-      eventType: currentEventKey,
-      createdAt: new Date().toISOString(),
-      tables: JSON.parse(JSON.stringify(activeTables)),
-      floorElements: JSON.parse(JSON.stringify(activeFloorElements)),
+    return {
+      tables: JSON.parse(JSON.stringify(activeTables)) as TableItem[],
+      floorElements: JSON.parse(JSON.stringify(activeFloorElements)) as FloorElement[],
       floorPlanUrl: activeFloorPlanUrl,
       floorPlanUrl2: activeFloorPlanUrl2,
       dualLayout: profile.floorPlanDualLayout || 'side-by-side',
       guestTableMap
     };
+  };
+
+  const handleSaveSnapshot = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const defaultLabel = `${isCivilLayout ? 'Boda Civil' : 'Boda Principal'} v${eventSnapshots.length + 1}`;
+    const name = newVersionName.trim() || defaultLabel;
+    const data = buildCurrentSnapshotData();
+    const snap: LayoutSnapshot = {
+      id: `snap_${Date.now()}`,
+      name,
+      eventType: currentEventKey,
+      createdAt: new Date().toISOString(),
+      ...data
+    };
     updateWedding(prev => ({
       ...prev,
       layoutSnapshots: [snap, ...(prev.layoutSnapshots ?? [])]
     }));
+    setActiveSnapshotId(snap.id);
     setActiveVersionName(name);
     setNewVersionName('');
   };
 
   const handleLoadSnapshot = (snap: LayoutSnapshot) => {
+    const currentData = buildCurrentSnapshotData();
     const validTableIds = new Set(snap.tables.map(t => t.id));
     const map = snap.guestTableMap || {};
-    updateWedding(prev => ({
-      ...prev,
-      profile: isCivilLayout
-        ? {
-            ...prev.profile,
-            civilFloorPlanUrl: snap.floorPlanUrl ?? prev.profile.civilFloorPlanUrl,
-            civilFloorPlanUrl2: snap.floorPlanUrl2 ?? prev.profile.civilFloorPlanUrl2,
-            floorPlanDualLayout: snap.dualLayout || prev.profile.floorPlanDualLayout
+
+    updateWedding(prev => {
+      let nextSnapshots = [...(prev.layoutSnapshots ?? [])];
+      if (activeSnapshotId && activeSnapshotId !== snap.id) {
+        // Auto-save edits made to the version we are leaving so NOTHING is ever lost!
+        nextSnapshots = nextSnapshots.map(s =>
+          s.id === activeSnapshotId
+            ? { ...s, ...currentData, createdAt: new Date().toISOString() }
+            : s
+        );
+      } else if (!activeSnapshotId && (currentData.tables.length > 0 || currentData.floorElements.length > 0)) {
+        // User had unsaved work on a non-versioned canvas: auto-backup before switching!
+        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+        const autoSnap: LayoutSnapshot = {
+          id: `snap_auto_${Date.now()}`,
+          name: `${isCivilLayout ? 'Boda Civil' : 'Boda Principal'} (respaldo ${timeStr})`,
+          eventType: currentEventKey,
+          createdAt: new Date().toISOString(),
+          ...currentData
+        };
+        nextSnapshots = [autoSnap, ...nextSnapshots];
+      }
+
+      return {
+        ...prev,
+        layoutSnapshots: nextSnapshots,
+        profile: isCivilLayout
+          ? {
+              ...prev.profile,
+              civilFloorPlanUrl: snap.floorPlanUrl ?? prev.profile.civilFloorPlanUrl,
+              civilFloorPlanUrl2: snap.floorPlanUrl2 ?? prev.profile.civilFloorPlanUrl2,
+              floorPlanDualLayout: snap.dualLayout || prev.profile.floorPlanDualLayout
+            }
+          : {
+              ...prev.profile,
+              floorPlanUrl: snap.floorPlanUrl ?? prev.profile.floorPlanUrl,
+              floorPlanUrl2: snap.floorPlanUrl2 ?? prev.profile.floorPlanUrl2,
+              floorPlanDualLayout: snap.dualLayout || prev.profile.floorPlanDualLayout
+            },
+        ...(isCivilLayout
+          ? {
+              civilTables: JSON.parse(JSON.stringify(snap.tables)),
+              civilFloorElements: JSON.parse(JSON.stringify(snap.floorElements))
+            }
+          : {
+              tables: JSON.parse(JSON.stringify(snap.tables)),
+              floorElements: JSON.parse(JSON.stringify(snap.floorElements))
+            }),
+        guests: prev.guests.map(g => {
+          const assigned = map[g.id];
+          const safeAssigned = assigned && validTableIds.has(assigned) ? assigned : undefined;
+          if (isCivilLayout) {
+            return g.isInvitedCivil ? { ...g, civilTableId: safeAssigned } : g;
           }
-        : {
-            ...prev.profile,
-            floorPlanUrl: snap.floorPlanUrl ?? prev.profile.floorPlanUrl,
-            floorPlanUrl2: snap.floorPlanUrl2 ?? prev.profile.floorPlanUrl2,
-            floorPlanDualLayout: snap.dualLayout || prev.profile.floorPlanDualLayout
-          },
-      ...(isCivilLayout
-        ? {
-            civilTables: JSON.parse(JSON.stringify(snap.tables)),
-            civilFloorElements: JSON.parse(JSON.stringify(snap.floorElements))
-          }
-        : {
-            tables: JSON.parse(JSON.stringify(snap.tables)),
-            floorElements: JSON.parse(JSON.stringify(snap.floorElements))
-          }),
-      guests: prev.guests.map(g => {
-        const assigned = map[g.id];
-        const safeAssigned = assigned && validTableIds.has(assigned) ? assigned : undefined;
-        if (isCivilLayout) {
-          return g.isInvitedCivil ? { ...g, civilTableId: safeAssigned } : g;
-        }
-        return g.isInvitedPrincipal !== false ? { ...g, tableId: safeAssigned } : g;
-      })
-    }));
+          return g.isInvitedPrincipal !== false ? { ...g, tableId: safeAssigned } : g;
+        })
+      };
+    });
+    setActiveSnapshotId(snap.id);
     setActiveVersionName(snap.name);
     setShowVersionsMenu(false);
   };
 
   const handleDeleteSnapshot = (snapId: string) => {
+    if (activeSnapshotId === snapId) {
+      setActiveSnapshotId(null);
+      setActiveVersionName(null);
+    }
     updateWedding(prev => ({
       ...prev,
       layoutSnapshots: (prev.layoutSnapshots ?? []).filter(s => s.id !== snapId)
@@ -1248,7 +1291,17 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                 <button
                   type="button"
                   onClick={() => {
+                    if (activeSnapshotId) {
+                      const currentData = buildCurrentSnapshotData();
+                      updateWedding(prev => ({
+                        ...prev,
+                        layoutSnapshots: (prev.layoutSnapshots ?? []).map(s =>
+                          s.id === activeSnapshotId ? { ...s, ...currentData, createdAt: new Date().toISOString() } : s
+                        )
+                      }));
+                    }
                     setLayoutEvent('principal');
+                    setActiveSnapshotId(null);
                     setActiveVersionName(null);
                   }}
                   className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer border ${
@@ -1270,7 +1323,17 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                 <button
                   type="button"
                   onClick={() => {
+                    if (activeSnapshotId) {
+                      const currentData = buildCurrentSnapshotData();
+                      updateWedding(prev => ({
+                        ...prev,
+                        layoutSnapshots: (prev.layoutSnapshots ?? []).map(s =>
+                          s.id === activeSnapshotId ? { ...s, ...currentData, createdAt: new Date().toISOString() } : s
+                        )
+                      }));
+                    }
                     setLayoutEvent('civil');
+                    setActiveSnapshotId(null);
                     setActiveVersionName(null);
                   }}
                   className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer border ${

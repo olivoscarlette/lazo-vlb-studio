@@ -14,6 +14,8 @@ interface CustomElementPayload {
   height: number;
   shape?: FloorElement['shape'];
   tone?: FloorElement['tone'];
+  x?: number;
+  y?: number;
 }
 
 interface SeatingCanvas2DProps {
@@ -122,9 +124,12 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
+    canvasX?: number;
+    canvasY?: number;
     kind: 'canvas' | 'table' | 'element';
     targetId?: string;
   } | null>(null);
+  const [pendingSpawnPos, setPendingSpawnPos] = useState<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState<{
     kind: 'table' | 'element';
     id: string;
@@ -198,14 +203,43 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     };
   };
 
-  const getCanvasPoint = (e: React.PointerEvent) => {
+  const getCanvasPoint = (e: React.PointerEvent | React.MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return { x: 0, y: 0 };
+    if (!rect) return { x: 420, y: 260 };
     return {
       x: (e.clientX - rect.left) / zoom,
       y: (e.clientY - rect.top) / zoom
     };
   };
+
+  const getViewportCenter = (): { x: number; y: number } => {
+    const vp = viewportRef.current;
+    const cv = canvasRef.current;
+    if (!vp || !cv) return { x: 420, y: 260 };
+    const vpRect = vp.getBoundingClientRect();
+    const cvRect = cv.getBoundingClientRect();
+    const centerClientX = vpRect.left + vpRect.width / 2;
+    const centerClientY = vpRect.top + vpRect.height / 2;
+    const cx = (centerClientX - cvRect.left) / zoom;
+    const cy = (centerClientY - cvRect.top) / zoom;
+    return {
+      x: Math.max(60, Math.min(CANVAS_W - 60, Math.round(cx))),
+      y: Math.max(50, Math.min(CANVAS_H - 50, Math.round(cy)))
+    };
+  };
+
+  // Auto-select newly added floor element so it's immediately ready to adjust
+  const prevElCountRef = useRef(floorElements.length);
+  useEffect(() => {
+    if (floorElements.length > prevElCountRef.current && multiSelected.length === 0) {
+      const newest = floorElements[floorElements.length - 1];
+      if (newest) {
+        setSelectedElementId(newest.id);
+        setSelectedTableId(null);
+      }
+    }
+    prevElCountRef.current = floorElements.length;
+  }, [floorElements.length]);
 
   const showQuickToast = (msg: string) => {
     setCopyToast(msg);
@@ -241,23 +275,42 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     showQuickToast(total === 1 ? '1 elemento copiado (⌘V / Ctrl+V para pegar)' : `${total} elementos copiados (⌘V / Ctrl+V para pegar)`);
   };
 
-  const handlePasteClipboard = () => {
+  const handlePasteClipboard = (atPos?: { x: number; y: number }) => {
     if (!clipboard || !onBatchPaste) return;
     const stamp = Date.now();
+    // If pasting at a specific right-clicked spot, center the pasted group right at that cursor spot
+    let dx = 34;
+    let dy = 34;
+    if (atPos) {
+      const allXs = [
+        ...clipboard.tables.map(t => t.x ?? 420),
+        ...clipboard.elements.map(el => el.x)
+      ];
+      const allYs = [
+        ...clipboard.tables.map(t => t.y ?? 320),
+        ...clipboard.elements.map(el => el.y)
+      ];
+      if (allXs.length > 0) {
+        const avgX = allXs.reduce((a, b) => a + b, 0) / allXs.length;
+        const avgY = allYs.reduce((a, b) => a + b, 0) / allYs.length;
+        dx = Math.round(atPos.x - avgX);
+        dy = Math.round(atPos.y - avgY);
+      }
+    }
     const newTables: TableItem[] = clipboard.tables.map((t, i) => ({
       ...JSON.parse(JSON.stringify(t)),
       id: `${eventType === 'civil' ? 'ctbl' : 'tbl'}_${stamp}_${i}`,
       name: `${t.name}`,
-      x: Math.min(CANVAS_W - 70, (t.x ?? 420) + 34),
-      y: Math.min(CANVAS_H - 70, (t.y ?? 320) + 34),
+      x: Math.max(70, Math.min(CANVAS_W - 70, (t.x ?? 420) + dx)),
+      y: Math.max(70, Math.min(CANVAS_H - 70, (t.y ?? 320) + dy)),
       locked: false,
       seatAssignments: []
     }));
     const newElements: FloorElement[] = clipboard.elements.map((el, i) => ({
       ...JSON.parse(JSON.stringify(el)),
       id: `${eventType === 'civil' ? 'cel' : 'el'}_${stamp}_${i}`,
-      x: Math.min(CANVAS_W - 55, el.x + 34),
-      y: Math.min(CANVAS_H - 45, el.y + 34)
+      x: Math.max(45, Math.min(CANVAS_W - 45, el.x + dx)),
+      y: Math.max(35, Math.min(CANVAS_H - 35, el.y + dy))
     }));
     if (newTables.length === 0 && newElements.length === 0) return;
     onBatchPaste({ tables: newTables, elements: newElements });
@@ -1264,7 +1317,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => onAddElement('pista')}
+            onClick={() => {
+              const c = getViewportCenter();
+              onAddElement('pista', { label: 'Pista de Baile', width: 148, height: 148, x: c.x, y: c.y });
+            }}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-[11px] font-medium transition cursor-pointer"
           >
             <Sparkles className="w-3 h-3 text-[#C48B81]" />
@@ -1272,7 +1328,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => onAddElement('dj')}
+            onClick={() => {
+              const c = getViewportCenter();
+              onAddElement('dj', { label: 'DJ / Escenario', width: 150, height: 48, x: c.x, y: c.y });
+            }}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-[11px] font-medium transition cursor-pointer"
           >
             <Music className="w-3 h-3 text-[#C48B81]" />
@@ -1280,7 +1339,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => onAddElement('barra')}
+            onClick={() => {
+              const c = getViewportCenter();
+              onAddElement('barra', { label: 'Barra de Bebidas', width: 136, height: 48, x: c.x, y: c.y });
+            }}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-[11px] font-medium transition cursor-pointer"
           >
             <Wine className="w-3 h-3 text-[#C48B81]" />
@@ -1288,7 +1350,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => onAddElement('entrada')}
+            onClick={() => {
+              const c = getViewportCenter();
+              onAddElement('entrada', { label: 'Entrada Principal', width: 130, height: 42, x: c.x, y: c.y });
+            }}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#5A524C] border border-[#EFE8E1] text-[11px] font-medium transition cursor-pointer"
           >
             <DoorOpen className="w-3 h-3 text-[#C48B81]" />
@@ -1296,7 +1361,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           </button>
           <button
             type="button"
-            onClick={() => setShowOtherModal(true)}
+            onClick={() => {
+              setPendingSpawnPos(getViewportCenter());
+              setShowOtherModal(true);
+            }}
             className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#D8CFC8] text-[11px] font-medium transition cursor-pointer"
           >
             <Shapes className="w-3 h-3 text-[#C48B81]" />
@@ -1572,7 +1640,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               onPointerDown={handleCanvasPointerDown}
               onContextMenu={e => {
                 e.preventDefault();
-                setContextMenu({ x: e.clientX, y: e.clientY, kind: 'canvas' });
+                const pt = getCanvasPoint(e);
+                setContextMenu({ x: e.clientX, y: e.clientY, canvasX: pt.x, canvasY: pt.y, kind: 'canvas' });
               }}
               style={{
                 width: CANVAS_W * zoom,
@@ -2707,13 +2776,17 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 <button
                   type="button"
                   onClick={() => {
-                    handlePasteClipboard();
+                    handlePasteClipboard(
+                      contextMenu.canvasX !== undefined && contextMenu.canvasY !== undefined
+                        ? { x: contextMenu.canvasX, y: contextMenu.canvasY }
+                        : undefined
+                    );
                     setContextMenu(null);
                   }}
                   className="w-full px-3 py-2 text-left hover:bg-[#F7EDEB] text-[#8E5348] font-medium flex items-center gap-2 cursor-pointer"
                 >
                   <ClipboardPaste className="w-3.5 h-3.5 text-[#C48B81]" />
-                  <span>Pegar ({clipboard.tables.length + clipboard.elements.length})</span>
+                  <span>Pegar aquí ({clipboard.tables.length + clipboard.elements.length})</span>
                 </button>
               )}
               <button
@@ -2730,35 +2803,56 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  onAddElement('otro', { label: 'Sillón / Sofá', width: 120, height: 52, shape: 'sofa', tone: 'neutral' });
+                  onAddElement('otro', {
+                    label: 'Sillón / Sofá',
+                    width: 120,
+                    height: 52,
+                    shape: 'sofa',
+                    tone: 'neutral',
+                    x: contextMenu.canvasX,
+                    y: contextMenu.canvasY
+                  });
                   setContextMenu(null);
                 }}
                 className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
               >
                 <Armchair className="w-3.5 h-3.5 text-[#7D6F6B]" />
-                <span>Sillón / Sofá</span>
+                <span>Sillón / Sofá aquí</span>
               </button>
               <button
                 type="button"
                 onClick={() => {
-                  onAddElement('otro', { label: 'Silla', width: 34, height: 34, shape: 'chair', tone: 'neutral' });
+                  onAddElement('otro', {
+                    label: 'Silla',
+                    width: 34,
+                    height: 34,
+                    shape: 'chair',
+                    tone: 'neutral',
+                    x: contextMenu.canvasX,
+                    y: contextMenu.canvasY
+                  });
                   setContextMenu(null);
                 }}
                 className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
               >
                 <Armchair className="w-3.5 h-3.5 text-[#7D6F6B]" />
-                <span>Silla individual</span>
+                <span>Silla individual aquí</span>
               </button>
               <button
                 type="button"
                 onClick={() => {
+                  setPendingSpawnPos(
+                    contextMenu.canvasX !== undefined && contextMenu.canvasY !== undefined
+                      ? { x: contextMenu.canvasX, y: contextMenu.canvasY }
+                      : getViewportCenter()
+                  );
                   setShowOtherModal(true);
                   setContextMenu(null);
                 }}
                 className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
               >
                 <Shapes className="w-3.5 h-3.5 text-[#C48B81]" />
-                <span>Más elementos...</span>
+                <span>Más elementos aquí...</span>
               </button>
               <div className="my-1 border-t border-[#FAF8F5]" />
               <button
@@ -2836,13 +2930,17 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   key={preset.label}
                   type="button"
                   onClick={() => {
+                    const pos = pendingSpawnPos || getViewportCenter();
                     onAddElement('otro', {
                       label: preset.label,
                       width: preset.w,
                       height: preset.h,
                       shape: preset.shape,
-                      tone: preset.tone
+                      tone: preset.tone,
+                      x: pos.x,
+                      y: pos.y
                     });
+                    setPendingSpawnPos(null);
                     setShowOtherModal(false);
                   }}
                   className="px-3 py-1.5 rounded-full text-xs bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#2B2826] border border-[#EFE8E1] transition cursor-pointer"
@@ -2884,11 +2982,15 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   : customEl.shape === 'double-door'
                   ? { width: 100, height: 56, shape: 'double-door' as const }
                   : { width: 128, height: 48, shape: 'rect' as const };
+              const pos = pendingSpawnPos || getViewportCenter();
               onAddElement('otro', {
                 label: customEl.label.trim(),
                 ...dims,
-                tone: customEl.tone
+                tone: customEl.tone,
+                x: pos.x,
+                y: pos.y
               });
+              setPendingSpawnPos(null);
               setCustomEl({ label: '', shape: 'rect', tone: 'neutral' });
               setShowOtherModal(false);
             }}
