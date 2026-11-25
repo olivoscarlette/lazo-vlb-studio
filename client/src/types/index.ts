@@ -153,6 +153,7 @@ export interface Vendor {
   costo_real: number;
   payment_due_date?: string | null;
   contact_person?: string;
+  team_responsible?: string | null;
   notes?: string;
   total_pagado?: number;
   saldo_restante?: number;

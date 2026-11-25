@@ -216,6 +216,7 @@ export function initDatabase() {
       costo_real REAL DEFAULT 0,
       payment_due_date TEXT,
       contact_person TEXT,
+      team_responsible TEXT,
       notes TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
@@ -416,6 +417,12 @@ export function initDatabase() {
 
   try {
     db.exec('ALTER TABLE vendors ADD COLUMN payment_due_date TEXT;');
+  } catch {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE vendors ADD COLUMN team_responsible TEXT;');
   } catch {
     // Column already exists
   }

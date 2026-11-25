@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Vendor, Payment } from '../types';
 import {
   CreditCard, Plus, DollarSign, CheckCircle2, Clock, Phone,
-  Building2, Calendar, FileText, Trash2, Edit3, MessageSquare, AlertCircle, AlertTriangle, Sparkles
+  Building2, Calendar, FileText, Trash2, Edit3, MessageSquare, AlertCircle, AlertTriangle, Sparkles, UserCheck
 } from 'lucide-react';
 
 export const ProveedoresPagosModule: React.FC = () => {
@@ -31,6 +31,7 @@ export const ProveedoresPagosModule: React.FC = () => {
     costo_real: '' as any,
     payment_due_date: '',
     contact_person: '',
+    team_responsible: '',
     notes: ''
   });
   const [vendorError, setVendorError] = useState('');
@@ -93,6 +94,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       costo_real: '' as any,
       payment_due_date: '',
       contact_person: '',
+      team_responsible: '',
       notes: ''
     });
     setVendorError('');
@@ -109,6 +111,7 @@ export const ProveedoresPagosModule: React.FC = () => {
       costo_real: v.costo_real && v.costo_real > 0 ? String(v.costo_real) as any : '',
       payment_due_date: v.payment_due_date || '',
       contact_person: v.contact_person || '',
+      team_responsible: v.team_responsible || '',
       notes: v.notes || ''
     });
     setVendorError('');
@@ -239,6 +242,7 @@ export const ProveedoresPagosModule: React.FC = () => {
         locations: ['RECEPCIÓN'],
         costo_real: '' as any,
         contact_person: '',
+        team_responsible: '',
         notes: '',
         payment_due_date: ''
       });
@@ -575,6 +579,7 @@ export const ProveedoresPagosModule: React.FC = () => {
                         costo_real: '' as any,
                         payment_due_date: '',
                         contact_person: '',
+                        team_responsible: '',
                         notes: ''
                       });
                       setVendorError('');
@@ -624,6 +629,15 @@ export const ProveedoresPagosModule: React.FC = () => {
                         </div>
                         {v.contact_person && (
                           <div className="text-[11px] text-[#8A7E72] whitespace-nowrap mt-0.5">Contacto: {v.contact_person}</div>
+                        )}
+                        {v.team_responsible && (
+                          <div
+                            className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[10px] font-medium max-w-[260px]"
+                            title={`Responsable del equipo: ${v.team_responsible}`}
+                          >
+                            <UserCheck className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{v.team_responsible}</span>
+                          </div>
                         )}
                       </td>
                       <td className="py-2.5 px-3 whitespace-nowrap">
@@ -895,6 +909,19 @@ export const ProveedoresPagosModule: React.FC = () => {
                   placeholder="Nombre del asesor o director"
                   value={vendorForm.contact_person}
                   onChange={e => setVendorForm({ ...vendorForm, contact_person: e.target.value })}
+                  className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2B2826] uppercase tracking-wider mb-1">
+                  Responsable del Equipo (quién habla con este proveedor)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ej. Scarlette — confirmar horarios de montaje y accesos"
+                  value={vendorForm.team_responsible}
+                  onChange={e => setVendorForm({ ...vendorForm, team_responsible: e.target.value })}
                   className="w-full px-3.5 py-2.5 border border-[#EFE8E1] rounded-xl text-sm text-[#2B2826] focus:outline-none focus:ring-2 focus:ring-[#C48B81]"
                 />
               </div>

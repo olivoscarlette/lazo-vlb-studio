@@ -205,6 +205,7 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
       totalCost: Number(v.costo_real) || 0,
       paidAmount,
       nextDueDate: v.payment_due_date || '',
+      teamResponsible: v.team_responsible || '',
       notes: v.notes || '',
       payments: vPayments
     };

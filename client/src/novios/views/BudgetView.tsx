@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Plus, Trash2, Check, MessageSquare, Scale, Wallet, Sparkles, Upload, FileCheck, Edit3, Calendar, Receipt, Eye, Download, ArrowRight
+  Plus, Trash2, Check, MessageSquare, Scale, Wallet, Sparkles, Upload, FileCheck, Edit3, Calendar, Receipt, Eye, Download, ArrowRight, UserCheck
 } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
 import { formatMXN, formatShortDate } from '../data/seedWedding';
@@ -43,6 +43,7 @@ export const BudgetView: React.FC = () => {
     totalCost: '',
     paidAmount: '',
     nextDueDate: '',
+    teamResponsible: '',
     notes: ''
   });
 
@@ -55,6 +56,7 @@ export const BudgetView: React.FC = () => {
     phone: '',
     totalCost: '',
     nextDueDate: '',
+    teamResponsible: '',
     notes: ''
   });
 
@@ -213,11 +215,12 @@ export const BudgetView: React.FC = () => {
       totalCost: Number(vendorForm.totalCost) || 0,
       paidAmount: initialPaid,
       nextDueDate: vendorForm.nextDueDate,
+      teamResponsible: vendorForm.teamResponsible.trim(),
       notes: vendorForm.notes.trim(),
       payments: initialPayments
     };
     updateWedding(prev => ({ ...prev, vendors: [newV, ...prev.vendors] }));
-    setVendorForm({ name: '', category: 'Locación y Banquete', phone: '', totalCost: '', paidAmount: '', nextDueDate: '', notes: '' });
+    setVendorForm({ name: '', category: 'Locación y Banquete', phone: '', totalCost: '', paidAmount: '', nextDueDate: '', teamResponsible: '', notes: '' });
     setShowVendorModal(false);
     setSubTab('proveedores');
   };
@@ -242,6 +245,7 @@ export const BudgetView: React.FC = () => {
       phone: selectedVendor.phone || '',
       totalCost: String(selectedVendor.totalCost || ''),
       nextDueDate: selectedVendor.nextDueDate || '',
+      teamResponsible: selectedVendor.teamResponsible || '',
       notes: selectedVendor.notes || ''
     });
     setIsEditingVendor(true);
@@ -262,6 +266,7 @@ export const BudgetView: React.FC = () => {
               phone: editVendorDraft.phone.trim(),
               totalCost: Number(editVendorDraft.totalCost) || 0,
               nextDueDate: editVendorDraft.nextDueDate,
+              teamResponsible: editVendorDraft.teamResponsible.trim(),
               notes: editVendorDraft.notes.trim()
             }
           : v
@@ -768,6 +773,12 @@ export const BudgetView: React.FC = () => {
                           <h4 className="font-editorial text-xl text-[#2B2826] group-hover:text-[#A86B60] transition-colors">
                             {v.name}
                           </h4>
+                          {v.teamResponsible && (
+                            <div className="inline-flex items-center gap-1.5 mt-1.5 px-2.5 py-0.5 rounded-full bg-[#F7EDEB] text-[#8A4D43] border border-[#ECD9D5] text-[11px] font-medium max-w-full">
+                              <UserCheck className="w-3 h-3 shrink-0" />
+                              <span className="truncate">Responsable: {v.teamResponsible}</span>
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                           {v.phone && (
@@ -1098,6 +1109,16 @@ export const BudgetView: React.FC = () => {
                   </div>
                 </div>
                 <div>
+                  <label className="text-[11px] text-[#7D6F6B] block mb-1">Responsable del equipo (quién habla con el proveedor)</label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Scarlette — confirmar horarios de montaje y accesos"
+                    value={editVendorDraft.teamResponsible}
+                    onChange={e => setEditVendorDraft({ ...editVendorDraft, teamResponsible: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+                  />
+                </div>
+                <div>
                   <label className="text-[11px] text-[#7D6F6B] block mb-1">Notas y qué incluye</label>
                   <textarea
                     rows={3}
@@ -1184,6 +1205,19 @@ export const BudgetView: React.FC = () => {
                     />
                   </div>
                 </div>
+
+                {/* Team Responsible */}
+                {selectedVendor.teamResponsible && (
+                  <div className="flex items-start gap-2.5 text-xs text-[#8A4D43] bg-[#F7EDEB]/70 p-3.5 rounded-2xl border border-[#ECD9D5] leading-relaxed">
+                    <UserCheck className="w-4 h-4 shrink-0 mt-0.5 text-[#C48B81]" />
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider font-semibold text-[#8A4D43] block mb-0.5">
+                        Responsable del equipo
+                      </span>
+                      <span className="text-[#2B2826] font-normal">{selectedVendor.teamResponsible}</span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Notes / Package details */}
                 {selectedVendor.notes && (
@@ -1451,6 +1485,16 @@ export const BudgetView: React.FC = () => {
               value={vendorForm.nextDueDate}
               onChange={e => setVendorForm({ ...vendorForm, nextDueDate: e.target.value })}
               className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-[#7D6F6B] block mb-1">Responsable del equipo (quién habla con el proveedor)</label>
+            <input
+              type="text"
+              placeholder="Ej. Scarlette — confirmar horarios de montaje"
+              value={vendorForm.teamResponsible}
+              onChange={e => setVendorForm({ ...vendorForm, teamResponsible: e.target.value })}
+              className="w-full px-3.5 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
             />
           </div>
           <textarea
