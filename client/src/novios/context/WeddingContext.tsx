@@ -133,6 +133,7 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
           const rawType = String(t.type || '').toLowerCase();
           let shape: TableItem['shape'] = 'Redonda';
           if (rawType.includes('serpent') || rawType.includes('espiral')) shape = 'Serpentina (S)';
+          else if (rawType.includes('cuadr')) shape = 'Cuadrada';
           else if (rawType.includes('imperial') || rawType.includes('novio')) shape = 'Imperial';
           else if (rawType.includes('rect')) shape = 'Rectangular';
           const prevTableMeta = (existingStudio?.tables || []).find(st => String(st.id) === String(t.id));

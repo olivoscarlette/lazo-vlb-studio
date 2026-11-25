@@ -79,7 +79,7 @@ export interface GuestItem {
 export interface TableItem {
   id: string;
   name: string;
-  shape: 'Redonda' | 'Rectangular' | 'Imperial' | 'Serpentina (S)';
+  shape: 'Redonda' | 'Cuadrada' | 'Rectangular' | 'Imperial' | 'Serpentina (S)';
   capacity: number;
   x?: number;
   y?: number;

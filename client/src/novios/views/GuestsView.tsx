@@ -1115,12 +1115,13 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas' }> = ({ in
                 setTableForm({
                   ...tableForm,
                   shape: nextShape,
-                  capacity: nextShape === 'Serpentina (S)' ? '16' : tableForm.capacity
+                  capacity: nextShape === 'Serpentina (S)' ? '16' : nextShape === 'Cuadrada' ? '8' : tableForm.capacity
                 });
               }}
               className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs"
             >
               <option value="Redonda">Redonda</option>
+              <option value="Cuadrada">Cuadrada</option>
               <option value="Rectangular">Rectangular</option>
               <option value="Imperial">Imperial</option>
               <option value="Serpentina (S)">Serpentina (S)</option>

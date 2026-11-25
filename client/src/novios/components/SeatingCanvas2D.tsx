@@ -588,6 +588,110 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       );
     }
 
+    if (table.shape === 'Cuadrada') {
+      const rot = table.rotation || 0;
+      const base = Math.floor(cap / 4);
+      const extra = cap % 4;
+      const topCount = base + (extra >= 1 ? 1 : 0);
+      const bottomCount = base + (extra >= 2 ? 1 : 0);
+      const rightCount = base + (extra >= 3 ? 1 : 0);
+      const leftCount = base;
+      const maxPerSide = Math.max(2, topCount, bottomCount, rightCount, leftCount);
+      const side = Math.max(76, maxPerSide * 28);
+
+      return (
+        <div
+          className="relative flex items-center justify-center transition-transform"
+          style={{ width: side + 38, height: side + 38 }}
+        >
+          <div
+            className="relative flex items-center justify-center"
+            style={{ transform: `rotate(${rot}deg)` }}
+          >
+            {/* Top chairs */}
+            {topCount > 0 && (
+              <div className="absolute -top-4 inset-x-2 flex justify-around">
+                {Array.from({ length: topCount }).map((_, i) => (
+                  <span
+                    key={`sq_t_${i}`}
+                    className={`w-3.5 h-2.5 rounded-full border ${
+                      i < usedSeats ? 'bg-[#577355] border-[#455C44]' : 'bg-white border-[#D8CFC8]'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+            {/* Right chairs */}
+            {rightCount > 0 && (
+              <div className="absolute -right-4 inset-y-2 flex flex-col justify-around">
+                {Array.from({ length: rightCount }).map((_, i) => (
+                  <span
+                    key={`sq_r_${i}`}
+                    className={`w-2.5 h-3.5 rounded-full border ${
+                      topCount + i < usedSeats ? 'bg-[#577355] border-[#455C44]' : 'bg-white border-[#D8CFC8]'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+            {/* Bottom chairs */}
+            {bottomCount > 0 && (
+              <div className="absolute -bottom-4 inset-x-2 flex justify-around">
+                {Array.from({ length: bottomCount }).map((_, i) => (
+                  <span
+                    key={`sq_b_${i}`}
+                    className={`w-3.5 h-2.5 rounded-full border ${
+                      topCount + rightCount + i < usedSeats ? 'bg-[#577355] border-[#455C44]' : 'bg-white border-[#D8CFC8]'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+            {/* Left chairs */}
+            {leftCount > 0 && (
+              <div className="absolute -left-4 inset-y-2 flex flex-col justify-around">
+                {Array.from({ length: leftCount }).map((_, i) => (
+                  <span
+                    key={`sq_l_${i}`}
+                    className={`w-2.5 h-3.5 rounded-full border ${
+                      topCount + rightCount + bottomCount + i < usedSeats
+                        ? 'bg-[#577355] border-[#455C44]'
+                        : 'bg-white border-[#D8CFC8]'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Square tabletop */}
+            <div
+              style={{ width: side, height: side }}
+              className={`rounded-xl flex flex-col items-center justify-center text-center px-2 border transition-all shadow-2xs ${
+                isSelected
+                  ? 'bg-white border-[#C48B81] ring-4 ring-[#C48B81]/20'
+                  : isOver
+                  ? 'bg-rose-50 border-rose-300'
+                  : 'bg-white border-[#E5DDD5] hover:border-[#C48B81]/70'
+              }`}
+            >
+              <span
+                className="text-[10px] font-medium text-[#2B2826] leading-tight truncate max-w-full"
+                style={{ transform: `rotate(${-rot}deg)` }}
+              >
+                {table.name}
+              </span>
+              <span
+                className={`text-[9px] font-semibold ${isOver ? 'text-rose-600' : 'text-[#7D6F6B]'}`}
+                style={{ transform: `rotate(${-rot}deg)` }}
+              >
+                {usedSeats}/{cap}
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // Rectangular or Imperial
     const rot = table.rotation || 0;
     const isVertical = rot % 180 === 90;
@@ -1236,7 +1340,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       Forma de la mesa
                     </span>
                     <div className="grid grid-cols-2 gap-1.5">
-                      {(['Redonda', 'Rectangular', 'Imperial', 'Serpentina (S)'] as TableItem['shape'][]).map(shape => {
+                      {(['Redonda', 'Cuadrada', 'Rectangular', 'Imperial', 'Serpentina (S)'] as TableItem['shape'][]).map(shape => {
                         const active = selectedTable.shape === shape;
                         return (
                           <button
@@ -1244,46 +1348,66 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                             type="button"
                             onClick={() => onUpdateTable(selectedTable.id, { shape })}
                             className={`px-2.5 py-1.5 rounded-xl text-[11px] font-medium border transition cursor-pointer ${
+                              shape === 'Serpentina (S)' ? 'col-span-2' : ''
+                            } ${
                               active
                                 ? 'bg-[#2B2826] text-white border-[#2B2826]'
                                 : 'bg-[#FAF8F5] text-[#5A524C] border-[#EFE8E1] hover:border-[#C48B81]'
                             }`}
                           >
-                            {shape === 'Serpentina (S)' ? 'Serpentina' : shape}
+                            {shape === 'Serpentina (S)' ? 'Serpentina (S)' : shape}
                           </button>
                         );
                       })}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
-                    <span className="text-xs font-medium text-[#5A524C]">Lugares</span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onUpdateTable(selectedTable.id, {
-                            capacity: Math.max(2, (selectedTable.capacity || 10) - 1)
-                          })
-                        }
-                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="text-xs font-semibold text-[#2B2826] w-8 text-center">
-                        {selectedTable.capacity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          onUpdateTable(selectedTable.id, {
-                            capacity: Math.min(30, (selectedTable.capacity || 10) + 1)
-                          })
-                        }
-                        className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
+                  <div className="bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1] space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-[#5A524C]">Lugares</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateTable(selectedTable.id, {
+                              capacity: Math.max(2, (selectedTable.capacity || 10) - 1)
+                            })
+                          }
+                          className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-xs font-semibold text-[#2B2826] w-8 text-center">
+                          {selectedTable.capacity}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateTable(selectedTable.id, {
+                              capacity: Math.min(30, (selectedTable.capacity || 10) + 1)
+                            })
+                          }
+                          className="w-7 h-7 rounded-full bg-white border border-[#EFE8E1] hover:border-[#C48B81] flex items-center justify-center text-[#5A524C] cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {[8, 10, 12].map(preset => (
+                        <button
+                          key={preset}
+                          type="button"
+                          onClick={() => onUpdateTable(selectedTable.id, { capacity: preset })}
+                          className={`flex-1 py-1 rounded-lg text-[10px] font-medium border transition cursor-pointer ${
+                            selectedTable.capacity === preset
+                              ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                              : 'bg-white text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
+                          }`}
+                        >
+                          {preset} pers.
+                        </button>
+                      ))}
                     </div>
                   </div>
 
