@@ -1,12 +1,12 @@
 import React, { useRef, useState } from 'react';
 import {
   Plus, MessageSquare, Trash2, Search, Users, Armchair, Map as MapIcon, LayoutList, Download, Lock,
-  SlidersHorizontal, FileSpreadsheet, Upload, FileText, ChevronDown
+  SlidersHorizontal, FileSpreadsheet, Upload, FileText, ChevronDown, Layers, Check
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useWedding } from '../context/WeddingContext';
 import { useAuth } from '../../context/AuthContext';
-import { FloorElement, GuestItem, GuestStatus, TableItem } from '../types/lazo';
+import { FloorElement, GuestItem, GuestStatus, LayoutSnapshot, TableItem } from '../types/lazo';
 import { Modal } from '../components/Modal';
 import { SeatingCanvas2D } from '../components/SeatingCanvas2D';
 import { exportFloorPlanPdf, exportGuestsPdf } from '../utils/pdfExport';
@@ -27,6 +27,9 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
   const [statusFilter, setStatusFilter] = useState<'TODOS' | GuestStatus>('TODOS');
   const [search, setSearch] = useState('');
   const [showToolsMenu, setShowToolsMenu] = useState(false);
+  const [showVersionsMenu, setShowVersionsMenu] = useState(false);
+  const [newVersionName, setNewVersionName] = useState('');
+  const [activeVersionName, setActiveVersionName] = useState<string | null>(null);
   const [importFeedback, setImportFeedback] = useState<string | null>(null);
   const excelInputRef = useRef<HTMLInputElement>(null);
 
@@ -393,6 +396,85 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
     );
   };
 
+  // Saved Layout Versions (e.g. "Boda Civil v1", "Boda Civil v2", "Plan Lluvia")
+  const currentEventKey: 'principal' | 'civil' = isCivilLayout ? 'civil' : 'principal';
+  const eventSnapshots = (wedding.layoutSnapshots ?? []).filter(s => s.eventType === currentEventKey);
+
+  const handleSaveSnapshot = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const defaultLabel = `${isCivilLayout ? 'Boda Civil' : 'Boda Principal'} v${eventSnapshots.length + 1}`;
+    const name = newVersionName.trim() || defaultLabel;
+    const guestTableMap: Record<string, string> = {};
+    for (const g of activeLayoutGuests) {
+      if (g.tableId) guestTableMap[g.id] = g.tableId;
+    }
+    const snap: LayoutSnapshot = {
+      id: `snap_${Date.now()}`,
+      name,
+      eventType: currentEventKey,
+      createdAt: new Date().toISOString(),
+      tables: JSON.parse(JSON.stringify(activeTables)),
+      floorElements: JSON.parse(JSON.stringify(activeFloorElements)),
+      floorPlanUrl: activeFloorPlanUrl,
+      floorPlanUrl2: activeFloorPlanUrl2,
+      dualLayout: profile.floorPlanDualLayout || 'side-by-side',
+      guestTableMap
+    };
+    updateWedding(prev => ({
+      ...prev,
+      layoutSnapshots: [snap, ...(prev.layoutSnapshots ?? [])]
+    }));
+    setActiveVersionName(name);
+    setNewVersionName('');
+  };
+
+  const handleLoadSnapshot = (snap: LayoutSnapshot) => {
+    const validTableIds = new Set(snap.tables.map(t => t.id));
+    const map = snap.guestTableMap || {};
+    updateWedding(prev => ({
+      ...prev,
+      profile: isCivilLayout
+        ? {
+            ...prev.profile,
+            civilFloorPlanUrl: snap.floorPlanUrl ?? prev.profile.civilFloorPlanUrl,
+            civilFloorPlanUrl2: snap.floorPlanUrl2 ?? prev.profile.civilFloorPlanUrl2,
+            floorPlanDualLayout: snap.dualLayout || prev.profile.floorPlanDualLayout
+          }
+        : {
+            ...prev.profile,
+            floorPlanUrl: snap.floorPlanUrl ?? prev.profile.floorPlanUrl,
+            floorPlanUrl2: snap.floorPlanUrl2 ?? prev.profile.floorPlanUrl2,
+            floorPlanDualLayout: snap.dualLayout || prev.profile.floorPlanDualLayout
+          },
+      ...(isCivilLayout
+        ? {
+            civilTables: JSON.parse(JSON.stringify(snap.tables)),
+            civilFloorElements: JSON.parse(JSON.stringify(snap.floorElements))
+          }
+        : {
+            tables: JSON.parse(JSON.stringify(snap.tables)),
+            floorElements: JSON.parse(JSON.stringify(snap.floorElements))
+          }),
+      guests: prev.guests.map(g => {
+        const assigned = map[g.id];
+        const safeAssigned = assigned && validTableIds.has(assigned) ? assigned : undefined;
+        if (isCivilLayout) {
+          return g.isInvitedCivil ? { ...g, civilTableId: safeAssigned } : g;
+        }
+        return g.isInvitedPrincipal !== false ? { ...g, tableId: safeAssigned } : g;
+      })
+    }));
+    setActiveVersionName(snap.name);
+    setShowVersionsMenu(false);
+  };
+
+  const handleDeleteSnapshot = (snapId: string) => {
+    updateWedding(prev => ({
+      ...prev,
+      layoutSnapshots: (prev.layoutSnapshots ?? []).filter(s => s.id !== snapId)
+    }));
+  };
+
   const buildWhatsAppLink = (g: GuestItem) => {
     let clean = g.phone.replace(/\D/g, '');
     if (clean.length === 10) clean = `52${clean}`;
@@ -618,6 +700,102 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                   </button>
                 </div>
               )}
+              {/* Versiones del plano (v1, v2, Plan Lluvia...) */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowVersionsMenu(v => !v)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
+                  title="Guarda y alterna entre varias versiones de este plano"
+                >
+                  <Layers className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>
+                    {activeVersionName ? activeVersionName : 'Versiones'}
+                    {eventSnapshots.length > 0 ? ` (${eventSnapshots.length})` : ''}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-[#7D6F6B] transition-transform ${showVersionsMenu ? 'rotate-180' : ''}`} />
+                </button>
+
+                {showVersionsMenu && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setShowVersionsMenu(false)} />
+                    <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] bg-white rounded-3xl shadow-xl border border-[#EFE8E1] p-3 z-40 space-y-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#7D6F6B]">
+                          Versiones · {isCivilLayout ? 'Boda Civil' : 'Boda Principal'}
+                        </p>
+                        <p className="text-[11px] text-[#7D6F6B] font-light mt-0.5">
+                          Guarda tu acomodo actual para probar otra opción sin perderlo.
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleSaveSnapshot} className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={newVersionName}
+                          onChange={e => setNewVersionName(e.target.value)}
+                          placeholder={`Ej. ${isCivilLayout ? 'Boda Civil' : 'Boda Principal'} v${eventSnapshots.length + 1}`}
+                          className="flex-1 min-w-0 px-3 py-1.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs focus:outline-none focus:border-[#C48B81]"
+                        />
+                        <button
+                          type="submit"
+                          className="px-3 py-1.5 rounded-xl bg-[#2B2826] hover:bg-[#181514] text-white text-xs font-medium shrink-0 cursor-pointer"
+                        >
+                          Guardar
+                        </button>
+                      </form>
+
+                      {eventSnapshots.length === 0 ? (
+                        <p className="text-[11px] text-[#7D6F6B] font-light text-center py-3 bg-[#FAF8F5] rounded-2xl">
+                          Aún no hay versiones guardadas para este evento.
+                        </p>
+                      ) : (
+                        <div className="max-h-56 overflow-y-auto space-y-1.5">
+                          {eventSnapshots.map(snap => {
+                            const isCurrent = activeVersionName === snap.name;
+                            return (
+                              <div
+                                key={snap.id}
+                                className={`flex items-center justify-between gap-2 px-3 py-2 rounded-2xl border transition ${
+                                  isCurrent ? 'bg-[#F7EDEB]/60 border-[#E5CFCB]' : 'bg-[#FAF8F5] border-[#EFE8E1]'
+                                }`}
+                              >
+                                <div className="min-w-0">
+                                  <div className="text-xs font-semibold text-[#2B2826] truncate flex items-center gap-1">
+                                    {isCurrent && <Check className="w-3 h-3 text-[#C48B81] shrink-0" />}
+                                    <span className="truncate">{snap.name}</span>
+                                  </div>
+                                  <div className="text-[10px] text-[#7D6F6B] font-light">
+                                    {snap.tables.length} {snap.tables.length === 1 ? 'mesa' : 'mesas'} · {new Date(snap.createdAt).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleLoadSnapshot(snap)}
+                                    className="px-2.5 py-1 rounded-full bg-white hover:bg-[#2B2826] hover:text-white text-[#2B2826] border border-[#EFE8E1] text-[10px] font-medium transition cursor-pointer"
+                                  >
+                                    Abrir
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteSnapshot(snap.id)}
+                                    className="p-1 text-[#7D6F6B]/60 hover:text-rose-600 cursor-pointer"
+                                    title="Eliminar versión"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+
               {canUseLayout2D && (
                 <button
                   type="button"
@@ -1000,7 +1178,10 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setLayoutEvent('principal')}
+                  onClick={() => {
+                    setLayoutEvent('principal');
+                    setActiveVersionName(null);
+                  }}
                   className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer border ${
                     !isCivilLayout
                       ? 'bg-[#2B2826] text-white border-[#2B2826]'
@@ -1019,7 +1200,10 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                 </button>
                 <button
                   type="button"
-                  onClick={() => setLayoutEvent('civil')}
+                  onClick={() => {
+                    setLayoutEvent('civil');
+                    setActiveVersionName(null);
+                  }}
                   className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition cursor-pointer border ${
                     isCivilLayout
                       ? 'bg-[#2B2826] text-white border-[#2B2826]'

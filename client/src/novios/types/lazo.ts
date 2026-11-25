@@ -212,6 +212,19 @@ export interface HandoverItem {
   returnNotes?: string;
 }
 
+export interface LayoutSnapshot {
+  id: string;
+  name: string;
+  eventType: 'principal' | 'civil';
+  createdAt: string;
+  tables: TableItem[];
+  floorElements: FloorElement[];
+  floorPlanUrl?: string;
+  floorPlanUrl2?: string;
+  dualLayout?: 'side-by-side' | 'stacked';
+  guestTableMap?: Record<string, string>;
+}
+
 export interface WeddingState {
   onboarded: boolean;
   profile: WeddingProfile;
@@ -223,6 +236,7 @@ export interface WeddingState {
   floorElements?: FloorElement[];
   civilTables?: TableItem[];
   civilFloorElements?: FloorElement[];
+  layoutSnapshots?: LayoutSnapshot[];
   checklist: ChecklistItem[];
   timeline: TimelineItem[];
   ceremonies: CeremonyDetails;

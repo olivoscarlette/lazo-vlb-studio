@@ -394,6 +394,7 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
     floorElements,
     civilTables: Array.isArray(existingStudio?.civilTables) ? existingStudio.civilTables : [],
     civilFloorElements: Array.isArray(existingStudio?.civilFloorElements) ? existingStudio.civilFloorElements : [],
+    layoutSnapshots: Array.isArray(existingStudio?.layoutSnapshots) ? existingStudio.layoutSnapshots : [],
     vendors,
     checklist,
     timeline,
