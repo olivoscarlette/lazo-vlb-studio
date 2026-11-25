@@ -28,6 +28,10 @@ interface SeatingCanvas2DProps {
   onFloorPlan2Change?: (nextUrl: string) => void;
   dualLayout?: 'side-by-side' | 'stacked';
   onDualLayoutChange?: (mode: 'side-by-side' | 'stacked') => void;
+  floorPlanOpacity?: number;
+  onFloorPlanOpacityChange?: (val: number) => void;
+  floorPlanVisible?: boolean;
+  onFloorPlanVisibleChange?: (val: boolean) => void;
   tables: TableItem[];
   guests: GuestItem[];
   floorElements: FloorElement[];
@@ -66,6 +70,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   onFloorPlan2Change,
   dualLayout = 'side-by-side',
   onDualLayoutChange,
+  floorPlanOpacity: controlledOpacity,
+  onFloorPlanOpacityChange,
+  floorPlanVisible: controlledVisible,
+  onFloorPlanVisibleChange,
   tables,
   guests,
   floorElements,
@@ -93,8 +101,19 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const floorPlanInput2Ref = useRef<HTMLInputElement>(null);
   const [zoom, setZoom] = useState(0.8);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [floorPlanOpacity, setFloorPlanOpacity] = useState(0.55);
-  const [floorPlanVisible, setFloorPlanVisible] = useState(true);
+  const [localFloorPlanOpacity, setLocalFloorPlanOpacity] = useState(0.55);
+  const [localFloorPlanVisible, setLocalFloorPlanVisible] = useState(true);
+  const floorPlanOpacity = controlledOpacity ?? localFloorPlanOpacity;
+  const setFloorPlanOpacity = (next: number) => {
+    setLocalFloorPlanOpacity(next);
+    onFloorPlanOpacityChange?.(next);
+  };
+  const floorPlanVisible = controlledVisible ?? localFloorPlanVisible;
+  const setFloorPlanVisible = (next: boolean | ((prev: boolean) => boolean)) => {
+    const resolved = typeof next === 'function' ? next(floorPlanVisible) : next;
+    setLocalFloorPlanVisible(resolved);
+    onFloorPlanVisibleChange?.(resolved);
+  };
   const [uploadingFloorPlan, setUploadingFloorPlan] = useState(false);
   const [floorPlanError, setFloorPlanError] = useState<string | null>(null);
   const [panning, setPanning] = useState<{

@@ -277,7 +277,7 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
   </div>
   <script>
     window.addEventListener('load', () => {
-      setTimeout(() => { window.print(); }, 350);
+      setTimeout(() => { window.print(); }, 550);
     });
   </script>
 </body>
@@ -373,45 +373,102 @@ export function exportGuestsPdf(profile: WeddingProfile, guests: GuestItem[], ta
   );
 }
 
-function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElements: FloorElement[]): string {
+interface FloorPlanBgOptions {
+  floorPlanUrl?: string;
+  floorPlanUrl2?: string;
+  dualLayout?: 'side-by-side' | 'stacked';
+  floorPlanOpacity?: number;
+  floorPlanVisible?: boolean;
+}
+
+function toAbsoluteUrl(url?: string): string {
+  if (!url) return '';
+  if (/^(https?:|data:|blob:)/i.test(url)) return url;
+  if (typeof window !== 'undefined' && window.location?.origin) {
+    return `${window.location.origin}${url.startsWith('/') ? url : `/${url}`}`;
+  }
+  return url;
+}
+
+function buildFloorPlanSvg(
+  tables: TableItem[],
+  guests: GuestItem[],
+  floorElements: FloorElement[],
+  bg?: FloorPlanBgOptions
+): string {
   const CANVAS_W = 1400;
   const CANVAS_H = 1000;
 
-  // Compute smart bounding box around all tables & elements so the print fits cleanly with zero clipping
-  let minX = CANVAS_W;
-  let minY = CANVAS_H;
-  let maxX = 0;
-  let maxY = 0;
+  const showBg = bg?.floorPlanVisible !== false && Boolean(bg?.floorPlanUrl || bg?.floorPlanUrl2);
+  const bgOpacity = typeof bg?.floorPlanOpacity === 'number' ? bg.floorPlanOpacity : 0.55;
+  const bgUrl1 = showBg ? toAbsoluteUrl(bg?.floorPlanUrl) : '';
+  const bgUrl2 = showBg ? toAbsoluteUrl(bg?.floorPlanUrl2) : '';
+  const dualLayout = bg?.dualLayout || 'side-by-side';
 
-  const includeBounds = (cx: number, cy: number, halfW: number, halfH: number) => {
-    minX = Math.min(minX, cx - halfW);
-    minY = Math.min(minY, cy - halfH);
-    maxX = Math.max(maxX, cx + halfW);
-    maxY = Math.max(maxY, cy + halfH);
-  };
+  // When a venue background PDF/image is visible, keep the full 1400x1000 canvas so every table/element aligns 1:1 with the PDF
+  let vbX = 0;
+  let vbY = 0;
+  let vbW = CANVAS_W;
+  let vbH = CANVAS_H;
 
-  floorElements.forEach(el => {
-    const diag = Math.hypot(el.width, el.height) / 2;
-    const isRotated = (el.rotation || 0) % 180 !== 0;
-    includeBounds(el.x, el.y, isRotated ? diag : el.width / 2, isRotated ? diag : el.height / 2);
-  });
+  if (!showBg) {
+    let minX = CANVAS_W;
+    let minY = CANVAS_H;
+    let maxX = 0;
+    let maxY = 0;
 
-  tables.forEach((table, idx) => {
-    const x = Math.max(70, Math.min(CANVAS_W - 70, typeof table.x === 'number' ? table.x : 140 + (idx % 5) * 210));
-    const y = Math.max(70, Math.min(CANVAS_H - 70, typeof table.y === 'number' ? table.y : 120 + (Math.floor(idx / 5) % 5) * 165));
-    const sc = typeof table.scale === 'number' ? table.scale : 1;
-    const pad = (table.shape === 'Serpentina (S)' ? 145 : 95) * sc;
-    includeBounds(x, y, pad, pad);
-  });
+    const includeBounds = (cx: number, cy: number, halfW: number, halfH: number) => {
+      minX = Math.min(minX, cx - halfW);
+      minY = Math.min(minY, cy - halfH);
+      maxX = Math.max(maxX, cx + halfW);
+      maxY = Math.max(maxY, cy + halfH);
+    };
 
-  const pad = 48;
-  const hasItems = floorElements.length > 0 || tables.length > 0;
-  const vbX = hasItems ? Math.max(0, Math.floor(minX - pad)) : 0;
-  const vbY = hasItems ? Math.max(0, Math.floor(minY - pad)) : 0;
-  const vbMaxX = hasItems ? Math.min(CANVAS_W, Math.ceil(maxX + pad)) : CANVAS_W;
-  const vbMaxY = hasItems ? Math.min(CANVAS_H, Math.ceil(maxY + pad)) : CANVAS_H;
-  const vbW = Math.max(360, vbMaxX - vbX);
-  const vbH = Math.max(260, vbMaxY - vbY);
+    floorElements.forEach(el => {
+      const diag = Math.hypot(el.width, el.height) / 2;
+      const isRotated = (el.rotation || 0) % 180 !== 0;
+      includeBounds(el.x, el.y, isRotated ? diag : el.width / 2, isRotated ? diag : el.height / 2);
+    });
+
+    tables.forEach((table, idx) => {
+      const x = Math.max(70, Math.min(CANVAS_W - 70, typeof table.x === 'number' ? table.x : 140 + (idx % 5) * 210));
+      const y = Math.max(70, Math.min(CANVAS_H - 70, typeof table.y === 'number' ? table.y : 120 + (Math.floor(idx / 5) % 5) * 165));
+      const sc = typeof table.scale === 'number' ? table.scale : 1;
+      const pad = (table.shape === 'Serpentina (S)' ? 145 : 95) * sc;
+      includeBounds(x, y, pad, pad);
+    });
+
+    const pad = 48;
+    const hasItems = floorElements.length > 0 || tables.length > 0;
+    vbX = hasItems ? Math.max(0, Math.floor(minX - pad)) : 0;
+    vbY = hasItems ? Math.max(0, Math.floor(minY - pad)) : 0;
+    const vbMaxX = hasItems ? Math.min(CANVAS_W, Math.ceil(maxX + pad)) : CANVAS_W;
+    const vbMaxY = hasItems ? Math.min(CANVAS_H, Math.ceil(maxY + pad)) : CANVAS_H;
+    vbW = Math.max(360, vbMaxX - vbX);
+    vbH = Math.max(260, vbMaxY - vbY);
+  }
+
+  let bgSvg = '';
+  if (bgUrl1 && bgUrl2) {
+    if (dualLayout === 'stacked') {
+      bgSvg = `
+        <g opacity="${bgOpacity}">
+          <image href="${escapeHtml(bgUrl1)}" x="8" y="8" width="${CANVAS_W - 16}" height="${CANVAS_H / 2 - 16}" preserveAspectRatio="xMidYMid meet" />
+          <line x1="0" y1="${CANVAS_H / 2}" x2="${CANVAS_W}" y2="${CANVAS_H / 2}" stroke="#D8CFC8" stroke-width="1.5" stroke-dasharray="6 5" />
+          <image href="${escapeHtml(bgUrl2)}" x="8" y="${CANVAS_H / 2 + 8}" width="${CANVAS_W - 16}" height="${CANVAS_H / 2 - 16}" preserveAspectRatio="xMidYMid meet" />
+        </g>`;
+    } else {
+      bgSvg = `
+        <g opacity="${bgOpacity}">
+          <image href="${escapeHtml(bgUrl1)}" x="8" y="8" width="${CANVAS_W / 2 - 16}" height="${CANVAS_H - 16}" preserveAspectRatio="xMidYMid meet" />
+          <line x1="${CANVAS_W / 2}" y1="0" x2="${CANVAS_W / 2}" y2="${CANVAS_H}" stroke="#D8CFC8" stroke-width="1.5" stroke-dasharray="6 5" />
+          <image href="${escapeHtml(bgUrl2)}" x="${CANVAS_W / 2 + 8}" y="8" width="${CANVAS_W / 2 - 16}" height="${CANVAS_H - 16}" preserveAspectRatio="xMidYMid meet" />
+        </g>`;
+    }
+  } else if (bgUrl1 || bgUrl2) {
+    const singleUrl = bgUrl1 || bgUrl2;
+    bgSvg = `<image href="${escapeHtml(singleUrl)}" x="0" y="0" width="${CANVAS_W}" height="${CANVAS_H}" opacity="${bgOpacity}" preserveAspectRatio="xMidYMid meet" />`;
+  }
 
   const elementsSvg = floorElements
     .map(el => {
@@ -872,6 +929,7 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
       </defs>
       <rect x="${vbX}" y="${vbY}" width="${vbW}" height="${vbH}" rx="16" fill="#FCFBF9" />
       <rect x="${vbX}" y="${vbY}" width="${vbW}" height="${vbH}" rx="16" fill="url(#dotGrid)" />
+      ${bgSvg}
       ${elementsSvg}
       ${tablesSvg}
     </svg>`;
@@ -882,9 +940,23 @@ export function exportFloorPlanPdf(
   tables: TableItem[],
   guests: GuestItem[],
   floorElements: FloorElement[],
-  options?: { eventLabel?: string; eventDate?: string }
+  options?: {
+    eventLabel?: string;
+    eventDate?: string;
+    floorPlanUrl?: string;
+    floorPlanUrl2?: string;
+    dualLayout?: 'side-by-side' | 'stacked';
+    floorPlanOpacity?: number;
+    floorPlanVisible?: boolean;
+  }
 ) {
-  const svg = buildFloorPlanSvg(tables, guests, floorElements);
+  const svg = buildFloorPlanSvg(tables, guests, floorElements, {
+    floorPlanUrl: options?.floorPlanUrl ?? profile.floorPlanUrl,
+    floorPlanUrl2: options?.floorPlanUrl2 ?? profile.floorPlanUrl2,
+    dualLayout: options?.dualLayout ?? profile.floorPlanDualLayout,
+    floorPlanOpacity: options?.floorPlanOpacity,
+    floorPlanVisible: options?.floorPlanVisible
+  });
   const printProfile: WeddingProfile = options?.eventDate
     ? { ...profile, weddingDate: options.eventDate }
     : profile;

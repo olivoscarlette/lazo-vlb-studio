@@ -24,6 +24,8 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
   const subTab = mesasOnly ? 'mesas' : subTabState;
   const [layoutEvent, setLayoutEvent] = useState<'principal' | 'civil'>('principal');
   const [tablesView, setTablesView] = useState<'plano' | 'tarjetas'>(canUseLayout2D ? 'plano' : 'tarjetas');
+  const [floorPlanOpacity, setFloorPlanOpacity] = useState(0.55);
+  const [floorPlanVisible, setFloorPlanVisible] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'TODOS' | GuestStatus>('TODOS');
   const [search, setSearch] = useState('');
   const [showToolsMenu, setShowToolsMenu] = useState(false);
@@ -935,12 +937,15 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                       activeTables,
                       activeLayoutGuests,
                       activeFloorElements,
-                      hasCivilLayout
-                        ? {
-                            eventLabel: isCivilLayout ? 'Boda Civil' : 'Boda Principal',
-                            eventDate: isCivilLayout ? wedding.ceremonies.civilDate : profile.weddingDate
-                          }
-                        : undefined
+                      {
+                        eventLabel: hasCivilLayout ? (isCivilLayout ? 'Boda Civil' : 'Boda Principal') : undefined,
+                        eventDate: hasCivilLayout ? (isCivilLayout ? wedding.ceremonies.civilDate : profile.weddingDate) : undefined,
+                        floorPlanUrl: activeFloorPlanUrl,
+                        floorPlanUrl2: activeFloorPlanUrl2,
+                        dualLayout: profile.floorPlanDualLayout || 'side-by-side',
+                        floorPlanOpacity,
+                        floorPlanVisible
+                      }
                     )
                   }
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
@@ -1440,6 +1445,10 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                   profile: { ...prev.profile, floorPlanDualLayout: mode }
                 }))
               }
+              floorPlanOpacity={floorPlanOpacity}
+              onFloorPlanOpacityChange={setFloorPlanOpacity}
+              floorPlanVisible={floorPlanVisible}
+              onFloorPlanVisibleChange={setFloorPlanVisible}
               tables={activeTables}
               guests={activeLayoutGuests}
               floorElements={activeFloorElements}
