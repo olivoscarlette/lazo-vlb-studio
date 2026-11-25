@@ -617,6 +617,22 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           </g>`;
       }
 
+      if (el.shape === 'note') {
+        const lines = (el.label || 'Nota').split('\n').filter((_, i) => i < 12);
+        const startY = -el.height / 2 + 16;
+        const tspans = lines
+          .map(
+            (line, idx) =>
+              `<tspan x="${(-el.width / 2 + 10).toFixed(1)}" dy="${idx === 0 ? 0 : 13}">${escapeHtml(line)}</tspan>`
+          )
+          .join('');
+        return `
+          <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
+            <rect x="${-el.width / 2}" y="${-el.height / 2}" width="${el.width}" height="${el.height}" rx="10" fill="#FFFDF4" stroke="#E5D9B6" stroke-width="1.2" />
+            <text y="${startY.toFixed(1)}" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#4A4238">${tspans}</text>
+          </g>`;
+      }
+
       const shapeMarkup = isCircle
         ? `<circle cx="0" cy="0" r="${el.width / 2}" fill="${fill}" stroke="${stroke}" stroke-width="1.2" />`
         : `<rect x="${-el.width / 2}" y="${-el.height / 2}" width="${el.width}" height="${el.height}" rx="14" fill="${fill}" stroke="${stroke}" stroke-width="1.2" ${dash} />`;

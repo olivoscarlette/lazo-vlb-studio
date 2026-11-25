@@ -461,6 +461,24 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
     );
   };
 
+  const handleUpdateFloorElement = (id: string, patch: Partial<FloorElement>) => {
+    updateWedding(prev =>
+      isCivilLayout
+        ? {
+            ...prev,
+            civilFloorElements: (prev.civilFloorElements ?? []).map(el =>
+              el.id === id ? { ...el, ...patch } : el
+            )
+          }
+        : {
+            ...prev,
+            floorElements: (prev.floorElements ?? defaultFloorElements).map(el =>
+              el.id === id ? { ...el, ...patch } : el
+            )
+          }
+    );
+  };
+
   const handleDeleteFloorElement = (id: string) => {
     updateWedding(prev =>
       isCivilLayout
@@ -1435,6 +1453,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
               onMoveElement={handleMoveFloorElement}
               onResizeElement={handleResizeFloorElement}
               onRotateElement={handleRotateFloorElement}
+              onUpdateElement={handleUpdateFloorElement}
               onDuplicateElement={handleDuplicateFloorElement}
               onDeleteElement={handleDeleteFloorElement}
               onBatchMove={handleBatchMove}

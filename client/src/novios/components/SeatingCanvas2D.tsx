@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import {
   RotateCw, Trash2, ZoomIn, ZoomOut, Plus, Minus, Music, Wine, Sparkles, DoorOpen, Users, Shapes,
   MoveDiagonal2, MoveHorizontal, MoveVertical, Upload, Eye, EyeOff, Maximize2, Minimize2, FileImage, Crosshair, Lock, Copy, Armchair,
-  MousePointer2, Hand, ClipboardPaste
+  MousePointer2, Hand, ClipboardPaste, StickyNote
 } from 'lucide-react';
 import { FloorElement, GuestItem, TableItem } from '../types/lazo';
 import { Modal } from './Modal';
@@ -41,6 +41,7 @@ interface SeatingCanvas2DProps {
   onMoveElement: (id: string, x: number, y: number) => void;
   onResizeElement: (id: string, width: number, height: number) => void;
   onRotateElement: (id: string, rotation: number) => void;
+  onUpdateElement?: (id: string, patch: Partial<FloorElement>) => void;
   onDuplicateElement?: (el: FloorElement) => void;
   onDeleteElement: (id: string) => void;
   onBatchMove?: (moves: {
@@ -78,6 +79,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   onMoveElement,
   onResizeElement,
   onRotateElement,
+  onUpdateElement,
   onDuplicateElement,
   onDeleteElement,
   onBatchMove,
@@ -1362,6 +1364,26 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           <button
             type="button"
             onClick={() => {
+              const c = getViewportCenter();
+              onAddElement('otro', {
+                label: 'Nueva nota...\nEscribe aquí los detalles',
+                width: 180,
+                height: 84,
+                shape: 'note',
+                tone: 'neutral',
+                x: c.x,
+                y: c.y
+              });
+            }}
+            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-[#FFFDF4] hover:bg-[#FAF3DC] text-[#6B5B35] border border-[#E5D9B6] text-[11px] font-medium transition cursor-pointer"
+            title="Agregar una nota de texto sobre el plano"
+          >
+            <StickyNote className="w-3 h-3 text-[#B59246]" />
+            <span>+ Nota</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
               setPendingSpawnPos(getViewportCenter());
               setShowOtherModal(true);
             }}
@@ -1718,9 +1740,12 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     el.shape === 'cocktail' ||
                     el.shape === 'door' ||
                     el.shape === 'double-door';
-                  const shapeClass = el.shape === 'circle' ? 'rounded-full' : 'rounded-2xl';
+                  const isNote = el.shape === 'note';
+                  const shapeClass = el.shape === 'circle' ? 'rounded-full' : isNote ? 'rounded-xl' : 'rounded-2xl';
                   const toneClass =
-                    el.type === 'pista'
+                    isNote
+                      ? 'bg-[#FFFDF4]/95 border-[#E5D9B6] text-[#4A4238] shadow-xs'
+                      : el.type === 'pista'
                       ? 'bg-[#F5EFEA]/80 border-dashed border-[#D2C2B6] text-[#7D6F6B]'
                       : el.type === 'dj'
                       ? 'bg-[#2B2826]/90 border-[#2B2826] text-white'
@@ -1949,6 +1974,13 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         </svg>
                       )}
 
+                      {isNote ? (
+                        <div className="w-full h-full p-2.5 text-left overflow-hidden pointer-events-none flex flex-col justify-start">
+                          <span className="text-[11px] font-medium text-[#4A4238] leading-snug whitespace-pre-wrap break-words">
+                            {el.label}
+                          </span>
+                        </div>
+                      ) : (
                       <span
                         className={`text-[10px] uppercase tracking-[0.14em] font-semibold pointer-events-none leading-tight ${
                           el.shape === 'chair' || el.shape === 'armchair' || el.shape === 'cocktail' || el.shape === 'door' || el.shape === 'double-door'
@@ -1960,6 +1992,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       >
                         {el.label}
                       </span>
+                      )}
 
                       {/* Top-center Rotate Handle (compact & pushed outside on small elements) */}
                       {isSel && !isMultiSel && el.shape !== 'circle' && (
@@ -2164,10 +2197,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#FAF8F5]">
                 <div>
                   <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#C48B81]">
-                    Elemento del plano
+                    {selectedElement.shape === 'note' ? 'Nota en el plano' : 'Elemento del plano'}
                   </span>
                   <h4 className="font-editorial text-xl text-[#2B2826] leading-tight">
-                    {selectedElement.label}
+                    {selectedElement.shape === 'note' ? 'Nota de texto' : selectedElement.label}
                   </h4>
                   <span className="text-[11px] text-[#7D6F6B] font-light">
                     Arrastra las flechitas del elemento o ajusta aquí
@@ -2185,6 +2218,31 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
+
+              {/* Editable Text / Note Content */}
+              {onUpdateElement && (
+                <div>
+                  <label className="text-[10px] uppercase tracking-[0.14em] font-semibold text-[#7D6F6B] block mb-1">
+                    {selectedElement.shape === 'note' ? 'Texto de la nota' : 'Nombre / Etiqueta'}
+                  </label>
+                  {selectedElement.shape === 'note' ? (
+                    <textarea
+                      rows={4}
+                      value={selectedElement.label}
+                      onChange={e => onUpdateElement(selectedElement.id, { label: e.target.value })}
+                      placeholder="Escribe indicaciones de montaje, mantelería, sillas, horarios..."
+                      className="w-full px-3 py-2 rounded-2xl bg-[#FFFDF4] border border-[#E5D9B6] text-xs text-[#2B2826] focus:outline-none focus:border-[#C48B81] leading-relaxed"
+                    />
+                  ) : (
+                    <input
+                      type="text"
+                      value={selectedElement.label}
+                      onChange={e => onUpdateElement(selectedElement.id, { label: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-xs text-[#2B2826] focus:outline-none focus:border-[#C48B81]"
+                    />
+                  )}
+                </div>
+              )}
 
               {selectedElement.shape === 'circle' ? (
                 <div className="flex items-center justify-between bg-[#FAF8F5] px-3.5 py-2.5 rounded-2xl border border-[#EFE8E1]">
@@ -2799,6 +2857,25 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
               >
                 <Plus className="w-3.5 h-3.5 text-[#C48B81]" />
                 <span>Nueva Mesa</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onAddElement('otro', {
+                    label: 'Nueva nota...\nEscribe aquí los detalles',
+                    width: 180,
+                    height: 84,
+                    shape: 'note',
+                    tone: 'neutral',
+                    x: contextMenu.canvasX,
+                    y: contextMenu.canvasY
+                  });
+                  setContextMenu(null);
+                }}
+                className="w-full px-3 py-2 text-left hover:bg-[#FAF8F5] flex items-center gap-2 cursor-pointer"
+              >
+                <StickyNote className="w-3.5 h-3.5 text-[#B59246]" />
+                <span>Nota de texto aquí</span>
               </button>
               <button
                 type="button"
