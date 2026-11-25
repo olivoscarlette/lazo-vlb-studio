@@ -288,7 +288,11 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
   win.document.close();
 }
 
-export function exportTimelinePdf(profile: WeddingProfile, timeline: TimelineItem[]) {
+export function exportTimelinePdf(
+  profile: WeddingProfile,
+  timeline: TimelineItem[],
+  options?: { eventLabel?: string; eventDate?: string; eventVenue?: string }
+) {
   const sorted = [...timeline].sort((a, b) => a.time.localeCompare(b.time));
   const rows = sorted.length
     ? sorted
@@ -306,12 +310,17 @@ export function exportTimelinePdf(profile: WeddingProfile, timeline: TimelineIte
         .join('')
     : '<p style="font-size:12px;color:#7D6F6B;font-style:italic">Sin momentos registrados aún.</p>';
 
-  openPrintablePdf(
-    'Itinerario del Gran Día',
-    'Minuto a minuto oficial para proveedores, familia y cortejo',
-    profile,
-    rows
-  );
+  const printProfile: WeddingProfile = {
+    ...profile,
+    weddingDate: options?.eventDate || profile.weddingDate,
+    city: options?.eventVenue || profile.city
+  };
+  const title = options?.eventLabel ? `Itinerario · ${options.eventLabel}` : 'Itinerario del Gran Día';
+  const subtitle = options?.eventLabel
+    ? `Minuto a minuto oficial de ${options.eventLabel} para proveedores, familia y cortejo`
+    : 'Minuto a minuto oficial para proveedores, familia y cortejo';
+
+  openPrintablePdf(title, subtitle, printProfile, rows);
 }
 
 export function exportGuestsPdf(profile: WeddingProfile, guests: GuestItem[], tables: TableItem[]) {
@@ -623,11 +632,10 @@ function buildFloorPlanSvg(
       }
 
       if (el.shape === 'armchair') {
-        const sx = el.width / 64;
-        const sy = el.height / 60;
+        const sc = Math.min(el.width / 64, el.height / 60);
         return `
           <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
-            <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
+            <g transform="translate(${(-32 * sc).toFixed(2)}, ${(-30 * sc).toFixed(2)}) scale(${sc.toFixed(4)})">
               <rect x="6" y="4" width="52" height="14" rx="6" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
               <rect x="4" y="14" width="12" height="40" rx="5" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
               <rect x="48" y="14" width="12" height="40" rx="5" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
@@ -637,11 +645,10 @@ function buildFloorPlanSvg(
       }
 
       if (el.shape === 'chair') {
-        const sx = el.width / 40;
-        const sy = el.height / 40;
+        const sc = Math.min(el.width / 40, el.height / 40);
         return `
           <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
-            <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
+            <g transform="translate(${(-20 * sc).toFixed(2)}, ${(-20 * sc).toFixed(2)}) scale(${sc.toFixed(4)})">
               <rect x="5" y="4" width="30" height="8" rx="4" fill="${svgFill}" stroke="${svgStroke}" stroke-width="2" />
               <rect x="7" y="12" width="26" height="23" rx="5" fill="#FFFFFF" stroke="${svgStroke}" stroke-width="1.8" />
             </g>
@@ -666,9 +673,9 @@ function buildFloorPlanSvg(
         return `
           <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
             <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
-              <line x1="6" y1="58" x2="6" y2="8" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" />
-              <path d="M 6 8 A 50 50 0 0 1 56 58" fill="none" stroke="${svgStroke}" stroke-width="1.6" stroke-dasharray="4 3" />
-              <line x1="2" y1="58" x2="58" y2="58" stroke="${svgStroke}" stroke-width="1.4" opacity="0.45" />
+              <line x1="6" y1="58" x2="6" y2="8" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+              <path d="M 6 8 A 50 50 0 0 1 56 58" fill="none" stroke="${svgStroke}" stroke-width="1.6" stroke-dasharray="4 3" vector-effect="non-scaling-stroke" />
+              <line x1="2" y1="58" x2="58" y2="58" stroke="${svgStroke}" stroke-width="1.4" opacity="0.45" vector-effect="non-scaling-stroke" />
             </g>
           </g>`;
       }
@@ -679,11 +686,11 @@ function buildFloorPlanSvg(
         return `
           <g transform="translate(${el.x}, ${el.y}) rotate(${rot})">
             <g transform="translate(${-el.width / 2}, ${-el.height / 2}) scale(${sx.toFixed(4)}, ${sy.toFixed(4)})">
-              <line x1="6" y1="54" x2="6" y2="8" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" />
-              <path d="M 6 8 A 46 46 0 0 1 52 54" fill="none" stroke="${svgStroke}" stroke-width="1.5" stroke-dasharray="4 3" />
-              <line x1="104" y1="54" x2="104" y2="8" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" />
-              <path d="M 104 8 A 46 46 0 0 0 58 54" fill="none" stroke="${svgStroke}" stroke-width="1.5" stroke-dasharray="4 3" />
-              <line x1="2" y1="54" x2="108" y2="54" stroke="${svgStroke}" stroke-width="1.4" opacity="0.45" />
+              <line x1="6" y1="54" x2="6" y2="8" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+              <path d="M 6 8 A 46 46 0 0 1 52 54" fill="none" stroke="${svgStroke}" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke" />
+              <line x1="104" y1="54" x2="104" y2="8" stroke="${svgStroke}" stroke-width="3" stroke-linecap="round" vector-effect="non-scaling-stroke" />
+              <path d="M 104 8 A 46 46 0 0 0 58 54" fill="none" stroke="${svgStroke}" stroke-width="1.5" stroke-dasharray="4 3" vector-effect="non-scaling-stroke" />
+              <line x1="2" y1="54" x2="108" y2="54" stroke="${svgStroke}" stroke-width="1.4" opacity="0.45" vector-effect="non-scaling-stroke" />
             </g>
           </g>`;
       }

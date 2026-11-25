@@ -398,6 +398,7 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
     vendors,
     checklist,
     timeline,
+    civilTimeline: Array.isArray(existingStudio?.civilTimeline) ? existingStudio.civilTimeline : [],
     ceremonies,
     files
   };

@@ -11,6 +11,7 @@ import { exportTimelinePdf } from '../utils/pdfExport';
 export const MyDayView: React.FC = () => {
   const { wedding, flags, updateWedding } = useWedding();
   const [subTab, setSubTab] = useState<'itinerario' | 'entregas' | 'ceremonias'>('itinerario');
+  const [timelineEvent, setTimelineEvent] = useState<'principal' | 'civil'>('principal');
   const [showVlbModal, setShowVlbModal] = useState(false);
 
   // Add / Edit Timeline Modal
@@ -26,13 +27,38 @@ export const MyDayView: React.FC = () => {
   if (!wedding) return null;
 
   const { profile, timeline, ceremonies } = wedding;
+  const civilTimeline = wedding.civilTimeline ?? [];
   const handoverItems = wedding.handoverItems || [];
   const isNonWedding = Boolean(profile.eventType && !profile.eventType.toLowerCase().includes('boda'));
   const activeSubTab = isNonWedding && subTab === 'ceremonias' ? 'itinerario' : subTab;
 
+  const weddingDayKey = (profile.weddingDate || '').slice(0, 10);
+  const civilDayKey = (ceremonies.civilDate || '').slice(0, 10);
+  const hasCivilTimeline = Boolean(
+    !isNonWedding &&
+      ((ceremonies.civilEnabled && (!civilDayKey || !weddingDayKey || civilDayKey !== weddingDayKey)) ||
+        civilTimeline.length > 0)
+  );
+  const isCivilTimeline = hasCivilTimeline && timelineEvent === 'civil';
+  const activeTimeline = isCivilTimeline ? civilTimeline : timeline;
+
+  const formatShortDate = (raw?: string) => {
+    if (!raw) return '';
+    const d = new Date(raw.length === 10 ? `${raw}T12:00:00` : raw);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  };
+  const principalDateShort = formatShortDate(profile.weddingDate);
+  const civilDateShort = formatShortDate(ceremonies.civilDate);
+
   const openAddEvent = () => {
     setEditingEventId(null);
-    setEventForm({ time: '18:00', title: '', location: '', notes: '' });
+    setEventForm({
+      time: isCivilTimeline ? ceremonies.civilTime || '18:00' : '18:00',
+      title: '',
+      location: isCivilTimeline ? ceremonies.civilVenue || '' : '',
+      notes: ''
+    });
     setShowEventModal(true);
   };
 
@@ -52,9 +78,9 @@ export const MyDayView: React.FC = () => {
     if (!eventForm.title.trim()) return;
 
     if (editingEventId) {
-      updateWedding(prev => ({
-        ...prev,
-        timeline: prev.timeline
+      updateWedding(prev => {
+        const list = isCivilTimeline ? prev.civilTimeline ?? [] : prev.timeline;
+        const nextList = list
           .map(item =>
             item.id === editingEventId
               ? {
@@ -66,8 +92,9 @@ export const MyDayView: React.FC = () => {
                 }
               : item
           )
-          .sort((a, b) => a.time.localeCompare(b.time))
-      }));
+          .sort((a, b) => a.time.localeCompare(b.time));
+        return isCivilTimeline ? { ...prev, civilTimeline: nextList } : { ...prev, timeline: nextList };
+      });
     } else {
       const nextItem: TimelineItem = {
         id: `tl_${Date.now()}`,
@@ -76,10 +103,11 @@ export const MyDayView: React.FC = () => {
         location: eventForm.location.trim(),
         notes: eventForm.notes.trim()
       };
-      updateWedding(prev => ({
-        ...prev,
-        timeline: [...prev.timeline, nextItem].sort((a, b) => a.time.localeCompare(b.time))
-      }));
+      updateWedding(prev => {
+        const list = isCivilTimeline ? prev.civilTimeline ?? [] : prev.timeline;
+        const nextList = [...list, nextItem].sort((a, b) => a.time.localeCompare(b.time));
+        return isCivilTimeline ? { ...prev, civilTimeline: nextList } : { ...prev, timeline: nextList };
+      });
     }
 
     setShowEventModal(false);
@@ -87,10 +115,11 @@ export const MyDayView: React.FC = () => {
   };
 
   const handleDeleteEvent = (id: string) => {
-    updateWedding(prev => ({
-      ...prev,
-      timeline: prev.timeline.filter(x => x.id !== id)
-    }));
+    updateWedding(prev =>
+      isCivilTimeline
+        ? { ...prev, civilTimeline: (prev.civilTimeline ?? []).filter(x => x.id !== id) }
+        : { ...prev, timeline: prev.timeline.filter(x => x.id !== id) }
+    );
     if (editingEventId === id) {
       setShowEventModal(false);
       setEditingEventId(null);
@@ -114,11 +143,19 @@ export const MyDayView: React.FC = () => {
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
               type="button"
-              onClick={() => exportTimelinePdf(profile, timeline)}
+              onClick={() =>
+                isCivilTimeline
+                  ? exportTimelinePdf(profile, civilTimeline, {
+                      eventLabel: 'Boda Civil',
+                      eventDate: ceremonies.civilDate || profile.weddingDate,
+                      eventVenue: ceremonies.civilVenue || profile.city
+                    })
+                  : exportTimelinePdf(profile, timeline)
+              }
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium shadow-2xs transition cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-[#C48B81]" />
-              <span>PDF</span>
+              <span>{isCivilTimeline ? 'PDF Civil' : 'PDF'}</span>
             </button>
             <button
               type="button"
@@ -133,36 +170,90 @@ export const MyDayView: React.FC = () => {
       </div>
 
       {/* Clean Sub-Tabs: Ceremonias (solo bodas) · Minuto a Minuto · Artículos & Entregas */}
-      <div className="flex flex-wrap items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs gap-1">
-        {!isNonWedding && (
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center p-1 bg-white rounded-full border border-[#EFE8E1] w-fit shadow-2xs gap-1">
+          {!isNonWedding && (
+            <button
+              type="button"
+              onClick={() => setSubTab('ceremonias')}
+              className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
+                activeSubTab === 'ceremonias' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+              }`}
+            >
+              Ceremonias
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => setSubTab('ceremonias')}
+            onClick={() => setSubTab('itinerario')}
             className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
-              activeSubTab === 'ceremonias' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+              activeSubTab === 'itinerario' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
             }`}
           >
-            Ceremonias
+            Minuto a Minuto ({hasCivilTimeline ? timeline.length + civilTimeline.length : timeline.length})
           </button>
+          <button
+            type="button"
+            onClick={() => setSubTab('entregas')}
+            className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
+              activeSubTab === 'entregas' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+            }`}
+          >
+            Artículos &amp; Entregas ({handoverItems.length})
+          </button>
+        </div>
+
+        {/* Dual-day Switcher: Boda Principal vs Boda Civil */}
+        {activeSubTab === 'itinerario' && hasCivilTimeline && (
+          <div className="flex items-center p-1 bg-[#FAF8F5] rounded-full border border-[#EFE8E1] shadow-2xs gap-1">
+            <button
+              type="button"
+              onClick={() => setTimelineEvent('principal')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                !isCivilTimeline
+                  ? 'bg-[#2B2826] text-white shadow-2xs'
+                  : 'text-[#6E605C] hover:text-[#2B2826]'
+              }`}
+            >
+              <span>Boda Principal</span>
+              {principalDateShort && (
+                <span className={`text-[10px] ${!isCivilTimeline ? 'text-white/75' : 'text-[#8C7E79]'}`}>
+                  · {principalDateShort}
+                </span>
+              )}
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  !isCivilTimeline ? 'bg-white/20 text-white' : 'bg-white text-[#7D6F6B]'
+                }`}
+              >
+                {timeline.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimelineEvent('civil')}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition cursor-pointer flex items-center gap-1.5 ${
+                isCivilTimeline
+                  ? 'bg-[#2B2826] text-white shadow-2xs'
+                  : 'text-[#6E605C] hover:text-[#2B2826]'
+              }`}
+            >
+              <span>Boda Civil</span>
+              {civilDateShort && (
+                <span className={`text-[10px] ${isCivilTimeline ? 'text-white/75' : 'text-[#8C7E79]'}`}>
+                  · {civilDateShort}
+                </span>
+              )}
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                  isCivilTimeline ? 'bg-white/20 text-white' : 'bg-white text-[#7D6F6B]'
+                }`}
+              >
+                {civilTimeline.length}
+              </span>
+            </button>
+          </div>
         )}
-        <button
-          type="button"
-          onClick={() => setSubTab('itinerario')}
-          className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
-            activeSubTab === 'itinerario' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
-          }`}
-        >
-          Minuto a Minuto ({timeline.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setSubTab('entregas')}
-          className={`px-4 py-1.5 rounded-full text-[13px] font-medium transition cursor-pointer ${
-            activeSubTab === 'entregas' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
-          }`}
-        >
-          Artículos &amp; Entregas ({handoverItems.length})
-        </button>
       </div>
 
       {/* SUB-TAB 2: CONTROL DE ARTÍCULOS & ENTREGAS (Recepción previa + Devolución al cierre) */}
@@ -183,11 +274,29 @@ export const MyDayView: React.FC = () => {
       {activeSubTab === 'itinerario' && (
         <div className="space-y-4">
         <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs">
-          {timeline.length === 0 ? (
+          {isCivilTimeline && (ceremonies.civilDate || ceremonies.civilVenue) && (
+            <div className="mb-4 pb-3 border-b border-[#FAF8F5] flex flex-wrap items-center justify-between gap-2 text-xs text-[#7D6F6B]">
+              <span className="font-medium text-[#2B2826]">
+                Itinerario de Boda Civil
+                {civilDateShort ? ` · ${civilDateShort}` : ''}
+                {ceremonies.civilVenue ? ` · ${ceremonies.civilVenue}` : ''}
+              </span>
+              {ceremonies.civilTime && (
+                <span className="text-[11px] text-[#A86B60] bg-[#FAF8F5] px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
+                  Ceremonia: {ceremonies.civilTime}
+                </span>
+              )}
+            </div>
+          )}
+          {activeTimeline.length === 0 ? (
             <div className="py-10 text-center space-y-3">
-              <p className="font-editorial text-xl text-[#2B2826]">Arma tu minuto a minuto</p>
+              <p className="font-editorial text-xl text-[#2B2826]">
+                {isCivilTimeline ? 'Arma el minuto a minuto de tu Boda Civil' : 'Arma tu minuto a minuto'}
+              </p>
               <p className="text-xs text-[#7D6F6B] font-light max-w-sm mx-auto">
-                Registra cada momento del día para compartirlo en PDF con tu fotógrafo, DJ, banquete y familia.
+                {isCivilTimeline
+                  ? 'Registra los horarios de tu ceremonia civil, llegada del juez, brindis y comida para compartirlo en PDF.'
+                  : 'Registra cada momento del día para compartirlo en PDF con tu fotógrafo, DJ, banquete y familia.'}
               </p>
               <button
                 type="button"
@@ -200,7 +309,7 @@ export const MyDayView: React.FC = () => {
             </div>
           ) : (
             <div className="divide-y divide-[#FAF8F5]">
-              {timeline.map(item => (
+              {activeTimeline.map(item => (
                 <div
                   key={item.id}
                   onClick={() => openEditEvent(item)}
@@ -302,7 +411,7 @@ export const MyDayView: React.FC = () => {
           setShowEventModal(false);
           setEditingEventId(null);
         }}
-        title={editingEventId ? 'Editar Momento' : 'Agregar Momento'}
+        title={`${editingEventId ? 'Editar Momento' : 'Agregar Momento'}${isCivilTimeline ? ' · Boda Civil' : ''}`}
         subtitle="Se ordenará automáticamente según el horario."
         maxWidthClass="max-w-md"
       >

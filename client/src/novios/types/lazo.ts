@@ -239,6 +239,7 @@ export interface WeddingState {
   layoutSnapshots?: LayoutSnapshot[];
   checklist: ChecklistItem[];
   timeline: TimelineItem[];
+  civilTimeline?: TimelineItem[];
   ceremonies: CeremonyDetails;
   style: StyleBoard;
   files: FileItem[];
