@@ -117,6 +117,21 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     startRotation: number;
     moved: boolean;
   } | null>(null);
+  const [scalingTable, setScalingTable] = useState<{
+    id: string;
+    startX: number;
+    startY: number;
+    startScale: number;
+  } | null>(null);
+  const [rotatingTable, setRotatingTable] = useState<{
+    id: string;
+    centerX: number;
+    centerY: number;
+    startPointerX: number;
+    startPointerY: number;
+    startRotation: number;
+    moved: boolean;
+  } | null>(null);
 
   const selectedTable = tables.find(t => t.id === selectedTableId) || null;
   const selectedElement = floorElements.find(el => el.id === selectedElementId) || null;
@@ -227,7 +242,66 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     });
   };
 
+  const handlePointerDownTableScale = (e: React.PointerEvent, table: TableItem) => {
+    e.stopPropagation();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const pt = getCanvasPoint(e);
+    setSelectedTableId(table.id);
+    setSelectedElementId(null);
+    setDragging(null);
+    setRotatingTable(null);
+    setScalingTable({
+      id: table.id,
+      startX: pt.x,
+      startY: pt.y,
+      startScale: typeof table.scale === 'number' ? table.scale : 1
+    });
+  };
+
+  const handlePointerDownTableRotate = (e: React.PointerEvent, table: TableItem, cx: number, cy: number) => {
+    e.stopPropagation();
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    const pt = getCanvasPoint(e);
+    setSelectedTableId(table.id);
+    setSelectedElementId(null);
+    setDragging(null);
+    setScalingTable(null);
+    setRotatingTable({
+      id: table.id,
+      centerX: cx,
+      centerY: cy,
+      startPointerX: pt.x,
+      startPointerY: pt.y,
+      startRotation: table.rotation || 0,
+      moved: false
+    });
+  };
+
   const handlePointerMove = (e: React.PointerEvent) => {
+    if (rotatingTable) {
+      const pt = getCanvasPoint(e);
+      const dist = Math.hypot(pt.x - rotatingTable.startPointerX, pt.y - rotatingTable.startPointerY);
+      if (dist > 3) {
+        if (!rotatingTable.moved) {
+          setRotatingTable(prev => (prev ? { ...prev, moved: true } : null));
+        }
+        let deg = (Math.atan2(pt.y - rotatingTable.centerY, pt.x - rotatingTable.centerX) * 180) / Math.PI + 90;
+        deg = ((deg % 360) + 360) % 360;
+        const nearest45 = Math.round(deg / 45) * 45;
+        if (Math.abs(deg - nearest45) <= 4) {
+          deg = nearest45 % 360;
+        }
+        onUpdateTable(rotatingTable.id, { rotation: Math.round(deg) });
+      }
+      return;
+    }
+    if (scalingTable) {
+      const pt = getCanvasPoint(e);
+      const delta = (pt.x - scalingTable.startX + (pt.y - scalingTable.startY)) / 2;
+      const nextScale = Math.max(0.45, Math.min(1.8, Number((scalingTable.startScale + delta / 110).toFixed(2))));
+      onUpdateTable(scalingTable.id, { scale: nextScale });
+      return;
+    }
     if (rotating) {
       const pt = getCanvasPoint(e);
       const dist = Math.hypot(pt.x - rotating.startPointerX, pt.y - rotating.startPointerY);
@@ -287,15 +361,20 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       // Single click on rotate handle rotates by +45°
       onRotateElement(rotating.id, rotating.startRotation + 45);
     }
+    if (rotatingTable && !rotatingTable.moved) {
+      onUpdateTable(rotatingTable.id, { rotation: (rotatingTable.startRotation + 45) % 360 });
+    }
     setDragging(null);
     setResizing(null);
     setRotating(null);
+    setScalingTable(null);
+    setRotatingTable(null);
     setPanning(null);
   };
 
   // Pan empty canvas with mouse/trackpad click-and-drag
   const handleCanvasPointerDown = (e: React.PointerEvent) => {
-    if (dragging || resizing || rotating) return;
+    if (dragging || resizing || rotating || scalingTable || rotatingTable) return;
     const vp = viewportRef.current;
     if (!vp) return;
     setSelectedElementId(null);
@@ -723,18 +802,17 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   : 'bg-white border-[#E5DDD5] hover:border-[#C48B81]/70'
               }`}
             >
-              <span
-                className="text-[10px] font-medium text-[#2B2826] leading-tight truncate max-w-full"
+              <div
+                className="flex flex-col items-center justify-center leading-tight pointer-events-none"
                 style={{ transform: `rotate(${-rot}deg)` }}
               >
-                {table.name}
-              </span>
-              <span
-                className={`text-[9px] font-semibold ${isOver ? 'text-rose-600' : 'text-[#7D6F6B]'}`}
-                style={{ transform: `rotate(${-rot}deg)` }}
-              >
-                {usedSeats}/{cap}
-              </span>
+                <span className="text-[10px] font-medium text-[#2B2826] whitespace-nowrap">
+                  {table.name}
+                </span>
+                <span className={`text-[9px] font-semibold mt-0.5 ${isOver ? 'text-rose-600' : 'text-[#7D6F6B]'}`}>
+                  {usedSeats}/{cap}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -801,18 +879,17 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                 : 'bg-white border-[#E5DDD5] hover:border-[#C48B81]/70'
             }`}
           >
-            <span
-              className="text-[10px] font-medium text-[#2B2826] leading-tight truncate max-w-full"
+            <div
+              className="flex flex-col items-center justify-center leading-tight pointer-events-none"
               style={{ transform: `rotate(${-rot}deg)` }}
             >
-              {table.name}
-            </span>
-            <span
-              className={`text-[9px] font-semibold ${isOver ? 'text-rose-600' : 'text-[#7D6F6B]'}`}
-              style={{ transform: `rotate(${-rot}deg)` }}
-            >
-              {usedSeats}/{cap}
-            </span>
+              <span className="text-[10px] font-medium text-[#2B2826] whitespace-nowrap">
+                {table.name}
+              </span>
+              <span className={`text-[9px] font-semibold mt-0.5 ${isOver ? 'text-rose-600' : 'text-[#7D6F6B]'}`}>
+                {usedSeats}/{cap}
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -1401,19 +1478,68 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     .reduce((s, g) => s + g.passes, 0);
 
                   const tableScale = typeof table.scale === 'number' ? table.scale : 1;
+                  const isSelTable = selectedTableId === table.id;
+                  const invScale = 1 / Math.max(0.5, tableScale);
 
                   return (
                     <div
                       key={table.id}
                       onPointerDown={e => handlePointerDownItem(e, 'table', table.id, coords.x, coords.y)}
+                      onClick={e => e.stopPropagation()}
                       style={{
                         left: coords.x,
                         top: coords.y,
                         transform: `translate(-50%, -50%) scale(${tableScale})`
                       }}
-                      className="absolute cursor-grab active:cursor-grabbing z-10"
+                      className={`absolute cursor-grab active:cursor-grabbing ${isSelTable ? 'z-20' : 'z-10'}`}
                     >
                       {renderTableShape(table, usedSeats)}
+
+                      {/* On-canvas Rotate Handle (top center) */}
+                      {isSelTable && table.shape !== 'Redonda' && (
+                        <button
+                          type="button"
+                          onPointerDown={e => handlePointerDownTableRotate(e, table, coords.x, coords.y)}
+                          onClick={e => e.stopPropagation()}
+                          style={{ transform: `translateX(-50%) scale(${invScale})` }}
+                          className="absolute -top-8 left-1/2 w-6 h-6 rounded-full bg-white border border-[#C48B81] text-[#A86B60] shadow-sm flex items-center justify-center cursor-grab active:cursor-grabbing"
+                          title="Arrastra para rotar libremente o haz clic para girar 45°"
+                        >
+                          <RotateCw className="w-3 h-3" />
+                        </button>
+                      )}
+
+                      {/* On-canvas Resize/Scale Handle (bottom right) */}
+                      {isSelTable && (
+                        <button
+                          type="button"
+                          onPointerDown={e => handlePointerDownTableScale(e, table)}
+                          onClick={e => e.stopPropagation()}
+                          style={{ transform: `scale(${invScale})` }}
+                          className="absolute -bottom-2.5 -right-2.5 w-6 h-6 rounded-full bg-white border border-[#C48B81] text-[#A86B60] shadow-sm flex items-center justify-center cursor-nwse-resize"
+                          title="Arrastra para cambiar tamaño de la mesa"
+                        >
+                          <MoveDiagonal2 className="w-3 h-3" />
+                        </button>
+                      )}
+
+                      {/* On-canvas Delete Handle (top right) */}
+                      {isSelTable && (
+                        <button
+                          type="button"
+                          onPointerDown={e => e.stopPropagation()}
+                          onClick={e => {
+                            e.stopPropagation();
+                            onDeleteTable(table.id);
+                            setSelectedTableId(null);
+                          }}
+                          style={{ transform: `scale(${invScale})` }}
+                          className="absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full bg-white border border-[#EFE8E1] text-rose-600 shadow-sm flex items-center justify-center cursor-pointer"
+                          title="Eliminar mesa"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      )}
                     </div>
                   );
                 })}
