@@ -168,6 +168,8 @@ function hydrateWeddingFromLegacyDb(apiData: any, existingStudio?: any): Persist
             rotation: Number(t.rotation) || 0,
             scale: typeof prevTableMeta?.scale === 'number' ? prevTableMeta.scale : 1,
             headSeats: prevTableMeta?.headSeats,
+            headSeatsLeft: prevTableMeta?.headSeatsLeft,
+            headSeatsRight: prevTableMeta?.headSeatsRight,
             seatSides: prevTableMeta?.seatSides,
             locked: Boolean(prevTableMeta?.locked),
             seatAssignments: Array.isArray(prevTableMeta?.seatAssignments) ? prevTableMeta.seatAssignments : undefined

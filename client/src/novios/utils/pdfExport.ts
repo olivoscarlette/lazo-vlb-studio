@@ -698,18 +698,27 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           </g>`;
       }
 
-      // Rectangular / Imperial (respects headSeats / cabeceras & seatSides)
+      // Rectangular / Imperial (respects custom headSeatsLeft/Right & seatSides)
       const isNovios = cap <= 2;
       const sidesMode: 'both' | 'top' | 'bottom' = table.seatSides || (isNovios ? 'top' : 'both');
-      const useHeadSeats = !isNovios && cap >= 6 && table.headSeats !== false && sidesMode === 'both';
-      const remaining = useHeadSeats ? cap - 2 : cap;
+      let headLeft = 0;
+      let headRight = 0;
+      if (typeof table.headSeatsLeft === 'number' || typeof table.headSeatsRight === 'number') {
+        headLeft = Math.max(0, Math.min(2, table.headSeatsLeft ?? 0));
+        headRight = Math.max(0, Math.min(2, table.headSeatsRight ?? 0));
+      } else if (!isNovios && cap >= 6 && table.headSeats !== false && sidesMode === 'both') {
+        headLeft = 1;
+        headRight = 1;
+      }
+      const remaining = Math.max(0, cap - headLeft - headRight);
       const topCount =
         sidesMode === 'top' ? remaining : sidesMode === 'bottom' ? 0 : Math.ceil(remaining / 2);
       const bottomCount =
         sidesMode === 'bottom' ? remaining : sidesMode === 'top' ? 0 : remaining - topCount;
       const maxLongSide = Math.max(1, topCount, bottomCount);
+      const maxHeadSide = Math.max(1, headLeft, headRight);
       const tw = isNovios ? 92 : Math.max(122, maxLongSide * 24);
-      const th = isNovios ? 44 : table.shape === 'Imperial' ? 58 : 50;
+      const th = isNovios ? 44 : Math.max(table.shape === 'Imperial' ? 58 : 50, maxHeadSide * 28);
       const topChairs = Array.from({ length: topCount })
         .map((_, i) => {
           const cx = -tw / 2 + ((i + 0.5) / topCount) * tw;
@@ -717,20 +726,29 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           return `<rect x="${(cx - 6).toFixed(1)}" y="${(-th / 2 - 14).toFixed(1)}" width="12" height="9" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
         })
         .join('');
-      const rightHeadChair = useHeadSeats
-        ? `<rect x="${(tw / 2 + 5).toFixed(1)}" y="-6" width="9" height="12" rx="4.5" fill="${topCount < used ? '#577355' : '#FFFFFF'}" stroke="${topCount < used ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`
-        : '';
+      const rightHeadChair = Array.from({ length: headRight })
+        .map((_, i) => {
+          const cy = -th / 2 + ((i + 0.5) / headRight) * th;
+          const filled = topCount + i < used;
+          return `<rect x="${(tw / 2 + 5).toFixed(1)}" y="${(cy - 6).toFixed(1)}" width="9" height="12" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
+        })
+        .join('');
       const bottomChairs = Array.from({ length: bottomCount })
         .map((_, i) => {
           const cx = -tw / 2 + ((i + 0.5) / bottomCount) * tw;
-          const seatIdx = (useHeadSeats ? topCount + 1 : topCount) + (bottomCount - 1 - i);
+          const seatIdx = topCount + headRight + (bottomCount - 1 - i);
           const filled = seatIdx < used;
           return `<rect x="${(cx - 6).toFixed(1)}" y="${(th / 2 + 5).toFixed(1)}" width="12" height="9" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
         })
         .join('');
-      const leftHeadChair = useHeadSeats
-        ? `<rect x="${(-tw / 2 - 14).toFixed(1)}" y="-6" width="9" height="12" rx="4.5" fill="${cap - 1 < used ? '#577355' : '#FFFFFF'}" stroke="${cap - 1 < used ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`
-        : '';
+      const leftHeadChair = Array.from({ length: headLeft })
+        .map((_, i) => {
+          const cy = -th / 2 + ((i + 0.5) / headLeft) * th;
+          const seatIdx = topCount + headRight + bottomCount + (headLeft - 1 - i);
+          const filled = seatIdx < used;
+          return `<rect x="${(-tw / 2 - 14).toFixed(1)}" y="${(cy - 6).toFixed(1)}" width="9" height="12" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
+        })
+        .join('');
 
       return `
         <g transform="translate(${x}, ${y}) scale(${sc}) rotate(${rot})">

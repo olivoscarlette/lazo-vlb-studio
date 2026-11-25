@@ -14,6 +14,26 @@ export interface SeatSlotInfo {
   subtitle?: string;
 }
 
+export function getHeadSeatCounts(table: TableItem): { left: number; right: number } {
+  const cap = Math.max(1, table.capacity || 10);
+  if (table.shape !== 'Rectangular' && table.shape !== 'Imperial') {
+    return { left: 0, right: 0 };
+  }
+  const sidesMode: 'both' | 'top' | 'bottom' = table.seatSides || (cap <= 2 ? 'top' : 'both');
+  if (typeof table.headSeatsLeft === 'number' || typeof table.headSeatsRight === 'number') {
+    const rawL = Math.max(0, Math.min(2, table.headSeatsLeft ?? 0));
+    const rawR = Math.max(0, Math.min(2, table.headSeatsRight ?? 0));
+    if (rawL + rawR <= cap) return { left: rawL, right: rawR };
+    const clampedL = Math.min(rawL, cap);
+    const clampedR = Math.min(rawR, Math.max(0, cap - clampedL));
+    return { left: clampedL, right: clampedR };
+  }
+  if (cap >= 6 && table.headSeats !== false && sidesMode === 'both') {
+    return { left: 1, right: 1 };
+  }
+  return { left: 0, right: 0 };
+}
+
 export function getGuestInitials(name: string, passIndex = 0): string {
   if (passIndex > 0) return `+${passIndex}`;
   const parts = (name || '')
@@ -134,7 +154,7 @@ export const TableSeatModal: React.FC<TableSeatModalProps> = ({
   const slots = useMemo(() => buildSeatSlots(table, seatedGuests), [table, seatedGuests]);
   const isRectLike = table.shape === 'Rectangular' || table.shape === 'Imperial';
   const sidesMode: 'both' | 'top' | 'bottom' = table.seatSides || (cap <= 2 ? 'top' : 'both');
-  const useHeadSeats = isRectLike && cap >= 6 && table.headSeats !== false && sidesMode === 'both';
+  const { left: headLeft, right: headRight } = getHeadSeatCounts(table);
 
   const commitSlotKeys = (nextKeys: Array<string | null>) => {
     onUpdateTable(table.id, { seatAssignments: nextKeys });
@@ -268,16 +288,17 @@ export const TableSeatModal: React.FC<TableSeatModalProps> = ({
       return { coords, body: { kind: 'serpentine' as const } };
     }
 
-    // Rectangular or Imperial (with optional head seats / cabeceras & 1-sided seating)
+    // Rectangular or Imperial (with customizable head seats per side & 1-sided seating)
     const isNovios = cap <= 2;
-    const remaining = useHeadSeats ? cap - 2 : cap;
+    const remaining = Math.max(0, cap - headLeft - headRight);
     const topN =
       sidesMode === 'top' ? remaining : sidesMode === 'bottom' ? 0 : Math.ceil(remaining / 2);
     const bottomN =
       sidesMode === 'bottom' ? remaining : sidesMode === 'top' ? 0 : remaining - topN;
     const maxLongSide = Math.max(1, topN, bottomN);
+    const maxHeadSide = Math.max(1, headLeft, headRight);
     const w = isNovios ? 140 : Math.min(256, Math.max(150, maxLongSide * 34));
-    const h = isNovios ? 64 : table.shape === 'Imperial' ? 84 : 74;
+    const h = isNovios ? 64 : Math.max(table.shape === 'Imperial' ? 84 : 74, maxHeadSide * 42);
     const halfW = w / 2;
     const halfH = h / 2;
     const offset = 22;
@@ -286,21 +307,21 @@ export const TableSeatModal: React.FC<TableSeatModalProps> = ({
     for (let i = 0; i < topN; i++) {
       coords.push({ x: cx - halfW + ((i + 0.5) / topN) * w, y: cy - halfH - offset });
     }
-    // Right head seat (cabecera derecha)
-    if (useHeadSeats) {
-      coords.push({ x: cx + halfW + offset, y: cy });
+    // Right head seats (top -> bottom)
+    for (let i = 0; i < headRight; i++) {
+      coords.push({ x: cx + halfW + offset, y: cy - halfH + ((i + 0.5) / headRight) * h });
     }
     // Bottom row (right -> left for natural clockwise seating)
     for (let i = 0; i < bottomN; i++) {
       coords.push({ x: cx + halfW - ((i + 0.5) / bottomN) * w, y: cy + halfH + offset });
     }
-    // Left head seat (cabecera izquierda)
-    if (useHeadSeats) {
-      coords.push({ x: cx - halfW - offset, y: cy });
+    // Left head seats (bottom -> top)
+    for (let i = 0; i < headLeft; i++) {
+      coords.push({ x: cx - halfW - offset, y: cy + halfH - ((i + 0.5) / headLeft) * h });
     }
 
     return { coords, body: { kind: 'rect' as const, w, h } };
-  }, [table.shape, cap, useHeadSeats, sidesMode]);
+  }, [table.shape, cap, headLeft, headRight, sidesMode]);
 
   const rot = table.rotation || 0;
 
@@ -353,20 +374,53 @@ export const TableSeatModal: React.FC<TableSeatModalProps> = ({
               </div>
             )}
 
-            {/* Cabeceras toggle for Rectangular / Imperial */}
-            {isRectLike && cap >= 6 && sidesMode === 'both' && (
-              <button
-                type="button"
-                onClick={() => onUpdateTable(table.id, { headSeats: !useHeadSeats })}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition cursor-pointer ${
-                  useHeadSeats
-                    ? 'bg-[#F7EDEB] text-[#8E5348] border-[#E5CFCB]'
-                    : 'bg-[#FAF8F5] text-[#7D6F6B] border-[#EFE8E1] hover:border-[#C48B81]'
-                }`}
-                title="Activar o desactivar sillas en las cabeceras izquierda y derecha"
-              >
-                <span>{useHeadSeats ? '✓ Con cabeceras' : 'Sin cabeceras'}</span>
-              </button>
+            {/* Cabeceras count per side (Izq: 0-2, Der: 0-2) */}
+            {isRectLike && cap >= 3 && (
+              <div className="inline-flex items-center gap-2 bg-[#FAF8F5] px-2.5 py-1 rounded-full border border-[#EFE8E1] text-[11px]">
+                <span className="text-[#7D6F6B] font-medium">Cabeceras:</span>
+                <div className="inline-flex items-center gap-1">
+                  <span className="text-[10px] text-[#7D6F6B]">Izq</span>
+                  {[0, 1, 2].map(n => (
+                    <button
+                      key={`hl_${n}`}
+                      type="button"
+                      onClick={() =>
+                        onUpdateTable(table.id, {
+                          headSeatsLeft: n,
+                          headSeatsRight: headRight,
+                          headSeats: n + headRight > 0
+                        })
+                      }
+                      className={`w-5 h-5 rounded-full text-[10px] font-semibold transition cursor-pointer ${
+                        headLeft === n ? 'bg-[#2B2826] text-white' : 'bg-white text-[#5A524C] border border-[#EFE8E1]'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <div className="inline-flex items-center gap-1 border-l border-[#EFE8E1] pl-2">
+                  <span className="text-[10px] text-[#7D6F6B]">Der</span>
+                  {[0, 1, 2].map(n => (
+                    <button
+                      key={`hr_${n}`}
+                      type="button"
+                      onClick={() =>
+                        onUpdateTable(table.id, {
+                          headSeatsLeft: headLeft,
+                          headSeatsRight: n,
+                          headSeats: headLeft + n > 0
+                        })
+                      }
+                      className={`w-5 h-5 rounded-full text-[10px] font-semibold transition cursor-pointer ${
+                        headRight === n ? 'bg-[#2B2826] text-white' : 'bg-white text-[#5A524C] border border-[#EFE8E1]'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
 
             {/* Lock position toggle */}

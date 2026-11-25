@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { FloorElement, GuestItem, TableItem } from '../types/lazo';
 import { Modal } from './Modal';
-import { TableSeatModal, buildSeatSlots } from './TableSeatModal';
+import { TableSeatModal, buildSeatSlots, getHeadSeatCounts } from './TableSeatModal';
 
 interface CustomElementPayload {
   label: string;
@@ -827,25 +827,26 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       );
     }
 
-    // Rectangular or Imperial (with optional head seats / cabeceras & 1-sided seating)
+    // Rectangular or Imperial (with customizable head seats per side & 1-sided seating)
     const rot = table.rotation || 0;
     const isVertical = rot % 180 === 90;
     const isNovios = cap <= 2;
     const sidesMode: 'both' | 'top' | 'bottom' = table.seatSides || (isNovios ? 'top' : 'both');
-    const useHeadSeats = !isNovios && cap >= 6 && table.headSeats !== false && sidesMode === 'both';
-    const remaining = useHeadSeats ? cap - 2 : cap;
+    const { left: headLeft, right: headRight } = getHeadSeatCounts(table);
+    const remaining = Math.max(0, cap - headLeft - headRight);
     const topCount =
       sidesMode === 'top' ? remaining : sidesMode === 'bottom' ? 0 : Math.ceil(remaining / 2);
     const bottomCount =
       sidesMode === 'bottom' ? remaining : sidesMode === 'top' ? 0 : remaining - topCount;
     const maxLongSide = Math.max(1, topCount, bottomCount);
+    const maxHeadSide = Math.max(1, headLeft, headRight);
     const w = isNovios ? 92 : Math.max(126, maxLongSide * 25);
-    const h = isNovios ? 44 : table.shape === 'Imperial' ? 58 : 50;
+    const h = isNovios ? 44 : Math.max(table.shape === 'Imperial' ? 58 : 50, maxHeadSide * 28);
 
-    // Seat indices clockwise: top (0..topCount-1), right head (topCount), bottom (right->left), left head (cap-1)
-    const rightHeadIdx = useHeadSeats ? topCount : -1;
-    const bottomStartIdx = useHeadSeats ? topCount + 1 : topCount;
-    const leftHeadIdx = useHeadSeats ? cap - 1 : -1;
+    // Seat indices clockwise: top (0..topCount-1), right heads, bottom (right->left), left heads (bottom->top)
+    const rightHeadStart = topCount;
+    const bottomStartIdx = topCount + headRight;
+    const leftHeadStart = bottomStartIdx + bottomCount;
 
     const renderChairCircle = (slotIdx: number, key: string) => {
       const slot = slots[slotIdx];
@@ -865,12 +866,14 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
       );
     };
 
+    const hasAnyHead = headLeft > 0 || headRight > 0;
+
     return (
       <div
         className="relative flex items-center justify-center transition-transform"
         style={{
-          width: isVertical ? h + 44 : w + (useHeadSeats ? 48 : 30),
-          height: isVertical ? w + (useHeadSeats ? 48 : 30) : h + 44
+          width: isVertical ? h + 44 : w + (hasAnyHead ? 48 : 30),
+          height: isVertical ? w + (hasAnyHead ? 48 : 30) : h + 44
         }}
       >
         <div
@@ -886,10 +889,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </div>
           )}
 
-          {/* Right head seat (cabecera derecha) */}
-          {useHeadSeats && (
-            <div className="absolute -right-5 top-1/2 -translate-y-1/2">
-              {renderChairCircle(rightHeadIdx, 'hr')}
+          {/* Right head seats */}
+          {headRight > 0 && (
+            <div className="absolute -right-5 inset-y-1 flex flex-col justify-around">
+              {Array.from({ length: headRight }).map((_, i) => renderChairCircle(rightHeadStart + i, `hr_${i}`))}
             </div>
           )}
 
@@ -902,10 +905,12 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             </div>
           )}
 
-          {/* Left head seat (cabecera izquierda) */}
-          {useHeadSeats && (
-            <div className="absolute -left-5 top-1/2 -translate-y-1/2">
-              {renderChairCircle(leftHeadIdx, 'hl')}
+          {/* Left head seats */}
+          {headLeft > 0 && (
+            <div className="absolute -left-5 inset-y-1 flex flex-col justify-around">
+              {Array.from({ length: headLeft }).map((_, i) =>
+                renderChairCircle(leftHeadStart + (headLeft - 1 - i), `hl_${i}`)
+              )}
             </div>
           )}
 
@@ -1906,36 +1911,62 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   )}
 
                   {(selectedTable.shape === 'Rectangular' || selectedTable.shape === 'Imperial') &&
-                    selectedTable.capacity >= 6 &&
-                    (selectedTable.seatSides || 'both') === 'both' && (
-                      <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
-                        <span className="text-xs font-medium text-[#5A524C]">Cabeceras</span>
-                        <div className="inline-flex items-center bg-white p-0.5 rounded-full border border-[#EFE8E1]">
-                          <button
-                            type="button"
-                            onClick={() => onUpdateTable(selectedTable.id, { headSeats: true })}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition cursor-pointer ${
-                              selectedTable.headSeats !== false
-                                ? 'bg-[#2B2826] text-white'
-                                : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                            }`}
-                          >
-                            Sí
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onUpdateTable(selectedTable.id, { headSeats: false })}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition cursor-pointer ${
-                              selectedTable.headSeats === false
-                                ? 'bg-[#2B2826] text-white'
-                                : 'text-[#7D6F6B] hover:text-[#2B2826]'
-                            }`}
-                          >
-                            No
-                          </button>
+                    selectedTable.capacity >= 3 && (() => {
+                      const { left: curL, right: curR } = getHeadSeatCounts(selectedTable);
+                      return (
+                        <div className="bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1] space-y-1.5">
+                          <span className="text-xs font-medium text-[#5A524C] block">Cabeceras</span>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] text-[#7D6F6B] mr-0.5">Izq</span>
+                              {[0, 1, 2].map(n => (
+                                <button
+                                  key={`insp_hl_${n}`}
+                                  type="button"
+                                  onClick={() =>
+                                    onUpdateTable(selectedTable.id, {
+                                      headSeatsLeft: n,
+                                      headSeatsRight: curR,
+                                      headSeats: n + curR > 0
+                                    })
+                                  }
+                                  className={`w-6 h-6 rounded-full text-[10px] font-semibold transition cursor-pointer ${
+                                    curL === n
+                                      ? 'bg-[#2B2826] text-white'
+                                      : 'bg-white text-[#5A524C] border border-[#EFE8E1] hover:border-[#C48B81]'
+                                  }`}
+                                >
+                                  {n}
+                                </button>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] text-[#7D6F6B] mr-0.5">Der</span>
+                              {[0, 1, 2].map(n => (
+                                <button
+                                  key={`insp_hr_${n}`}
+                                  type="button"
+                                  onClick={() =>
+                                    onUpdateTable(selectedTable.id, {
+                                      headSeatsLeft: curL,
+                                      headSeatsRight: n,
+                                      headSeats: curL + n > 0
+                                    })
+                                  }
+                                  className={`w-6 h-6 rounded-full text-[10px] font-semibold transition cursor-pointer ${
+                                    curR === n
+                                      ? 'bg-[#2B2826] text-white'
+                                      : 'bg-white text-[#5A524C] border border-[#EFE8E1] hover:border-[#C48B81]'
+                                  }`}
+                                >
+                                  {n}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      );
+                    })()}
 
                   <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
                     <span className="text-xs font-medium text-[#5A524C]">Tamaño</span>
