@@ -1870,6 +1870,37 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                     </div>
                   </div>
 
+                  {(selectedTable.shape === 'Rectangular' || selectedTable.shape === 'Imperial') &&
+                    selectedTable.capacity >= 6 && (
+                      <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
+                        <span className="text-xs font-medium text-[#5A524C]">Cabeceras</span>
+                        <div className="inline-flex items-center bg-white p-0.5 rounded-full border border-[#EFE8E1]">
+                          <button
+                            type="button"
+                            onClick={() => onUpdateTable(selectedTable.id, { headSeats: true })}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition cursor-pointer ${
+                              selectedTable.headSeats !== false
+                                ? 'bg-[#2B2826] text-white'
+                                : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                            }`}
+                          >
+                            Sí
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => onUpdateTable(selectedTable.id, { headSeats: false })}
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition cursor-pointer ${
+                              selectedTable.headSeats === false
+                                ? 'bg-[#2B2826] text-white'
+                                : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                            }`}
+                          >
+                            No
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                   <div className="flex items-center justify-between bg-[#FAF8F5] px-3 py-2 rounded-2xl border border-[#EFE8E1]">
                     <span className="text-xs font-medium text-[#5A524C]">Tamaño</span>
                     <div className="flex items-center gap-2">

@@ -698,10 +698,12 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           </g>`;
       }
 
-      // Rectangular / Imperial
+      // Rectangular / Imperial (respects headSeats / cabeceras)
       const isNovios = cap <= 2;
-      const topCount = isNovios ? cap : Math.ceil(cap / 2);
-      const bottomCount = isNovios ? 0 : cap - topCount;
+      const useHeadSeats = !isNovios && cap >= 6 && table.headSeats !== false;
+      const remaining = useHeadSeats ? cap - 2 : cap;
+      const topCount = isNovios ? cap : Math.ceil(remaining / 2);
+      const bottomCount = isNovios ? 0 : remaining - topCount;
       const tw = isNovios ? 92 : Math.max(122, topCount * 24);
       const th = isNovios ? 44 : table.shape === 'Imperial' ? 58 : 50;
       const topChairs = Array.from({ length: topCount })
@@ -711,18 +713,27 @@ function buildFloorPlanSvg(tables: TableItem[], guests: GuestItem[], floorElemen
           return `<rect x="${(cx - 6).toFixed(1)}" y="${(-th / 2 - 14).toFixed(1)}" width="12" height="9" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
         })
         .join('');
+      const rightHeadChair = useHeadSeats
+        ? `<rect x="${(tw / 2 + 5).toFixed(1)}" y="-6" width="9" height="12" rx="4.5" fill="${topCount < used ? '#577355' : '#FFFFFF'}" stroke="${topCount < used ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`
+        : '';
       const bottomChairs = Array.from({ length: bottomCount })
         .map((_, i) => {
           const cx = -tw / 2 + ((i + 0.5) / bottomCount) * tw;
-          const filled = topCount + i < used;
+          const seatIdx = (useHeadSeats ? topCount + 1 : topCount) + (bottomCount - 1 - i);
+          const filled = seatIdx < used;
           return `<rect x="${(cx - 6).toFixed(1)}" y="${(th / 2 + 5).toFixed(1)}" width="12" height="9" rx="4.5" fill="${filled ? '#577355' : '#FFFFFF'}" stroke="${filled ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`;
         })
         .join('');
+      const leftHeadChair = useHeadSeats
+        ? `<rect x="${(-tw / 2 - 14).toFixed(1)}" y="-6" width="9" height="12" rx="4.5" fill="${cap - 1 < used ? '#577355' : '#FFFFFF'}" stroke="${cap - 1 < used ? '#455C44' : '#D8CFC8'}" stroke-width="1.1" />`
+        : '';
 
       return `
         <g transform="translate(${x}, ${y}) scale(${sc}) rotate(${rot})">
           ${topChairs}
+          ${rightHeadChair}
           ${bottomChairs}
+          ${leftHeadChair}
           <rect x="${-tw / 2}" y="${-th / 2}" width="${tw}" height="${th}" rx="11" fill="#FFFFFF" stroke="#E5DDD5" stroke-width="1.4" />
           <g transform="rotate(${-rot})">
             <text x="0" y="-2" text-anchor="middle" font-family="Outfit, sans-serif" font-size="9.5" font-weight="500" fill="#2B2826">${escapeHtml(table.name)}</text>
