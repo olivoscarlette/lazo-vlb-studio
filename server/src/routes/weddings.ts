@@ -951,6 +951,59 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
   try { religious = db.prepare('SELECT * FROM religious_ceremony WHERE wedding_id = ?').get(weddingId) as any; } catch (e) { console.error('hydrate religious err:', e); }
   try { documents = db.prepare('SELECT * FROM documents WHERE wedding_id = ? ORDER BY created_at DESC').all(weddingId) as any[]; } catch (e) { console.error('hydrate documents err:', e); }
 
+  // Auto-recover any payments saved in novios_studio_json that were previously rolled back by a cross-wedding PK collision
+  try {
+    if (studio && Array.isArray(studio.vendors) && studio.vendors.length > 0) {
+      const existingPayIds = new Set(payments.map(p => String(p.id)));
+      const existingVendorIds = new Set(vendors.map(v => String(v.id)));
+      const nowIso = new Date().toISOString();
+      let recoveredAny = false;
+
+      for (const sv of studio.vendors) {
+        const vid = String(sv.id || '');
+        if (!vid || !Array.isArray(sv.payments)) continue;
+        const linkedVendorId = vid === 'v_general_payments' ? null : (existingVendorIds.has(vid) ? vid : null);
+        if (vid !== 'v_general_payments' && !linkedVendorId) continue;
+
+        for (const sp of sv.payments) {
+          const rawPid = String(sp.id || '');
+          if (!rawPid || existingPayIds.has(rawPid)) continue;
+          const amount = Number(sp.amount) || 0;
+          if (amount <= 0) continue;
+
+          // Ensure globally unique payment ID across weddings
+          const collision = db.prepare('SELECT wedding_id FROM payments WHERE id = ?').get(rawPid) as any;
+          const finalPid = collision && collision.wedding_id !== weddingId ? `${weddingId}_${rawPid}` : rawPid;
+          if (existingPayIds.has(finalPid)) continue;
+
+          db.prepare(`
+            INSERT OR IGNORE INTO payments (id, wedding_id, vendor_id, concept, amount, payment_date, payment_method, notes, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).run(
+            finalPid,
+            weddingId,
+            linkedVendorId,
+            sp.concept || 'Abono',
+            amount,
+            sp.date || nowIso.split('T')[0],
+            sp.method || 'Transferencia',
+            sp.notes || '',
+            nowIso,
+            nowIso
+          );
+          existingPayIds.add(finalPid);
+          recoveredAny = true;
+        }
+      }
+
+      if (recoveredAny) {
+        payments = db.prepare('SELECT * FROM payments WHERE wedding_id = ? ORDER BY payment_date DESC').all(weddingId) as any[];
+      }
+    }
+  } catch (recoverErr) {
+    console.error('auto-recover payments err:', recoverErr);
+  }
+
   return res.json({
     studio,
     wedding: {
@@ -1005,6 +1058,15 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       WHERE id = ?
     `).run(serialized, weddingId);
 
+    // Helper: prevent cross-wedding PRIMARY KEY collisions (e.g. default IDs like 'el_pista', 'tl_1', 't_1')
+    const resolveUniqueId = (tableName: string, rawId: string): string => {
+      const existing = db.prepare(`SELECT wedding_id FROM ${tableName} WHERE id = ?`).get(rawId) as any;
+      if (existing && String(existing.wedding_id) !== String(weddingId)) {
+        return `${weddingId}_${rawId}`;
+      }
+      return rawId;
+    };
+
     // 2. Sync ALL operational data bidirectionally into the real SQLite tables inside a single transaction
     db.exec('BEGIN');
     try {
@@ -1057,7 +1119,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
         );
         const keepIds = new Set<string>();
         for (const t of studio.tables) {
-          const id = String(t.id);
+          const id = resolveUniqueId('tables', String(t.id));
           keepIds.add(id);
           const typeVal = t.shape || 'Redonda';
           if (existingIds.has(id)) {
@@ -1067,7 +1129,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
             `).run(t.name || 'Mesa', typeVal, Number(t.capacity) || 10, Number(t.x) || 150, Number(t.y) || 150, Number(t.rotation) || 0, now, id, weddingId);
           } else {
             db.prepare(`
-              INSERT INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, created_at, updated_at)
+              INSERT OR IGNORE INTO tables (id, wedding_id, name, type, capacity, x, y, rotation, created_at, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(id, weddingId, t.name || 'Mesa', typeVal, Number(t.capacity) || 10, Number(t.x) || 150, Number(t.y) || 150, Number(t.rotation) || 0, now, now);
           }
@@ -1086,7 +1148,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
         );
         const keepIds = new Set<string>();
         for (const el of studio.floorElements) {
-          const id = String(el.id);
+          const id = resolveUniqueId('layout_elements', String(el.id));
           keepIds.add(id);
           if (existingIds.has(id)) {
             db.prepare(`
@@ -1095,7 +1157,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
             `).run(el.label || 'Elemento', el.type || 'otro', Number(el.x) || 300, Number(el.y) || 250, Number(el.width) || 120, Number(el.height) || 50, Number(el.rotation) || 0, now, id, weddingId);
           } else {
             db.prepare(`
-              INSERT INTO layout_elements (id, wedding_id, name, type, x, y, width, height, rotation, created_at, updated_at)
+              INSERT OR IGNORE INTO layout_elements (id, wedding_id, name, type, x, y, width, height, rotation, created_at, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(id, weddingId, el.label || 'Elemento', el.type || 'otro', Number(el.x) || 300, Number(el.y) || 250, Number(el.width) || 120, Number(el.height) || 50, Number(el.rotation) || 0, now, now);
           }
@@ -1117,7 +1179,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
         );
         const keepIds = new Set<string>();
         for (const g of studio.guests) {
-          const id = String(g.id);
+          const id = resolveUniqueId('guests', String(g.id));
           keepIds.add(id);
           const parts = String(g.name || 'Invitado').trim().split(/\s+/);
           const fn = (g.firstName || parts[0] || 'Invitado').trim();
@@ -1141,7 +1203,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
             `).run(fn, ln, phone, comp, dbStatus, tableId, obs, now, id, weddingId);
           } else {
             db.prepare(`
-              INSERT INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, status, table_id, observations, created_at, updated_at)
+              INSERT OR IGNORE INTO guests (id, wedding_id, first_name, last_name, phone, companion_count, status, table_id, observations, created_at, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(id, weddingId, fn, ln, phone, comp, dbStatus, tableId, obs, now, now);
           }
@@ -1165,8 +1227,8 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
         const keepPaymentIds = new Set<string>();
 
         for (const v of studio.vendors) {
-          const vid = String(v.id);
-          const isVirtualOrphanBucket = vid === 'v_general_payments';
+          const isVirtualOrphanBucket = String(v.id) === 'v_general_payments';
+          const vid = isVirtualOrphanBucket ? 'v_general_payments' : resolveUniqueId('vendors', String(v.id));
           if (!isVirtualOrphanBucket) {
             keepVendorIds.add(vid);
             if (existingVendorIds.has(vid)) {
@@ -1177,7 +1239,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
               `).run(v.name || 'Proveedor', v.phone || '', v.category || 'Otro', Number(v.totalCost) || 0, v.nextDueDate || null, v.notes || '', now, vid, weddingId);
             } else {
               db.prepare(`
-                INSERT INTO vendors (id, wedding_id, name, phone, type, locations, costo_real, payment_due_date, notes, created_at, updated_at)
+                INSERT OR IGNORE INTO vendors (id, wedding_id, name, phone, type, locations, costo_real, payment_due_date, notes, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
               `).run(vid, weddingId, v.name || 'Proveedor', v.phone || '', v.category || 'Otro', '["Recepción"]', Number(v.totalCost) || 0, v.nextDueDate || null, v.notes || '', now, now);
             }
@@ -1185,7 +1247,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
 
           if (Array.isArray(v.payments)) {
             for (const pay of v.payments) {
-              const pid = String(pay.id);
+              const pid = resolveUniqueId('payments', String(pay.id));
               keepPaymentIds.add(pid);
               const linkedVendorId = isVirtualOrphanBucket ? null : vid;
               if (existingPaymentIds.has(pid)) {
@@ -1196,7 +1258,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
                 `).run(linkedVendorId, pay.concept || 'Abono', Number(pay.amount) || 0, pay.date || now.split('T')[0], pay.method || 'Transferencia', pay.notes || '', now, pid, weddingId);
               } else {
                 db.prepare(`
-                  INSERT INTO payments (id, wedding_id, vendor_id, concept, amount, payment_date, payment_method, notes, created_at, updated_at)
+                  INSERT OR IGNORE INTO payments (id, wedding_id, vendor_id, concept, amount, payment_date, payment_method, notes, created_at, updated_at)
                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 `).run(pid, weddingId, linkedVendorId, pay.concept || 'Abono', Number(pay.amount) || 0, pay.date || now.split('T')[0], pay.method || 'Transferencia', pay.notes || '', now, now);
               }
@@ -1223,7 +1285,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
         );
         const keepTaskIds = new Set<string>();
         for (const t of studio.checklist) {
-          const tid = String(t.id);
+          const tid = resolveUniqueId('tasks', String(t.id));
           keepTaskIds.add(tid);
           const dbStatus = t.completed ? 'Completada' : 'Pendiente';
           if (existingTaskIds.has(tid)) {
@@ -1233,7 +1295,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
             `).run(t.title || 'Tarea', t.category || 'General', t.owner || 'Ambos', t.dueDate || null, dbStatus, t.notes || '', now, tid, weddingId);
           } else {
             db.prepare(`
-              INSERT INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
+              INSERT OR IGNORE INTO tasks (id, wedding_id, title, category, responsible, due_date, priority, status, notes, created_at, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, 'Media', ?, ?, ?, ?)
             `).run(tid, weddingId, t.title || 'Tarea', t.category || 'General', t.owner || 'Ambos', t.dueDate || null, dbStatus, t.notes || '', now, now);
           }
@@ -1252,7 +1314,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
         );
         const keepTlIds = new Set<string>();
         studio.timeline.forEach((ev: any, idx: number) => {
-          const eid = String(ev.id);
+          const eid = resolveUniqueId('timeline_events', String(ev.id));
           keepTlIds.add(eid);
           if (existingTlIds.has(eid)) {
             db.prepare(`
@@ -1261,7 +1323,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
             `).run(ev.time || '18:00', ev.title || 'Momento', ev.location || '', ev.notes || '', idx, now, eid, weddingId);
           } else {
             db.prepare(`
-              INSERT INTO timeline_events (id, wedding_id, time, activity, location, notes, order_index, created_at, updated_at)
+              INSERT OR IGNORE INTO timeline_events (id, wedding_id, time, activity, location, notes, order_index, created_at, updated_at)
               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             `).run(eid, weddingId, ev.time || '18:00', ev.title || 'Momento', ev.location || '', ev.notes || '', idx, now, now);
           }
