@@ -544,16 +544,26 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
             : s
         );
       } else if (!activeSnapshotId && (currentData.tables.length > 0 || currentData.floorElements.length > 0)) {
-        // User had unsaved work on a non-versioned canvas: auto-backup before switching!
-        const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-        const autoSnap: LayoutSnapshot = {
-          id: `snap_auto_${Date.now()}`,
-          name: `${isCivilLayout ? 'Boda Civil' : 'Boda Principal'} (respaldo ${timeStr})`,
-          eventType: currentEventKey,
-          createdAt: new Date().toISOString(),
-          ...currentData
-        };
-        nextSnapshots = [autoSnap, ...nextSnapshots];
+        // Only auto-backup if the current canvas actually differs from all existing versions for this event
+        const serializeLayout = (d: { tables: TableItem[]; floorElements: FloorElement[]; guestTableMap?: Record<string, string> }) =>
+          JSON.stringify({ t: d.tables, e: d.floorElements, g: d.guestTableMap || {} });
+        const currentSig = serializeLayout(currentData);
+        const alreadySaved = nextSnapshots.some(
+          s => (s.eventType || 'principal') === currentEventKey && serializeLayout(s) === currentSig
+        );
+        if (!alreadySaved) {
+          const autoId = `snap_auto_${currentEventKey}`;
+          const timeStr = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+          const autoSnap: LayoutSnapshot = {
+            id: autoId,
+            name: `${isCivilLayout ? 'Boda Civil' : 'Boda Principal'} (respaldo ${timeStr})`,
+            eventType: currentEventKey,
+            createdAt: new Date().toISOString(),
+            ...currentData
+          };
+          // Keep at most ONE rolling auto-backup per event so it never spams duplicates
+          nextSnapshots = [autoSnap, ...nextSnapshots.filter(s => s.id !== autoId)];
+        }
       }
 
       return {
