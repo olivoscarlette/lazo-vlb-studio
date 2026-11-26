@@ -8,6 +8,7 @@ import { daysUntil, formatMXN, formatShortDate } from '../data/seedWedding';
 import { LazoTab } from '../types/lazo';
 import { Modal } from '../components/Modal';
 import { VlbCoordinationModal } from '../components/VlbCoordinationModal';
+import { sortTimelineItems } from '../utils/pdfExport';
 
 interface HomeViewProps {
   onNavigate: (tab: LazoTab) => void;
@@ -395,7 +396,7 @@ export const HomeView: React.FC<HomeViewProps> = ({ onNavigate }) => {
                   </div>
                 ) : (
                   <div className="divide-y divide-[#F3EDE7] flex-1">
-                    {(wedding.timeline || []).slice(0, 5).map(item => (
+                    {sortTimelineItems(wedding.timeline || []).slice(0, 5).map(item => (
                       <button
                         key={item.id}
                         type="button"

@@ -56,8 +56,8 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
   const [loading, setLoading] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Sub-vista: 'events' (Liquidación de Eventos) | 'payroll' (Control de Nómina & Dispersión)
-  const [activeSubView, setActiveSubView] = useState<'events' | 'payroll'>('events');
+  // Sub-vista: 'events' (Liquidación de Eventos) | 'payroll' (Nómina Operativa) | 'profits' (Reparto de Utilidades)
+  const [activeSubView, setActiveSubView] = useState<'events' | 'payroll' | 'profits'>('events');
   const [payrollRecipientFilter, setPayrollRecipientFilter] = useState<'ALL' | 'SCARLETTE' | 'VICTORIA' | 'EXTERNAL'>('ALL');
   const [payrollStatusFilter, setPayrollStatusFilter] = useState<'ALL' | 'PENDING' | 'PAID'>('PENDING');
 
@@ -464,26 +464,32 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
         acc.totalNetProfit += calc.netProfit;
         acc.totalCompanyFund += calc.companyFundAmount;
 
-        // Scarlette
+        // Scarlette (Nómina operativa separada de utilidades)
+        const scarletteOp = calc.scarletteShiftPayout + calc.scarletteFreightPayout + calc.scarletteStationeryPayout;
         acc.totalScarlette += calc.scarletteTotalPayout;
         acc.totalScarletteProfit += calc.scarletteProfitShare;
-        acc.totalScarletteOp += (calc.scarletteShiftPayout + (item.car_provider === 'SCARLETTE' ? calc.freightPayout : 0) + calc.scarletteStationeryPayout);
-        if (item.paid_scarlette) {
-          acc.paidScarlette += calc.scarletteTotalPayout;
-        } else {
-          acc.pendingScarlette += calc.scarletteTotalPayout;
-          if (calc.scarletteTotalPayout > 0) acc.pendingScarletteCount += 1;
+        acc.totalScarletteOp += scarletteOp;
+        if (scarletteOp > 0) {
+          if (item.paid_scarlette) {
+            acc.paidScarlette += scarletteOp;
+          } else {
+            acc.pendingScarlette += scarletteOp;
+            acc.pendingScarletteCount += 1;
+          }
         }
 
-        // Victoria
+        // Victoria (Nómina operativa separada de utilidades)
+        const victoriaOp = calc.victoriaShiftPayout + calc.victoriaFreightPayout + calc.victoriaStationeryPayout;
         acc.totalVictoria += calc.victoriaTotalPayout;
         acc.totalVictoriaProfit += calc.victoriaProfitShare;
-        acc.totalVictoriaOp += (calc.victoriaShiftPayout + (item.car_provider === 'VICTORIA' ? calc.freightPayout : 0) + calc.victoriaStationeryPayout);
-        if (item.paid_victoria) {
-          acc.paidVictoria += calc.victoriaTotalPayout;
-        } else {
-          acc.pendingVictoria += calc.victoriaTotalPayout;
-          if (calc.victoriaTotalPayout > 0) acc.pendingVictoriaCount += 1;
+        acc.totalVictoriaOp += victoriaOp;
+        if (victoriaOp > 0) {
+          if (item.paid_victoria) {
+            acc.paidVictoria += victoriaOp;
+          } else {
+            acc.pendingVictoria += victoriaOp;
+            acc.pendingVictoriaCount += 1;
+          }
         }
 
         // Staff Externo
@@ -586,15 +592,15 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     }> = [];
 
     settlementsWithCalc.forEach(({ item, calc }) => {
-      // Scarlette
-      if (calc.scarletteTotalPayout > 0) {
+      // Scarlette (solo nómina operativa del evento; utilidades van en su propia pestaña)
+      const scarletteOp = calc.scarletteShiftPayout + calc.scarletteFreightPayout + calc.scarletteStationeryPayout;
+      if (scarletteOp > 0) {
         const concepts: string[] = [];
         if (calc.scarletteShiftPayout > 0) concepts.push(`Turno Staff ($${calc.scarletteShiftPayout})`);
         if (calc.scarletteFreightPayout > 0) {
           concepts.push(`Flete / Carro ($${calc.scarletteFreightPayout})${item.car_provider === 'AMBAS_COMPLETO' ? ' (Ambas tarifa completa)' : item.car_provider === 'AMBAS_DIVIDIDO' ? ' (Ambas dividido 50/50)' : ''}`);
         }
         if (calc.scarletteStationeryPayout > 0) concepts.push(`Taller Papelería ($${calc.scarletteStationeryPayout})`);
-        if (calc.scarletteProfitShare > 0) concepts.push(`Utilidad Socia 20% ($${calc.scarletteProfitShare})`);
         if (item.notes) concepts.push(`Nota: ${item.notes}`);
 
         list.push({
@@ -605,25 +611,25 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
           venue: item.venue || '',
           target: 'scarlette',
           beneficiaryName: 'Scarlette Olivo',
-          amount: calc.scarletteTotalPayout,
+          amount: scarletteOp,
           isPaid: Boolean(item.paid_scarlette),
           paidAt: item.paid_scarlette_at,
           concepts,
           profitShare: calc.scarletteProfitShare,
-          operationalAmount: calc.scarletteTotalPayout - calc.scarletteProfitShare,
+          operationalAmount: scarletteOp,
           settlementItem: item
         });
       }
 
-      // Victoria
-      if (calc.victoriaTotalPayout > 0) {
+      // Victoria (solo nómina operativa del evento; utilidades van en su propia pestaña)
+      const victoriaOp = calc.victoriaShiftPayout + calc.victoriaFreightPayout + calc.victoriaStationeryPayout;
+      if (victoriaOp > 0) {
         const concepts: string[] = [];
         if (calc.victoriaShiftPayout > 0) concepts.push(`Turno Staff ($${calc.victoriaShiftPayout})`);
         if (calc.victoriaFreightPayout > 0) {
           concepts.push(`Flete / Carro ($${calc.victoriaFreightPayout})${item.car_provider === 'AMBAS_COMPLETO' ? ' (Ambas tarifa completa)' : item.car_provider === 'AMBAS_DIVIDIDO' ? ' (Ambas dividido 50/50)' : ''}`);
         }
         if (calc.victoriaStationeryPayout > 0) concepts.push(`Taller Papelería ($${calc.victoriaStationeryPayout})`);
-        if (calc.victoriaProfitShare > 0) concepts.push(`Utilidad Socia 20% ($${calc.victoriaProfitShare})`);
         if (item.notes) concepts.push(`Nota: ${item.notes}`);
 
         list.push({
@@ -634,12 +640,12 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
           venue: item.venue || '',
           target: 'victoria',
           beneficiaryName: 'Victoria',
-          amount: calc.victoriaTotalPayout,
+          amount: victoriaOp,
           isPaid: Boolean(item.paid_victoria),
           paidAt: item.paid_victoria_at,
           concepts,
           profitShare: calc.victoriaProfitShare,
-          operationalAmount: calc.victoriaTotalPayout - calc.victoriaProfitShare,
+          operationalAmount: victoriaOp,
           settlementItem: item
         });
       }
@@ -899,57 +905,65 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
         </div>
       </div>
 
-      {/* TARJETAS DE LIQUIDACIÓN A SOCIAS & STAFF */}
+      {/* TARJETAS DE NÓMINA OPERATIVA & STAFF */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Scarlette */}
         <div className="bg-[#FFFFFF] p-5 rounded-3xl border-2 border-[#EAE3DA] shadow-xs space-y-2 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#70443D] uppercase tracking-wider">Liquidación Total</span>
+            <span className="text-xs font-bold text-[#70443D] uppercase tracking-wider">Nómina Operativa</span>
             <div className="flex items-center space-x-1 text-[10px]">
-              <span className="font-bold text-[#70443D] bg-[#FCFAF7] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                Por pagar: {fmt(globalKpis.pendingScarlette)}
+              <span className="font-bold text-[#E84E6D] bg-[#FFF6F8] px-2 py-0.5 rounded-full border border-[#F5C2CD]">
+                Op. por pagar: {fmt(globalKpis.pendingScarlette)}
               </span>
             </div>
           </div>
           <h3 className="font-serif text-lg font-bold text-[#332A28]">Scarlette Olivo</h3>
           <div className="text-2xl font-bold font-serif text-[#70443D]">
-            {fmt(globalKpis.totalScarlette)}
+            {fmt(globalKpis.totalScarletteOp)}
           </div>
           <div className="space-y-1 text-[11px] pt-1.5 border-t border-[#EAE3DA]">
-            <div className="flex justify-between text-[#7D6F6B]">
-              <span>• Reparto Utilidades (20% neto):</span>
-              <span className="font-bold text-[#70443D]">{fmt(globalKpis.totalScarletteProfit)}</span>
-            </div>
             <div className="flex justify-between text-[#7D6F6B]">
               <span>• Turnos, Carro & Taller:</span>
               <span className="font-semibold text-[#332A28]">{fmt(globalKpis.totalScarletteOp)}</span>
             </div>
+            <button
+              type="button"
+              onClick={() => setActiveSubView('profits')}
+              className="w-full flex justify-between text-[#7D6F6B] hover:text-[#9C665C] transition cursor-pointer"
+            >
+              <span>• Utilidad acumulada (20%):</span>
+              <span className="font-bold text-[#9C665C] underline decoration-dotted">{fmt(globalKpis.totalScarletteProfit)}</span>
+            </button>
           </div>
         </div>
 
         {/* Victoria */}
         <div className="bg-[#FFFFFF] p-5 rounded-3xl border-2 border-[#EAE3DA] shadow-xs space-y-2 relative overflow-hidden">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-[#70443D] uppercase tracking-wider">Liquidación Total</span>
+            <span className="text-xs font-bold text-[#70443D] uppercase tracking-wider">Nómina Operativa</span>
             <div className="flex items-center space-x-1 text-[10px]">
               <span className="font-bold text-[#70443D] bg-[#FCFAF7] px-2 py-0.5 rounded-full border border-[#EAE3DA]">
-                Por pagar: {fmt(globalKpis.pendingVictoria)}
+                Op. por pagar: {fmt(globalKpis.pendingVictoria)}
               </span>
             </div>
           </div>
           <h3 className="font-serif text-lg font-bold text-[#332A28]">Victoria</h3>
           <div className="text-2xl font-bold font-serif text-[#70443D]">
-            {fmt(globalKpis.totalVictoria)}
+            {fmt(globalKpis.totalVictoriaOp)}
           </div>
           <div className="space-y-1 text-[11px] pt-1.5 border-t border-[#EAE3DA]">
             <div className="flex justify-between text-[#7D6F6B]">
-              <span>• Reparto Utilidades (20% neto):</span>
-              <span className="font-bold text-[#70443D]">{fmt(globalKpis.totalVictoriaProfit)}</span>
-            </div>
-            <div className="flex justify-between text-[#7D6F6B]">
-              <span>• Turnos & Carro:</span>
+              <span>• Turnos, Carro & Taller:</span>
               <span className="font-semibold text-[#332A28]">{fmt(globalKpis.totalVictoriaOp)}</span>
             </div>
+            <button
+              type="button"
+              onClick={() => setActiveSubView('profits')}
+              className="w-full flex justify-between text-[#7D6F6B] hover:text-[#9C665C] transition cursor-pointer"
+            >
+              <span>• Utilidad acumulada (20%):</span>
+              <span className="font-bold text-[#9C665C] underline decoration-dotted">{fmt(globalKpis.totalVictoriaProfit)}</span>
+            </button>
           </div>
         </div>
 
@@ -973,9 +987,9 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
         </div>
       </div>
 
-      {/* SUB-VISTAS: LIQUIDACIONES DE EVENTOS vs CONTROL DE NÓMINA */}
+      {/* SUB-VISTAS: LIQUIDACIONES DE EVENTOS · NÓMINA OPERATIVA · REPARTO DE UTILIDADES */}
       <div className="flex items-center justify-between border-b border-[#EAE3DA] pb-2 pt-1">
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setActiveSubView('events')}
             className={`px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center space-x-2 cursor-pointer ${
@@ -997,7 +1011,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
             }`}
           >
             <Banknote className="w-3.5 h-3.5" />
-            <span>Control de Nómina & Dispersión</span>
+            <span>Nómina Operativa & Dispersión</span>
             {(globalKpis.pendingScarletteCount + globalKpis.pendingVictoriaCount + globalKpis.pendingExternalCount) > 0 && (
               <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-black ${
                 activeSubView === 'payroll' ? 'bg-white text-[#E84E6D]' : 'bg-[#E84E6D] text-white'
@@ -1005,6 +1019,18 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 {globalKpis.pendingScarletteCount + globalKpis.pendingVictoriaCount + globalKpis.pendingExternalCount}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={() => setActiveSubView('profits')}
+            className={`px-4 py-2 rounded-2xl text-xs font-bold transition flex items-center space-x-2 cursor-pointer ${
+              activeSubView === 'profits'
+                ? 'bg-[#9C665C] text-white shadow-xs'
+                : 'bg-[#FCFAF7] text-[#7D6F6B] hover:text-[#332A28] border border-[#EAE3DA]'
+            }`}
+          >
+            <PieChart className="w-3.5 h-3.5" />
+            <span>Reparto de Utilidades (40%)</span>
           </button>
         </div>
       </div>
@@ -1078,8 +1104,8 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                 <th className="py-3 px-3 text-center">Staff Asistencia</th>
                 <th className="py-3 px-3 text-right">Ganancia Neta</th>
                 <th className="py-3 px-3 text-right font-bold text-[#9C665C]">60% VLB</th>
-                <th className="py-3 px-3 text-right font-bold text-[#70443D]">Pago Victoria</th>
-                <th className="py-3 px-3 text-right font-bold text-[#70443D]">Pago Scarlette</th>
+                <th className="py-3 px-3 text-right font-bold text-[#70443D]">Pago Op. Victoria</th>
+                <th className="py-3 px-3 text-right font-bold text-[#70443D]">Pago Op. Scarlette</th>
                 <th className="py-3 px-3 text-center">Acciones</th>
               </tr>
             </thead>
@@ -1220,44 +1246,54 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                       )}
                     </td>
 
-                    {/* Staff Asistencia */}
+                    {/* Staff Asistencia (muestra únicamente a quien SÍ asistió) */}
                     <td className="py-3.5 px-3 text-center space-y-1">
-                      <div className="flex items-center justify-center space-x-1 text-[10px]">
-                        <span className={`px-1.5 py-0.5 rounded font-bold ${item.staff_scarlette ? 'bg-[#E84E6D]/15 text-[#E84E6D]' : 'bg-gray-100 text-gray-400'}`}>
-                          S
-                        </span>
-                        <span className={`px-1.5 py-0.5 rounded font-bold ${item.staff_victoria ? 'bg-[#70443D]/15 text-[#70443D]' : 'bg-gray-100 text-gray-400'}`}>
-                          V
-                        </span>
-                        {item.external_staff_count > 0 && (
-                          <span className="px-1.5 py-0.5 rounded bg-[#FAF6F2] text-[#7D6F6B] font-semibold border border-[#EAE3DA]">
-                            +{item.external_staff_count} ext
-                          </span>
-                        )}
-                      </div>
-                      {item.external_staff_names && (
-                        <div className="text-[9px] text-[#7D6F6B] truncate max-w-[120px] mx-auto font-medium" title={item.external_staff_names}>
-                          {item.external_staff_names}
-                        </div>
-                      )}
-                      {item.external_staff_count > 0 && (
-                        <div>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleTogglePayout(item.id, 'external');
-                            }}
-                            className={`mt-1 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition cursor-pointer ${
-                              item.paid_external
-                                ? 'bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]'
-                                : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
-                            }`}
-                            title={item.paid_external ? 'Staff pagado. Clic para desmarcar' : 'Staff por pagar. Clic para marcar pagado'}
-                          >
-                            {item.paid_external ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
-                            <span>{item.paid_external ? 'Staff Pagado' : 'Staff Pend.'}</span>
-                          </button>
-                        </div>
+                      {!item.staff_scarlette && !item.staff_victoria && item.external_staff_count === 0 ? (
+                        <span className="text-[#A69995] text-[11px]">—</span>
+                      ) : (
+                        <>
+                          <div className="flex flex-wrap items-center justify-center gap-1 text-[10px]">
+                            {item.staff_scarlette && (
+                              <span className="px-2 py-0.5 rounded-md font-bold bg-[#FFF0F3] text-[#E84E6D] border border-[#F5C2CD]">
+                                Scarlette
+                              </span>
+                            )}
+                            {item.staff_victoria && (
+                              <span className="px-2 py-0.5 rounded-md font-bold bg-[#FAF6F2] text-[#70443D] border border-[#DFD1C4]">
+                                Victoria
+                              </span>
+                            )}
+                            {item.external_staff_count > 0 && (
+                              <span className="px-1.5 py-0.5 rounded-md bg-[#FAF6F2] text-[#7D6F6B] font-semibold border border-[#EAE3DA]">
+                                +{item.external_staff_count} ext
+                              </span>
+                            )}
+                          </div>
+                          {item.external_staff_names && (
+                            <div className="text-[9px] text-[#7D6F6B] truncate max-w-[130px] mx-auto font-medium" title={item.external_staff_names}>
+                              {item.external_staff_names}
+                            </div>
+                          )}
+                          {item.external_staff_count > 0 && (
+                            <div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTogglePayout(item.id, 'external');
+                                }}
+                                className={`mt-1 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition cursor-pointer ${
+                                  item.paid_external
+                                    ? 'bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]'
+                                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                                }`}
+                                title={item.paid_external ? 'Staff pagado. Clic para desmarcar' : 'Staff por pagar. Clic para marcar pagado'}
+                              >
+                                {item.paid_external ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
+                                <span>{item.paid_external ? 'Staff Pagado' : 'Staff Pend.'}</span>
+                              </button>
+                            </div>
+                          )}
+                        </>
                       )}
                     </td>
 
@@ -1273,69 +1309,89 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                       {fmt(calc.companyFundAmount)}
                     </td>
 
-                    {/* Pago Victoria */}
-                    <td className="py-3.5 px-3 text-right">
-                      <div className="font-bold text-sm text-[#70443D] font-mono">
-                        {fmt(calc.victoriaTotalPayout)}
-                      </div>
-                      <div className="text-[10px] text-[#70443D]/80 font-sans font-medium">
-                        Utilidad: {fmt(calc.victoriaProfitShare)}
-                      </div>
-                      {(calc.victoriaShiftPayout > 0 || calc.victoriaFreightPayout > 0 || calc.victoriaStationeryPayout > 0) && (
-                        <div className="text-[9px] text-[#7D6F6B] font-sans">
-                          +Op: {fmt(calc.victoriaShiftPayout + calc.victoriaFreightPayout + calc.victoriaStationeryPayout)}
-                        </div>
-                      )}
-                      <div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTogglePayout(item.id, 'victoria');
-                          }}
-                          className={`mt-1 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition cursor-pointer ${
-                            item.paid_victoria
-                              ? 'bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]'
-                              : 'bg-[#FFF6F8] text-[#70443D] border border-[#EAE3DA] hover:bg-[#FAF6F2]'
-                          }`}
-                          title={item.paid_victoria ? 'Pagado. Clic para desmarcar' : 'Pendiente de dispersar. Clic para marcar pagado'}
-                        >
-                          {item.paid_victoria ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
-                          <span>{item.paid_victoria ? 'Pagado' : 'Por pagar'}</span>
-                        </button>
-                      </div>
-                    </td>
+                    {/* Pago Operativo Victoria (solo Turno + Carro + Papelería; utilidades en su pestaña) */}
+                    {(() => {
+                      const victoriaOp = calc.victoriaShiftPayout + calc.victoriaFreightPayout + calc.victoriaStationeryPayout;
+                      const parts: string[] = [];
+                      if (calc.victoriaShiftPayout > 0) parts.push(`Turno ${fmt(calc.victoriaShiftPayout)}`);
+                      if (calc.victoriaFreightPayout > 0) parts.push(`Carro ${fmt(calc.victoriaFreightPayout)}`);
+                      if (calc.victoriaStationeryPayout > 0) parts.push(`Papel ${fmt(calc.victoriaStationeryPayout)}`);
+                      return (
+                        <td className="py-3.5 px-3 text-right">
+                          {victoriaOp > 0 ? (
+                            <>
+                              <div className="font-bold text-sm text-[#70443D] font-mono">
+                                {fmt(victoriaOp)}
+                              </div>
+                              <div className="text-[9px] text-[#7D6F6B] font-sans leading-tight mt-0.5">
+                                {parts.join(' · ')}
+                              </div>
+                              <div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTogglePayout(item.id, 'victoria');
+                                  }}
+                                  className={`mt-1 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition cursor-pointer ${
+                                    item.paid_victoria
+                                      ? 'bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]'
+                                      : 'bg-[#FFF6F8] text-[#70443D] border border-[#EAE3DA] hover:bg-[#FAF6F2]'
+                                  }`}
+                                  title={item.paid_victoria ? 'Pagado. Clic para desmarcar' : 'Pendiente de dispersar. Clic para marcar pagado'}
+                                >
+                                  {item.paid_victoria ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
+                                  <span>{item.paid_victoria ? 'Pagado' : 'Por pagar'}</span>
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-[#A69995] text-xs">—</span>
+                          )}
+                        </td>
+                      );
+                    })()}
 
-                    {/* Pago Scarlette */}
-                    <td className="py-3.5 px-3 text-right">
-                      <div className="font-bold text-sm text-[#E84E6D] font-mono">
-                        {fmt(calc.scarletteTotalPayout)}
-                      </div>
-                      <div className="text-[10px] text-[#E84E6D]/80 font-sans font-medium">
-                        Utilidad: {fmt(calc.scarletteProfitShare)}
-                      </div>
-                      {(calc.scarletteShiftPayout > 0 || calc.scarletteFreightPayout > 0 || calc.scarletteStationeryPayout > 0) && (
-                        <div className="text-[9px] text-[#7D6F6B] font-sans">
-                          +Op: {fmt(calc.scarletteShiftPayout + calc.scarletteFreightPayout + calc.scarletteStationeryPayout)}
-                        </div>
-                      )}
-                      <div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTogglePayout(item.id, 'scarlette');
-                          }}
-                          className={`mt-1 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition cursor-pointer ${
-                            item.paid_scarlette
-                              ? 'bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]'
-                              : 'bg-[#FFF6F8] text-[#E84E6D] border border-[#F5C2CD] hover:bg-[#FFE8ED]'
-                          }`}
-                          title={item.paid_scarlette ? 'Pagado. Clic para desmarcar' : 'Pendiente de dispersar. Clic para marcar pagado'}
-                        >
-                          {item.paid_scarlette ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
-                          <span>{item.paid_scarlette ? 'Pagado' : 'Por pagar'}</span>
-                        </button>
-                      </div>
-                    </td>
+                    {/* Pago Operativo Scarlette (solo Turno + Carro + Papelería; utilidades en su pestaña) */}
+                    {(() => {
+                      const scarletteOp = calc.scarletteShiftPayout + calc.scarletteFreightPayout + calc.scarletteStationeryPayout;
+                      const parts: string[] = [];
+                      if (calc.scarletteShiftPayout > 0) parts.push(`Turno ${fmt(calc.scarletteShiftPayout)}`);
+                      if (calc.scarletteFreightPayout > 0) parts.push(`Carro ${fmt(calc.scarletteFreightPayout)}`);
+                      if (calc.scarletteStationeryPayout > 0) parts.push(`Papel ${fmt(calc.scarletteStationeryPayout)}`);
+                      return (
+                        <td className="py-3.5 px-3 text-right">
+                          {scarletteOp > 0 ? (
+                            <>
+                              <div className="font-bold text-sm text-[#E84E6D] font-mono">
+                                {fmt(scarletteOp)}
+                              </div>
+                              <div className="text-[9px] text-[#7D6F6B] font-sans leading-tight mt-0.5">
+                                {parts.join(' · ')}
+                              </div>
+                              <div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTogglePayout(item.id, 'scarlette');
+                                  }}
+                                  className={`mt-1 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition cursor-pointer ${
+                                    item.paid_scarlette
+                                      ? 'bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]'
+                                      : 'bg-[#FFF6F8] text-[#E84E6D] border border-[#F5C2CD] hover:bg-[#FFE8ED]'
+                                  }`}
+                                  title={item.paid_scarlette ? 'Pagado. Clic para desmarcar' : 'Pendiente de dispersar. Clic para marcar pagado'}
+                                >
+                                  {item.paid_scarlette ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
+                                  <span>{item.paid_scarlette ? 'Pagado' : 'Por pagar'}</span>
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-[#A69995] text-xs">—</span>
+                          )}
+                        </td>
+                      );
+                    })()}
 
                     {/* Acciones */}
                     <td className="py-3.5 px-3 text-center">
@@ -1607,6 +1663,154 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                     ))
                   )}
                 </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ---------------------------------------------------- */}
+      {/* VISTA 3: REPARTO DE UTILIDADES (60% VLB · 20% VICTORIA · 20% SCARLETTE) */}
+      {/* ---------------------------------------------------- */}
+      {activeSubView === 'profits' && (
+        <div className="space-y-4">
+          {/* Resumen de Utilidades del Periodo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#EAE3DA] shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#7D6F6B] block">
+                Ganancia Neta del Periodo
+              </span>
+              <span className="font-serif text-2xl font-bold text-[#C83460] block mt-1">
+                {fmt(globalKpis.totalNetProfit)}
+              </span>
+              <span className="text-[10px] text-[#7D6F6B]">
+                Después de insumos y operación ({settlementsWithCalc.length} eventos)
+              </span>
+            </div>
+
+            <div className="bg-[#FAF6F2] p-4 rounded-2xl border border-[#EAE3DA] shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#9C665C] block">
+                60% Fondo Empresa VLB
+              </span>
+              <span className="font-serif text-2xl font-bold text-[#9C665C] block mt-1">
+                {fmt(globalKpis.totalCompanyFund)}
+              </span>
+              <span className="text-[10px] text-[#7D6F6B]">
+                Reserva fija, reinversión y taller
+              </span>
+            </div>
+
+            <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#EAE3DA] shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#70443D] block">
+                20% Utilidad Victoria
+              </span>
+              <span className="font-serif text-2xl font-bold text-[#70443D] block mt-1">
+                {fmt(globalKpis.totalVictoriaProfit)}
+              </span>
+              <span className="text-[10px] text-[#7D6F6B]">
+                50% de la bolsa de socias (independiente de asistencia)
+              </span>
+            </div>
+
+            <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#F5C2CD] shadow-xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#E84E6D] block">
+                20% Utilidad Scarlette
+              </span>
+              <span className="font-serif text-2xl font-bold text-[#E84E6D] block mt-1">
+                {fmt(globalKpis.totalScarletteProfit)}
+              </span>
+              <span className="text-[10px] text-[#7D6F6B]">
+                50% de la bolsa de socias (independiente de asistencia)
+              </span>
+            </div>
+          </div>
+
+          {/* Filtro por mes para Utilidades */}
+          <div className="bg-[#FFFFFF] p-3.5 rounded-2xl border border-[#EAE3DA] shadow-xs flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center space-x-2 text-xs text-[#7D6F6B]">
+              <Calendar className="w-3.5 h-3.5 text-[#9C665C]" />
+              <span className="font-bold text-[#332A28]">Periodo:</span>
+              <select
+                value={selectedMonth}
+                onChange={e => setSelectedMonth(e.target.value)}
+                className="px-3 py-1.5 text-xs bg-[#FCFAF7] border border-[#EAE3DA] rounded-xl text-[#332A28] focus:outline-none focus:ring-1 focus:ring-[#9C665C] cursor-pointer"
+              >
+                <option value="ALL">📅 Todos los Meses</option>
+                {availableMonths.map(m => (
+                  <option key={m} value={m}>{formatMonthName(m)}</option>
+                ))}
+              </select>
+            </div>
+            <p className="text-[11px] text-[#7D6F6B]">
+              Las utilidades se calculan sobre la <strong>Ganancia Neta</strong> (ya descontados turnos, carro, papelería, staff e insumos).
+            </p>
+          </div>
+
+          {/* Tabla de Desglose de Utilidades por Evento */}
+          <div className="bg-[#FFFFFF] rounded-3xl border border-[#EAE3DA] shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-[#FCFAF7] border-b border-[#EAE3DA] text-[10px] font-bold uppercase tracking-wider text-[#7D6F6B]">
+                    <th className="py-3 px-4">Fecha & Evento</th>
+                    <th className="py-3 px-3 text-right">Ingreso</th>
+                    <th className="py-3 px-3 text-right">Gastos & Op.</th>
+                    <th className="py-3 px-3 text-right text-[#C83460]">Ganancia Neta</th>
+                    <th className="py-3 px-3 text-right text-[#9C665C]">60% VLB</th>
+                    <th className="py-3 px-3 text-right text-[#70443D]">20% Victoria</th>
+                    <th className="py-3 px-3 text-right text-[#E84E6D]">20% Scarlette</th>
+                    <th className="py-3 px-3 text-center">Detalle</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F7F3EE]">
+                  {settlementsWithCalc.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-10 text-center text-[#7D6F6B]">
+                        No hay eventos en este periodo.
+                      </td>
+                    </tr>
+                  ) : (
+                    settlementsWithCalc.map(({ item, calc }) => (
+                      <tr key={item.id} className="hover:bg-[#FCFAF7] transition">
+                        <td className="py-3 px-4">
+                          <div className="font-serif font-bold text-sm text-[#332A28]">{item.event_name}</div>
+                          <div className="text-[11px] text-[#7D6F6B]">
+                            {item.event_date}{item.venue ? ` · ${item.venue}` : ''}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 text-right font-mono text-[#332A28]">{fmt(calc.totalRevenue)}</td>
+                        <td className="py-3 px-3 text-right font-mono text-[#7D6F6B]">{fmt(calc.totalExpenses)}</td>
+                        <td className="py-3 px-3 text-right font-mono font-bold text-[#C83460]">{fmt(calc.netProfit)}</td>
+                        <td className="py-3 px-3 text-right font-mono font-semibold text-[#9C665C]">{fmt(calc.companyFundAmount)}</td>
+                        <td className="py-3 px-3 text-right font-mono font-bold text-[#70443D]">{fmt(calc.victoriaProfitShare)}</td>
+                        <td className="py-3 px-3 text-right font-mono font-bold text-[#E84E6D]">{fmt(calc.scarletteProfitShare)}</td>
+                        <td className="py-3 px-3 text-center">
+                          <button
+                            onClick={() => setDetailModalSettlement(item)}
+                            className="p-1.5 rounded-lg bg-[#FAF6F2] hover:bg-[#F6ECE8] text-[#9C665C] transition cursor-pointer"
+                            title="Ver desglose completo del evento"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+                {settlementsWithCalc.length > 0 && (
+                  <tfoot>
+                    <tr className="bg-[#FAF6F2] border-t-2 border-[#EAE3DA] font-bold">
+                      <td className="py-3.5 px-4 font-serif text-sm text-[#332A28]">Total del Periodo</td>
+                      <td className="py-3.5 px-3 text-right font-mono text-[#332A28]">{fmt(globalKpis.totalRevenue)}</td>
+                      <td className="py-3.5 px-3 text-right font-mono text-[#7D6F6B]">{fmt(globalKpis.totalExpenses)}</td>
+                      <td className="py-3.5 px-3 text-right font-mono text-[#C83460]">{fmt(globalKpis.totalNetProfit)}</td>
+                      <td className="py-3.5 px-3 text-right font-mono text-[#9C665C]">{fmt(globalKpis.totalCompanyFund)}</td>
+                      <td className="py-3.5 px-3 text-right font-mono text-[#70443D]">{fmt(globalKpis.totalVictoriaProfit)}</td>
+                      <td className="py-3.5 px-3 text-right font-mono text-[#E84E6D]">{fmt(globalKpis.totalScarletteProfit)}</td>
+                      <td />
+                    </tr>
+                  </tfoot>
+                )}
               </table>
             </div>
           </div>
