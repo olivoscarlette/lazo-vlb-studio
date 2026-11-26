@@ -23,6 +23,7 @@ export const SACRAMENT_MOMENTS_ORDER = [
   'Entrada de novio y cortejo',
   'Entrada de la novia',
   'Rito del matrimonio',
+  'Intercambio de anillos',
   'Imposición de anillos, arras y lazo',
   'Ofertorio',
   'Comunión',
@@ -39,6 +40,7 @@ export const normalizeMomentName = (m: string): string => {
   if (clean.includes('cortejo') || (clean.includes('entrada') && clean.includes('novio'))) return 'Entrada de novio y cortejo';
   if (clean.includes('entrada') && clean.includes('novia')) return 'Entrada de la novia';
   if (clean.includes('rito') || clean.includes('consentimiento')) return 'Rito del matrimonio';
+  if (clean.includes('intercambio') && clean.includes('anillo')) return 'Intercambio de anillos';
   if (clean.includes('anillo') || clean.includes('arras') || clean.includes('lazo')) return 'Imposición de anillos, arras y lazo';
   if (clean.includes('ofertorio') || clean.includes('dones')) return 'Ofertorio';
   if (clean.includes('comunión') || clean.includes('comunion')) return 'Comunión';

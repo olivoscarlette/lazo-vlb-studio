@@ -48,6 +48,7 @@ const SACRAMENT_MOMENTS = [
   'Entrada de novio y cortejo',
   'Entrada de la novia',
   'Rito del matrimonio',
+  'Intercambio de anillos',
   'Imposición de anillos, arras y lazo',
   'Ofertorio',
   'Comunión',
