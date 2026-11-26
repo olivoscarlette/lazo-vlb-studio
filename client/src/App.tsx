@@ -26,7 +26,8 @@ import { PublicProposalView } from './modules/PublicProposalView';
 import { NoviosStudioRoot } from './novios/NoviosStudioRoot';
 import { LandingPage } from './novios/components/LandingPage';
 import {
-  Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff, Sparkles, BellRing, X
+  Lock, Mail, ArrowRight, AlertCircle, CheckCircle2, ArrowLeft, KeyRound, Eye, EyeOff, Sparkles, BellRing, X,
+  Clock3, Grid2x2Check, Users2, Phone
 } from 'lucide-react';
 
 const LoginView: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
@@ -624,41 +625,81 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
               : 'lg:pl-[4.75rem] max-w-none'
           }`}
         >
-          {/* Banner exclusivo de Modo Día de la Boda */}
+          {/* Banner exclusivo de Modo Día de la Boda (compacto 1 línea en celular) */}
           {weddingDayMode && (
-            <div className="mb-6 bg-gradient-to-r from-[#C48B81] via-[#85534A] to-[#6E433D] text-white p-4 sm:p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center space-x-3.5">
-                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5 text-white" />
+            <div className="mb-4 sm:mb-6 bg-gradient-to-r from-[#C48B81] via-[#85534A] to-[#6E433D] text-white px-3.5 py-2.5 sm:p-5 rounded-2xl shadow-sm flex items-center justify-between gap-2 sm:gap-4">
+              <div className="flex items-center space-x-2.5 sm:space-x-3.5 min-w-0">
+                <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-white" />
                 </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-sm tracking-wide uppercase">MODO DÍA DE LA BODA ACTIVO</span>
-                    <span className="bg-white/20 text-white font-bold text-[10px] px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-white/30">
+                <div className="min-w-0">
+                  <div className="flex items-center space-x-1.5 sm:space-x-2">
+                    <span className="font-bold text-[11px] sm:text-sm tracking-wide uppercase truncate">
+                      <span className="sm:hidden">Día de la Boda</span>
+                      <span className="hidden sm:inline">MODO DÍA DE LA BODA ACTIVO</span>
+                    </span>
+                    <span className="bg-white/20 text-white font-bold text-[9px] sm:text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider border border-white/30 shrink-0">
                       EN VIVO
                     </span>
                   </div>
-                  <p className="text-xs text-stone-200 mt-0.5">
-                    Herramientas operativas en tiempo real: Cronograma en vivo, Asignación de Mesas y Listado de Invitados para recepción.
+                  <p className="hidden sm:block text-xs text-stone-200 mt-0.5">
+                    Herramientas operativas en tiempo real: Cronograma en vivo, Plano de Mesas, Recepción y Proveedores del Día.
                   </p>
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2 shrink-0 self-start sm:self-center">
-                <button
-                  onClick={handleToggleWeddingDayMode}
-                  className="px-3.5 py-1.5 bg-white/15 hover:bg-white/25 text-white text-xs font-semibold rounded-xl border border-white/20 transition cursor-pointer"
-                  title="Volver al menú de planeación general"
-                >
-                  Ver Planeación Completa
-                </button>
-              </div>
+              <button
+                onClick={handleToggleWeddingDayMode}
+                className="px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white text-[11px] sm:text-xs font-semibold rounded-xl border border-white/20 transition cursor-pointer shrink-0"
+                title="Volver al menú de planeación general"
+              >
+                <span className="sm:hidden">Salir</span>
+                <span className="hidden sm:inline">Ver Planeación Completa</span>
+              </button>
             </div>
           )}
 
-          {renderModuleContent()}
+          <div className={weddingDayMode ? 'pb-20 md:pb-0' : ''}>
+            {renderModuleContent()}
+          </div>
         </main>
       </div>
+
+      {/* Barra inferior fija para celular en Modo Día de la Boda (navegación con el pulgar) */}
+      {weddingDayMode && (
+        <nav
+          aria-label="Navegación Modo Día de la Boda"
+          className="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#EFE8E1] px-2 py-1.5 shadow-[0_-4px_20px_rgba(43,40,38,0.06)]"
+          style={{ paddingBottom: 'max(0.45rem, env(safe-area-inset-bottom))' }}
+        >
+          <div className="grid grid-cols-4 gap-1">
+            {[
+              { id: 'timeline' as WorkspaceTab, label: 'Operación', icon: Clock3 },
+              { id: 'mesas' as WorkspaceTab, label: 'Plano', icon: Grid2x2Check },
+              { id: 'invitados' as WorkspaceTab, label: 'Puerta', icon: Users2 },
+              { id: 'proveedores' as WorkspaceTab, label: 'Contactos', icon: Phone }
+            ].map(tab => {
+              const Icon = tab.icon;
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex flex-col items-center justify-center py-1.5 rounded-2xl transition cursor-pointer ${
+                    isActive
+                      ? 'bg-[#FAF4F0] text-[#A86B60] font-semibold'
+                      : 'text-[#7D6F6B] hover:text-[#2B2826]'
+                  }`}
+                >
+                  <Icon className={`w-4 h-4 mb-0.5 ${isActive ? 'text-[#C48B81]' : ''}`} />
+                  <span className="text-[10px] leading-tight">{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
     </div>
   );
 };

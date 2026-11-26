@@ -105,7 +105,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   const canvasRef = useRef<HTMLDivElement>(null);
   const floorPlanInputRef = useRef<HTMLInputElement>(null);
   const floorPlanInput2Ref = useRef<HTMLInputElement>(null);
-  const [zoom, setZoom] = useState(0.8);
+  const [zoom, setZoom] = useState(() => (typeof window !== 'undefined' && window.innerWidth < 640 ? 0.35 : 0.8));
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [localFloorPlanOpacity, setLocalFloorPlanOpacity] = useState(0.55);
   const [localFloorPlanVisible, setLocalFloorPlanVisible] = useState(true);

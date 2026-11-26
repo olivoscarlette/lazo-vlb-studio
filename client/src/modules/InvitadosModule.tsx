@@ -1443,7 +1443,7 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
             </button>
           </div>
 
-          <div className="text-[11px] text-[#8C7A75] font-serif italic flex items-center space-x-1.5">
+          <div className="hidden sm:flex text-[11px] text-[#8C7A75] font-serif italic items-center space-x-1.5">
             <span className="w-2 h-2 rounded-full bg-[#C48B81] inline-block" />
             <span>
               {eventTarget === 'civil'
@@ -1592,7 +1592,7 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
             placeholder={weddingDayMode ? 'Buscar invitado por nombre o apellido...' : 'Buscar por nombre, apellido o teléfono...'}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs border border-[#EFE8E1] rounded-full bg-[#FAF8F5]/60 focus:bg-white text-[#2B2826] placeholder:text-[#8A7E72]/70 focus:outline-none focus:border-[#C48B81] transition"
+            className="w-full pl-9 pr-4 py-2 text-sm sm:text-xs border border-[#EFE8E1] rounded-full bg-[#FAF8F5]/60 focus:bg-white text-[#2B2826] placeholder:text-[#8A7E72]/70 focus:outline-none focus:border-[#C48B81] transition"
           />
         </div>
 
@@ -1683,9 +1683,127 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
         </div>
       </div>
 
-      {/* Main Table: Operational, Single-Line & Properly Proportioned Columns */}
+      {/* Main List/Table Container */}
       <div className="bg-white rounded-2xl overflow-hidden border border-[#EFE8E1] shadow-2xs">
-        <div className="overflow-x-auto">
+        {/* Vista optimizada para celular en Modo Día de la Boda (tarjetas sin scroll horizontal) */}
+        {weddingDayMode && (
+          <div className="md:hidden divide-y divide-[#FAF8F5]">
+            {loading ? (
+              <div className="py-10 text-center text-[#8A7E72] text-xs font-light">
+                Cargando invitados...
+              </div>
+            ) : (() => {
+              const mobileGuests = guests.filter(g => {
+                if (checkinFilter === 'arrived') return Boolean(checkedInIds[g.id]);
+                if (checkinFilter === 'pending') return !checkedInIds[g.id];
+                return true;
+              });
+              if (mobileGuests.length === 0) {
+                return (
+                  <div className="py-10 text-center text-[#8A7E72] text-xs font-light">
+                    No se encontraron invitados con los filtros actuales.
+                  </div>
+                );
+              }
+              return mobileGuests.map(guest => {
+                const isArrived = Boolean(checkedInIds[guest.id]);
+                const isCivil = isCivilDifferentDay && eventTarget === 'civil';
+                const currentStatus = isCivil ? (guest.status_civil || 'Pendiente de confirmar') : guest.status;
+                const confirmedPlaces = isCivil ? guest.confirmed_places_civil : guest.confirmed_places;
+                const totalPlaces = confirmedPlaces && confirmedPlaces > 0 ? confirmedPlaces : 1 + (guest.companion_count || 0);
+                const extraPeople = Math.max(0, totalPlaces - 1);
+                const tableLabel = isCivil
+                  ? 'Ceremonia Civil'
+                  : currentStatus === 'No asistirá'
+                  ? 'Liberada'
+                  : guest.table_id
+                  ? (guest.table_name || tables.find(t => t.id === guest.table_id)?.name || 'Mesa asignada')
+                  : '';
+                const hasDietary = Boolean(guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna');
+
+                return (
+                  <div
+                    key={guest.id}
+                    className={`p-4 space-y-2.5 transition ${isArrived ? 'bg-[#F3F8F4]/90' : 'bg-white'}`}
+                  >
+                    {/* Fila 1: Nombre + Botón Llegó */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className={`font-semibold text-[15px] leading-snug ${isArrived ? 'text-[#384C3A]' : 'text-[#2B2826]'}`}>
+                          {guest.first_name} {guest.last_name}
+                        </p>
+                        {statusFilter === '' && currentStatus !== 'Confirmado' && (
+                          <span className={`inline-block mt-1 text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                            currentStatus === 'No asistirá'
+                              ? 'bg-[#FAF4F3] text-[#9B6158] border-[#EEDAD6]'
+                              : 'bg-[#FAF8F5] text-[#7D6F6B] border-[#EFE8E1]'
+                          }`}>
+                            {currentStatus === 'Pendiente de confirmar' ? 'Pendiente' : currentStatus}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => toggleCheckIn(guest.id)}
+                        className={`inline-flex items-center gap-1 px-3.5 py-2 rounded-full text-xs font-semibold transition cursor-pointer shrink-0 ${
+                          isArrived
+                            ? 'bg-[#384C3A] text-white shadow-2xs'
+                            : 'bg-[#FAF8F5] active:bg-[#EFE8E1] text-[#2B2826] border border-[#E5DCD5]'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        <span>{isArrived ? 'En salón' : 'Llegó'}</span>
+                      </button>
+                    </div>
+
+                    {/* Fila 2: Mesa + Acompañantes */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {isCivil ? (
+                        <span className="text-xs text-[#8A7E72] italic">Ceremonia Civil</span>
+                      ) : currentStatus === 'No asistirá' ? (
+                        <span className="text-xs text-[#9B6158] italic">Liberada</span>
+                      ) : tableLabel ? (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-[#FAF4F0] text-[#70443D] border border-[#E6D2CB]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]" />
+                          <span>{tableLabel}</span>
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-xl text-xs bg-[#FAF8F5] text-[#8A7E72] italic border border-[#EFE8E1]">
+                          Sin mesa
+                        </span>
+                      )}
+
+                      {extraPeople > 0 ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#E5EDE6] text-[#354B38] border border-[#D0DDD1]">
+                          <span>Con +{extraPeople} {extraPeople === 1 ? 'acomp.' : 'acomps.'}</span>
+                          <span className="text-[11px] opacity-75">({totalPlaces}p)</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-[#FAF8F5] text-[#7D6F6B] border border-[#EFE8E1]">
+                          Solo (1 pase)
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Fila 3: Observaciones / Restricciones */}
+                    {(guest.observations || hasDietary) && (
+                      <div className="text-xs text-[#5E524E] bg-[#FAF8F5]/80 rounded-xl px-3 py-2 border border-[#EFE8E1] space-y-1">
+                        {guest.observations && <p className="leading-snug">{guest.observations}</p>}
+                        {hasDietary && (
+                          <span className="inline-block text-[11px] font-semibold text-[#8A6D5E]">
+                            Restricción: {guest.dietary_requirements}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              });
+            })()}
+          </div>
+        )}
+
+        <div className={`overflow-x-auto ${weddingDayMode ? 'hidden md:block' : ''}`}>
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#FAF8F5] border-b border-[#EFE8E1] text-[11px] font-semibold uppercase tracking-wider text-[#8A7E72]">
