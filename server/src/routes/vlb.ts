@@ -3024,17 +3024,74 @@ router.put('/finance/settlements/:id', authenticateToken, requireAdmin, (req, re
   }
 });
 
-// PATCH /api/vlb/finance/settlements/:id/payout-toggle - Cambiar estado de dispersión/pago a Scarlette, Victoria o Staff
+// PATCH /api/vlb/finance/settlements/:id/payout-toggle - Cambiar estado de dispersión/pago a Scarlette, Victoria o Staff (global o individual por persona)
 router.patch('/finance/settlements/:id/payout-toggle', authenticateToken, requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
-    const { target, paid } = req.body; // target: 'scarlette' | 'victoria' | 'external'
+    const { target, paid, personName } = req.body; // target: 'scarlette' | 'victoria' | 'external'
     const existing = db.prepare('SELECT * FROM vlb_event_settlements WHERE id = ?').get(id) as any;
     if (!existing) {
       return res.status(404).json({ error: 'Registro de liquidación no encontrado.' });
     }
 
     const now = new Date().toISOString();
+
+    const parseExternalMembers = (namesRaw: string | null | undefined, countRaw: number | null | undefined): string[] => {
+      const count = Math.max(0, Number(countRaw || 0));
+      const parsed = String(namesRaw || '')
+        .split(/[,&/+]|\s+y\s+/i)
+        .map(s => s.trim())
+        .filter(Boolean);
+      const totalSlots = Math.max(count, parsed.length);
+      const members: string[] = [];
+      for (let i = 0; i < totalSlots; i++) {
+        members.push(parsed[i] || `Staff Externo #${i + 1}`);
+      }
+      return members;
+    };
+
+    if (target === 'external' && typeof personName === 'string' && personName.trim()) {
+      const cleanName = personName.trim();
+      const members = parseExternalMembers(existing.external_staff_names, existing.external_staff_count);
+      if (!members.includes(cleanName)) members.push(cleanName);
+
+      let map: Record<string, { paid: boolean; paid_at: string | null }> = {};
+      if (existing.paid_external_json) {
+        try {
+          const parsed = JSON.parse(existing.paid_external_json);
+          if (parsed && typeof parsed === 'object') map = parsed;
+        } catch {}
+      } else if (Boolean(existing.paid_external)) {
+        members.forEach(m => {
+          map[m] = { paid: true, paid_at: existing.paid_external_at || now };
+        });
+      }
+
+      const currentPersonVal = Boolean(map[cleanName]?.paid);
+      const nextPersonVal = paid !== undefined ? Boolean(paid) : !currentPersonVal;
+      map[cleanName] = { paid: nextPersonVal, paid_at: nextPersonVal ? now : null };
+
+      const allPaid = members.length > 0 && members.every(m => Boolean(map[m]?.paid));
+      db.prepare(`
+        UPDATE vlb_event_settlements
+        SET paid_external_json = ?, paid_external = ?, paid_external_at = ?, updated_at = ?
+        WHERE id = ?
+      `).run(JSON.stringify(map), allPaid ? 1 : 0, allPaid ? now : null, now, id);
+
+      const updated = db.prepare('SELECT * FROM vlb_event_settlements WHERE id = ?').get(id) as any;
+      return res.json({
+        settlement: {
+          ...updated,
+          staff_scarlette: Boolean(updated.staff_scarlette),
+          staff_victoria: Boolean(updated.staff_victoria),
+          paid_scarlette: Boolean(updated.paid_scarlette),
+          paid_victoria: Boolean(updated.paid_victoria),
+          paid_external: Boolean(updated.paid_external),
+        },
+        message: `Pago de ${cleanName} actualizado a ${nextPersonVal ? 'PAGADO' : 'PENDIENTE'}.`
+      });
+    }
+
     let col = '';
     let colDate = '';
     if (target === 'scarlette') {
@@ -3054,11 +3111,24 @@ router.patch('/finance/settlements/:id/payout-toggle', authenticateToken, requir
     const nextVal = paid !== undefined ? Boolean(paid) : !currentVal;
     const paidAt = nextVal ? now : null;
 
-    db.prepare(`
-      UPDATE vlb_event_settlements
-      SET ${col} = ?, ${colDate} = ?, updated_at = ?
-      WHERE id = ?
-    `).run(nextVal ? 1 : 0, paidAt, now, id);
+    if (target === 'external') {
+      const members = parseExternalMembers(existing.external_staff_names, existing.external_staff_count);
+      const map: Record<string, { paid: boolean; paid_at: string | null }> = {};
+      members.forEach(m => {
+        map[m] = { paid: nextVal, paid_at: paidAt };
+      });
+      db.prepare(`
+        UPDATE vlb_event_settlements
+        SET paid_external = ?, paid_external_at = ?, paid_external_json = ?, updated_at = ?
+        WHERE id = ?
+      `).run(nextVal ? 1 : 0, paidAt, JSON.stringify(map), now, id);
+    } else {
+      db.prepare(`
+        UPDATE vlb_event_settlements
+        SET ${col} = ?, ${colDate} = ?, updated_at = ?
+        WHERE id = ?
+      `).run(nextVal ? 1 : 0, paidAt, now, id);
+    }
 
     const updated = db.prepare('SELECT * FROM vlb_event_settlements WHERE id = ?').get(id) as any;
     res.json({

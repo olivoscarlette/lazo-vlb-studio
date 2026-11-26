@@ -183,6 +183,7 @@ export interface VlbEventSettlement {
   paid_scarlette_at?: string | null;
   paid_victoria_at?: string | null;
   paid_external_at?: string | null;
+  paid_external_json?: string | null;
   notes?: string | null;
   created_at: string;
   updated_at: string;

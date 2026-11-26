@@ -450,6 +450,36 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     }));
   }, [filteredSettlements, settings]);
 
+  // Desglose individual por persona de staff externo (para controlar pago persona por persona)
+  const getExternalStaffMembers = (item: VlbEventSettlement, totalExternalPayout: number) => {
+    const count = Math.max(0, Number(item.external_staff_count || 0));
+    const parsedNames = String(item.external_staff_names || '')
+      .split(/[,&/+]|\s+y\s+/i)
+      .map(s => s.trim())
+      .filter(Boolean);
+    const totalSlots = Math.max(count, parsedNames.length);
+    if (totalSlots === 0 || totalExternalPayout <= 0) return [];
+
+    let paidMap: Record<string, { paid?: boolean; paid_at?: string | null }> | null = null;
+    if (item.paid_external_json) {
+      try {
+        const parsed = JSON.parse(item.paid_external_json);
+        if (parsed && typeof parsed === 'object') paidMap = parsed;
+      } catch {}
+    }
+
+    const perPersonAmount = Math.round((totalExternalPayout / totalSlots) * 100) / 100;
+    const members: Array<{ name: string; amount: number; isPaid: boolean; paidAt?: string | null }> = [];
+    for (let i = 0; i < totalSlots; i++) {
+      const name = parsedNames[i] || `Staff Externo #${i + 1}`;
+      const entry = paidMap ? paidMap[name] : undefined;
+      const isPaid = entry !== undefined ? Boolean(entry.paid) : Boolean(item.paid_external);
+      const paidAt = entry !== undefined ? (entry.paid_at || null) : (item.paid_external ? item.paid_external_at : null);
+      members.push({ name, amount: perPersonAmount, isPaid, paidAt });
+    }
+    return members;
+  };
+
   // Resumen Global Acumulado (KPIs)
   const globalKpis = useMemo(() => {
     return settlementsWithCalc.reduce(
@@ -492,14 +522,17 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
           }
         }
 
-        // Staff Externo
+        // Staff Externo (contabilizado persona por persona)
         acc.totalExternal += calc.externalTotalPayout;
-        if (item.paid_external) {
-          acc.paidExternal += calc.externalTotalPayout;
-        } else {
-          acc.pendingExternal += calc.externalTotalPayout;
-          if (calc.externalTotalPayout > 0) acc.pendingExternalCount += 1;
-        }
+        const extMembers = getExternalStaffMembers(item, calc.externalTotalPayout);
+        extMembers.forEach(m => {
+          if (m.isPaid) {
+            acc.paidExternal += m.amount;
+          } else {
+            acc.pendingExternal += m.amount;
+            acc.pendingExternalCount += 1;
+          }
+        });
 
         return acc;
       },
@@ -533,17 +566,74 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
     );
   }, [settlementsWithCalc]);
 
-  // Toggle individual de dispersión de nómina
-  const handleTogglePayout = async (settlementId: string, target: 'scarlette' | 'victoria' | 'external', newStatus?: boolean) => {
+  // Toggle individual de dispersión de nómina (soporta persona individual para Staff Externo)
+  const handleTogglePayout = async (
+    settlementId: string,
+    target: 'scarlette' | 'victoria' | 'external',
+    newStatus?: boolean,
+    personName?: string
+  ) => {
+    const nowIso = new Date().toISOString();
     setSettlements(prev => prev.map(s => {
       if (s.id !== settlementId) return s;
+      if (target === 'external' && personName) {
+        let map: Record<string, { paid: boolean; paid_at: string | null }> = {};
+        const parsedNames = String(s.external_staff_names || '')
+          .split(/[,&/+]|\s+y\s+/i)
+          .map(x => x.trim())
+          .filter(Boolean);
+        const totalSlots = Math.max(Number(s.external_staff_count || 0), parsedNames.length);
+        const members: string[] = [];
+        for (let i = 0; i < totalSlots; i++) {
+          members.push(parsedNames[i] || `Staff Externo #${i + 1}`);
+        }
+        if (!members.includes(personName)) members.push(personName);
+        if (s.paid_external_json) {
+          try {
+            const parsed = JSON.parse(s.paid_external_json);
+            if (parsed && typeof parsed === 'object') map = { ...parsed };
+          } catch {}
+        } else if (Boolean(s.paid_external)) {
+          members.forEach(m => {
+            map[m] = { paid: true, paid_at: s.paid_external_at || nowIso };
+          });
+        }
+        const nextVal = newStatus !== undefined ? newStatus : !Boolean(map[personName]?.paid);
+        map[personName] = { paid: nextVal, paid_at: nextVal ? nowIso : null };
+        const allPaid = members.length > 0 && members.every(m => Boolean(map[m]?.paid));
+        return {
+          ...s,
+          paid_external_json: JSON.stringify(map),
+          paid_external: allPaid,
+          paid_external_at: allPaid ? nowIso : null,
+        };
+      }
+
       const key = `paid_${target}` as keyof VlbEventSettlement;
       const keyDate = `paid_${target}_at` as keyof VlbEventSettlement;
       const nextVal = newStatus !== undefined ? newStatus : !Boolean(s[key]);
+      if (target === 'external') {
+        const parsedNames = String(s.external_staff_names || '')
+          .split(/[,&/+]|\s+y\s+/i)
+          .map(x => x.trim())
+          .filter(Boolean);
+        const totalSlots = Math.max(Number(s.external_staff_count || 0), parsedNames.length);
+        const map: Record<string, { paid: boolean; paid_at: string | null }> = {};
+        for (let i = 0; i < totalSlots; i++) {
+          const m = parsedNames[i] || `Staff Externo #${i + 1}`;
+          map[m] = { paid: nextVal, paid_at: nextVal ? nowIso : null };
+        }
+        return {
+          ...s,
+          paid_external: nextVal,
+          paid_external_at: nextVal ? nowIso : null,
+          paid_external_json: JSON.stringify(map),
+        };
+      }
       return {
         ...s,
         [key]: nextVal,
-        [keyDate]: nextVal ? new Date().toISOString() : null,
+        [keyDate]: nextVal ? nowIso : null,
       };
     }));
 
@@ -554,7 +644,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token') || ''}`
         },
-        body: JSON.stringify({ target, paid: newStatus })
+        body: JSON.stringify({ target, paid: newStatus, personName })
       });
       if (res.ok) {
         const data = await res.json();
@@ -581,6 +671,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
       eventDate: string;
       venue: string;
       target: 'scarlette' | 'victoria' | 'external';
+      personName?: string;
       beneficiaryName: string;
       amount: number;
       isPaid: boolean;
@@ -650,34 +741,32 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
         });
       }
 
-      // Staff Externo
+      // Staff Externo (separado por persona para marcar pagos individuales)
       if (calc.externalTotalPayout > 0) {
-        const staffTitle = item.external_staff_names 
-          ? `Staff: ${item.external_staff_names}`
-          : `Staff Externo (${calc.externalStaffCount} pers.)`;
-        const staffConcepts = [`${calc.externalStaffCount} turno(s) de apoyo ($${settings.staff_rate} c/u)`];
-        if (item.external_staff_names) {
-          staffConcepts.push(`Personal: ${item.external_staff_names}`);
-        }
-        if (item.notes) {
-          staffConcepts.push(`Nota: ${item.notes}`);
-        }
+        const extMembers = getExternalStaffMembers(item, calc.externalTotalPayout);
+        extMembers.forEach((member, idx) => {
+          const staffConcepts = [`1 turno de apoyo (${fmt(member.amount)})`];
+          if (item.notes) {
+            staffConcepts.push(`Nota: ${item.notes}`);
+          }
 
-        list.push({
-          id: `${item.id}_external`,
-          settlementId: item.id,
-          eventName: item.event_name,
-          eventDate: item.event_date,
-          venue: item.venue || '',
-          target: 'external',
-          beneficiaryName: staffTitle,
-          amount: calc.externalTotalPayout,
-          isPaid: Boolean(item.paid_external),
-          paidAt: item.paid_external_at,
-          concepts: staffConcepts,
-          profitShare: 0,
-          operationalAmount: calc.externalTotalPayout,
-          settlementItem: item
+          list.push({
+            id: `${item.id}_external_${idx}_${member.name}`,
+            settlementId: item.id,
+            eventName: item.event_name,
+            eventDate: item.event_date,
+            venue: item.venue || '',
+            target: 'external',
+            personName: member.name,
+            beneficiaryName: `Staff: ${member.name}`,
+            amount: member.amount,
+            isPaid: member.isPaid,
+            paidAt: member.paidAt,
+            concepts: staffConcepts,
+            profitShare: 0,
+            operationalAmount: member.amount,
+            settlementItem: item
+          });
         });
       }
     });
@@ -1274,25 +1363,40 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                               {item.external_staff_names}
                             </div>
                           )}
-                          {item.external_staff_count > 0 && (
-                            <div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleTogglePayout(item.id, 'external');
-                                }}
-                                className={`mt-1 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition cursor-pointer ${
-                                  item.paid_external
-                                    ? 'bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]'
-                                    : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
-                                }`}
-                                title={item.paid_external ? 'Staff pagado. Clic para desmarcar' : 'Staff por pagar. Clic para marcar pagado'}
-                              >
-                                {item.paid_external ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
-                                <span>{item.paid_external ? 'Staff Pagado' : 'Staff Pend.'}</span>
-                              </button>
-                            </div>
-                          )}
+                          {item.external_staff_count > 0 && (() => {
+                            const extMembers = getExternalStaffMembers(item, calc.externalTotalPayout);
+                            const paidCount = extMembers.filter(m => m.isPaid).length;
+                            const totalCount = extMembers.length;
+                            const allPaid = totalCount > 0 && paidCount === totalCount;
+                            const partialPaid = paidCount > 0 && paidCount < totalCount;
+                            return (
+                              <div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleTogglePayout(item.id, 'external', !allPaid);
+                                  }}
+                                  className={`mt-1 inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-bold transition cursor-pointer ${
+                                    allPaid
+                                      ? 'bg-[#E8F8EE] text-[#1EBE5D] border border-[#BCE8CB]'
+                                      : partialPaid
+                                      ? 'bg-[#FFF8EB] text-[#B45309] border border-[#FDE68A] hover:bg-[#FEF3C7]'
+                                      : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                                  }`}
+                                  title={
+                                    allPaid
+                                      ? 'Todo el staff pagado. Clic para desmarcar'
+                                      : partialPaid
+                                      ? `${paidCount} de ${totalCount} pagados. Clic para marcar a todos pagados`
+                                      : 'Staff por pagar. Clic para marcar a todos pagados'
+                                  }
+                                >
+                                  {allPaid ? <CheckCircle2 className="w-2.5 h-2.5" /> : <Clock className="w-2.5 h-2.5" />}
+                                  <span>{allPaid ? 'Staff Pagado' : partialPaid ? `Staff ${paidCount}/${totalCount}` : 'Staff Pend.'}</span>
+                                </button>
+                              </div>
+                            );
+                          })()}
                         </>
                       )}
                     </td>
@@ -1634,7 +1738,7 @@ export const VlbFinanceModule: React.FC<VlbFinanceModuleProps> = ({ user, onBack
                         <td className="py-3.5 px-4 text-center">
                           <div className="flex items-center justify-center space-x-1.5">
                             <button
-                              onClick={() => handleTogglePayout(d.settlementId, d.target, !d.isPaid)}
+                              onClick={() => handleTogglePayout(d.settlementId, d.target, !d.isPaid, d.personName)}
                               className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer flex items-center space-x-1 ${
                                 d.isPaid
                                   ? 'bg-[#FCFAF7] hover:bg-gray-100 text-[#7D6F6B] border border-[#EAE3DA]'
