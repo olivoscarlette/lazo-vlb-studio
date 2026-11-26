@@ -11,7 +11,7 @@ import {
 import * as XLSX from 'xlsx';
 import { BroadcastScheduleModal } from '../components/BroadcastScheduleModal';
 
-export const InvitadosModule: React.FC = () => {
+export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddingDayMode = false }) => {
   const { currentWedding, setCurrentWedding, token, user } = useAuth();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [tables, setTables] = useState<Table[]>([]);
@@ -35,11 +35,16 @@ export const InvitadosModule: React.FC = () => {
 
   // Search, Filters & Sort
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(weddingDayMode ? 'Confirmado' : '');
   const [priorityFilter, setPriorityFilter] = useState('');
   const [tableFilter, setTableFilter] = useState('');
   const [sortBy, setSortBy] = useState<'alpha_asc' | 'alpha_desc' | 'lastname_asc' | 'lastname_desc' | 'priority_desc' | 'priority_asc'>('alpha_asc');
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setStatusFilter(weddingDayMode ? 'Confirmado' : '');
+    setPage(1);
+  }, [weddingDayMode]);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1, limit: 25 });
   const [summary, setSummary] = useState({
     total: 0,
@@ -1093,16 +1098,19 @@ export const InvitadosModule: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#8A7E72]">
-            Lista de Invitados & Cortesía
+            {weddingDayMode ? 'Modo Día de la Boda · Recepción' : 'Lista de Invitados & Cortesía'}
           </span>
           <h2 className="font-novios text-3xl sm:text-4xl text-[#2B2826] mt-1 tracking-tight">
-            Invitados y Confirmaciones
+            {weddingDayMode ? 'Recepción de Invitados' : 'Invitados y Confirmaciones'}
           </h2>
           <p className="text-xs sm:text-sm text-[#8A7E72] mt-1.5 font-light">
-            Gestión unificada de asistencia, pases y asignación de mesas.
+            {weddingDayMode
+              ? 'Vista rápida para puerta: quién es, su mesa, si viene acompañado y observaciones.'
+              : 'Gestión unificada de asistencia, pases y asignación de mesas.'}
           </p>
         </div>
 
+        {!weddingDayMode && (
         <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
           {/* Menú Desplegable Unificado: Herramientas y Opciones */}
           <div className="relative">
@@ -1366,6 +1374,7 @@ export const InvitadosModule: React.FC = () => {
             <span>Nuevo Invitado</span>
           </button>
         </div>
+        )}
       </div>
 
       {/* Event Switcher — ONLY rendered when Boda Civil is on a different date than Boda Principal */}
@@ -1374,7 +1383,7 @@ export const InvitadosModule: React.FC = () => {
           <div className="flex items-center space-x-2">
             <button
               type="button"
-              onClick={() => { setEventTarget('principal'); setStatusFilter(''); setTableFilter(''); setPage(1); }}
+              onClick={() => { setEventTarget('principal'); setStatusFilter(weddingDayMode ? 'Confirmado' : ''); setTableFilter(''); setPage(1); }}
               className={`px-4 py-2 rounded-xl text-xs font-serif font-bold transition flex items-center space-x-2 cursor-pointer ${
                 eventTarget === 'principal'
                   ? 'bg-[#332C2A] text-white shadow-xs'
@@ -1390,7 +1399,7 @@ export const InvitadosModule: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => { setEventTarget('civil'); setStatusFilter(''); setTableFilter(''); setPage(1); }}
+              onClick={() => { setEventTarget('civil'); setStatusFilter(weddingDayMode ? 'Confirmado' : ''); setTableFilter(''); setPage(1); }}
               className={`px-4 py-2 rounded-xl text-xs font-serif font-bold transition flex items-center space-x-2 cursor-pointer ${
                 eventTarget === 'civil'
                   ? 'bg-[#C48B81] text-white shadow-xs'
@@ -1442,7 +1451,8 @@ export const InvitadosModule: React.FC = () => {
         </div>
       )}
 
-      {/* Summary KPI Strip — Tarjetas clicables que funcionan como filtro único */}
+      {/* Summary KPI Strip — Tarjetas clicables que funcionan como filtro único (ocultas en Modo Día de la Boda) */}
+      {!weddingDayMode && (
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3.5">
         <div
           onClick={() => { setStatusFilter(''); setTableFilter(''); setPage(1); }}
@@ -1542,6 +1552,7 @@ export const InvitadosModule: React.FC = () => {
           <div className="text-[11px] text-[#8A7E72] mt-1 font-light">Tasa de respuesta</div>
         </div>
       </div>
+      )}
 
       {/* Filters, Search & Sort Bar */}
       <div className="flex flex-col lg:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-[#EFE8E1] shadow-2xs">
@@ -1549,7 +1560,7 @@ export const InvitadosModule: React.FC = () => {
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8A7E72]" />
           <input
             type="text"
-            placeholder="Buscar por nombre, apellido o teléfono..."
+            placeholder={weddingDayMode ? 'Buscar invitado por nombre o apellido...' : 'Buscar por nombre, apellido o teléfono...'}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 text-xs border border-[#EFE8E1] rounded-full bg-[#FAF8F5]/60 focus:bg-white text-[#2B2826] placeholder:text-[#8A7E72]/70 focus:outline-none focus:border-[#C48B81] transition"
@@ -1557,6 +1568,28 @@ export const InvitadosModule: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+          {weddingDayMode && (
+            <div className="inline-flex items-center p-0.5 bg-[#FAF8F5] rounded-full border border-[#EFE8E1]">
+              <button
+                type="button"
+                onClick={() => { setStatusFilter('Confirmado'); setPage(1); }}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                  statusFilter === 'Confirmado' ? 'bg-[#384C3A] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+                }`}
+              >
+                Confirmados ({summary.confirmed_places})
+              </button>
+              <button
+                type="button"
+                onClick={() => { setStatusFilter(''); setPage(1); }}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                  statusFilter === '' ? 'bg-[#2B2826] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+                }`}
+              >
+                Todos
+              </button>
+            </div>
+          )}
           {/* Sort By Selector: Alphabetical */}
           <div className="inline-flex items-center space-x-1.5 bg-[#FAF8F5] px-3.5 py-1 rounded-full border border-[#EFE8E1]">
             <span className="text-[11px] font-medium text-[#8A7E72] whitespace-nowrap">Ordenar:</span>
@@ -1604,35 +1637,129 @@ export const InvitadosModule: React.FC = () => {
                   className="py-3.5 px-4 whitespace-nowrap cursor-pointer hover:text-[#2B2826] select-none transition"
                   title="Haz clic para ordenar alfabéticamente"
                 >
-                  NOMBRE Y APELLIDO {sortBy === 'alpha_asc' ? '↑' : sortBy === 'alpha_desc' ? '↓' : '↕'}
+                  {weddingDayMode ? 'INVITADO' : 'NOMBRE Y APELLIDO'} {sortBy === 'alpha_asc' ? '↑' : sortBy === 'alpha_desc' ? '↓' : '↕'}
                 </th>
-                <th className="py-3.5 px-4 whitespace-nowrap min-w-[175px]">WHATSAPP</th>
-                <th className="py-3.5 px-4 text-center whitespace-nowrap">PASES</th>
-                <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">
-                  {isCivilDifferentDay && eventTarget === 'civil' ? 'ESTATUS CIVIL' : 'ESTATUS'}
-                </th>
-                {canShowWhatsappColumn && (
-                  <th className="py-3.5 px-4 text-center whitespace-nowrap">
-                    {isCoordinationManagedForNovios ? 'RSVP COORDINACIÓN' : 'RSVP WHATSAPP'}
-                  </th>
+                {weddingDayMode ? (
+                  <>
+                    <th className="py-3.5 px-4 whitespace-nowrap">MESA</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">ACOMPAÑANTES</th>
+                    <th className="py-3.5 px-4">OBSERVACIONES</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="py-3.5 px-4 whitespace-nowrap min-w-[175px]">WHATSAPP</th>
+                    <th className="py-3.5 px-4 text-center whitespace-nowrap">PASES</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap w-[150px]">
+                      {isCivilDifferentDay && eventTarget === 'civil' ? 'ESTATUS CIVIL' : 'ESTATUS'}
+                    </th>
+                    {canShowWhatsappColumn && (
+                      <th className="py-3.5 px-4 text-center whitespace-nowrap">
+                        {isCoordinationManagedForNovios ? 'RSVP COORDINACIÓN' : 'RSVP WHATSAPP'}
+                      </th>
+                    )}
+                    <th className="py-3.5 px-4 whitespace-nowrap">MESA</th>
+                    <th className="py-3.5 px-4 whitespace-nowrap">OBSERVACIONES</th>
+                  </>
                 )}
-                <th className="py-3.5 px-4 whitespace-nowrap">MESA</th>
-                <th className="py-3.5 px-4 whitespace-nowrap">OBSERVACIONES</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#FAF8F5]">
               {loading ? (
                 <tr>
-                  <td colSpan={canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
+                  <td colSpan={weddingDayMode ? 4 : canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
                     Cargando invitados...
                   </td>
                 </tr>
               ) : guests.length === 0 ? (
                 <tr>
-                  <td colSpan={canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
+                  <td colSpan={weddingDayMode ? 4 : canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
                     No se encontraron invitados con los filtros actuales.
                   </td>
                 </tr>
+              ) : weddingDayMode ? (
+                guests.map(guest => {
+                  const isCivil = isCivilDifferentDay && eventTarget === 'civil';
+                  const currentStatus = isCivil ? (guest.status_civil || 'Pendiente de confirmar') : guest.status;
+                  const confirmedPlaces = isCivil ? guest.confirmed_places_civil : guest.confirmed_places;
+                  const totalPlaces = confirmedPlaces && confirmedPlaces > 0 ? confirmedPlaces : 1 + (guest.companion_count || 0);
+                  const extraPeople = Math.max(0, totalPlaces - 1);
+                  const tableLabel = isCivil
+                    ? 'Ceremonia Civil'
+                    : currentStatus === 'No asistirá'
+                    ? 'Liberada'
+                    : guest.table_id
+                    ? (guest.table_name || tables.find(t => t.id === guest.table_id)?.name || 'Mesa asignada')
+                    : '';
+                  const hasDietary = Boolean(guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna');
+
+                  return (
+                    <tr key={guest.id} className="hover:bg-[#FAF8F5]/70 transition">
+                      {/* 1. Quién es */}
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-[15px] text-[#2B2826]">
+                            {guest.first_name} {guest.last_name}
+                          </span>
+                          {statusFilter === '' && currentStatus !== 'Confirmado' && (
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                              currentStatus === 'No asistirá'
+                                ? 'bg-[#FAF4F3] text-[#9B6158] border-[#EEDAD6]'
+                                : 'bg-[#FAF8F5] text-[#7D6F6B] border-[#EFE8E1]'
+                            }`}>
+                              {currentStatus === 'Pendiente de confirmar' ? 'Pendiente' : currentStatus}
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 2. Qué mesa tiene */}
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        {isCivil ? (
+                          <span className="text-xs text-[#8A7E72] italic">Ceremonia Civil</span>
+                        ) : currentStatus === 'No asistirá' ? (
+                          <span className="text-xs text-[#9B6158] italic">Liberada</span>
+                        ) : tableLabel ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#FAF4F0] text-[#70443D] border border-[#E6D2CB]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#C48B81]" />
+                            <span>{tableLabel}</span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-[#8A7E72] italic">Sin mesa</span>
+                        )}
+                      </td>
+
+                      {/* 3. Si va con gente */}
+                      <td className="py-4 px-4 whitespace-nowrap">
+                        {extraPeople > 0 ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[#E5EDE6] text-[#354B38] border border-[#D0DDD1]">
+                            <span>Con +{extraPeople} {extraPeople === 1 ? 'acompañante' : 'acompañantes'}</span>
+                            <span className="text-[11px] opacity-75">({totalPlaces} pases)</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-[#FAF8F5] text-[#7D6F6B] border border-[#EFE8E1]">
+                            Solo (1 pase)
+                          </span>
+                        )}
+                      </td>
+
+                      {/* 4. Observaciones (texto completo legible) */}
+                      <td className="py-4 px-4 text-xs text-[#5E524E] leading-relaxed min-w-[220px]">
+                        {guest.observations || hasDietary ? (
+                          <div className="space-y-1">
+                            {guest.observations && <p className="whitespace-normal">{guest.observations}</p>}
+                            {hasDietary && (
+                              <span className="inline-block text-[11px] font-semibold text-[#8A6D5E] bg-[#FAF4F0] px-2 py-0.5 rounded-md border border-[#EFE8E1]">
+                                Restricción: {guest.dietary_requirements}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-[#D2C4B4] italic">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 guests.map(guest => (
                   <tr

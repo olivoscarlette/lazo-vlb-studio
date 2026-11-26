@@ -572,7 +572,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
 
     switch (activeTab) {
       case 'invitados':
-        return <InvitadosModule />;
+        return <InvitadosModule weddingDayMode={weddingDayMode} />;
       case 'reuniones':
         return <ReunionesModule />;
       case 'rsvp_envios':
