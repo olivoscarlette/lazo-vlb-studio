@@ -10,13 +10,20 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
-function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfile, bodyHtml: string) {
+function openPrintablePdf(
+  title: string,
+  subtitle: string,
+  profile: WeddingProfile,
+  bodyHtml: string,
+  options?: { fitOnePage?: boolean }
+) {
   const win = window.open('', '_blank', 'width=960,height=780');
   if (!win) {
     alert('Por favor permite ventanas emergentes para descargar el PDF.');
     return;
   }
 
+  const fitOnePage = Boolean(options?.fitOnePage);
   const couple = `${profile.partner1 || 'Novia'} & ${profile.partner2 || 'Novio'}`;
   const dateLabel = profile.weddingDate ? formatShortDate(profile.weddingDate) : '';
   const metaLine = [dateLabel, profile.city].filter(Boolean).join(' · ');
@@ -165,21 +172,36 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
     .pill-no { background: #FAF4F3; border-color: #EEDAD6; color: #A86B60; }
     .timeline-row {
       display: flex;
-      gap: 18px;
-      padding: 12px 0;
+      gap: 16px;
+      padding: 10px 0;
       border-bottom: 1px solid #F5EFEA;
       page-break-inside: avoid;
+      break-inside: avoid;
     }
     .timeline-time {
       font-family: 'Marcellus', Georgia, serif;
-      font-size: 17px;
+      font-size: 16px;
       color: #C48B81;
-      width: 68px;
+      width: 64px;
       flex-shrink: 0;
+      line-height: 1.25;
     }
-    .timeline-title { font-size: 14px; font-weight: 500; color: #2B2826; }
-    .timeline-sub { font-size: 11px; color: #7D6F6B; margin-top: 2px; }
-    .timeline-notes { font-size: 11px; color: #A86B60; font-style: italic; margin-top: 3px; }
+    .timeline-title { font-size: 13.5px; font-weight: 500; color: #2B2826; line-height: 1.25; }
+    .timeline-sub { font-size: 11px; color: #7D6F6B; margin-top: 2px; line-height: 1.25; }
+    .timeline-notes { font-size: 10.5px; color: #A86B60; font-style: italic; margin-top: 2px; line-height: 1.25; }
+    .timeline-list.compact .timeline-row { gap: 12px; padding: 6px 0; }
+    .timeline-list.compact .timeline-time { font-size: 14px; width: 54px; }
+    .timeline-list.compact .timeline-title { font-size: 12px; }
+    .timeline-list.compact .timeline-sub { font-size: 10px; margin-top: 1px; }
+    .timeline-list.compact .timeline-notes { font-size: 9.5px; margin-top: 1px; }
+    .timeline-list.ultra-compact .timeline-row { gap: 10px; padding: 4px 0; }
+    .timeline-list.ultra-compact .timeline-time { font-size: 12.5px; width: 48px; }
+    .timeline-list.ultra-compact .timeline-title { font-size: 11px; }
+    .timeline-list.ultra-compact .timeline-sub { font-size: 9.5px; margin-top: 1px; }
+    .timeline-list.ultra-compact .timeline-notes { font-size: 9px; margin-top: 1px; }
+    body.fit-one-page .header { padding-bottom: 10px; margin-bottom: 12px; }
+    body.fit-one-page .title { font-size: 24px; }
+    body.fit-one-page .footer { margin-top: 14px; padding-top: 8px; }
     .svg-box {
       border: 1px solid #EFE8E1;
       border-radius: 18px;
@@ -249,35 +271,80 @@ function openPrintablePdf(title: string, subtitle: string, profile: WeddingProfi
       font-weight: 500;
       cursor: pointer;
     }
+    .print-btn-secondary {
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid #EFE8E1;
+      background: #FFFFFF;
+      color: #5A524C;
+      font-family: 'Outfit', sans-serif;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+    }
     @media print {
       body { padding: 0; }
       .print-bar { display: none; }
+      body.fit-one-page .page-sheet {
+        max-height: 254mm;
+        overflow: hidden;
+      }
     }
   </style>
 </head>
-<body>
+<body class="${fitOnePage ? 'fit-one-page' : ''}">
   <div class="print-bar">
+    ${fitOnePage ? '<button id="fit-toggle-btn" class="print-btn-secondary" onclick="toggleFitOnePage()">Ajuste 1 hoja: Sí</button>' : ''}
     <button class="print-btn" onclick="window.print()">Guardar / Imprimir PDF</button>
   </div>
-  <div class="header">
-    <div>
-      <div class="brand">LAZO</div>
-      <h1 class="title">${escapeHtml(title)}</h1>
-      <div class="subtitle">${escapeHtml(subtitle)}</div>
+  <div id="page-sheet" class="page-sheet">
+    <div class="header">
+      <div>
+        <div class="brand">LAZO</div>
+        <h1 class="title">${escapeHtml(title)}</h1>
+        <div class="subtitle">${escapeHtml(subtitle)}</div>
+      </div>
+      <div class="meta">
+        <strong>${escapeHtml(couple)}</strong>
+        <span>${escapeHtml(metaLine)}</span>
+      </div>
     </div>
-    <div class="meta">
-      <strong>${escapeHtml(couple)}</strong>
-      <span>${escapeHtml(metaLine)}</span>
+    ${bodyHtml}
+    <div class="footer">
+      <span>Generado con Lazo · Planeación de Boda</span>
+      <span>${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
     </div>
-  </div>
-  ${bodyHtml}
-  <div class="footer">
-    <span>Generado con Lazo · Planeación de Boda</span>
-    <span>${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
   </div>
   <script>
+    let fitEnabled = ${fitOnePage ? 'true' : 'false'};
+    function applyFitOnePage() {
+      const sheet = document.getElementById('page-sheet');
+      if (!sheet) return;
+      sheet.style.zoom = '';
+      if (!fitEnabled) {
+        document.body.classList.remove('fit-one-page');
+        return;
+      }
+      document.body.classList.add('fit-one-page');
+      // Printable height for US Letter / A4 portrait with 12mm margins (~940px at 96dpi)
+      const targetHeight = 935;
+      const actualHeight = sheet.scrollHeight;
+      if (actualHeight > targetHeight) {
+        const ratio = Math.max(0.52, Math.min(1, targetHeight / actualHeight));
+        sheet.style.zoom = ratio.toFixed(3);
+      }
+    }
+    function toggleFitOnePage() {
+      fitEnabled = !fitEnabled;
+      const btn = document.getElementById('fit-toggle-btn');
+      if (btn) btn.textContent = fitEnabled ? 'Ajuste 1 hoja: Sí' : 'Ajuste 1 hoja: No';
+      applyFitOnePage();
+    }
     window.addEventListener('load', () => {
-      setTimeout(() => { window.print(); }, 550);
+      setTimeout(() => {
+        applyFitOnePage();
+        setTimeout(() => { window.print(); }, 150);
+      }, 450);
     });
   </script>
 </body>
@@ -307,8 +374,10 @@ export function exportTimelinePdf(
   options?: { eventLabel?: string; eventDate?: string; eventVenue?: string }
 ) {
   const sorted = sortTimelineItems(timeline);
+  const densityClass =
+    sorted.length >= 18 ? 'ultra-compact' : sorted.length >= 11 ? 'compact' : '';
   const rows = sorted.length
-    ? sorted
+    ? `<div class="timeline-list ${densityClass}">${sorted
         .map(
           item => `
         <div class="timeline-row">
@@ -320,7 +389,7 @@ export function exportTimelinePdf(
           </div>
         </div>`
         )
-        .join('')
+        .join('')}</div>`
     : '<p style="font-size:12px;color:#7D6F6B;font-style:italic">Sin momentos registrados aún.</p>';
 
   const printProfile: WeddingProfile = {
@@ -333,7 +402,7 @@ export function exportTimelinePdf(
     ? `Minuto a minuto oficial de ${options.eventLabel} para proveedores, familia y cortejo`
     : 'Minuto a minuto oficial para proveedores, familia y cortejo';
 
-  openPrintablePdf(title, subtitle, printProfile, rows);
+  openPrintablePdf(title, subtitle, printProfile, rows, { fitOnePage: true });
 }
 
 export function exportGuestsPdf(profile: WeddingProfile, guests: GuestItem[], tables: TableItem[]) {
