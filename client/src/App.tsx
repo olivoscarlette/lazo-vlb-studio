@@ -556,6 +556,7 @@ const MainWorkspace: React.FC<MainWorkspaceProps> = ({ sidebarOpen, setSidebarOp
           embedded
           forcedTab={mappedNoviosTab}
           initialGuestsSubTab={activeTab === 'mesas' ? 'mesas' : 'lista'}
+          weddingDayMode={weddingDayMode}
           onTabChange={nextTab => {
             const reverseMap: Record<string, WorkspaceTab> = {
               inicio: 'resumen',

@@ -55,6 +55,9 @@ interface SeatingCanvas2DProps {
   onBatchPaste?: (payload: { tables: TableItem[]; elements: FloorElement[] }) => void;
   onBatchDelete?: (payload: { tableIds: string[]; elementIds: string[] }) => void;
   onOpenNewTable: () => void;
+  readOnly?: boolean;
+  highlightedTableId?: string | null;
+  onReadOnlySelectTable?: (tableId: string) => void;
 }
 
 const CANVAS_W = 1400;
@@ -93,7 +96,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
   onBatchMove,
   onBatchPaste,
   onBatchDelete,
-  onOpenNewTable
+  onOpenNewTable,
+  readOnly = false,
+  highlightedTableId = null,
+  onReadOnlySelectTable
 }) => {
   const viewportRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -412,6 +418,13 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
     currY: number
   ) => {
     e.stopPropagation();
+    if (readOnly) {
+      if (kind === 'table') {
+        setSelectedTableId(id);
+        onReadOnlySelectTable?.(id);
+      }
+      return;
+    }
     const itemKey = `${kind}:${id}`;
 
     // Shift+Click toggles item in multi-selection
@@ -1325,7 +1338,56 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           : 'space-y-4'
       }
     >
-      {/* Top Studio Toolbar */}
+      {/* Top Studio Toolbar (hidden in readOnly Wedding Day Mode, replaced by compact locked zoom bar) */}
+      {readOnly ? (
+        <div className="bg-white rounded-2xl px-3.5 py-2 border border-[#EFE8E1] shadow-2xs flex flex-wrap items-center justify-between gap-2">
+          <div className="inline-flex items-center gap-2 text-xs text-[#5A524C]">
+            <Lock className="w-3.5 h-3.5 text-[#C48B81]" />
+            <span className="font-medium text-[#2B2826]">Plano bloqueado (modo consulta)</span>
+            <span className="hidden sm:inline text-[#7D6F6B] font-light">· Toca cualquier mesa para ver quién se sienta ahí</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="inline-flex items-center gap-1 bg-[#FAF8F5] rounded-full px-1.5 py-1 border border-[#EFE8E1]">
+              <button
+                type="button"
+                onClick={() => setZoom(z => Math.max(0.35, Number((z - 0.1).toFixed(2))))}
+                className="p-1 rounded-full hover:bg-white text-[#5A524C] transition cursor-pointer"
+                title="Alejar"
+              >
+                <ZoomOut className="w-3.5 h-3.5" />
+              </button>
+              <span className="text-[11px] font-medium text-[#5A524C] w-10 text-center">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                type="button"
+                onClick={() => setZoom(z => Math.min(2, Number((z + 0.1).toFixed(2))))}
+                className="p-1 rounded-full hover:bg-white text-[#5A524C] transition cursor-pointer"
+                title="Acercar"
+              >
+                <ZoomIn className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsFullscreen(v => !v)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
+            >
+              {isFullscreen ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>Salir</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-[#C48B81]" />
+                  <span>Expandir</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      ) : (
       <div className="bg-white rounded-2xl p-2.5 border border-[#EFE8E1] shadow-2xs flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
           <button
@@ -1538,6 +1600,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           </button>
         </div>
       </div>
+      )}
 
       {floorPlanError && (
         <div className="px-4 py-2 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
@@ -1547,7 +1610,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
 
       {/* Main 2D Canvas + Slim Inspector Split */}
       <div
-        className={`grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_310px] gap-4 ${
+        className={`grid grid-cols-1 ${readOnly ? '' : 'lg:grid-cols-[minmax(0,1fr)_310px]'} gap-4 ${
           isFullscreen ? 'flex-1 min-h-0 items-stretch' : 'items-start'
         }`}
       >
@@ -2100,8 +2163,9 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                   const usedSeats = seatedHere.reduce((s, g) => s + g.passes, 0);
 
                   const tableScale = typeof table.scale === 'number' ? table.scale : 1;
-                  const isMultiSelTable = multiSelected.includes(`table:${table.id}`);
-                  const isSelTable = selectedTableId === table.id;
+                  const isMultiSelTable = !readOnly && multiSelected.includes(`table:${table.id}`);
+                  const isSelTable = !readOnly && selectedTableId === table.id;
+                  const isHighlightedTable = Boolean(highlightedTableId && highlightedTableId === table.id);
                   const invScale = 1 / Math.max(0.5, tableScale);
 
                   return (
@@ -2109,6 +2173,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                       key={table.id}
                       onPointerDown={e => handlePointerDownItem(e, 'table', table.id, coords.x, coords.y)}
                       onContextMenu={e => {
+                        if (readOnly) return;
                         e.preventDefault();
                         e.stopPropagation();
                         if (!isMultiSelTable) {
@@ -2118,6 +2183,7 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         setContextMenu({ x: e.clientX, y: e.clientY, kind: 'table', targetId: table.id });
                       }}
                       onDoubleClick={e => {
+                        if (readOnly) return;
                         e.stopPropagation();
                         setSelectedTableId(table.id);
                         setSeatModalTableId(table.id);
@@ -2128,10 +2194,16 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
                         top: coords.y,
                         transform: `translate(-50%, -50%) scale(${tableScale})`
                       }}
-                      className={`absolute ${table.locked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${
-                        isSelTable || isMultiSelTable ? 'z-20' : 'z-10'
-                      } ${isMultiSelTable ? 'ring-4 ring-[#C48B81]/35 rounded-2xl' : ''}`}
-                      title="Doble clic para abrir en grande y asignar asiento por asiento"
+                      className={`absolute ${readOnly || table.locked ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing'} ${
+                        isHighlightedTable ? 'z-30' : isSelTable || isMultiSelTable ? 'z-20' : 'z-10'
+                      } ${
+                        isHighlightedTable
+                          ? 'ring-4 ring-[#C48B81] ring-offset-4 rounded-2xl shadow-xl animate-pulse'
+                          : isMultiSelTable
+                          ? 'ring-4 ring-[#C48B81]/35 rounded-2xl'
+                          : ''
+                      }`}
+                      title={readOnly ? 'Toca para ver los invitados de esta mesa' : 'Doble clic para abrir en grande y asignar asiento por asiento'}
                     >
                       {renderTableShape(table, usedSeats, seatedHere)}
                       {table.locked && (
@@ -2209,7 +2281,8 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
           </div>
         </div>
 
-        {/* Right Side Inspector: Selected Table or Floor Element Controls */}
+        {/* Right Side Inspector: Selected Table or Floor Element Controls (hidden in readOnly mode) */}
+        {!readOnly && (
         <div
           className={`bg-white rounded-3xl p-5 border border-[#EFE8E1] shadow-2xs space-y-4 overflow-y-auto ${
             isFullscreen ? 'h-full max-h-full' : 'lg:max-h-[74vh]'
@@ -2715,9 +2788,10 @@ export const SeatingCanvas2D: React.FC<SeatingCanvas2DProps> = ({
             );
           })()}
         </div>
+        )}
       </div>
       {/* Right-Click Context Menu */}
-      {contextMenu && (
+      {contextMenu && !readOnly && (
         <div
           style={{
             left: Math.min(contextMenu.x, typeof window !== 'undefined' ? window.innerWidth - 230 : contextMenu.x),

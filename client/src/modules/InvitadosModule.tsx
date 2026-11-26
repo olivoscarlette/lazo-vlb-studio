@@ -45,6 +45,10 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
     setStatusFilter(weddingDayMode ? 'Confirmado' : '');
     setPage(1);
   }, [weddingDayMode]);
+
+  // Check-in en puerta para Modo Día de la Boda (persistido por boda y evento)
+  const [checkedInIds, setCheckedInIds] = useState<Record<string, boolean>>({});
+  const [checkinFilter, setCheckinFilter] = useState<'all' | 'pending' | 'arrived'>('all');
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1, limit: 25 });
   const [summary, setSummary] = useState({
     total: 0,
@@ -63,6 +67,31 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
   const [civilDate, setCivilDate] = useState<string | null>(null);
   const [principalDate, setPrincipalDate] = useState<string | null>(null);
   const [eventTarget, setEventTarget] = useState<'principal' | 'civil'>('principal');
+
+  const checkinStorageKey = currentWedding?.id ? `lazo_checkin_${currentWedding.id}_${eventTarget}` : '';
+
+  useEffect(() => {
+    if (!checkinStorageKey) return;
+    try {
+      const raw = localStorage.getItem(checkinStorageKey);
+      setCheckedInIds(raw ? JSON.parse(raw) : {});
+    } catch {
+      setCheckedInIds({});
+    }
+  }, [checkinStorageKey]);
+
+  const toggleCheckIn = (guestId: string) => {
+    setCheckedInIds(prev => {
+      const next = { ...prev, [guestId]: !prev[guestId] };
+      if (!next[guestId]) delete next[guestId];
+      if (checkinStorageKey) {
+        try {
+          localStorage.setItem(checkinStorageKey, JSON.stringify(next));
+        } catch {}
+      }
+      return next;
+    });
+  };
   const [principalSummary, setPrincipalSummary] = useState<any>(null);
   const [civilSummary, setCivilSummary] = useState<any>(null);
 
@@ -1569,26 +1598,57 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
 
         <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
           {weddingDayMode && (
-            <div className="inline-flex items-center p-0.5 bg-[#FAF8F5] rounded-full border border-[#EFE8E1]">
-              <button
-                type="button"
-                onClick={() => { setStatusFilter('Confirmado'); setPage(1); }}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
-                  statusFilter === 'Confirmado' ? 'bg-[#384C3A] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
-                }`}
-              >
-                Confirmados ({summary.confirmed_places})
-              </button>
-              <button
-                type="button"
-                onClick={() => { setStatusFilter(''); setPage(1); }}
-                className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
-                  statusFilter === '' ? 'bg-[#2B2826] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
-                }`}
-              >
-                Todos
-              </button>
-            </div>
+            <>
+              <div className="inline-flex items-center p-0.5 bg-[#FAF8F5] rounded-full border border-[#EFE8E1]">
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter('Confirmado'); setPage(1); }}
+                  className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                    statusFilter === 'Confirmado' ? 'bg-[#384C3A] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+                  }`}
+                >
+                  Confirmados ({summary.confirmed_places})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setStatusFilter(''); setPage(1); }}
+                  className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                    statusFilter === '' ? 'bg-[#2B2826] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+                  }`}
+                >
+                  Todos
+                </button>
+              </div>
+              <div className="inline-flex items-center p-0.5 bg-[#FAF8F5] rounded-full border border-[#EFE8E1]">
+                <button
+                  type="button"
+                  onClick={() => setCheckinFilter('all')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                    checkinFilter === 'all' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+                  }`}
+                >
+                  Todos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCheckinFilter('pending')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                    checkinFilter === 'pending' ? 'bg-[#C48B81] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+                  }`}
+                >
+                  Por llegar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCheckinFilter('arrived')}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition cursor-pointer ${
+                    checkinFilter === 'arrived' ? 'bg-[#384C3A] text-white' : 'text-[#6E605C] hover:text-[#2B2826]'
+                  }`}
+                >
+                  ✓ En salón ({Object.keys(checkedInIds).length})
+                </button>
+              </div>
+            </>
           )}
           {/* Sort By Selector: Alphabetical */}
           <div className="inline-flex items-center space-x-1.5 bg-[#FAF8F5] px-3.5 py-1 rounded-full border border-[#EFE8E1]">
@@ -1644,6 +1704,7 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
                     <th className="py-3.5 px-4 whitespace-nowrap">MESA</th>
                     <th className="py-3.5 px-4 whitespace-nowrap">ACOMPAÑANTES</th>
                     <th className="py-3.5 px-4">OBSERVACIONES</th>
+                    <th className="py-3.5 px-4 text-center whitespace-nowrap">LLEGADA</th>
                   </>
                 ) : (
                   <>
@@ -1666,18 +1727,25 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
             <tbody className="divide-y divide-[#FAF8F5]">
               {loading ? (
                 <tr>
-                  <td colSpan={weddingDayMode ? 4 : canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
+                  <td colSpan={weddingDayMode ? 5 : canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
                     Cargando invitados...
                   </td>
                 </tr>
               ) : guests.length === 0 ? (
                 <tr>
-                  <td colSpan={weddingDayMode ? 4 : canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
+                  <td colSpan={weddingDayMode ? 5 : canShowWhatsappColumn ? 7 : 6} className="py-12 text-center text-[#8A7E72] text-xs font-light">
                     No se encontraron invitados con los filtros actuales.
                   </td>
                 </tr>
               ) : weddingDayMode ? (
-                guests.map(guest => {
+                guests
+                  .filter(g => {
+                    if (checkinFilter === 'arrived') return Boolean(checkedInIds[g.id]);
+                    if (checkinFilter === 'pending') return !checkedInIds[g.id];
+                    return true;
+                  })
+                  .map(guest => {
+                  const isArrived = Boolean(checkedInIds[guest.id]);
                   const isCivil = isCivilDifferentDay && eventTarget === 'civil';
                   const currentStatus = isCivil ? (guest.status_civil || 'Pendiente de confirmar') : guest.status;
                   const confirmedPlaces = isCivil ? guest.confirmed_places_civil : guest.confirmed_places;
@@ -1693,11 +1761,11 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
                   const hasDietary = Boolean(guest.dietary_requirements && guest.dietary_requirements !== 'Ninguna');
 
                   return (
-                    <tr key={guest.id} className="hover:bg-[#FAF8F5]/70 transition">
+                    <tr key={guest.id} className={`transition ${isArrived ? 'bg-[#F3F8F4]/80' : 'hover:bg-[#FAF8F5]/70'}`}>
                       {/* 1. Quién es */}
                       <td className="py-4 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-[15px] text-[#2B2826]">
+                          <span className={`font-medium text-[15px] ${isArrived ? 'text-[#384C3A]' : 'text-[#2B2826]'}`}>
                             {guest.first_name} {guest.last_name}
                           </span>
                           {statusFilter === '' && currentStatus !== 'Confirmado' && (
@@ -1756,6 +1824,22 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
                         ) : (
                           <span className="text-[#D2C4B4] italic">—</span>
                         )}
+                      </td>
+
+                      {/* 5. Check-in en puerta */}
+                      <td className="py-4 px-4 text-center whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => toggleCheckIn(guest.id)}
+                          className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold transition cursor-pointer ${
+                            isArrived
+                              ? 'bg-[#384C3A] text-white shadow-2xs'
+                              : 'bg-white hover:bg-[#FAF8F5] text-[#6E605C] border border-[#E5DCD5]'
+                          }`}
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>{isArrived ? 'En salón' : 'Llegó'}</span>
+                        </button>
                       </td>
                     </tr>
                   );

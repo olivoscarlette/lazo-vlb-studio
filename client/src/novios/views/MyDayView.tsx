@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Plus, Trash2, Clock, MapPin, Pencil, Download, Sparkles } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Plus, Trash2, Clock, MapPin, Pencil, Download, Sparkles, CheckCircle2, Circle } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
+import { useAuth } from '../../context/AuthContext';
 import { CeremoniesSection } from '../components/CeremoniesSection';
 import { HandoverSection } from '../components/HandoverSection';
 import { Modal } from '../components/Modal';
@@ -8,11 +9,36 @@ import { VlbCoordinationModal } from '../components/VlbCoordinationModal';
 import { TimelineItem } from '../types/lazo';
 import { exportTimelinePdf, sortTimelineItems } from '../utils/pdfExport';
 
-export const MyDayView: React.FC = () => {
+export const MyDayView: React.FC<{ weddingDayMode?: boolean }> = ({ weddingDayMode = false }) => {
   const { wedding, flags, updateWedding } = useWedding();
+  const { currentWedding } = useAuth();
   const [subTab, setSubTab] = useState<'itinerario' | 'entregas' | 'ceremonias'>('itinerario');
   const [timelineEvent, setTimelineEvent] = useState<'principal' | 'civil'>('principal');
   const [showVlbModal, setShowVlbModal] = useState(false);
+  const [allowEditInDayMode, setAllowEditInDayMode] = useState(false);
+  const [completedMoments, setCompletedMoments] = useState<Record<string, boolean>>({});
+
+  const liveStorageKey = `lazo_tl_done_${currentWedding?.id || 'default'}_${timelineEvent}`;
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(liveStorageKey);
+      setCompletedMoments(raw ? JSON.parse(raw) : {});
+    } catch {
+      setCompletedMoments({});
+    }
+  }, [liveStorageKey]);
+
+  const toggleMomentDone = (id: string) => {
+    setCompletedMoments(prev => {
+      const next = { ...prev, [id]: !prev[id] };
+      if (!next[id]) delete next[id];
+      try {
+        localStorage.setItem(liveStorageKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
 
   // Add / Edit Timeline Modal
   const [showEventModal, setShowEventModal] = useState(false);
@@ -132,10 +158,10 @@ export const MyDayView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-[11px] uppercase tracking-[0.2em] font-semibold text-[#7D6F6B]">
-            Logística del Evento
+            {weddingDayMode ? 'Modo Día de la Boda · Operación en Vivo' : 'Logística del Evento'}
           </span>
           <h2 className="font-editorial text-3xl sm:text-4xl text-[#2B2826] mt-1">
-            El Gran Día
+            {weddingDayMode ? 'Modo Operación' : 'El Gran Día'}
           </h2>
         </div>
 
@@ -157,14 +183,30 @@ export const MyDayView: React.FC = () => {
               <Download className="w-3.5 h-3.5 text-[#C48B81]" />
               <span>{isCivilTimeline ? 'PDF Civil' : 'PDF'}</span>
             </button>
-            <button
-              type="button"
-              onClick={openAddEvent}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Agregar Momento</span>
-            </button>
+            {weddingDayMode ? (
+              <button
+                type="button"
+                onClick={() => setAllowEditInDayMode(prev => !prev)}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-medium border transition cursor-pointer ${
+                  allowEditInDayMode
+                    ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                    : 'bg-white hover:bg-[#FAF8F5] text-[#6E605C] border-[#EFE8E1]'
+                }`}
+              >
+                <Pencil className="w-3 h-3" />
+                <span>{allowEditInDayMode ? 'Terminar edición' : 'Editar'}</span>
+              </button>
+            ) : null}
+            {(!weddingDayMode || allowEditInDayMode) && (
+              <button
+                type="button"
+                onClick={openAddEvent}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Agregar Momento</span>
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -270,9 +312,64 @@ export const MyDayView: React.FC = () => {
         />
       )}
 
-      {/* SUB-TAB 1: ITINERARIO EDITABLE */}
-      {activeSubTab === 'itinerario' && (
+      {/* SUB-TAB 1: ITINERARIO EDITABLE / EN VIVO */}
+      {activeSubTab === 'itinerario' && (() => {
+        const doneCount = activeTimeline.filter(it => Boolean(completedMoments[it.id])).length;
+        const nextPendingMoment = weddingDayMode
+          ? activeTimeline.find(it => !completedMoments[it.id]) || null
+          : null;
+        return (
         <div className="space-y-4">
+        {weddingDayMode && activeTimeline.length > 0 && (
+          <div className="bg-[#FAF4F0] rounded-3xl p-5 border border-[#E6D2CB] shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {nextPendingMoment ? (
+              <div className="space-y-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#A86B60] bg-white px-2.5 py-0.5 rounded-full border border-[#EEDAD6]">
+                    Siguiente Momento
+                  </span>
+                  <span className="text-[11px] text-[#7D6F6B]">
+                    {doneCount} / {activeTimeline.length} completados
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-3 pt-0.5">
+                  <span className="font-editorial text-2xl text-[#C48B81] shrink-0">
+                    {nextPendingMoment.time}
+                  </span>
+                  <p className="font-editorial text-xl text-[#2B2826] truncate">
+                    {nextPendingMoment.title}
+                  </p>
+                </div>
+                {(nextPendingMoment.location || nextPendingMoment.notes) && (
+                  <p className="text-xs text-[#6E605C]">
+                    {nextPendingMoment.location ? `📍 ${nextPendingMoment.location}` : ''}
+                    {nextPendingMoment.location && nextPendingMoment.notes ? ' · ' : ''}
+                    {nextPendingMoment.notes || ''}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#384C3A]">
+                  ¡Itinerario completado!
+                </span>
+                <p className="font-editorial text-xl text-[#2B2826]">
+                  Todos los momentos ({activeTimeline.length}/{activeTimeline.length}) han sido marcados como listos.
+                </p>
+              </div>
+            )}
+            {nextPendingMoment && (
+              <button
+                type="button"
+                onClick={() => toggleMomentDone(nextPendingMoment.id)}
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full bg-[#384C3A] hover:bg-[#2B3B2D] text-white text-xs font-semibold shadow-xs transition cursor-pointer shrink-0"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>Marcar listo</span>
+              </button>
+            )}
+          </div>
+        )}
         <div className="bg-white rounded-3xl p-5 sm:p-6 border border-[#EFE8E1] shadow-2xs">
           {isCivilTimeline && (ceremonies.civilDate || ceremonies.civilVenue) && (
             <div className="mb-4 pb-3 border-b border-[#FAF8F5] flex flex-wrap items-center justify-between gap-2 text-xs text-[#7D6F6B]">
@@ -309,19 +406,46 @@ export const MyDayView: React.FC = () => {
             </div>
           ) : (
             <div className="divide-y divide-[#FAF8F5]">
-              {activeTimeline.map(item => (
+              {activeTimeline.map(item => {
+                const isDone = weddingDayMode && Boolean(completedMoments[item.id]);
+                const isNext = weddingDayMode && nextPendingMoment?.id === item.id;
+                const canEditRow = !weddingDayMode || allowEditInDayMode;
+                return (
                 <div
                   key={item.id}
-                  onClick={() => openEditEvent(item)}
-                  className="py-4 px-2 rounded-2xl flex items-start justify-between gap-4 group hover:bg-[#FAF8F5]/70 transition cursor-pointer"
+                  onClick={() => (weddingDayMode && !allowEditInDayMode ? toggleMomentDone(item.id) : openEditEvent(item))}
+                  className={`py-4 px-2.5 rounded-2xl flex items-start justify-between gap-4 group transition cursor-pointer ${
+                    isNext
+                      ? 'bg-[#FAF4F0]/80 border border-[#EEDAD6] my-1'
+                      : isDone
+                      ? 'opacity-55 hover:opacity-80'
+                      : 'hover:bg-[#FAF8F5]/70'
+                  }`}
                 >
-                  <div className="flex items-start gap-4 min-w-0 flex-1">
-                    <span className="font-editorial text-lg text-[#C48B81] w-20 shrink-0 flex items-center gap-1.5">
+                  <div className="flex items-start gap-3.5 min-w-0 flex-1">
+                    {weddingDayMode && (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          toggleMomentDone(item.id);
+                        }}
+                        className="mt-0.5 shrink-0 text-[#C48B81] hover:text-[#384C3A] transition cursor-pointer"
+                        title={isDone ? 'Desmarcar' : 'Marcar como completado'}
+                      >
+                        {isDone ? (
+                          <CheckCircle2 className="w-5 h-5 text-[#384C3A]" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-[#D2C2B6]" />
+                        )}
+                      </button>
+                    )}
+                    <span className={`font-editorial text-lg w-20 shrink-0 flex items-center gap-1.5 ${isDone ? 'text-[#8A7E72] line-through' : 'text-[#C48B81]'}`}>
                       <Clock className="w-3.5 h-3.5 opacity-60 shrink-0" />
                       {item.time}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-[#2B2826] group-hover:text-[#A86B60] transition-colors">
+                      <p className={`text-sm font-medium transition-colors ${isDone ? 'text-[#7D6F6B] line-through' : 'text-[#2B2826] group-hover:text-[#A86B60]'}`}>
                         {item.title}
                       </p>
                       {item.location && (
@@ -338,6 +462,7 @@ export const MyDayView: React.FC = () => {
                     </div>
                   </div>
 
+                  {canEditRow && (
                   <div
                     className="flex items-center gap-1 shrink-0"
                     onClick={e => e.stopPropagation()}
@@ -359,13 +484,15 @@ export const MyDayView: React.FC = () => {
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
 
-        {flags.isVirtualNovios && (
+        {flags.isVirtualNovios && !weddingDayMode && (
           <div className="bg-[#FAF8F5] rounded-2xl p-4 sm:p-5 border border-[#EEDAD6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-full bg-[#F7EDEB] border border-[#EEDAD6] flex items-center justify-center text-[#C48B81] shrink-0 mt-0.5">
@@ -390,7 +517,8 @@ export const MyDayView: React.FC = () => {
           </div>
         )}
         </div>
-      )}
+        );
+      })()}
 
       {/* SUB-TAB 2: CEREMONIAS OPCIONALES (MÓDULOS COMPLETOS CIVIL & RELIGIOSA) */}
       {activeSubTab === 'ceremonias' && !isNonWedding && (
@@ -398,6 +526,7 @@ export const MyDayView: React.FC = () => {
           ceremonies={ceremonies}
           weddingDate={wedding.profile.weddingDate}
           guests={wedding.guests}
+          weddingDayMode={weddingDayMode}
           onChange={updater =>
             updateWedding(prev => ({ ...prev, ceremonies: updater(prev.ceremonies) }))
           }

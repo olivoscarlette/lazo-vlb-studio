@@ -13,9 +13,14 @@ import { exportFloorPlanPdf, exportGuestsPdf } from '../utils/pdfExport';
 import { formatShortDate } from '../data/seedWedding';
 import { buildVlbWhatsAppUrl } from '../components/VlbCoordinationModal';
 
-export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly?: boolean }> = ({
+export const GuestsView: React.FC<{
+  initialSubTab?: 'lista' | 'mesas';
+  mesasOnly?: boolean;
+  weddingDayMode?: boolean;
+}> = ({
   initialSubTab,
-  mesasOnly = false
+  mesasOnly = false,
+  weddingDayMode = false
 }) => {
   const { wedding, flags, updateWedding } = useWedding();
   const { currentWedding, token } = useAuth();
@@ -24,6 +29,8 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
   const subTab = mesasOnly ? 'mesas' : subTabState;
   const [layoutEvent, setLayoutEvent] = useState<'principal' | 'civil'>('principal');
   const [tablesView, setTablesView] = useState<'plano' | 'tarjetas'>(canUseLayout2D ? 'plano' : 'tarjetas');
+  const [dayTableSearch, setDayTableSearch] = useState('');
+  const [readOnlyTableId, setReadOnlyTableId] = useState<string | null>(null);
   const [floorPlanOpacity, setFloorPlanOpacity] = useState(0.55);
   const [floorPlanVisible, setFloorPlanVisible] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'TODOS' | GuestStatus>('TODOS');
@@ -818,7 +825,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
         <div className="flex flex-wrap items-center gap-2">
           {subTab === 'mesas' ? (
             <>
-              {mesasOnly && (
+              {mesasOnly && !weddingDayMode && (
                 <div className="inline-flex items-center p-1 bg-white rounded-full border border-[#EFE8E1] shadow-2xs">
                   <button
                     type="button"
@@ -842,7 +849,8 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                   </button>
                 </div>
               )}
-              {/* Versiones del plano (v1, v2, Plan Lluvia...) */}
+              {/* Versiones del plano (v1, v2, Plan Lluvia...) — oculto en Modo Día de la Boda */}
+              {!weddingDayMode && (
               <div className="relative">
                 <button
                   type="button"
@@ -937,6 +945,7 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                   </>
                 )}
               </div>
+              )}
 
               {canUseLayout2D && (
                 <button
@@ -985,14 +994,16 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                   <span>PDF Plano</span>
                 </button>
               )}
-              <button
-                type="button"
-                onClick={() => setShowTableModal(true)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Nueva Mesa</span>
-              </button>
+              {!weddingDayMode && (
+                <button
+                  type="button"
+                  onClick={() => setShowTableModal(true)}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-xs font-medium shadow-2xs transition cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Nueva Mesa</span>
+                </button>
+              )}
             </>
           ) : (
             <>
@@ -1445,11 +1456,136 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
                 </button>
               </div>
             </div>
-          ) : tablesView === 'plano' ? (
+          ) : tablesView === 'plano' || weddingDayMode ? (() => {
+            const q = dayTableSearch.trim().toLowerCase();
+            const matchingDayGuests = weddingDayMode && q
+              ? activeLayoutGuests
+                  .filter(g => g.status !== 'No asistirá' && g.name.toLowerCase().includes(q))
+                  .slice(0, 8)
+              : [];
+            const autoMatchedTableId =
+              matchingDayGuests.length === 1 && matchingDayGuests[0].tableId
+                ? matchingDayGuests[0].tableId
+                : null;
+            const effectiveHighlightedTableId = weddingDayMode
+              ? (readOnlyTableId || autoMatchedTableId)
+              : null;
+            const inspectedTable = effectiveHighlightedTableId
+              ? activeTables.find(t => t.id === effectiveHighlightedTableId) || null
+              : null;
+            const inspectedGuests = inspectedTable
+              ? activeLayoutGuests.filter(g => g.tableId === inspectedTable.id && g.status !== 'No asistirá')
+              : [];
+
+            return (
+              <div className="space-y-3">
+                {weddingDayMode && (
+                  <div className="bg-white rounded-2xl p-3.5 border border-[#EFE8E1] shadow-2xs space-y-2.5">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
+                      <div className="relative flex-1">
+                        <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#C48B81]" />
+                        <input
+                          type="text"
+                          value={dayTableSearch}
+                          onChange={e => {
+                            setDayTableSearch(e.target.value);
+                            if (!e.target.value.trim()) setReadOnlyTableId(null);
+                          }}
+                          placeholder="Buscar invitado para iluminar su mesa en el plano..."
+                          className="w-full pl-9 pr-4 py-2 text-xs rounded-full bg-[#FAF8F5] border border-[#EFE8E1] focus:bg-white focus:border-[#C48B81] focus:outline-none text-[#2B2826]"
+                        />
+                      </div>
+                      {(dayTableSearch || readOnlyTableId) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDayTableSearch('');
+                            setReadOnlyTableId(null);
+                          }}
+                          className="px-3 py-1.5 rounded-full text-xs text-[#7D6F6B] hover:text-[#2B2826] bg-[#FAF8F5] border border-[#EFE8E1] cursor-pointer self-start sm:self-auto"
+                        >
+                          Limpiar búsqueda
+                        </button>
+                      )}
+                    </div>
+
+                    {matchingDayGuests.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {matchingDayGuests.map(g => {
+                          const tObj = g.tableId ? activeTables.find(t => t.id === g.tableId) : null;
+                          const active = Boolean(tObj && effectiveHighlightedTableId === tObj.id);
+                          return (
+                            <button
+                              key={g.id}
+                              type="button"
+                              onClick={() => {
+                                if (tObj) setReadOnlyTableId(tObj.id);
+                              }}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border transition cursor-pointer ${
+                                active
+                                  ? 'bg-[#C48B81] text-white border-[#C48B81]'
+                                  : 'bg-[#FAF8F5] text-[#2B2826] border-[#EFE8E1] hover:border-[#C48B81]'
+                              }`}
+                            >
+                              <span className="font-medium">{g.name}</span>
+                              <span className={`text-[11px] ${active ? 'text-white/90' : 'text-[#A86B60]'}`}>
+                                → {tObj ? tObj.name : 'Sin mesa'}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {inspectedTable && (
+                      <div className="bg-[#FAF4F0] rounded-2xl p-3.5 border border-[#E6D2CB] flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                        <div className="space-y-1.5 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-editorial text-lg text-[#2B2826]">{inspectedTable.name}</span>
+                            <span className="text-[11px] text-[#7D6F6B] bg-white px-2.5 py-0.5 rounded-full border border-[#EFE8E1]">
+                              {inspectedGuests.reduce((s, g) => s + g.passes, 0)} / {inspectedTable.capacity} lugares
+                            </span>
+                          </div>
+                          {inspectedGuests.length === 0 ? (
+                            <p className="text-xs text-[#7D6F6B] italic">Sin invitados asignados a esta mesa.</p>
+                          ) : (
+                            <div className="flex flex-wrap gap-1.5">
+                              {inspectedGuests.map(g => (
+                                <span
+                                  key={g.id}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs bg-white text-[#2B2826] border border-[#EFE8E1]"
+                                >
+                                  <span className="font-medium">{g.name}</span>
+                                  {g.passes > 1 && (
+                                    <span className="text-[10px] text-[#A86B60] font-semibold">({g.passes}p)</span>
+                                  )}
+                                  {g.dietary && g.dietary !== 'Ninguna' && (
+                                    <span className="text-[10px] text-[#8A6D5E]">· {g.dietary}</span>
+                                  )}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setReadOnlyTableId(null)}
+                          className="text-xs text-[#7D6F6B] hover:text-[#2B2826] cursor-pointer shrink-0"
+                        >
+                          Cerrar ✕
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
             <SeatingCanvas2D
               weddingId={currentWedding?.id}
               authToken={token}
               eventType={isCivilLayout ? 'civil' : 'principal'}
+              readOnly={weddingDayMode}
+              highlightedTableId={effectiveHighlightedTableId}
+              onReadOnlySelectTable={tid => setReadOnlyTableId(tid)}
               floorPlanUrl={activeFloorPlanUrl}
               onFloorPlanChange={nextUrl =>
                 updateWedding(prev => ({
@@ -1500,7 +1636,9 @@ export const GuestsView: React.FC<{ initialSubTab?: 'lista' | 'mesas'; mesasOnly
               onBatchDelete={handleBatchDelete}
               onOpenNewTable={() => setShowTableModal(true)}
             />
-          ) : (
+              </div>
+            );
+          })() : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeTables.map(table => {
                 const seatedGuests = activeLayoutGuests.filter(g => g.tableId === table.id);

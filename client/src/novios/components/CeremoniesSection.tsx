@@ -25,6 +25,7 @@ interface CeremoniesSectionProps {
   ceremonies: CeremonyDetails;
   weddingDate: string;
   guests: GuestItem[];
+  weddingDayMode?: boolean;
   onChange: (updater: (prev: CeremonyDetails) => CeremonyDetails) => void;
 }
 
@@ -69,6 +70,7 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
   ceremonies,
   weddingDate,
   guests,
+  weddingDayMode = false,
   onChange
 }) => {
   // Civil local inputs
@@ -107,6 +109,153 @@ export const CeremoniesSection: React.FC<CeremoniesSectionProps> = ({
   const relReadings = ceremonies.religiousReadingsList ?? [];
 
   const activeGuests = guests.filter(g => g.status !== 'No asistirá');
+
+  if (weddingDayMode) {
+    return (
+      <div className="space-y-5">
+        {!ceremonies.civilEnabled && !ceremonies.religiousEnabled ? (
+          <div className="bg-white rounded-3xl p-8 border border-[#EFE8E1] text-center text-xs text-[#7D6F6B]">
+            No hay ceremonias activas configuradas para esta boda.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {ceremonies.civilEnabled && (
+              <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
+                <div className="flex items-center gap-3 pb-3 border-b border-[#FAF8F5]">
+                  <div className="w-9 h-9 rounded-2xl bg-[#FAF4F3] border border-[#EEDAD6] flex items-center justify-center text-[#C48B81]">
+                    <Landmark className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-editorial text-xl text-[#2B2826]">Ceremonia Civil</h3>
+                    <p className="text-xs text-[#7D6F6B]">
+                      {[ceremonies.civilDate || weddingDate, ceremonies.civilTime, ceremonies.civilVenue].filter(Boolean).join(' · ') || 'Sin horario definido'}
+                    </p>
+                  </div>
+                </div>
+
+                {ceremonies.civilJudge && (
+                  <div className="text-xs text-[#2B2826] flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-[#C48B81]" />
+                    <span className="text-[#7D6F6B]">Juez / Oficial:</span>
+                    <span className="font-medium">{ceremonies.civilJudge}</span>
+                  </div>
+                )}
+
+                {civilWitnesses.length > 0 && (
+                  <div className="space-y-1.5">
+                    <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#7D6F6B] flex items-center gap-1.5">
+                      <Users className="w-3.5 h-3.5 text-[#C48B81]" />
+                      <span>Testigos ({civilWitnesses.length})</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {civilWitnesses.map(w => (
+                        <span key={w} className="px-2.5 py-1 rounded-full text-xs bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1]">
+                          {w}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {civilSongs.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#7D6F6B] flex items-center gap-1.5">
+                      <Music className="w-3.5 h-3.5 text-[#C48B81]" />
+                      <span>Música Civil</span>
+                    </div>
+                    <div className="divide-y divide-[#FAF8F5]">
+                      {civilSongs.map(s => (
+                        <div key={s.id} className="py-1.5 flex items-baseline justify-between gap-2 text-xs">
+                          <span className="font-medium text-[#A86B60] shrink-0">{s.moment}</span>
+                          <span className="text-[#2B2826] text-right">
+                            {s.title}{s.artist ? ` · ${s.artist}` : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {ceremonies.civilNotes && (
+                  <p className="text-xs text-[#5E524E] bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
+                    {ceremonies.civilNotes}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {ceremonies.religiousEnabled && (
+              <div className="bg-white rounded-3xl p-6 border border-[#EFE8E1] shadow-2xs space-y-4">
+                <div className="flex items-center gap-3 pb-3 border-b border-[#FAF8F5]">
+                  <div className="w-9 h-9 rounded-2xl bg-[#FAF4F3] border border-[#EEDAD6] flex items-center justify-center text-[#C48B81]">
+                    <Church className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-editorial text-xl text-[#2B2826]">Ceremonia Religiosa</h3>
+                    <p className="text-xs text-[#7D6F6B]">
+                      {[ceremonies.religiousDate || weddingDate, ceremonies.religiousTime, ceremonies.religiousVenue].filter(Boolean).join(' · ') || 'Sin horario definido'}
+                    </p>
+                  </div>
+                </div>
+
+                {ceremonies.religiousOfficiant && (
+                  <div className="text-xs text-[#2B2826] flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-[#C48B81]" />
+                    <span className="text-[#7D6F6B]">Sacerdote / Celebrante:</span>
+                    <span className="font-medium">{ceremonies.religiousOfficiant}</span>
+                  </div>
+                )}
+
+                {relReadings.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#7D6F6B] flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-[#C48B81]" />
+                      <span>Lecturas ({relReadings.length})</span>
+                    </div>
+                    <div className="divide-y divide-[#FAF8F5]">
+                      {relReadings.map(r => (
+                        <div key={r.id} className="py-1.5 flex items-baseline justify-between gap-2 text-xs">
+                          <span className="font-medium text-[#A86B60] shrink-0">{r.type}</span>
+                          <span className="text-[#2B2826] text-right">
+                            {r.reader || 'Por asignar'}{r.title ? ` (${r.title})` : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {relSongs.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#7D6F6B] flex items-center gap-1.5">
+                      <Music className="w-3.5 h-3.5 text-[#C48B81]" />
+                      <span>Repertorio Musical ({relSongs.length})</span>
+                    </div>
+                    <div className="divide-y divide-[#FAF8F5]">
+                      {relSongs.map(s => (
+                        <div key={s.id} className="py-1.5 flex items-baseline justify-between gap-2 text-xs">
+                          <span className="font-medium text-[#A86B60] shrink-0">{s.moment}</span>
+                          <span className="text-[#2B2826] text-right">
+                            {s.title}{s.artist ? ` · ${s.artist}` : ''}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {ceremonies.religiousNotes && (
+                  <p className="text-xs text-[#5E524E] bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1]">
+                    {ceremonies.religiousNotes}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const handleAddWitness = (e: React.FormEvent) => {
     e.preventDefault();

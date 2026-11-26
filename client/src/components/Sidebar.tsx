@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CalendarCheck2, Users2, Grid2x2Check,
   CreditCard, Landmark, Church, Clock3, CheckSquare,
   FileText, BarChart3, Contact2, History, X, MessageSquare,
-  ChevronLeft, Sparkles, Calendar, PanelLeft, Send
+  ChevronLeft, Sparkles, Calendar, PanelLeft, Send, Phone
 } from 'lucide-react';
 
 export type WorkspaceTab =
@@ -60,15 +60,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
     currentWedding?.event_type && !currentWedding.event_type.toLowerCase().includes('boda')
   );
 
-  // Si weddingDayMode está activo, SOLO se muestran Modo Operación, Asignación de Mesas y Listado de Invitados
+  // Si weddingDayMode está activo, SOLO se muestran las 4 vistas rápidas de operación en vivo
   const sections: { title: string; items: MenuItemDef[] }[] = weddingDayMode
     ? [
         {
           title: 'OPERACIÓN EN VIVO',
           items: [
             { id: 'timeline', label: 'Modo Operación', icon: Clock3 },
-            { id: 'mesas', label: 'Asignación de Mesas', icon: Grid2x2Check },
-            { id: 'invitados', label: 'Listado de Invitados', icon: Users2 }
+            { id: 'mesas', label: 'Plano de Mesas', icon: Grid2x2Check },
+            { id: 'invitados', label: 'Recepción Invitados', icon: Users2 },
+            { id: 'proveedores', label: 'Proveedores del Día', icon: Phone }
           ]
         }
       ]

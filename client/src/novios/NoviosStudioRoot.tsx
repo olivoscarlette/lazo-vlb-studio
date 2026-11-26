@@ -15,6 +15,7 @@ interface NoviosStudioRootProps {
   embedded?: boolean;
   forcedTab?: LazoTab;
   initialGuestsSubTab?: 'lista' | 'mesas';
+  weddingDayMode?: boolean;
   onTabChange?: (tab: LazoTab) => void;
 }
 
@@ -30,6 +31,7 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
   embedded = false,
   forcedTab,
   initialGuestsSubTab,
+  weddingDayMode = false,
   onTabChange
 }) => {
   const { wedding, flags, loading, saving, updateWedding } = useWedding();
@@ -67,15 +69,16 @@ const NoviosStudioInner: React.FC<NoviosStudioRootProps> = ({
   const content = (
     <>
       {activeTab === 'inicio' && <HomeView onNavigate={handleSelectTab} />}
-      {activeTab === 'presupuesto' && <BudgetView />}
+      {activeTab === 'presupuesto' && <BudgetView weddingDayMode={weddingDayMode} />}
       {activeTab === 'invitados' && (
         <GuestsView
           initialSubTab={initialGuestsSubTab}
           mesasOnly={embedded && initialGuestsSubTab === 'mesas'}
+          weddingDayMode={weddingDayMode}
         />
       )}
       {activeTab === 'checklist' && <ChecklistView />}
-      {activeTab === 'midia' && <MyDayView />}
+      {activeTab === 'midia' && <MyDayView weddingDayMode={weddingDayMode} />}
       {activeTab === 'reuniones' && <NoviosReunionesView />}
     </>
   );
