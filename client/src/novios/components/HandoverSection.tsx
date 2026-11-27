@@ -41,6 +41,40 @@ const QUICK_SUGGESTIONS: Array<{ name: string; category: string; qtyDelivered: s
 const HANDOVER_STAGES = ['IGLESIA', 'CIVIL', 'RECEPCIÓN', 'OTRO'] as const;
 type HandoverStage = (typeof HANDOVER_STAGES)[number];
 
+const HANDOVER_UNITS: Array<{ value: string; singular: string; plural: string }> = [
+  { value: 'pieza', singular: 'pieza', plural: 'piezas' },
+  { value: 'caja', singular: 'caja', plural: 'cajas' },
+  { value: 'botella', singular: 'botella', plural: 'botellas' },
+  { value: 'paquete', singular: 'paquete', plural: 'paquetes' },
+  { value: 'par', singular: 'par', plural: 'pares' },
+  { value: 'canasta', singular: 'canasta', plural: 'canastas' },
+  { value: 'bolsa', singular: 'bolsa', plural: 'bolsas' },
+  { value: 'juego', singular: 'juego', plural: 'juegos' },
+  { value: 'kit', singular: 'kit', plural: 'kits' },
+  { value: 'charola', singular: 'charola', plural: 'charolas' }
+];
+
+const formatQtyWithUnit = (numRaw: string, unitValue: string): string => {
+  const cleanNum = numRaw.trim() || '1';
+  const unitObj = HANDOVER_UNITS.find(u => u.value === unitValue) || HANDOVER_UNITS[0];
+  const n = Number(cleanNum);
+  const label = !Number.isNaN(n) && n === 1 ? unitObj.singular : unitObj.plural;
+  return `${cleanNum} ${label}`;
+};
+
+const parseQtyAndUnit = (raw?: string): { qtyNum: string; qtyUnit: string } => {
+  const str = (raw || '').trim();
+  if (!str) return { qtyNum: '1', qtyUnit: 'pieza' };
+  const match = /^(\d+(?:[.,]\d+)?)\s*(.*)$/.exec(str);
+  if (!match) return { qtyNum: '1', qtyUnit: 'pieza' };
+  const qtyNum = match[1];
+  const rest = match[2].trim().toLowerCase();
+  const found = HANDOVER_UNITS.find(
+    u => rest === u.value || rest === u.singular || rest === u.plural || rest.startsWith(u.singular)
+  );
+  return { qtyNum, qtyUnit: found ? found.value : 'pieza' };
+};
+
 const getStageBadgeClass = (stage: string) => {
   const upper = stage.toUpperCase();
   if (upper === 'CIVIL') return 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5]';
@@ -63,7 +97,8 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
     category: CATEGORIES[0],
     stages: ['RECEPCIÓN'] as HandoverStage[],
     stageSplit: {} as Partial<Record<HandoverStage, string>>,
-    qtyDelivered: '1 pieza',
+    qtyNum: '1',
+    qtyUnit: 'pieza',
     deliveredNotes: '',
     qtyReturned: '',
     returnedToWhom: '',
@@ -94,7 +129,8 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
       category: CATEGORIES[0],
       stages: [initialStage],
       stageSplit: { [initialStage]: '' },
-      qtyDelivered: '1 pieza',
+      qtyNum: '1',
+      qtyUnit: 'pieza',
       deliveredNotes: '',
       qtyReturned: '',
       returnedToWhom: '',
@@ -105,9 +141,17 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
 
   const openEditModal = (item: HandoverItem) => {
     const existingStages = getItemStages(item);
+    const { qtyNum, qtyUnit } = parseQtyAndUnit(item.qtyDelivered);
+    const unitObj = HANDOVER_UNITS.find(u => u.value === qtyUnit);
     const existingSplit: Partial<Record<HandoverStage, string>> = {};
     existingStages.forEach(st => {
-      existingSplit[st] = item.stageSplit?.[st] || '';
+      const rawVal = (item.stageSplit?.[st] || '').trim();
+      if (rawVal && unitObj) {
+        const m = new RegExp(`^(\\d+(?:[.,]\\d+)?)\\s+(?:${unitObj.singular}|${unitObj.plural})$`, 'i').exec(rawVal);
+        existingSplit[st] = m ? m[1] : rawVal;
+      } else {
+        existingSplit[st] = rawVal;
+      }
     });
     setEditingId(item.id);
     setForm({
@@ -115,7 +159,8 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
       category: item.category || CATEGORIES[0],
       stages: existingStages,
       stageSplit: existingSplit,
-      qtyDelivered: item.qtyDelivered || '1 pieza',
+      qtyNum,
+      qtyUnit,
       deliveredNotes: item.deliveredNotes || '',
       qtyReturned: item.qtyReturned || '',
       returnedToWhom: item.returnedToWhom || '',
@@ -144,9 +189,17 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
     if (!form.name.trim()) return;
 
     const cleanStages: HandoverStage[] = form.stages.length > 0 ? form.stages : ['RECEPCIÓN'];
+    const formattedQtyDelivered = formatQtyWithUnit(form.qtyNum, form.qtyUnit);
     const cleanSplit: Partial<Record<HandoverStage, string>> = {};
     cleanStages.forEach(st => {
-      cleanSplit[st] = (form.stageSplit[st] || '').trim();
+      const raw = (form.stageSplit[st] || '').trim();
+      if (!raw) {
+        cleanSplit[st] = '';
+      } else if (/^\d+(?:[.,]\d+)?$/.test(raw)) {
+        cleanSplit[st] = formatQtyWithUnit(raw, form.qtyUnit);
+      } else {
+        cleanSplit[st] = raw;
+      }
     });
 
     if (editingId) {
@@ -159,7 +212,7 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
                 category: form.category,
                 stage: cleanStages[0],
                 stageSplit: cleanSplit,
-                qtyDelivered: form.qtyDelivered.trim() || '1 pieza',
+                qtyDelivered: formattedQtyDelivered,
                 deliveredNotes: form.deliveredNotes.trim(),
                 qtyReturned: form.qtyReturned.trim(),
                 returnedToWhom: form.returnedToWhom.trim(),
@@ -175,7 +228,7 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
         category: form.category,
         stage: cleanStages[0],
         stageSplit: cleanSplit,
-        qtyDelivered: form.qtyDelivered.trim() || '1 pieza',
+        qtyDelivered: formattedQtyDelivered,
         deliveredNotes: form.deliveredNotes.trim(),
         receivedByStaff: false,
         returnedToCouple: false,
@@ -604,7 +657,7 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
             {form.stages.length > 1 && (
               <div className="bg-[#FAF8F5] rounded-2xl p-3 border border-[#EFE8E1] space-y-2">
                 <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-[#7D6F6B] block">
-                  Reparto por momento (ej. 5 cajas recepción, 1 caja civil)
+                  Reparto por momento ({HANDOVER_UNITS.find(u => u.value === form.qtyUnit)?.plural || 'piezas'})
                 </span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {form.stages.map(st => (
@@ -616,7 +669,8 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
                       </span>
                       <input
                         type="text"
-                        placeholder="Ej. 1 caja..."
+                        inputMode="numeric"
+                        placeholder="Ej. 1"
                         value={form.stageSplit[st] || ''}
                         onChange={e =>
                           setForm(prev => ({
@@ -633,7 +687,7 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
                 Categoría
@@ -654,13 +708,28 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
               <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1">
                 Cantidad entregada
               </label>
-              <input
-                type="text"
-                placeholder="Ej. 30 pares, 2 cajas..."
-                value={form.qtyDelivered}
-                onChange={e => setForm({ ...form, qtyDelivered: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
-              />
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={1}
+                  step="any"
+                  inputMode="decimal"
+                  value={form.qtyNum}
+                  onChange={e => setForm({ ...form, qtyNum: e.target.value })}
+                  className="w-20 px-3 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm text-center font-medium focus:border-[#C48B81]"
+                />
+                <select
+                  value={form.qtyUnit}
+                  onChange={e => setForm({ ...form, qtyUnit: e.target.value })}
+                  className="flex-1 min-w-0 px-2.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+                >
+                  {HANDOVER_UNITS.map(u => (
+                    <option key={u.value} value={u.value}>
+                      {Number(form.qtyNum) === 1 ? u.singular : u.plural}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
