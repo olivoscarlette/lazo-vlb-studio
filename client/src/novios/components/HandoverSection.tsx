@@ -10,6 +10,7 @@ import {
   UserCheck
 } from 'lucide-react';
 import { HandoverItem, WeddingProfile } from '../types/lazo';
+import { useAuth } from '../../context/AuthContext';
 import { Modal } from './Modal';
 import { exportHandoverPdf } from '../utils/pdfExport';
 
@@ -88,6 +89,8 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
   items,
   onChange
 }) => {
+  const { user } = useAuth();
+  const isCoordinator = user?.role !== 'NOVIOS';
   const [phase, setPhase] = useState<'recepcion' | 'devolucion'>('recepcion');
   const [stageFilter, setStageFilter] = useState<'TODAS' | HandoverStage>('TODAS');
   const [showModal, setShowModal] = useState(false);
@@ -230,7 +233,8 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
         stageSplit: cleanSplit,
         qtyDelivered: formattedQtyDelivered,
         deliveredNotes: form.deliveredNotes.trim(),
-        receivedByStaff: false,
+        receivedByStaff: isCoordinator,
+        receivedAt: isCoordinator ? new Date().toISOString() : undefined,
         returnedToCouple: false,
         qtyReturned: form.qtyReturned.trim(),
         returnedToWhom: form.returnedToWhom.trim(),
@@ -252,10 +256,23 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
       stageSplit: { [initialStage]: '' },
       qtyDelivered: s.qtyDelivered,
       deliveredNotes: '',
-      receivedByStaff: false,
+      receivedByStaff: isCoordinator,
+      receivedAt: isCoordinator ? new Date().toISOString() : undefined,
       returnedToCouple: false
     };
     onChange([...items, next]);
+  };
+
+  const handleMarkAllReceived = () => {
+    const visibleIds = new Set(visibleItems.map(it => it.id));
+    const nowIso = new Date().toISOString();
+    onChange(
+      items.map(it =>
+        visibleIds.has(it.id) && !it.receivedByStaff
+          ? { ...it, receivedByStaff: true, receivedAt: nowIso }
+          : it
+      )
+    );
   };
 
   const toggleReceived = (id: string) => {
@@ -387,15 +404,26 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
 
         {/* Contextual Progress Bar for Active Phase */}
         <div className="space-y-2 pt-1">
-          <div className="flex items-center justify-between text-xs text-[#7D6F6B]">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#7D6F6B]">
             <span>
               {phase === 'recepcion'
                 ? 'Artículos entregados por los novios a coordinación antes del evento'
                 : 'Control de sobrantes y artículos devueltos al terminar el evento'}
             </span>
-            <span className="font-medium text-[#2B2826] shrink-0 ml-2">
-              {phase === 'recepcion' ? `${receivedPct}% recibido` : `${returnedPct}% devuelto`}
-            </span>
+            <div className="flex items-center gap-2.5 shrink-0">
+              {isCoordinator && phase === 'recepcion' && visibleItems.length > 0 && receivedCount < visibleItems.length && (
+                <button
+                  type="button"
+                  onClick={handleMarkAllReceived}
+                  className="text-[11px] font-medium text-[#577355] hover:text-[#384C3A] bg-[#E5EDE6]/70 hover:bg-[#E5EDE6] px-2.5 py-0.5 rounded-full border border-[#D0DDD1] transition cursor-pointer"
+                >
+                  ✓ Marcar todo recibido
+                </button>
+              )}
+              <span className="font-medium text-[#2B2826]">
+                {phase === 'recepcion' ? `${receivedPct}% recibido` : `${returnedPct}% devuelto`}
+              </span>
+            </div>
           </div>
           <div className="h-1.5 w-full bg-[#FAF8F5] rounded-full overflow-hidden">
             <div
