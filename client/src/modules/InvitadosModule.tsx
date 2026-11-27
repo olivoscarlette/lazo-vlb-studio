@@ -575,9 +575,13 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
   const handleDownloadAttendanceTablesExcel = async () => {
     if (!currentWedding || !token) return;
     try {
-      const res = await fetch(`/api/weddings/${currentWedding.id}/guests?page=1&limit=5000&sortBy=alpha_asc`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const isCivilExport = Boolean(isCivilDifferentDay && eventTarget === 'civil');
+      const res = await fetch(
+        `/api/weddings/${currentWedding.id}/guests?page=1&limit=5000&sortBy=alpha_asc&eventTarget=${eventTarget}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
       if (!res.ok) {
         alert('Error al obtener la lista de invitados para descargar.');
         return;
@@ -585,9 +589,9 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
       const data = await res.json();
       const allGuests: Guest[] = data.guests || [];
 
-      // Filtrar solo los confirmados / que asistirán
+      // Filtrar solo los confirmados / que asistirán del evento activo
       const attendingGuests = allGuests
-        .filter(g => g.status === 'Confirmado')
+        .filter(g => (isCivilExport ? g.status_civil === 'Confirmado' : g.status === 'Confirmado'))
         .sort((a, b) => {
           const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim().toLowerCase();
           const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim().toLowerCase();
@@ -595,17 +599,26 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
         });
 
       if (attendingGuests.length === 0) {
-        alert('Aún no hay invitados confirmados para descargar.');
+        alert(
+          isCivilExport
+            ? 'Aún no hay invitados confirmados para la Boda Civil.'
+            : 'Aún no hay invitados confirmados para descargar.'
+        );
         return;
       }
 
       const rows = attendingGuests.map((g, index) => {
-        const assignedTable = g.table_name || tables.find(t => t.id === g.table_id)?.name || 'Sin mesa asignada';
+        const assignedTable = isCivilExport
+          ? 'Ceremonia Civil'
+          : (g.table_name || tables.find(t => t.id === g.table_id)?.name || 'Sin mesa asignada');
+        const confirmedPlaces = isCivilExport
+          ? (g.confirmed_places_civil || (1 + (g.companion_count || 0)))
+          : (g.confirmed_places || (1 + (g.companion_count || 0)));
         return {
           'NO.': index + 1,
           'INVITADO (A-Z)': `${g.first_name || ''} ${g.last_name || ''}`.trim(),
           'MESA': assignedTable,
-          'LUGARES CONFIRMADOS': g.confirmed_places || (1 + (g.companion_count || 0)),
+          'LUGARES CONFIRMADOS': confirmedPlaces,
           'ACOMPAÑANTES': g.companion_count || 0,
           'TELÉFONO / WHATSAPP': g.phone || '—',
           'RESTRICCIONES ALIMENTARIAS': (g.dietary_requirements && g.dietary_requirements !== 'Ninguna') ? g.dietary_requirements : 'Ninguna',
@@ -628,10 +641,10 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
         { wch: 32 }  // OBSERVACIONES
       ];
 
-      XLSX.utils.book_append_sheet(wb, ws, 'Asistencia y Mesas');
+      XLSX.utils.book_append_sheet(wb, ws, isCivilExport ? 'Asistencia Boda Civil' : 'Asistencia y Mesas');
 
       const safeWeddingName = currentWedding.name.replace(/[^a-zA-Z0-9_-]/g, '_');
-      XLSX.writeFile(wb, `Asistencia_y_Mesas_${safeWeddingName}.xlsx`);
+      XLSX.writeFile(wb, `${isCivilExport ? 'Asistencia_Civil_' : 'Asistencia_y_Mesas_'}${safeWeddingName}.xlsx`);
     } catch (err) {
       console.error('Error al generar Excel de asistencia y mesas:', err);
       alert('Ocurrió un error al descargar el archivo Excel.');
@@ -642,9 +655,13 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
   const handleExportGuestList = async () => {
     if (!currentWedding || !token) return;
     try {
-      const res = await fetch(`/api/weddings/${currentWedding.id}/guests?page=1&limit=5000&sortBy=${sortBy}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const isCivilExport = Boolean(isCivilDifferentDay && eventTarget === 'civil');
+      const res = await fetch(
+        `/api/weddings/${currentWedding.id}/guests?page=1&limit=5000&sortBy=${sortBy}&eventTarget=${eventTarget}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
       if (!res.ok) {
         alert('Error al obtener la lista de invitados para descargar.');
         return;
@@ -659,6 +676,20 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
 
       const formatGuestRows = (list: Guest[]) =>
         list.map(g => {
+          if (isCivilExport) {
+            const civilStatus = g.status_civil || 'Pendiente de confirmar';
+            return {
+              'NOMBRE': g.first_name,
+              'APELLIDO': g.last_name,
+              'WHATSAPP': g.phone,
+              'ACOMPAÑANTES': g.companion_count,
+              'TOTAL LUGARES': 1 + (g.companion_count || 0),
+              'LUGARES CONFIRMADOS CIVIL': g.confirmed_places_civil || (civilStatus === 'Confirmado' ? (1 + (g.companion_count || 0)) : 0),
+              'ESTATUS CIVIL': civilStatus,
+              'OBSERVACIONES': g.observations || (g.dietary_requirements && g.dietary_requirements !== 'Ninguna' ? `Alergias: ${g.dietary_requirements}` : ''),
+              'ALERGIAS / RESTRICCIONES': (g.dietary_requirements && g.dietary_requirements !== 'Ninguna') ? g.dietary_requirements : 'Sin restricciones'
+            };
+          }
           const row: any = {
             'NOMBRE': g.first_name,
             'APELLIDO': g.last_name,
@@ -705,45 +736,60 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
         }
       }
 
-      // Sheet 1: Todos los invitados
+      // Sheet 1: Todos los invitados del evento activo
       const wsAll = XLSX.utils.json_to_sheet(formatGuestRows(allGuests));
-      XLSX.utils.book_append_sheet(wb, wsAll, 'Todos los Invitados');
+      XLSX.utils.book_append_sheet(wb, wsAll, isCivilExport ? 'Todos Boda Civil' : 'Todos los Invitados');
 
       // Sheet 2: Confirmados
-      const confirmedList = allGuests.filter(g => (eventTarget === 'civil' && isCivilDifferentDay ? g.status_civil === 'Confirmado' : g.status === 'Confirmado'));
+      const confirmedList = allGuests.filter(g =>
+        isCivilExport ? g.status_civil === 'Confirmado' : g.status === 'Confirmado'
+      );
       const wsConfirmed = XLSX.utils.json_to_sheet(formatGuestRows(confirmedList));
       XLSX.utils.book_append_sheet(wb, wsConfirmed, 'Confirmados');
 
       // Sheet 3: Pendientes
-      const pendingList = allGuests.filter(g => (eventTarget === 'civil' && isCivilDifferentDay ? g.status_civil === 'Pendiente de confirmar' : g.status === 'Pendiente de confirmar'));
+      const pendingList = allGuests.filter(g =>
+        isCivilExport
+          ? (g.status_civil || 'Pendiente de confirmar') === 'Pendiente de confirmar'
+          : (g.status || 'Pendiente de confirmar') === 'Pendiente de confirmar'
+      );
       const wsPending = XLSX.utils.json_to_sheet(formatGuestRows(pendingList));
       XLSX.utils.book_append_sheet(wb, wsPending, 'Pendientes');
 
       // Sheet 4: No asistirán
-      const declinedList = allGuests.filter(g => (eventTarget === 'civil' && isCivilDifferentDay ? g.status_civil === 'No asistirá' : g.status === 'No asistirá'));
+      const declinedList = allGuests.filter(g =>
+        isCivilExport ? g.status_civil === 'No asistirá' : g.status === 'No asistirá'
+      );
       const wsDeclined = XLSX.utils.json_to_sheet(formatGuestRows(declinedList));
       XLSX.utils.book_append_sheet(wb, wsDeclined, 'No Asistiran');
 
-      // Sheet 5: Civil exclusivo si aplica
-      if (isCivilDifferentDay) {
-        const civilGuests = allGuests.filter(g => g.is_invited_civil);
-        if (civilGuests.length > 0) {
-          const wsCivilOnly = XLSX.utils.json_to_sheet(civilGuests.map(g => ({
-            'NOMBRE': g.first_name,
-            'APELLIDO': g.last_name,
-            'WHATSAPP': g.phone,
-            'ACOMPAÑANTES': g.companion_count,
-            'TOTAL LUGARES': 1 + (g.companion_count || 0),
-            'LUGARES CONFIRMADOS CIVIL': g.confirmed_places_civil || (g.status_civil === 'Confirmado' ? (1 + (g.companion_count || 0)) : 0),
-            'ESTATUS CIVIL': g.status_civil || 'Pendiente de confirmar',
-            'OBSERVACIONES': g.observations || ''
-          })));
-          XLSX.utils.book_append_sheet(wb, wsCivilOnly, 'Boda Civil');
+      // Sheet 5: Hoja adicional de Boda Civil cuando se exporta desde Boda Principal
+      if (isCivilDifferentDay && !isCivilExport) {
+        const civilRes = await fetch(
+          `/api/weddings/${currentWedding.id}/guests?page=1&limit=5000&sortBy=${sortBy}&eventTarget=civil`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (civilRes.ok) {
+          const civilData = await civilRes.json();
+          const civilGuests: Guest[] = civilData.guests || [];
+          if (civilGuests.length > 0) {
+            const wsCivilOnly = XLSX.utils.json_to_sheet(civilGuests.map(g => ({
+              'NOMBRE': g.first_name,
+              'APELLIDO': g.last_name,
+              'WHATSAPP': g.phone,
+              'ACOMPAÑANTES': g.companion_count,
+              'TOTAL LUGARES': 1 + (g.companion_count || 0),
+              'LUGARES CONFIRMADOS CIVIL': g.confirmed_places_civil || (g.status_civil === 'Confirmado' ? (1 + (g.companion_count || 0)) : 0),
+              'ESTATUS CIVIL': g.status_civil || 'Pendiente de confirmar',
+              'OBSERVACIONES': g.observations || ''
+            })));
+            XLSX.utils.book_append_sheet(wb, wsCivilOnly, 'Boda Civil');
+          }
         }
       }
 
       const safeWeddingName = currentWedding.name.replace(/[^a-zA-Z0-9_-]/g, '_');
-      XLSX.writeFile(wb, `Lista_Invitados_${safeWeddingName}.xlsx`);
+      XLSX.writeFile(wb, `${isCivilExport ? 'Lista_Invitados_Civil_' : 'Lista_Invitados_'}${safeWeddingName}.xlsx`);
     } catch (err) {
       alert('Ocurrió un error al descargar la lista de invitados.');
     }
