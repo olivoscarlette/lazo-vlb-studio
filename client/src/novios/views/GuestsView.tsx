@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import {
   Plus, MessageSquare, Trash2, Search, Users, Armchair, Map as MapIcon, LayoutList, Download, Lock,
-  SlidersHorizontal, FileSpreadsheet, Upload, FileText, ChevronDown, Layers, Check
+  SlidersHorizontal, FileSpreadsheet, Upload, FileText, ChevronDown, Layers, Check, X
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useWedding } from '../context/WeddingContext';
@@ -1492,8 +1492,21 @@ export const GuestsView: React.FC<{
                             if (!e.target.value.trim()) setReadOnlyTableId(null);
                           }}
                           placeholder="Buscar invitado para iluminar su mesa en el plano..."
-                          className="w-full pl-9 pr-4 py-2 text-xs rounded-full bg-[#FAF8F5] border border-[#EFE8E1] focus:bg-white focus:border-[#C48B81] focus:outline-none text-[#2B2826]"
+                          className="w-full pl-9 pr-9 py-2 text-sm sm:text-xs rounded-full bg-[#FAF8F5] border border-[#EFE8E1] focus:bg-white focus:border-[#C48B81] focus:outline-none text-[#2B2826]"
                         />
+                        {dayTableSearch && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setDayTableSearch('');
+                              setReadOnlyTableId(null);
+                            }}
+                            aria-label="Limpiar búsqueda"
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#EFE8E1]/70 transition cursor-pointer"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
                       {(dayTableSearch || readOnlyTableId) && (
                         <button

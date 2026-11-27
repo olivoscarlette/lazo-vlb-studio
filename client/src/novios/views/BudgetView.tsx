@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Plus, Trash2, Check, MessageSquare, Scale, Wallet, Sparkles, Upload, FileCheck, Edit3, Calendar, Receipt, Eye, Download, ArrowRight, UserCheck, LayoutGrid, List, Phone, Search
+  Plus, Trash2, Check, MessageSquare, Scale, Wallet, Sparkles, Upload, FileCheck, Edit3, Calendar, Receipt, Eye, Download, ArrowRight, UserCheck, LayoutGrid, List, Phone, Search, X
 } from 'lucide-react';
 import { useWedding } from '../context/WeddingContext';
 import { useAuth } from '../../context/AuthContext';
@@ -158,8 +158,18 @@ export const BudgetView: React.FC<{ weddingDayMode?: boolean }> = ({ weddingDayM
               placeholder="Buscar proveedor, servicio o nota..."
               value={dayVendorSearch}
               onChange={e => setDayVendorSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-[#EFE8E1] rounded-full bg-[#FAF8F5]/60 focus:bg-white text-[#2B2826] placeholder:text-[#8A7E72]/70 focus:outline-none focus:border-[#C48B81] transition"
+              className="w-full pl-9 pr-9 py-2 text-sm sm:text-xs border border-[#EFE8E1] rounded-full bg-[#FAF8F5]/60 focus:bg-white text-[#2B2826] placeholder:text-[#8A7E72]/70 focus:outline-none focus:border-[#C48B81] transition"
             />
+            {dayVendorSearch && (
+              <button
+                type="button"
+                onClick={() => setDayVendorSearch('')}
+                aria-label="Limpiar búsqueda"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-[#8A7E72] hover:text-[#2B2826] hover:bg-[#EFE8E1]/70 transition cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
