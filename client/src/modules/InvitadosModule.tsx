@@ -5,7 +5,7 @@ import {
   Users, UserPlus, FileSpreadsheet, Download, Upload,
   Search, Filter, ChevronLeft, ChevronRight, Phone, MessageSquare,
   AlertTriangle, CheckCircle, Clock, XCircle, Edit2, AlertCircle,
-  Send, Loader2, Check, FileText, Sparkles, Link as LinkIcon, ExternalLink, Trash2,
+  Send, Loader2, Check, Copy, FileText, Sparkles, Link as LinkIcon, ExternalLink, Trash2,
   ShieldAlert, ShieldCheck, Lock, Unlock, SlidersHorizontal, Settings2, X
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -49,6 +49,30 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
   // Check-in en puerta para Modo Día de la Boda (persistido por boda y evento)
   const [checkedInIds, setCheckedInIds] = useState<Record<string, boolean>>({});
   const [checkinFilter, setCheckinFilter] = useState<'all' | 'pending' | 'arrived'>('all');
+  const [copiedPhoneId, setCopiedPhoneId] = useState<string | null>(null);
+
+  const handleCopyPhone = async (guestId: string, phone: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(phone);
+      } else {
+        const textarea = document.createElement('textarea');
+        textarea.value = phone;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      }
+      setCopiedPhoneId(guestId);
+      setTimeout(() => {
+        setCopiedPhoneId(prev => (prev === guestId ? null : prev));
+      }, 1800);
+    } catch (err) {
+      console.error('Error al copiar número:', err);
+    }
+  };
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1, limit: 25 });
   const [summary, setSummary] = useState({
     total: 0,
@@ -2038,8 +2062,8 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
                       </div>
                     </td>
 
-                    {/* WhatsApp — Single line with 1-click personalized link */}
-                    <td className="py-3.5 px-4 whitespace-nowrap min-w-[195px]">
+                    {/* WhatsApp — Single line with 1-click personalized link & copy number */}
+                    <td className="py-3.5 px-4 whitespace-nowrap min-w-[220px]">
                       {guest.phone ? (
                         <div className="inline-flex items-center space-x-2">
                           <a
@@ -2062,6 +2086,22 @@ export const InvitadosModule: React.FC<{ weddingDayMode?: boolean }> = ({ weddin
                             <MessageSquare className="w-3.5 h-3.5" />
                           </a>
                           <span className="font-mono text-xs text-[#5A524C]">{guest.phone}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyPhone(guest.id, guest.phone)}
+                            className={`p-1.5 rounded-full transition shrink-0 cursor-pointer ${
+                              copiedPhoneId === guest.id
+                                ? 'bg-[#E4ECE5] text-[#354B38]'
+                                : 'bg-[#FAF8F5] hover:bg-[#EFE8E1] text-[#8A7E72] hover:text-[#2B2826] border border-[#EFE8E1]'
+                            }`}
+                            title={copiedPhoneId === guest.id ? 'Número copiado' : 'Copiar número'}
+                          >
+                            {copiedPhoneId === guest.id ? (
+                              <Check className="w-3.5 h-3.5" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                          </button>
                         </div>
                       ) : (
                         <span className="text-xs text-[#8A7E72] italic font-light">Sin teléfono</span>
