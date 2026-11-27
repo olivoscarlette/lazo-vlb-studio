@@ -425,25 +425,26 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [saving, setSaving] = useState(false);
   const saveTimerRef = useRef<number | null>(null);
   const weddingIdRef = useRef<string | null>(null);
+  const dirtyKeysRef = useRef<Set<string>>(new Set());
+  const savingInFlightRef = useRef(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    const weddingId = currentWedding?.id;
-    weddingIdRef.current = weddingId || null;
-
-    if (!weddingId || !token) {
-      setWedding(null);
-      setLoading(false);
+  const fetchLatestStudio = (weddingId: string, silent: boolean) => {
+    if (!weddingId || !token) return;
+    if (silent && (savingInFlightRef.current || saveTimerRef.current !== null || dirtyKeysRef.current.size > 0)) {
       return;
     }
-
-    setLoading(true);
+    if (!silent) setLoading(true);
     fetch(`/api/weddings/${weddingId}/novios-studio`, {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store'
     })
       .then(res => (res.ok ? res.json() : Promise.reject(new Error('No se pudo cargar la boda'))))
       .then(data => {
-        if (cancelled) return;
+        if (weddingIdRef.current !== weddingId) return;
+        // If user started editing locally while silent fetch was in flight, don't clobber local edits
+        if (silent && (savingInFlightRef.current || saveTimerRef.current !== null || dirtyKeysRef.current.size > 0)) {
+          return;
+        }
         const pkg = data.wedding?.package_type || currentWedding?.package_type || '';
         const isAdmin = user?.role !== 'NOVIOS';
         const isVirtualNovios =
@@ -462,18 +463,51 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ child
       })
       .catch(err => {
         console.error('Error loading novios studio:', err);
-        if (!cancelled && currentWedding) {
+        if (!silent && weddingIdRef.current === weddingId && currentWedding) {
           const fallback = hydrateWeddingFromLegacyDb({ wedding: currentWedding, seedFromDb: {} });
           setWedding(fallback);
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!silent && weddingIdRef.current === weddingId) setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    const weddingId = currentWedding?.id;
+    weddingIdRef.current = weddingId || null;
+    dirtyKeysRef.current.clear();
+
+    if (!weddingId || !token) {
+      setWedding(null);
+      setLoading(false);
+      return;
+    }
+
+    fetchLatestStudio(weddingId, false);
+
+    // Live sync: silently refresh when returning to tab or every 20s while visible & idle
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === 'visible' && weddingIdRef.current) {
+        fetchLatestStudio(weddingIdRef.current, true);
+      }
+    };
+    window.addEventListener('focus', handleVisibilityOrFocus);
+    document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+    const pollInterval = window.setInterval(() => {
+      if (document.visibilityState === 'visible' && weddingIdRef.current) {
+        fetchLatestStudio(weddingIdRef.current, true);
+      }
+    }, 20000);
 
     return () => {
-      cancelled = true;
-      if (saveTimerRef.current) window.clearTimeout(saveTimerRef.current);
+      window.removeEventListener('focus', handleVisibilityOrFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+      window.clearInterval(pollInterval);
+      if (saveTimerRef.current) {
+        window.clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
     };
   }, [currentWedding?.id, token]);
 
@@ -484,24 +518,41 @@ export const WeddingProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setSaving(true);
     const payload = { ...nextState, studioVersion: CURRENT_STUDIO_VERSION };
     saveTimerRef.current = window.setTimeout(() => {
+      saveTimerRef.current = null;
+      const changedKeys = Array.from(dirtyKeysRef.current);
+      dirtyKeysRef.current.clear();
+      savingInFlightRef.current = true;
       fetch(`/api/weddings/${weddingId}/novios-studio`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ studio: payload })
+        body: JSON.stringify({
+          studio: payload,
+          ...(changedKeys.length > 0 ? { changedKeys } : {})
+        })
       })
         .catch(err => console.error('Error persisting novios studio:', err))
-        .finally(() => setSaving(false));
+        .finally(() => {
+          savingInFlightRef.current = false;
+          setSaving(false);
+        });
     }, 500);
   };
 
   const updateWedding = (updater: (prev: WeddingState) => WeddingState) => {
     setWedding(prev => {
       if (!prev) return prev;
+      const updated = updater(prev);
+      const keys = Object.keys(updated) as Array<keyof WeddingState>;
+      for (const k of keys) {
+        if (updated[k] !== prev[k]) {
+          dirtyKeysRef.current.add(String(k));
+        }
+      }
       const next: PersistedWeddingState = {
-        ...updater(prev),
+        ...updated,
         studioVersion: CURRENT_STUDIO_VERSION
       };
       schedulePersist(next);

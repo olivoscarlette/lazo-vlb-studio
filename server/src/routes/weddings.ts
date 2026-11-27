@@ -1082,17 +1082,43 @@ router.get('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
 // PUT /api/weddings/:weddingId/novios-studio - Sincronización bidireccional real con las tablas SQLite + extras de Nuevo Lazo
 router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess, (req, res) => {
   const { weddingId } = req.params;
-  const { studio } = req.body;
+  const { studio, changedKeys } = req.body;
 
   if (!studio || typeof studio !== 'object') {
     return res.status(400).json({ error: 'Estado de estudio requerido.' });
   }
 
   const now = new Date().toISOString();
+  const hasChangedKeys = Array.isArray(changedKeys) && changedKeys.length > 0;
+  const changedSet = hasChangedKeys ? new Set<string>(changedKeys.map((k: any) => String(k))) : null;
+  const shouldSync = (key: string) => !changedSet || changedSet.has(key);
 
   try {
-    // 1. Save UI extras (style, quotes, contributions, coverPhoto, budgetGoal) in novios_studio_json
-    const serialized = JSON.stringify(studio);
+    // 1. Merge-safe persistence of novios_studio_json so concurrent edits by Admin & Novios NEVER overwrite unrelated sections (e.g. handoverItems)
+    let mergedStudio = studio;
+    if (changedSet) {
+      const currentRow = db.prepare('SELECT novios_studio_json FROM weddings WHERE id = ?').get(weddingId) as any;
+      if (currentRow?.novios_studio_json) {
+        try {
+          const existingJson = JSON.parse(currentRow.novios_studio_json);
+          if (existingJson && typeof existingJson === 'object') {
+            mergedStudio = { ...existingJson };
+            for (const key of changedSet) {
+              if (key in studio) {
+                mergedStudio[key] = studio[key];
+              }
+            }
+            if (studio.studioVersion !== undefined) {
+              mergedStudio.studioVersion = studio.studioVersion;
+            }
+          }
+        } catch {
+          mergedStudio = studio;
+        }
+      }
+    }
+
+    const serialized = JSON.stringify(mergedStudio);
     db.prepare(`
       UPDATE weddings
       SET novios_studio_json = ?, updated_at = datetime('now')
@@ -1112,7 +1138,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
     db.exec('BEGIN');
     try {
       // 2a. Wedding core profile columns
-      if (studio.profile) {
+      if (shouldSync('profile') && studio.profile) {
         const p = studio.profile;
         const updates: string[] = [];
         const params: any[] = [];
@@ -1154,7 +1180,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       }
 
       // 2b. Tables (upsert + delete removed)
-      if (Array.isArray(studio.tables)) {
+      if (shouldSync('tables') && Array.isArray(studio.tables)) {
         const existingIds = new Set(
           (db.prepare('SELECT id FROM tables WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
         );
@@ -1183,7 +1209,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       }
 
       // 2c. Layout Elements (upsert + delete removed)
-      if (Array.isArray(studio.floorElements)) {
+      if (shouldSync('floorElements') && Array.isArray(studio.floorElements)) {
         const existingIds = new Set(
           (db.prepare('SELECT id FROM layout_elements WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
         );
@@ -1211,7 +1237,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       }
 
       // 2d. Guests (lossless UPDATE for existing to preserve WhatsApp RSVP columns, INSERT for new, DELETE removed)
-      if (Array.isArray(studio.guests)) {
+      if (shouldSync('guests') && Array.isArray(studio.guests)) {
         const validTableIds = new Set(
           (db.prepare('SELECT id FROM tables WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
         );
@@ -1257,7 +1283,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       }
 
       // 2e. Vendors & Payments (lossless upsert + delete removed)
-      if (Array.isArray(studio.vendors)) {
+      if (shouldSync('vendors') && Array.isArray(studio.vendors)) {
         const existingVendorIds = new Set(
           (db.prepare('SELECT id FROM vendors WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
         );
@@ -1332,7 +1358,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       }
 
       // 2f. Tasks / Checklist
-      if (Array.isArray(studio.checklist)) {
+      if (shouldSync('checklist') && Array.isArray(studio.checklist)) {
         const existingTaskIds = new Set(
           (db.prepare('SELECT id FROM tasks WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
         );
@@ -1361,7 +1387,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       }
 
       // 2g. Timeline Events
-      if (Array.isArray(studio.timeline)) {
+      if (shouldSync('timeline') && Array.isArray(studio.timeline)) {
         const existingTlIds = new Set(
           (db.prepare('SELECT id FROM timeline_events WHERE wedding_id = ?').all(weddingId) as any[]).map(r => String(r.id))
         );
@@ -1389,7 +1415,7 @@ router.put('/:weddingId/novios-studio', authenticateToken, requireWeddingAccess,
       }
 
       // 2h. Civil & Religious Ceremonies
-      if (studio.ceremonies) {
+      if (shouldSync('ceremonies') && studio.ceremonies) {
         const c = studio.ceremonies;
         const existingCivil = db.prepare('SELECT id FROM civil_ceremony WHERE wedding_id = ?').get(weddingId) as any;
         const witnessesJson = JSON.stringify(c.civilWitnessList || []);
