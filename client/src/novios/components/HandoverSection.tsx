@@ -7,7 +7,8 @@ import {
   Pencil,
   Trash2,
   Download,
-  UserCheck
+  UserCheck,
+  AlertTriangle
 } from 'lucide-react';
 import { HandoverItem, WeddingProfile } from '../types/lazo';
 import { useAuth } from '../../context/AuthContext';
@@ -305,8 +306,31 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
     }
   };
 
-  const existingNames = new Set(items.map(i => i.name.toLowerCase()));
-  const availableSuggestions = QUICK_SUGGESTIONS.filter(s => !existingNames.has(s.name.toLowerCase()));
+  const normalizeItemName = (str: string) =>
+    (str || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+  const existingNames = new Set(items.map(i => normalizeItemName(i.name)));
+  const availableSuggestions = QUICK_SUGGESTIONS.filter(s => !existingNames.has(normalizeItemName(s.name)));
+
+  const typedNorm = normalizeItemName(form.name);
+  const exactDuplicate = typedNorm
+    ? items.find(it => it.id !== editingId && normalizeItemName(it.name) === typedNorm) || null
+    : null;
+  const similarItems =
+    typedNorm.length >= 3 && !exactDuplicate
+      ? items
+          .filter(it => {
+            if (it.id === editingId) return false;
+            const n = normalizeItemName(it.name);
+            return n.includes(typedNorm) || typedNorm.includes(n);
+          })
+          .slice(0, 3)
+      : [];
 
   return (
     <div className="space-y-5">
@@ -649,8 +673,47 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
               placeholder="Ej. Copas de brindis, Pantuflas, Botellas..."
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
+              className={`w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border text-sm focus:outline-none ${
+                exactDuplicate ? 'border-[#C48B81] bg-[#FFF8F6]' : 'border-[#EFE8E1] focus:border-[#C48B81]'
+              }`}
             />
+            {exactDuplicate && (
+              <div className="mt-2 p-2.5 rounded-xl bg-[#FFF6F4] border border-[#E6B8AF] flex items-center justify-between gap-2">
+                <div className="flex items-start gap-2 min-w-0">
+                  <AlertTriangle className="w-4 h-4 text-[#A86B60] shrink-0 mt-0.5" />
+                  <p className="text-[11.5px] text-[#70443D] leading-snug">
+                    Ya existe <strong>"{exactDuplicate.name}"</strong> ({exactDuplicate.qtyDelivered}). ¿Quieres editarlo en lugar de duplicarlo?
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => openEditModal(exactDuplicate)}
+                  className="px-2.5 py-1 rounded-full bg-[#C48B81] hover:bg-[#A86B60] text-white text-[11px] font-medium shrink-0 cursor-pointer transition"
+                >
+                  Editar
+                </button>
+              </div>
+            )}
+            {similarItems.length > 0 && (
+              <div className="mt-2 space-y-1">
+                <span className="text-[10.5px] text-[#8A7E72] block">
+                  Artículos parecidos ya registrados (toca para editar):
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {similarItems.map(sim => (
+                    <button
+                      key={sim.id}
+                      type="button"
+                      onClick={() => openEditModal(sim)}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FAF4F0] hover:bg-[#F3E6E0] border border-[#E6D2CB] text-[11px] text-[#70443D] cursor-pointer transition"
+                    >
+                      <span className="font-medium">{sim.name}</span>
+                      <span className="text-[#A86B60]">({sim.qtyDelivered})</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
