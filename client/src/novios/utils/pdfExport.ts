@@ -1184,13 +1184,20 @@ export function exportHandoverPdf(profile: WeddingProfile, items: HandoverItem[]
 
   const rows = items.length
     ? items
-        .map(
-          item => `
+        .map(item => {
+          const splitEntries = item.stageSplit ? Object.entries(item.stageSplit) : [];
+          const stageSummary =
+            splitEntries.length > 0
+              ? splitEntries
+                  .map(([st, qty]) => (qty && qty.trim() ? `${st}: ${qty.trim()}` : st))
+                  .join(' · ')
+              : item.stage || '';
+          return `
         <tr>
           <td>
             <strong>${escapeHtml(item.name)}</strong>
             <div style="font-size:10px;color:#7D6F6B;margin-top:2px">
-              ${escapeHtml(item.category)}${item.stage ? ` · <span style="color:#A86B60;font-weight:600">${escapeHtml(item.stage)}</span>` : ''}
+              ${escapeHtml(item.category)}${stageSummary ? ` · <span style="color:#A86B60;font-weight:600">${escapeHtml(stageSummary)}</span>` : ''}
             </div>
           </td>
           <td>
@@ -1208,8 +1215,8 @@ export function exportHandoverPdf(profile: WeddingProfile, items: HandoverItem[]
               ${item.returnedToCouple ? '✓ Entregado al cierre' : '○ Pendiente de devolución'}
             </div>
           </td>
-        </tr>`
-        )
+        </tr>`;
+        })
         .join('')
     : `<tr><td colspan="3" style="text-align:center;color:#7D6F6B;padding:24px">Sin artículos registrados todavía.</td></tr>`;
 

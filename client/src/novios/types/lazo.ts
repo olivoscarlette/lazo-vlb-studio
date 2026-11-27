@@ -203,6 +203,7 @@ export interface HandoverItem {
   name: string;
   category: string;
   stage?: 'IGLESIA' | 'CIVIL' | 'RECEPCIÓN' | 'OTRO';
+  stageSplit?: Partial<Record<'IGLESIA' | 'CIVIL' | 'RECEPCIÓN' | 'OTRO', string>>;
   qtyDelivered: string;
   deliveredNotes?: string;
   receivedByStaff: boolean;
