@@ -38,17 +38,30 @@ const QUICK_SUGGESTIONS: Array<{ name: string; category: string; qtyDelivered: s
   { name: 'Señalética / Menús / Letreros', category: 'Decoración & Señalética', qtyDelivered: '1 paquete' }
 ];
 
+const HANDOVER_STAGES = ['IGLESIA', 'CIVIL', 'RECEPCIÓN', 'OTRO'] as const;
+type HandoverStage = (typeof HANDOVER_STAGES)[number];
+
+const getStageBadgeClass = (stage: string) => {
+  const upper = stage.toUpperCase();
+  if (upper === 'CIVIL') return 'bg-[#F7EDEB] text-[#A86B60] border-[#ECD9D5]';
+  if (upper === 'IGLESIA') return 'bg-[#FAF3E8] text-[#7C5824] border-[#E8D7B8]';
+  if (upper === 'OTRO') return 'bg-[#F3EFEA] text-[#6B615A] border-[#E6DFD6]';
+  return 'bg-[#FAF8F5] text-[#5A524C] border-[#EFE8E1]';
+};
+
 export const HandoverSection: React.FC<HandoverSectionProps> = ({
   profile,
   items,
   onChange
 }) => {
   const [phase, setPhase] = useState<'recepcion' | 'devolucion'>('recepcion');
+  const [stageFilter, setStageFilter] = useState<'TODAS' | HandoverStage>('TODAS');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     category: CATEGORIES[0],
+    stage: 'RECEPCIÓN' as HandoverStage,
     qtyDelivered: '1 pieza',
     deliveredNotes: '',
     qtyReturned: '',
@@ -56,16 +69,20 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
     returnNotes: ''
   });
 
-  const receivedCount = items.filter(i => i.receivedByStaff).length;
-  const returnedCount = items.filter(i => i.returnedToCouple).length;
-  const receivedPct = items.length > 0 ? Math.round((receivedCount / items.length) * 100) : 0;
-  const returnedPct = items.length > 0 ? Math.round((returnedCount / items.length) * 100) : 0;
+  const getItemStage = (it: HandoverItem): HandoverStage => (it.stage || 'RECEPCIÓN') as HandoverStage;
+  const visibleItems = stageFilter === 'TODAS' ? items : items.filter(it => getItemStage(it) === stageFilter);
+
+  const receivedCount = visibleItems.filter(i => i.receivedByStaff).length;
+  const returnedCount = visibleItems.filter(i => i.returnedToCouple).length;
+  const receivedPct = visibleItems.length > 0 ? Math.round((receivedCount / visibleItems.length) * 100) : 0;
+  const returnedPct = visibleItems.length > 0 ? Math.round((returnedCount / visibleItems.length) * 100) : 0;
 
   const openAddModal = () => {
     setEditingId(null);
     setForm({
       name: '',
       category: CATEGORIES[0],
+      stage: stageFilter === 'TODAS' ? 'RECEPCIÓN' : stageFilter,
       qtyDelivered: '1 pieza',
       deliveredNotes: '',
       qtyReturned: '',
@@ -80,6 +97,7 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
     setForm({
       name: item.name,
       category: item.category || CATEGORIES[0],
+      stage: getItemStage(item),
       qtyDelivered: item.qtyDelivered || '1 pieza',
       deliveredNotes: item.deliveredNotes || '',
       qtyReturned: item.qtyReturned || '',
@@ -101,6 +119,7 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
                 ...it,
                 name: form.name.trim(),
                 category: form.category,
+                stage: form.stage,
                 qtyDelivered: form.qtyDelivered.trim() || '1 pieza',
                 deliveredNotes: form.deliveredNotes.trim(),
                 qtyReturned: form.qtyReturned.trim(),
@@ -115,6 +134,7 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
         id: `hnd_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
         name: form.name.trim(),
         category: form.category,
+        stage: form.stage,
         qtyDelivered: form.qtyDelivered.trim() || '1 pieza',
         deliveredNotes: form.deliveredNotes.trim(),
         receivedByStaff: false,
@@ -134,6 +154,7 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
       id: `hnd_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       name: s.name,
       category: s.category,
+      stage: stageFilter === 'TODAS' ? 'RECEPCIÓN' : stageFilter,
       qtyDelivered: s.qtyDelivered,
       deliveredNotes: '',
       receivedByStaff: false,
@@ -192,7 +213,7 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
               }`}
             >
               <Package className="w-3.5 h-3.5 shrink-0" />
-              <span>1. Entrega previa ({receivedCount}/{items.length})</span>
+              <span>1. Entrega previa ({receivedCount}/{visibleItems.length})</span>
             </button>
             <button
               type="button"
@@ -204,19 +225,25 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
               }`}
             >
               <PackageCheck className="w-3.5 h-3.5 shrink-0" />
-              <span>2. Devolución al cierre ({returnedCount}/{items.length})</span>
+              <span>2. Devolución al cierre ({returnedCount}/{visibleItems.length})</span>
             </button>
           </div>
 
           <div className="flex items-center gap-2 self-start md:self-auto">
-            {items.length > 0 && (
+            {visibleItems.length > 0 && (
               <button
                 type="button"
-                onClick={() => exportHandoverPdf(profile, items)}
+                onClick={() =>
+                  exportHandoverPdf(
+                    profile,
+                    visibleItems,
+                    stageFilter === 'TODAS' ? undefined : stageFilter
+                  )
+                }
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-white hover:bg-[#FAF8F5] text-[#2B2826] border border-[#EFE8E1] text-xs font-medium transition cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5 text-[#C48B81]" />
-                <span>Recibo PDF</span>
+                <span>{stageFilter === 'TODAS' ? 'Recibo PDF' : `PDF ${stageFilter}`}</span>
               </button>
             )}
             <button
@@ -228,6 +255,39 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
               <span>Agregar artículo</span>
             </button>
           </div>
+        </div>
+
+        {/* Stage Filter Chips: Todos · Iglesia · Civil · Recepción · Otro */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <button
+            type="button"
+            onClick={() => setStageFilter('TODAS')}
+            className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer border ${
+              stageFilter === 'TODAS'
+                ? 'bg-[#2B2826] text-white border-[#2B2826]'
+                : 'bg-[#FAF8F5] text-[#6E605C] border-[#EFE8E1] hover:border-[#C48B81]'
+            }`}
+          >
+            Todos ({items.length})
+          </button>
+          {HANDOVER_STAGES.map(st => {
+            const count = items.filter(it => getItemStage(it) === st).length;
+            const active = stageFilter === st;
+            return (
+              <button
+                key={st}
+                type="button"
+                onClick={() => setStageFilter(st)}
+                className={`px-3 py-1 rounded-full text-[11px] font-medium transition cursor-pointer border ${
+                  active
+                    ? 'bg-[#C48B81] text-white border-[#C48B81]'
+                    : 'bg-[#FAF8F5] text-[#6E605C] border-[#EFE8E1] hover:border-[#C48B81]'
+                }`}
+              >
+                {st} ({count})
+              </button>
+            );
+          })}
         </div>
 
         {/* Contextual Progress Bar for Active Phase */}
@@ -284,10 +344,28 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
             </div>
           </div>
         </div>
+      ) : visibleItems.length === 0 ? (
+        <div className="bg-white rounded-[1.75rem] p-8 border border-[#EFE8E1] shadow-2xs text-center space-y-3">
+          <p className="font-editorial text-xl text-[#2B2826]">
+            No hay artículos marcados para {stageFilter}
+          </p>
+          <p className="text-xs text-[#7D6F6B] font-light">
+            Agrega un artículo nuevo o edita uno existente para asignarlo a {stageFilter}.
+          </p>
+          <button
+            type="button"
+            onClick={openAddModal}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#C48B81] text-white text-xs font-medium cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Agregar para {stageFilter}</span>
+          </button>
+        </div>
       ) : (
         <div className="bg-white rounded-[1.75rem] border border-[#EFE8E1] shadow-2xs overflow-hidden divide-y divide-[#F5EFEA]">
-          {items.map(item => {
+          {visibleItems.map(item => {
             const isChecked = phase === 'recepcion' ? item.receivedByStaff : item.returnedToCouple;
+            const itemStage = getItemStage(item);
             return (
               <div
                 key={item.id}
@@ -324,6 +402,11 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
                       >
                         {item.name}
                       </p>
+                      <span
+                        className={`text-[9.5px] font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full border ${getStageBadgeClass(itemStage)}`}
+                      >
+                        {itemStage}
+                      </span>
                       <span className="text-[10.5px] text-[#7D6F6B] bg-[#FAF8F5] border border-[#EFE8E1] px-2.5 py-0.5 rounded-full">
                         {item.category}
                       </span>
@@ -439,6 +522,31 @@ export const HandoverSection: React.FC<HandoverSectionProps> = ({
               onChange={e => setForm({ ...form, name: e.target.value })}
               className="w-full px-3.5 py-2.5 rounded-xl bg-[#FAF8F5] border border-[#EFE8E1] text-sm focus:border-[#C48B81]"
             />
+          </div>
+
+          <div>
+            <label className="text-[11px] uppercase tracking-wider text-[#7D6F6B] block mb-1.5">
+              ¿Para qué momento es?
+            </label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+              {HANDOVER_STAGES.map(st => {
+                const active = form.stage === st;
+                return (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setForm({ ...form, stage: st })}
+                    className={`py-2 px-2.5 rounded-xl text-[11px] font-semibold tracking-wider border transition cursor-pointer ${
+                      active
+                        ? 'bg-[#C48B81] text-white border-[#C48B81] shadow-2xs'
+                        : 'bg-[#FAF8F5] text-[#6E605C] border-[#EFE8E1] hover:border-[#C48B81]'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">

@@ -202,6 +202,7 @@ export interface HandoverItem {
   id: string;
   name: string;
   category: string;
+  stage?: 'IGLESIA' | 'CIVIL' | 'RECEPCIÓN' | 'OTRO';
   qtyDelivered: string;
   deliveredNotes?: string;
   receivedByStaff: boolean;

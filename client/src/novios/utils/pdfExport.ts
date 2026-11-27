@@ -1178,7 +1178,7 @@ export function exportFloorPlanPdf(
   );
 }
 
-export function exportHandoverPdf(profile: WeddingProfile, items: HandoverItem[]) {
+export function exportHandoverPdf(profile: WeddingProfile, items: HandoverItem[], stageLabel?: string) {
   const receivedCount = items.filter(i => i.receivedByStaff).length;
   const returnedCount = items.filter(i => i.returnedToCouple).length;
 
@@ -1189,7 +1189,9 @@ export function exportHandoverPdf(profile: WeddingProfile, items: HandoverItem[]
         <tr>
           <td>
             <strong>${escapeHtml(item.name)}</strong>
-            <div style="font-size:10px;color:#7D6F6B;margin-top:2px">${escapeHtml(item.category)}</div>
+            <div style="font-size:10px;color:#7D6F6B;margin-top:2px">
+              ${escapeHtml(item.category)}${item.stage ? ` · <span style="color:#A86B60;font-weight:600">${escapeHtml(item.stage)}</span>` : ''}
+            </div>
           </td>
           <td>
             <div>${escapeHtml(item.qtyDelivered || '1')}</div>
@@ -1242,7 +1244,7 @@ export function exportHandoverPdf(profile: WeddingProfile, items: HandoverItem[]
     </div>`;
 
   openPrintablePdf(
-    'Control de Artículos & Entregas',
+    stageLabel ? `Control de Artículos · ${stageLabel}` : 'Control de Artículos & Entregas',
     'Respaldo de recepción previa al evento y devolución de sobrantes al cierre',
     profile,
     body
